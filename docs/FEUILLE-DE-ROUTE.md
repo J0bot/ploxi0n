@@ -77,6 +77,9 @@
 | ✅ 0.12 | **Ouvrir un ploxion depuis un ploxion** (pile : « ‹ » y revient vivant) | |
 | ✅ 0.12 | **▁ Minimiser**, « en arrière-plan » sur l'accueil, **⧉ basculer** | 5 vivants au plus |
 | ✅ 0.12 | **Les bords** gauche/droit : glisser pour passer d'une app à l'autre | |
+| ✅ 0.13 | Le **dock en bas** (compte, épinglés, ⚙) | RS-7 : « la barre boxion avec les épinglés en bas » |
+| ✅ 0.13 | **Six façons de voir ses ploxions** : grille, compacte, liste, usage (ses heures), récents, catégories | |
+| ✅ 0.13 | Le **droit au silence** appliqué : ce qu'un ploxion accroche à la page se cache, revient et part avec lui | le carré lilas flottant |
 | ⏭ | Glisser-déposer pour ranger (au lieu du ✎ + prompt) | |
 | ⏭ | Deux ploxions côte à côte (iPad, iPhone en paysage) ; **fill the gaps** dans l'app (jOSGaps) | |
 | 💭 | Le **cube** / la carte géante des apps (vision originelle 14.09) comme accueil alternatif | |

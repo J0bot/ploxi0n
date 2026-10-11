@@ -16,7 +16,7 @@ import { creerNotifs } from './natif/notifs.js';
 import { creerHud } from './app/hud.js';
 import { enregistrerReglages } from './app/reglages.js';
 
-const VERSION = '0.12.0';
+const VERSION = '0.13.0';
 
 async function demarrer() {
   const racine = document.getElementById('ploxi0n');
@@ -66,7 +66,10 @@ async function demarrer() {
   let raccourcis = null;
   async function majAccueil() {
     const installes = await depot.installes();
-    const liste = [...installes.map(p => ({ id: p.id, nom: p.nom, icone: p.icone })), ...internes];
+    // la catégorie vient du catalogue en cache (la vue « par catégorie » de l'accueil)
+    const cat = new Map(((await depot.catalogue({ reseau: false }).catch(() => null)) || { items: [] }).items.map(x => [x.id, x]));
+    const liste = [...installes.map(p => ({ id: p.id, nom: p.nom, icone: p.icone, categorie: (cat.get(p.id) || {}).categorie || 'Autres', cat_icone: (cat.get(p.id) || {}).cat_icone || '📦' })),
+      ...internes.map(p => ({ categorie: 'ploxi0n', cat_icone: '◇', ...p }))];
     routeur.majCatalogue(liste);
     if (raccourcis) raccourcis.publier(liste).catch(() => {});   // l'app Raccourcis et Siri proposent les ploxions installés
   }
@@ -90,7 +93,7 @@ async function demarrer() {
   // un ploxion sur l'écran d'accueil de l'iPhone (via Raccourcis) : depuis l'édition de l'accueil et la fiche du marketplace
   const ecranAccueil = creerEcranAccueil({ trouver: (id) => routeur.catalogue().find(p => p.id === id), liste: () => routeur.catalogue(), boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine) });
   window.jOSEcranAccueil = ecranAccueil;
-  routeur = creerRouteur({ racine, catalogue: internes, boxion, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id), hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}) });
+  routeur = creerRouteur({ racine, catalogue: internes, boxion, usage: () => boxion.get('usage', 'stats'), verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id), hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}) });
   const rafraichir = () => { if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); };
   compte.surChangement(rafraichir);
   hud.surChangement(() => routeur.rafraichirHud());

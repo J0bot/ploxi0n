@@ -338,3 +338,22 @@ test('notifications : coord — rien au premier passage, puis les nouveaux messa
   assert.equal(planifiees.length, 4, '2 derniers + un résumé'); assert.match(planifiees[3].body, /4 autres/);
   assert.equal((await boxion.get('reglages', 'notifs')).dernierCoord, 17);
 });
+
+test('le droit au silence : ce qu\'un ploxion accroche à la page se cache avec lui, revient avec lui, part avec lui', async () => {
+  const { creerRouteur } = await import('../src/app/routeur.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    W.jOSApps = W.jOSApps || {};
+    W.jOSApps.bulle = { manifest: { id: 'bulle' }, mount(h) { const b = W.document.createElement('div'); b.className = 'compagnon'; b.style.position = 'fixed'; W.document.body.appendChild(b); h.textContent = 'bulle'; return { unmount() {} }; } };
+    const racine = W.document.createElement('div'); W.document.body.appendChild(racine);
+    const r = creerRouteur({ fenetre: W, racine, catalogue: [{ id: 'bulle', nom: 'Bulle' }] });
+    await r.accueil(); await r.ouvrir('bulle'); await attendre(10);
+    const b = W.document.querySelector('body > .compagnon'); assert.ok(b);
+    r.minimiser(); await attendre(10);
+    assert.equal(b.style.display, 'none', 'caché avec le ploxion minimisé');
+    await r.ouvrir('bulle'); await attendre(10);
+    assert.equal(b.style.display, '', 'rendu quand on le reprend');
+    r.retour(); await attendre(10);
+    assert.equal(W.document.querySelector('body > .compagnon'), null, 'retiré quand on le ferme');
+  } finally { p.fin(); }
+});

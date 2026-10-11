@@ -129,3 +129,33 @@ button{font-family:inherit;-webkit-user-select:none;user-select:none}
 .px-bord-g::after{left:2px}.px-bord-d::after{right:2px}
 .px-bord.px-tire::after{opacity:calc(.25 + .75 * var(--p))}
 .px-bord{pointer-events:none}.px-a-vivants .px-bord{pointer-events:auto}
+
+/* ---- le DOCK en bas (RS-7 12.10 : « la barre boxion avec les épinglés en bas ») : compte, épinglés, ⚙, au pouce ---- */
+.px-accueil{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
+.px-dock{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);z-index:30;margin:0;padding:7px;border-radius:22px;
+  background:rgba(15,11,24,.94) var(--grain);border:var(--trait) solid var(--bord2);box-shadow:inset 0 0 0 1px var(--filet),0 12px 30px -10px rgba(0,0,0,.8)}
+.px-dock .px-h-b{min-width:48px;min-height:48px;border-radius:14px;font-size:1.45rem}
+.px-dock .px-compte{min-height:48px;border-radius:14px}
+.px-dock [data-reglages]{font-size:1.2rem}
+.px-mode-ploxion .px-dock{display:none}
+.px-bord{bottom:calc(env(safe-area-inset-bottom,0px) + 90px)}
+
+/* ---- les façons de voir ses ploxions ---- */
+.px-vues{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -2px 18px;padding:0 2px}.px-vues::-webkit-scrollbar{display:none}
+.px-vues button{flex:none;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--muted);border-radius:11px;padding:0 12px;min-height:34px;font:600 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.px-vues button.on{color:var(--txt);border-color:var(--bord2);box-shadow:inset 0 -2px 0 var(--bio)}
+/* compacte : plus de ploxions à l'écran, des noms courts */
+.px-vue-compacte .px-grille{grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:14px 6px}
+.px-vue-compacte .px-ic{width:50px;height:50px;font-size:1.45rem;border-radius:12px}
+.px-vue-compacte .px-tuile>span:last-child{font-size:10px;-webkit-line-clamp:1}
+/* liste, usage, récents : des lignes gravées */
+.px-plat{display:flex;flex-direction:column;gap:8px}
+.px-ligne{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:8px 12px 8px 8px;border:var(--trait) solid var(--bord);border-radius:16px;background:var(--surface) var(--grain);color:var(--txt);box-shadow:inset 0 0 0 1px var(--filet);transition:transform .12s}
+.px-ligne:active{transform:scale(.98)}
+.px-ligne .px-ic{width:44px;height:44px;font-size:1.35rem;border-radius:12px;flex:none}
+.px-ligne-t{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.px-ligne-t b{font:600 14px var(--police);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-ligne-t small{font:500 10.5px var(--mono);letter-spacing:.06em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-jauge{display:block;height:4px;border-radius:2px;background:var(--creux);overflow:hidden;margin-top:2px}.px-jauge>i{display:block;height:100%;background:var(--acc2);border-radius:2px}
+/* catégories : un titre gravé, une grille par catégorie */
+.px-vue-categories .px-plat{gap:0}.px-vue-categories .px-titre-page{margin:18px 2px 12px}.px-vue-categories .px-titre-page:first-child{margin-top:0}

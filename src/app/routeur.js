@@ -15,7 +15,7 @@ const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
   + R.map(r => `M512 ${512 - r}L${512 + r} 512L512 ${512 + r}L${512 - r} 512Z`).join('') + '"/></svg>';
 
-export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null } = {}) {
+export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null } = {}) {
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
   // PLUSIEURS PLOXIONS VIVANTS (RS-7 12.10 : « pouvoir ouvrir des ploxions depuis des ploxions, et pouvoir minimiser un ploxion ») :
@@ -51,6 +51,15 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     };
     b.addEventListener('pointerup', lacher); b.addEventListener('pointercancel', lacher);
   }
+  // LE DROIT AU SILENCE, appliqué : ce qu'un ploxion (ou ses bions) accroche directement à la page (une bulle flottante, un panneau…)
+  // lui appartient ; caché quand il passe en arrière-plan, rendu quand on le reprend, retiré quand on le ferme. (RS-7 12.10 : un carré
+  // flottait sur l'accueil, laissé par un ploxion fermé.) Ce que l'app accroche elle-même (px-*, mk-*) et les scripts ne comptent pas.
+  const accroches = new Map();   // élément → id du ploxion
+  const ignorer = (n) => n.nodeType !== 1 || /^(SCRIPT|STYLE|LINK|META|TEMPLATE)$/.test(n.tagName) || n === racine || /(^|\s)(px|mk)-/.test(n.className || '') || n.id === 'ploxi0n';
+  if (W.MutationObserver && D.body) new W.MutationObserver((l) => {
+    for (const m of l) for (const n of m.addedNodes) if (!ignorer(n) && courant) accroches.set(n, courant.id);
+  }).observe(D.body, { childList: true });
+  function accrochesDe(id, f) { for (const [n, x] of accroches) if (x === id) f(n); }
   /** passer à l'app d'à côté : sens +1 (suivante), -1 (précédente) ; l'accueil est au bout de la file */
   function aCote(sens) {
     const file = [null, ...vivants.keys()];
@@ -110,11 +119,34 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     return '<div class="px-arriere"><span class="px-grave">en arrière-plan</span><div class="px-arriere-l">' + l.map(v => { const p = parId.get(v.id) || { nom: v.id };
       return '<span class="px-vivant"><button data-reprendre="' + texte(v.id) + '"><span class="px-ic" style="--t:' + teinte(v.id) + '">' + texte(p.icone || '▣') + '</span>' + texte(p.nom || v.id) + '</button><button class="px-x" data-tuer="' + texte(v.id) + '" aria-label="fermer">✕</button></span>'; }).join('') + '</div></div>';
   }
+  // PLUSIEURS FAÇONS DE VOIR SES PLOXIONS (RS-7 12.10) : grille (dossiers et pages) · compacte · liste · usage (ses heures) · récents ·
+  // catégories. Gardée dans « reglages/accueil ».vue. Hors grille et compacte, tout est à plat (dossiers et pages ignorés, pas perdus).
+  const VUES_ACCUEIL = [['grille', '▦', 'grille'], ['compacte', '▪', 'compacte'], ['liste', '☰', 'liste'], ['usage', '⏱', 'usage'], ['recents', '↺', 'récents'], ['categories', '◫', 'catégories']];
+  const duree = (s) => !s ? '' : s < 3600 ? Math.max(1, Math.round(s / 60)) + ' min' : (Math.round(s / 360) / 10).toLocaleString('fr-CH') + ' h';
+  const ilYa = (t) => { if (!t) return 'jamais ouvert'; const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'à l\'instant' : m < 60 ? 'il y a ' + m + ' min' : m < 1440 ? 'il y a ' + Math.round(m / 60) + ' h' : 'il y a ' + Math.round(m / 1440) + ' j'; };
+  const ligne = (p, meta, part) => '<button class="px-ligne" data-id="' + texte(p.id) + '"><span class="px-ic" style="--t:' + teinte(p.id) + '">' + texte(p.icone || '▣') + '</span><span class="px-ligne-t"><b>' + (verrous.has(p.id) ? '🔒 ' : '') + texte(p.nom || p.id) + '</b><small>' + texte(meta || '') + '</small>'
+    + (part != null ? '<i class="px-jauge"><i style="width:' + Math.round(part * 100) + '%"></i></i>' : '') + '</span></button>';
+  function dock() {
+    return '<nav class="px-dock px-hud px-visiere"><span class="px-hud-c">' + (hud ? hud.html() : '') + '</span></nav>';
+  }
+  async function aPlat(vue, tous) {
+    const u = vue === 'usage' || vue === 'recents' ? (((usage && await usage().catch(() => null)) || {}).px || {}) : {};
+    if (vue === 'liste') return [...tous].sort((a, b) => String(a.nom).localeCompare(String(b.nom))).map(p => ligne(p, p.categorie || '')).join('');
+    if (vue === 'usage') {
+      const l = [...tous].sort((a, b) => ((u[b.id] || {}).seconds || 0) - ((u[a.id] || {}).seconds || 0) || String(a.nom).localeCompare(String(b.nom)));
+      const max = Math.max(1, ...l.map(p => (u[p.id] || {}).seconds || 0));
+      return l.map(p => { const x = u[p.id] || {}; return ligne(p, x.seconds ? duree(x.seconds) + ' · ' + (x.opens || 0) + ' ouverture' + ((x.opens || 0) > 1 ? 's' : '') : '😴 zéro heure', (x.seconds || 0) / max); }).join('');
+    }
+    if (vue === 'recents') return [...tous].sort((a, b) => ((u[b.id] || {}).lastAt || 0) - ((u[a.id] || {}).lastAt || 0)).map(p => ligne(p, ilYa((u[p.id] || {}).lastAt))).join('');
+    const groupes = new Map(); for (const p of tous) { const k = p.categorie || 'Autres'; if (!groupes.has(k)) groupes.set(k, { icone: p.cat_icone || '📦', l: [] }); groupes.get(k).l.push(p); }
+    return [...groupes.entries()].sort((a, b) => b[1].l.length - a[1].l.length).map(([k, g]) => '<h2 class="px-titre-page">' + texte(g.icone + ' ' + k) + ' · ' + g.l.length + '</h2><div class="px-grille px-cat">' + g.l.map(tuile).join('') + '</div>').join('');
+  }
   async function accueil() {
     fermer();
     vueAccueil();
     await pret;
     const tous = [...parId.values()];
+    const vue = VUES_ACCUEIL.some(v => v[0] === accueilDoc.vue) ? accueilDoc.vue : 'grille';
     if (dossierOuvert !== null && accueilDoc.dossiers[dossierOuvert]) {
       const d = accueilDoc.dossiers[dossierOuvert];
       ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-sortir aria-label="retour">‹</button><span>📁 ' + texte(d.nom) + '</span></div><div class="px-grille px-pad">'
@@ -129,13 +161,17 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     ];
     const noms = ['accueil', ...accueilDoc.pages.map(pg => pg.nom)];
     pageCourante = Math.min(pageCourante, pages.length - 1);
-    ecran.innerHTML = '<div class="px-accueil"><header class="px-tete"><h1>' + LOGO + '<b>ploxi0n</b></h1><button class="px-modif" data-edition>' + (edition ? 'terminé' : '✎') + '</button></header>'
-      + '<div class="px-hud px-visiere"><span class="px-hud-c">' + (hud ? hud.html() : '') + '</span></div>'
+    const vues = '<div class="px-vues">' + VUES_ACCUEIL.map(([k, i, n]) => '<button data-vue-accueil="' + k + '"' + (k === vue ? ' class="on"' : '') + '>' + i + ' ' + n + '</button>').join('') + '</div>';
+    const plat = vue !== 'grille' && vue !== 'compacte';
+    ecran.innerHTML = '<div class="px-accueil px-vue-' + vue + '"><header class="px-tete"><h1>' + LOGO + '<b>ploxi0n</b></h1><button class="px-modif" data-edition>' + (edition ? 'terminé' : '✎') + '</button></header>'
       + arriere()
       + '<p class="px-sous px-grave">' + (edition ? 'Touche un ploxion : le ranger dans un dossier, sur une page, ou l\'ajouter à l\'écran d\'accueil de l\'iPhone.' : ('◇ cycle ' + (new Date().getFullYear() + 5000) + ' · ' + tous.length + ' ploxions · hors ligne')) + '</p>'
-      + '<div class="px-pages">' + pages.map((h, i) => '<section class="px-page" data-page="' + i + '">' + (i ? '<h2 class="px-titre-page">' + texte(noms[i]) + '</h2>' : '') + '<div class="px-grille">' + (h || '<p class="px-sous">page vide</p>') + '</div></section>').join('') + '</div>'
-      + (pages.length > 1 ? '<div class="px-points">' + pages.map((_, i) => '<button class="px-point' + (i === pageCourante ? ' on' : '') + '" data-aller="' + i + '" aria-label="' + texte(noms[i]) + '"></button>').join('') + '</div>' : '') + '</div>';
+      + vues
+      + (plat ? '<div class="px-plat">' + await aPlat(vue, tous) + '</div></div>' + dock() : '')
+      + (plat ? '' : '<div class="px-pages">' + pages.map((h, i) => '<section class="px-page" data-page="' + i + '">' + (i ? '<h2 class="px-titre-page">' + texte(noms[i]) + '</h2>' : '') + '<div class="px-grille">' + (h || '<p class="px-sous">page vide</p>') + '</div></section>').join('') + '</div>'
+      + (pages.length > 1 ? '<div class="px-points">' + pages.map((_, i) => '<button class="px-point' + (i === pageCourante ? ' on' : '') + '" data-aller="' + i + '" aria-label="' + texte(noms[i]) + '"></button>').join('') + '</div>' : '') + '</div>' + dock());
     const conteneur = racine.querySelector('.px-pages');
+    if (!conteneur) return;
     if (pageCourante && conteneur.children[pageCourante]) conteneur.scrollLeft = conteneur.children[pageCourante].offsetLeft;
     conteneur.addEventListener('scroll', () => {
       const i = Math.round(conteneur.scrollLeft / Math.max(1, conteneur.clientWidth)); if (i === pageCourante) return;
@@ -177,6 +213,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (b.hasAttribute('data-chercher')) return ouvrir('marketplace', { chercher: '1' });
     if (b.hasAttribute('data-hud-px')) return ouvrir(b.getAttribute('data-hud-px'));
     if (b.hasAttribute('data-edition')) { edition = !edition; return accueil(); }
+    if (b.hasAttribute('data-vue-accueil')) { accueilDoc.vue = b.getAttribute('data-vue-accueil'); garder(); return accueil(); }
     if (b.hasAttribute('data-sortir')) { dossierOuvert = null; return accueil(); }
     if (b.hasAttribute('data-dossier')) { dossierOuvert = +b.getAttribute('data-dossier'); return accueil(); }
     if (b.hasAttribute('data-retour')) return retour();
@@ -196,13 +233,14 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (surUsage && v && v.debut) { const sec = Math.min(4 * 3600, Math.round((Date.now() - v.debut) / 1000)); if (sec > 0) surUsage(v.id, sec); }
     if (v) v.debut = 0;
   }
-  function cacher(v) { if (!v) return; compter(v); v.hote.hidden = true; v.vu = Date.now(); }
+  function cacher(v) { if (!v) return; compter(v); v.hote.hidden = true; v.vu = Date.now(); accrochesDe(v.id, n => { if (!n.hasAttribute('data-px-cache')) { n.setAttribute('data-px-cache', n.style.display || ''); n.style.display = 'none'; } }); }
   function tuer(id) {
     const v = vivants.get(id); if (!v) return;
     if (v === courant) { compter(v); courant = null; }
     vivants.delete(id); pile = pile.filter(x => x !== id);
     try { if (v.inst && typeof v.inst.unmount === 'function') v.inst.unmount(); } catch (e) { console.warn('[ploxi0n] unmount', id, e); }
     v.hote.innerHTML = ''; v.hote.remove(); majBords();
+    accrochesDe(id, n => { accroches.delete(n); try { n.remove(); } catch (e) { /* */ } });
   }
   function barre(p, id) {
     const autres = vivants.size - 1;
@@ -222,6 +260,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   function montrer(v) {
     for (const x of vivants.values()) if (x !== v) x.hote.hidden = true;
     v.hote.hidden = false; v.debut = Date.now(); v.vu = Date.now(); courant = v; majBords();
+    accrochesDe(v.id, n => { if (n.hasAttribute('data-px-cache')) { n.style.display = n.getAttribute('data-px-cache'); n.removeAttribute('data-px-cache'); } });
     racine.classList.add('px-mode-ploxion'); racine.classList.remove('px-mode-accueil');
     barre(parId.get(v.id) || { nom: v.id }, v.id);
     try { W.history.replaceState(null, '', '#/' + encodeURIComponent(v.id)); } catch (er) { /* */ }
