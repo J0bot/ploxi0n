@@ -9,8 +9,9 @@ import { creerDepot, creerHttp } from './marketplace/depot.js';
 import { enregistrerMarketplace } from './marketplace/marketplace.js';
 import { enregistrerXerEnLigne } from './app/xer-en-ligne.js';
 import { brancherLiens } from './natif/liens.js';
+import { creerRaccourcis } from './natif/raccourcis.js';
 
-const VERSION = '0.4.0';
+const VERSION = '0.5.0';
 
 async function demarrer() {
   const racine = document.getElementById('ploxi0n');
@@ -28,15 +29,25 @@ async function demarrer() {
     enregistrerXerEnLigne({}),
     enregistrerBanc({ boxion, version: VERSION }),
   ];
+  let raccourcis = null;
   async function majAccueil() {
     const installes = await depot.installes();
-    routeur.majCatalogue([...installes.map(p => ({ id: p.id, nom: p.nom, icone: p.icone })), ...internes]);
+    const liste = [...installes.map(p => ({ id: p.id, nom: p.nom, icone: p.icone })), ...internes];
+    routeur.majCatalogue(liste);
+    if (raccourcis) raccourcis.publier(liste).catch(() => {});   // l'app Raccourcis et Siri proposent les ploxions installés
   }
   routeur = creerRouteur({ racine, catalogue: internes, boxion, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id) });
   await majAccueil();
   window.ploxi0n = { boxion, shim, routeur, depot, version: VERSION };
   brancherLiens({ routeur });
+  raccourcis = creerRaccourcis({ routeur, boxion });
+  await majAccueil();
   const id = decodeURIComponent((location.hash.match(/^#\/(.+)$/) || [])[1] || '');
   if (id && routeur.connait(id)) routeur.ouvrir(id); else routeur.accueil();
+  // un raccourci (Siri, l'app Raccourcis, une automatisation) a pu demander un ploxion ou noter un tsoin
+  raccourcis.recevoir().catch(() => {});
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    import('@capacitor/app').then(({ App }) => App.addListener('appStateChange', (e) => { if (e.isActive) raccourcis.recevoir().catch(() => {}); })).catch(() => {});
+  }
 }
 demarrer().catch((e) => { document.getElementById('ploxi0n').innerHTML = '<p class="px-erreur">ploxi0n n\'a pas pu démarrer : ' + String(e && e.message).replace(/[<&]/g, '') + '</p>'; });

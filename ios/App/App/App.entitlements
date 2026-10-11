@@ -23,5 +23,10 @@
 	<array>
 		<string>group.ch.j0bot.ploxi0n</string>
 	</array>
+	<!-- Sign in with Apple : un compte bion (le serveur du labo vérifie le jeton d'Apple) -->
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
 </dict>
 </plist>
