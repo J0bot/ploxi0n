@@ -34,3 +34,4 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:15px s
 .px-tiroir button{min-height:48px;border-radius:12px;border:1px solid #22324f;background:#111b2e;color:inherit;font:16px system-ui;text-align:left;padding:0 14px}.px-tiroir button:last-child{text-align:center;background:none}
 .px-ft{display:flex;align-items:center;gap:10px;margin:2px 0 6px;font-weight:600}
 .px-etapes{margin:2px 0 4px;padding-left:22px;color:var(--muted);line-height:1.5;font-size:.9rem}.px-etapes b{color:var(--txt)}
+.px-h-b{min-width:34px;min-height:34px;border-radius:999px;border:1px solid var(--bord);background:transparent;color:inherit;font-size:1rem;padding:0 8px}.px-h-ic{font:600 12px system-ui;color:var(--muted);white-space:nowrap}

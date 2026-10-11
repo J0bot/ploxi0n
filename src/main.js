@@ -13,8 +13,9 @@ import { creerRaccourcis } from './natif/raccourcis.js';
 import { creerCompte } from './natif/compte.js';
 import { creerEcranAccueil } from './natif/ecran-accueil.js';
 import { creerHud } from './app/hud.js';
+import { enregistrerReglages } from './app/reglages.js';
 
-const VERSION = '0.8.0';
+const VERSION = '0.9.0';
 
 async function demarrer() {
   const racine = document.getElementById('ploxi0n');
@@ -70,7 +71,11 @@ async function demarrer() {
   }
   const compte = creerCompte({ boxion, http: creerHttp(window) });
   await compte.pret;
-  const hud = creerHud({ compte });
+  const reglerModeConnecte = (v) => { if (v != null) { modeConnecte = !!v; boxion.put('reglages', 'mode-connecte', modeConnecte); } return modeConnecte; };
+  const hud = creerHud({ compte, boxion, trouver: (id) => routeur && routeur.catalogue().find(p => p.id === id), modeConnecte: () => modeConnecte });
+  await hud.pret;
+  // ⚙ les réglages : un ploxion interne, au bout du ⚙ de l'accueil (jamais retirable)
+  internes.push(enregistrerReglages({ compte, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, version: VERSION }));
   // le vecteur xerion de ce téléphone : le temps passé par ploxion (même forme que jOSUsage du labo : { px: { id: { opens, seconds, lastAt } } })
   async function surUsage(id, sec) {
     const u = (await boxion.get('usage', 'stats')) || { px: {} };
@@ -82,7 +87,10 @@ async function demarrer() {
   const ecranAccueil = creerEcranAccueil({ trouver: (id) => routeur.catalogue().find(p => p.id === id) });
   window.jOSEcranAccueil = ecranAccueil;
   routeur = creerRouteur({ racine, catalogue: internes, boxion, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id), hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}) });
-  compte.surChangement(() => { if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); });
+  const rafraichir = () => { if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); };
+  compte.surChangement(rafraichir);
+  hud.surChangement(() => routeur.rafraichirHud());
+  window.addEventListener('online', () => routeur.rafraichirHud()); window.addEventListener('offline', () => routeur.rafraichirHud());
   await majAccueil();
   // jOSApps.monter / peut, comme dans le labo : un ploxion en monte un autre dans un coin (fill the gaps, les « ultimate »). Démontable.
   window.jOSApps.peut = (id) => routeur.connait(id);
@@ -92,7 +100,7 @@ async function demarrer() {
       .catch(e => { if (hote) hote.textContent = '⚠ « ' + id + ' » indisponible : ' + (e && e.message); });
     return { ready: pret, unmount() { mort = true; if (inst && inst.unmount) { try { inst.unmount(); } catch (e) { /* */ } } inst = null; } };
   };
-  window.ploxi0n = { boxion, shim, routeur, depot, compte, version: VERSION, modeConnecte: (v) => { if (v != null) { modeConnecte = !!v; boxion.put('reglages', 'mode-connecte', modeConnecte); } return modeConnecte; } };
+  window.ploxi0n = { boxion, shim, routeur, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte };
   brancherLiens({ routeur, compte });
   raccourcis = creerRaccourcis({ routeur, boxion });
   await majAccueil();

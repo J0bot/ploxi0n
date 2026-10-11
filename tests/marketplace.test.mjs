@@ -183,3 +183,49 @@ test('dépendances 0.8 : les bions TOUCHÉS (non déclarés) aussi, récursiveme
   assert.equal(demandes.length, n, 'les bions déjà là ne se retéléchargent pas');
   assert.deepEqual(await d.completerBions(), [], 'idempotent');
 });
+
+test('⚙ réglages et HUD composé : éléments, ordre, épinglés, ⚙ toujours sur l\'accueil, mode connecté, verrous', async () => {
+  const { creerHud } = await import('../src/app/hud.js');
+  const { enregistrerReglages } = await import('../src/app/reglages.js');
+  const { creerRouteur } = await import('../src/app/routeur.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    const boxion = p.boxion; let mc = true;
+    const compte = { etat: () => ({ connecte: false }), surChangement: () => () => {}, connecter: async () => {}, deconnecter: async () => {} };
+    let routeur = null;
+    const hud = creerHud({ W, compte, boxion, trouver: (id) => routeur.catalogue().find(x => x.id === id), modeConnecte: () => mc });
+    await hud.pret;
+    const depot = { completerBions: async () => [], aJour: async () => [] };
+    const reg = enregistrerReglages({ W, compte, hud, routeur: () => routeur, depot, boxion, modeConnecte: (v) => { if (v != null) mc = v; return mc; }, version: 't' });
+    const racine = W.document.createElement('div'); W.document.body.appendChild(racine);
+    routeur = creerRouteur({ fenetre: W, racine, catalogue: [reg, { id: 'pomo', nom: 'Pomodoro', icone: '🍅' }], boxion, hud });
+    hud.surChangement(() => routeur.rafraichirHud());
+    await routeur.accueil();
+    assert.ok(racine.querySelector('.px-hud [data-reglages]'), '⚙ sur l\'accueil');
+    racine.querySelector('[data-reglages]').click(); await attendre(40);
+    assert.equal(routeur.courant(), 'reglages-app');
+    const h = racine.querySelector('.px-hote');
+    assert.ok(racine.querySelector('.px-barre [data-compte]'), 'le HUD compact dans la barre');
+    // épingler pomo → il apparaît dans le HUD
+    h.querySelector('[data-pin="pomo"]').click(); await attendre(30);
+    assert.deepEqual((await boxion.get('reglages', 'hud')).epingles, ['pomo']);
+    assert.ok(racine.querySelector('.px-barre [data-hud-px="pomo"]'), 'épinglé dans le HUD');
+    // l'heure allumée, puis montée en tête
+    const iHeure = hud.config().elements.findIndex(x => x.k === 'heure');
+    const cb = h.querySelector('[data-el="' + iHeure + '"]'); cb.checked = true; cb.dispatchEvent(new W.Event('change', { bubbles: true })); await attendre(30);
+    assert.ok(racine.querySelector('.px-barre .px-heure'));
+    for (let i = hud.config().elements.findIndex(x => x.k === 'heure'); i > 0; i--) { h.querySelector('[data-monter="' + i + '"]').click(); await attendre(20); }
+    assert.equal(hud.config().elements[0].k, 'heure');
+    // tout éteindre : le ⚙ reste sur l'accueil
+    for (let i = 0; i < 5; i++) { const c = h.querySelector('[data-el="' + i + '"]'); if (c.checked) { c.checked = false; c.dispatchEvent(new W.Event('change', { bubbles: true })); await attendre(20); } }
+    await routeur.accueil();
+    assert.equal(racine.querySelector('.px-hud-c').querySelectorAll('button,span').length, 1); assert.ok(racine.querySelector('[data-reglages]'), 'on ne s\'enferme jamais dehors');
+    // le mode connecté
+    racine.querySelector('[data-reglages]').click(); await attendre(40);
+    const m = racine.querySelector('[data-t="mode"]'); m.checked = false; m.dispatchEvent(new W.Event('change', { bubbles: true })); await attendre(20);
+    assert.equal(mc, false);
+    // une configuration reprise d'un ancien format, ou abîmée, se répare
+    await hud.regler({ elements: [{ k: 'inconnu', on: true }, { k: 'compte', on: true }, { k: 'compte', on: false }], epingles: ['a', 'b', 'c', 'd', 'e', 3] });
+    assert.deepEqual(hud.config().elements.map(x => x.k), ['compte', 'reseau', 'heure', 'chercher', 'epingles']); assert.equal(hud.config().epingles.length, 4);
+  } finally { p.fin(); }
+});

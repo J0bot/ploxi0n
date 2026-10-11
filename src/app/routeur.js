@@ -74,7 +74,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     ];
     const noms = ['accueil', ...accueilDoc.pages.map(pg => pg.nom)];
     pageCourante = Math.min(pageCourante, pages.length - 1);
-    racine.innerHTML = '<div class="px-accueil"><h1>' + LOGO + 'ploxi0n<span class="px-hud">' + (hud ? hud.html() : '') + '<button class="px-modif" data-edition>' + (edition ? 'terminé' : '✎') + '</button></span></h1>'
+    racine.innerHTML = '<div class="px-accueil"><h1>' + LOGO + 'ploxi0n<span class="px-hud"><span class="px-hud-c">' + (hud ? hud.html() : '') + '</span><button class="px-modif" data-edition>' + (edition ? 'terminé' : '✎') + '</button></span></h1>'
       + '<p class="px-sous">' + (edition ? 'Touche un ploxion : le ranger dans un dossier, sur une page, ou l\'ajouter à l\'écran d\'accueil de l\'iPhone.' : 'tes ploxions, sur ton téléphone, même sans réseau') + '</p>'
       + '<div class="px-pages">' + pages.map((h, i) => '<section class="px-page" data-page="' + i + '">' + (i ? '<h2 class="px-titre-page">' + texte(noms[i]) + '</h2>' : '') + '<div class="px-grille">' + (h || '<p class="px-sous">page vide</p>') + '</div></section>').join('') + '</div>'
       + (pages.length > 1 ? '<div class="px-points">' + pages.map((_, i) => '<button class="px-point' + (i === pageCourante ? ' on' : '') + '" data-aller="' + i + '" aria-label="' + texte(noms[i]) + '"></button>').join('') + '</div>' : '') + '</div>';
@@ -116,6 +116,9 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   racine.addEventListener('click', async (e) => {
     const b = e.target.closest('button'); if (!b || !racine.contains(b) || b.closest('.px-hote') || b.closest('.px-voile')) return;
     if (b.hasAttribute('data-compte')) { if (hud) hud.ouvrir(); return; }
+    if (b.hasAttribute('data-reglages')) return ouvrir('reglages-app');
+    if (b.hasAttribute('data-chercher')) return ouvrir('marketplace', { chercher: '1' });
+    if (b.hasAttribute('data-hud-px')) return ouvrir(b.getAttribute('data-hud-px'));
     if (b.hasAttribute('data-edition')) { edition = !edition; return accueil(); }
     if (b.hasAttribute('data-sortir')) { dossierOuvert = null; return accueil(); }
     if (b.hasAttribute('data-dossier')) { dossierOuvert = +b.getAttribute('data-dossier'); return accueil(); }
@@ -136,7 +139,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
       return false;
     }
     racine.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">‹</button><span>' + texte((p.icone || '') + ' ' + (p.nom || id)) + '</span>'
-      + '<span class="px-hud">' + (hud ? hud.html(true) : '') + (verrou && !p.interne ? '<button class="px-verrou" data-verrou aria-label="verrou Face ID">' + (verrous.has(id) ? '🔒' : '🔓') + '</button>' : '') + '</span></div><div class="px-hote"></div>';
+      + '<span class="px-hud"><span class="px-hud-c">' + (hud ? hud.html(true) : '') + '</span>' + (verrou && !p.interne ? '<button class="px-verrou" data-verrou aria-label="verrou Face ID">' + (verrous.has(id) ? '🔒' : '🔓') + '</button>' : '') + '</span></div><div class="px-hote"></div>';
     const bv = racine.querySelector('[data-verrou]');
     if (bv) bv.onclick = async (e) => {
       e.stopPropagation();
@@ -169,7 +172,12 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     accueil, ouvrir, fermer, charger,
     connait: (id) => parId.has(id), courant: () => (courant ? courant.id : null),
     majCatalogue(liste) { parId = new Map(liste.map(p => [p.id, p])); },
-    rafraichirHud() { racine.querySelectorAll('.px-hud [data-compte]').forEach(b => { const t = D.createElement('div'); t.innerHTML = hud ? hud.html(!!courant) : ''; if (t.firstElementChild) b.replaceWith(t.firstElementChild); }); },
+    rafraichirHud() { racine.querySelectorAll('.px-hud-c').forEach(c => { c.innerHTML = hud ? hud.html(!!courant) : ''; }); },
     catalogue: () => [...parId.values()],
+    verrous: () => [...verrous],
+    /** retirer un verrou Face ID (il faut le visage) */
+    async deverrouiller(id) { if (!verrous.has(id)) return true; if (!(verrou && await verrou.ouvrir('Retirer le verrou de ' + ((parId.get(id) || {}).nom || id)))) return false; verrous.delete(id); garder(); return true; },
+    /** l'accueil d'origine : plus de dossiers ni de pages */
+    reinitialiserAccueil() { accueilDoc = { dossiers: [], pages: [] }; pageCourante = 0; dossierOuvert = null; garder(); },
   };
 }

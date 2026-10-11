@@ -1,10 +1,25 @@
 // Le HUD du compte (RS-7 : « un bouton se connecter facilement accessible dans le HUD et l'UI ») : une pastille toujours visible, en haut de
 // l'accueil et dans la barre de chaque ploxion. Déconnecté : « Se connecter » ; connecté : le glyphe du rang et le nom. La toucher ouvre une
 // feuille : se connecter avec son compte xerboxion.org, (bientôt) continuer avec Apple, ou se déconnecter.
+// 0.9 (RS-7 : « un vrai bouton réglages, et un moyen de customiser son HUD ») : le HUD se COMPOSE (boxion_local « reglages/hud ») :
+//   elements = [{ k, on }] dans l'ordre : compte · reseau (📶/📴 + le mode connecté) · heure · chercher (le marketplace) · epingles
+//   epingles = au plus 4 ploxions, une icône chacun, ouverts d'un geste. ⚙ (les réglages) est toujours là : on ne s'enferme jamais dehors.
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-export function creerHud({ W = globalThis.window, compte }) {
+export const ELEMENTS = [['compte', '👤 compte'], ['reseau', '📶 réseau et mode connecté'], ['heure', '🕐 heure'], ['chercher', '🔎 chercher un ploxion'], ['epingles', '📌 ploxions épinglés']];
+export const HUD_DEFAUT = { elements: ELEMENTS.map(([k]) => ({ k, on: k === 'compte' || k === 'epingles' || k === 'reseau' })), epingles: [] };
+
+export function creerHud({ W = globalThis.window, compte, boxion = null, trouver = () => null, modeConnecte = () => true }) {
   const D = W.document;
+  let config = HUD_DEFAUT;
+  const abonnes = new Set();
+  const normaliser = (c) => {
+    const vus = new Set(), el = [];
+    for (const e of (c && Array.isArray(c.elements) ? c.elements : [])) if (e && ELEMENTS.some(x => x[0] === e.k) && !vus.has(e.k)) { vus.add(e.k); el.push({ k: e.k, on: !!e.on }); }
+    for (const e of HUD_DEFAUT.elements) if (!vus.has(e.k)) el.push({ ...e });
+    return { elements: el, epingles: (c && Array.isArray(c.epingles) ? c.epingles : []).filter(x => typeof x === 'string').slice(0, 4) };
+  };
+  const pret = boxion ? boxion.get('reglages', 'hud').then(c => { config = normaliser(c); }).catch(() => {}) : Promise.resolve();
   function fermer() { const f = D.querySelector('.px-feuille'); if (f) f.remove(); }
   function feuille(html, actions) {
     fermer();
@@ -18,11 +33,27 @@ export function creerHud({ W = globalThis.window, compte }) {
     });
     D.body.appendChild(f);
   }
+  function bouton(compact) {
+    const e = compte.etat();
+    if (!e.connecte) return '<button class="px-compte" data-compte>' + (compact ? '👤' : '👤 Se connecter') + '</button>';
+    return '<button class="px-compte on" data-compte title="' + esc(e.nom) + ' · ' + esc(e.palier) + '"><span class="g">' + esc(e.glyphe || '·') + '</span>' + (compact ? '' : esc(String(e.nom || '').slice(0, 14))) + '</button>';
+  }
+  const morceaux = {
+    compte: bouton,
+    reseau: () => { const en = W.navigator.onLine !== false, mc = modeConnecte(); return '<span class="px-h-ic" title="' + (en ? (mc ? 'en ligne, mode connecté' : 'en ligne, mode connecté coupé') : 'hors ligne') + '">' + (en ? (mc ? '📶' : '📶◌') : '📴') + '</span>'; },
+    heure: () => '<span class="px-h-ic px-heure">' + new Date().toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' }) + '</span>',
+    chercher: () => '<button class="px-h-b" data-chercher aria-label="chercher un ploxion">🔎</button>',
+    epingles: () => config.epingles.map(id => { const p = trouver(id); return p ? '<button class="px-h-b" data-hud-px="' + esc(id) + '" aria-label="' + esc(p.nom || id) + '">' + esc(p.icone || '▣') + '</button>' : ''; }).join(''),
+  };
   return {
-    html(compact) {
-      const e = compte.etat();
-      if (!e.connecte) return '<button class="px-compte" data-compte>' + (compact ? '👤' : '👤 Se connecter') + '</button>';
-      return '<button class="px-compte on" data-compte title="' + esc(e.nom) + ' · ' + esc(e.palier) + '"><span class="g">' + esc(e.glyphe || '·') + '</span>' + (compact ? '' : esc(String(e.nom || '').slice(0, 14))) + '</button>';
+    pret,
+    config: () => normaliser(config),
+    async regler(c) { config = normaliser(c); if (boxion) await boxion.put('reglages', 'hud', config); for (const f of abonnes) { try { f(config); } catch (e) { /* */ } } return config; },
+    surChangement(f) { abonnes.add(f); return () => abonnes.delete(f); },
+    /** compact = la barre d'un ploxion ouvert ; reglages = le bouton ⚙ (toujours sur l'accueil) */
+    html(compact, { reglages = !compact } = {}) {
+      const h = config.elements.filter(e => e.on).map(e => morceaux[e.k](compact)).join('');
+      return h + (reglages ? '<button class="px-h-b" data-reglages aria-label="réglages">⚙</button>' : '');
     },
     ouvrir() {
       const e = compte.etat();

@@ -238,6 +238,7 @@ export function enregistrerMarketplace({ W = globalThis.window, depot, surChange
       await charger(true).catch(() => {}); if (!vivant) return;
       if (!feuille && (D.activeElement !== champ || q.trim())) peindre();
       if (params.id) ouvrirFiche(String(params.id));
+      if (params.chercher) { try { champ.focus(); } catch (e) { /* */ } }
     })();
     return { ready: pret, unmount() { vivant = false; fermerFiche(); hote.innerHTML = ''; } };
   }
