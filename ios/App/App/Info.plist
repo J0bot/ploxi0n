@@ -82,5 +82,7 @@
 	<string>ploxi0n n'utilise ta position en arrière-plan que si un ploxion te le propose et que tu l'acceptes (par exemple les lieux visités) ; elle reste sur ton téléphone.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>ploxi0n n'utilise ta position en arrière-plan que si un ploxion te le propose et que tu l'acceptes ; elle reste sur ton téléphone.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

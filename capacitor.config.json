@@ -2,13 +2,18 @@
   "appId": "ch.j0bot.ploxi0n",
   "appName": "ploxi0n",
   "webDir": "dist",
-  "ios": { "contentInset": "never", "limitsNavigationsToAppBoundDomains": false },
+  "ios": {
+    "contentInset": "never",
+    "limitsNavigationsToAppBoundDomains": false
+  },
   "plugins": {
     "CapacitorSQLite": {
       "iosDatabaseLocation": "Library/CapacitorDatabase",
-      "iosIsEncryption": true,
+      "iosIsEncryption": false,
       "iosKeychainPrefix": "ploxi0n",
-      "iosBiometric": { "biometricAuth": false }
+      "iosBiometric": {
+        "biometricAuth": false
+      }
     }
   }
 }

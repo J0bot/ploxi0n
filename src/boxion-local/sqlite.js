@@ -1,4 +1,5 @@
-// boxion_local sur SQLite : iOS (brief : « impl ios → @capacitor-community/sqlite, chiffré, fichier dans le conteneur de l'app, non purgeable »).
+// boxion_local sur SQLite : iOS (brief : « impl ios → @capacitor-community/sqlite, chiffré, fichier dans le conteneur de l'app, non purgeable » ;
+// le chiffrement est celui d'iOS, la Data Protection, depuis le 11.10).
 // La logique SQL ne parle qu'à un EXÉCUTEUR { run(sql, params) → { lastId }, query(sql, params) → lignes } :
 //   - executeurCapacitor()  la base chiffrée du plugin sur l'iPhone
 //   - les tests passent le même code sur node:sqlite (tests/contrat-boxion.test.mjs)
@@ -59,19 +60,15 @@ export async function creerSqlite(ex, { horloge = () => Date.now() } = {}) {
   };
 }
 
-// l'exécuteur de l'iPhone : @capacitor-community/sqlite, base chiffrée (SQLCipher ; le secret vit dans le trousseau iOS, géré par le plugin)
-export async function executeurCapacitor({ base = 'ploxi0n-boxion' } = {}) {
+// l'exécuteur de l'iPhone : @capacitor-community/sqlite. La base n'est plus chiffrée par SQLCipher : c'est iOS qui la chiffre (Data
+// Protection « Complete », entitlement com.apple.developer.default-data-protection) dès que l'iPhone est verrouillé. Nouvelle base
+// « ploxi0n-local » : l'ancienne « ploxi0n-boxion » (chiffrée, builds 1 à 6, données de test) n'est plus ouverte.
+export async function executeurCapacitor({ base = 'ploxi0n-local' } = {}) {
   const { CapacitorSQLite, SQLiteConnection } = await import('@capacitor-community/sqlite');
   const sqlite = new SQLiteConnection(CapacitorSQLite);
-  const secret = await sqlite.isSecretStored();
-  if (!secret.result) {
-    // un secret aléatoire par installation, stocké par le plugin dans le trousseau (jamais dans le code ni dans la WebView)
-    const a = new Uint8Array(32); crypto.getRandomValues(a);
-    await sqlite.setEncryptionSecret(Array.from(a, b => b.toString(16).padStart(2, '0')).join(''));
-  }
-  const cohérent = (await sqlite.checkConnectionsConsistency()).result;
+  const coherent = (await sqlite.checkConnectionsConsistency()).result;
   const existe = (await sqlite.isConnection(base, false)).result;
-  const db = cohérent && existe ? await sqlite.retrieveConnection(base, false) : await sqlite.createConnection(base, true, 'secret', 1, false);
+  const db = coherent && existe ? await sqlite.retrieveConnection(base, false) : await sqlite.createConnection(base, false, 'no-encryption', 1, false);
   await db.open();
   return {
     async run(sql, params) { const r = await db.run(sql, params, false); return { lastId: r && r.changes ? r.changes.lastId : undefined }; },

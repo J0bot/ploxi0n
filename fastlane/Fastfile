@@ -41,7 +41,8 @@ platform :ios do
       # match : le certificat de distribution et le profil App Store sont créés UNE fois (avec la clé API), chiffrés dans le dépôt privé
       # ploxi0n-certificats, puis réutilisés ; un profil App Store n'exige aucun appareil enregistré
       match(type: "appstore", readonly: false, api_key: cle, app_identifier: APP_ID, git_url: ENV["MATCH_GIT_URL"],
-            team_id: ENV["APPLE_TEAM_ID"], keychain_name: ENV["MATCH_KEYCHAIN_NAME"])
+            team_id: ENV["APPLE_TEAM_ID"], keychain_name: ENV["MATCH_KEYCHAIN_NAME"],
+            force: ENV["MATCH_FORCE"] == "true")   # MATCH_FORCE : régénérer le profil quand les capabilities de l'identifiant changent
       profil = ENV["sigh_#{APP_ID}_appstore_profile-name"]
       update_code_signing_settings(path: PROJET, use_automatic_signing: false, team_id: ENV["APPLE_TEAM_ID"], targets: ["App"],
                                    code_sign_identity: "Apple Distribution", profile_name: profil, build_configurations: ["Release"])

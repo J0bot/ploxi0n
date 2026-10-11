@@ -9,6 +9,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      regenerer_profil: { description: 'régénérer le profil de signature (après un changement de capabilities)', type: boolean, default: false }
 concurrency:
   group: ios-testflight
   cancel-in-progress: true
@@ -55,6 +57,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           TESTFLIGHT_EMAIL: ${{ secrets.TESTFLIGHT_EMAIL }}
+          MATCH_FORCE: ${{ inputs.regenerer_profil }}
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: build-logs, path: ~/Library/Logs/gym, if-no-files-found: ignore }
