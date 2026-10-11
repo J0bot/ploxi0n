@@ -36,3 +36,24 @@
 9. **Un ploxion = une icône sur l'écran d'accueil.** iOS ne laisse pas une app poser elle-même plusieurs icônes. La voie qui marche : pour chaque ploxion, un raccourci (app Raccourcis) avec SON icône et son nom, qui ouvre `ploxi0n://px/<id>` ou le lien universel `https://xerboxion.org/px/<id>` ; ploxi0n prépare l'icône et guide en deux gestes. À l'écran, ça ressemble à une app par ploxion ; derrière, c'est le même ploxi0n, les mêmes données, hors ligne. (Plus tard, des App Clips pour quelques ploxions phares.)
 10. **L'icône qui évolue avec le rang** : iOS permet de changer l'icône de l'app (icônes alternatives, déclarées dans l'app) : bion → zion → … → xeroction, chaque palier son losange. Le nom affiché reste « ploxi0n » (iOS ne permet pas de le changer) ; c'est l'icône et l'accueil qui deviennent « l'app xeroction ».
 11. **L'app xeroction = tous les xers** : au rang xeroction (son boxion installé), l'accueil de ploxi0n montre les xers du xerboxion (thèmes, dispositions) et l'accès au Nexus.
+
+## Posé (suite) : le vrai mode xerboxion sur l'iPhone
+
+- « Toute l'interface de l'iPhone, les réglages, le son, tout manipulable avec des widgets et des fonctionnalités de l'app ploxi0n, juste en installant des ploxions ou des bions ; on peut changer toute notre interface, commander les différentes interfaces ; si on a des pages de homescreen, on peut faire nos propres customs, pour avoir le vrai mode xerboxion sur notre phone. »
+
+## Lecture : ce qu'iOS permet, et comment chaque morceau devient un ploxion ou un bion
+
+iOS isole chaque app : ploxi0n ne peut pas modifier directement les réglages du système ni ranger l'écran d'accueil. Mais iOS ouvre beaucoup de portes officielles, et chacune peut être pilotée par un ploxion ou un bion :
+
+| Porte d'iOS | Ce qu'elle permet | Devient |
+| --- | --- | --- |
+| Widgets (accueil, écran verrouillé), interactifs depuis iOS 17 | des boutons et des interrupteurs qui agissent sans ouvrir l'app | chaque ploxion ou bion publie ses widgets (une valeur, un bouton, un graphique) |
+| Contrôles du Centre de contrôle (iOS 18) | des boutons à soi dans le Centre de contrôle, sur l'écran verrouillé et le bouton Action | un bion = un contrôle (lancer un tsoin, basculer un mode, ouvrir un ploxion) |
+| App Intents (Raccourcis, Siri, Spotlight, bouton Action) | exposer les actions des ploxions au système | chaque ploxion déclare ses actions ; elles deviennent utilisables partout dans iOS |
+| L'app Raccourcis et ses automatisations | changer le fond d'écran, le mode sombre, le Wi-Fi, le Bluetooth, le volume, la luminosité, les modes de concentration, sur un déclencheur (heure, lieu, NFC, ouverture d'une app) | ploxi0n fournit des raccourcis prêts à installer ; un ploxion « interface » les compose |
+| Modes de concentration (Focus) et leurs pages d'accueil | choisir quelles pages d'écran d'accueil s'affichent selon le mode | un « xer » = un mode de concentration avec SES pages d'accueil (les icônes de ploxions) ; changer de xer = changer de mode |
+| Filtres de concentration (Focus Filter) | l'app s'adapte au mode actif | ploxi0n change son accueil et son thème selon le xer actif |
+| Live Activities et Dynamic Island | une activité vivante (minuteur, tsoin en cours, musique) | un ploxion publie son activité vivante |
+| Dans l'app | luminosité de l'écran, sons, vibrations, plein écran, orientation | des bions du shim (jOSAppareil, jOSSon…) |
+
+Le vrai mode xerboxion = des pages d'écran d'accueil faites d'icônes de ploxions et de widgets de bions, un mode de concentration par xer, des contrôles et des raccourcis qui pilotent le système. Le tout installé depuis le marketplace, comme un ploxion.
