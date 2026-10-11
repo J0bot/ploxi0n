@@ -5,5 +5,23 @@
 	<!-- Data Protection « Complete » : les fichiers de l'app (dont la base boxion_local) sont chiffrés par iOS quand l'iPhone est verrouillé -->
 	<key>com.apple.developer.default-data-protection</key>
 	<string>NSFileProtectionComplete</string>
+	<!-- HealthKit (lecture, sur accord) -->
+	<key>com.apple.developer.healthkit</key>
+	<true/>
+	<key>com.apple.developer.healthkit.access</key>
+	<array/>
+	<!-- NFC : lire des tags -->
+	<key>com.apple.developer.nfc.readersession.formats</key>
+	<array>
+		<string>TAG</string>
+	</array>
+	<!-- le nom du réseau Wi-Fi -->
+	<key>com.apple.developer.networking.wifi-info</key>
+	<true/>
+	<!-- App Groups : l'app et ses widgets partagent leurs données -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.ch.j0bot.ploxi0n</string>
+	</array>
 </dict>
 </plist>

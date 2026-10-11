@@ -84,5 +84,17 @@
 	<string>ploxi0n n'utilise ta position en arrière-plan que si un ploxion te le propose et que tu l'acceptes ; elle reste sur ton téléphone.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>ploxi0n utilise le Bluetooth pour voir et piloter les appareils autour de toi (capteurs, lumières, robots) quand un ploxion te le propose.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>ploxi0n lit les données Santé que tu autorises (pas, sommeil, rythme) pour tes ploxions santé ; elles restent sur ton téléphone.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>ploxi0n n'écrit dans Santé que ce que tu lui demandes d'enregistrer.</string>
+	<key>NFCReaderUsageDescription</key>
+	<string>ploxi0n lit les tags NFC que tu approches, pour les ploxions qui s'en servent.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
+	</array>
 </dict>
 </plist>

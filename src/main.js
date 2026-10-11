@@ -4,7 +4,7 @@ import { installerShim } from './shim/jos.js';
 import { creerRouteur } from './app/routeur.js';
 import { enregistrerBanc } from './banc/banc.js';
 
-const VERSION = '0.2.0';
+const VERSION = '0.3.0';
 
 async function demarrer() {
   const racine = document.getElementById('ploxi0n');

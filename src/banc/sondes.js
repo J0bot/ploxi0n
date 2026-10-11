@@ -234,6 +234,75 @@ export function sondes(W) {
     existe(W, 'navigator.serial', 'Port série'),
     { id: 'sys-midi', groupe: 'système', nom: 'MIDI (claviers, contrôleurs)', quand: 'auto', fn: () => (N.requestMIDIAccess ? ok('Web MIDI') : non()) },
 
+    // ---- banc v2 : les capabilities natives (11.10) --------------------------------------------------------------------------------------------
+    { id: 'nat-bluetooth', groupe: 'natif', nom: 'Bluetooth LE : appareils autour (ultimate-bluetooth)', quand: 'toucher', fn: async (c) => {
+      if (!c.natif()) return non('natif seulement');
+      const { BleClient } = await c.plugin('bluetooth-le');
+      await BleClient.initialize({ androidNeverForLocation: true });
+      const vus = new Map();
+      await BleClient.requestLEScan({ allowDuplicates: false }, (r) => { vus.set(r.device.deviceId, (r.localName || r.device.name || '?') + (r.rssi != null ? ' ' + r.rssi + ' dBm' : '')); });
+      await new Promise(r => setTimeout(r, 5000)); await BleClient.stopLEScan();
+      return vus.size ? ok(`${vus.size} appareils en 5 s : ${[...vus.values()].slice(0, 6).join(' · ')}`) : partiel('aucun appareil en 5 s');
+    } },
+    { id: 'nat-sante', groupe: 'natif', nom: 'HealthKit : pas du jour et sommeil (lecture seule)', quand: 'toucher', fn: async (c) => {
+      if (!c.natif()) return non('natif seulement');
+      const { Health } = await c.plugin('health');
+      const dispo = await Health.isAvailable(); if (!dispo.available) return non(dispo.reason || 'HealthKit indisponible');
+      await Health.requestAuthorization({ read: ['steps', 'heartRate', 'sleep'] });
+      const debut = new Date(); debut.setHours(0, 0, 0, 0);
+      const a = await Health.queryAggregated({ dataType: 'steps', startDate: debut.toISOString(), endDate: new Date().toISOString(), bucket: 'day', aggregation: 'sum' });
+      const pas = (a.samples || []).reduce((t, x) => t + (x.value ?? (x.values && x.values.sum) ?? 0), 0);
+      return ok(`${Math.round(pas)} pas aujourd'hui (Apple Santé ne dit pas si la lecture est refusée : 0 peut vouloir dire « refusé »)`);
+    } },
+    { id: 'nat-nfc', groupe: 'natif', nom: 'NFC : lire un tag (approche un tag NFC du haut de l\'iPhone)', quand: 'toucher', fn: async (c) => {
+      if (!c.natif()) return non('natif seulement');
+      const { CapacitorNfc } = await c.plugin('nfc');
+      const sup = await CapacitorNfc.isSupported(); if (!sup.supported) return non('NFC non supporté');
+      return new Promise(async (res) => {
+        const h = []; const fin = (r) => { h.forEach(x => x.remove()); CapacitorNfc.stopScanning().catch(() => {}); res(r); };
+        h.push(await CapacitorNfc.addListener('nfcEvent', (e) => fin(ok('tag lu : ' + JSON.stringify(e.tag || e).slice(0, 140)))));
+        h.push(await CapacitorNfc.addListener('nfcSessionEnd', () => fin(partiel('session fermée sans tag'))));
+        await CapacitorNfc.startScanning({ alertMessage: 'Approche un tag NFC du haut de l\'iPhone' });
+        setTimeout(() => fin(partiel('aucun tag en 30 s')), 30000);
+      });
+    } },
+    { id: 'nat-wifi', groupe: 'natif', nom: 'Nom du réseau Wi-Fi (demande la position)', quand: 'toucher', fn: async (c) => {
+      if (!c.natif()) return non('natif seulement');
+      const { Geolocation } = await c.plugin('geolocation'); await Geolocation.requestPermissions();
+      const { CapacitorWifi } = await c.plugin('wifi');
+      const r = await CapacitorWifi.getSsid(); return r && r.ssid ? ok('réseau : ' + r.ssid) : partiel('pas de Wi-Fi (ou nom masqué)');
+    } },
+    { id: 'nat-voix', groupe: 'natif', nom: 'Voix native (synthèse iOS)', quand: 'toucher', fn: async (c) => {
+      if (!c.natif()) return non('natif seulement');
+      const { TextToSpeech } = await c.plugin('text-to-speech');
+      const l = (await TextToSpeech.getSupportedLanguages()).languages || [];
+      await TextToSpeech.speak({ text: 'ploxi0n parle, même sans réseau.', lang: 'fr-FR', rate: 1.0 });
+      return ok(`${l.filter(x => /^fr/.test(x)).length} langues françaises sur ${l.length}`);
+    } },
+    { id: 'nat-raccourcis', groupe: 'natif', nom: 'Raccourcis sur l\'icône (appui long sur ploxi0n)', quand: 'toucher', fn: async (c) => {
+      if (!c.natif()) return non('natif seulement');
+      const { AppShortcuts } = await c.plugin('app-shortcuts');
+      await AppShortcuts.set({ shortcuts: [{ id: 'banc', title: 'Banc iPhone', description: 'tester l\'appareil' }, { id: 'accueil', title: 'Mes ploxions', description: 'l\'accueil' }] });
+      return ok('posés : appuie longuement sur l\'icône de ploxi0n');
+    } },
+    { id: 'nat-qr', groupe: 'natif', nom: 'Lire un QR code (caméra + jsQR, hors ligne)', quand: 'toucher', fn: async (c) => {
+      const N = W.navigator; if (!N.mediaDevices || !N.mediaDevices.getUserMedia) return non();
+      const jsQR = (await c.plugin('jsqr')).default;
+      const flux = await N.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      const v = W.document.createElement('video'); v.playsInline = true; v.muted = true; v.srcObject = flux; await v.play();
+      const cv = W.document.createElement('canvas'), g = cv.getContext('2d', { willReadFrequently: true });
+      const t0 = Date.now();
+      try {
+        while (Date.now() - t0 < 15000) {
+          await new Promise(r => setTimeout(r, 200));
+          cv.width = v.videoWidth; cv.height = v.videoHeight; if (!cv.width) continue;
+          g.drawImage(v, 0, 0); const img = g.getImageData(0, 0, cv.width, cv.height);
+          const code = jsQR(img.data, img.width, img.height); if (code) return ok('QR : ' + code.data.slice(0, 140));
+        }
+        return partiel('aucun QR vu en 15 s (vise un QR code avec la caméra arrière)');
+      } finally { flux.getTracks().forEach(x => x.stop()); }
+    } },
+    { id: 'nat-protection', groupe: 'natif', nom: 'Data Protection (base chiffrée par iOS)', quand: 'auto', fn: async (c) => (c.natif() ? ok('entitlement « Complete » : boxion_local est chiffré quand l\'iPhone est verrouillé') : non('natif seulement')) },
     // ---- le réseau (seulement si on touche : le banc respecte le mode avion) ---------------------------------------------------------------------
     { id: 'res-https', groupe: 'réseau', nom: 'Joindre Internet (HTTPS)', quand: 'toucher', fn: async () => {
       const t0 = performance.now(); try { const r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=46.7&longitude=6.4&current=temperature_2m'); const d = await r.json(); return ok(`open-meteo : ${d.current && d.current.temperature_2m} °C en ${ms(t0)}`); }

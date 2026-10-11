@@ -12,7 +12,9 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.5.3"),
+        .package(name: "CapacitorCommunityBluetoothLe", path: "../../../node_modules/@capacitor-community/bluetooth-le"),
         .package(name: "CapacitorCommunitySqlite", path: "../../../node_modules/@capacitor-community/sqlite"),
+        .package(name: "CapacitorCommunityTextToSpeech", path: "../../../node_modules/@capacitor-community/text-to-speech"),
         .package(name: "CapacitorApp", path: "../../../node_modules/@capacitor/app"),
         .package(name: "CapacitorCamera", path: "../../../node_modules/@capacitor/camera"),
         .package(name: "CapacitorClipboard", path: "../../../node_modules/@capacitor/clipboard"),
@@ -26,7 +28,11 @@ let package = Package(
         .package(name: "CapacitorPreferences", path: "../../../node_modules/@capacitor/preferences"),
         .package(name: "CapacitorScreenOrientation", path: "../../../node_modules/@capacitor/screen-orientation"),
         .package(name: "CapacitorShare", path: "../../../node_modules/@capacitor/share"),
-        .package(name: "CapacitorStatusBar", path: "../../../node_modules/@capacitor/status-bar")
+        .package(name: "CapacitorStatusBar", path: "../../../node_modules/@capacitor/status-bar"),
+        .package(name: "CapawesomeCapacitorAppShortcuts", path: "../../../node_modules/@capawesome/capacitor-app-shortcuts"),
+        .package(name: "CapgoCapacitorHealth", path: "../../../node_modules/@capgo/capacitor-health"),
+        .package(name: "CapgoCapacitorNfc", path: "../../../node_modules/@capgo/capacitor-nfc"),
+        .package(name: "CapgoCapacitorWifi", path: "../../../node_modules/@capgo/capacitor-wifi")
     ],
     targets: [
         .target(
@@ -34,7 +40,9 @@ let package = Package(
             dependencies: [
                 .product(name: "Capacitor", package: "capacitor-swift-pm"),
                 .product(name: "Cordova", package: "capacitor-swift-pm"),
+                .product(name: "CapacitorCommunityBluetoothLe", package: "CapacitorCommunityBluetoothLe"),
                 .product(name: "CapacitorCommunitySqlite", package: "CapacitorCommunitySqlite"),
+                .product(name: "CapacitorCommunityTextToSpeech", package: "CapacitorCommunityTextToSpeech"),
                 .product(name: "CapacitorApp", package: "CapacitorApp"),
                 .product(name: "CapacitorCamera", package: "CapacitorCamera"),
                 .product(name: "CapacitorClipboard", package: "CapacitorClipboard"),
@@ -48,7 +56,11 @@ let package = Package(
                 .product(name: "CapacitorPreferences", package: "CapacitorPreferences"),
                 .product(name: "CapacitorScreenOrientation", package: "CapacitorScreenOrientation"),
                 .product(name: "CapacitorShare", package: "CapacitorShare"),
-                .product(name: "CapacitorStatusBar", package: "CapacitorStatusBar")
+                .product(name: "CapacitorStatusBar", package: "CapacitorStatusBar"),
+                .product(name: "CapawesomeCapacitorAppShortcuts", package: "CapawesomeCapacitorAppShortcuts"),
+                .product(name: "CapgoCapacitorHealth", package: "CapgoCapacitorHealth"),
+                .product(name: "CapgoCapacitorNfc", package: "CapgoCapacitorNfc"),
+                .product(name: "CapgoCapacitorWifi", package: "CapgoCapacitorWifi")
             ]
         )
     ]

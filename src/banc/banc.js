@@ -9,6 +9,9 @@ const CHARGEURS = {
   haptics: () => import('@capacitor/haptics'), 'local-notifications': () => import('@capacitor/local-notifications'), share: () => import('@capacitor/share'),
   clipboard: () => import('@capacitor/clipboard'), app: () => import('@capacitor/app'), 'screen-orientation': () => import('@capacitor/screen-orientation'),
   'status-bar': () => import('@capacitor/status-bar'),
+  'bluetooth-le': () => import('@capacitor-community/bluetooth-le'), health: () => import('@capgo/capacitor-health'), nfc: () => import('@capgo/capacitor-nfc'),
+  wifi: () => import('@capgo/capacitor-wifi'), 'text-to-speech': () => import('@capacitor-community/text-to-speech'), 'app-shortcuts': () => import('@capawesome/capacitor-app-shortcuts'),
+  jsqr: () => import('jsqr'),
 };
 const SYMBOLE = { ok: '✓', partiel: '◐', non: '✗', refuse: '⛔', erreur: '⚠', attente: '…', '': '○' };
 const COULEUR = { ok: '#5fe08a', partiel: '#ffcf6a', non: '#8aa0c0', refuse: '#ff8a8a', erreur: '#ff8a8a' };
