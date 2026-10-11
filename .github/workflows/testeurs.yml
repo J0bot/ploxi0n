@@ -1,0 +1,18 @@
+# Les testeurs TestFlight, sans build : crée le groupe interne « ploxi0n interne » (il reçoit chaque build) et invite TESTFLIGHT_EMAIL.
+# Sur Linux : quelques secondes de minutes normales, au lieu d'un build macOS (×10).
+name: TestFlight testeurs
+on:
+  workflow_dispatch:
+jobs:
+  testeurs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with: { ruby-version: '3.3', bundler-cache: true }
+      - run: bundle exec fastlane ios testeurs
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          TESTFLIGHT_EMAIL: ${{ secrets.TESTFLIGHT_EMAIL }}

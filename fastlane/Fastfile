@@ -41,13 +41,22 @@ platform :ios do
   # Le groupe de testeurs internes « ploxi0n interne » reçoit AUTOMATIQUEMENT chaque build (pas d'attente du traitement d'Apple,
   # donc pas de minutes macOS perdues) ; TESTFLIGHT_EMAIL (secret, l'Apple ID de RS-7) y est ajouté et invité (betaTesterInvitations).
   # Jamais bloquant : un échec ici n'annule pas le build envoyé.
+  desc "Crée le groupe de testeurs internes et invite TESTFLIGHT_EMAIL (sans build : tourne sur Linux)"
+  lane :testeurs do
+    app_store_connect_api_key(key_id: ENV["ASC_KEY_ID"], issuer_id: ENV["ASC_ISSUER_ID"], key_content: ENV["ASC_KEY_P8"], in_house: false)
+    testeurs_internes
+  end
+
   private_lane :testeurs_internes do
     email = ENV["TESTFLIGHT_EMAIL"].to_s
     next UI.important("TESTFLIGHT_EMAIL absent : personne à inviter") if email.empty?
     begin
       app = Spaceship::ConnectAPI::App.find(APP_ID)
+      # pas app.create_beta_group : fastlane y ajoute publicLinkLimitEnabled, refusé pour un groupe interne
       groupe = app.get_beta_groups(filter: { name: "ploxi0n interne" }).first ||
-               app.create_beta_group(group_name: "ploxi0n interne", is_internal_group: true, has_access_to_all_builds: true)
+               Spaceship::ConnectAPI::BetaGroup.new(*Spaceship::ConnectAPI.test_flight_request_client.post("betaGroups", {
+                 data: { type: "betaGroups", attributes: { name: "ploxi0n interne", isInternalGroup: true, hasAccessToAllBuilds: true },
+                         relationships: { app: { data: { type: "apps", id: app.id } } } } }).body["data"].values_at("id", "attributes"))
       testeur = Spaceship::ConnectAPI::BetaTester.all(filter: { email: email }).first
       if testeur.nil?
         Spaceship::ConnectAPI.post_beta_tester_assignment(beta_group_ids: [groupe.id], attributes: { email: email, firstName: "RS", lastName: "7" })
