@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       regenerer_profil: { description: 'régénérer le profil de signature (après un changement de capabilities)', type: boolean, default: false }
-      widgets: { description: 'construire avec les widgets (extension PloxionWidgets ; l\'identifiant ch.j0bot.ploxi0n.widgets doit avoir le groupe group.ch.j0bot.ploxi0n)', type: boolean, default: false }
+      widgets: { description: "construire avec les widgets (extension PloxionWidgets ; ch.j0bot.ploxi0n.widgets doit avoir le groupe group.ch.j0bot.ploxi0n)", type: boolean, default: false }
 concurrency:
   group: ios-testflight
   cancel-in-progress: true
