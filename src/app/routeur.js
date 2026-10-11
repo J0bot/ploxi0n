@@ -78,7 +78,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     pageCourante = Math.min(pageCourante, pages.length - 1);
     racine.innerHTML = '<div class="px-accueil"><header class="px-tete"><h1>' + LOGO + '<b>ploxi0n</b></h1><button class="px-modif" data-edition>' + (edition ? 'terminé' : '✎') + '</button></header>'
       + '<div class="px-hud px-visiere"><span class="px-hud-c">' + (hud ? hud.html() : '') + '</span></div>'
-      + '<p class="px-sous">' + (edition ? 'Touche un ploxion : le ranger dans un dossier, sur une page, ou l\'ajouter à l\'écran d\'accueil de l\'iPhone.' : 'tes ploxions, sur ton téléphone, même sans réseau') + '</p>'
+      + '<p class="px-sous px-grave">' + (edition ? 'Touche un ploxion : le ranger dans un dossier, sur une page, ou l\'ajouter à l\'écran d\'accueil de l\'iPhone.' : ('◇ cycle ' + (new Date().getFullYear() + 5000) + ' · ' + tous.length + ' ploxions · hors ligne')) + '</p>'
       + '<div class="px-pages">' + pages.map((h, i) => '<section class="px-page" data-page="' + i + '">' + (i ? '<h2 class="px-titre-page">' + texte(noms[i]) + '</h2>' : '') + '<div class="px-grille">' + (h || '<p class="px-sous">page vide</p>') + '</div></section>').join('') + '</div>'
       + (pages.length > 1 ? '<div class="px-points">' + pages.map((_, i) => '<button class="px-point' + (i === pageCourante ? ' on' : '') + '" data-aller="' + i + '" aria-label="' + texte(noms[i]) + '"></button>').join('') + '</div>' : '') + '</div>';
     const conteneur = racine.querySelector('.px-pages');

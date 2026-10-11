@@ -1,103 +1,104 @@
-/* ploxi0n — le look CHILL-TEKK ORGANIQUE (RS-7 12.10 : « chill-tekk-ifier » ; « un violet profond et chill, des bords ronds épais » ;
-   « plus organique » ; « je veux pas ce dégradé »). Les références : la mémoire organic-chill-tekk-ui (violet/indigo profond,
-   bioluminescence verte, formes blob, cadres = membranes cellulaires, jonctions = noyaux qui luisent).
-   Règles : AUCUN dégradé ; des aplats violets ; des bords épais et ronds (membranes) ; des icônes en cellules un peu irrégulières ;
-   le vert biolumineux seulement pour ce qui est VIVANT (en ligne, choisi, installé). Aucune animation continue (Pi 4) : seuls les gestes. */
+/* ploxi0n — CHILL-TEKK-7026 (RS-7 12.10 : « chill-tekk-ifier » ; « un violet profond, des bords ronds épais » ; « pas de dégradé » ;
+   « pas assez sombre ; rond mais rond CHILL, pas trop ; plus futuriste ; qu'on ait l'impression que l'app a des milliers d'années, une app
+   usée »). Le UI d'un endroit chill dans 5000 ans (braindump 11.10 : chill-tekk-<année + 5000>) :
+   - presque noir, violets délavés, AUCUN dégradé ; la patine = un grain fixe (SVG, une seule image, rien ne bouge) ;
+   - un arrondi calme et un peu inégal (une pièce usée), des bords doubles comme du métal usiné (un trait, un filet intérieur) ;
+   - des inscriptions gravées : petites capitales espacées, chiffres tabulaires ;
+   - le vert biolumineux, faible, comme une veilleuse : seulement ce qui est VIVANT. Aucune animation continue (Pi 4). */
 :root{
-  --bg:#120a2b;            /* le fond : violet nuit, en aplat */
-  --surface:#1c1140;       /* les membranes */
-  --surface2:#251754;
-  --creux:#160d35;         /* un champ, un creux */
-  --bord:#3b2775; --bord2:#5a3fa8; --trait:3px;
-  --acc:#b69cff;           /* lilas */
-  --acc2:#8a6cf0;
-  --bio:#7dffb0;           /* la bioluminescence : le vivant */
-  --txt:#efe9ff; --muted:#a99cd0;
-  --glow:rgba(125,255,176,.45);
-  --rayon:30px;
+  --bg:#07050c;
+  --surface:#0f0b18; --surface2:#151021; --creux:#0a0712;
+  --bord:#272036; --bord2:#3a3050; --filet:rgba(190,175,230,.06); --trait:2px;
+  --acc:#a597cf;           /* lilas délavé */
+  --acc2:#7a6aa8;
+  --bio:#79d9a2;           /* la veilleuse */
+  --txt:#ddd6ea; --muted:#7f7699; --grave:#5f5878;
+  --glow:rgba(121,217,162,.28);
   --police:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,sans-serif;
-  /* des cellules : quatre formes de blob, une par tuile en rotation */
-  --blob1:36% 42% 38% 44% / 40% 36% 44% 38%;
-  --blob2:42% 36% 44% 38% / 36% 42% 38% 44%;
-  --blob3:38% 44% 36% 42% / 44% 38% 42% 36%;
-  --blob4:44% 38% 42% 36% / 38% 44% 36% 42%;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  /* un arrondi CHILL, un peu inégal : usé par des siècles de pouces */
+  --blob1:15px 17px 14px 16px; --blob2:17px 14px 16px 15px; --blob3:14px 16px 15px 17px; --blob4:16px 15px 17px 14px;
+  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .75 0 0 0 0 .7 0 0 0 0 .9 0 0 0 .055 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-html,body{margin:0;height:100%;color:var(--txt);font:15px/1.4 var(--police);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;background:var(--bg)}
+html,body{margin:0;height:100%;color:var(--txt);font:15px/1.4 var(--police);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;background:var(--bg) var(--grain)}
 button{font-family:inherit;-webkit-user-select:none;user-select:none}
 #ploxi0n{height:100%;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
+/* le métal usiné : un trait sombre, un filet clair à l'intérieur */
+.px-plaque,.px-visiere,.px-modif,.px-barre,.px-feuille>div,.px-tiroir{box-shadow:inset 0 0 0 1px var(--filet)}
 
 /* ---- l'accueil ---- */
 .px-accueil{padding:10px 18px 18px;overflow:auto;flex:1}
-.px-tete{display:flex;align-items:center;gap:12px;margin:10px 2px 14px}
-.px-accueil h1{display:flex;align-items:center;gap:11px;margin:0;font:700 1.55rem/1 var(--police);letter-spacing:.05em;flex:1;min-width:0;color:var(--acc)}
-.px-accueil h1 b{font-weight:700;color:var(--txt)}
-.px-logo{width:32px;height:32px;color:var(--acc)}
-.px-sous{color:var(--muted);margin:0 2px 16px;font-size:.88rem}
-.px-modif{background:var(--surface);border:var(--trait) solid var(--bord);color:var(--txt);border-radius:999px;padding:0 16px;min-height:40px;font-size:.92rem}
+.px-tete{display:flex;align-items:center;gap:12px;margin:12px 2px 12px}
+.px-accueil h1{display:flex;align-items:center;gap:12px;margin:0;font:600 1.15rem/1 var(--mono);letter-spacing:.32em;text-transform:uppercase;flex:1;min-width:0;color:var(--txt)}
+.px-accueil h1 b{font-weight:600}
+.px-logo{width:28px;height:28px;color:var(--acc);opacity:.85}
+.px-sous{color:var(--muted);margin:0 2px 16px;font-size:.86rem}
+.px-grave{font:500 10.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--grave);margin:2px 4px 18px}
+.px-modif{background:var(--surface);border:var(--trait) solid var(--bord);color:var(--muted);border-radius:12px;padding:0 14px;min-height:38px;font-size:.92rem}
 
-/* la visière du HUD : une membrane en capsule, sur sa propre ligne */
-.px-visiere{display:flex;align-items:center;gap:6px;padding:5px;margin:0 0 18px;border-radius:999px;background:var(--surface);border:var(--trait) solid var(--bord);overflow-x:auto;scrollbar-width:none}
+/* la visière du HUD : une plaque, sur sa propre ligne */
+.px-visiere{display:flex;align-items:center;gap:6px;padding:5px;margin:0 0 10px;border-radius:16px;background:var(--surface) var(--grain);border:var(--trait) solid var(--bord);overflow-x:auto;scrollbar-width:none}
 .px-visiere::-webkit-scrollbar{display:none}
 .px-hud,.px-hud-c{display:flex;align-items:center;gap:6px;min-width:0}
 .px-visiere .px-hud-c{flex:1}
 .px-visiere [data-reglages]{margin-left:auto}
-.px-compte{display:flex;align-items:center;gap:7px;border-radius:999px;padding:0 16px;min-height:40px;font:700 14px var(--police);border:var(--trait) solid var(--acc);background:var(--acc);color:#1a0d3d;white-space:nowrap}
-.px-compte.on{border-color:var(--bord2);background:var(--surface2);color:var(--txt);font-weight:600}
-.px-compte .g{font-size:1rem;color:var(--bio)}
-.px-h-b{min-width:40px;min-height:40px;border-radius:999px;border:var(--trait) solid transparent;background:var(--surface2);color:inherit;font-size:1.05rem;padding:0 9px;flex:none;transition:transform .12s}
-.px-h-b:active{transform:scale(.9)}
-.px-h-ic{font:700 12px var(--police);color:var(--muted);white-space:nowrap;padding:0 6px}
+.px-compte{display:flex;align-items:center;gap:7px;border-radius:12px;padding:0 14px;min-height:38px;font:600 11.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;border:var(--trait) solid var(--acc2);background:var(--surface2);color:var(--acc);white-space:nowrap}
+.px-compte.on{border-color:var(--bord2);color:var(--txt);text-transform:none;letter-spacing:0;font:600 13px var(--police)}
+.px-compte .g{font-size:1rem;color:var(--bio);text-shadow:0 0 6px var(--glow)}
+.px-h-b{min-width:38px;min-height:38px;border-radius:12px;border:var(--trait) solid transparent;background:var(--surface2);color:var(--muted);font-size:1rem;padding:0 8px;flex:none;transition:transform .12s}
+.px-h-b:active{transform:scale(.92)}
+.px-h-ic{font:600 10.5px var(--mono);letter-spacing:.1em;color:var(--muted);white-space:nowrap;padding:0 6px}
 
-/* les tuiles : des CELLULES — un aplat teinté (--t, la teinte du ploxion), une membrane épaisse, une forme un peu irrégulière */
+/* les tuiles : des plaques anciennes — un aplat sombre à peine teinté (--t), un bord usé, l'arrondi chill, la patine */
 .px-grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:20px 10px}
-.px-tuile{display:flex;flex-direction:column;align-items:center;gap:8px;padding:0;border:0;background:none;color:var(--txt);font:600 12px/1.2 var(--police);min-width:0;transition:transform .16s cubic-bezier(.3,1.6,.5,1)}
-.px-tuile:active{transform:scale(.9)}
-.px-ic{width:66px;height:66px;border-radius:var(--blob1);display:flex;align-items:center;justify-content:center;font-size:1.95rem;line-height:1;position:relative;
-  background:hsl(var(--t,265) 38% 24%);border:var(--trait) solid hsl(var(--t,265) 48% 46%)}
+.px-tuile{display:flex;flex-direction:column;align-items:center;gap:8px;padding:0;border:0;background:none;color:var(--txt);font:600 12px/1.2 var(--police);min-width:0;transition:transform .14s ease}
+.px-tuile:active{transform:scale(.93)}
+.px-ic{width:64px;height:64px;border-radius:var(--blob1);display:flex;align-items:center;justify-content:center;font-size:1.85rem;line-height:1;position:relative;
+  background:hsl(var(--t,265) 22% 11%) var(--grain);border:var(--trait) solid hsl(var(--t,265) 20% 24%);box-shadow:inset 0 0 0 1px var(--filet)}
 .px-tuile:nth-child(4n+2) .px-ic{border-radius:var(--blob2)}.px-tuile:nth-child(4n+3) .px-ic{border-radius:var(--blob3)}.px-tuile:nth-child(4n) .px-ic{border-radius:var(--blob4)}
-.px-tuile>span:last-child{max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-align:center;font-weight:600;font-size:11.5px;line-height:1.2}
-.px-dossier .px-ic{background:var(--surface2);border-color:var(--bord2)}
-.px-edite .px-ic{outline:3px dashed var(--acc);outline-offset:4px}
+.px-tuile>span:last-child{max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-align:center;font-weight:500;font-size:11.5px;line-height:1.2;color:#c9c1d9}
+.px-dossier .px-ic{background:var(--surface2) var(--grain);border-color:var(--bord2)}
+.px-edite .px-ic{outline:2px dashed var(--acc2);outline-offset:4px}
 .px-pad{padding:16px 18px}
 
-/* les pages et leurs points (des noyaux) */
+/* les pages et leurs points (des voyants) */
 .px-pages{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -18px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.px-pages::-webkit-scrollbar{display:none}
-.px-page{flex:0 0 100%;box-sizing:border-box;padding:0 18px 20px;scroll-snap-align:start;min-height:50vh}.px-titre-page{font:700 .8rem var(--police);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 14px}
+.px-page{flex:0 0 100%;box-sizing:border-box;padding:0 18px 20px;scroll-snap-align:start;min-height:50vh}.px-titre-page{font:600 10.5px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--grave);margin:0 0 14px}
 .px-points{display:flex;justify-content:center;gap:2px;padding:6px 0}.px-point{width:22px;height:22px;border:0;background:none;padding:0;position:relative}
-.px-point::after{content:'';position:absolute;inset:7px;border-radius:99px;background:var(--bord2)}.px-point.on::after{background:var(--bio);box-shadow:0 0 8px var(--glow)}
+.px-point::after{content:'';position:absolute;inset:8px;border-radius:2px;background:var(--bord2)}.px-point.on::after{background:var(--bio);box-shadow:0 0 6px var(--glow)}
 
 /* ---- un ploxion ouvert : la barre ---- */
-.px-barre{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface);border-bottom:var(--trait) solid var(--bord);position:relative;z-index:5;border-radius:0 0 24px 24px}
-.px-barre>span:not(.px-hud){font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.px-retour{font-size:1.5rem;line-height:1;background:var(--surface2);border:var(--trait) solid var(--bord);border-radius:999px;color:var(--acc);width:44px;height:44px;padding:0 0 3px;flex:none}
-.px-retour:active{transform:scale(.9)}
+.px-barre{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface) var(--grain);border-bottom:var(--trait) solid var(--bord);position:relative;z-index:5}
+.px-barre>span:not(.px-hud){font:600 11.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;color:var(--muted)}
+.px-retour{font-size:1.4rem;line-height:1;background:var(--surface2);border:var(--trait) solid var(--bord);border-radius:12px;color:var(--acc);width:42px;height:42px;padding:0 0 3px;flex:none}
+.px-retour:active{transform:scale(.92)}
 .px-barre .px-hud{margin-left:auto;flex:none}
-.px-barre .px-compte{padding:0 12px}
-.px-verrou{font-size:1.05rem;background:var(--surface2);border:var(--trait) solid transparent;border-radius:999px;min-width:40px;min-height:40px}
+.px-barre .px-compte{padding:0 11px}
+.px-verrou{font-size:1rem;background:var(--surface2);border:var(--trait) solid transparent;border-radius:12px;min-width:38px;min-height:38px}
 .px-hote{flex:1;min-height:0;position:relative;overflow:auto}
-.px-erreur{color:#ffa3c4;padding:16px}
+.px-erreur{color:#d993ad;padding:16px}
 
-/* ---- les feuilles : une grande membrane qui monte du bas ---- */
-.px-feuille,.px-voile{position:fixed;inset:0;z-index:50;background:rgba(10,5,26,.7);display:flex;align-items:flex-end}
-.px-feuille>div,.px-tiroir{width:100%;box-sizing:border-box;background:var(--surface);border:var(--trait) solid var(--bord2);border-bottom:0;border-radius:38px 38px 0 0;
+/* ---- les feuilles : une plaque qui monte du bas ---- */
+.px-feuille,.px-voile{position:fixed;inset:0;z-index:50;background:rgba(3,2,6,.78);display:flex;align-items:flex-end}
+.px-feuille>div,.px-tiroir{width:100%;box-sizing:border-box;background:var(--surface) var(--grain);border:var(--trait) solid var(--bord2);border-bottom:0;border-radius:22px 22px 0 0;
   padding:12px 18px calc(22px + env(safe-area-inset-bottom,0px))}
-.px-feuille>div::before,.px-tiroir::before{content:"";display:block;width:44px;height:6px;border-radius:9px;background:var(--bord2);margin:0 auto 16px}
-.px-feuille h2{margin:0 0 6px;font-size:1.2rem}.px-feuille p{color:var(--muted);margin:0 0 14px;line-height:1.45}
-.px-feuille button,.px-tiroir button{width:100%;min-height:52px;padding:0 18px;border-radius:999px;font:700 16px var(--police);margin:5px 0;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);text-align:left;transition:transform .1s}
+.px-feuille>div::before,.px-tiroir::before{content:"";display:block;width:38px;height:4px;border-radius:2px;background:var(--bord2);margin:0 auto 16px}
+.px-feuille h2{margin:0 0 6px;font-size:1.1rem}.px-feuille p{color:var(--muted);margin:0 0 14px;line-height:1.45}
+.px-feuille button,.px-tiroir button{width:100%;min-height:50px;padding:0 16px;border-radius:13px;font:600 15px var(--police);margin:5px 0;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);text-align:left;transition:transform .1s;box-shadow:inset 0 0 0 1px var(--filet)}
 .px-feuille button{text-align:center}
-.px-feuille button:active,.px-tiroir button:active{transform:scale(.97)}
-.px-feuille .p,.px-tiroir .p{background:var(--acc);border-color:var(--acc);color:#1a0d3d;text-align:center}.px-feuille .apple{background:#fff;color:#000;border-color:#fff}
+.px-feuille button:active,.px-tiroir button:active{transform:scale(.98)}
+.px-feuille .p,.px-tiroir .p{background:var(--acc);border-color:var(--acc);color:#0d0a16;text-align:center}.px-feuille .apple{background:#e8e4ef;color:#000;border-color:#e8e4ef}
 .px-tiroir{display:flex;flex-direction:column;gap:2px}
-.px-tiroir button:last-child{text-align:center;background:none;border-color:transparent;color:var(--muted)}
-.px-ft{display:flex;align-items:center;gap:12px;margin:0 0 10px;font-weight:700;font-size:1.05rem}
-.px-ft .px-ic{width:48px;height:48px;font-size:1.5rem}
+.px-tiroir button:last-child{text-align:center;background:none;border-color:transparent;color:var(--muted);box-shadow:none}
+.px-ft{display:flex;align-items:center;gap:12px;margin:0 0 10px;font-weight:600;font-size:1rem}
+.px-ft .px-ic{width:46px;height:46px;font-size:1.4rem}
 .px-etapes{margin:4px 0 6px;padding-left:22px;color:var(--muted);line-height:1.55;font-size:.9rem}.px-etapes b{color:var(--txt)}
 
-/* la feuille « tes ploxions en apps » : des cellules à cocher ; une cellule choisie s'allume (vert biolumineux) */
+/* la feuille « tes ploxions en apps » : des plaques à cocher ; une plaque choisie s'allume (la veilleuse) */
 .px-choix{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:14px 8px;max-height:46vh;overflow:auto;padding:6px 2px 12px}
-.px-tiroir .px-choix .px-tuile{width:auto;min-height:0;padding:0;margin:0;border:0;border-radius:0;background:none;text-align:center;opacity:.5;font:600 11.5px var(--police)}
+.px-tiroir .px-choix .px-tuile{width:auto;min-height:0;padding:0;margin:0;border:0;border-radius:0;background:none;text-align:center;opacity:.45;box-shadow:none;font:600 11.5px var(--police)}
 .px-tiroir .px-choix .px-tuile.on{opacity:1}
-.px-tiroir .px-choix .px-tuile.on .px-ic{border-color:var(--bio);box-shadow:0 0 14px var(--glow)}
-.px-tiroir .px-choix .px-ic{width:56px;height:56px;font-size:1.7rem}
-.px-tiroir button:disabled{opacity:.5}
-.px-tiroir .px-lien{min-height:40px;background:none;border-color:transparent;color:var(--acc);font-weight:600;font-size:14px;text-align:center}
+.px-tiroir .px-choix .px-tuile.on .px-ic{border-color:var(--bio);box-shadow:0 0 10px var(--glow),inset 0 0 0 1px var(--filet)}
+.px-tiroir .px-choix .px-ic{width:56px;height:56px;font-size:1.6rem}
+.px-tiroir button:disabled{opacity:.45}
+.px-tiroir .px-lien{min-height:40px;background:none;border-color:transparent;color:var(--acc);font-weight:600;font-size:14px;text-align:center;box-shadow:none}

@@ -15,7 +15,7 @@ import { creerEcranAccueil } from './natif/ecran-accueil.js';
 import { creerHud } from './app/hud.js';
 import { enregistrerReglages } from './app/reglages.js';
 
-const VERSION = '0.10.0';
+const VERSION = '0.11.0';
 
 async function demarrer() {
   const racine = document.getElementById('ploxi0n');
