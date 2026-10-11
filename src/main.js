@@ -2,6 +2,9 @@
 import { ouvrirBoxionLocal } from './boxion-local/index.js';
 import { installerShim } from './shim/jos.js';
 import { creerRouteur } from './app/routeur.js';
+import { enregistrerBanc } from './banc/banc.js';
+
+const VERSION = '0.2.0';
 
 async function demarrer() {
   const racine = document.getElementById('ploxi0n');
@@ -10,8 +13,9 @@ async function demarrer() {
   const shim = await installerShim({ boxion, routeur: routeurProxy });
   let catalogue = [];
   try { catalogue = (await (await fetch('/ploxions/index.json')).json()).ploxions || []; } catch (e) { /* aucun ploxion embarqué */ }
+  catalogue = [enregistrerBanc({ boxion, version: VERSION }), ...catalogue];   // 🧪 le banc iPhone, intégré à l'app
   const routeur = creerRouteur({ racine, catalogue });
-  window.ploxi0n = { boxion, shim, routeur, version: '0.1.0' };
+  window.ploxi0n = { boxion, shim, routeur, version: VERSION };
   const id = decodeURIComponent((location.hash.match(/^#\/(.+)$/) || [])[1] || '');
   if (id && routeur.connait(id)) routeur.ouvrir(id); else routeur.accueil();
 }

@@ -66,5 +66,17 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>ploxi0n utilise la caméra quand un ploxion te le demande (photo, scan) ; rien ne quitte ton téléphone sans ton accord.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>ploxi0n ouvre tes photos quand tu choisis d'en donner une à un ploxion.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>ploxi0n enregistre dans tes photos ce que tu choisis d'exporter.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>ploxi0n utilise le micro quand un ploxion enregistre ou écoute, seulement à ta demande.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>ploxi0n utilise ta position quand un ploxion en a besoin (carte, lieux) ; elle reste sur ton téléphone.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>ploxi0n lit les capteurs de mouvement pour les ploxions qui s'en servent (pas, inclinaison, boussole).</string>
 </dict>
 </plist>
