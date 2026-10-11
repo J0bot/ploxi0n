@@ -59,8 +59,15 @@ platform :ios do
   desc "Affiche les capabilities activées sur l'identifiant de l'app (sans build : tourne sur Linux)"
   lane :capabilities do
     app_store_connect_api_key(key_id: ENV["ASC_KEY_ID"], issuer_id: ENV["ASC_ISSUER_ID"], key_content: ENV["ASC_KEY_P8"], in_house: false)
-    b = asc(:get, "bundleIds?filter[identifier]=#{APP_ID}&include=bundleIdCapabilities&limit[bundleIdCapabilities]=200")
-    caps = (b["included"] || []).map { |c| c["attributes"]["capabilityType"] }.sort
+    bid = asc(:get, "bundleIds?filter[identifier]=#{APP_ID}")["data"].first || UI.user_error!("identifiant #{APP_ID} introuvable")
+    caps, chemin = [], "bundleIds/#{bid['id']}/bundleIdCapabilities?limit=50"
+    while chemin
+      page = asc(:get, chemin)
+      caps += page["data"].map { |c| c["attributes"]["capabilityType"] + (c["attributes"]["settings"].to_a.empty? ? "" : " #{c['attributes']['settings'].map { |x| x['options'].to_a.select { |o| o['enabled'] }.map { |o| o['key'] } }.flatten.join('/')}") }
+      suivant = page.dig("links", "next")
+      chemin = suivant ? suivant.sub("https://api.appstoreconnect.apple.com/v1/", "") : nil
+    end
+    caps.sort!
     UI.success("#{caps.size} capabilities sur #{APP_ID} : #{caps.join(', ')}")
   end
 
