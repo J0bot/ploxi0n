@@ -62,6 +62,19 @@ test('pack hors ligne : installable sans réseau', async () => {
   assert.deepEqual(s.appels, [], 'aucun appel réseau');
 });
 
+test('pack hors ligne : les bions du ploxion (bother → jOSGpg, jOSBug) viennent du pack aussi, une seule fois', async () => {
+  const s = serveur(); s.enLigne = false;
+  const boxion = creerMemoire(), lus = [];
+  const d = creerDepot({ boxion, http: s.http, packLocal: [{ id: 'local', nom: 'Local', icone: '📦', bions: ['jOSGpg', 'jOSAbsent'] }], lireLocal: async () => BUNDLE('local'),
+    lireBionLocal: async (b) => { lus.push(b); if (b === 'jOSAbsent') throw new Error('absent'); return 'window.' + b + '={};'; } });
+  await d.installerLocal('local');
+  assert.deepEqual((await boxion.get('ploxions', 'local')).bions, ['jOSGpg']);
+  assert.match(await d.bundle('local'), /window\.jOSGpg=\{\};[\s\S]*local/);
+  await d.installerLocal('local');
+  assert.deepEqual(lus, ['jOSGpg', 'jOSAbsent', 'jOSAbsent'], 'un bion déjà là ne se relit pas');
+  assert.deepEqual(s.appels, []);
+});
+
 test('routeur : un ploxion installé s\'ouvre depuis boxion_local (jamais depuis le réseau), se démonte, et les dossiers se rangent', async () => {
   const s = serveur(), p = await page({ avion: true, ploxions: [] });
   try {

@@ -15,12 +15,14 @@
 //   les autres moteurs window.jOS*  absents : les ploxions testent déjà leur existence
 // Toute autre route du serveur répond 503 {horsLigne:true} SANS toucher le réseau, et s'inscrit dans le journal 'manques' (ce qu'il faudra
 // réimplémenter) ; une URL externe part sur le réseau (les ploxions « online only »), comptée dans shim.sortants.
+// relais = [{ prefixe, vers(chemin) → url }] + envoyer({methode, url, headers, corps}) → {status, texte} : quelques routes du labo qui ont une
+// version API sans session (ex. /bother → https://xerboxion.org/api/app/bother, le ploxion des testeurs) partent sur le réseau ; hors ligne → 503.
 
 const NS_LS = 'localStorage';
 const NS_BOX = (ns) => 'box:' + ns;
 const ASSETS = /^\/(ploxions|assets|vendor|icons|fonts|img|data)\//;
 
-export async function installerShim({ boxion, fenetre = globalThis.window, routeur = null, journalSortant = null } = {}) {
+export async function installerShim({ boxion, fenetre = globalThis.window, routeur = null, journalSortant = null, relais = null } = {}) {
   if (!boxion) throw new Error('shim jOS : boxion_local manquant');
   const W = fenetre, D = W.document;
   const etat = { sortants: [], manques: [], tsoins: [], subs: new Map() };
@@ -164,6 +166,16 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
       if (p === '/px/boxion/load') { const d = await jb.load(q.get('ns'), q.get('key')); return json(d || { item: null }); }
       if (p === '/px/boxion/list') return json({ items: await jb.list(q.get('ns')) });
       if (p === '/px/boxion/del') return json(await jb.del(b.ns, b.key));
+    }
+    const rel = relais && relais.routes.find(r => p === r.prefixe || p.startsWith(r.prefixe + '/'));
+    if (rel) {
+      const cible = rel.vers(p) + url.search;
+      etat.sortants.push(cible);
+      try {
+        const corps = init && typeof init.body === 'string' ? init.body : undefined;
+        const r = await relais.envoyer({ methode, url: cible, headers: { Accept: 'application/json', ...(corps ? { 'Content-Type': 'application/json' } : {}) }, corps });
+        return new W.Response(r.status === 204 ? null : r.texte, { status: r.status, headers: { 'Content-Type': 'application/json' } });
+      } catch (e) { return json({ ok: false, horsLigne: true, route: p, message: 'hors ligne : ' + e.message }, 503); }
     }
     etat.manques.push(methode + ' ' + p);
     boxion.append('manques', { methode, route: p }).catch(() => {});

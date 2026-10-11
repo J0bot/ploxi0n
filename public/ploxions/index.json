@@ -1,13 +1,29 @@
 {
  "v": 1,
  "source": "labo",
+ "base": [
+  "bother"
+ ],
  "ploxions": [
+  {
+   "id": "bother",
+   "nom": "Bother me",
+   "icone": "🗯",
+   "hash": "d25fac50ff216c422cd382f7f5442f6a0d95088c8f15e596bf4b276c18e327ac",
+   "deps": [],
+   "bions": [
+    "jOSGpg",
+    "jOSBug"
+   ],
+   "octets": 16118
+  },
   {
    "id": "pomodoro",
    "nom": "Pomodoro",
    "icone": "🍅",
    "hash": "c77332a2c78938795d33f220dbe9ada04c5a657af650b4ecfde045cbac5d882b",
    "deps": [],
+   "bions": [],
    "octets": 1017
   },
   {
@@ -16,6 +32,7 @@
    "icone": "🕐",
    "hash": "e2ddb9ce96063227f0b9f958cb12d03ce7f284820f9c0497525581e4abdf0f7d",
    "deps": [],
+   "bions": [],
    "octets": 8414
   },
   {
@@ -24,6 +41,7 @@
    "icone": "🎹",
    "hash": "7f86b15fae1b6780c02df7c81462fe4a7b65f2eb5b5909c9b9a05d3de5a2e360",
    "deps": [],
+   "bions": [],
    "octets": 19613
   },
   {
@@ -32,6 +50,7 @@
    "icone": "🎨",
    "hash": "2bb2ea32ca9e1ba3401c2583e390e316c6c75dc6113150bf0f24518f81041d96",
    "deps": [],
+   "bions": [],
    "octets": 35847
   },
   {
@@ -40,6 +59,7 @@
    "icone": "🌐",
    "hash": "25daede5e50a17937b1bb87748a546a3131dcdf9ce5a397a37ea2e06e91d1662",
    "deps": [],
+   "bions": [],
    "octets": 6874
   },
   {
@@ -48,6 +68,7 @@
    "icone": "📖",
    "hash": "ca419da6673faf2aa0e6da5f07af1817f5c62b4d6f9426305e91fe5726c69b68",
    "deps": [],
+   "bions": [],
    "octets": 12864
   }
  ]

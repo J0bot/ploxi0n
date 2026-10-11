@@ -61,3 +61,13 @@ Le vrai mode xerboxion = des pages d'écran d'accueil faites d'icônes de ploxio
 ## Posé (suite) : comme les mods sur Prism
 
 - « Exactement quand on rajoute des mods sur Prism : ça nous ajoute **les dépendances automatiquement** (fait en 0.6), et ça nous propose **des apps qui sont utilisées habituellement en même temps** que celle-là (fait en 0.7 : « souvent utilisé avec », calculé sur le Nexus), **ou un xer de cette app**. Parce qu'au bout d'un moment, **chaque ploxion devient un xerboxion**. »
+
+## Posé (suite) : bother me de base, le marketplace qui se trouve, le Steam Workshop
+
+- « Il faut aussi avoir le ploxion **bother me comme ploxion de base**, parce que là ce sont quand même les versions de test… juste pour les testeurs, genre mes potes. » Fait en 0.8 : bother est dans le pack hors ligne avec ses bions (jOSGpg, jOSBug) et openpgp, installé d'office au premier lancement (retirable) ; ses routes `/bother*` partent sur `xerboxion.org/api/app/bother*` (relais du shim, sans session).
+- « Pour le marketplace, actuellement c'est vraiment l'enfer de trouver un ploxion : il faut une manière **bien plus stylée et rapide**, **différentes façons de voir le marketplace** sur iPhone. »
+- « Il faudra que le marketplace fonctionne avec **le Workshop de Steam** aussi. »
+
+## Lecture (suite)
+
+12. **Le Steam Workshop = une source de plus du marketplace** (même geste que le point 7 : plusieurs sources, un adaptateur chacune, jamais un choix exclusif). Le jeu pourriture-4 sur Steam a son Workshop ; un ploxion publié là (un « objet » du Workshop : le bundle `app.js` + l'icône + la description) s'installe dans ploxi0n comme ceux de xerboxion.org, après le même banc de compatibilité. Lecture côté iPhone : l'API Web de Steam (`IPublishedFileService/QueryFiles`, `ISteamRemoteStorage/GetPublishedFileDetails`) donne la liste et l'URL du fichier ; la clé d'API Steam vit sur le boxion (jamais dans l'app) : le labo sert un miroir `/px/workshop/*.json`, que le marketplace lit comme le registre. Publication : depuis le jeu (Steamworks UGC) ou depuis le boxion. Le classement reste celui du Nexus (les heures), le Workshop ajoute ses abonnés comme info.

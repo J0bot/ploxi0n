@@ -126,3 +126,22 @@ test('le TEST HORS LIGNE DE RÉFÉRENCE (simulé) : mode avion, écrire (localSt
   assert.deepEqual([...a.tentatives, ...b.tentatives], [], 'aucune requête sortante');
   b.fin();
 });
+
+test('le relais : /bother part sur xerboxion.org/api/app/bother (le ploxion des testeurs) ; hors ligne → 503, jamais une exception', async () => {
+  const envois = [];
+  let enLigne = true;
+  const relais = { routes: [{ prefixe: '/bother', vers: (c) => 'https://xerboxion.org/api/app' + c }],
+    envoyer: async (q) => { envois.push(q); if (!enLigne) throw new Error('mode avion'); return { status: 200, texte: JSON.stringify({ ok: true, token: 'abcd1234' }) }; } };
+  const p = await page({ relais });
+  const r = await p.w.fetch('/bother', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'salut' }) });
+  assert.equal(r.status, 200); assert.equal((await r.json()).token, 'abcd1234');
+  assert.equal(envois[0].methode, 'POST'); assert.equal(envois[0].url, 'https://xerboxion.org/api/app/bother'); assert.equal(JSON.parse(envois[0].corps).message, 'salut');
+  await p.w.fetch('/bother/t/abcd1234?x=1');
+  assert.equal(envois[1].url, 'https://xerboxion.org/api/app/bother/t/abcd1234?x=1'); assert.equal(envois[1].corps, undefined);
+  assert.equal((await p.w.fetch('/botherX')).status, 503, 'seulement le préfixe exact');
+  enLigne = false;
+  const h = await p.w.fetch('/bother/pubkey');
+  assert.equal(h.status, 503); assert.equal((await h.json()).horsLigne, true);
+  assert.deepEqual(p.tentatives, [], 'le relais ne passe jamais par le fetch de la page');
+  p.fin();
+});

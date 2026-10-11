@@ -1,11 +1,15 @@
 {
- "note": "PROVISOIRE (11.10) : 6 ploxions « prêts et complets » de ploxions-compat.md, en attendant le choix de RS-7 (3 à 5).",
+ "note": "Le pack hors ligne (installable sans réseau). « base » = installés d'office au premier lancement (11.10 : bother me, pour les testeurs).",
  "ploxions": [
+  "bother",
   "pomodoro",
   "horloge",
   "piano",
   "couleurs",
   "langues",
   "recits"
+ ],
+ "base": [
+  "bother"
  ]
 }

@@ -11,11 +11,16 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BLADE, decouper } from './bundle.mjs';
 
+// les bions que l'app fournit déjà (src/marketplace/depot.js FOURNIS) : jamais embarqués
+const FOURNIS = new Set(['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou']);
+const SOURCE_BIONS = process.env.SOURCE_BIONS || 'https://labo.j0bot.ch';
+
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
 const iL = args.indexOf('--labo');
 const LABO = iL >= 0 ? args.splice(iL, 2)[1] : (process.env.LABO || '/home/debian/labo/my_website2');
-const ids = args.length ? args : JSON.parse(readFileSync(path.join(RACINE, 'ploxions.embarques.json'), 'utf8')).ploxions;
+const EMB = JSON.parse(readFileSync(path.join(RACINE, 'ploxions.embarques.json'), 'utf8'));
+const ids = args.length ? args : EMB.ploxions;
 const PUB = path.join(RACINE, 'public');
 const registre = JSON.parse(execFileSync('php', [path.join(RACINE, 'tools/registre-ploxions.php')], { env: { ...process.env, LABO }, maxBuffer: 64 << 20 }).toString());
 const parId = new Map(registre.map(p => [p.id, p]));
@@ -47,12 +52,23 @@ for (const id of ids) {
     copyFileSync(path.join(LABO, 'public', local), path.join(PUB, local));
     deps.push(local);
   }
+  // ses bions (servis seuls par le labo : /px/bion-app/<jOSNom>.js) et les bibliothèques locales qu'ils chargent (ex. /vendor/js/openpgp.min.js)
+  const bions = [];
+  for (const b of [...new Set(d.js.match(/\bjOS[A-Z][A-Za-z0-9]*/g) || [])].filter(b => !FOURNIS.has(b))) {
+    const r = await fetch(SOURCE_BIONS + '/px/bion-app/' + b + '.js').catch(() => null);
+    if (!r || r.status !== 200) continue;
+    const js = await r.text(); if (!js.includes(b)) continue;
+    mkdirSync(path.join(PUB, 'bions'), { recursive: true }); writeFileSync(path.join(PUB, 'bions', b + '.js'), js); bions.push(b);
+    for (const lib of new Set(js.match(/\/vendor\/js\/[A-Za-z0-9._-]+\.js/g) || [])) {
+      if (existsSync(path.join(LABO, 'public', lib))) { mkdirSync(path.dirname(path.join(PUB, lib)), { recursive: true }); copyFileSync(path.join(LABO, 'public', lib), path.join(PUB, lib)); }
+    }
+  }
   writeFileSync(path.join(dossier, 'app.js'), d.js);
   writeFileSync(path.join(dossier, 'app.css'), d.css);
-  index.push({ id, nom: p.name || id, icone: p.icon || '▣', hash: sha(d.js + '\n' + d.css), deps, octets: d.js.length + d.css.length });
+  index.push({ id, nom: p.name || id, icone: p.icon || '▣', hash: sha(d.js + '\n' + d.css), deps, bions, octets: d.js.length + d.css.length });
 }
 mkdirSync(path.join(PUB, 'ploxions'), { recursive: true });
-writeFileSync(path.join(PUB, 'ploxions/index.json'), JSON.stringify({ v: 1, source: 'labo', ploxions: index }, null, 1) + '\n');
+writeFileSync(path.join(PUB, 'ploxions/index.json'), JSON.stringify({ v: 1, source: 'labo', base: (EMB.base || []).filter(b => index.some(p => p.id === b)), ploxions: index }, null, 1) + '\n');
 console.log(`${index.length} ploxion(s) extrait(s) : ${index.map(x => x.id).join(', ') || '—'}`);
 for (const [id, r] of refus) console.log(`  refusé ${id} : ${r}`);
 if (refus.length && !args.length) process.exitCode = 1;

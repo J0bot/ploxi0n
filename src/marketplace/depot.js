@@ -21,7 +21,7 @@ async function sha256(texte) {
   return Array.from(new Uint8Array(h), b => b.toString(16).padStart(2, '0')).join('');
 }
 
-export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLocal = [], lireLocal = null }) {
+export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLocal = [], lireLocal = null, lireBionLocal = null }) {
   const NS = 'ploxions', META = 'marketplace';
   async function liste() { const l = await boxion.get(META, 'installes'); return Array.isArray(l) ? l : []; }
   async function garderListe(l) { await boxion.put(META, 'installes', [...new Set(l)]); }
@@ -80,7 +80,13 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       const p = packLocal.find(x => x.id === id); if (!p || !lireLocal) throw new Error(id + ' n\'est pas dans le pack hors ligne');
       const js = await lireLocal(id);
       if (!valide(js, id)) throw new Error(id + ' : bundle du pack invalide');
-      await boxion.put(NS, id, { id, nom: p.nom, icone: p.icone, js, hash: await sha256(js), etag: null, origine: 'pack', installe: new Date().toISOString() });
+      const bions = [];
+      for (const b of p.bions || []) {
+        if (await boxion.get('bions', b)) { bions.push(b); continue; }
+        const bj = lireBionLocal ? await lireBionLocal(b).catch(() => null) : null;
+        if (bj && bj.includes(b)) { await boxion.put('bions', b, { js: bj, hash: await sha256(bj), le: new Date().toISOString() }); bions.push(b); }
+      }
+      await boxion.put(NS, id, { id, nom: p.nom, icone: p.icone, js, hash: await sha256(js), etag: null, origine: 'pack', installe: new Date().toISOString(), bions });
       await garderListe([...(await liste()), id]);
       await boxion.append('tsoins', { kind: 'marketplace', action: 'installer', id, origine: 'pack' });
       return { id };
@@ -138,6 +144,16 @@ export function creerHttp(W = globalThis.window) {
       const r = await W.fetch(url, { headers });
       const h = {}; r.headers.forEach((v, k) => { h[k.toLowerCase()] = v; });
       return { status: r.status, texte: r.status === 304 ? '' : await r.text(), entetes: h };
+    },
+    /** une requête quelconque (le relais du shim) ; fetchReseau = le fetch d'origine (le shim remplace W.fetch) */
+    async requete({ methode = 'GET', url, headers = {}, corps }, fetchReseau = W.fetch.bind(W)) {
+      if (natif()) {
+        const { CapacitorHttp } = await import('@capacitor/core');
+        const r = await CapacitorHttp.request({ method: methode, url, headers, data: corps ? JSON.parse(corps) : undefined, responseType: 'text' });
+        return { status: r.status, texte: typeof r.data === 'string' ? r.data : JSON.stringify(r.data) };
+      }
+      const r = await fetchReseau(url, { method: methode, headers, body: corps });
+      return { status: r.status, texte: await r.text() };
     },
   };
 }

@@ -86,7 +86,7 @@ export async function page(o = {}) {
   if (o.ploxions) catalogue = catalogue.filter(p => o.ploxions.includes(p.id));
   if (o.bundles) catalogue = o.bundles.map(b => ({ id: b.id, nom: b.nom || b.id, icone: b.icone || '▣' }));
   let routeur = null;
-  const shim = await installerShim({ boxion, fenetre: w, routeur: { ouvrir: (...a) => routeur.ouvrir(...a), connait: (id) => routeur.connait(id), fermer: () => routeur.fermer() } });
+  const shim = await installerShim({ boxion, fenetre: w, routeur: { ouvrir: (...a) => routeur.ouvrir(...a), connait: (id) => routeur.connait(id), fermer: () => routeur.fermer() }, relais: o.relais || null });
   const evalBundle = (js) => { try { w.eval(js); } catch (e) { erreurs.push('évaluation : ' + e.message); } };
   if (o.bundles) for (const b of o.bundles) evalBundle(b.js);
   else for (const p of catalogue) evalBundle(readFileSync(path.join(RACINE, 'public/ploxions', p.id, 'app.js'), 'utf8'));

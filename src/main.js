@@ -5,7 +5,7 @@ import { installerShim } from './shim/jos.js';
 import { creerRouteur } from './app/routeur.js';
 import { enregistrerBanc } from './banc/banc.js';
 import { creerVerrou } from './natif/verrou.js';
-import { creerDepot, creerHttp } from './marketplace/depot.js';
+import { creerDepot, creerHttp, SOURCE } from './marketplace/depot.js';
 import { enregistrerMarketplace } from './marketplace/marketplace.js';
 import { enregistrerXerEnLigne } from './app/xer-en-ligne.js';
 import { brancherLiens } from './natif/liens.js';
@@ -13,7 +13,7 @@ import { creerRaccourcis } from './natif/raccourcis.js';
 import { creerCompte } from './natif/compte.js';
 import { creerHud } from './app/hud.js';
 
-const VERSION = '0.7.0';
+const VERSION = '0.8.0';
 
 async function demarrer() {
   const racine = document.getElementById('ploxi0n');
@@ -30,12 +30,22 @@ async function demarrer() {
     },
     connait: (id) => routeur.connait(id), fermer: () => routeur.fermer(),
   };
-  const shim = await installerShim({ boxion, routeur: routeurProxy });
+  // le relais : les routes du labo qui ont une version API sans session partent sur xerboxion.org (bother me, le ploxion des testeurs)
+  const fetchOrigine = window.fetch.bind(window), httpRelais = creerHttp(window);
+  const relais = { routes: [{ prefixe: '/bother', vers: (p) => SOURCE + '/api/app' + p }], envoyer: (q) => httpRelais.requete(q, fetchOrigine) };
+  const shim = await installerShim({ boxion, routeur: routeurProxy, relais });
   window.jOSVerrou = creerVerrou();   // Face ID pour les ploxions
   const lireJson = async (u, defaut) => { try { return await (await fetch(u)).json(); } catch (e) { return defaut; } };
-  const pack = (await lireJson('/ploxions/index.json', { ploxions: [] })).ploxions || [];
+  const indexPack = await lireJson('/ploxions/index.json', { ploxions: [] }), pack = indexPack.ploxions || [];
   const compat = await lireJson('/marketplace/compat.json', {});
-  const depot = creerDepot({ boxion, http: creerHttp(window), compat, packLocal: pack, lireLocal: async (id) => (await fetch('/ploxions/' + encodeURIComponent(id) + '/app.js')).text() });
+  const depot = creerDepot({ boxion, http: creerHttp(window), compat, packLocal: pack, lireLocal: async (id) => (await fetch('/ploxions/' + encodeURIComponent(id) + '/app.js')).text(),
+    lireBionLocal: async (b) => { const r = await fetch('/bions/' + encodeURIComponent(b) + '.js'); if (!r.ok) throw new Error('bion absent'); return r.text(); } });
+  // les ploxions de base (index.json « base » : bother me pour les testeurs) : installés une fois, au premier lancement ; retirables ensuite
+  const deja = (await boxion.get('reglages', 'base-installes')) || [];
+  for (const id of (indexPack.base || []).filter(b => !deja.includes(b))) {
+    try { await depot.installerLocal(id); deja.push(id); } catch (e) { console.warn('ploxion de base', id, e); }
+  }
+  await boxion.put('reglages', 'base-installes', deja);
   const internes = [
     enregistrerMarketplace({ depot, surChangement: () => majAccueil(), usage: () => boxion.get('usage', 'stats') }),
     enregistrerXerEnLigne({}),
