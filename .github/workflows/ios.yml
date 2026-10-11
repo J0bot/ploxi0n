@@ -2,7 +2,8 @@
 # Les tests tournent d'abord sur Linux (minutes au tarif normal) ; le build iOS seulement s'ils passent (macOS = minutes ×10).
 # Secrets à poser par RS-7 dans le dépôt (Settings › Secrets and variables › Actions), JAMAIS sur le Boxion ni dans un agent :
 #   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (le contenu du fichier .p8), APPLE_TEAM_ID
-#   option match : MATCH_GIT_URL, MATCH_PASSWORD, MATCH_GIT_BASIC_AUTHORIZATION (sinon : signature gérée par Apple via la clé API)
+#   signature : MATCH_PAT (jeton GitHub, Contents lecture/écriture sur J0bot/ploxi0n-certificats seulement) et MATCH_PASSWORD (la phrase qui
+#   chiffre les certificats) ; sans eux, la CI tente la signature automatique (qui exige un iPhone enregistré dans le compte)
 name: iOS TestFlight
 on:
   push:
@@ -25,6 +26,8 @@ jobs:
     needs: tests
     runs-on: macos-latest
     timeout-minutes: 45
+    env:
+      MATCH_PAT: ${{ secrets.MATCH_PAT }}
     steps:
       - uses: actions/checkout@v4
       - uses: maxim-lobanov/setup-xcode@v1
@@ -36,15 +39,21 @@ jobs:
       - run: npx cap sync ios
       - uses: ruby/setup-ruby@v1
         with: { ruby-version: '3.3', bundler-cache: true }
+      # match lit le dépôt des certificats avec un jeton (MATCH_PAT : accès « Contents » à ploxi0n-certificats seulement)
+      - name: Accès au dépôt des certificats
+        if: ${{ env.MATCH_PAT != '' }}
+        run: |
+          b64=$(printf 'x-access-token:%s' "$MATCH_PAT" | base64 | tr -d '\n')
+          echo "::add-mask::$b64"
+          echo "MATCH_GIT_BASIC_AUTHORIZATION=$b64" >> "$GITHUB_ENV"
+          echo "MATCH_GIT_URL=https://github.com/J0bot/ploxi0n-certificats.git" >> "$GITHUB_ENV"
       - run: bundle exec fastlane beta
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: build-logs, path: ~/Library/Logs/gym, if-no-files-found: ignore }

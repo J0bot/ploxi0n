@@ -18,17 +18,20 @@ platform :ios do
       chemin_cle = File.join(Dir.tmpdir, "AuthKey_#{ENV['ASC_KEY_ID']}.p8")
       File.write(chemin_cle, ENV["ASC_KEY_P8"])
       auth = "-allowProvisioningUpdates -authenticationKeyPath #{chemin_cle} -authenticationKeyID #{ENV['ASC_KEY_ID']} -authenticationKeyIssuerID #{ENV['ASC_ISSUER_ID']}"
-      # archive signée directement en DISTRIBUTION : sinon Xcode veut d'abord un profil de développement, qui exige un appareil enregistré
-      update_code_signing_settings(path: PROJET, use_automatic_signing: true, team_id: ENV["APPLE_TEAM_ID"], targets: ["App"],
-                                   code_sign_identity: "Apple Distribution", build_configurations: ["Release"])
+      update_code_signing_settings(path: PROJET, use_automatic_signing: true, team_id: ENV["APPLE_TEAM_ID"], targets: ["App"])
       build_app(project: PROJET, scheme: "App", configuration: "Release", output_directory: "build",
                 export_method: "app-store", xcargs: auth, export_xcargs: auth,
                 export_options: { signingStyle: "automatic", teamID: ENV["APPLE_TEAM_ID"] })
     else
-      match(type: "appstore", readonly: true, api_key: cle, app_identifier: APP_ID, git_url: ENV["MATCH_GIT_URL"])
+      # match : le certificat de distribution et le profil App Store sont créés UNE fois (avec la clé API), chiffrés dans le dépôt privé
+      # ploxi0n-certificats, puis réutilisés ; un profil App Store n'exige aucun appareil enregistré
+      match(type: "appstore", readonly: false, api_key: cle, app_identifier: APP_ID, git_url: ENV["MATCH_GIT_URL"],
+            team_id: ENV["APPLE_TEAM_ID"], keychain_name: ENV["MATCH_KEYCHAIN_NAME"])
+      profil = ENV["sigh_#{APP_ID}_appstore_profile-name"]
       update_code_signing_settings(path: PROJET, use_automatic_signing: false, team_id: ENV["APPLE_TEAM_ID"], targets: ["App"],
-                                   code_sign_identity: "Apple Distribution", profile_name: "match AppStore #{APP_ID}")
-      build_app(project: PROJET, scheme: "App", configuration: "Release", output_directory: "build", export_method: "app-store")
+                                   code_sign_identity: "Apple Distribution", profile_name: profil, build_configurations: ["Release"])
+      build_app(project: PROJET, scheme: "App", configuration: "Release", output_directory: "build", export_method: "app-store",
+                export_options: { signingStyle: "manual", teamID: ENV["APPLE_TEAM_ID"], provisioningProfiles: { APP_ID => profil } })
     end
 
     upload_to_testflight(api_key: cle, skip_waiting_for_build_processing: true)

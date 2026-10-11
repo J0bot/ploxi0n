@@ -59,7 +59,7 @@ Un push sur `main` lance `.github/workflows/ios.yml`. Les tests tournent sur Lin
 1. Dans App Store Connect, créer l'app : bundle id `ch.j0bot.ploxi0n`, nom « ploxi0n ».
 2. Créer une clé API App Store Connect (rôle Admin ou App Manager, avec accès aux certificats) et télécharger le `.p8`.
 3. Dans les secrets du dépôt GitHub, poser `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` (le contenu du fichier) et `APPLE_TEAM_ID`. Ces secrets ne vont jamais sur le Boxion ni dans un agent.
-4. Option `match` (un dépôt de certificats) : `MATCH_GIT_URL`, `MATCH_PASSWORD`, `MATCH_GIT_BASIC_AUTHORIZATION`. Sans eux, la signature est gérée par Apple à travers la clé API.
+4. La signature (fastlane `match`) : `MATCH_PASSWORD` (une phrase de passe que tu choisis : elle chiffre les certificats) et `MATCH_PAT` (un jeton GitHub « fine-grained » limité au dépôt privé `J0bot/ploxi0n-certificats`, permission Contents en lecture et écriture). Le premier build crée le certificat de distribution et le profil App Store et les y range, chiffrés ; les suivants les réutilisent. Aucun iPhone à enregistrer.
 
 En dépôt privé (GitHub Pro), une minute macOS compte pour 10. Il faut compter environ 300 minutes macOS par mois, et un build iOS en prend 10 à 15.
 
