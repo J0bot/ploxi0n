@@ -83,7 +83,7 @@ export function sondes(W) {
     } },
     { id: 'cal-wasm-simd', groupe: 'calcul', nom: 'WebAssembly SIMD', quand: 'auto', fn: () => {
       // (module (func (result v128) i32.const 0 i8x16.splat))
-      const o = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 26, 11]);
+      const o = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 8, 1, 6, 0, 65, 0, 253, 15, 11]);   // (corrigé 11.10 : l'ancien « drop » rendait le module invalide partout)
       try { return W.WebAssembly && W.WebAssembly.validate(o) ? ok('validé') : non(); } catch (e) { return non(e.message); }
     } },
     { id: 'cal-threads', groupe: 'calcul', nom: 'Mémoire partagée (threads WASM)', quand: 'auto', fn: () => (W.crossOriginIsolated && typeof SharedArrayBuffer !== 'undefined' ? ok('isolé, SharedArrayBuffer') : non('pas d\'isolation cross-origin')) },
