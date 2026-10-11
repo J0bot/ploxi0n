@@ -53,7 +53,9 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   }
 
   const texte = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const tuile = (p) => '<button class="px-tuile' + (edition && !p.interne ? ' px-edite' : '') + '" data-id="' + texte(p.id) + '"><span class="px-ic">' + texte(p.icone || '▣') + '</span><span>' + (verrous.has(p.id) ? '🔒 ' : '') + texte(p.nom || p.id) + '</span></button>';
+  // la teinte d'un ploxion (chill-tekk : chaque icône de verre a sa couleur, stable, tirée de son id)
+  const teinte = (id) => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return 160 + (h % 160); };
+  const tuile = (p) => '<button class="px-tuile' + (edition && !p.interne ? ' px-edite' : '') + '" data-id="' + texte(p.id) + '"><span class="px-ic" style="--t:' + teinte(p.id) + '">' + texte(p.icone || '▣') + '</span><span>' + (verrous.has(p.id) ? '🔒 ' : '') + texte(p.nom || p.id) + '</span></button>';
   const dansDossier = () => new Set([...accueilDoc.dossiers.flatMap(d => d.ids), ...accueilDoc.pages.flatMap(pg => pg.ids)]);
 
   async function accueil() {
@@ -74,7 +76,8 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     ];
     const noms = ['accueil', ...accueilDoc.pages.map(pg => pg.nom)];
     pageCourante = Math.min(pageCourante, pages.length - 1);
-    racine.innerHTML = '<div class="px-accueil"><h1>' + LOGO + 'ploxi0n<span class="px-hud"><span class="px-hud-c">' + (hud ? hud.html() : '') + '</span><button class="px-modif" data-edition>' + (edition ? 'terminé' : '✎') + '</button></span></h1>'
+    racine.innerHTML = '<div class="px-accueil"><header class="px-tete"><h1>' + LOGO + '<b>ploxi0n</b></h1><button class="px-modif" data-edition>' + (edition ? 'terminé' : '✎') + '</button></header>'
+      + '<div class="px-hud px-visiere"><span class="px-hud-c">' + (hud ? hud.html() : '') + '</span></div>'
       + '<p class="px-sous">' + (edition ? 'Touche un ploxion : le ranger dans un dossier, sur une page, ou l\'ajouter à l\'écran d\'accueil de l\'iPhone.' : 'tes ploxions, sur ton téléphone, même sans réseau') + '</p>'
       + '<div class="px-pages">' + pages.map((h, i) => '<section class="px-page" data-page="' + i + '">' + (i ? '<h2 class="px-titre-page">' + texte(noms[i]) + '</h2>' : '') + '<div class="px-grille">' + (h || '<p class="px-sous">page vide</p>') + '</div></section>').join('') + '</div>'
       + (pages.length > 1 ? '<div class="px-points">' + pages.map((_, i) => '<button class="px-point' + (i === pageCourante ? ' on' : '') + '" data-aller="' + i + '" aria-label="' + texte(noms[i]) + '"></button>').join('') + '</div>' : '') + '</div>';

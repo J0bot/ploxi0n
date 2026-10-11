@@ -10,13 +10,13 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
     let vivant = true;
     const R = () => routeur();
     hote.innerHTML = '<div class="rg"><style>'
-      + '.rg{padding:6px 14px 70px;max-width:640px;margin:0 auto}.rg h3{margin:20px 4px 6px;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#8aa0c0)}'
-      + '.rg .bloc{background:#0e1626;border:1px solid var(--bord,#22324f);border-radius:14px;overflow:hidden}.rg .l{display:flex;align-items:center;gap:10px;padding:11px 14px;min-height:30px;border-top:1px solid rgba(120,140,190,.13)}.rg .l:first-child{border-top:0}'
-      + '.rg .l>span{flex:1;min-width:0}.rg .l small{display:block;color:var(--muted,#8aa0c0);font-size:.78rem}.rg button{border:1px solid var(--bord,#22324f);background:transparent;color:inherit;border-radius:10px;padding:6px 11px;min-height:34px;font:14px system-ui}'
+      + '.rg{padding:6px 16px 70px;max-width:640px;margin:0 auto}.rg h3{margin:20px 4px 6px;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#8aa0c0)}'
+      + '.rg .bloc{background:var(--surface,rgba(16,14,30,.62));border:1px solid var(--bord,#22324f);border-radius:18px;overflow:hidden;-webkit-backdrop-filter:saturate(160%) blur(18px);backdrop-filter:saturate(160%) blur(18px);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}.rg .l{display:flex;align-items:center;gap:10px;padding:12px 16px;min-height:30px;border-top:1px solid rgba(150,120,235,.12)}.rg .l:first-child{border-top:0}'
+      + '.rg .l>span{flex:1;min-width:0}.rg .l small{display:block;color:var(--muted,#8aa0c0);font-size:.78rem}.rg button{border:1px solid var(--bord,#22324f);background:rgba(255,255,255,.05);color:inherit;border-radius:999px;padding:6px 14px;min-height:34px;font:500 14px inherit}'
       + '.rg .bas{border:0;min-height:30px;padding:2px 8px;color:var(--muted,#8aa0c0)}.rg .p{border-color:var(--acc,#3fe0d0);color:var(--acc,#3fe0d0)}.rg .msg{color:var(--muted,#8aa0c0);font-size:.82rem;margin:6px 4px}'
-      + '.rg input[type=checkbox]{appearance:none;-webkit-appearance:none;width:46px;height:28px;border-radius:99px;background:#26324a;position:relative;flex:none;margin:0;transition:background .15s}'
-      + '.rg input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:99px;background:#fff;transition:transform .15s}.rg input:checked{background:#34c759}.rg input:checked::after{transform:translateX(18px)}'
-      + '.rg .pins{display:flex;gap:8px;flex-wrap:wrap;padding:10px 14px}.rg .pin{font-size:1.4rem;width:46px;height:46px;border-radius:12px;padding:0}.rg .pin.on{border-color:var(--acc,#3fe0d0);background:rgba(63,224,208,.12)}'
+      + '.rg input[type=checkbox]{appearance:none;-webkit-appearance:none;width:48px;height:29px;border-radius:99px;background:rgba(150,120,235,.22);position:relative;flex:none;margin:0;transition:background .15s}'
+      + '.rg input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:99px;background:#fff;transition:transform .15s}.rg input:checked{background:linear-gradient(135deg,var(--acc,#60c8cd),var(--acc2,#a85cff));box-shadow:0 0 12px rgba(96,200,205,.4)}.rg input:checked::after{transform:translateX(18px)}'
+      + '.rg .pins{display:flex;gap:10px;flex-wrap:wrap;padding:12px 16px}.rg .pin{font-size:1.4rem;width:48px;height:48px;border-radius:15px;padding:0;opacity:.55}.rg .pin.on{opacity:1;border-color:rgba(96,200,205,.7);background:linear-gradient(150deg,rgba(96,200,205,.25),rgba(168,92,255,.2));box-shadow:0 0 14px -4px var(--acc,#60c8cd)}'
       + '</style><div data-c></div></div>';
     const zone = hote.querySelector('[data-c]');
     async function peindre() {
