@@ -10,3 +10,8 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:15px s
 .px-hote{flex:1;min-height:0;position:relative;overflow:auto}
 .px-erreur{color:#ff8a8a;padding:16px}
 .px-accueil h1{display:flex;align-items:center;gap:10px}.px-logo{width:34px;height:34px;color:var(--txt)}
+.px-verrou{margin-left:auto;font-size:1.2rem;background:none;border:0;min-width:44px;min-height:44px}
+.px-modif{margin-left:auto;font-size:.9rem;background:none;border:1px solid var(--bord);color:var(--txt);border-radius:9px;padding:4px 10px;min-height:32px}
+.px-edite{outline:2px dashed var(--acc);outline-offset:-4px}
+.px-dossier{background:#111b2e}
+.px-pad{padding:14px 16px}

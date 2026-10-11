@@ -96,5 +96,18 @@
 	<array>
 		<string>bluetooth-central</string>
 	</array>
+	<key>NSFaceIDUsageDescription</key>
+	<string>ploxi0n utilise Face ID pour ouvrir les ploxions et les secrets que tu as verrouillés.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>ch.j0bot.ploxi0n</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>ploxi0n</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

@@ -302,6 +302,19 @@ export function sondes(W) {
         return partiel('aucun QR vu en 15 s (vise un QR code avec la caméra arrière)');
       } finally { flux.getTracks().forEach(x => x.stop()); }
     } },
+    { id: 'fid-dispo', groupe: 'natif', nom: 'Face ID disponible', quand: 'auto', fn: async () => {
+      const v = W.jOSVerrou; if (!v) return non('jOSVerrou absent'); const d = await v.dispo();
+      return d.ok ? ok(d.type === 'faceid' ? 'Face ID' : d.type === 'touchid' ? 'Touch ID' : 'code de l\'iPhone') : non(d.type ? 'biométrie non configurée' : 'natif seulement');
+    } },
+    { id: 'fid-ouvrir', groupe: 'natif', nom: 'Face ID : te reconnaître', quand: 'toucher', fn: async () => (W.jOSVerrou && await W.jOSVerrou.ouvrir('Le banc vérifie Face ID') ? ok('reconnu') : { etat: 'refuse', detail: 'non reconnu ou annulé' }) },
+    { id: 'fid-coffre', groupe: 'natif', nom: 'Face ID : un secret qui ne sort qu\'avec ton visage', quand: 'toucher', fn: async () => {
+      const v = W.jOSVerrou; if (!v || !(await v.dispo()).ok) return non('Face ID indisponible');
+      const a = new Uint8Array(8); W.crypto.getRandomValues(a); const secret = Array.from(a, b => b.toString(16).padStart(2, '0')).join('');
+      await v.garder('banc', secret);
+      const lu = await v.lire('banc', 'Le banc relit un secret protégé par Face ID');
+      await v.oublier('banc');
+      return lu === secret ? ok('rangé dans le trousseau, relu après Face ID, puis effacé') : { etat: 'refuse', detail: lu === null ? 'Face ID refusé : le secret reste fermé' : 'secret différent' };
+    } },
     { id: 'nat-protection', groupe: 'natif', nom: 'Data Protection (base chiffrée par iOS)', quand: 'auto', fn: async (c) => (c.natif() ? ok('entitlement « Complete » : boxion_local est chiffré quand l\'iPhone est verrouillé') : non('natif seulement')) },
     // ---- le réseau (seulement si on touche : le banc respecte le mode avion) ---------------------------------------------------------------------
     { id: 'res-https', groupe: 'réseau', nom: 'Joindre Internet (HTTPS)', quand: 'toucher', fn: async () => {
