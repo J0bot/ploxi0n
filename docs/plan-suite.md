@@ -57,3 +57,7 @@ iOS isole chaque app : ploxi0n ne peut pas modifier directement les réglages du
 | Dans l'app | luminosité de l'écran, sons, vibrations, plein écran, orientation | des bions du shim (jOSAppareil, jOSSon…) |
 
 Le vrai mode xerboxion = des pages d'écran d'accueil faites d'icônes de ploxions et de widgets de bions, un mode de concentration par xer, des contrôles et des raccourcis qui pilotent le système. Le tout installé depuis le marketplace, comme un ploxion.
+
+## Posé (suite) : comme les mods sur Prism
+
+- « Exactement quand on rajoute des mods sur Prism : ça nous ajoute **les dépendances automatiquement** (fait en 0.6), et ça nous propose **des apps qui sont utilisées habituellement en même temps** que celle-là (fait en 0.7 : « souvent utilisé avec », calculé sur le Nexus), **ou un xer de cette app**. Parce qu'au bout d'un moment, **chaque ploxion devient un xerboxion**. »

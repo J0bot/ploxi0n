@@ -13,7 +13,7 @@ import { creerRaccourcis } from './natif/raccourcis.js';
 import { creerCompte } from './natif/compte.js';
 import { creerHud } from './app/hud.js';
 
-const VERSION = '0.6.0';
+const VERSION = '0.7.0';
 
 async function demarrer() {
   const racine = document.getElementById('ploxi0n');
@@ -61,6 +61,14 @@ async function demarrer() {
   routeur = creerRouteur({ racine, catalogue: internes, boxion, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id), hud, surUsage: (id, s) => surUsage(id, s).catch(() => {}) });
   compte.surChangement(() => { if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); });
   await majAccueil();
+  // jOSApps.monter / peut, comme dans le labo : un ploxion en monte un autre dans un coin (fill the gaps, les « ultimate »). Démontable.
+  window.jOSApps.peut = (id) => routeur.connait(id);
+  window.jOSApps.monter = (id, hote, ctx) => {
+    let inst = null, mort = false;
+    const pret = routeur.charger(id).then(app => { if (mort) return null; inst = app.mount(hote, ctx || { embed: true }) || null; return inst; })
+      .catch(e => { if (hote) hote.textContent = '⚠ « ' + id + ' » indisponible : ' + (e && e.message); });
+    return { ready: pret, unmount() { mort = true; if (inst && inst.unmount) { try { inst.unmount(); } catch (e) { /* */ } } inst = null; } };
+  };
   window.ploxi0n = { boxion, shim, routeur, depot, compte, version: VERSION };
   brancherLiens({ routeur, compte });
   raccourcis = creerRaccourcis({ routeur, boxion });

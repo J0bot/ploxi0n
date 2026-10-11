@@ -14,7 +14,16 @@ const heures = (s) => !s ? '0 h' : s < 3600 ? Math.max(1, Math.round(s / 60)) + 
 
 export function enregistrerMarketplace({ W = globalThis.window, depot, surChangement = () => {}, usage = async () => null }) {
   function mount(hote, ctx) {
-    let onglet = (ctx && ctx.params && ctx.params.onglet) || 'catalogue', q = '', cat = '★', vivant = true;
+    let onglet = (ctx && ctx.params && ctx.params.onglet) || 'catalogue', q = '', cat = '★', vivant = true, ensemble = {}, parId = new Map();
+    // « souvent utilisés avec » (comme les mods sur Prism) : après une installation, ce qui va d'habitude avec
+    async function avec(id, ligne) {
+      const deja = new Set((await depot.installes()).map(x => x.id));
+      const l = (ensemble[id] || []).map(([a]) => parId.get(a)).filter(x => x && !deja.has(x.id)).slice(0, 4);
+      if (!l.length || !ligne || !ligne.parentNode) return;
+      const d = W.document.createElement('div'); d.className = 'mk-avec';
+      d.innerHTML = '<span class="n">souvent utilisé avec :</span> ' + l.map(x => '<button class="ok" data-installer="' + esc(x.id) + '" data-nom="' + esc(x.nom) + '" data-icone="' + esc(x.icone) + '">' + esc(x.icone + ' ' + x.nom) + '</button>').join(' ');
+      ligne.parentNode.insertBefore(d, ligne.nextSibling);
+    }
     hote.innerHTML = '<div class="mk"><style>'
       + '.mk{padding:10px 14px 60px}.mk h2{margin:2px 0 6px;font-size:1.2rem}.mk .n{color:#8aa0c0;font-size:.84rem}'
       + '.mk .tabs{display:flex;gap:6px;margin:8px 0}.mk button{border:1px solid #22324f;background:transparent;color:inherit;border-radius:9px;padding:6px 11px;font:13px system-ui;min-height:36px}'
@@ -22,7 +31,7 @@ export function enregistrerMarketplace({ W = globalThis.window, depot, surChange
       + '.mk .it{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid rgba(120,140,190,.14)}.mk .ic{font-size:1.6rem;width:34px;text-align:center}'
       + '.mk .it div{flex:1;min-width:0}.mk .it small{display:block;color:#8aa0c0;font-size:.8rem;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}'
       + '.mk-b{display:inline-block;font-size:.66rem;font-weight:700;border-radius:99px;padding:1px 7px;border:1px solid currentColor;margin-left:4px}.mk-ok{color:#5fe08a}.mk-mi{color:#ffcf6a}.mk-web{color:#8fb2ff}.mk-q{color:#8aa0c0}'
-      + '.mk .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}.mk .chips button{white-space:nowrap}'
+      + '.mk .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}.mk .chips button{white-space:nowrap}.mk-avec{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:6px 0 10px 44px}'
       + '</style><h2>🛍 Marketplace</h2><p class="n">Installe les ploxions que tu utilises : le réseau sert à installer, ils tournent ensuite hors ligne.</p>'
       + '<div class="tabs"><button data-o="catalogue">catalogue</button><button data-o="pack">pack hors ligne</button><button data-o="installes">installés</button></div><div data-c></div></div>';
     const zone = hote.querySelector('[data-c]');
@@ -36,6 +45,7 @@ export function enregistrerMarketplace({ W = globalThis.window, depot, surChange
         const [c, pop] = await Promise.all([depot.catalogue({ reseau: true }), depot.populaires()]);
         if (!vivant) return;
         const sec = new Map((pop.ploxions || []).map(x => [x.id, x.secondes]));
+        ensemble = pop.ensemble || {}; parId = new Map(c.items.map(x => [x.id, x]));
         const zero = new Set((pop.zero || []).map(x => x.id));
         const cats = [...new Set(c.items.map(x => x.categorie))].sort();
         // ★ = les plus utilisés (heures du Nexus) ; 😴 = zéro heure ; sinon une catégorie
@@ -65,7 +75,7 @@ export function enregistrerMarketplace({ W = globalThis.window, depot, surChange
       if (b.hasAttribute('data-o')) { onglet = b.getAttribute('data-o'); return peindre(); }
       if (b.hasAttribute('data-cat')) { cat = b.getAttribute('data-cat'); return peindre(); }
       try {
-        if (b.hasAttribute('data-installer')) { b.disabled = true; b.textContent = '⏳'; await depot.installer(b.getAttribute('data-installer'), { nom: b.getAttribute('data-nom'), icone: b.getAttribute('data-icone') }); await surChangement(); b.textContent = 'installé ✓'; return; }
+        if (b.hasAttribute('data-installer')) { b.disabled = true; b.textContent = '⏳'; const pid = b.getAttribute('data-installer'); const r = await depot.installer(pid, { nom: b.getAttribute('data-nom'), icone: b.getAttribute('data-icone') }); await surChangement(); b.textContent = 'installé ✓' + (r.bions && r.bions.length ? ' (+' + r.bions.length + ' bion' + (r.bions.length > 1 ? 's' : '') + ')' : ''); avec(pid, b.closest('.it') || b.closest('.mk-avec')); return; }
         if (b.hasAttribute('data-pack')) { b.disabled = true; await depot.installerLocal(b.getAttribute('data-pack')); await surChangement(); b.textContent = 'installé ✓'; return; }
         if (b.hasAttribute('data-retirer')) { await depot.retirer(b.getAttribute('data-retirer')); await surChangement(); return peindre(); }
         if (b.hasAttribute('data-ajour')) { const m = zone.querySelector('[data-msg]'); m.textContent = '⏳'; const r = await depot.aJour(); await surChangement(); m.textContent = r.length ? r.map(x => x.id + ' : ' + ({ 'a-jour': 'à jour', 'mis-a-jour': 'mis à jour ✓', erreur: 'erreur ' + (x.detail || '') }[x.etat])).join(' · ') : 'rien à vérifier'; return; }
