@@ -5,7 +5,9 @@
 //   1. window.jOSApps[id] déjà là (les ploxions intégrés : banc, marketplace)
 //   2. bundleLocal(id) → le JS installé dans boxion_local (le marketplace)
 //   3. public/ploxions/<id>/app.js (le pack hors ligne embarqué)
-// L'accueil : boxion_local « reglages/accueil » = { dossiers: [{ nom, ids }] } ; un ploxion hors dossier reste à la racine.
+// L'accueil : boxion_local « reglages/accueil » = { dossiers: [{ nom, ids }], pages: [{ nom, ids }] } ; des PAGES qu'on fait glisser comme
+// l'écran d'accueil de l'iPhone (la première : les dossiers et tout ce qui n'est rangé nulle part). En édition, toucher un ploxion ouvre ses
+// actions : le ranger dans un dossier, le mettre sur une page, l'ajouter à l'écran d'accueil de l'iPhone (ecranAccueil(id), main.js).
 // Face ID : « reglages/verrous » = [ids] ; un ploxion verrouillé ne s'ouvre qu'avec jOSVerrou.ouvrir().
 
 const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
@@ -13,16 +15,16 @@ const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
   + R.map(r => `M512 ${512 - r}L${512 + r} 512L512 ${512 + r}L${512 - r} 512Z`).join('') + '"/></svg>';
 
-export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null } = {}) {
+export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null } = {}) {
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
   let courant = null;     // { id, inst, hote }
   let edition = false, dossierOuvert = null;
-  let verrous = new Set(), accueilDoc = { dossiers: [] };
+  let verrous = new Set(), accueilDoc = { dossiers: [], pages: [] }, pageCourante = 0;
   const charges = new Map();
   const pret = boxion ? Promise.all([
     boxion.get('reglages', 'verrous').then(v => { verrous = new Set(Array.isArray(v) ? v : []); }),
-    boxion.get('reglages', 'accueil').then(v => { if (v && Array.isArray(v.dossiers)) accueilDoc = v; }),
+    boxion.get('reglages', 'accueil').then(v => { if (v && Array.isArray(v.dossiers)) accueilDoc = { pages: [], ...v }; if (!Array.isArray(accueilDoc.pages)) accueilDoc.pages = []; }),
   ]).catch(() => {}) : Promise.resolve();
   const garder = () => { if (boxion) { boxion.put('reglages', 'verrous', [...verrous]).catch(() => {}); boxion.put('reglages', 'accueil', accueilDoc).catch(() => {}); } };
 
@@ -52,7 +54,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
 
   const texte = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const tuile = (p) => '<button class="px-tuile' + (edition && !p.interne ? ' px-edite' : '') + '" data-id="' + texte(p.id) + '"><span class="px-ic">' + texte(p.icone || '▣') + '</span><span>' + (verrous.has(p.id) ? '🔒 ' : '') + texte(p.nom || p.id) + '</span></button>';
-  const dansDossier = () => new Set(accueilDoc.dossiers.flatMap(d => d.ids));
+  const dansDossier = () => new Set([...accueilDoc.dossiers.flatMap(d => d.ids), ...accueilDoc.pages.flatMap(pg => pg.ids)]);
 
   async function accueil() {
     fermer();
@@ -65,31 +67,63 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
       return;
     }
     const ranges = dansDossier();
+    const pages = [
+      accueilDoc.dossiers.map((d, i) => '<button class="px-tuile px-dossier" data-dossier="' + i + '"><span class="px-ic">📁</span><span>' + texte(d.nom) + ' (' + d.ids.filter(id => parId.has(id)).length + ')</span></button>').join('')
+        + tous.filter(p => !ranges.has(p.id)).map(tuile).join(''),
+      ...accueilDoc.pages.map(pg => pg.ids.map(id => parId.get(id)).filter(Boolean).map(tuile).join('')),
+    ];
+    const noms = ['accueil', ...accueilDoc.pages.map(pg => pg.nom)];
+    pageCourante = Math.min(pageCourante, pages.length - 1);
     racine.innerHTML = '<div class="px-accueil"><h1>' + LOGO + 'ploxi0n<span class="px-hud">' + (hud ? hud.html() : '') + '<button class="px-modif" data-edition>' + (edition ? 'terminé' : '✎') + '</button></span></h1>'
-      + '<p class="px-sous">' + (edition ? 'Touche un ploxion pour le ranger dans un dossier, ou l\'en sortir.' : 'tes ploxions, sur ton téléphone, même sans réseau') + '</p><div class="px-grille">'
-      + accueilDoc.dossiers.map((d, i) => '<button class="px-tuile px-dossier" data-dossier="' + i + '"><span class="px-ic">📁</span><span>' + texte(d.nom) + ' (' + d.ids.filter(id => parId.has(id)).length + ')</span></button>').join('')
-      + tous.filter(p => !ranges.has(p.id)).map(tuile).join('') + '</div></div>';
+      + '<p class="px-sous">' + (edition ? 'Touche un ploxion : le ranger dans un dossier, sur une page, ou l\'ajouter à l\'écran d\'accueil de l\'iPhone.' : 'tes ploxions, sur ton téléphone, même sans réseau') + '</p>'
+      + '<div class="px-pages">' + pages.map((h, i) => '<section class="px-page" data-page="' + i + '">' + (i ? '<h2 class="px-titre-page">' + texte(noms[i]) + '</h2>' : '') + '<div class="px-grille">' + (h || '<p class="px-sous">page vide</p>') + '</div></section>').join('') + '</div>'
+      + (pages.length > 1 ? '<div class="px-points">' + pages.map((_, i) => '<button class="px-point' + (i === pageCourante ? ' on' : '') + '" data-aller="' + i + '" aria-label="' + texte(noms[i]) + '"></button>').join('') + '</div>' : '') + '</div>';
+    const conteneur = racine.querySelector('.px-pages');
+    if (pageCourante && conteneur.children[pageCourante]) conteneur.scrollLeft = conteneur.children[pageCourante].offsetLeft;
+    conteneur.addEventListener('scroll', () => {
+      const i = Math.round(conteneur.scrollLeft / Math.max(1, conteneur.clientWidth)); if (i === pageCourante) return;
+      pageCourante = i; racine.querySelectorAll('.px-point').forEach((b, k) => b.classList.toggle('on', k === i));
+    }, { passive: true });
+  }
+  function demander(question, defaut) { try { return W.prompt(question, defaut); } catch (er) { return null; } }
+  function ranger(id, quoi) {
+    const liste = quoi === 'page' ? 'pages' : 'dossiers';
+    const actuel = accueilDoc[liste].findIndex(d => d.ids.includes(id));
+    let nom = demander(quoi === 'page' ? (actuel >= 0 ? 'Sur quelle page ? (vide = la remettre sur l\'accueil)' : 'Sur quelle page ? (un nom existant ou nouveau)') : (actuel >= 0 ? 'Dossier de ce ploxion (vide = le sortir du dossier)' : 'Ranger dans quel dossier ? (un nom existant ou nouveau)'), actuel >= 0 ? accueilDoc[liste][actuel].nom : '');
+    if (nom === null) return;
+    nom = String(nom).trim().slice(0, 40);
+    // un ploxion vit à un seul endroit : un dossier OU une page (ou l'accueil)
+    for (const l of ['dossiers', 'pages']) accueilDoc[l].forEach(d => { d.ids = d.ids.filter(x => x !== id); });
+    if (nom) { let d = accueilDoc[liste].find(x => x.nom === nom); if (!d) { d = { nom, ids: [] }; accueilDoc[liste].push(d); } d.ids.push(id); if (quoi === 'page') pageCourante = accueilDoc.pages.indexOf(d) + 1; }
+    accueilDoc.dossiers = accueilDoc.dossiers.filter(d => d.ids.length); accueilDoc.pages = accueilDoc.pages.filter(d => d.ids.length);
+    if (dossierOuvert !== null && !accueilDoc.dossiers[dossierOuvert]) dossierOuvert = null;
+    garder(); accueil();
+  }
+  function actions(id) {
+    const p = parId.get(id); if (!p) return;
+    const f = D.createElement('div'); f.className = 'px-voile';
+    f.innerHTML = '<div class="px-feuille"><p class="px-ft"><span class="px-ic">' + texte(p.icone || '▣') + '</span> ' + texte(p.nom || id) + '</p>'
+      + (p.interne ? '' : '<button data-ranger="dossier">📁 ranger dans un dossier</button><button data-ranger="page">📄 mettre sur une page</button>')
+      + (ecranAccueil ? '<button data-ranger="iphone">⌂ ajouter à l\'écran d\'accueil de l\'iPhone</button>' : '') + '<button data-ranger="">annuler</button></div>';
+    racine.appendChild(f);
+    f.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-ranger]'); if (!b && e.target !== f) return;
+      e.stopPropagation(); f.remove();
+      const quoi = b ? b.getAttribute('data-ranger') : '';
+      if (quoi === 'iphone') ecranAccueil(id); else if (quoi) ranger(id, quoi);
+    });
   }
   racine.addEventListener('click', async (e) => {
-    const b = e.target.closest('button'); if (!b || !racine.contains(b) || b.closest('.px-hote')) return;
+    const b = e.target.closest('button'); if (!b || !racine.contains(b) || b.closest('.px-hote') || b.closest('.px-voile')) return;
     if (b.hasAttribute('data-compte')) { if (hud) hud.ouvrir(); return; }
     if (b.hasAttribute('data-edition')) { edition = !edition; return accueil(); }
     if (b.hasAttribute('data-sortir')) { dossierOuvert = null; return accueil(); }
     if (b.hasAttribute('data-dossier')) { dossierOuvert = +b.getAttribute('data-dossier'); return accueil(); }
     if (b.hasAttribute('data-retour')) return accueil();
+    if (b.hasAttribute('data-aller')) { const c = racine.querySelector('.px-pages'), i = +b.getAttribute('data-aller'); if (c && c.children[i]) c.scrollTo ? c.scrollTo({ left: c.children[i].offsetLeft, behavior: 'smooth' }) : (c.scrollLeft = c.children[i].offsetLeft); return; }
     const id = b.getAttribute('data-id'); if (!id) return;
     if (!edition) return ouvrir(id);
-    if (parId.get(id) && parId.get(id).interne) return;
-    // édition : ranger dans un dossier (nouveau ou existant), ou l'en sortir
-    const actuel = accueilDoc.dossiers.findIndex(d => d.ids.includes(id));
-    let nom = null; try { nom = W.prompt(actuel >= 0 ? 'Dossier de ce ploxion (vide = le sortir du dossier)' : 'Ranger dans quel dossier ? (un nom existant ou nouveau)', actuel >= 0 ? accueilDoc.dossiers[actuel].nom : ''); } catch (er) { /* pas de prompt */ }
-    if (nom === null) return;
-    nom = String(nom).trim().slice(0, 40);
-    accueilDoc.dossiers.forEach(d => { d.ids = d.ids.filter(x => x !== id); });
-    if (nom) { let d = accueilDoc.dossiers.find(x => x.nom === nom); if (!d) { d = { nom, ids: [] }; accueilDoc.dossiers.push(d); } d.ids.push(id); }
-    accueilDoc.dossiers = accueilDoc.dossiers.filter(d => d.ids.length);
-    if (dossierOuvert !== null && !accueilDoc.dossiers[dossierOuvert]) dossierOuvert = null;
-    garder(); accueil();
+    actions(id);
   });
 
   async function ouvrir(id, params) {

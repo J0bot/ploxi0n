@@ -11,6 +11,7 @@ import { enregistrerXerEnLigne } from './app/xer-en-ligne.js';
 import { brancherLiens } from './natif/liens.js';
 import { creerRaccourcis } from './natif/raccourcis.js';
 import { creerCompte } from './natif/compte.js';
+import { creerEcranAccueil } from './natif/ecran-accueil.js';
 import { creerHud } from './app/hud.js';
 
 const VERSION = '0.8.0';
@@ -30,15 +31,20 @@ async function demarrer() {
     },
     connait: (id) => routeur.connait(id), fermer: () => routeur.fermer(),
   };
-  // le relais : les routes du labo qui ont une version API sans session partent sur xerboxion.org (bother me, le ploxion des testeurs)
-  const fetchOrigine = window.fetch.bind(window), httpRelais = creerHttp(window);
-  const relais = { routes: [{ prefixe: '/bother', vers: (p) => SOURCE + '/api/app' + p }], envoyer: (q) => httpRelais.requete(q, fetchOrigine) };
+  // LE MODE CONNECTÉ (RS-7 : « les utiliser tous seuls, mais connectés ») : en ligne, toute route du serveur qu'un ploxion appelle part sur
+  // xerboxion.org, avec X-Ploxi0n et le jeton de la personne (labo : JetonAppWeb, docs/dev/57) ; hors ligne, la dernière réponse connue.
+  // Les routes nommées d'abord : /bother → l'API sans session (bother me, le ploxion des testeurs). Kill-switch : reglages/mode-connecte = false.
+  const enTetes = async () => { const c = await boxion.get('compte', 'courant').catch(() => null); return c && c.jeton ? { 'X-Ploxi0n': '1', Authorization: 'Bearer ' + c.jeton } : { 'X-Ploxi0n': '1' }; };
+  let modeConnecte = (await boxion.get('reglages', 'mode-connecte')) !== false;
+  const fetchOrigine = window.fetch.bind(window), httpRelais = creerHttp(window, enTetes);
+  const relais = { routes: [{ prefixe: '/bother', vers: (p) => SOURCE + '/api/app' + p }], general: () => modeConnecte && navigator.onLine !== false, vers: (p) => SOURCE + p,
+    envoyer: (q) => httpRelais.requete(q, fetchOrigine) };
   const shim = await installerShim({ boxion, routeur: routeurProxy, relais });
   window.jOSVerrou = creerVerrou();   // Face ID pour les ploxions
   const lireJson = async (u, defaut) => { try { return await (await fetch(u)).json(); } catch (e) { return defaut; } };
   const indexPack = await lireJson('/ploxions/index.json', { ploxions: [] }), pack = indexPack.ploxions || [];
   const compat = await lireJson('/marketplace/compat.json', {});
-  const depot = creerDepot({ boxion, http: creerHttp(window), compat, packLocal: pack, lireLocal: async (id) => (await fetch('/ploxions/' + encodeURIComponent(id) + '/app.js')).text(),
+  const depot = creerDepot({ boxion, http: creerHttp(window, enTetes), compat, packLocal: pack, lireLocal: async (id) => (await fetch('/ploxions/' + encodeURIComponent(id) + '/app.js')).text(),
     lireBionLocal: async (b) => { const r = await fetch('/bions/' + encodeURIComponent(b) + '.js'); if (!r.ok) throw new Error('bion absent'); return r.text(); } });
   // les ploxions de base (index.json « base » : bother me pour les testeurs) : installés une fois, au premier lancement ; retirables ensuite
   const deja = (await boxion.get('reglages', 'base-installes')) || [];
@@ -46,8 +52,12 @@ async function demarrer() {
     try { await depot.installerLocal(id); deja.push(id); } catch (e) { console.warn('ploxion de base', id, e); }
   }
   await boxion.put('reglages', 'base-installes', deja);
+  // 0.8 : les bions TOUCHÉS (pas seulement déclarés) ; les ploxions installés avant sont complétés une fois, en ligne, sans bloquer le démarrage
+  if (!(await boxion.get('reglages', 'bions-v2')) && navigator.onLine !== false) {
+    depot.completerBions().then(r => { boxion.put('reglages', 'bions-v2', { le: new Date().toISOString(), r }); }).catch(() => {});
+  }
   const internes = [
-    enregistrerMarketplace({ depot, surChangement: () => majAccueil(), usage: () => boxion.get('usage', 'stats') }),
+    enregistrerMarketplace({ depot, surChangement: () => majAccueil(), usage: () => boxion.get('usage', 'stats'), prefs: { lire: () => boxion.get('reglages', 'marketplace'), ecrire: (v) => boxion.put('reglages', 'marketplace', v) } }),
     enregistrerXerEnLigne({}),
     enregistrerBanc({ boxion, version: VERSION }),
   ];
@@ -68,7 +78,10 @@ async function demarrer() {
     p.opens++; p.seconds += sec; p.lastAt = Date.now();
     await boxion.put('usage', 'stats', u);
   }
-  routeur = creerRouteur({ racine, catalogue: internes, boxion, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id), hud, surUsage: (id, s) => surUsage(id, s).catch(() => {}) });
+  // un ploxion sur l'écran d'accueil de l'iPhone (via Raccourcis) : depuis l'édition de l'accueil et la fiche du marketplace
+  const ecranAccueil = creerEcranAccueil({ trouver: (id) => routeur.catalogue().find(p => p.id === id) });
+  window.jOSEcranAccueil = ecranAccueil;
+  routeur = creerRouteur({ racine, catalogue: internes, boxion, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id), hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}) });
   compte.surChangement(() => { if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); });
   await majAccueil();
   // jOSApps.monter / peut, comme dans le labo : un ploxion en monte un autre dans un coin (fill the gaps, les « ultimate »). Démontable.
@@ -79,7 +92,7 @@ async function demarrer() {
       .catch(e => { if (hote) hote.textContent = '⚠ « ' + id + ' » indisponible : ' + (e && e.message); });
     return { ready: pret, unmount() { mort = true; if (inst && inst.unmount) { try { inst.unmount(); } catch (e) { /* */ } } inst = null; } };
   };
-  window.ploxi0n = { boxion, shim, routeur, depot, compte, version: VERSION };
+  window.ploxi0n = { boxion, shim, routeur, depot, compte, version: VERSION, modeConnecte: (v) => { if (v != null) { modeConnecte = !!v; boxion.put('reglages', 'mode-connecte', modeConnecte); } return modeConnecte; } };
   brancherLiens({ routeur, compte });
   raccourcis = creerRaccourcis({ routeur, boxion });
   await majAccueil();

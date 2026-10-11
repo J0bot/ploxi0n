@@ -71,3 +71,19 @@ Le vrai mode xerboxion = des pages d'écran d'accueil faites d'icônes de ploxio
 ## Lecture (suite)
 
 12. **Le Steam Workshop = une source de plus du marketplace** (même geste que le point 7 : plusieurs sources, un adaptateur chacune, jamais un choix exclusif). Le jeu pourriture-4 sur Steam a son Workshop ; un ploxion publié là (un « objet » du Workshop : le bundle `app.js` + l'icône + la description) s'installe dans ploxi0n comme ceux de xerboxion.org, après le même banc de compatibilité. Lecture côté iPhone : l'API Web de Steam (`IPublishedFileService/QueryFiles`, `ISteamRemoteStorage/GetPublishedFileDetails`) donne la liste et l'URL du fichier ; la clé d'API Steam vit sur le boxion (jamais dans l'app) : le labo sert un miroir `/px/workshop/*.json`, que le marketplace lit comme le registre. Publication : depuis le jeu (Steamworks UGC) ou depuis le boxion. Le classement reste celui du Nexus (les heures), le Workshop ajoute ses abonnés comme info.
+
+## Posé (suite, 11.10 la nuit)
+
+- « Le ploxion réglages fonctionne pas, en fait presque tous les ploxions. » Diagnostic (`tools/diagnostic-iphone.mjs`, le vrai chemin de l'app) sur les 45 plus utilisés : 15 marchaient. Fait en 0.8 : **le mode connecté** (toute route du serveur → xerboxion.org avec le jeton ; labo `JetonAppWeb`) → 41/45 ; les bions **touchés** (pas seulement déclarés), récursivement → réglages, xerkions et ultimate-social montent avec leurs bions ; jOSXerPrefs complet.
+- « Le mode connecté, y a pas tout qui fonctionne, des fois les xerkions » ; « l'ultimate social fonctionne pas non plus ». Cause : jOSXerkionHub jamais installé (non déclaré) → « vit dans la galerie Xerkions — ouverture… » ; corrigé par la règle des bions touchés (0.8) et le rattrapage des ploxions déjà installés au démarrage.
+- « Il faut pouvoir utiliser des **pages de ploxions** » (fait en 0.8 : pages qu'on fait glisser, comme l'écran d'accueil) ; « ajouter des ploxions au **homescreen** et les utiliser tous seuls, mais connectés » (fait en 0.8 : le guide Raccourcis + l'icône du ploxion, depuis l'édition et la fiche du marketplace).
+- « Je veux des **widgets ploxion**. » (prochain lot : extension WidgetKit + App Group, une deuxième cible signée.)
+- « Il faut pouvoir **ajouter des options en plus dans Raccourcis**, avoir **le marketplace de ça** aussi. »
+- « Il faut vraiment **un vrai bouton réglages** dans l'app ploxi0n, et un moyen de **customiser son HUD**. »
+- « Une **vision des trucs qu'on regarde** : les films qu'on regarde, sur YouTube, Stremio, n'importe quoi genre Netflix, ou avec Trakt : pouvoir tout checker. »
+
+## Lecture (suite)
+
+13. **Les actions Raccourcis = des ploxions aussi** : chaque action (App Intent) est déclarée dans l'app ; les ajouter au vol n'est pas possible (iOS les lit à la compilation). La voie : un petit nombre d'actions GÉNÉRIQUES (ouvrir un ploxion, envoyer un port à un ploxion `ploxion.port(payload)`, lire la valeur d'un bion, noter un tsoin, lancer un tsoin rejouable) ; le marketplace propose des **recettes** (un raccourci tout fait = une suite de ces actions avec ses paramètres, partageable en lien iCloud) : « le marketplace des raccourcis ».
+14. **Le vu du xerboxion (vision de ce qu'on regarde)** : un bion `jOSVu` (journal de visionnage : titre, source, durée, quand) alimenté par les ploxions médias (YouTube, Stremio, cinéma) ; Trakt en adaptateur (API OAuth, l'historique Netflix/Disney y arrive via ses intégrations) ; l'export Netflix (CSV) en import. Un ploxion « 👁 vu » : la frise, les heures par source, ce qui reste à finir. Rien ne sort du boxion (degré O par défaut).
+15. **Les réglages de ploxi0n** : un ploxion interne ⚙ toujours accessible (HUD) : compte, mode connecté, verrous Face ID, pages, vue du marketplace, version et banc ; **le HUD se compose** (quels éléments, dans quel ordre : compte, réseau, mode, heure, des ploxions épinglés).

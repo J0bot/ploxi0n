@@ -16,6 +16,11 @@ export function bionsDuBundle(js) {
   try { return m ? JSON.parse(m[1]).filter(b => typeof b === 'string' && /^jOS[A-Za-z0-9]{1,48}$/.test(b)) : []; } catch (e) { return []; }
 }
 
+/** les bions qu'un code TOUCHE (window.jOSX…, jOSX.f()) : beaucoup de bundles n'en déclarent aucun (RS-7 11.10 : xerkions, ultimate-social) */
+export function bionsTouches(js, sauf = '') {
+  return [...new Set((String(js || '').match(/\bjOS[A-Z][A-Za-z0-9]{0,47}\b/g) || []))].filter(b => b !== sauf && !FOURNIS.has(b));
+}
+
 async function sha256(texte) {
   const h = await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(texte));
   return Array.from(new Uint8Array(h), b => b.toString(16).padStart(2, '0')).join('');
@@ -27,8 +32,41 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
   async function garderListe(l) { await boxion.put(META, 'installes', [...new Set(l)]); }
   const valide = (js, id) => typeof js === 'string' && js.length > 0 && js.length < 8e6 && /jOSApps/.test(js) && js.includes(id);
 
+  // les bions d'un code, RÉCURSIVEMENT (les bions d'un bion), dépendances d'abord ; servis seuls par le labo (/px/bion-app/<jOSNom>.js).
+  // « manquants » = ceux que le bundle DÉCLARE et que personne ne sert (un bion seulement touché et introuvable : ignoré, le code teste son
+  // existence). Un bion déjà dans boxion_local ne se retélécharge pas. 80 bions au plus par ploxion.
+  async function resoudreBions(js) {
+    const vus = new Set(), ordre = [], manquants = [], declares = new Set(bionsDuBundle(js));
+    async function visiter(b) {
+      if (vus.has(b) || FOURNIS.has(b) || vus.size >= 80) return;
+      vus.add(b);
+      let x = await boxion.get('bions', b);
+      if (!x) {
+        try {
+          const rb = await http.get(source + '/px/bion-app/' + b + '.js', { headers: { Accept: 'application/javascript' } });
+          if (rb.status === 200 && rb.texte.includes(b)) { x = { js: rb.texte, hash: await sha256(rb.texte), le: new Date().toISOString() }; await boxion.put('bions', b, x); }
+        } catch (e) { /* hors ligne : manquant */ }
+      }
+      if (!x) { if (declares.has(b)) manquants.push(b); return; }
+      for (const c of bionsTouches(x.js, b)) await visiter(c);
+      ordre.push(b);
+    }
+    for (const b of [...declares, ...bionsTouches(js)]) await visiter(b);
+    return { bions: ordre, manquants };
+  }
+
   return {
     source,
+    /** complète les bions des ploxions déjà installés (règle « déclarés + touchés », 0.8) : une fois, en ligne */
+    async completerBions() {
+      const res = [];
+      for (const id of await liste()) {
+        const p = await boxion.get(NS, id); if (!p) continue;
+        const { bions, manquants } = await resoudreBions(p.js);
+        if (bions.join() !== (p.bions || []).join()) { await boxion.put(NS, id, { ...p, bions, manquants }); res.push({ id, avant: (p.bions || []).length, apres: bions.length }); }
+      }
+      return res;
+    },
     async catalogue({ reseau = true } = {}) {
       if (reseau) {
         try {
@@ -36,7 +74,7 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
           if (r.status !== 200) throw new Error('registre : HTTP ' + r.status);
           const brut = JSON.parse(r.texte);
           const items = (Array.isArray(brut) ? brut : brut.ploxions || brut.items || []).filter(p => p && p.id && p.hasScreen && p.enabled !== false && !p.admin && p.status === 'live')
-            .map(p => ({ id: p.id, nom: p.name || p.id, icone: p.icon || '▣', description: String(p.description || '').slice(0, 400), categorie: p.cat_label || 'Autres', cat_icone: p.cat_icon || '📦', compat: compat[p.id] || null }));
+            .map(p => ({ id: p.id, nom: p.name || p.id, icone: p.icon || '▣', description: String(p.description || '').slice(0, 400), categorie: p.cat_label || 'Autres', cat_icone: p.cat_icon || '📦', compat: compat[p.id] || null, mtime: +p.mtime || 0, fournit: Array.isArray(p.provides) ? p.provides.slice(0, 8).map(String) : [] }));
           const c = { maj: new Date().toISOString(), source, items };
           await boxion.put(META, 'catalogue', c);
           return { ...c, horsLigne: false };
@@ -59,17 +97,7 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       const r = await http.get(source + '/px/' + encodeURIComponent(id) + '/app.js', { headers: { Accept: 'application/javascript' } });
       if (r.status !== 200) throw new Error(`le serveur refuse ${id} (HTTP ${r.status})`);
       if (!valide(r.texte, id)) throw new Error(`${id} : ce n'est pas un ploxion installable (pas d'enregistrement jOSApps)`);
-      // les bions dont il a besoin (servis seuls par le labo : /px/bion-app/<jOSNom>.js) ; un bion introuvable n'empêche pas l'installation
-      const bions = [], manquants = [];
-      for (const b of bionsDuBundle(r.texte)) {
-        if (FOURNIS.has(b)) continue;
-        if (await boxion.get('bions', b)) { bions.push(b); continue; }
-        try {
-          const rb = await http.get(source + '/px/bion-app/' + b + '.js', { headers: { Accept: 'application/javascript' } });
-          if (rb.status === 200 && rb.texte.includes(b)) { await boxion.put('bions', b, { js: rb.texte, hash: await sha256(rb.texte), le: new Date().toISOString() }); bions.push(b); }
-          else manquants.push(b);
-        } catch (e) { manquants.push(b); }
-      }
+      const { bions, manquants } = await resoudreBions(r.texte);
       const doc = { id, nom: meta.nom || id, icone: meta.icone || '▣', js: r.texte, hash: await sha256(r.texte), etag: (r.entetes && (r.entetes.etag || r.entetes.ETag)) || null, origine: source, installe: new Date().toISOString(), bions, manquants };
       await boxion.put(NS, id, doc);
       await garderListe([...(await liste()), id]);
@@ -120,7 +148,8 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       return avant + '\n' + p.js;
     },
     // les plus utilisés : les heures passées, tout le Nexus (labo : /px/marketplace/populaires.json), en cache pour le mode avion
-    async populaires() {
+    async populaires({ reseau = true } = {}) {
+      if (!reseau) { const d = await boxion.get(META, 'populaires'); return d ? { ...d, horsLigne: true } : { ploxions: [], zero: [], horsLigne: true }; }
       try {
         const r = await http.get(source + '/px/marketplace/populaires.json', { headers: { Accept: 'application/json' } });
         if (r.status !== 200) throw new Error('HTTP ' + r.status);
@@ -131,17 +160,18 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
 }
 
 /** l'accès HTTP : CapacitorHttp (natif, sans CORS) sur l'iPhone, fetch ailleurs */
-export function creerHttp(W = globalThis.window) {
+/** enTetes() → des en-têtes ajoutés à chaque requête (le mode connecté : X-Ploxi0n + le jeton de la personne) */
+export function creerHttp(W = globalThis.window, enTetes = async () => ({})) {
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
   return {
     async get(url, { headers = {} } = {}) {
       if (natif()) {
         const { CapacitorHttp } = await import('@capacitor/core');
-        const r = await CapacitorHttp.get({ url, headers, responseType: 'text' });
+        const r = await CapacitorHttp.get({ url, headers: { ...(await enTetes()), ...headers }, responseType: 'text' });
         const h = {}; for (const k in (r.headers || {})) h[k.toLowerCase()] = r.headers[k];
         return { status: r.status, texte: typeof r.data === 'string' ? r.data : JSON.stringify(r.data), entetes: h };
       }
-      const r = await W.fetch(url, { headers });
+      const r = await W.fetch(url, { headers: { ...(await enTetes()), ...headers } });
       const h = {}; r.headers.forEach((v, k) => { h[k.toLowerCase()] = v; });
       return { status: r.status, texte: r.status === 304 ? '' : await r.text(), entetes: h };
     },
@@ -149,11 +179,14 @@ export function creerHttp(W = globalThis.window) {
     async requete({ methode = 'GET', url, headers = {}, corps }, fetchReseau = W.fetch.bind(W)) {
       if (natif()) {
         const { CapacitorHttp } = await import('@capacitor/core');
-        const r = await CapacitorHttp.request({ method: methode, url, headers, data: corps ? JSON.parse(corps) : undefined, responseType: 'text' });
-        return { status: r.status, texte: typeof r.data === 'string' ? r.data : JSON.stringify(r.data) };
+        let data; if (corps) { try { data = JSON.parse(corps); } catch (e) { data = corps; } }
+        const r = await CapacitorHttp.request({ method: methode, url, headers: { ...(await enTetes()), ...headers }, data, responseType: 'text' });
+        const h = {}; for (const k in (r.headers || {})) h[k.toLowerCase()] = r.headers[k];
+        return { status: r.status, texte: typeof r.data === 'string' ? r.data : JSON.stringify(r.data), entetes: h };
       }
-      const r = await fetchReseau(url, { method: methode, headers, body: corps });
-      return { status: r.status, texte: await r.text() };
+      const r = await fetchReseau(url, { method: methode, headers: { ...(await enTetes()), ...headers }, body: corps });
+      const h = {}; r.headers.forEach((v, k) => { h[k.toLowerCase()] = v; });
+      return { status: r.status, texte: await r.text(), entetes: h };
     },
   };
 }

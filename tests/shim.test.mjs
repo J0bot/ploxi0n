@@ -145,3 +145,26 @@ test('le relais : /bother part sur xerboxion.org/api/app/bother (le ploxion des 
   assert.deepEqual(p.tentatives, [], 'le relais ne passe jamais par le fetch de la page');
   p.fin();
 });
+
+test('le MODE CONNECTÉ : toute route du serveur part sur xerboxion.org (en-têtes du ploxion, sans le CSRF local) ; le GET est gardé et resservi hors ligne', async () => {
+  const envois = []; let enLigne = true, connecte = true;
+  const relais = { routes: [], general: () => connecte, vers: (c) => 'https://xerboxion.org' + c,
+    envoyer: async (q) => { envois.push(q); if (!enLigne) throw new Error('mode avion'); return { status: 200, texte: '{"items":[1,2]}', entetes: { 'content-type': 'application/json' } }; } };
+  const p = await page({ relais });
+  const r = await p.w.fetch('/fs/list?d=/', { headers: { 'X-CSRF-TOKEN': 'ploxi0n-local', 'X-Requested-With': 'XMLHttpRequest' } });
+  assert.equal(r.status, 200); assert.deepEqual((await r.json()).items, [1, 2]);
+  assert.equal(envois[0].url, 'https://xerboxion.org/fs/list?d=/'); assert.equal(envois[0].headers['X-Requested-With'], 'XMLHttpRequest'); assert.equal(envois[0].headers['X-CSRF-TOKEN'], undefined, 'le faux CSRF local ne part pas');
+  const post = await p.w.fetch('/social/post', { method: 'POST', body: JSON.stringify({ t: 1 }) });
+  assert.equal(post.status, 200); assert.equal(envois[1].methode, 'POST'); assert.equal(envois[1].corps, '{"t":1}');
+  enLigne = false;
+  const h = await p.w.fetch('/fs/list?d=/');
+  assert.equal(h.status, 200, 'hors ligne : la dernière réponse'); assert.ok(h.headers.get('X-Ploxi0n-Cache'));
+  assert.equal((await p.w.fetch('/fs/list?d=/autre')).status, 503, 'jamais vu → 503');
+  connecte = false;
+  assert.equal((await p.w.fetch('/fs/list?d=/')).status, 200, 'mode connecté coupé : le cache reste lisible');
+  const n = envois.length; assert.equal((await p.w.fetch('/wiki/terms.json')).status, 503); assert.equal(envois.length, n, 'coupé : aucun envoi');
+  assert.equal((await p.w.fetch('/xion/snapshot')).status, 200, 'les routes locales restent locales');
+  assert.equal(envois.length, n);
+  assert.deepEqual(p.tentatives, []);
+  p.fin();
+});

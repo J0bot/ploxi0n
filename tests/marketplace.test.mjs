@@ -91,8 +91,19 @@ test('routeur : un ploxion installé s\'ouvre depuis boxion_local (jamais depuis
     p.w.prompt = () => 'Outils';
     racine.querySelector('[data-edition]').click(); await attendre(30);
     racine.querySelector('[data-id="pomo"]').click(); await attendre(30);
+    racine.querySelector('[data-ranger="dossier"]').click(); await attendre(30);
     assert.deepEqual((await p.boxion.get('reglages', 'accueil')).dossiers, [{ nom: 'Outils', ids: ['pomo'] }]);
     assert.ok(racine.querySelector('[data-dossier="0"]'), 'le dossier apparaît sur l\'accueil');
+    // une PAGE : le ploxion quitte son dossier (un seul endroit), la page apparaît, avec ses points
+    p.w.prompt = () => 'Travail';
+    r.majCatalogue([{ id: 'pomo', nom: 'Pomodoro', icone: '🍅' }, { id: 'autre', nom: 'Autre', icone: '◇' }]); await r.accueil();
+    racine.querySelector('[data-dossier="0"]').click(); await attendre(10);
+    racine.querySelector('[data-id="pomo"]').click(); await attendre(10);   // depuis l'intérieur du dossier
+    racine.querySelector('[data-ranger="page"]').click(); await attendre(30);
+    const doc = await p.boxion.get('reglages', 'accueil');
+    assert.deepEqual([doc.dossiers, doc.pages], [[], [{ nom: 'Travail', ids: ['pomo'] }]]);
+    assert.equal(racine.querySelectorAll('.px-page').length, 2); assert.equal(racine.querySelectorAll('.px-point').length, 2);
+    assert.ok(racine.querySelector('.px-page[data-page="1"] [data-id="pomo"]') && racine.querySelector('.px-page[data-page="0"] [data-id="autre"]'));
   } finally { p.w.close(); }
 });
 
@@ -106,4 +117,69 @@ test('dépendances : les bions déclarés par le bundle s\'installent avec lui (
   assert.deepEqual(r.bions, ['jOSXerkionHub']); assert.deepEqual(r.manquants, ['jOSAbsent'], 'jOSPorts vient du shim, jOSAbsent est introuvable');
   const b = await d.bundle('galerie');
   assert.ok(b.indexOf('window.jOSXerkionHub') < b.indexOf('jOSApps'), 'le bion passe avant le ploxion');
+});
+
+test('l\'interface du marketplace : cache d\'abord, recherche en mémoire (sans accents), cinq vues, fiche, installer depuis la fiche, découvrir', async () => {
+  const { chercher, enregistrerMarketplace, VUES } = await import('../src/marketplace/marketplace.js');
+  const items = [{ id: 'meteo', nom: 'Météo', description: 'le temps qu\'il fait', categorie: 'Maison & Vie', fournit: ['weather'] }, { id: 'pomo', nom: 'Pomodoro', description: 'minuteur', categorie: 'Temps', fournit: [] },
+    { id: 'carte', nom: 'Carte du monde', description: 'avec la météo', categorie: 'Cartes', fournit: [] }];
+  assert.deepEqual(chercher(items, 'meteo').map(x => x.id), ['meteo', 'carte'], 'le nom avant la description, sans accents');
+  assert.deepEqual(chercher(items, 'xyz car').map(x => x.id), [], 'un mot introuvable suffit à écarter');
+  assert.deepEqual(chercher(items, 'car mon').map(x => x.id), ['carte'], 'tous les mots, dans n\'importe quel ordre');
+  assert.deepEqual(chercher(items, 'weather').map(x => x.id), ['meteo'], 'ce qu\'il fournit');
+
+  const s = serveur(), boxion = creerMemoire(), p = await page({ avion: true, ploxions: [] }), W = p.w;
+  const d = creerDepot({ boxion, http: s.http, packLocal: [{ id: 'local', nom: 'Local', icone: '📦' }], lireLocal: async () => BUNDLE('local') });
+  await d.catalogue();   // le cache
+  s.enLigne = false; s.appels.length = 0;
+  let pref = null; const ouverts = [];
+  W.jOS.openPloxion = (id) => ouverts.push(id);
+  enregistrerMarketplace({ W, depot: d, prefs: { lire: async () => pref, ecrire: async (v) => { pref = v; } } });
+  const hote = W.document.createElement('div'); W.document.body.appendChild(hote);
+  const inst = W.jOSApps.marketplace.mount(hote, {});
+  await inst.ready;
+  assert.ok(hote.querySelector('.mk-rayon'), 'la vitrine, depuis le cache, en mode avion');
+  assert.match(hote.textContent, /Pomodoro/); assert.match(hote.textContent, /Local/, 'le pack est dans la vitrine');
+  for (const [v] of VUES) { hote.querySelector('[data-vue="' + v + '"]').click(); await attendre(10); assert.ok(hote.querySelector('[data-vue="' + v + '"]').classList.contains('on'), v); }
+  assert.equal(pref.vue, 'moi', 'la vue est gardée');
+  hote.querySelector('[data-vue="liste"]').click(); await attendre(10);
+  assert.ok(hote.querySelector('.mk-az [data-az="P"]'), 'la barre de lettres');
+  const champ = hote.querySelector('[data-q]'); champ.value = 'pomo'; champ.dispatchEvent(new W.Event('input')); 
+  assert.equal(hote.querySelectorAll('.mk-it').length, 1, 'recherche instantanée');
+  const appelsAvant = s.appels.length;
+  champ.value = 'po'; champ.dispatchEvent(new W.Event('input')); champ.value = 'pom'; champ.dispatchEvent(new W.Event('input'));
+  assert.equal(s.appels.length, appelsAvant, 'chercher ne touche jamais le réseau');
+  champ.value = ''; champ.dispatchEvent(new W.Event('input'));
+  hote.querySelector('[data-vue="grille"]').click(); await attendre(10);
+  hote.querySelector('.mk-carte[data-fiche="local"]').click(); await attendre(10);
+  const f = hote.querySelector('.mk-feuille'); assert.ok(f, 'la fiche');
+  f.querySelector('[data-installer="local"]').click(); await attendre(40);
+  assert.deepEqual((await d.installes()).map(x => x.id), ['local'], 'installé depuis le pack, sans réseau');
+  hote.querySelector('.mk-feuille [data-ouvrir="local"]').click(); await attendre(10);
+  assert.deepEqual(ouverts, ['local']); assert.equal(hote.querySelector('.mk-feuille'), null);
+  hote.querySelector('[data-vue="decouvrir"]').click(); await attendre(10);
+  assert.equal(hote.querySelector('.mk-dc').getAttribute('data-carte'), 'pomo', 'découvrir : le seul pas encore installé');
+  hote.querySelector('[data-passer="pomo"]').click(); await attendre(20);
+  assert.match(hote.textContent, /tout vu/); assert.deepEqual(pref.passes, ['pomo']);
+  inst.unmount(); p.fin();
+});
+
+test('dépendances 0.8 : les bions TOUCHÉS (non déclarés) aussi, récursivement, dépendances d\'abord ; completerBions rattrape les anciens', async () => {
+  const s = serveur(), boxion = creerMemoire();
+  s.js.xk = BUNDLE('xk') + '\nif (window.jOSXerkion) jOSXerkion.ouvrir();';
+  const BIONS = { jOSXerkion: 'window.jOSXerkion={ouvrir(){ if (window.jOSStore) jOSStore.get(); }};', jOSStore: 'window.jOSStore={get(){}};' };
+  const get = s.http.get; const demandes = [];
+  s.http.get = async (url, o) => { const m = url.match(/\/px\/bion-app\/(\w+)\.js$/); if (m) { demandes.push(m[1]); return BIONS[m[1]] ? { status: 200, texte: BIONS[m[1]], entetes: {} } : { status: 404, texte: '', entetes: {} }; } return get(url, o); };
+  const d = creerDepot({ boxion, http: s.http });
+  const r = await d.installer('xk');
+  assert.deepEqual(r.bions, ['jOSStore', 'jOSXerkion'], 'jOSStore (touché par jOSXerkion) passe avant lui');
+  assert.deepEqual(r.manquants, [], 'un bion seulement touché et introuvable n\'est pas « manquant »');
+  const b = await d.bundle('xk');
+  assert.ok(b.indexOf('window.jOSStore') < b.indexOf('window.jOSXerkion=') && b.indexOf('window.jOSXerkion=') < b.indexOf('jOSApps'));
+  // un ploxion installé à l'ancienne (sans ses bions touchés) est complété
+  await boxion.put('ploxions', 'xk', { ...(await boxion.get('ploxions', 'xk')), bions: [] });
+  const n = demandes.length;
+  assert.deepEqual(await d.completerBions(), [{ id: 'xk', avant: 0, apres: 2 }]);
+  assert.equal(demandes.length, n, 'les bions déjà là ne se retéléchargent pas');
+  assert.deepEqual(await d.completerBions(), [], 'idempotent');
 });

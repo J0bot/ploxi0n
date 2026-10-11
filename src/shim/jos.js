@@ -15,8 +15,9 @@
 //   les autres moteurs window.jOS*  absents : les ploxions testent déjà leur existence
 // Toute autre route du serveur répond 503 {horsLigne:true} SANS toucher le réseau, et s'inscrit dans le journal 'manques' (ce qu'il faudra
 // réimplémenter) ; une URL externe part sur le réseau (les ploxions « online only »), comptée dans shim.sortants.
-// relais = [{ prefixe, vers(chemin) → url }] + envoyer({methode, url, headers, corps}) → {status, texte} : quelques routes du labo qui ont une
-// version API sans session (ex. /bother → https://xerboxion.org/api/app/bother, le ploxion des testeurs) partent sur le réseau ; hors ligne → 503.
+// relais = { routes: [{ prefixe, vers(chemin) → url }], general() → bool, vers(chemin) → url, envoyer({methode, url, headers, corps}) →
+// {status, texte, entetes} } : les routes nommées (ex. /bother → https://xerboxion.org/api/app/bother) et, en MODE CONNECTÉ (general()),
+// toute autre route du serveur partent sur le réseau ; un GET réussi est gardé (boxion_local « routes ») et resservi hors ligne.
 
 const NS_LS = 'localStorage';
 const NS_BOX = (ns) => 'box:' + ns;
@@ -128,7 +129,25 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
   const ouvrir = (id, params) => (routeur ? routeur.ouvrir(String(id), params || null) : false);
   W.jOS = Object.assign(W.jOS || {}, { openPloxion: (id, o) => ouvrir(id, o && o.params), isDesktop: () => false });
   W.isDesktop = () => false;
-  W.jOSXerPrefs = Object.assign(W.jOSXerPrefs || {}, { ouvrir: (id, o) => ouvrir(id, o && o.params), ouvrable: (id) => !!(routeur && routeur.connait(id)) });
+  // jOSXerPrefs : la même API que le bion du labo (partials/_xerprefs_bion) ; ici, ouvrir = le routeur (une page plein écran, toujours)
+  const DEMANDES = {}, JOURNAL = [];
+  const lirePrefs = () => { try { return Object.assign({ start: '', open: 'page', boot: [] }, JSON.parse(W.localStorage.getItem('xb:xer') || '{}')); } catch (e) { return { start: '', open: 'page', boot: [] }; } };
+  const demande = (id) => { const d = DEMANDES[id]; if (!d) return null; delete DEMANDES[id]; return Date.now() - d.t < 30000 ? d.params : null; };
+  W.jOSXerPrefs = Object.assign(W.jOSXerPrefs || {}, {
+    get: () => lirePrefs(),
+    set(patch) { const P = Object.assign(lirePrefs(), patch || {}); try { W.localStorage.setItem('xb:xer', JSON.stringify(P)); } catch (e) { /* */ } try { W.jOSPorts.emit('xerprefs', 'update', P); } catch (e) { /* */ } return lirePrefs(); },
+    reset() { try { W.localStorage.removeItem('xb:xer'); } catch (e) { /* */ } },
+    ouvrir(x, o) {
+      const id = String(x && typeof x === 'object' ? x.id : x), p = o && o.params;
+      if (p && typeof p === 'object') DEMANDES[id] = { params: p, t: Date.now() };
+      JOURNAL.unshift({ id, t: Date.now(), hote: 'page' }); JOURNAL.length = Math.min(JOURNAL.length, 20);
+      return ouvrir(id, p);
+    },
+    ouvrable: (x) => !!(routeur && routeur.connait(String(x && typeof x === 'object' ? x.id : x))),
+    mode: () => ({ voulu: 'page', resolu: 'page' }), central: () => false,
+    demande, params: (id, ctx) => (ctx && ctx.params && typeof ctx.params === 'object' ? ctx.params : null) || demande(id) || {},
+    journal: () => JOURNAL.slice(),
+  });
   W.jOSMobile = Object.assign(W.jOSMobile || {}, { open: (id, x) => ouvrir(id, x && x.params), close: () => routeur && routeur.fermer() });
 
   // ---- fetch : les routes du serveur, en local ; le réseau seulement pour l'externe -----------------------------------------------------------
@@ -167,15 +186,33 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
       if (p === '/px/boxion/list') return json({ items: await jb.list(q.get('ns')) });
       if (p === '/px/boxion/del') return json(await jb.del(b.ns, b.key));
     }
-    const rel = relais && relais.routes.find(r => p === r.prefixe || p.startsWith(r.prefixe + '/'));
+    // le relais : les routes nommées (ex. /bother → l'API sans session), puis, en MODE CONNECTÉ, toute route du serveur → xerboxion.org
+    // (le jeton de la personne si elle est connectée) ; un GET réussi est gardé dans boxion_local « routes » : le mode avion le resservira
+    const rel = relais && ((relais.routes || []).find(r => p === r.prefixe || p.startsWith(r.prefixe + '/')) || (relais.general && relais.general() ? { vers: relais.vers } : null));
+    const cle = methode + ' ' + p + url.search;
     if (rel) {
       const cible = rel.vers(p) + url.search;
       etat.sortants.push(cible);
       try {
-        const corps = init && typeof init.body === 'string' ? init.body : undefined;
-        const r = await relais.envoyer({ methode, url: cible, headers: { Accept: 'application/json', ...(corps ? { 'Content-Type': 'application/json' } : {}) }, corps });
-        return new W.Response(r.status === 204 ? null : r.texte, { status: r.status, headers: { 'Content-Type': 'application/json' } });
-      } catch (e) { return json({ ok: false, horsLigne: true, route: p, message: 'hors ligne : ' + e.message }, 503); }
+        const corps = init && init.body != null ? (typeof init.body === 'string' ? init.body : init.body instanceof W.URLSearchParams ? init.body.toString() : null) : undefined;
+        if (corps === null) throw new Error('corps non texte (fichier) : pas encore relayé');
+        const h = {}; const hi = (init && init.headers) || {};
+        if (hi instanceof W.Headers) hi.forEach((v, k) => { h[k] = v; }); else Object.assign(h, hi);
+        delete h['X-CSRF-TOKEN']; delete h['x-csrf-token'];
+        const r = await relais.envoyer({ methode, url: cible, headers: { Accept: 'application/json', ...h }, corps });
+        const type = (r.entetes && (r.entetes['content-type'] || r.entetes['Content-Type'])) || 'application/json';
+        if (methode === 'GET' && r.status === 200 && r.texte && r.texte.length < 2e6) boxion.put('routes', cle, { texte: r.texte, type, le: Date.now() }).catch(() => {});
+        return new W.Response(r.status === 204 || r.status === 304 ? null : r.texte, { status: r.status, headers: { 'Content-Type': type } });
+      } catch (e) {
+        const c = methode === 'GET' ? await boxion.get('routes', cle).catch(() => null) : null;
+        if (c) return new W.Response(c.texte, { status: 200, headers: { 'Content-Type': c.type, 'X-Ploxi0n-Cache': new Date(c.le).toISOString() } });
+        etat.manques.push(methode + ' ' + p);
+        return json({ ok: false, horsLigne: true, route: p, message: 'hors ligne : ' + e.message }, 503);
+      }
+    }
+    if (methode === 'GET') {   // mode connecté coupé ou hors ligne : la dernière réponse connue
+      const c = await boxion.get('routes', cle).catch(() => null);
+      if (c) return new W.Response(c.texte, { status: 200, headers: { 'Content-Type': c.type, 'X-Ploxi0n-Cache': new Date(c.le).toISOString() } });
     }
     etat.manques.push(methode + ' ' + p);
     boxion.append('manques', { methode, route: p }).catch(() => {});

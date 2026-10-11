@@ -1,3 +1,4 @@
+import { IDBFactory as FDBFactory, IDBKeyRange as FDBKeyRange } from 'fake-indexeddb';
 // L'aide des tests : une page jsdom avec boxion_local (mémoire, ou partagé pour simuler un redémarrage), le vrai jOSb du labo, le shim et le
 // routeur ; des compteurs pour le « droit au silence » (minuteurs, rAF, écouteurs, blobs) ; un réseau qui refuse tout (le mode avion).
 import { JSDOM, VirtualConsole } from 'jsdom';
@@ -78,6 +79,10 @@ export async function page(o = {}) {
   };
   if (!w.Response) w.Response = globalThis.Response;
   fauxCanvas(w);
+  // WKWebView a ResizeObserver (iOS 13.4+), jsdom non : un faux muet, pour ne pas compter de faux « cassés »
+  // WKWebView a IndexedDB, jsdom non : celui de fake-indexeddb (une base neuve par page)
+  if (!w.indexedDB) { w.indexedDB = new FDBFactory(); w.IDBKeyRange = FDBKeyRange; }
+  if (!w.ResizeObserver) w.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
   const compte = compteurs(w, erreurs);
   w.eval(readFileSync(path.join(RACINE, 'public/vendor/jOSb.js'), 'utf8'));
   const boxion = o.boxion || creerMemoire();
