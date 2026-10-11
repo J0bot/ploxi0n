@@ -4,6 +4,21 @@ default_platform(:ios)
 PROJET = "ios/App/App.xcodeproj"
 APP_ID = "ch.j0bot.ploxi0n"
 
+# un appel à l'API publique d'App Store Connect, avec le jeton de la clé API (app_store_connect_api_key doit avoir tourné)
+def asc(methode, chemin, corps = nil)
+  require "net/http"
+  require "json"
+  uri = URI("https://api.appstoreconnect.apple.com/v1/#{chemin}")
+  req = (methode == :get ? Net::HTTP::Get : Net::HTTP::Post).new(uri)
+  req["Authorization"] = "Bearer #{Spaceship::ConnectAPI.token.text}"
+  req["Content-Type"] = "application/json"
+  req.body = corps.to_json if corps
+  r = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |h| h.request(req) }
+  d = r.body.to_s.strip.empty? ? {} : JSON.parse(r.body)
+  raise("HTTP #{r.code} : #{(d['errors'] || []).map { |e| e['detail'] }.join(' ; ')}") unless r.code.to_i.between?(200, 299)
+  d
+end
+
 platform :ios do
   desc "Construit l'app et l'envoie sur TestFlight"
   lane :beta do
@@ -50,28 +65,38 @@ platform :ios do
   private_lane :testeurs_internes do
     email = ENV["TESTFLIGHT_EMAIL"].to_s
     next UI.important("TESTFLIGHT_EMAIL absent : personne à inviter") if email.empty?
-    begin
-      app = Spaceship::ConnectAPI::App.find(APP_ID)
-      # pas app.create_beta_group : fastlane y ajoute publicLinkLimitEnabled, refusé pour un groupe interne
-      groupe = app.get_beta_groups(filter: { name: "ploxi0n interne" }).first ||
-               Spaceship::ConnectAPI::BetaGroup.new(*Spaceship::ConnectAPI.test_flight_request_client.post("betaGroups", {
-                 data: { type: "betaGroups", attributes: { name: "ploxi0n interne", isInternalGroup: true, hasAccessToAllBuilds: true },
-                         relationships: { app: { data: { type: "apps", id: app.id } } } } }).body["data"].values_at("id", "attributes"))
-      testeur = Spaceship::ConnectAPI::BetaTester.all(filter: { email: email }).first
-      if testeur.nil?
-        Spaceship::ConnectAPI.post_beta_tester_assignment(beta_group_ids: [groupe.id], attributes: { email: email, firstName: "RS", lastName: "7" })
-        UI.success("testeur ajouté au groupe « ploxi0n interne » : l'invitation TestFlight part")
-      else
-        begin
-          Spaceship::ConnectAPI.add_beta_tester_to_group(beta_group_id: groupe.id, beta_tester_ids: [testeur.id])
-        rescue => e
-          UI.message("déjà dans le groupe ? #{e.message}")
-        end
-        Spaceship::ConnectAPI.post_beta_tester_invitation(app_id: app.id, beta_tester_id: testeur.id) rescue UI.message("invitation déjà envoyée")
-        UI.success("testeur présent : invitation (re)envoyée")
+    etape = lambda do |nom, &bloc|
+      begin
+        r = bloc.call
+        UI.success(nom)
+        r
+      rescue => e
+        UI.important("#{nom} : #{e.message} (le build n'est pas touché)")
+        nil
       end
-    rescue => e
-      UI.important("testeurs internes non configurés (le build est quand même envoyé) : #{e.message}")
+    end
+    app = etape.call("app trouvée") { asc(:get, "apps?filter[bundleId]=#{APP_ID}")["data"].first || raise("app #{APP_ID} absente d'App Store Connect") }
+    next unless app
+    groupe = etape.call("groupe « ploxi0n interne » prêt (il reçoit chaque build)") do
+      asc(:get, "betaGroups?filter[app]=#{app['id']}&filter[name]=#{URI.encode_www_form_component('ploxi0n interne')}")["data"].first ||
+        asc(:post, "betaGroups", { data: { type: "betaGroups", attributes: { name: "ploxi0n interne", isInternalGroup: true, hasAccessToAllBuilds: true },
+                                          relationships: { app: { data: { type: "apps", id: app["id"] } } } } })["data"]
+    end
+    next unless groupe
+    testeur = etape.call("testeur dans le groupe") do
+      t = asc(:get, "betaTesters?filter[email]=#{URI.encode_www_form_component(email)}")["data"].first
+      if t
+        asc(:post, "betaGroups/#{groupe['id']}/relationships/betaTesters", { data: [{ type: "betaTesters", id: t["id"] }] })
+        t
+      else
+        asc(:post, "betaTesters", { data: { type: "betaTesters", attributes: { email: email, firstName: "RS", lastName: "7" },
+                                           relationships: { betaGroups: { data: [{ type: "betaGroups", id: groupe["id"] }] } } } })["data"]
+      end
+    end
+    next unless testeur
+    etape.call("invitation TestFlight envoyée") do
+      asc(:post, "betaTesterInvitations", { data: { type: "betaTesterInvitations",
+                                                   relationships: { app: { data: { type: "apps", id: app["id"] } }, betaTester: { data: { type: "betaTesters", id: testeur["id"] } } } } })
     end
   end
 end
