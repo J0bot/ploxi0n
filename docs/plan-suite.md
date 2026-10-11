@@ -25,3 +25,14 @@
 6. **La technique pour tout le monde** : ploxi0n devient un modèle de dépôt (« fais ton app ») : la même coque, le même shim, la même CI ; tes ploxions viennent de ton boxion. Exigence : chaque ploxion respecte le contrat du xer de xerboxion.org (jOSApps : manifest, mount/unmount, describe, ports) — le banc de compatibilité le vérifie avant d'entrer au Nexus.
 7. **Les apps des autres dans la nôtre** : le marketplace lit plusieurs sources (xerboxion.org, et le boxion de chaque xeroction du Nexus) ; un ploxion venu d'ailleurs s'installe comme les nôtres, après le même banc.
 8. **La vidéo, faite de tsoins** : chaque étape du processus (créer le dépôt, poser les secrets, pousser, recevoir sur l'iPhone) est enregistrée comme tsoin ; la vidéo se rejoue depuis ces tsoins.
+
+## Posé (suite, 11.10 au soir)
+
+- « On peut utiliser les ploxions individuellement : chaque ploxion devient une app du homescreen ; au bout d'un moment, sur le homescreen il n'y a que des apps du ploxion, et ça devient le xerboxion. »
+- « On peut avoir notre icône qui change au fur et à mesure qu'on avance dans le xerboxion ; avec l'app ploxi0n on peut devenir l'app xeroction si on veut, donc tous les xers depuis le xerboxion. »
+
+## Lecture (suite)
+
+9. **Un ploxion = une icône sur l'écran d'accueil.** iOS ne laisse pas une app poser elle-même plusieurs icônes. La voie qui marche : pour chaque ploxion, un raccourci (app Raccourcis) avec SON icône et son nom, qui ouvre `ploxi0n://px/<id>` ou le lien universel `https://xerboxion.org/px/<id>` ; ploxi0n prépare l'icône et guide en deux gestes. À l'écran, ça ressemble à une app par ploxion ; derrière, c'est le même ploxi0n, les mêmes données, hors ligne. (Plus tard, des App Clips pour quelques ploxions phares.)
+10. **L'icône qui évolue avec le rang** : iOS permet de changer l'icône de l'app (icônes alternatives, déclarées dans l'app) : bion → zion → … → xeroction, chaque palier son losange. Le nom affiché reste « ploxi0n » (iOS ne permet pas de le changer) ; c'est l'icône et l'accueil qui deviennent « l'app xeroction ».
+11. **L'app xeroction = tous les xers** : au rang xeroction (son boxion installé), l'accueil de ploxi0n montre les xers du xerboxion (thèmes, dispositions) et l'accès au Nexus.
