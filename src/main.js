@@ -10,14 +10,26 @@ import { enregistrerMarketplace } from './marketplace/marketplace.js';
 import { enregistrerXerEnLigne } from './app/xer-en-ligne.js';
 import { brancherLiens } from './natif/liens.js';
 import { creerRaccourcis } from './natif/raccourcis.js';
+import { creerCompte } from './natif/compte.js';
+import { creerHud } from './app/hud.js';
 
-const VERSION = '0.5.0';
+const VERSION = '0.6.0';
 
 async function demarrer() {
   const racine = document.getElementById('ploxi0n');
   const boxion = await ouvrirBoxionLocal();
   let routeur = null;
-  const routeurProxy = { ouvrir: (...a) => routeur.ouvrir(...a), connait: (id) => routeur.connait(id), fermer: () => routeur.fermer() };
+  // un ploxion en ouvre un autre (jOSXerPrefs.ouvrir, jOS.openPloxion) : s'il n'est pas installé et qu'il y a du réseau, on l'installe à la volée
+  const routeurProxy = {
+    async ouvrir(id, params) {
+      if (!routeur.connait(id)) {
+        try { const c = await depot.catalogue({ reseau: false }); const m = (c.items || []).find(x => x.id === id) || {}; await depot.installer(id, { nom: m.nom, icone: m.icone }); await majAccueil(); }
+        catch (e) { return false; }
+      }
+      return routeur.ouvrir(id, params);
+    },
+    connait: (id) => routeur.connait(id), fermer: () => routeur.fermer(),
+  };
   const shim = await installerShim({ boxion, routeur: routeurProxy });
   window.jOSVerrou = creerVerrou();   // Face ID pour les ploxions
   const lireJson = async (u, defaut) => { try { return await (await fetch(u)).json(); } catch (e) { return defaut; } };
@@ -25,7 +37,7 @@ async function demarrer() {
   const compat = await lireJson('/marketplace/compat.json', {});
   const depot = creerDepot({ boxion, http: creerHttp(window), compat, packLocal: pack, lireLocal: async (id) => (await fetch('/ploxions/' + encodeURIComponent(id) + '/app.js')).text() });
   const internes = [
-    enregistrerMarketplace({ depot, surChangement: () => majAccueil() }),
+    enregistrerMarketplace({ depot, surChangement: () => majAccueil(), usage: () => boxion.get('usage', 'stats') }),
     enregistrerXerEnLigne({}),
     enregistrerBanc({ boxion, version: VERSION }),
   ];
@@ -36,10 +48,21 @@ async function demarrer() {
     routeur.majCatalogue(liste);
     if (raccourcis) raccourcis.publier(liste).catch(() => {});   // l'app Raccourcis et Siri proposent les ploxions installés
   }
-  routeur = creerRouteur({ racine, catalogue: internes, boxion, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id) });
+  const compte = creerCompte({ boxion, http: creerHttp(window) });
+  await compte.pret;
+  const hud = creerHud({ compte });
+  // le vecteur xerion de ce téléphone : le temps passé par ploxion (même forme que jOSUsage du labo : { px: { id: { opens, seconds, lastAt } } })
+  async function surUsage(id, sec) {
+    const u = (await boxion.get('usage', 'stats')) || { px: {} };
+    const p = u.px[id] = u.px[id] || { opens: 0, seconds: 0, lastAt: 0 };
+    p.opens++; p.seconds += sec; p.lastAt = Date.now();
+    await boxion.put('usage', 'stats', u);
+  }
+  routeur = creerRouteur({ racine, catalogue: internes, boxion, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id), hud, surUsage: (id, s) => surUsage(id, s).catch(() => {}) });
+  compte.surChangement(() => { if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); });
   await majAccueil();
-  window.ploxi0n = { boxion, shim, routeur, depot, version: VERSION };
-  brancherLiens({ routeur });
+  window.ploxi0n = { boxion, shim, routeur, depot, compte, version: VERSION };
+  brancherLiens({ routeur, compte });
   raccourcis = creerRaccourcis({ routeur, boxion });
   await majAccueil();
   const id = decodeURIComponent((location.hash.match(/^#\/(.+)$/) || [])[1] || '');

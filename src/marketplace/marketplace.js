@@ -10,9 +10,11 @@ function badge(c) {
   return '<span class="mk-b mk-q" title="' + esc(c.verdict) + '">⚠ à revoir</span>';
 }
 
-export function enregistrerMarketplace({ W = globalThis.window, depot, surChangement = () => {} }) {
+const heures = (s) => !s ? '0 h' : s < 3600 ? Math.max(1, Math.round(s / 60)) + ' min' : (Math.round(s / 360) / 10).toLocaleString('fr-CH') + ' h';
+
+export function enregistrerMarketplace({ W = globalThis.window, depot, surChangement = () => {}, usage = async () => null }) {
   function mount(hote, ctx) {
-    let onglet = (ctx && ctx.params && ctx.params.onglet) || 'catalogue', q = '', cat = '', vivant = true;
+    let onglet = (ctx && ctx.params && ctx.params.onglet) || 'catalogue', q = '', cat = '★', vivant = true;
     hote.innerHTML = '<div class="mk"><style>'
       + '.mk{padding:10px 14px 60px}.mk h2{margin:2px 0 6px;font-size:1.2rem}.mk .n{color:#8aa0c0;font-size:.84rem}'
       + '.mk .tabs{display:flex;gap:6px;margin:8px 0}.mk button{border:1px solid #22324f;background:transparent;color:inherit;border-radius:9px;padding:6px 11px;font:13px system-ui;min-height:36px}'
@@ -31,15 +33,19 @@ export function enregistrerMarketplace({ W = globalThis.window, depot, surChange
       if (!vivant) return;
       if (onglet === 'catalogue') {
         zone.innerHTML = '<p class="n">⏳ le catalogue…</p>';
-        const c = await depot.catalogue({ reseau: true });
+        const [c, pop] = await Promise.all([depot.catalogue({ reseau: true }), depot.populaires()]);
         if (!vivant) return;
+        const sec = new Map((pop.ploxions || []).map(x => [x.id, x.secondes]));
+        const zero = new Set((pop.zero || []).map(x => x.id));
         const cats = [...new Set(c.items.map(x => x.categorie))].sort();
-        const L = c.items.filter(x => (!cat || x.categorie === cat) && (!q || (x.nom + ' ' + x.id + ' ' + x.description).toLowerCase().includes(q.toLowerCase())))
-          .sort((a, b) => (b.compat && b.compat.complet === 'oui') - (a.compat && a.compat.complet === 'oui') || a.nom.localeCompare(b.nom));
+        // ★ = les plus utilisés (heures du Nexus) ; 😴 = zéro heure ; sinon une catégorie
+        const L = c.items.filter(x => (cat === '★' ? true : cat === '😴' ? zero.has(x.id) || !sec.has(x.id) : !cat || x.categorie === cat) && (!q || (x.nom + ' ' + x.id + ' ' + x.description).toLowerCase().includes(q.toLowerCase())))
+          .sort((a, b) => (sec.get(b.id) || 0) - (sec.get(a.id) || 0) || (b.compat && b.compat.complet === 'oui') - (a.compat && a.compat.complet === 'oui') || a.nom.localeCompare(b.nom));
         zone.innerHTML = (c.horsLigne ? '<p class="n">📴 hors ligne : le catalogue du ' + esc((c.maj || '').slice(0, 10) || '—') + ' (installer demande le réseau)</p>' : '<p class="n">' + c.items.length + ' ploxions sur ' + esc(c.source || depot.source) + '</p>')
           + '<input data-q placeholder="chercher un ploxion…" value="' + esc(q) + '">'
-          + '<div class="chips"><button data-cat="" class="' + (!cat ? 'on' : '') + '">tout</button>' + cats.map(k => '<button data-cat="' + esc(k) + '" class="' + (cat === k ? 'on' : '') + '">' + esc(k) + '</button>').join('') + '</div>'
-          + L.slice(0, 150).map(x => '<div class="it"><span class="ic">' + esc(x.icone) + '</span><div><b>' + esc(x.nom) + '</b>' + badge(x.compat) + '<small>' + esc(x.description) + '</small></div>'
+          + (pop.heures_total != null ? '<p class="n">⭐ ' + heures(pop.heures_total * 3600) + ' passées dans les ploxions du Nexus · ' + (pop.utilises || 0) + ' utilisés, ' + ((pop.zero || []).length) + ' à zéro heure</p>' : '')
+          + '<div class="chips"><button data-cat="★" class="' + (cat === '★' ? 'on' : '') + '">⭐ plus utilisés</button><button data-cat="😴" class="' + (cat === '😴' ? 'on' : '') + '">😴 zéro heure</button><button data-cat="" class="' + (!cat ? 'on' : '') + '">tout</button>' + cats.map(k => '<button data-cat="' + esc(k) + '" class="' + (cat === k ? 'on' : '') + '">' + esc(k) + '</button>').join('') + '</div>'
+          + L.slice(0, 150).map(x => '<div class="it"><span class="ic">' + esc(x.icone) + '</span><div><b>' + esc(x.nom) + '</b>' + badge(x.compat) + (sec.get(x.id) ? '<span class="mk-b mk-ok">' + heures(sec.get(x.id)) + '</span>' : '') + '<small>' + esc(x.description) + '</small></div>'
             + (installes.has(x.id) ? '<button disabled>installé ✓</button>' : '<button class="ok" data-installer="' + esc(x.id) + '" data-nom="' + esc(x.nom) + '" data-icone="' + esc(x.icone) + '">installer</button>') + '</div>').join('')
           + (L.length > 150 ? '<p class="n">… ' + (L.length - 150) + ' de plus : affine ta recherche</p>' : '');
       } else if (onglet === 'pack') {
@@ -48,8 +54,9 @@ export function enregistrerMarketplace({ W = globalThis.window, depot, surChange
           + (installes.has(x.id) ? '<button disabled>installé ✓</button>' : '<button class="ok" data-pack="' + esc(x.id) + '">installer</button>') + '</div>').join('');
       } else {
         const I = await depot.installes();
+        const moi = ((await usage()) || { px: {} }).px || {};
         zone.innerHTML = '<div class="tabs"><button data-ajour>vérifier les mises à jour</button></div><p class="n" data-msg></p>'
-          + (I.length ? I.map(x => '<div class="it"><span class="ic">' + esc(x.icone) + '</span><div><b>' + esc(x.nom) + '</b><small>' + esc(x.origine === 'pack' ? 'pack hors ligne' : 'installé') + ' le ' + esc((x.maj || x.installe || '').slice(0, 10)) + ' · ' + esc((x.hash || '').slice(0, 10)) + '</small></div><button data-retirer="' + esc(x.id) + '">retirer</button></div>').join('') : '<p class="n">Aucun ploxion installé : va dans le catalogue ou le pack hors ligne.</p>');
+          + (I.length ? I.map(x => '<div class="it"><span class="ic">' + esc(x.icone) + '</span><div><b>' + esc(x.nom) + '</b><small>' + (moi[x.id] ? '⏱ ' + heures(moi[x.id].seconds) + ' · ' : '') + esc(x.origine === 'pack' ? 'pack hors ligne' : 'installé') + ' le ' + esc((x.maj || x.installe || '').slice(0, 10)) + ' · ' + esc((x.hash || '').slice(0, 10)) + '</small></div><button data-retirer="' + esc(x.id) + '">retirer</button></div>').join('') : '<p class="n">Aucun ploxion installé : va dans le catalogue ou le pack hors ligne.</p>');
       }
     }
     hote.addEventListener('input', (e) => { if (e.target.matches('[data-q]')) { q = e.target.value; const pos = e.target.selectionStart; peindre().then(() => { const i = zone.querySelector('[data-q]'); if (i) { i.focus(); try { i.setSelectionRange(pos, pos); } catch (er) { /* */ } } }); } });

@@ -13,7 +13,7 @@ const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
   + R.map(r => `M512 ${512 - r}L${512 + r} 512L512 ${512 + r}L${512 - r} 512Z`).join('') + '"/></svg>';
 
-export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null } = {}) {
+export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null } = {}) {
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
   let courant = null;     // { id, inst, hote }
@@ -65,13 +65,14 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
       return;
     }
     const ranges = dansDossier();
-    racine.innerHTML = '<div class="px-accueil"><h1>' + LOGO + 'ploxi0n<button class="px-modif" data-edition>' + (edition ? 'terminé' : '✎') + '</button></h1>'
+    racine.innerHTML = '<div class="px-accueil"><h1>' + LOGO + 'ploxi0n<span class="px-hud">' + (hud ? hud.html() : '') + '<button class="px-modif" data-edition>' + (edition ? 'terminé' : '✎') + '</button></span></h1>'
       + '<p class="px-sous">' + (edition ? 'Touche un ploxion pour le ranger dans un dossier, ou l\'en sortir.' : 'tes ploxions, sur ton téléphone, même sans réseau') + '</p><div class="px-grille">'
       + accueilDoc.dossiers.map((d, i) => '<button class="px-tuile px-dossier" data-dossier="' + i + '"><span class="px-ic">📁</span><span>' + texte(d.nom) + ' (' + d.ids.filter(id => parId.has(id)).length + ')</span></button>').join('')
       + tous.filter(p => !ranges.has(p.id)).map(tuile).join('') + '</div></div>';
   }
   racine.addEventListener('click', async (e) => {
     const b = e.target.closest('button'); if (!b || !racine.contains(b) || b.closest('.px-hote')) return;
+    if (b.hasAttribute('data-compte')) { if (hud) hud.ouvrir(); return; }
     if (b.hasAttribute('data-edition')) { edition = !edition; return accueil(); }
     if (b.hasAttribute('data-sortir')) { dossierOuvert = null; return accueil(); }
     if (b.hasAttribute('data-dossier')) { dossierOuvert = +b.getAttribute('data-dossier'); return accueil(); }
@@ -101,7 +102,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
       return false;
     }
     racine.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">‹</button><span>' + texte((p.icone || '') + ' ' + (p.nom || id)) + '</span>'
-      + (verrou && !p.interne ? '<button class="px-verrou" data-verrou aria-label="verrou Face ID">' + (verrous.has(id) ? '🔒' : '🔓') + '</button>' : '') + '</div><div class="px-hote"></div>';
+      + '<span class="px-hud">' + (hud ? hud.html(true) : '') + (verrou && !p.interne ? '<button class="px-verrou" data-verrou aria-label="verrou Face ID">' + (verrous.has(id) ? '🔒' : '🔓') + '</button>' : '') + '</span></div><div class="px-hote"></div>';
     const bv = racine.querySelector('[data-verrou]');
     if (bv) bv.onclick = async (e) => {
       e.stopPropagation();
@@ -113,7 +114,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     try {
       const app = await charger(id);
       const inst = app.mount(hote, { embed: false, standalone: true, host: 'ploxi0n', params: params || null, onglet: params && params.onglet }) || {};
-      courant = { id, inst, hote };
+      courant = { id, inst, hote, debut: Date.now() };
       try { W.history.replaceState(null, '', '#/' + encodeURIComponent(id)); } catch (er) { /* */ }
     } catch (er) {
       hote.innerHTML = '<p class="px-erreur">Ce ploxion n\'a pas pu s\'ouvrir : ' + texte(er.message) + '</p>';
@@ -125,6 +126,8 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (!courant) return;
     const c = courant; courant = null;
     try { if (c.inst && typeof c.inst.unmount === 'function') c.inst.unmount(); } catch (e) { console.warn('[ploxi0n] unmount', c.id, e); }
+    // le temps passé dans ce ploxion (le vecteur xerion, comme jOSUsage du labo) ; au-delà de 4 h d'affilée, l'écran était sans doute oublié
+    if (surUsage && c.debut) { const sec = Math.min(4 * 3600, Math.round((Date.now() - c.debut) / 1000)); if (sec > 0) surUsage(c.id, sec); }
     c.hote.innerHTML = '';
   }
 
@@ -132,6 +135,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     accueil, ouvrir, fermer, charger,
     connait: (id) => parId.has(id), courant: () => (courant ? courant.id : null),
     majCatalogue(liste) { parId = new Map(liste.map(p => [p.id, p])); },
+    rafraichirHud() { racine.querySelectorAll('.px-hud [data-compte]').forEach(b => { const t = D.createElement('div'); t.innerHTML = hud ? hud.html(!!courant) : ''; if (t.firstElementChild) b.replaceWith(t.firstElementChild); }); },
     catalogue: () => [...parId.values()],
   };
 }

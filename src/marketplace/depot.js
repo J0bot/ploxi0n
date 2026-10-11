@@ -8,6 +8,13 @@
 //   retirer(id), installes(), bundle(id)
 // http = { get(url, { headers }) → { status, texte, entetes } } : CapacitorHttp sur l'iPhone (pas de CORS), fetch ailleurs, un faux en test.
 export const SOURCE = 'https://xerboxion.org';
+// les bions que l'app fournit déjà (le shim, Face ID, le pack) : jamais téléchargés
+export const FOURNIS = new Set(['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou']);
+/** les bions qu'un bundle du labo déclare attendre (window.__PLOXIONS_BIONS__[id] = [...]) */
+export function bionsDuBundle(js) {
+  const m = /__PLOXIONS_BIONS__[\s\S]{0,200}?\]\s*=\s*(\[[^\]]*\])/.exec(js || '');
+  try { return m ? JSON.parse(m[1]).filter(b => typeof b === 'string' && /^jOS[A-Za-z0-9]{1,48}$/.test(b)) : []; } catch (e) { return []; }
+}
 
 async function sha256(texte) {
   const h = await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(texte));
@@ -52,11 +59,22 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       const r = await http.get(source + '/px/' + encodeURIComponent(id) + '/app.js', { headers: { Accept: 'application/javascript' } });
       if (r.status !== 200) throw new Error(`le serveur refuse ${id} (HTTP ${r.status})`);
       if (!valide(r.texte, id)) throw new Error(`${id} : ce n'est pas un ploxion installable (pas d'enregistrement jOSApps)`);
-      const doc = { id, nom: meta.nom || id, icone: meta.icone || '▣', js: r.texte, hash: await sha256(r.texte), etag: (r.entetes && (r.entetes.etag || r.entetes.ETag)) || null, origine: source, installe: new Date().toISOString() };
+      // les bions dont il a besoin (servis seuls par le labo : /px/bion-app/<jOSNom>.js) ; un bion introuvable n'empêche pas l'installation
+      const bions = [], manquants = [];
+      for (const b of bionsDuBundle(r.texte)) {
+        if (FOURNIS.has(b)) continue;
+        if (await boxion.get('bions', b)) { bions.push(b); continue; }
+        try {
+          const rb = await http.get(source + '/px/bion-app/' + b + '.js', { headers: { Accept: 'application/javascript' } });
+          if (rb.status === 200 && rb.texte.includes(b)) { await boxion.put('bions', b, { js: rb.texte, hash: await sha256(rb.texte), le: new Date().toISOString() }); bions.push(b); }
+          else manquants.push(b);
+        } catch (e) { manquants.push(b); }
+      }
+      const doc = { id, nom: meta.nom || id, icone: meta.icone || '▣', js: r.texte, hash: await sha256(r.texte), etag: (r.entetes && (r.entetes.etag || r.entetes.ETag)) || null, origine: source, installe: new Date().toISOString(), bions, manquants };
       await boxion.put(NS, id, doc);
       await garderListe([...(await liste()), id]);
       await boxion.append('tsoins', { kind: 'marketplace', action: 'installer', id, hash: doc.hash });
-      return { id, hash: doc.hash, octets: r.texte.length };
+      return { id, hash: doc.hash, octets: r.texte.length, bions, manquants };
     },
     async installerLocal(id) {
       const p = packLocal.find(x => x.id === id); if (!p || !lireLocal) throw new Error(id + ' n\'est pas dans le pack hors ligne');
@@ -89,7 +107,20 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       await garderListe((await liste()).filter(x => x !== id));
       await boxion.append('tsoins', { kind: 'marketplace', action: 'retirer', id });
     },
-    async bundle(id) { const p = await boxion.get(NS, id); return p ? p.js : null; },
+    async bundle(id) {
+      const p = await boxion.get(NS, id); if (!p) return null;
+      let avant = '';
+      for (const b of p.bions || []) { const x = await boxion.get('bions', b); if (x && x.js) avant += '\n;/* bion ' + b + ' */\n' + x.js + '\n;'; }   // chaque bion se garde lui-même d'une double définition
+      return avant + '\n' + p.js;
+    },
+    // les plus utilisés : les heures passées, tout le Nexus (labo : /px/marketplace/populaires.json), en cache pour le mode avion
+    async populaires() {
+      try {
+        const r = await http.get(source + '/px/marketplace/populaires.json', { headers: { Accept: 'application/json' } });
+        if (r.status !== 200) throw new Error('HTTP ' + r.status);
+        const d = JSON.parse(r.texte); await boxion.put(META, 'populaires', d); return { ...d, horsLigne: false };
+      } catch (e) { const d = await boxion.get(META, 'populaires'); return d ? { ...d, horsLigne: true } : { ploxions: [], zero: [], horsLigne: true }; }
+    },
   };
 }
 

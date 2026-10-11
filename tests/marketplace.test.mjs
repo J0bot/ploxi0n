@@ -37,7 +37,7 @@ test('installer : vérifié, haché, rangé dans boxion_local ; refus d\'un faux
   const s = serveur(), boxion = creerMemoire(), d = creerDepot({ boxion, http: s.http });
   const r = await d.installer('pomo', { nom: 'Pomodoro', icone: '🍅' });
   assert.match(r.hash, /^[0-9a-f]{64}$/);
-  assert.equal(await d.bundle('pomo'), BUNDLE('pomo'));
+  assert.ok((await d.bundle('pomo')).endsWith(BUNDLE('pomo')));
   assert.deepEqual((await d.installes()).map(x => x.id), ['pomo']);
   s.js.faux = '<html>pas un ploxion</html>';
   await assert.rejects(() => d.installer('faux'), /pas un ploxion installable/);
@@ -81,4 +81,16 @@ test('routeur : un ploxion installé s\'ouvre depuis boxion_local (jamais depuis
     assert.deepEqual((await p.boxion.get('reglages', 'accueil')).dossiers, [{ nom: 'Outils', ids: ['pomo'] }]);
     assert.ok(racine.querySelector('[data-dossier="0"]'), 'le dossier apparaît sur l\'accueil');
   } finally { p.w.close(); }
+});
+
+test('dépendances : les bions déclarés par le bundle s\'installent avec lui (sauf ceux du shim), et passent avant lui', async () => {
+  const s = serveur(), boxion = creerMemoire();
+  s.js.galerie = '(function(){var B=window.__PLOXIONS_BIONS__=window.__PLOXIONS_BIONS__||{};B["galerie"]=["jOSXerkionHub","jOSPorts","jOSAbsent"];})();\n' + BUNDLE('galerie');
+  const get = s.http.get;
+  s.http.get = async (url, o) => url.endsWith('/px/bion-app/jOSXerkionHub.js') ? { status: 200, texte: 'window.jOSXerkionHub=window.jOSXerkionHub||{};', entetes: {} } : url.includes('/px/bion-app/') ? { status: 404, texte: '', entetes: {} } : get(url, o);
+  const d = creerDepot({ boxion, http: s.http });
+  const r = await d.installer('galerie');
+  assert.deepEqual(r.bions, ['jOSXerkionHub']); assert.deepEqual(r.manquants, ['jOSAbsent'], 'jOSPorts vient du shim, jOSAbsent est introuvable');
+  const b = await d.bundle('galerie');
+  assert.ok(b.indexOf('window.jOSXerkionHub') < b.indexOf('jOSApps'), 'le bion passe avant le ploxion');
 });
