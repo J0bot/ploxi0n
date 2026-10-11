@@ -1,0 +1,180 @@
+// Le SHIM jOS (brief ploxi0n v1, section « Shim jOS ») : injecté avant tout ploxion. Le contrat d'un ploxion (papier anatomie-ploxion)
+// ne dépend que de quelques globals et de trois routes serveur ; on les remplace toutes, en local, sur boxion_local.
+//
+//   jOSPorts.emit/on            bus local immédiat + boxion_local.append('xion', {topic, data})  (→ /xion/emit du Boxion distant plus tard)
+//   GET  /xion/snapshot         l'état reconstruit depuis le journal 'xion'
+//   POST /xion/emit             idem jOSPorts.emit
+//   jOSTsoin.mark(…)            boxion_local.append('tsoins', …)
+//   POST /chat {kind:'tsoin'}   idem
+//   <meta> user-* / csrf-token  l'identité locale (clé matérielle du Secure Enclave : piste native, plus tard)
+//   localStorage                miroir dans boxion_local (iOS peut purger le localStorage de la WebView) ; restauré au démarrage
+//   jOS.openPloxion(id)         le routeur de l'app ; jOSXerPrefs.ouvrir et jOSMobile.open aussi
+//   isDesktop()                 false : un ploxion écran n'est jamais bloqué
+//   jOSBoxion (111 ploxions)    la même API que le labo (save, saveSoon, load, lire, get, set, list, del), sur boxion_local
+//   /px/boxion/save|load|list|del  idem pour les ploxions qui appellent la route directement
+//   les autres moteurs window.jOS*  absents : les ploxions testent déjà leur existence
+// Toute autre route du serveur répond 503 {horsLigne:true} SANS toucher le réseau, et s'inscrit dans le journal 'manques' (ce qu'il faudra
+// réimplémenter) ; une URL externe part sur le réseau (les ploxions « online only »), comptée dans shim.sortants.
+
+const NS_LS = 'localStorage';
+const NS_BOX = (ns) => 'box:' + ns;
+const ASSETS = /^\/(ploxions|assets|vendor|icons|fonts|img|data)\//;
+
+export async function installerShim({ boxion, fenetre = globalThis.window, routeur = null, journalSortant = null } = {}) {
+  if (!boxion) throw new Error('shim jOS : boxion_local manquant');
+  const W = fenetre, D = W.document;
+  const etat = { sortants: [], manques: [], tsoins: [], subs: new Map() };
+
+  // ---- l'identité locale ----------------------------------------------------------------------------------------------------------------
+  let moi = await boxion.get('identite', 'moi');
+  if (!moi) {
+    const a = new Uint8Array(16); (W.crypto || globalThis.crypto).getRandomValues(a);
+    moi = { id: Array.from(a, b => b.toString(16).padStart(2, '0')).join(''), nom: 'moi', cree: Date.now() };
+    await boxion.put('identite', 'moi', moi);
+  }
+  function meta(nom, valeur) { let m = D.querySelector('meta[name="' + nom + '"]'); if (!m) { m = D.createElement('meta'); m.setAttribute('name', nom); D.head.appendChild(m); } m.setAttribute('content', valeur); }
+  meta('csrf-token', 'ploxi0n-local'); meta('user-authenticated', '1'); meta('user-name', moi.nom); meta('user-admin', '0'); meta('user-id', moi.id);
+
+  // ---- le miroir du localStorage (restaurer d'abord, puis suivre chaque écriture) ------------------------------------------------------------
+  const LS = W.localStorage;
+  if (LS) {
+    for (const { key } of await boxion.list(NS_LS)) {
+      try { if (LS.getItem(key) === null) { const v = await boxion.get(NS_LS, key); if (typeof v === 'string') W.Storage.prototype.setItem.call(LS, key, v); } } catch (e) { /* quota : tant pis pour cette clé */ }
+    }
+    const P = W.Storage.prototype, setItem = P.setItem, removeItem = P.removeItem, clear = P.clear;
+    P.setItem = function (k, v) { setItem.call(this, k, v); if (this === LS) boxion.put(NS_LS, String(k), String(v)).catch(() => {}); };
+    P.removeItem = function (k) { removeItem.call(this, k); if (this === LS) boxion.del(NS_LS, String(k)).catch(() => {}); };
+    P.clear = function () { const cles = this === LS ? Object.keys(this) : []; clear.call(this); for (const k of cles) boxion.del(NS_LS, k).catch(() => {}); };
+  }
+
+  // ---- le bus ---------------------------------------------------------------------------------------------------------------------------
+  function diffuser(topic, payload) {
+    for (const t of [topic, '*']) for (const cb of [...(etat.subs.get(t) || [])]) { try { cb(payload, topic); } catch (e) { /* un abonné ne casse pas le bus */ } }
+  }
+  function emit(id, port, payload, versXion) {
+    const topic = 'ploxion.' + id + (port ? '.' + port : '');
+    diffuser(topic, payload);
+    let data = versXion !== undefined ? versXion : payload;
+    try { data = JSON.parse(JSON.stringify(data === undefined ? null : data)); } catch (e) { data = String(data); }
+    boxion.append('xion', { topic, data }).catch(() => {});
+    return topic;
+  }
+  function on(topic, cb) {
+    if (!etat.subs.has(topic)) etat.subs.set(topic, new Set());
+    etat.subs.get(topic).add(cb);
+    return () => { const s = etat.subs.get(topic); if (s) { s.delete(cb); if (!s.size) etat.subs.delete(topic); } };
+  }
+  W.jOSPorts = { emit, on, io: () => null, xion: false, list: () => [], topics: () => [...etat.subs.keys()] };
+
+  // ---- les tsoins -----------------------------------------------------------------------------------------------------------------------
+  etat.tsoins = (await boxion.lire('tsoins', { limite: 5000 })).map(e => ({ seq: e.seq, t: e.t, ...e.entry }));
+  function marquer(entry) {
+    const e = { kind: 'action', ...entry };
+    const local = { t: Date.now(), ...e };
+    etat.tsoins.push(local);
+    return boxion.append('tsoins', e).then(r => { local.seq = r.seq; return r; });
+  }
+  W.jOSTsoin = Object.assign(W.jOSTsoin || {}, {
+    mark(k, detail, extra) { const e = { k: String(k == null ? '' : k).slice(0, 80), d: detail == null ? '' : String(detail).slice(0, 120) }; if (extra && typeof extra === 'object') for (const kk in extra) if (!(kk in e)) e[kk] = extra[kk]; marquer(e).catch(() => {}); },
+    isOn: () => true, start() {}, stop() { return null; },
+    list: () => etat.tsoins.slice(), get: (id) => etat.tsoins.find(t => t.id === id || t.seq === id) || null,
+    badge: (icon) => '<span>' + (icon || '⧗') + '</span>', svg: () => '',
+  });
+
+  // ---- jOSBoxion : la même API que le labo, sur boxion_local ------------------------------------------------------------------------------
+  const minuteurs = new Map();
+  const valide = (ns, key) => typeof ns === 'string' && typeof key === 'string' && ns && key && ns.length <= 40 && key.length <= 80;
+  const jb = {
+    authed: () => true, compte: '', local: (k) => k, entetes: (h) => h || {},
+    async save(ns, key, data, name) {
+      ns = ns == null ? '' : String(ns); key = key == null ? '' : String(key);
+      if (!valide(ns, key)) return { ok: false, invalid: true };
+      const doc = { ns, key, name: String(name || key).slice(0, 160), data: data === undefined ? null : data, savedAt: new Date().toISOString() };
+      await boxion.put(NS_BOX(ns), key, doc);
+      return { ok: true, item: doc };
+    },
+    saveSoon(ns, key, data, name, ms) {
+      const id = ns + '\u0000' + key;
+      if (minuteurs.has(id)) W.clearTimeout(minuteurs.get(id));
+      minuteurs.set(id, W.setTimeout(() => { minuteurs.delete(id); jb.save(ns, key, data, name); }, ms || 1200));
+    },
+    async load(ns, key) { return valide(String(ns), String(key)) ? boxion.get(NS_BOX(String(ns)), String(key)) : null; },
+    async lire(ns, key) {
+      ns = ns == null ? '' : String(ns); key = key == null ? '' : String(key);
+      if (!valide(ns, key)) return { ok: false, status: 0, horsLigne: false, raison: 'invalide' };
+      const item = await boxion.get(NS_BOX(ns), key);
+      return item ? { ok: true, existe: true, item } : { ok: true, existe: false, item: null };
+    },
+    async get(ns, key) { const d = await jb.load(ns, key); return d && d.data !== undefined ? d.data : d; },
+    set(ns, key, data, name) { return jb.save(ns, key, data, name); },
+    async list(ns) {
+      const espaces = ns ? [String(ns)] : [...new Set((await boxion.list('box-index')).map(x => x.key))];
+      const out = [];
+      for (const n of espaces) for (const { key } of await boxion.list(NS_BOX(n))) { const d = await boxion.get(NS_BOX(n), key); if (d) out.push({ ns: n, key, name: d.name, size: JSON.stringify(d.data).length, savedAt: d.savedAt }); }
+      return out;
+    },
+    async del(ns, key) { await boxion.del(NS_BOX(String(ns)), String(key)); return { ok: true }; },
+    async uploadFile() { return null; }, async listFiles() { return []; }, fileUrl: (id) => '#fichier-' + id, async delFile() { return { ok: false }; }, async recatFile() { return { ok: false }; },
+    toast(m) { try { const t = D.createElement('div'); t.textContent = m; t.style.cssText = 'position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:9999;padding:8px 14px;border-radius:18px;background:rgba(20,80,60,.96);color:#fff;font:13px system-ui'; D.body.appendChild(t); W.setTimeout(() => t.remove(), 2200); } catch (e) { /* pas de DOM */ } },
+  };
+  // l'index des espaces de noms de jOSBoxion (pour list() sans ns)
+  const saveBrut = jb.save;
+  jb.save = async (ns, key, data, name) => { const r = await saveBrut(ns, key, data, name); if (r.ok) boxion.put('box-index', String(ns), 1).catch(() => {}); return r; };
+  W.jOSBoxion = jb;
+
+  // ---- le routeur et l'écran ------------------------------------------------------------------------------------------------------------
+  const ouvrir = (id, params) => (routeur ? routeur.ouvrir(String(id), params || null) : false);
+  W.jOS = Object.assign(W.jOS || {}, { openPloxion: (id, o) => ouvrir(id, o && o.params), isDesktop: () => false });
+  W.isDesktop = () => false;
+  W.jOSXerPrefs = Object.assign(W.jOSXerPrefs || {}, { ouvrir: (id, o) => ouvrir(id, o && o.params), ouvrable: (id) => !!(routeur && routeur.connait(id)) });
+  W.jOSMobile = Object.assign(W.jOSMobile || {}, { open: (id, x) => ouvrir(id, x && x.params), close: () => routeur && routeur.fermer() });
+
+  // ---- fetch : les routes du serveur, en local ; le réseau seulement pour l'externe -----------------------------------------------------------
+  const fetchReseau = W.fetch ? W.fetch.bind(W) : null;
+  const json = (corps, status = 200) => new W.Response(JSON.stringify(corps), { status, headers: { 'Content-Type': 'application/json' } });
+  async function corpsDe(init) { try { return init && typeof init.body === 'string' ? JSON.parse(init.body) : {}; } catch (e) { return {}; } }
+  W.fetch = async function (entree, init) {
+    const url = new W.URL(typeof entree === 'string' ? entree : (entree && entree.url) || String(entree), W.location.href);
+    const methode = String((init && init.method) || (entree && entree.method) || 'GET').toUpperCase();
+    if (url.origin !== W.location.origin) {
+      etat.sortants.push(url.origin + url.pathname);
+      if (journalSortant) journalSortant(url.href);
+      if (!fetchReseau) throw new TypeError('hors ligne');
+      return fetchReseau(entree, init);
+    }
+    const p = url.pathname;
+    if (ASSETS.test(p) || p === '/' || p === '/index.html') return fetchReseau(entree, init);
+    if (p === '/xion/snapshot') {
+      const ev = await boxion.lire('xion', { limite: 100000 });
+      const topics = {}; for (const e of ev) topics[e.entry.topic] = { data: e.entry.data, t: e.t, seq: e.seq };
+      return json({ ok: true, local: true, topics, derniers: ev.slice(-200).map(e => ({ seq: e.seq, t: e.t, ...e.entry })) });
+    }
+    if (p === '/xion/emit' && methode === 'POST') {
+      const b = await corpsDe(init); if (!b.topic) return json({ ok: false, message: 'topic manquant' }, 422);
+      let data = b.payload; try { data = typeof data === 'string' ? JSON.parse(data) : data; } catch (e) { /* une chaîne reste une chaîne */ }
+      diffuser(String(b.topic), data); await boxion.append('xion', { topic: String(b.topic), data }); return json({ ok: true });
+    }
+    if (p === '/chat' && methode === 'POST') {
+      const b = await corpsDe(init);
+      if (b && b.kind === 'tsoin') { const r = await marquer({ ...b, kind: 'tsoin' }); return json({ ok: true, seq: r.seq }); }
+    }
+    if (p.startsWith('/px/boxion/')) {
+      const q = url.searchParams, b = methode === 'POST' ? await corpsDe(init) : {};
+      if (p === '/px/boxion/save') return json(await jb.save(b.ns, b.key, b.data, b.name));
+      if (p === '/px/boxion/load') { const d = await jb.load(q.get('ns'), q.get('key')); return json(d || { item: null }); }
+      if (p === '/px/boxion/list') return json({ items: await jb.list(q.get('ns')) });
+      if (p === '/px/boxion/del') return json(await jb.del(b.ns, b.key));
+    }
+    etat.manques.push(methode + ' ' + p);
+    boxion.append('manques', { methode, route: p }).catch(() => {});
+    return json({ ok: false, horsLigne: true, route: p, message: 'pas encore dans ploxi0n hors ligne' }, 503);
+  };
+
+  return {
+    moi,
+    sortants: () => etat.sortants.slice(),
+    manques: () => etat.manques.slice(),
+    abonnes: () => [...etat.subs.values()].reduce((n, s) => n + s.size, 0),
+    minuteurs: () => minuteurs.size,
+  };
+}

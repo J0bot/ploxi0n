@@ -1,0 +1,6 @@
+id,verdict,classe,monte,interval,raf,ecoute,blob,timeout,reseau,manques,erreurs,octets
+wiki,pret,A,oui,0,0,0,0,0,0,,,2695
+trouver,pret,A,oui,0,0,0,0,0,0,,,1744
+braindump,pret,A,oui,0,0,0,0,0,0,,,8161
+veille-seismes,pret,A,oui,0,0,0,0,0,0,,,1678
+pomodoro,pret,A,oui,0,0,0,0,1,0,,,1419

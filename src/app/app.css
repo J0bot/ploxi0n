@@ -1,0 +1,11 @@
+:root{--bg:#0b1220;--txt:#e7f0ff;--muted:#8aa0c0;--acc:#3fe0d0;--bord:#22324f}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:15px system-ui,-apple-system,sans-serif}
+#ploxi0n{height:100%;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
+.px-accueil{padding:18px 16px;overflow:auto}.px-accueil h1{margin:6px 0 2px;font-size:1.6rem}.px-sous{color:var(--muted);margin:0 0 16px}
+.px-grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:12px}
+.px-tuile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:16px;border:1px solid var(--bord);background:#0c1320;color:inherit;font:13px system-ui}
+.px-ic{font-size:2rem;line-height:1}
+.px-barre{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--bord)}
+.px-retour{font-size:1.6rem;line-height:1;background:none;border:0;color:var(--acc);padding:2px 10px;min-width:44px;min-height:44px}
+.px-hote{flex:1;min-height:0;position:relative;overflow:auto}
+.px-erreur{color:#ff8a8a;padding:16px}

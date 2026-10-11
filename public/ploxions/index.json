@@ -1,0 +1,14 @@
+{
+ "v": 1,
+ "source": "labo",
+ "ploxions": [
+  {
+   "id": "pomodoro",
+   "nom": "Pomodoro",
+   "icone": "🍅",
+   "hash": "c77332a2c78938795d33f220dbe9ada04c5a657af650b4ecfde045cbac5d882b",
+   "deps": [],
+   "octets": 1017
+  }
+ ]
+}

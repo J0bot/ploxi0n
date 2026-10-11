@@ -1,0 +1,50 @@
+# ploxi0n — un push sur main produit un build TestFlight, sans aucun Mac local (brief v1, « CI, tests et publication »).
+# Les tests tournent d'abord sur Linux (minutes au tarif normal) ; le build iOS seulement s'ils passent (macOS = minutes ×10).
+# Secrets à poser par RS-7 dans le dépôt (Settings › Secrets and variables › Actions), JAMAIS sur le Boxion ni dans un agent :
+#   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (le contenu du fichier .p8), APPLE_TEAM_ID
+#   option match : MATCH_GIT_URL, MATCH_PASSWORD, MATCH_GIT_BASIC_AUTHORIZATION (sinon : signature gérée par Apple via la clé API)
+name: iOS TestFlight
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: ios-testflight
+  cancel-in-progress: true
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+  testflight:
+    needs: tests
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with: { xcode-version: latest-stable }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync ios
+      - uses: ruby/setup-ruby@v1
+        with: { ruby-version: '3.3', bundler-cache: true }
+      - run: bundle exec fastlane beta
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: build-logs, path: ~/Library/Logs/gym, if-no-files-found: ignore }
