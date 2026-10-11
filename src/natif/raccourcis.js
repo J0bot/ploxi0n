@@ -35,6 +35,10 @@ export function creerRaccourcis({ W = globalThis.window, routeur, boxion, charge
       const q = (await Pr.get({ key: 'ploxi0n.chercher' })).value;
       if (q) { await Pr.remove({ key: 'ploxi0n.chercher' }); if (routeur.connait('marketplace')) await routeur.ouvrir('marketplace', { chercher: '1', q: q.trim() }); }
     },
+    /** les ploxions épinglés du HUD → le widget « Ploxions épinglés » */
+    async epingles(liste) {
+      if (natif()) await (await P()).set({ key: 'ploxi0n.epingles', value: JSON.stringify(liste.slice(0, 8).map(p => ({ id: p.id, nom: p.nom, icone: p.icone }))) });
+    },
     async valeur(cle, titre, valeur) {
       cle = String(cle || '').replace(/[^A-Za-z0-9._-]/g, '').slice(0, 60); if (!cle) return;
       valeurs[cle] = { titre: String(titre || cle).slice(0, 80), valeur: String(valeur == null ? '' : valeur).slice(0, 500), le: Date.now() };

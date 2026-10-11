@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import WidgetKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -9,7 +10,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // les raccourcis automatiques (Raccourcis.swift) : la liste des ploxions proposés à Siri et à l'app Raccourcis suit les installations
         if #available(iOS 16.0, *) { RaccourcisPloxi0n.updateAppShortcutParameters() }
+        // les WIDGETS (extension PloxionWidgets) lisent l'App Group : chaque fois que l'app réécrit ses Préférences, on y recopie les
+        // ploxions épinglés et les valeurs, et on redessine les widgets seulement si quelque chose a changé
+        NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in self?.versLesWidgets() }
+        versLesWidgets()
         return true
+    }
+
+    private func versLesWidgets() {
+        guard let g = UserDefaults(suiteName: "group.ch.j0bot.ploxi0n") else { return }
+        var change = false
+        for k in ["ploxi0n.epingles", "ploxi0n.valeurs"] {
+            let v = UserDefaults.standard.string(forKey: "CapacitorStorage." + k)
+            if v != nil && g.string(forKey: k) != v { g.set(v, forKey: k); change = true }
+        }
+        if change { WidgetCenter.shared.reloadAllTimelines() }
     }
 
     func applicationWillResignActive(_ application: UIApplication) {

@@ -11,6 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       regenerer_profil: { description: 'régénérer le profil de signature (après un changement de capabilities)', type: boolean, default: false }
+      widgets: { description: 'construire avec les widgets (extension PloxionWidgets ; l\'identifiant ch.j0bot.ploxi0n.widgets doit avoir le groupe group.ch.j0bot.ploxi0n)', type: boolean, default: false }
 concurrency:
   group: ios-testflight
   cancel-in-progress: true
@@ -58,6 +59,8 @@ jobs:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           TESTFLIGHT_EMAIL: ${{ secrets.TESTFLIGHT_EMAIL }}
           MATCH_FORCE: ${{ inputs.regenerer_profil }}
+          # les widgets : l'entrée du lancement manuel, ou la variable du dépôt PLOXI0N_WIDGETS=1 (Settings › Variables) pour chaque push
+          PLOXI0N_WIDGETS: ${{ inputs.widgets && '1' || vars.PLOXI0N_WIDGETS }}
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: build-logs, path: ~/Library/Logs/gym, if-no-files-found: ignore }

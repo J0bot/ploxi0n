@@ -114,7 +114,9 @@ async function demarrer() {
     await raccourcis.valeur('ploxions', 'Ploxions installés', (await depot.installes()).length);
     await raccourcis.valeur('compte', 'Compte', e.connecte ? (e.nom + ' · ' + e.palier) : 'pas connecté');
     await raccourcis.valeur('mode', 'Mode connecté', modeConnecte ? 'oui' : 'non');
+    await raccourcis.epingles(hud.config().epingles.map(id => routeur.catalogue().find(p => p.id === id)).filter(Boolean));
   }
+  hud.surChangement(() => publierValeurs().catch(() => {}));
   await majAccueil();
   const id = decodeURIComponent((location.hash.match(/^#\/(.+)$/) || [])[1] || '');
   if (id && routeur.connait(id)) routeur.ouvrir(id); else routeur.accueil();
