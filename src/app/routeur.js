@@ -102,7 +102,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   function actions(id) {
     const p = parId.get(id); if (!p) return;
     const f = D.createElement('div'); f.className = 'px-voile';
-    f.innerHTML = '<div class="px-feuille"><p class="px-ft"><span class="px-ic">' + texte(p.icone || '▣') + '</span> ' + texte(p.nom || id) + '</p>'
+    f.innerHTML = '<div class="px-tiroir"><p class="px-ft"><span class="px-ic">' + texte(p.icone || '▣') + '</span> ' + texte(p.nom || id) + '</p>'
       + (p.interne ? '' : '<button data-ranger="dossier">📁 ranger dans un dossier</button><button data-ranger="page">📄 mettre sur une page</button>')
       + (ecranAccueil ? '<button data-ranger="iphone">⌂ ajouter à l\'écran d\'accueil de l\'iPhone</button>' : '') + '<button data-ranger="">annuler</button></div>';
     racine.appendChild(f);

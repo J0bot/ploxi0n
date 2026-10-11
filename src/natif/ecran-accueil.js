@@ -37,7 +37,7 @@ export function creerEcranAccueil({ W = globalThis.window, trouver }) {
     const p = trouver(id); if (!p) return false;
     const lien = 'ploxi0n://px/' + encodeURIComponent(id);
     const f = W.document.createElement('div'); f.className = 'px-voile';
-    f.innerHTML = '<div class="px-feuille px-guide"><p class="px-ft"><span class="px-ic">' + esc(p.icone || '▣') + '</span> ' + esc(p.nom || id) + ' sur l\'écran d\'accueil</p>'
+    f.innerHTML = '<div class="px-tiroir px-guide"><p class="px-ft"><span class="px-ic">' + esc(p.icone || '▣') + '</span> ' + esc(p.nom || id) + ' sur l\'écran d\'accueil</p>'
       + '<button data-g="icone">1 · enregistrer son icône dans Photos</button>'
       + '<button data-g="raccourcis">2 · ouvrir Raccourcis</button>'
       + '<ol class="px-etapes"><li>« Ajouter une action », cherche <b>ploxi0n</b> → <b>Ouvrir un ploxion</b> → choisis <b>' + esc(p.nom || id) + '</b></li>'
