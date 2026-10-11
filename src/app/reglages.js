@@ -11,12 +11,12 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
     const R = () => routeur();
     hote.innerHTML = '<div class="rg"><style>'
       + '.rg{padding:6px 16px 70px;max-width:640px;margin:0 auto}.rg h3{margin:20px 4px 6px;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#8aa0c0)}'
-      + '.rg .bloc{background:var(--surface,rgba(16,14,30,.62));border:1px solid var(--bord,#22324f);border-radius:18px;overflow:hidden;-webkit-backdrop-filter:saturate(160%) blur(18px);backdrop-filter:saturate(160%) blur(18px);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}.rg .l{display:flex;align-items:center;gap:10px;padding:12px 16px;min-height:30px;border-top:1px solid rgba(150,120,235,.12)}.rg .l:first-child{border-top:0}'
-      + '.rg .l>span{flex:1;min-width:0}.rg .l small{display:block;color:var(--muted,#8aa0c0);font-size:.78rem}.rg button{border:1px solid var(--bord,#22324f);background:rgba(255,255,255,.05);color:inherit;border-radius:999px;padding:6px 14px;min-height:34px;font:500 14px inherit}'
-      + '.rg .bas{border:0;min-height:30px;padding:2px 8px;color:var(--muted,#8aa0c0)}.rg .p{border-color:var(--acc,#3fe0d0);color:var(--acc,#3fe0d0)}.rg .msg{color:var(--muted,#8aa0c0);font-size:.82rem;margin:6px 4px}'
-      + '.rg input[type=checkbox]{appearance:none;-webkit-appearance:none;width:48px;height:29px;border-radius:99px;background:rgba(150,120,235,.22);position:relative;flex:none;margin:0;transition:background .15s}'
-      + '.rg input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:99px;background:#fff;transition:transform .15s}.rg input:checked{background:linear-gradient(135deg,var(--acc,#60c8cd),var(--acc2,#a85cff));box-shadow:0 0 12px rgba(96,200,205,.4)}.rg input:checked::after{transform:translateX(18px)}'
-      + '.rg .pins{display:flex;gap:10px;flex-wrap:wrap;padding:12px 16px}.rg .pin{font-size:1.4rem;width:48px;height:48px;border-radius:15px;padding:0;opacity:.55}.rg .pin.on{opacity:1;border-color:rgba(96,200,205,.7);background:linear-gradient(150deg,rgba(96,200,205,.25),rgba(168,92,255,.2));box-shadow:0 0 14px -4px var(--acc,#60c8cd)}'
+      + '.rg .bloc{background:var(--surface,#1c1140);border:var(--trait,3px) solid var(--bord,#3b2775);border-radius:30px;overflow:hidden}.rg .l{display:flex;align-items:center;gap:10px;padding:12px 16px;min-height:30px;border-top:1px solid rgba(178,140,255,.14)}.rg .l:first-child{border-top:0}'
+      + '.rg .l>span{flex:1;min-width:0}.rg .l small{display:block;color:var(--muted,#8aa0c0);font-size:.78rem}.rg button{border:var(--trait,3px) solid var(--bord,#22324f);background:var(--surface2,#251754);color:inherit;border-radius:999px;padding:6px 14px;min-height:34px;font:500 14px inherit}'
+      + '.rg .bas{border:0;min-height:30px;padding:2px 8px;color:var(--muted,#8aa0c0)}.rg .p{border-color:rgba(182,156,255,.65);color:var(--acc,#b69cff)}.rg .msg{color:var(--muted,#8aa0c0);font-size:.82rem;margin:6px 4px}'
+      + '.rg input[type=checkbox]{appearance:none;-webkit-appearance:none;width:48px;height:29px;border-radius:99px;background:var(--creux,#160d35);border:3px solid var(--bord,#3b2775);box-sizing:content-box;position:relative;flex:none;margin:0;transition:background .15s}'
+      + '.rg input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:99px;background:#fff;transition:transform .15s}.rg input:checked{background:var(--bio,#7dffb0)}.rg input:checked::after{background:#0b2a17}.rg input:checked::after{transform:translateX(18px)}'
+      + '.rg .pins{display:flex;gap:10px;flex-wrap:wrap;padding:12px 16px}.rg .pin{font-size:1.4rem;width:50px;height:50px;border-radius:var(--blob1);padding:0;opacity:.5}.rg .pin.on{opacity:1;border-color:var(--bio,#7dffb0);background:var(--surface2,#251754);box-shadow:0 0 12px rgba(125,255,176,.4)}'
       + '</style><div data-c></div></div>';
     const zone = hote.querySelector('[data-c]');
     async function peindre() {
@@ -29,6 +29,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         + '<h3>HUD</h3><div class="bloc">' + c.elements.map((x, i) => '<label class="l"><span>' + esc(ELS[x.k] || x.k) + '</span><button class="bas" data-monter="' + i + '"' + (i ? '' : ' disabled') + ' aria-label="monter">↑</button><input type="checkbox" data-el="' + i + '"' + (x.on ? ' checked' : '') + '></label>').join('')
         + '<div class="l"><span>⚙ réglages<small>toujours sur l\'accueil</small></span></div></div>'
         + '<p class="msg">📌 épinglés dans le HUD (4 au plus) : touche pour épingler ou retirer</p><div class="bloc"><div class="pins">' + (cat.length ? cat.map(p => '<button class="pin' + (c.epingles.includes(p.id) ? ' on' : '') + '" data-pin="' + esc(p.id) + '" title="' + esc(p.nom) + '">' + esc(p.icone || '▣') + '</button>').join('') : '<span class="msg">installe des ploxions d\'abord</span>') + '</div></div>'
+        + '<h3>Écran d\'accueil de l\'iPhone</h3><div class="bloc"><div class="l"><span>📲 Tes ploxions en apps<small>une icône par ploxion, qui ouvre ploxi0n directement dessus</small></span><button class="p" data-a="apps">choisir</button></div></div>'
         + '<h3>Accueil</h3><div class="bloc"><div class="l"><span>Dossiers et pages<small>✎ sur l\'accueil, puis touche un ploxion</small></span><button data-a="accueil">tout remettre</button></div></div>'
         + '<h3>Face ID</h3><div class="bloc">' + (verrous.length ? verrous.map(id => { const p = cat.find(x => x.id === id) || { nom: id, icone: '🔒' }; return '<div class="l"><span>' + esc(p.icone + ' ' + p.nom) + '</span><button data-deverrou="' + esc(id) + '">retirer le verrou</button></div>'; }).join('') : '<div class="l"><span>Aucun ploxion verrouillé<small>🔓 dans la barre d\'un ploxion</small></span></div>') + '</div>'
         + '<h3>Ploxions</h3><div class="bloc"><div class="l"><span>Compléter leurs bions<small>ce que chaque ploxion touche, servi par le labo</small></span><button data-a="bions">compléter</button></div>'
@@ -54,7 +55,8 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       const a = b.getAttribute('data-a'); if (!a) return;
       b.disabled = true;
       try {
-        if (a === 'connecter') await compte.connecter();
+        if (a === 'apps') { if (W.jOSEcranAccueil) await W.jOSEcranAccueil(); }
+        else if (a === 'connecter') await compte.connecter();
         else if (a === 'sortir') { await compte.deconnecter(); }
         else if (a === 'accueil') { R().reinitialiserAccueil(); msg('✓ accueil remis à zéro'); }
         else if (a === 'bions') { const r = await depot.completerBions(); msg(r.length ? '✓ ' + r.map(x => x.id + ' +' + (x.apres - x.avant)).join(' · ') : '✓ rien à compléter'); }

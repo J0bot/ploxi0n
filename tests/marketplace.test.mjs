@@ -252,3 +252,28 @@ test('raccourcis 0.9 : « Envoyer à un ploxion » ouvre et émet sur le bus, «
     assert.equal(v['tsoins-jour'].valeur, '3'); assert.ok(v['px.script'], 'la clé est nettoyée');
   } finally { p.fin(); }
 });
+
+test('📲 tes ploxions en apps : la feuille coche, le labo reçoit des PNG et des ids, Safari s\'ouvre sur le profil', async () => {
+  const { creerEcranAccueil } = await import('../src/natif/ecran-accueil.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    const cat = [{ id: 'pomo', nom: 'Pomodoro', icone: '🍅' }, { id: 'marketplace', nom: 'Marketplace', icone: '🛍', interne: true }];
+    const envois = [], ouverts = []; W.open = (u) => ouverts.push(u);
+    // un faux canvas qui sait rendre un PNG
+    const vrai = W.document.createElement.bind(W.document);
+    W.document.createElement = (t) => { const e = vrai(t); if (t === 'canvas') { e.getContext = () => ({ createLinearGradient: () => ({ addColorStop() {} }), createRadialGradient: () => ({ addColorStop() {} }), fillRect() {}, strokeRect() {}, fillText() {} }); e.toDataURL = () => 'data:image/png;base64,iVBORw0KGgo='; } return e; };
+    const guider = creerEcranAccueil({ W, trouver: (id) => cat.find(x => x.id === id), liste: () => cat, boxion: p.boxion,
+      envoyer: async (q) => { envois.push(q); return { status: 200, texte: JSON.stringify({ url: 'https://xerboxion.org/app/accueil/' + 'a'.repeat(40) }) }; } });
+    await guider('pomo');
+    const f = W.document.querySelector('.px-voile');
+    assert.ok(f.querySelector('[data-c="pomo"].on'), 'le ploxion d\'où l\'on vient est coché');
+    f.querySelector('[data-c="marketplace"]').click();
+    assert.match(f.querySelector('[data-g="installer"]').textContent, /2 apps/);
+    f.querySelector('[data-g="installer"]').click(); await attendre(30);
+    const corps = JSON.parse(envois[0].corps);
+    assert.equal(envois[0].url, 'https://xerboxion.org/api/app/accueil');
+    assert.deepEqual(corps.apps.map(a => a.id), ['pomo', 'marketplace']); assert.ok(corps.apps.every(a => a.icone === 'iVBORw0KGgo='));
+    assert.deepEqual(ouverts, ['https://xerboxion.org/app/accueil/' + 'a'.repeat(40)], 'Safari s\'ouvre sur le profil');
+    assert.deepEqual(await p.boxion.get('reglages', 'apps-accueil'), ['pomo', 'marketplace'], 'le choix est gardé');
+  } finally { p.fin(); }
+});

@@ -1,9 +1,14 @@
 // Les LIENS vers un ploxion : ploxi0n://px/<id> (schéma de l'app : avec l'app Raccourcis d'iOS, « Ouvrir l'URL » + « Ajouter à l'écran
 // d'accueil » = une icône par ploxion sur l'écran d'accueil de l'iPhone) et les raccourcis de l'icône (appui long sur ploxi0n).
-export function brancherLiens({ W = globalThis.window, routeur, compte = null }) {
+export function brancherLiens({ W = globalThis.window, routeur, compte = null, installer = null }) {
   const natif = !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
   if (!natif) return;
-  const aller = (id) => { if (!id || id === 'accueil') return routeur.accueil(); if (routeur.connait(id)) routeur.ouvrir(id); else routeur.accueil(); };
+  const aller = (id) => {
+    if (!id || id === 'accueil') return routeur.accueil();
+    if (routeur.connait(id)) return routeur.ouvrir(id);
+    if (installer) return Promise.resolve(installer(id)).then(ok => ok || routeur.accueil()).catch(() => routeur.accueil());
+    routeur.accueil();
+  };
   import('@capacitor/app').then(({ App }) => App.addListener('appUrlOpen', (e) => {
     try {
       const u = new URL(e.url);

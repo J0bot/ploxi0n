@@ -1,91 +1,103 @@
-/* ploxi0n — le look CHILL-TEKK (RS-7 12.10 : « le UI est dégueu, il faut le chill-tekk-ifier »). Les jetons viennent du chill-tekk MOBILE
-   du labo (public/css/themes.css, html.uitier-mobile[data-theme="chill-tekk"]) : fond bleu nuit, surfaces translucides vitrées, bordure
-   douce teintée violet, accent teal calme, électricité violette, une bioluminescence verte pour ce qui est VIVANT (en ligne, installé).
-   Aucune animation continue (règle Pi 4) : la profondeur vient de dégradés fixes ; seuls les gestes animent (appui, feuille). */
+/* ploxi0n — le look CHILL-TEKK ORGANIQUE (RS-7 12.10 : « chill-tekk-ifier » ; « un violet profond et chill, des bords ronds épais » ;
+   « plus organique » ; « je veux pas ce dégradé »). Les références : la mémoire organic-chill-tekk-ui (violet/indigo profond,
+   bioluminescence verte, formes blob, cadres = membranes cellulaires, jonctions = noyaux qui luisent).
+   Règles : AUCUN dégradé ; des aplats violets ; des bords épais et ronds (membranes) ; des icônes en cellules un peu irrégulières ;
+   le vert biolumineux seulement pour ce qui est VIVANT (en ligne, choisi, installé). Aucune animation continue (Pi 4) : seuls les gestes. */
 :root{
-  --bg:#050510; --surface:rgba(16,14,30,.62); --surface2:rgba(26,22,48,.55); --verre:rgba(255,255,255,.045);
-  --bord:rgba(150,120,235,.22); --bord2:rgba(150,120,235,.38);
-  --acc:#60c8cd; --acc2:#a85cff; --bio:#7dffb0;
-  --txt:rgba(232,234,240,.95); --muted:rgba(200,205,220,.56);
-  --glow:rgba(120,90,235,.20); --glow2:rgba(96,200,205,.16);
-  --rayon:18px; --flou:saturate(160%) blur(18px);
+  --bg:#120a2b;            /* le fond : violet nuit, en aplat */
+  --surface:#1c1140;       /* les membranes */
+  --surface2:#251754;
+  --creux:#160d35;         /* un champ, un creux */
+  --bord:#3b2775; --bord2:#5a3fa8; --trait:3px;
+  --acc:#b69cff;           /* lilas */
+  --acc2:#8a6cf0;
+  --bio:#7dffb0;           /* la bioluminescence : le vivant */
+  --txt:#efe9ff; --muted:#a99cd0;
+  --glow:rgba(125,255,176,.45);
+  --rayon:30px;
   --police:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,sans-serif;
+  /* des cellules : quatre formes de blob, une par tuile en rotation */
+  --blob1:36% 42% 38% 44% / 40% 36% 44% 38%;
+  --blob2:42% 36% 44% 38% / 36% 42% 38% 44%;
+  --blob3:38% 44% 36% 42% / 44% 38% 42% 36%;
+  --blob4:44% 38% 42% 36% / 38% 44% 36% 42%;
 }
-html,body{margin:0;height:100%;color:var(--txt);font:15px/1.4 var(--police);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
-html{background:var(--bg)}
-/* l'ambiance : deux nébuleuses fixes (violet en haut, teal en bas), une trame très fine */
-body{background:
-  radial-gradient(120% 60% at 0% 0%, rgba(168,92,255,.20), transparent 60%),
-  radial-gradient(100% 55% at 100% 100%, rgba(96,200,205,.14), transparent 60%),
-  radial-gradient(60% 40% at 80% 20%, rgba(125,255,176,.05), transparent 70%),
-  var(--bg);background-attachment:fixed}
+html,body{margin:0;height:100%;color:var(--txt);font:15px/1.4 var(--police);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;background:var(--bg)}
 button{font-family:inherit;-webkit-user-select:none;user-select:none}
 #ploxi0n{height:100%;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
 
 /* ---- l'accueil ---- */
 .px-accueil{padding:10px 18px 18px;overflow:auto;flex:1}
-.px-tete{display:flex;align-items:center;gap:12px;margin:8px 0 10px}
-.px-accueil h1{display:flex;align-items:center;gap:11px;margin:0;font:700 1.55rem/1 var(--police);letter-spacing:.06em;flex:1;min-width:0}
-.px-accueil h1 b{font-weight:700;background:linear-gradient(90deg,var(--txt),#cbb8ff 70%,var(--acc));-webkit-background-clip:text;background-clip:text;color:transparent}
-.px-logo{width:34px;height:34px;color:var(--acc2);filter:drop-shadow(0 0 10px rgba(168,92,255,.55))}
-.px-sous{color:var(--muted);margin:0 0 16px;font-size:.88rem}
-.px-modif{background:var(--verre);border:1px solid var(--bord);color:var(--txt);border-radius:999px;padding:0 14px;min-height:36px;font-size:.9rem;-webkit-backdrop-filter:var(--flou);backdrop-filter:var(--flou)}
+.px-tete{display:flex;align-items:center;gap:12px;margin:10px 2px 14px}
+.px-accueil h1{display:flex;align-items:center;gap:11px;margin:0;font:700 1.55rem/1 var(--police);letter-spacing:.05em;flex:1;min-width:0;color:var(--acc)}
+.px-accueil h1 b{font-weight:700;color:var(--txt)}
+.px-logo{width:32px;height:32px;color:var(--acc)}
+.px-sous{color:var(--muted);margin:0 2px 16px;font-size:.88rem}
+.px-modif{background:var(--surface);border:var(--trait) solid var(--bord);color:var(--txt);border-radius:999px;padding:0 16px;min-height:40px;font-size:.92rem}
 
-/* la visière du HUD : une capsule de verre, sur sa propre ligne, qui défile si elle déborde */
-.px-visiere{display:flex;align-items:center;gap:6px;padding:5px;margin:0 0 16px;border-radius:999px;background:var(--surface);border:1px solid var(--bord);
-  -webkit-backdrop-filter:var(--flou);backdrop-filter:var(--flou);box-shadow:0 8px 30px -12px var(--glow),inset 0 1px 0 rgba(255,255,255,.06);overflow-x:auto;scrollbar-width:none}
+/* la visière du HUD : une membrane en capsule, sur sa propre ligne */
+.px-visiere{display:flex;align-items:center;gap:6px;padding:5px;margin:0 0 18px;border-radius:999px;background:var(--surface);border:var(--trait) solid var(--bord);overflow-x:auto;scrollbar-width:none}
 .px-visiere::-webkit-scrollbar{display:none}
 .px-hud,.px-hud-c{display:flex;align-items:center;gap:6px;min-width:0}
 .px-visiere .px-hud-c{flex:1}
 .px-visiere [data-reglages]{margin-left:auto}
-.px-compte{display:flex;align-items:center;gap:6px;border-radius:999px;padding:0 14px;min-height:36px;font:600 13.5px var(--police);border:1px solid rgba(96,200,205,.55);
-  background:linear-gradient(135deg,rgba(96,200,205,.22),rgba(168,92,255,.18));color:var(--txt);white-space:nowrap;box-shadow:0 0 18px -6px var(--glow2)}
-.px-compte.on{border-color:var(--bord);background:var(--verre);box-shadow:none;font-weight:500}.px-compte .g{font-size:1rem;color:var(--bio);text-shadow:0 0 8px rgba(125,255,176,.6)}
-.px-h-b{min-width:36px;min-height:36px;border-radius:999px;border:1px solid transparent;background:var(--verre);color:inherit;font-size:1.05rem;padding:0 8px;flex:none;transition:transform .12s}
+.px-compte{display:flex;align-items:center;gap:7px;border-radius:999px;padding:0 16px;min-height:40px;font:700 14px var(--police);border:var(--trait) solid var(--acc);background:var(--acc);color:#1a0d3d;white-space:nowrap}
+.px-compte.on{border-color:var(--bord2);background:var(--surface2);color:var(--txt);font-weight:600}
+.px-compte .g{font-size:1rem;color:var(--bio)}
+.px-h-b{min-width:40px;min-height:40px;border-radius:999px;border:var(--trait) solid transparent;background:var(--surface2);color:inherit;font-size:1.05rem;padding:0 9px;flex:none;transition:transform .12s}
 .px-h-b:active{transform:scale(.9)}
-.px-h-ic{font:600 12px var(--police);color:var(--muted);white-space:nowrap;padding:0 6px}
+.px-h-ic{font:700 12px var(--police);color:var(--muted);white-space:nowrap;padding:0 6px}
 
-/* les tuiles : une icône de verre teintée (--t, la teinte du ploxion), le nom dessous — comme l'écran d'accueil */
-.px-grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:18px 10px}
-.px-tuile{display:flex;flex-direction:column;align-items:center;gap:7px;padding:0;border:0;background:none;color:var(--txt);font:500 12px/1.2 var(--police);min-width:0;transition:transform .14s ease}
-.px-tuile:active{transform:scale(.92)}
-.px-ic{width:62px;height:62px;border-radius:19px;display:flex;align-items:center;justify-content:center;font-size:1.95rem;line-height:1;position:relative;
-  background:linear-gradient(150deg,hsla(var(--t,265),70%,62%,.34),hsla(calc(var(--t,265) + 40),70%,40%,.16) 60%,rgba(10,10,24,.5));
-  border:1px solid hsla(var(--t,265),80%,75%,.28);box-shadow:0 10px 24px -12px hsla(var(--t,265),80%,60%,.7),inset 0 1px 0 rgba(255,255,255,.14)}
-.px-ic::after{content:"";position:absolute;inset:1px 1px 50% 1px;border-radius:18px 18px 40% 40%;background:linear-gradient(180deg,rgba(255,255,255,.13),transparent);pointer-events:none}
-.px-tuile>span:last-child{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+/* les tuiles : des CELLULES — un aplat teinté (--t, la teinte du ploxion), une membrane épaisse, une forme un peu irrégulière */
+.px-grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:20px 10px}
+.px-tuile{display:flex;flex-direction:column;align-items:center;gap:8px;padding:0;border:0;background:none;color:var(--txt);font:600 12px/1.2 var(--police);min-width:0;transition:transform .16s cubic-bezier(.3,1.6,.5,1)}
+.px-tuile:active{transform:scale(.9)}
+.px-ic{width:66px;height:66px;border-radius:var(--blob1);display:flex;align-items:center;justify-content:center;font-size:1.95rem;line-height:1;position:relative;
+  background:hsl(var(--t,265) 38% 24%);border:var(--trait) solid hsl(var(--t,265) 48% 46%)}
+.px-tuile:nth-child(4n+2) .px-ic{border-radius:var(--blob2)}.px-tuile:nth-child(4n+3) .px-ic{border-radius:var(--blob3)}.px-tuile:nth-child(4n) .px-ic{border-radius:var(--blob4)}
+.px-tuile>span:last-child{max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-align:center;font-weight:600;font-size:11.5px;line-height:1.2}
 .px-dossier .px-ic{background:var(--surface2);border-color:var(--bord2)}
-.px-edite .px-ic{outline:2px dashed var(--acc);outline-offset:3px}
+.px-edite .px-ic{outline:3px dashed var(--acc);outline-offset:4px}
 .px-pad{padding:16px 18px}
 
-/* les pages et leurs points */
+/* les pages et leurs points (des noyaux) */
 .px-pages{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -18px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.px-pages::-webkit-scrollbar{display:none}
-.px-page{flex:0 0 100%;box-sizing:border-box;padding:0 18px 20px;scroll-snap-align:start;min-height:50vh}.px-titre-page{font:600 .78rem var(--police);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
-.px-points{display:flex;justify-content:center;gap:2px;padding:6px 0}.px-point{width:20px;height:20px;border:0;background:none;padding:0;position:relative}
-.px-point::after{content:'';position:absolute;inset:7px;border-radius:99px;background:rgba(200,190,255,.28);transition:background .2s}.px-point.on::after{background:var(--acc);box-shadow:0 0 8px var(--acc)}
+.px-page{flex:0 0 100%;box-sizing:border-box;padding:0 18px 20px;scroll-snap-align:start;min-height:50vh}.px-titre-page{font:700 .8rem var(--police);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 14px}
+.px-points{display:flex;justify-content:center;gap:2px;padding:6px 0}.px-point{width:22px;height:22px;border:0;background:none;padding:0;position:relative}
+.px-point::after{content:'';position:absolute;inset:7px;border-radius:99px;background:var(--bord2)}.px-point.on::after{background:var(--bio);box-shadow:0 0 8px var(--glow)}
 
-/* ---- un ploxion ouvert : la barre de verre ---- */
-.px-barre{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface);border-bottom:1px solid var(--bord);-webkit-backdrop-filter:var(--flou);backdrop-filter:var(--flou);position:relative;z-index:5}
-.px-barre>span:not(.px-hud){font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.px-retour{font-size:1.5rem;line-height:1;background:var(--verre);border:1px solid var(--bord);border-radius:999px;color:var(--acc);width:40px;height:40px;padding:0 0 3px;flex:none}
+/* ---- un ploxion ouvert : la barre ---- */
+.px-barre{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface);border-bottom:var(--trait) solid var(--bord);position:relative;z-index:5;border-radius:0 0 24px 24px}
+.px-barre>span:not(.px-hud){font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.px-retour{font-size:1.5rem;line-height:1;background:var(--surface2);border:var(--trait) solid var(--bord);border-radius:999px;color:var(--acc);width:44px;height:44px;padding:0 0 3px;flex:none}
 .px-retour:active{transform:scale(.9)}
 .px-barre .px-hud{margin-left:auto;flex:none}
-.px-verrou{font-size:1.05rem;background:var(--verre);border:1px solid transparent;border-radius:999px;min-width:36px;min-height:36px}
+.px-barre .px-compte{padding:0 12px}
+.px-verrou{font-size:1.05rem;background:var(--surface2);border:var(--trait) solid transparent;border-radius:999px;min-width:40px;min-height:40px}
 .px-hote{flex:1;min-height:0;position:relative;overflow:auto}
-.px-erreur{color:#ff9ab0;padding:16px}
+.px-erreur{color:#ffa3c4;padding:16px}
 
-/* ---- les feuilles (HUD : px-feuille ; actions et guides : px-voile > px-tiroir) ---- */
-.px-feuille,.px-voile{position:fixed;inset:0;z-index:50;background:rgba(3,2,12,.55);display:flex;align-items:flex-end;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
-.px-feuille>div,.px-tiroir{width:100%;box-sizing:border-box;background:linear-gradient(180deg,rgba(28,22,52,.92),rgba(10,9,22,.96));border:1px solid var(--bord);border-bottom:0;border-radius:26px 26px 0 0;
-  padding:12px 18px calc(22px + env(safe-area-inset-bottom,0px));box-shadow:0 -20px 60px -20px var(--glow);-webkit-backdrop-filter:var(--flou);backdrop-filter:var(--flou)}
-.px-feuille>div::before,.px-tiroir::before{content:"";display:block;width:40px;height:5px;border-radius:9px;background:rgba(200,190,255,.28);margin:0 auto 14px}
+/* ---- les feuilles : une grande membrane qui monte du bas ---- */
+.px-feuille,.px-voile{position:fixed;inset:0;z-index:50;background:rgba(10,5,26,.7);display:flex;align-items:flex-end}
+.px-feuille>div,.px-tiroir{width:100%;box-sizing:border-box;background:var(--surface);border:var(--trait) solid var(--bord2);border-bottom:0;border-radius:38px 38px 0 0;
+  padding:12px 18px calc(22px + env(safe-area-inset-bottom,0px))}
+.px-feuille>div::before,.px-tiroir::before{content:"";display:block;width:44px;height:6px;border-radius:9px;background:var(--bord2);margin:0 auto 16px}
 .px-feuille h2{margin:0 0 6px;font-size:1.2rem}.px-feuille p{color:var(--muted);margin:0 0 14px;line-height:1.45}
-.px-feuille button,.px-tiroir button{width:100%;min-height:50px;padding:0 16px;border-radius:15px;font:600 16px var(--police);margin:5px 0;border:1px solid var(--bord);background:var(--verre);color:var(--txt);text-align:left;transition:transform .1s}
+.px-feuille button,.px-tiroir button{width:100%;min-height:52px;padding:0 18px;border-radius:999px;font:700 16px var(--police);margin:5px 0;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);text-align:left;transition:transform .1s}
 .px-feuille button{text-align:center}
-.px-feuille button:active,.px-tiroir button:active{transform:scale(.98)}
-.px-feuille .p{background:linear-gradient(135deg,var(--acc),#7f9bff);color:#050510;border-color:transparent;box-shadow:0 8px 24px -10px var(--acc)}.px-feuille .apple{background:#fff;color:#000;border-color:#fff}
+.px-feuille button:active,.px-tiroir button:active{transform:scale(.97)}
+.px-feuille .p,.px-tiroir .p{background:var(--acc);border-color:var(--acc);color:#1a0d3d;text-align:center}.px-feuille .apple{background:#fff;color:#000;border-color:#fff}
 .px-tiroir{display:flex;flex-direction:column;gap:2px}
 .px-tiroir button:last-child{text-align:center;background:none;border-color:transparent;color:var(--muted)}
-.px-ft{display:flex;align-items:center;gap:12px;margin:0 0 10px;font-weight:600;font-size:1.05rem}
-.px-ft .px-ic{width:46px;height:46px;border-radius:14px;font-size:1.5rem}
+.px-ft{display:flex;align-items:center;gap:12px;margin:0 0 10px;font-weight:700;font-size:1.05rem}
+.px-ft .px-ic{width:48px;height:48px;font-size:1.5rem}
 .px-etapes{margin:4px 0 6px;padding-left:22px;color:var(--muted);line-height:1.55;font-size:.9rem}.px-etapes b{color:var(--txt)}
+
+/* la feuille « tes ploxions en apps » : des cellules à cocher ; une cellule choisie s'allume (vert biolumineux) */
+.px-choix{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:14px 8px;max-height:46vh;overflow:auto;padding:6px 2px 12px}
+.px-tiroir .px-choix .px-tuile{width:auto;min-height:0;padding:0;margin:0;border:0;border-radius:0;background:none;text-align:center;opacity:.5;font:600 11.5px var(--police)}
+.px-tiroir .px-choix .px-tuile.on{opacity:1}
+.px-tiroir .px-choix .px-tuile.on .px-ic{border-color:var(--bio);box-shadow:0 0 14px var(--glow)}
+.px-tiroir .px-choix .px-ic{width:56px;height:56px;font-size:1.7rem}
+.px-tiroir button:disabled{opacity:.5}
+.px-tiroir .px-lien{min-height:40px;background:none;border-color:transparent;color:var(--acc);font-weight:600;font-size:14px;text-align:center}
