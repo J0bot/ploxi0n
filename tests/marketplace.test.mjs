@@ -229,3 +229,26 @@ test('⚙ réglages et HUD composé : éléments, ordre, épinglés, ⚙ toujour
     assert.deepEqual(hud.config().elements.map(x => x.k), ['compte', 'reseau', 'heure', 'chercher', 'epingles']); assert.equal(hud.config().epingles.length, 4);
   } finally { p.fin(); }
 });
+
+test('raccourcis 0.9 : « Envoyer à un ploxion » ouvre et émet sur le bus, « Chercher un ploxion », les valeurs publiées', async () => {
+  const { creerRaccourcis } = await import('../src/natif/raccourcis.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    const store = {}; W.Capacitor = { isNativePlatform: () => true };
+    const Preferences = { get: async ({ key }) => ({ value: store[key] ?? null }), set: async ({ key, value }) => { store[key] = value; }, remove: async ({ key }) => { delete store[key]; } };
+    const ouverts = [], recus = [];
+    const routeur = { connait: (id) => ['pomo', 'marketplace'].includes(id), ouvrir: async (id, params) => { ouverts.push([id, params]); return true; } };
+    W.jOSPorts.on('ploxion.pomo.cmd', (x) => recus.push(x));
+    const r = creerRaccourcis({ W, routeur, boxion: p.boxion, charger: async () => ({ Preferences }) });
+    store['ploxi0n.envoyer'] = JSON.stringify({ id: 'pomo', port: 'cmd', payload: 'start 25' });
+    store['ploxi0n.chercher'] = 'météo';
+    await r.recevoir();
+    assert.deepEqual(ouverts[0], ['pomo', { port: 'cmd', payload: 'start 25', texte: 'start 25', depuis: 'raccourci' }]);
+    assert.deepEqual(recus, ['start 25'], 'reçu sur le bus');
+    assert.deepEqual(ouverts[1], ['marketplace', { chercher: '1', q: 'météo' }]);
+    assert.equal(store['ploxi0n.envoyer'], undefined, 'consommé une fois');
+    await r.valeur('tsoins-jour', 'Tsoins aujourd\'hui', 3); await r.valeur('px.<script>', 'x', 'y');
+    const v = JSON.parse(store['ploxi0n.valeurs']);
+    assert.equal(v['tsoins-jour'].valeur, '3'); assert.ok(v['px.script'], 'la clé est nettoyée');
+  } finally { p.fin(); }
+});

@@ -103,13 +103,26 @@ async function demarrer() {
   window.ploxi0n = { boxion, shim, routeur, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte };
   brancherLiens({ routeur, compte });
   raccourcis = creerRaccourcis({ routeur, boxion });
+  // les valeurs pour « Lire une valeur de ploxi0n » (Raccourcis, Siri ; les widgets ensuite) ; un ploxion publie les siennes (préfixe px.)
+  window.jOSRaccourcis = { publierValeur: (cle, titre, valeur) => raccourcis.valeur('px.' + String(cle), titre, valeur) };
+  async function publierValeurs() {
+    const jour = new Date().toISOString().slice(0, 10), e = compte.etat();
+    const t = await boxion.lire('tsoins', { limite: 2000 }).catch(() => []);
+    const duJour = t.filter(x => new Date(x.t).toISOString().slice(0, 10) === jour), dernier = t[t.length - 1];
+    await raccourcis.valeur('tsoins-jour', 'Tsoins aujourd\'hui', duJour.length);
+    await raccourcis.valeur('dernier-tsoin', 'Dernier tsoin', dernier ? (dernier.entry.d || dernier.entry.action || dernier.entry.kind || '') : '—');
+    await raccourcis.valeur('ploxions', 'Ploxions installés', (await depot.installes()).length);
+    await raccourcis.valeur('compte', 'Compte', e.connecte ? (e.nom + ' · ' + e.palier) : 'pas connecté');
+    await raccourcis.valeur('mode', 'Mode connecté', modeConnecte ? 'oui' : 'non');
+  }
   await majAccueil();
   const id = decodeURIComponent((location.hash.match(/^#\/(.+)$/) || [])[1] || '');
   if (id && routeur.connait(id)) routeur.ouvrir(id); else routeur.accueil();
   // un raccourci (Siri, l'app Raccourcis, une automatisation) a pu demander un ploxion ou noter un tsoin
   raccourcis.recevoir().catch(() => {});
+  publierValeurs().catch(() => {});
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-    import('@capacitor/app').then(({ App }) => App.addListener('appStateChange', (e) => { if (e.isActive) raccourcis.recevoir().catch(() => {}); })).catch(() => {});
+    import('@capacitor/app').then(({ App }) => App.addListener('appStateChange', (e) => { if (e.isActive) raccourcis.recevoir().catch(() => {}); else publierValeurs().catch(() => {}); })).catch(() => {});
   }
 }
 demarrer().catch((e) => { document.getElementById('ploxi0n').innerHTML = '<p class="px-erreur">ploxi0n n\'a pas pu démarrer : ' + String(e && e.message).replace(/[<&]/g, '') + '</p>'; });

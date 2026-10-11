@@ -3,6 +3,12 @@
 //   Ouvrir un ploxion   la liste vient des ploxions installés (écrite par l'app : CapacitorStorage.ploxi0n.ploxions)
 //   Noter un tsoin      sans ouvrir l'app : rangé dans CapacitorStorage.ploxi0n.tsoins-en-attente, versé dans boxion_local au prochain lancement
 //   Ouvrir ploxi0n
+//   (0.9, RS-7 : « pouvoir ajouter des options en plus dans Raccourcis »)
+//   Envoyer à un ploxion  un port + un texte → le ploxion s'ouvre et le reçoit sur le bus (jOSPorts « ploxion.<id>.<port> ») : piloter n'importe
+//                         quel ploxion depuis une automatisation (heure, lieu, NFC, bouton Action)
+//   Lire une valeur       sans ouvrir l'app : les valeurs que l'app publie (CapacitorStorage.ploxi0n.valeurs : tsoins du jour, heures, mode…,
+//                         et celles des ploxions via jOSRaccourcis.publierValeur) ; les widgets liront les mêmes
+//   Chercher un ploxion   ouvre le marketplace sur la recherche
 // L'app et ces intents se parlent par UserDefaults.standard, avec le préfixe du plugin Préférences de Capacitor.
 import AppIntents
 import Foundation
@@ -64,6 +70,69 @@ struct NoterTsoin: AppIntent {
 }
 
 @available(iOS 16.0, *)
+struct EnvoyerAPloxion: AppIntent {
+    static var title: LocalizedStringResource = "Envoyer à un ploxion"
+    static var description = IntentDescription("Ouvre un ploxion et lui envoie un texte sur un port (le bus du xerboxion).")
+    static var openAppWhenRun: Bool = true
+    @Parameter(title: "Ploxion") var ploxion: PloxionEntity
+    @Parameter(title: "Port", default: "cmd") var port: String
+    @Parameter(title: "Texte", default: "") var texte: String
+    @MainActor func perform() async throws -> some IntentResult {
+        let m: [String: Any] = ["id": ploxion.id, "port": port, "payload": texte, "t": Int(Date().timeIntervalSince1970 * 1000)]
+        if let d = try? JSONSerialization.data(withJSONObject: m), let s = String(data: d, encoding: .utf8) { ecrire("ploxi0n.envoyer", s) }
+        return .result()
+    }
+}
+
+@available(iOS 16.0, *)
+struct ValeurEntity: AppEntity {
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Valeur ploxi0n"
+    static var defaultQuery = ValeurQuery()
+    var id: String
+    var titre: String
+    var valeur: String
+    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(titre)") }
+}
+
+@available(iOS 16.0, *)
+struct ValeurQuery: EntityQuery {
+    func toutes() -> [ValeurEntity] {
+        guard let s = lire("ploxi0n.valeurs"), let d = s.data(using: .utf8),
+              let o = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else { return [] }
+        return o.keys.sorted().compactMap { k in
+            guard let v = o[k] as? [String: Any] else { return nil }
+            return ValeurEntity(id: k, titre: (v["titre"] as? String) ?? k, valeur: (v["valeur"] as? String) ?? "")
+        }
+    }
+    func entities(for identifiers: [String]) async throws -> [ValeurEntity] { toutes().filter { identifiers.contains($0.id) } }
+    func suggestedEntities() async throws -> [ValeurEntity] { toutes() }
+}
+
+@available(iOS 16.0, *)
+struct LireValeur: AppIntent {
+    static var title: LocalizedStringResource = "Lire une valeur de ploxi0n"
+    static var description = IntentDescription("Rend une valeur publiée par ploxi0n ou un de ses ploxions, sans ouvrir l'app.")
+    static var openAppWhenRun: Bool = false
+    @Parameter(title: "Valeur") var valeur: ValeurEntity
+    func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
+        let v = ValeurQuery().toutes().first { $0.id == valeur.id }?.valeur ?? valeur.valeur
+        return .result(value: v, dialog: "\(valeur.titre) : \(v)")
+    }
+}
+
+@available(iOS 16.0, *)
+struct ChercherPloxion: AppIntent {
+    static var title: LocalizedStringResource = "Chercher un ploxion"
+    static var description = IntentDescription("Ouvre le marketplace de ploxi0n sur une recherche.")
+    static var openAppWhenRun: Bool = true
+    @Parameter(title: "Recherche", default: "") var texte: String
+    @MainActor func perform() async throws -> some IntentResult {
+        ecrire("ploxi0n.chercher", texte.isEmpty ? " " : texte)
+        return .result()
+    }
+}
+
+@available(iOS 16.0, *)
 struct OuvrirPloxi0n: AppIntent {
     static var title: LocalizedStringResource = "Ouvrir ploxi0n"
     static var openAppWhenRun: Bool = true
@@ -76,6 +145,8 @@ struct RaccourcisPloxi0n: AppShortcutsProvider {
         AppShortcut(intent: OuvrirPloxion(), phrases: ["Ouvre \(\.$ploxion) dans \(.applicationName)", "Ouvre \(\.$ploxion) avec \(.applicationName)"],
                     shortTitle: "Ouvrir un ploxion", systemImageName: "square.grid.2x2")
         AppShortcut(intent: NoterTsoin(), phrases: ["Note un tsoin dans \(.applicationName)"], shortTitle: "Noter un tsoin", systemImageName: "hourglass")
+        AppShortcut(intent: LireValeur(), phrases: ["Lis une valeur de \(.applicationName)", "Que dit \(.applicationName)"], shortTitle: "Lire une valeur", systemImageName: "text.bubble")
+        AppShortcut(intent: ChercherPloxion(), phrases: ["Cherche un ploxion dans \(.applicationName)"], shortTitle: "Chercher un ploxion", systemImageName: "magnifyingglass")
         AppShortcut(intent: OuvrirPloxi0n(), phrases: ["Ouvre \(.applicationName)"], shortTitle: "Ouvrir ploxi0n", systemImageName: "diamond")
     }
 }
