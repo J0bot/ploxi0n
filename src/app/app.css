@@ -159,3 +159,18 @@ button{font-family:inherit;-webkit-user-select:none;user-select:none}
 .px-jauge{display:block;height:4px;border-radius:2px;background:var(--creux);overflow:hidden;margin-top:2px}.px-jauge>i{display:block;height:100%;background:var(--acc2);border-radius:2px}
 /* catégories : un titre gravé, une grille par catégorie */
 .px-vue-categories .px-plat{gap:0}.px-vue-categories .px-titre-page{margin:18px 2px 12px}.px-vue-categories .px-titre-page:first-child{margin-top:0}
+
+/* ---- plus de zooms bizarres (RS-7 12.10) : ni double-tap, ni zoom sur un champ (iOS zoome sous 16 px), ni loupe d'appui long ---- */
+html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+input,textarea,select{font-size:max(16px,1em)}
+.px-tuile,.px-ligne,.px-dock button,.px-vivant button{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+
+/* ---- le menu d'un ploxion (appui long) ---- */
+.px-menu{max-height:86vh;overflow:auto}
+.px-menu button small{display:block;font:500 11px var(--police);color:var(--muted);margin-top:1px}
+.px-menu .px-grave{margin:12px 4px 6px}
+.px-puces{display:flex;flex-wrap:wrap;gap:6px}
+.px-tiroir .px-puces .px-puce{width:auto;min-height:38px;margin:0;padding:0 14px;border-radius:11px;font:600 13px var(--police);text-align:center}
+.px-tiroir .px-puces .px-puce.on{border-color:var(--bio);color:var(--txt)}
+.px-tiroir .px-danger{color:#e8a0b8}.px-tiroir .px-danger.sur{border-color:#e8a0b8}
+.px-tiroir .px-puces .px-puce:last-child{border-color:var(--bord);background:var(--surface2);color:var(--muted);box-shadow:inset 0 0 0 1px var(--filet)}

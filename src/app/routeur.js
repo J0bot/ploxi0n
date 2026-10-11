@@ -15,7 +15,7 @@ const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
   + R.map(r => `M512 ${512 - r}L${512 + r} 512L512 ${512 + r}L${512 - r} 512Z`).join('') + '"/></svg>';
 
-export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null } = {}) {
+export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null } = {}) {
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
   // PLUSIEURS PLOXIONS VIVANTS (RS-7 12.10 : « pouvoir ouvrir des ploxions depuis des ploxions, et pouvoir minimiser un ploxion ») :
@@ -179,10 +179,10 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     }, { passive: true });
   }
   function demander(question, defaut) { try { return W.prompt(question, defaut); } catch (er) { return null; } }
-  function ranger(id, quoi) {
+  function ranger(id, quoi, donne) {
     const liste = quoi === 'page' ? 'pages' : 'dossiers';
     const actuel = accueilDoc[liste].findIndex(d => d.ids.includes(id));
-    let nom = demander(quoi === 'page' ? (actuel >= 0 ? 'Sur quelle page ? (vide = la remettre sur l\'accueil)' : 'Sur quelle page ? (un nom existant ou nouveau)') : (actuel >= 0 ? 'Dossier de ce ploxion (vide = le sortir du dossier)' : 'Ranger dans quel dossier ? (un nom existant ou nouveau)'), actuel >= 0 ? accueilDoc[liste][actuel].nom : '');
+    let nom = donne !== undefined ? donne : demander(quoi === 'page' ? (actuel >= 0 ? 'Sur quelle page ? (vide = la remettre sur l\'accueil)' : 'Sur quelle page ? (un nom existant ou nouveau)') : (actuel >= 0 ? 'Dossier de ce ploxion (vide = le sortir du dossier)' : 'Ranger dans quel dossier ? (un nom existant ou nouveau)'), actuel >= 0 ? accueilDoc[liste][actuel].nom : '');
     if (nom === null) return;
     nom = String(nom).trim().slice(0, 40);
     // un ploxion vit à un seul endroit : un dossier OU une page (ou l'accueil)
@@ -192,20 +192,56 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (dossierOuvert !== null && !accueilDoc.dossiers[dossierOuvert]) dossierOuvert = null;
     garder(); accueil();
   }
+  // LE MENU D'UN PLOXION (appui long n'importe où, ou ✎ puis toucher) : tout ce qu'on peut en faire, en un geste ; les pages et les
+  // dossiers existants se choisissent directement (la saisie seulement pour en créer un)
   function actions(id) {
     const p = parId.get(id); if (!p) return;
+    const ep = hud ? hud.config().epingles : [];
+    const dans = (l) => accueilDoc[l].findIndex(d => d.ids.includes(id));
+    const iPage = dans('pages'), iDossier = dans('dossiers');
+    const puce = (attr, val, nom, on) => '<button class="px-puce' + (on ? ' on' : '') + '" ' + attr + '="' + texte(val) + '">' + texte(nom) + '</button>';
     const f = D.createElement('div'); f.className = 'px-voile';
-    f.innerHTML = '<div class="px-tiroir"><p class="px-ft"><span class="px-ic">' + texte(p.icone || '▣') + '</span> ' + texte(p.nom || id) + '</p>'
-      + (p.interne ? '' : '<button data-ranger="dossier">📁 ranger dans un dossier</button><button data-ranger="page">📄 mettre sur une page</button>')
-      + (ecranAccueil ? '<button data-ranger="iphone">⌂ ajouter à l\'écran d\'accueil de l\'iPhone</button>' : '') + '<button data-ranger="">annuler</button></div>';
+    f.innerHTML = '<div class="px-tiroir px-menu"><p class="px-ft"><span class="px-ic" style="--t:' + teinte(id) + '">' + texte(p.icone || '▣') + '</span> ' + texte(p.nom || id) + '</p>'
+      + '<button data-m="ouvrir">▶ ouvrir</button>'
+      + (hud ? '<button data-m="epingler">' + (ep.includes(id) ? '📌 retirer du dock' : '📌 épingler au dock') + '<small>et dans le widget « Ploxions épinglés »</small></button>' : '')
+      + (ecranAccueil ? '<button data-m="iphone">📲 sur l\'écran d\'accueil de l\'iPhone</button>' : '')
+      + (p.interne ? '' : '<p class="px-grave">déplacer vers une page</p><div class="px-puces">' + puce('data-vers-page', '', 'accueil', iPage < 0 && iDossier < 0)
+        + accueilDoc.pages.map((pg, k) => puce('data-vers-page', pg.nom, pg.nom, k === iPage)).join('') + '<button class="px-puce" data-ranger="page">＋ nouvelle</button></div>'
+        + '<p class="px-grave">ranger dans un dossier</p><div class="px-puces">' + accueilDoc.dossiers.map((d, k) => puce('data-vers-dossier', d.nom, '📁 ' + d.nom, k === iDossier)).join('')
+        + (iDossier >= 0 ? puce('data-vers-dossier', '', 'sortir du dossier', false) : '') + '<button class="px-puce" data-ranger="dossier">＋ nouveau</button></div>')
+      + (verrou && !p.interne ? '<button data-m="verrou">' + (verrous.has(id) ? '🔓 retirer le verrou Face ID' : '🔒 verrouiller avec Face ID') + '</button>' : '')
+      + (retirer && !p.interne ? '<button data-m="retirer" class="px-danger">🗑 retirer de ploxi0n</button>' : '')
+      + '<button data-m="">annuler</button></div>';
     racine.appendChild(f);
-    f.addEventListener('click', (e) => {
-      const b = e.target.closest('[data-ranger]'); if (!b && e.target !== f) return;
-      e.stopPropagation(); f.remove();
-      const quoi = b ? b.getAttribute('data-ranger') : '';
-      if (quoi === 'iphone') ecranAccueil(id); else if (quoi) ranger(id, quoi);
+    f.addEventListener('click', async (e) => {
+      const b = e.target.closest('button'); if (!b && e.target !== f) return;
+      e.stopPropagation();
+      if (b && b.getAttribute('data-m') === 'retirer' && !b.classList.contains('sur')) { b.classList.add('sur'); b.textContent = '🗑 sûr ? touche encore pour retirer'; return; }
+      f.remove();
+      if (!b) return;
+      const m = b.getAttribute('data-m');
+      if (b.hasAttribute('data-vers-page')) return ranger(id, 'page', b.getAttribute('data-vers-page'));
+      if (b.hasAttribute('data-vers-dossier')) return ranger(id, 'dossier', b.getAttribute('data-vers-dossier'));
+      if (b.hasAttribute('data-ranger')) return ranger(id, b.getAttribute('data-ranger'));
+      if (m === 'ouvrir') return ouvrir(id);
+      if (m === 'iphone') return ecranAccueil(id);
+      if (m === 'epingler') { const c = hud.config(); c.epingles = c.epingles.includes(id) ? c.epingles.filter(x => x !== id) : [...c.epingles, id].slice(-4); const el = c.elements.find(x => x.k === 'epingles'); if (el) el.on = true; await hud.regler(c); return accueil(); }
+      if (m === 'verrou') { if (verrous.has(id)) { if (!(await verrou.ouvrir('Retirer le verrou de ' + (p.nom || id)))) return; verrous.delete(id); } else { if (!(await verrou.dispo()).ok) return; verrous.add(id); } garder(); return accueil(); }
+      if (m === 'retirer') { tuer(id); await retirer(id); return accueil(); }
     });
   }
+  // l'APPUI LONG (450 ms sans bouger) sur une tuile ou une ligne : le menu ; le clic qui suit est avalé
+  let appui = null, avaler = 0;
+  racine.addEventListener('pointerdown', (e) => {
+    const t = e.target.closest('[data-id]'); if (!t || !racine.contains(t) || t.closest('.px-hote,.px-voile')) return;
+    const x0 = e.clientX, y0 = e.clientY, id = t.getAttribute('data-id');
+    appui = { x0, y0, t: W.setTimeout(() => { appui = null; avaler = Date.now(); try { const h = W.Capacitor && W.Capacitor.Plugins && W.Capacitor.Plugins.Haptics; if (h) h.impact({ style: 'MEDIUM' }); } catch (er) { /* */ } actions(id); }, 450) };
+  });
+  const annulerAppui = () => { if (appui) { W.clearTimeout(appui.t); appui = null; } };
+  racine.addEventListener('pointermove', (e) => { if (appui && Math.hypot(e.clientX - appui.x0, e.clientY - appui.y0) > 10) annulerAppui(); });
+  racine.addEventListener('pointerup', annulerAppui); racine.addEventListener('pointercancel', annulerAppui);
+  racine.addEventListener('click', (e) => { if (avaler && Date.now() - avaler < 800 && e.target.closest('[data-id]') && !e.target.closest('.px-voile')) { avaler = 0; e.stopPropagation(); e.preventDefault(); } }, true);
+  racine.addEventListener('contextmenu', (e) => { if (e.target.closest('[data-id]')) e.preventDefault(); });
   racine.addEventListener('click', async (e) => {
     const b = e.target.closest('button'); if (!b || !racine.contains(b) || b.closest('.px-hote') || b.closest('.px-voile')) return;
     if (b.hasAttribute('data-compte')) { if (hud) hud.ouvrir(); return; }

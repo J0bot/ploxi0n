@@ -80,7 +80,9 @@
 | ✅ 0.13 | Le **dock en bas** (compte, épinglés, ⚙) | RS-7 : « la barre boxion avec les épinglés en bas » |
 | ✅ 0.13 | **Six façons de voir ses ploxions** : grille, compacte, liste, usage (ses heures), récents, catégories | |
 | ✅ 0.13 | Le **droit au silence** appliqué : ce qu'un ploxion accroche à la page se cache, revient et part avec lui | le carré lilas flottant |
-| ⏭ | Glisser-déposer pour ranger (au lieu du ✎ + prompt) | |
+| ✅ 0.14 | **Appui long** sur un ploxion : ouvrir, épingler au dock (et au widget), sur l'écran d'accueil de l'iPhone, déplacer vers une page ou un dossier d'un toucher, Face ID, retirer | |
+| ✅ 0.14 | **Plus de zooms** : viewport fixé (gardé contre les bions), pas de double-tap, champs à 16 px | |
+| ⏭ | Glisser-déposer une tuile (vers le dock, vers une autre page) | |
 | ⏭ | Deux ploxions côte à côte (iPad, iPhone en paysage) ; **fill the gaps** dans l'app (jOSGaps) | |
 | 💭 | Le **cube** / la carte géante des apps (vision originelle 14.09) comme accueil alternatif | |
 

@@ -16,9 +16,18 @@ import { creerNotifs } from './natif/notifs.js';
 import { creerHud } from './app/hud.js';
 import { enregistrerReglages } from './app/reglages.js';
 
-const VERSION = '0.13.0';
+const VERSION = '0.14.0';
+
+// plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
+function garderViewport() {
+  const BON = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover';
+  const fixer = () => { for (const m of document.querySelectorAll('meta[name="viewport"]')) if (m.getAttribute('content') !== BON) m.setAttribute('content', BON); };
+  try { new MutationObserver(fixer).observe(document.head, { childList: true, subtree: true, attributes: true, attributeFilter: ['content'] }); } catch (e) { /* */ }
+  fixer();
+}
 
 async function demarrer() {
+  garderViewport();
   const racine = document.getElementById('ploxi0n');
   const boxion = await ouvrirBoxionLocal();
   let routeur = null;
@@ -93,7 +102,7 @@ async function demarrer() {
   // un ploxion sur l'écran d'accueil de l'iPhone (via Raccourcis) : depuis l'édition de l'accueil et la fiche du marketplace
   const ecranAccueil = creerEcranAccueil({ trouver: (id) => routeur.catalogue().find(p => p.id === id), liste: () => routeur.catalogue(), boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine) });
   window.jOSEcranAccueil = ecranAccueil;
-  routeur = creerRouteur({ racine, catalogue: internes, boxion, usage: () => boxion.get('usage', 'stats'), verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id), hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}) });
+  routeur = creerRouteur({ racine, catalogue: internes, boxion, usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id), hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}) });
   const rafraichir = () => { if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); };
   compte.surChangement(rafraichir);
   hud.surChangement(() => routeur.rafraichirHud());

@@ -357,3 +357,35 @@ test('le droit au silence : ce qu\'un ploxion accroche à la page se cache avec 
     assert.equal(W.document.querySelector('body > .compagnon'), null, 'retiré quand on le ferme');
   } finally { p.fin(); }
 });
+
+test('appui long : le menu d\'un ploxion (épingler au dock, déplacer vers une page existante sans saisie, retirer avec confirmation)', async () => {
+  const { creerRouteur } = await import('../src/app/routeur.js');
+  const { creerHud } = await import('../src/app/hud.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    const compte = { etat: () => ({ connecte: false }), surChangement: () => () => {} };
+    let r = null; const retires = [];
+    const hud = creerHud({ W, compte, boxion: p.boxion, trouver: (id) => r.catalogue().find(x => x.id === id) }); await hud.pret;
+    await p.boxion.put('reglages', 'accueil', { dossiers: [], pages: [{ nom: 'Travail', ids: ['b'] }] });
+    const racine = W.document.createElement('div'); W.document.body.appendChild(racine);
+    r = creerRouteur({ fenetre: W, racine, boxion: p.boxion, hud, catalogue: [{ id: 'a', nom: 'A', icone: '◇' }, { id: 'b', nom: 'B', icone: '◆' }], retirer: async (id) => retires.push(id) });
+    await r.accueil();
+    const appuyer = async (id) => { racine.querySelector('[data-id="' + id + '"]').dispatchEvent(new W.MouseEvent('pointerdown', { bubbles: true, clientX: 5, clientY: 5 })); await attendre(520); };
+    await appuyer('a');
+    assert.ok(racine.querySelector('.px-menu'), 'le menu s\'ouvre après 450 ms');
+    racine.querySelector('[data-m="epingler"]').click(); await attendre(30);
+    assert.deepEqual(hud.config().epingles, ['a']); assert.ok(racine.querySelector('.px-dock [data-hud-px="a"]'), 'dans le dock');
+    await appuyer('a');
+    racine.querySelector('[data-vers-page="Travail"]').click(); await attendre(30);
+    assert.deepEqual((await p.boxion.get('reglages', 'accueil')).pages, [{ nom: 'Travail', ids: ['b', 'a'] }], 'déplacé sans saisie');
+    await appuyer('a');
+    const ret = racine.querySelector('[data-m="retirer"]'); ret.click(); await attendre(10);
+    assert.deepEqual(retires, [], 'le premier toucher demande confirmation'); assert.match(ret.textContent, /sûr/);
+    ret.click(); await attendre(30);
+    assert.deepEqual(retires, ['a']);
+    // un appui court ne fait que cliquer
+    racine.querySelector('[data-id="b"]').dispatchEvent(new W.MouseEvent('pointerdown', { bubbles: true, clientX: 5, clientY: 5 }));
+    racine.querySelector('[data-id="b"]').dispatchEvent(new W.MouseEvent('pointerup', { bubbles: true })); await attendre(520);
+    assert.equal(racine.querySelector('.px-menu'), null, 'pas de menu sur un appui court');
+  } finally { p.fin(); }
+});
