@@ -320,3 +320,21 @@ test('multitâche : ouvrir un ploxion DEPUIS un ploxion (la pile, « ‹ » y re
     assert.deepEqual(r.vivants(), ['a']); assert.ok(demontes.includes('c'));
   } finally { p.fin(); }
 });
+
+test('notifications : coord — rien au premier passage, puis les nouveaux messages deviennent des notifications (3 au plus, puis un résumé)', async () => {
+  const { creerNotifs } = await import('../src/natif/notifs.js');
+  const boxion = creerMemoire(), planifiees = [], W = { Capacitor: { isNativePlatform: () => true }, setInterval: () => 1, clearInterval() {} };
+  let msgs = [{ id: 10, agent: 'rs1', content: 'vieux' }];
+  const LocalNotifications = { requestPermissions: async () => ({ display: 'granted' }), schedule: async ({ notifications }) => { planifiees.push(...notifications); }, addListener: async () => {} };
+  const n = creerNotifs({ W, boxion, charger: async () => ({ LocalNotifications }), envoyer: async (q) => { const since = +new URL(q.url).searchParams.get('since'); return { status: 200, texte: JSON.stringify({ messages: msgs.filter(m => m.id > since) }) }; } });
+  await n.pret; await n.coord(true);
+  assert.deepEqual(await n.verifierCoord(), [], 'le premier passage ne réveille pas l\'historique');
+  assert.equal(n.reglage().dernierCoord, 10); assert.equal(planifiees.length, 0);
+  msgs.push({ id: 11, agent: 'rs1', topic: 'ploxi0n', content: 'build 0.12 prêt' });
+  await n.verifierCoord();
+  assert.equal(planifiees.length, 1); assert.match(planifiees[0].title, /rs1 · #ploxi0n/); assert.equal(planifiees[0].extra.ouvrir, 'coord');
+  for (let i = 12; i < 18; i++) msgs.push({ id: i, agent: 'x', content: 'm' + i });
+  await n.verifierCoord();
+  assert.equal(planifiees.length, 4, '2 derniers + un résumé'); assert.match(planifiees[3].body, /4 autres/);
+  assert.equal((await boxion.get('reglages', 'notifs')).dernierCoord, 17);
+});

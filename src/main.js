@@ -12,10 +12,11 @@ import { brancherLiens } from './natif/liens.js';
 import { creerRaccourcis } from './natif/raccourcis.js';
 import { creerCompte } from './natif/compte.js';
 import { creerEcranAccueil } from './natif/ecran-accueil.js';
+import { creerNotifs } from './natif/notifs.js';
 import { creerHud } from './app/hud.js';
 import { enregistrerReglages } from './app/reglages.js';
 
-const VERSION = '0.11.0';
+const VERSION = '0.12.0';
 
 async function demarrer() {
   const racine = document.getElementById('ploxi0n');
@@ -75,7 +76,10 @@ async function demarrer() {
   const hud = creerHud({ compte, boxion, trouver: (id) => routeur && routeur.catalogue().find(p => p.id === id), modeConnecte: () => modeConnecte });
   await hud.pret;
   // ⚙ les réglages : un ploxion interne, au bout du ⚙ de l'accueil (jamais retirable)
-  internes.push(enregistrerReglages({ compte, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, version: VERSION }));
+  // les notifications (test, et les messages de coord tant que l'app est au premier plan ; la vraie « app fermée » demande APNs)
+  const notifs = creerNotifs({ boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id) => routeurProxy.ouvrir(id) });
+  await notifs.pret;
+  internes.push(enregistrerReglages({ compte, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, version: VERSION }));
   // le vecteur xerion de ce téléphone : le temps passé par ploxion (même forme que jOSUsage du labo : { px: { id: { opens, seconds, lastAt } } })
   async function surUsage(id, sec) {
     const u = (await boxion.get('usage', 'stats')) || { px: {} };
@@ -123,8 +127,9 @@ async function demarrer() {
   // un raccourci (Siri, l'app Raccourcis, une automatisation) a pu demander un ploxion ou noter un tsoin
   raccourcis.recevoir().catch(() => {});
   publierValeurs().catch(() => {});
+  notifs.demarrer();
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-    import('@capacitor/app').then(({ App }) => App.addListener('appStateChange', (e) => { if (e.isActive) raccourcis.recevoir().catch(() => {}); else publierValeurs().catch(() => {}); })).catch(() => {});
+    import('@capacitor/app').then(({ App }) => App.addListener('appStateChange', (e) => { if (e.isActive) { raccourcis.recevoir().catch(() => {}); notifs.demarrer(); } else { notifs.arreter(); publierValeurs().catch(() => {}); } })).catch(() => {});
   }
 }
 demarrer().catch((e) => { document.getElementById('ploxi0n').innerHTML = '<p class="px-erreur">ploxi0n n\'a pas pu démarrer : ' + String(e && e.message).replace(/[<&]/g, '') + '</p>'; });

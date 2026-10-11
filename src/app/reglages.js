@@ -4,7 +4,7 @@
 //   ploxions (compléter les bions, mettre à jour) · données (le cache des routes) · à propos (version, banc, bother me)
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, version = '?' }) {
+export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, notifs = null, version = '?' }) {
   const ELS = { compte: '👤 compte', reseau: '📶 réseau et mode connecté', heure: '🕐 heure', chercher: '🔎 chercher un ploxion', epingles: '📌 ploxions épinglés' };
   function mount(hote) {
     let vivant = true;
@@ -26,6 +26,8 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       zone.innerHTML = '<h3>Compte</h3><div class="bloc"><div class="l"><span>' + (e.connecte ? esc((e.glyphe || '·') + ' ' + e.nom) + '<small>rang ' + esc(e.palier) + ' · xerboxion.org</small>' : 'Pas connecté<small>tout reste sur ton téléphone</small>') + '</span>'
         + (e.connecte ? '<button data-a="sortir">se déconnecter</button>' : '<button class="p" data-a="connecter">se connecter</button>') + '</div></div>'
         + '<h3>Réseau</h3><div class="bloc"><label class="l"><span>Mode connecté<small>les ploxions joignent xerboxion.org' + (e.connecte ? ' avec ton compte' : '') + ' ; hors ligne, leur dernière réponse</small></span><input type="checkbox" data-t="mode"' + (modeConnecte() ? ' checked' : '') + '></label></div>'
+        + (notifs ? '<h3>Notifications</h3><div class="bloc"><div class="l"><span>Une notification de test<small>elle arrive 5 s après : verrouille le téléphone</small></span><button data-a="notif">tester</button></div>'
+          + '<label class="l"><span>Messages de coord<small>' + (e.connecte ? 'tant que l\'app est ouverte ; app fermée : bientôt (APNs)' : 'connecte-toi avec le compte admin') + '</small></span><input type="checkbox" data-t="coord"' + (notifs.reglage().coord ? ' checked' : '') + '></label></div>' : '')
         + '<h3>HUD</h3><div class="bloc">' + c.elements.map((x, i) => '<label class="l"><span>' + esc(ELS[x.k] || x.k) + '</span><button class="bas" data-monter="' + i + '"' + (i ? '' : ' disabled') + ' aria-label="monter">↑</button><input type="checkbox" data-el="' + i + '"' + (x.on ? ' checked' : '') + '></label>').join('')
         + '<div class="l"><span>⚙ réglages<small>toujours sur l\'accueil</small></span></div></div>'
         + '<p class="msg">📌 épinglés dans le HUD (4 au plus) : touche pour épingler ou retirer</p><div class="bloc"><div class="pins">' + (cat.length ? cat.map(p => '<button class="pin' + (c.epingles.includes(p.id) ? ' on' : '') + '" data-pin="' + esc(p.id) + '" title="' + esc(p.nom) + '">' + esc(p.icone || '▣') + '</button>').join('') : '<span class="msg">installe des ploxions d\'abord</span>') + '</div></div>'
@@ -44,6 +46,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
     hote.addEventListener('change', async (ev) => {
       const t = ev.target;
       if (t.matches('[data-t="mode"]')) { modeConnecte(t.checked); hud.regler(hud.config()); return; }
+      if (t.matches('[data-t="coord"]')) { try { await notifs.coord(t.checked); const n = t.checked ? await notifs.verifierCoord() : []; msg(t.checked ? '✓ coord surveillé' + (n.length ? ' : ' + n.length + ' nouveau(x)' : '') : 'coord : plus de notifications'); } catch (er) { t.checked = false; await notifs.coord(false); msg('⚠ ' + (er.message || er)); } return; }
       if (t.matches('[data-el]')) return majHud(c => { c.elements[+t.getAttribute('data-el')].on = t.checked; });
     });
     hote.addEventListener('click', async (ev) => {
@@ -55,7 +58,8 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       const a = b.getAttribute('data-a'); if (!a) return;
       b.disabled = true;
       try {
-        if (a === 'apps') { if (W.jOSEcranAccueil) await W.jOSEcranAccueil(); }
+        if (a === 'notif') { await notifs.tester(); msg('✓ elle arrive dans 5 secondes'); }
+        else if (a === 'apps') { if (W.jOSEcranAccueil) await W.jOSEcranAccueil(); }
         else if (a === 'connecter') await compte.connecter();
         else if (a === 'sortir') { await compte.deconnecter(); }
         else if (a === 'accueil') { R().reinitialiserAccueil(); msg('✓ accueil remis à zéro'); }
