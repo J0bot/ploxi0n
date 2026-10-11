@@ -4,8 +4,8 @@
 // Un ploxion installé = public/ploxions/<id>/app.js (+ app.css) et une entrée de public/ploxions/index.json { id, nom, icone, hash }.
 // Le bundle vient du labo (tools/extraire-ploxions.mjs) : il pose window.jOSApps[id] = { manifest, mount(container, ctx) → { unmount } }.
 
-// le logo (losanges concentriques), en clair sur le fond sombre
-const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><polygon points="512,72 952,512 512,952 72,512" fill="currentColor"/><polygon points="512,112 912,512 512,912 112,512" fill="var(--bg,#0b1220)"/><polygon points="512,152 872,512 512,872 152,512" fill="currentColor"/><polygon points="512,192 832,512 512,832 192,512" fill="var(--bg,#0b1220)"/><polygon points="512,232 792,512 512,792 232,512" fill="currentColor"/><polygon points="512,272 752,512 512,752 272,512" fill="var(--bg,#0b1220)"/><polygon points="512,312 712,512 512,712 312,512" fill="currentColor"/><polygon points="512,352 672,512 512,672 352,512" fill="var(--bg,#0b1220)"/><polygon points="512,392 632,512 512,632 392,512" fill="currentColor"/><polygon points="512,432 592,512 512,592 432,512" fill="var(--bg,#0b1220)"/></svg>';
+// le logo (losanges concentriques), transparent : les espaces entre les losanges sont des trous
+const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M512 72L952 512L512 952L72 512ZM512 112L912 512L512 912L112 512ZM512 152L872 512L512 872L152 512ZM512 192L832 512L512 832L192 512ZM512 232L792 512L512 792L232 512ZM512 272L752 512L512 752L272 512ZM512 312L712 512L512 712L312 512ZM512 352L672 512L512 672L352 512ZM512 392L632 512L512 632L392 512ZM512 432L592 512L512 592L432 512Z"/></svg>';
 
 export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000 } = {}) {
   const W = fenetre, D = W.document;

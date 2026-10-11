@@ -78,5 +78,9 @@
 	<string>ploxi0n utilise ta position quand un ploxion en a besoin (carte, lieux) ; elle reste sur ton téléphone.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>ploxi0n lit les capteurs de mouvement pour les ploxions qui s'en servent (pas, inclinaison, boussole).</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>ploxi0n n'utilise ta position en arrière-plan que si un ploxion te le propose et que tu l'acceptes (par exemple les lieux visités) ; elle reste sur ton téléphone.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>ploxi0n n'utilise ta position en arrière-plan que si un ploxion te le propose et que tu l'acceptes ; elle reste sur ton téléphone.</string>
 </dict>
 </plist>
