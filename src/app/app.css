@@ -102,3 +102,30 @@ button{font-family:inherit;-webkit-user-select:none;user-select:none}
 .px-tiroir .px-choix .px-ic{width:56px;height:56px;font-size:1.6rem}
 .px-tiroir button:disabled{opacity:.45}
 .px-tiroir .px-lien{min-height:40px;background:none;border-color:transparent;color:var(--acc);font-weight:600;font-size:14px;text-align:center;box-shadow:none}
+
+/* ---- plusieurs ploxions vivants : l'écran (accueil ou barre) et la scène (un hôte par ploxion vivant, un seul visible) ---- */
+.px-ecran{display:flex;flex-direction:column;min-height:0}
+.px-mode-accueil .px-ecran{flex:1}
+.px-mode-accueil .px-scene{display:none}
+.px-scene{flex:1;min-height:0;position:relative}
+.px-scene>.px-hote{position:absolute;inset:0;overflow:auto}
+.px-scene>.px-hote[hidden]{display:none}
+.px-mini{min-width:38px;min-height:38px;border-radius:12px;border:var(--trait) solid transparent;background:var(--surface2);color:var(--muted);font:600 14px var(--mono);padding:0 8px;display:inline-flex;align-items:center;gap:3px}
+.px-mini b{font:600 10px var(--mono);color:var(--bio)}
+/* la rangée « en arrière-plan » de l'accueil : les ploxions minimisés */
+.px-arriere{margin:0 0 14px}
+.px-arriere .px-grave{display:block;margin:0 4px 8px}
+.px-arriere-l{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}.px-arriere-l::-webkit-scrollbar{display:none}
+.px-vivant{display:flex;align-items:center;flex:none;border:var(--trait) solid var(--bord);border-radius:14px;background:var(--surface) var(--grain);box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 0 var(--bio)}
+.px-vivant button{border:0;background:none;color:var(--txt);font:600 12.5px var(--police);display:flex;align-items:center;gap:8px;padding:6px 6px 6px 8px;min-height:44px}
+.px-vivant .px-ic{width:30px;height:30px;font-size:1rem;border-radius:9px}
+.px-vivant .px-x{color:var(--muted);padding:0 10px;font-size:.85rem}
+.px-tiroir button.on{border-color:var(--bio)}
+.px-tiroir button .px-ic{display:inline-flex;width:30px;height:30px;font-size:1rem;border-radius:9px;vertical-align:middle;margin-right:6px}
+/* les bords : invisibles au repos ; pendant le glissé, la veilleuse monte avec le geste */
+.px-bord{position:fixed;top:calc(env(safe-area-inset-top,0px) + 56px);bottom:calc(env(safe-area-inset-bottom,0px) + 20px);width:16px;z-index:40;touch-action:none;--p:0}
+.px-bord-g{left:0}.px-bord-d{right:0}
+.px-bord::after{content:"";position:absolute;top:50%;width:4px;height:calc(40px + 80px * var(--p));transform:translateY(-50%);border-radius:2px;background:var(--bio);opacity:0;box-shadow:0 0 10px var(--glow)}
+.px-bord-g::after{left:2px}.px-bord-d::after{right:2px}
+.px-bord.px-tire::after{opacity:calc(.25 + .75 * var(--p))}
+.px-bord{pointer-events:none}.px-a-vivants .px-bord{pointer-events:auto}

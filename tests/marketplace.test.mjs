@@ -277,3 +277,46 @@ test('📲 tes ploxions en apps : la feuille coche, le labo reçoit des PNG et d
     assert.deepEqual(await p.boxion.get('reglages', 'apps-accueil'), ['pomo', 'marketplace'], 'le choix est gardé');
   } finally { p.fin(); }
 });
+
+test('multitâche : ouvrir un ploxion DEPUIS un ploxion (la pile, « ‹ » y revient vivant), minimiser, reprendre, ⧉, les bords', async () => {
+  const { creerRouteur } = await import('../src/app/routeur.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    const montes = [], demontes = [];
+    W.jOSApps = W.jOSApps || {};
+    for (const id of ['a', 'b', 'c']) W.jOSApps[id] = { manifest: { id }, mount(h) { montes.push(id); h.innerHTML = '<p>' + id + '</p>'; return { unmount() { demontes.push(id); } }; } };
+    const racine = W.document.createElement('div'); W.document.body.appendChild(racine);
+    const usage = [];
+    const r = creerRouteur({ fenetre: W, racine, catalogue: ['a', 'b', 'c'].map(id => ({ id, nom: id.toUpperCase(), icone: '◇' })), surUsage: (id, s) => usage.push(id) });
+    await r.accueil();
+    await r.ouvrir('a');
+    await r.ouvrir('b');   // depuis a : a reste vivant, en dessous
+    assert.deepEqual([r.courant(), r.vivants(), r.pile()], ['b', ['a', 'b'], ['a']]);
+    assert.deepEqual(demontes, [], 'a n\'est pas démonté');
+    assert.equal(racine.querySelector('[data-ploxion="a"]').hidden, true);
+    racine.querySelector('[data-retour]').click(); await attendre(20);
+    assert.deepEqual([r.courant(), r.vivants(), demontes], ['a', ['a'], ['b']], '« ‹ » ferme b et revient à a, vivant');
+    assert.deepEqual(montes, ['a', 'b'], 'a n\'a pas été remonté');
+    // minimiser : a reste vivant, l'accueil montre « en arrière-plan »
+    racine.querySelector('[data-minimiser]').click(); await attendre(20);
+    assert.equal(r.courant(), null); assert.deepEqual(r.vivants(), ['a']);
+    assert.ok(racine.querySelector('.px-arriere [data-reprendre="a"]'));
+    racine.querySelector('[data-reprendre="a"]').click(); await attendre(20);
+    assert.equal(r.courant(), 'a'); assert.deepEqual(montes, ['a', 'b'], 'repris sans remontage');
+    // ⧉ : deux vivants → le bouton apparaît
+    await r.ouvrir('c');
+    assert.ok(racine.querySelector('[data-basculer]'));
+    // les bords : depuis c, le bord gauche → a (la précédente), encore → l'accueil ; le bord droit depuis l'accueil → a
+    const tirer = (cote, dx) => { const b = racine.querySelector('.px-bord-' + cote), x = cote === 'g' ? 2 : 380;
+      b.dispatchEvent(new W.MouseEvent('pointerdown', { clientX: x, bubbles: true })); b.dispatchEvent(new W.MouseEvent('pointermove', { clientX: x + dx, bubbles: true })); b.dispatchEvent(new W.MouseEvent('pointerup', { clientX: x + dx, bubbles: true })); };
+    tirer('g', 90); await attendre(20); assert.equal(r.courant(), 'a');
+    tirer('g', 90); await attendre(20); assert.equal(r.courant(), null, 'l\'accueil');
+    tirer('d', -90); await attendre(20); assert.equal(r.courant(), 'a');
+    tirer('d', -30); await attendre(20); assert.equal(r.courant(), 'a', 'un geste trop court ne fait rien');
+    assert.deepEqual(r.vivants(), ['a', 'c'], 'les bords ne ferment rien');
+    // ✕ dans « en arrière-plan » ferme vraiment ; au plus 5 vivants
+    racine.querySelector('[data-minimiser]').click(); await attendre(20);
+    racine.querySelector('[data-tuer="c"]').click(); await attendre(20);
+    assert.deepEqual(r.vivants(), ['a']); assert.ok(demontes.includes('c'));
+  } finally { p.fin(); }
+});

@@ -18,7 +18,51 @@ const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><p
 export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null } = {}) {
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
-  let courant = null;     // { id, inst, hote }
+  // PLUSIEURS PLOXIONS VIVANTS (RS-7 12.10 : « pouvoir ouvrir des ploxions depuis des ploxions, et pouvoir minimiser un ploxion ») :
+  //   vivants  id → { id, inst, hote, debut }  chacun son hôte dans la scène ; un seul visible, les autres restent montés (cachés)
+  //   pile     les ploxions d'où l'on vient : ouvrir un ploxion DEPUIS un ploxion empile le premier ; « ‹ » ferme le second et y revient
+  //   minimiser : le ploxion reste vivant, l'accueil revient ; la rangée « en arrière-plan » le reprend d'un geste
+  // Au plus MAX_VIVANTS : au-delà, le plus anciennement vu (hors celui qu'on regarde) est fermé (le droit au silence).
+  const MAX_VIVANTS = 5;
+  let courant = null;     // l'instance visible
+  const vivants = new Map(); let pile = [];
+  racine.innerHTML = ''; racine.classList.add('px-mode-accueil');
+  const ecran = D.createElement('div'); ecran.className = 'px-ecran';
+  const scene = D.createElement('div'); scene.className = 'px-scene';
+  racine.appendChild(ecran); racine.appendChild(scene);
+  // LES BORDS (RS-7 : « on peut utiliser le bord droit et le bord gauche pour se balader entre les apps ») : deux bandes fines au-dessus
+  // de tout ; glisser depuis le bord droit vers la gauche = l'app suivante, depuis le bord gauche vers la droite = la précédente.
+  // L'ordre : l'accueil, puis les ploxions vivants dans l'ordre où ils ont été ouverts. Pointer events seulement, aucune minuterie.
+  const SEUIL = 64;
+  for (const cote of ['g', 'd']) {
+    const b = D.createElement('div'); b.className = 'px-bord px-bord-' + cote; b.setAttribute('aria-hidden', 'true'); racine.appendChild(b);
+    let x0 = null, id0 = null;
+    b.addEventListener('pointerdown', (e) => { if (vivants.size === 0) return; x0 = e.clientX; id0 = e.pointerId; try { b.setPointerCapture(e.pointerId); } catch (er) { /* */ } b.classList.add('px-tire'); e.preventDefault(); });
+    b.addEventListener('pointermove', (e) => {
+      if (x0 == null || e.pointerId !== id0) return;
+      const dx = (e.clientX - x0) * (cote === 'g' ? 1 : -1);
+      b.style.setProperty('--p', String(Math.max(0, Math.min(1, dx / SEUIL))));
+    });
+    const lacher = (e) => {
+      if (x0 == null) return;
+      const dx = ((e.clientX == null ? x0 : e.clientX) - x0) * (cote === 'g' ? 1 : -1);
+      x0 = null; b.classList.remove('px-tire'); b.style.removeProperty('--p');
+      if (e.type === 'pointerup' && dx > SEUIL) aCote(cote === 'd' ? 1 : -1);
+    };
+    b.addEventListener('pointerup', lacher); b.addEventListener('pointercancel', lacher);
+  }
+  /** passer à l'app d'à côté : sens +1 (suivante), -1 (précédente) ; l'accueil est au bout de la file */
+  function aCote(sens) {
+    const file = [null, ...vivants.keys()];
+    const i = file.indexOf(courant ? courant.id : null);
+    const cible = file[(i + sens + file.length) % file.length];
+    if (cible === (courant ? courant.id : null)) return false;
+    if (courant) { cacher(courant); courant = null; }
+    pile = [];
+    if (cible == null) { accueil(); return true; }
+    montrer(vivants.get(cible));
+    return true;
+  }
   let edition = false, dossierOuvert = null;
   let verrous = new Set(), accueilDoc = { dossiers: [], pages: [] }, pageCourante = 0;
   const charges = new Map();
@@ -58,13 +102,22 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   const tuile = (p) => '<button class="px-tuile' + (edition && !p.interne ? ' px-edite' : '') + '" data-id="' + texte(p.id) + '"><span class="px-ic" style="--t:' + teinte(p.id) + '">' + texte(p.icone || '▣') + '</span><span>' + (verrous.has(p.id) ? '🔒 ' : '') + texte(p.nom || p.id) + '</span></button>';
   const dansDossier = () => new Set([...accueilDoc.dossiers.flatMap(d => d.ids), ...accueilDoc.pages.flatMap(pg => pg.ids)]);
 
+  function vueAccueil() { racine.classList.add('px-mode-accueil'); racine.classList.remove('px-mode-ploxion'); majBords(); }
+  function majBords() { racine.classList.toggle('px-a-vivants', vivants.size > 0); }
+  function arriere() {
+    const l = [...vivants.values()].filter(v => v !== courant);
+    if (!l.length) return '';
+    return '<div class="px-arriere"><span class="px-grave">en arrière-plan</span><div class="px-arriere-l">' + l.map(v => { const p = parId.get(v.id) || { nom: v.id };
+      return '<span class="px-vivant"><button data-reprendre="' + texte(v.id) + '"><span class="px-ic" style="--t:' + teinte(v.id) + '">' + texte(p.icone || '▣') + '</span>' + texte(p.nom || v.id) + '</button><button class="px-x" data-tuer="' + texte(v.id) + '" aria-label="fermer">✕</button></span>'; }).join('') + '</div></div>';
+  }
   async function accueil() {
     fermer();
+    vueAccueil();
     await pret;
     const tous = [...parId.values()];
     if (dossierOuvert !== null && accueilDoc.dossiers[dossierOuvert]) {
       const d = accueilDoc.dossiers[dossierOuvert];
-      racine.innerHTML = '<div class="px-barre"><button class="px-retour" data-sortir aria-label="retour">‹</button><span>📁 ' + texte(d.nom) + '</span></div><div class="px-grille px-pad">'
+      ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-sortir aria-label="retour">‹</button><span>📁 ' + texte(d.nom) + '</span></div><div class="px-grille px-pad">'
         + d.ids.map(id => parId.get(id)).filter(Boolean).map(tuile).join('') + '</div>';
       return;
     }
@@ -76,8 +129,9 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     ];
     const noms = ['accueil', ...accueilDoc.pages.map(pg => pg.nom)];
     pageCourante = Math.min(pageCourante, pages.length - 1);
-    racine.innerHTML = '<div class="px-accueil"><header class="px-tete"><h1>' + LOGO + '<b>ploxi0n</b></h1><button class="px-modif" data-edition>' + (edition ? 'terminé' : '✎') + '</button></header>'
+    ecran.innerHTML = '<div class="px-accueil"><header class="px-tete"><h1>' + LOGO + '<b>ploxi0n</b></h1><button class="px-modif" data-edition>' + (edition ? 'terminé' : '✎') + '</button></header>'
       + '<div class="px-hud px-visiere"><span class="px-hud-c">' + (hud ? hud.html() : '') + '</span></div>'
+      + arriere()
       + '<p class="px-sous px-grave">' + (edition ? 'Touche un ploxion : le ranger dans un dossier, sur une page, ou l\'ajouter à l\'écran d\'accueil de l\'iPhone.' : ('◇ cycle ' + (new Date().getFullYear() + 5000) + ' · ' + tous.length + ' ploxions · hors ligne')) + '</p>'
       + '<div class="px-pages">' + pages.map((h, i) => '<section class="px-page" data-page="' + i + '">' + (i ? '<h2 class="px-titre-page">' + texte(noms[i]) + '</h2>' : '') + '<div class="px-grille">' + (h || '<p class="px-sous">page vide</p>') + '</div></section>').join('') + '</div>'
       + (pages.length > 1 ? '<div class="px-points">' + pages.map((_, i) => '<button class="px-point' + (i === pageCourante ? ' on' : '') + '" data-aller="' + i + '" aria-label="' + texte(noms[i]) + '"></button>').join('') + '</div>' : '') + '</div>';
@@ -125,57 +179,112 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (b.hasAttribute('data-edition')) { edition = !edition; return accueil(); }
     if (b.hasAttribute('data-sortir')) { dossierOuvert = null; return accueil(); }
     if (b.hasAttribute('data-dossier')) { dossierOuvert = +b.getAttribute('data-dossier'); return accueil(); }
-    if (b.hasAttribute('data-retour')) return accueil();
+    if (b.hasAttribute('data-retour')) return retour();
+    if (b.hasAttribute('data-minimiser')) return minimiser();
+    if (b.hasAttribute('data-reprendre')) return ouvrir(b.getAttribute('data-reprendre'));
+    if (b.hasAttribute('data-tuer')) { tuer(b.getAttribute('data-tuer')); return courant ? null : accueil(); }
+    if (b.hasAttribute('data-basculer')) return basculer();
     if (b.hasAttribute('data-aller')) { const c = racine.querySelector('.px-pages'), i = +b.getAttribute('data-aller'); if (c && c.children[i]) c.scrollTo ? c.scrollTo({ left: c.children[i].offsetLeft, behavior: 'smooth' }) : (c.scrollLeft = c.children[i].offsetLeft); return; }
     const id = b.getAttribute('data-id'); if (!id) return;
     if (!edition) return ouvrir(id);
     actions(id);
   });
 
-  async function ouvrir(id, params) {
-    if (!parId.has(id)) return false;
-    fermer();
-    await pret;
-    const p = parId.get(id);
-    if (verrous.has(id) && !(verrou && await verrou.ouvrir('Ouvrir ' + (p.nom || id)))) {
-      racine.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">‹</button><span>🔒 ' + texte(p.nom || id) + '</span></div><p class="px-erreur">Ce ploxion ne s\'ouvre qu\'avec ton visage.</p>';
-      return false;
-    }
-    racine.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">‹</button><span>' + texte((p.icone || '') + ' ' + (p.nom || id)) + '</span>'
-      + '<span class="px-hud"><span class="px-hud-c">' + (hud ? hud.html(true) : '') + '</span>' + (verrou && !p.interne ? '<button class="px-verrou" data-verrou aria-label="verrou Face ID">' + (verrous.has(id) ? '🔒' : '🔓') + '</button>' : '') + '</span></div><div class="px-hote"></div>';
-    const bv = racine.querySelector('[data-verrou]');
+  // le temps passé dans un ploxion (le vecteur xerion, comme jOSUsage du labo) : compté quand il cesse d'être visible ; au-delà de 4 h
+  // d'affilée, l'écran était sans doute oublié
+  function compter(v) {
+    if (surUsage && v && v.debut) { const sec = Math.min(4 * 3600, Math.round((Date.now() - v.debut) / 1000)); if (sec > 0) surUsage(v.id, sec); }
+    if (v) v.debut = 0;
+  }
+  function cacher(v) { if (!v) return; compter(v); v.hote.hidden = true; v.vu = Date.now(); }
+  function tuer(id) {
+    const v = vivants.get(id); if (!v) return;
+    if (v === courant) { compter(v); courant = null; }
+    vivants.delete(id); pile = pile.filter(x => x !== id);
+    try { if (v.inst && typeof v.inst.unmount === 'function') v.inst.unmount(); } catch (e) { console.warn('[ploxi0n] unmount', id, e); }
+    v.hote.innerHTML = ''; v.hote.remove(); majBords();
+  }
+  function barre(p, id) {
+    const autres = vivants.size - 1;
+    ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">‹</button><span>' + texte((p.icone || '') + ' ' + (p.nom || id)) + '</span>'
+      + '<span class="px-hud"><span class="px-hud-c">' + (hud ? hud.html(true) : '') + '</span>'
+      + (autres > 0 ? '<button class="px-mini" data-basculer aria-label="basculer entre les ploxions ouverts">⧉<b>' + (autres + 1) + '</b></button>' : '')
+      + '<button class="px-mini" data-minimiser aria-label="minimiser">▁</button>'
+      + (verrou && !p.interne ? '<button class="px-verrou" data-verrou aria-label="verrou Face ID">' + (verrous.has(id) ? '🔒' : '🔓') + '</button>' : '') + '</span></div>';
+    const bv = ecran.querySelector('[data-verrou]');
     if (bv) bv.onclick = async (e) => {
       e.stopPropagation();
       if (verrous.has(id)) { if (!(await verrou.ouvrir('Retirer le verrou de ' + (p.nom || id)))) return; verrous.delete(id); }
       else { if (!(await verrou.dispo()).ok) { bv.textContent = '⚠'; return; } verrous.add(id); }
       garder(); bv.textContent = verrous.has(id) ? '🔒' : '🔓';
     };
-    const hote = racine.querySelector('.px-hote');
+  }
+  function montrer(v) {
+    for (const x of vivants.values()) if (x !== v) x.hote.hidden = true;
+    v.hote.hidden = false; v.debut = Date.now(); v.vu = Date.now(); courant = v; majBords();
+    racine.classList.add('px-mode-ploxion'); racine.classList.remove('px-mode-accueil');
+    barre(parId.get(v.id) || { nom: v.id }, v.id);
+    try { W.history.replaceState(null, '', '#/' + encodeURIComponent(v.id)); } catch (er) { /* */ }
+  }
+
+  async function ouvrir(id, params) {
+    if (!parId.has(id)) return false;
+    await pret;
+    const p = parId.get(id);
+    if (courant && courant.id === id && !params) return true;
+    if (verrous.has(id) && !(vivants.has(id)) && !(verrou && await verrou.ouvrir('Ouvrir ' + (p.nom || id)))) {
+      if (!courant) { racine.classList.add('px-mode-ploxion'); racine.classList.remove('px-mode-accueil'); ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">‹</button><span>🔒 ' + texte(p.nom || id) + '</span></div><p class="px-erreur">Ce ploxion ne s\'ouvre qu\'avec ton visage.</p>'; }
+      return false;
+    }
+    // ouvert DEPUIS un ploxion : celui-ci reste vivant, en dessous (la pile) ; « ‹ » y reviendra
+    if (courant && courant.id !== id) { pile = pile.filter(x => x !== courant.id && x !== id); pile.push(courant.id); cacher(courant); courant = null; }
+    // déjà vivant (minimisé, ou dans la pile) : on le reprend tel quel ; avec une demande (params), on le remonte frais
+    if (vivants.has(id)) { if (!params) { pile = pile.filter(x => x !== id); montrer(vivants.get(id)); return true; } tuer(id); }
+    // la place : au-delà de MAX_VIVANTS, le plus anciennement vu s'endort pour de bon
+    while (vivants.size >= MAX_VIVANTS) { const vieux = [...vivants.values()].sort((a, b) => a.vu - b.vu)[0]; tuer(vieux.id); }
+    const hote = D.createElement('div'); hote.className = 'px-hote'; hote.dataset.ploxion = id; scene.appendChild(hote);
+    const v = { id, inst: {}, hote, debut: 0, vu: Date.now() };
+    vivants.set(id, v); montrer(v);
     try {
       const app = await charger(id);
-      const inst = app.mount(hote, { embed: false, standalone: true, host: 'ploxi0n', params: params || null, onglet: params && params.onglet }) || {};
-      courant = { id, inst, hote, debut: Date.now() };
-      try { W.history.replaceState(null, '', '#/' + encodeURIComponent(id)); } catch (er) { /* */ }
+      if (!vivants.has(id)) return false;   // fermé pendant le chargement
+      v.inst = app.mount(hote, { embed: false, standalone: true, host: 'ploxi0n', params: params || null, onglet: params && params.onglet }) || {};
     } catch (er) {
       hote.innerHTML = '<p class="px-erreur">Ce ploxion n\'a pas pu s\'ouvrir : ' + texte(er.message) + '</p>';
     }
     return true;
   }
 
-  function fermer() {
-    if (!courant) return;
-    const c = courant; courant = null;
-    try { if (c.inst && typeof c.inst.unmount === 'function') c.inst.unmount(); } catch (e) { console.warn('[ploxi0n] unmount', c.id, e); }
-    // le temps passé dans ce ploxion (le vecteur xerion, comme jOSUsage du labo) ; au-delà de 4 h d'affilée, l'écran était sans doute oublié
-    if (surUsage && c.debut) { const sec = Math.min(4 * 3600, Math.round((Date.now() - c.debut) / 1000)); if (sec > 0) surUsage(c.id, sec); }
-    c.hote.innerHTML = '';
+  /** ferme le ploxion visible (il est démonté : le droit au silence) */
+  function fermer() { if (courant) tuer(courant.id); }
+  /** « ‹ » : ferme le ploxion visible ; revient à celui d'où l'on venait (la pile), sinon à l'accueil */
+  function retour() {
+    fermer();
+    while (pile.length) { const id = pile.pop(); if (vivants.has(id)) { montrer(vivants.get(id)); return true; } }
+    return accueil();
+  }
+  /** ▁ : le ploxion visible reste vivant, en arrière-plan ; l'accueil revient */
+  function minimiser() { if (courant) { cacher(courant); courant = null; } pile = []; return accueil(); }
+  /** ⧉ : la liste des ploxions vivants, pour passer de l'un à l'autre */
+  function basculer() {
+    const f = D.createElement('div'); f.className = 'px-voile';
+    f.innerHTML = '<div class="px-tiroir"><p class="px-ft">⧉ ouverts</p>' + [...vivants.values()].sort((a, b) => b.vu - a.vu).map(v => { const p = parId.get(v.id) || { nom: v.id };
+      return '<button data-b="' + texte(v.id) + '"' + (v === courant ? ' class="on"' : '') + '><span class="px-ic" style="--t:' + teinte(v.id) + '">' + texte(p.icone || '▣') + '</span> ' + texte(p.nom || v.id) + (v === courant ? ' · ici' : '') + '</button>'; }).join('')
+      + '<button data-b="">fermer</button></div>';
+    racine.appendChild(f);
+    f.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-b]'); if (!b && e.target !== f) return;
+      e.stopPropagation(); f.remove();
+      const id = b && b.getAttribute('data-b'); if (id && (!courant || courant.id !== id)) ouvrir(id);
+    });
   }
 
   return {
-    accueil, ouvrir, fermer, charger,
+    accueil, ouvrir, fermer, charger, retour, minimiser, aCote,
+    vivants: () => [...vivants.keys()], pile: () => pile.slice(),
     connait: (id) => parId.has(id), courant: () => (courant ? courant.id : null),
     majCatalogue(liste) { parId = new Map(liste.map(p => [p.id, p])); },
-    rafraichirHud() { racine.querySelectorAll('.px-hud-c').forEach(c => { c.innerHTML = hud ? hud.html(!!courant) : ''; }); },
+    rafraichirHud() { ecran.querySelectorAll('.px-hud-c').forEach(c => { c.innerHTML = hud ? hud.html(!!courant) : ''; }); },
     catalogue: () => [...parId.values()],
     verrous: () => [...verrous],
     /** retirer un verrou Face ID (il faut le visage) */
