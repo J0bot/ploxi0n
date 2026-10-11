@@ -12,15 +12,36 @@ export const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)),
 export const attendre = (ms) => new Promise(r => setTimeout(r, ms || 20));
 
 /** compte ce qu'une page a d'actif : minuteurs, intervalles, rAF, écouteurs window/document, URL de blobs */
-function compteurs(w) {
+/** un faux contexte canvas (jsdom n'a pas de canvas) : tout appel réussit et rend quelque chose de plausible */
+function fauxCanvas(w) {
+  const rien = function () { return proxy; };
+  const proxy = new Proxy(rien, {
+    get(t, k) {
+      if (k === 'measureText') return () => ({ width: 0, actualBoundingBoxAscent: 0, actualBoundingBoxDescent: 0 });
+      if (k === 'getImageData' || k === 'createImageData') return (x, y, l = 1, h = 1) => ({ width: l, height: h, data: new Uint8ClampedArray(Math.max(4, (l | 0) * (h | 0) * 4)) });
+      if (k === 'canvas') return null;
+      if (k === Symbol.toPrimitive) return () => 0;
+      if (k === 'then') return undefined;
+      return proxy;
+    },
+    set() { return true; },
+    apply() { return proxy; },
+  });
+  w.HTMLCanvasElement.prototype.getContext = function () { return proxy; };
+  w.HTMLCanvasElement.prototype.toDataURL = () => 'data:image/png;base64,';
+  w.HTMLCanvasElement.prototype.toBlob = (cb) => cb && cb(new w.Blob([]));
+}
+
+function compteurs(w, erreurs) {
+  const garde = (fn) => (...x) => { try { if (typeof fn === 'function') fn(...x); } catch (e) { erreurs.push('minuteur : ' + (e && e.message)); } };
   const actifs = { timeout: new Map(), interval: new Map(), raf: new Map(), ecoute: new Map(), blob: new Set() };
   const st = w.setTimeout.bind(w), ct = w.clearTimeout.bind(w), si = w.setInterval.bind(w), ci = w.clearInterval.bind(w);
-  w.setTimeout = (fn, ms, ...a) => { const id = st((...x) => { actifs.timeout.delete(id); if (typeof fn === 'function') fn(...x); }, ms, ...a); actifs.timeout.set(id, ms || 0); return id; };
+  w.setTimeout = (fn, ms, ...a) => { const g = garde(fn); const id = st((...x) => { actifs.timeout.delete(id); g(...x); }, ms, ...a); actifs.timeout.set(id, ms || 0); return id; };
   w.clearTimeout = (id) => { actifs.timeout.delete(id); ct(id); };
-  w.setInterval = (fn, ms, ...a) => { const id = si(fn, ms, ...a); actifs.interval.set(id, ms || 0); return id; };
+  w.setInterval = (fn, ms, ...a) => { const id = si(garde(fn), ms, ...a); actifs.interval.set(id, ms || 0); return id; };
   w.clearInterval = (id) => { actifs.interval.delete(id); ci(id); };
   let rid = 0; const rafs = new Map();
-  w.requestAnimationFrame = (fn) => { const id = ++rid; const t = st(() => { actifs.raf.delete(id); rafs.delete(id); fn(Date.now()); }, 16); rafs.set(id, t); actifs.raf.set(id, 1); return id; };
+  w.requestAnimationFrame = (fn) => { const id = ++rid; const t = st(() => { actifs.raf.delete(id); rafs.delete(id); garde(fn)(Date.now()); }, 16); rafs.set(id, t); actifs.raf.set(id, 1); return id; };
   w.cancelAnimationFrame = (id) => { actifs.raf.delete(id); if (rafs.has(id)) { ct(rafs.get(id)); rafs.delete(id); } };
   for (const cible of [w, w.document]) {
     const add = cible.addEventListener.bind(cible), rem = cible.removeEventListener.bind(cible);
@@ -56,7 +77,8 @@ export async function page(o = {}) {
     return new w.Response('{}', { status: 200 });
   };
   if (!w.Response) w.Response = globalThis.Response;
-  const compte = compteurs(w);
+  fauxCanvas(w);
+  const compte = compteurs(w, erreurs);
   w.eval(readFileSync(path.join(RACINE, 'public/vendor/jOSb.js'), 'utf8'));
   const boxion = o.boxion || creerMemoire();
   let catalogue = [];

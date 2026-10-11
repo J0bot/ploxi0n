@@ -1,6 +1,352 @@
-id,verdict,classe,monte,interval,raf,ecoute,blob,timeout,reseau,manques,erreurs,octets
-wiki,pret,A,oui,0,0,0,0,0,0,,,2695
-trouver,pret,A,oui,0,0,0,0,0,0,,,1744
-braindump,pret,A,oui,0,0,0,0,0,0,,,8161
-veille-seismes,pret,A,oui,0,0,0,0,0,0,,,1678
-pomodoro,pret,A,oui,0,0,0,0,1,0,,,1419
+id,verdict,complet,rendu,absents,classe,monte,interval,raf,ecoute,blob,timeout,reseau,manques,erreurs,octets
+glyphes-editor,pret,non,140,jOSGlyphCodec jOSKion,A,oui,0,0,0,0,0,0,,,63689
+kion-galerie,pret,non,103,jOSGlyphCodec jOSSwipe,A,oui,0,0,0,0,0,0,,,14876
+xerkion-01,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-02,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-03,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-04,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-05,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-06,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-07,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-08,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-09,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-10,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-11,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-12,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-13,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-14,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-15,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-16,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-17,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-18,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-19,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-20,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-21,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-22,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-23,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-24,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-25,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-26,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-27,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-28,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-29,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-30,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-31,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-32,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-agent,pret,non,49,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1836
+xerkion-audio,pret,non,49,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1836
+xerkion-bouffe,pret,non,50,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1839
+xerkion-boxion,pret,non,50,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1839
+xerkion-code,pret,non,48,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1833
+xerkion-connaissance,pret,non,56,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1857
+xerkion-core,pret,non,58,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1844
+xerkion-crea,pret,non,48,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1834
+xerkion-data,pret,non,57,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1842
+xerkion-ender,pret,non,55,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1842
+xerkion-fabrication,pret,non,55,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1854
+xerkion-ferme,pret,non,49,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1836
+xerkion-jeu,pret,non,47,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1830
+xerkion-jeux,pret,non,48,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1833
+xerkion-media,pret,non,56,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1844
+xerkion-navigation,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1851
+xerkion-outils,pret,non,50,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1839
+xerkion-profil,pret,non,50,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1839
+xerkion-rendu,pret,non,49,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1836
+xerkion-repoverse,pret,non,53,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1848
+xerkion-robot,pret,non,49,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1836
+xerkion-sciences,pret,non,52,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1845
+xerkion-son,pret,non,55,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1839
+xerkion-3d,pret,non,52,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1833
+xerkion-accueil,pret,non,51,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1842
+xerkion-arcade,pret,non,50,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1839
+xerkion-banc,pret,non,56,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1843
+xerkion-bions,pret,non,49,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1836
+xerkion-bureau,pret,non,50,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1839
+xerkion-cablage,pret,non,51,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1843
+xerkion-cinema,pret,non,50,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1840
+xerkion-decouverte,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1852
+xerkion-dev,pret,non,55,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1838
+xerkion-espace,pret,non,50,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1839
+xerkion-etudes,pret,non,50,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1840
+xerkion-fete,pret,non,48,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1834
+xerkion-forge,pret,non,49,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1836
+xerkion-glyphes,pret,non,51,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1842
+xerkion-io,pret,non,58,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1839
+xerkion-labo,pret,non,48,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1833
+xerkion-lore,pret,non,48,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1833
+xerkion-machine,pret,non,51,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1842
+xerkion-musique,pret,non,56,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1847
+xerkion-physique,pret,non,52,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1845
+xerkion-primitives,pret,non,54,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1851
+xerkion-reglages,pret,non,52,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1846
+xerkion-sante,pret,non,49,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1837
+xerkion-signal,pret,non,50,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1839
+xerkion-social,pret,non,50,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1839
+xerkion-temps,pret,non,49,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1836
+xerkion-terre,pret,non,49,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1836
+xerploxions,pret,non,247,jOSXerkionsForge jOSXerploxion jOSXerploxionsForge,A,oui,0,0,0,0,0,0,,,10735
+xerploxion-pont,pret,non,55,jOSXerploxion,A,oui,0,0,0,0,0,0,,,1859
+xerploxion-bouffe,pret,non,55,jOSXerploxion,A,oui,0,0,0,0,0,0,,,1863
+xerploxion-ferme,pret,non,53,jOSXerploxion,A,oui,0,0,0,0,0,0,,,1859
+xerploxion-atelier,pret,non,59,jOSXerploxion,A,oui,0,0,0,0,0,0,,,1869
+xerploxion-veille,pret,non,62,jOSXerploxion,A,oui,0,0,0,0,0,0,,,1870
+xerkion-culture-web,pret,non,55,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1854
+xerkion-tsoin,pret,non,60,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1848
+xerkion-ui,pret,non,46,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1827
+xerkion-vie,pret,non,47,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1830
+xerkion-knowledge,pret,non,53,jOSXerkionHub,A,oui,0,0,0,0,0,0,,,1848
+media,pret,oui,53,,A,oui,0,0,0,0,0,0,,,2263
+montage,pret,non,233,jOSXui,A,oui,0,0,0,0,0,0,GET /bions/grade.wasm GET /bions/blend.wasm GET /bions/vignette.wasm,,49971
+image,pret,oui,106,,A,oui,0,0,0,0,0,0,,,6012
+enhance,pret,non,296,jOSGame jOSStore,A,oui,0,0,0,0,0,0,,,30594
+attracteurs,pret,non,308,jOSGame jOSStore,A,oui,0,0,0,0,0,0,,,22441
+logique,pret,non,266,jOSGame jOSStore,A,oui,0,0,0,0,0,0,,,23971
+physique,pret,non,368,jOSGame jOSStore,A,oui,0,0,0,0,0,0,,,24969
+grand-tsoin,pret,non,193,jOSGame jOSStore,A,oui,0,0,0,0,0,0,,,11514
+timeline,pret,non,1399,jOSGame jOSOp jOSXui,A,oui,0,0,0,0,0,0,,,29091
+themes,pret,non,2824,jOSTheme,A,oui,0,0,0,0,0,0,,,17640
+zoom,casse,non,0,jOSWire,A,non,0,0,0,0,0,0,,Ce ploxion n'a pas pu s'ouvrir : ResizeObserver is not defined,10224
+owasp,pret,oui,72,,A,oui,0,0,0,0,0,0,GET /security-kb.json,,8509
+transition,pret,non,434,jOSPageTransition,A,oui,0,0,0,0,0,0,,,5711
+stockage,pret,non,224,jOSCache jOSComptes,A,oui,0,0,0,0,0,0,,,5942
+infra,casse,non,0,,A,non,0,0,0,0,0,0,,Ce ploxion n'a pas pu s'ouvrir : ResizeObserver is not defined,14943
+browser,pret,oui,121,,A,oui,0,0,0,0,0,0,GET /px/registry.json,,10949
+photion,pret,oui,423,,A,oui,0,0,0,0,0,0,,,11222
+mapper,pret,oui,738,,A,oui,0,0,0,0,0,0,,,7805
+shipyard,pret,non,634,jOSGame jOSOp,A,oui,0,0,0,0,0,0,,,14903
+screens,pret,oui,229,,A,oui,0,0,0,0,0,0,,,6393
+compagnon,pret,non,639,jOSGame jOSJuice jOSSound,A,oui,0,0,0,0,1,0,,,65424
+download,pret,oui,53,,A,oui,0,0,0,0,0,0,,,2463
+multivers,pret,non,512,jOSGame jOSXui,A,oui,0,0,0,0,0,0,,,33374
+higgs,pret,non,2254,jOSGame jOSOp,A,oui,0,0,0,0,0,0,,,20953
+implant,pret,non,1176,jOSGame jOSOp,A,oui,0,0,0,0,0,0,,,18543
+wiki,pret,non,0,jOSWire,A,oui,0,0,0,0,0,0,,,2695
+cubions,pret,oui,186,,A,oui,0,0,0,0,0,0,GET /cubions.json,,7935
+cubion,pret,non,62,jOSCubion jOSOp jOSTsoinEngine,A,oui,0,0,0,0,0,0,,,15129
+quetes,a-revoir,non,11,jOSGame jOSTheme jOSXui,A,oui,0,0,0,0,0,0,GET /px/quetes.json,promesse rejetée : Cannot read properties of undefined (reading 'filter') | promesse rejetée : Cannot read properties of undefined (reading 'forEach'),47653
+cubionlink,a-revoir,non,96,jOSCubion,A,oui,0,0,0,0,0,0,GET /cubions.json GET /ploxion-bions.json,promesse rejetée : 503 /cubions.json,12605
+nature,pret,non,1120,jOSApi jOSCarte jOSStore,A,oui,0,0,0,0,0,0,,,31063
+boxion-designer,pret,oui,238,,A,oui,0,0,0,0,0,0,GET /boxions.json GET /boxion-apps.json,,11876
+forge-flow,pret,non,153,jOSForge jOSKnob,A,oui,0,0,0,0,0,0,,,20190
+forge-kion,pret,non,20,jOSForge jOSKionFloat,A,oui,0,0,0,0,0,0,,,8545
+kion-3d,pret,oui,118,,A,oui,0,0,0,0,0,0,,,7374
+avatar,pret,non,226,jOSEngine jOSNexus,A,oui,0,0,0,0,0,0,,,12969
+moteur,pret,non,48,jOSEngine,A,oui,0,0,0,0,0,0,,,7285
+forge-engine,pret,non,27,jOSEngine jOSForge jOSKit,A,oui,0,0,0,0,0,0,,,13120
+capture-lieu,pret,non,268,jOSNexus,A,oui,0,0,0,0,0,0,,,10214
+scan-reel,a-revoir,non,194,jOSEngine,A,oui,0,0,0,0,0,0,,Uncaught [TypeError: Cannot read properties of undefined (reading 'getUserMedia')],10155
+monde-os,pret,non,42,jOSEngine,A,oui,0,0,0,0,0,0,,,10085
+forge-jeu,pret,non,16,jOSForge jOSGames,A,oui,0,0,0,0,0,0,,,6730
+doomion,pret,non,36,jOSEngine,A,oui,0,0,0,0,0,0,,,7802
+doom,pret,oui,208,,A,oui,0,0,0,0,0,0,,,4985
+ion,pret,non,48,jOSViewer,A,oui,0,0,0,0,0,0,,,3364
+monde,pret,non,117,jOSEngine,A,oui,0,0,0,0,0,0,,,3856
+beats,pret,non,585,jOSKnob jOSPulse,A,oui,0,0,0,0,0,0,,,14772
+spiderion-sim,pret,non,198,jOSKnob,A,oui,0,0,0,0,0,0,,,15925
+music-lab,pret,non,171,jOSPulse jOSXerbion,A,oui,0,0,0,0,0,0,,,8406
+bras-sim,pret,non,183,jOSArm jOSKnob,A,oui,0,0,0,0,0,0,,,11312
+strudel-live,pret,oui,297,,A,oui,0,0,0,0,0,0,,,6775
+hydra-visual,pret,oui,19,,A,oui,0,0,0,0,0,0,,,5127
+bras,pret,non,149,jOSArm jOSKnob,A,oui,0,0,0,0,0,0,,,8156
+noyau,pret,non,26,jOSCore jOSKnob jOSTheme,A,oui,0,0,0,0,0,0,,,8189
+qfractale,pret,non,155,jOSKnob jOSQuantum,A,oui,0,0,0,0,0,0,,,6907
+quantique,pret,non,178,jOSQuantum,A,oui,0,0,0,0,0,0,,,18828
+trouver,pret,oui,53,,A,oui,0,0,0,0,0,0,,,1744
+xerbions,pret,oui,54,,A,oui,0,0,0,0,0,0,,,1760
+plugions,pret,non,51,jOSPlugion jOSPorte,A,oui,0,0,0,0,0,0,,,5971
+instagram,pret,non,250,jOSPlugion jOSPorte jOSTsoinSend,A,oui,0,0,0,0,0,0,,,9737
+fractale,pret,oui,39,,A,oui,0,0,0,0,0,0,GET /px/recipe-book.json,,9649
+craftion,pret,non,225,jOSForge jOSGame jOSWire,A,oui,0,0,0,0,0,0,GET /ploxion-io.json,,28593
+tsoinion,casse,non,0,jOSTransport jOSTsoinEngine,A,non,0,0,0,0,0,0,,Ce ploxion n'a pas pu s'ouvrir : ResizeObserver is not defined,20396
+boxion,a-revoir,non,192,jOSStore,A,oui,0,0,1,0,0,0,,,15504
+boxion-files,pret,non,136,jOSFiles,A,oui,0,0,0,0,0,0,,,12251
+xerlang,pret,oui,299,,A,oui,0,0,0,0,0,0,GET /bions.json,,12541
+surfaces,pret,non,742,jOSXui,A,oui,0,0,0,0,0,0,,,35725
+trion-ensemble,pret,non,423,jOSKion,A,oui,0,0,0,0,0,0,,,13404
+kion-map,a-revoir,non,174,,A,oui,0,0,2,0,0,0,GET /px/registry.json,,11982
+planete-bowl,pret,non,172,jOSGame,A,oui,0,0,0,0,0,0,,,16778
+phone-test,pret,oui,138,,A,oui,0,0,0,0,0,0,,,4561
+ios,pret,oui,482,,A,oui,0,0,0,0,0,0,,,6616
+monde-rosa,pret,non,151,jOSEngine,A,oui,0,0,0,0,0,0,,,5650
+xerworld,pret,oui,55,,A,oui,0,0,0,0,0,0,,,1770
+onboarding,pret,oui,2823,,A,oui,0,0,0,0,0,0,,,7757
+xer-switch,pret,non,657,jOSXer jOSXerSelecteur,A,oui,0,0,0,0,0,0,,,6570
+fractale-reel,pret,oui,712,,A,oui,0,0,0,0,0,0,,,14118
+endo,pret,oui,828,,A,oui,0,0,0,0,0,0,,,18396
+zlorbion,pret,oui,77,,A,oui,0,0,0,0,1,0,,,6851
+hoffman,pret,oui,929,,A,oui,0,0,0,0,0,0,,,24651
+periodic,a-revoir,non,199,,A,oui,0,0,0,0,0,0,GET /periodic.json,Uncaught [TypeError: Cannot read properties of null (reading 'elements')],8210
+tsoinfini,pret,oui,993,,A,oui,0,0,0,0,0,0,,,14230
+forge-core,pret,non,251,jOSKnob,A,oui,0,0,0,0,0,0,GET /forge-core.json,,9800
+glyphqr,pret,oui,482,,A,oui,0,0,0,0,0,0,,,11015
+dimensions,pret,oui,199,,A,oui,0,0,0,0,0,0,,,9785
+lorion,pret,oui,414,,A,oui,0,0,0,0,0,0,,,25561
+films,pret,non,88,jOSCine jOSPlayer jOSPlug,A,oui,0,0,0,0,0,0,,,14383
+apis,pret,non,257,jOSApi jOSApiDriver jOSKeys,A,oui,0,0,0,0,0,0,GET /px/public-apis.json,,18045
+plugion-forge,a-revoir,non,101,jOSPlug,A,oui,0,0,2,0,0,0,,,10865
+stash,pret,non,152,jOSStash,A,oui,0,0,0,0,0,0,,,4240
+braindump,pret,non,67,jOSWire,A,oui,0,0,0,0,0,0,,,8161
+text,pret,non,37,jOSFiles,A,oui,0,0,0,0,0,0,,,11935
+screenshot,pret,oui,142,,A,oui,0,0,0,0,0,0,,,5122
+record,a-revoir,non,1117,,A,oui,0,0,0,0,0,0,,Uncaught [TypeError: Cannot read properties of undefined (reading 'getUserMedia')],5459
+clavier,pret,non,120,jOSKeycap,A,oui,0,0,0,0,0,0,,,10986
+souris,pret,oui,75,,A,oui,0,0,0,0,0,0,,,3784
+pdf,pret,oui,85,,A,oui,0,0,0,0,0,0,,,5295
+son,pret,non,88,jOSPulse jOSWire,A,oui,0,0,0,0,0,0,,,8809
+logion,pret,non,49,jOSWire,A,oui,0,0,0,0,0,0,GET /px/logion/laravel.json,,8823
+horloge,pret,oui,286,,A,oui,0,0,0,0,0,0,,,8787
+calculatrice,pret,oui,59,,A,oui,0,0,0,0,0,0,,,8520
+minuteur,pret,non,94,jOSWire,A,oui,0,0,0,0,0,0,,,10607
+dico,pret,non,31283,jOSApi,A,oui,0,0,0,0,0,0,GET /wiki/lexicon.json,,12429
+ui,pret,oui,799,,A,oui,0,0,0,0,0,0,,,10685
+ui-desktop,pret,non,838,jOSStore,A,oui,0,0,0,0,0,0,,,18814
+ui-tablette,pret,non,862,jOSStore,A,oui,0,0,0,0,0,0,,,24135
+ui-mobile,pret,non,1364,jOSStore,A,oui,0,0,0,0,0,0,,,23358
+langues,pret,oui,1120,,A,oui,0,0,0,0,0,0,,,7705
+convertisseur,pret,non,928,jOSWire,A,oui,0,0,0,0,0,0,GET /bions-f64.json,,19859
+pdf-outils,pret,non,269,jOSFiles jOSTools jOSXui,A,oui,0,0,0,0,0,0,,,31131
+image-convert,pret,non,451,jOSFiles jOSTools,A,oui,0,0,0,0,0,0,,,30208
+audio-convert,pret,non,506,jOSFiles jOSTools,A,oui,0,0,0,0,0,0,,,31252
+tableur-convert,pret,non,403,jOSFiles,A,oui,0,0,0,0,0,0,,,19712
+word-import,pret,non,172,jOSFiles jOSOp jOSTools,A,oui,0,0,0,0,0,0,,,20419
+graphiques,pret,non,176,jOSChart jOSOp,A,oui,0,0,0,0,0,0,,,22286
+moniteur-serie,pret,non,33,jOSWire,A,oui,0,0,0,0,0,0,,,4206
+stats,pret,non,546,jOSChart jOSOp jOSStats jOSWire,A,oui,0,0,0,0,0,0,,,46916
+meteo-son,pret,non,35,jOSWeather,A,oui,0,0,0,0,0,0,,,3908
+jauge-capteur,pret,non,51,jOSChart jOSSensors jOSWire,A,oui,0,0,0,0,0,0,,,5286
+capteurs-son,pret,non,69,jOSSensors,A,oui,0,0,0,0,0,0,,,4690
+couleurs,pret,oui,678,,A,oui,0,0,0,0,0,0,,,37913
+hasard,pret,oui,186,,A,oui,0,0,0,0,0,0,,,18369
+piano,pret,oui,165,,A,oui,0,0,0,0,0,0,,,20610
+regex,pret,non,840,jOSWire jOSXui,A,oui,0,0,0,0,0,0,,,31516
+studio,a-revoir,non,112,jOSXui,A,oui,0,0,0,0,0,0,,Uncaught [TypeError: (window.AudioContext || window.webkitAudioContext) is not a constructor],41645
+tree,pret,oui,38,,A,oui,0,0,0,0,0,0,GET /wiki/lexicon.json,,11156
+3d,pret,non,221,jOSWire,A,oui,0,0,0,0,0,0,,,14186
+jeux,pret,oui,115,,A,oui,0,0,0,0,0,0,,,28496
+soiree,pret,oui,3923,,A,oui,0,0,0,0,0,0,,,15222
+chat,pret,non,131,jOSGpg jOSZone,A,oui,0,0,0,0,0,0,GET /chat/feed.json GET /chat/salons.json,,40987
+torrent,pret,oui,395,,A,oui,0,0,0,0,0,0,,,10829
+cine,pret,oui,52,,A,oui,0,0,0,0,0,0,,,1964
+presence,pret,non,22,jOSPresence,A,oui,0,0,0,0,0,0,,,7227
+civ,pret,non,24,jOSBions jOSCiv jOSPret jOSStore jOSXxx jOSZone,A,oui,0,0,0,0,0,0,,,14742
+taches,casse,non,0,jOSCiv jOSZone,A,non,0,0,0,0,0,0,,Ce ploxion n'a pas pu s'ouvrir : Cannot read properties of undefined (reading 'ui'),10793
+finances,casse,non,0,jOSCiv jOSZone,A,non,0,0,0,0,0,0,,Ce ploxion n'a pas pu s'ouvrir : Cannot read properties of undefined (reading 'ui'),11487
+stock,casse,non,0,jOSCiv jOSZone,A,non,0,0,0,0,0,0,,Ce ploxion n'a pas pu s'ouvrir : Cannot read properties of undefined (reading 'ui'),7286
+pieces,casse,non,0,jOSCiv jOSZone,A,non,0,0,0,0,0,0,,Ce ploxion n'a pas pu s'ouvrir : Cannot read properties of undefined (reading 'ui'),8803
+demenagement,casse,non,0,jOSCiv jOSZone,A,non,0,0,0,0,0,0,,Ce ploxion n'a pas pu s'ouvrir : Cannot read properties of undefined (reading 'ui'),10196
+monui,pret,non,16,jOSHud jOSMonUI,A,oui,0,0,0,0,0,0,,,30034
+globe,pret,non,20,jOSCarte jOSGlobe jOSVeille jOSXui,A,oui,0,0,0,0,0,0,,,13746
+veille,pret,non,88,jOSCarte jOSGame jOSGlobe jOSSharePloxion jOSVeille jOSVeilleSources jOSWindows jOSXui,A,oui,0,0,0,0,0,0,,,34280
+veille-avions,pret,non,70,jOSVeille,A,oui,0,0,0,0,0,0,,,1666
+veille-avions-mil,pret,non,75,jOSVeille,A,oui,0,0,0,0,0,0,,,1704
+veille-seismes,pret,non,72,jOSVeille,A,oui,0,0,0,0,0,0,,,1678
+veille-satellites,pret,non,75,jOSVeille,A,oui,0,0,0,0,0,0,,,1704
+veille-radios,pret,non,71,jOSVeille,A,oui,0,0,0,0,0,0,,,1668
+veille-lancements,pret,non,75,jOSVeille,A,oui,0,0,0,0,0,0,,,1704
+veille-bases-mil,pret,non,74,jOSVeille,A,oui,0,0,0,0,0,0,,,1695
+contacts,pret,non,15,jOSCiv jOSStore jOSZone,A,oui,0,0,0,0,0,0,,,6833
+documents,pret,non,15,jOSCiv jOSStore jOSZone,A,oui,0,0,0,0,0,0,,,8895
+compteurs,pret,non,15,jOSCiv jOSZone,A,oui,0,0,0,0,0,0,,,7127
+sessions,pret,non,83,jOSAppareil jOSSessions jOSWindows,A,oui,0,0,0,0,0,0,,,17100
+curseur,pret,non,22,jOSPresence,A,oui,0,0,0,0,0,0,,,8300
+excel,pret,non,159,jOSFiles jOSLive,A,oui,0,0,0,0,0,0,,,24152
+powerpoint,pret,non,87,jOSFiles jOSLive,A,oui,0,0,0,0,0,0,,,23021
+ultimate-boxion,pret,non,2600,jOSLancement jOSStore,A,oui,0,0,0,0,0,0,GET /boxions.json,,34451
+trousseau,pret,non,24,jOSGpg,A,oui,0,0,0,0,0,0,,,11769
+von-neumann,pret,oui,461,,A,oui,0,0,0,0,0,0,,,10263
+youtube,pret,oui,54,,A,oui,0,0,0,0,0,0,,,1888
+bd,pret,oui,159,,A,oui,0,0,0,0,0,0,,,15362
+bouffe,pret,non,652,jOSBouffe jOSOp jOSStore,A,oui,0,0,0,0,0,0,,,24574
+inventaire,pret,non,159,jOSBouffe jOSWire,A,oui,0,0,0,0,0,0,,,11384
+frigo,pret,non,104,jOSBouffe jOSOp,A,oui,0,0,0,0,0,0,,,11496
+cuisine,pret,non,277,jOSBouffe jOSGame jOSOp jOSStore,A,oui,0,0,0,0,0,0,,,31013
+cadeau,pret,oui,137,,A,oui,0,0,0,0,0,0,,,11513
+barrow,pret,non,3310,jOSTaille,A,oui,0,0,0,0,0,0,,,116070
+scientifiques,pret,non,5694,jOSWire,A,oui,0,0,0,0,0,0,,,15038
+glyphes,pret,oui,455,,A,oui,0,0,0,0,0,0,,,15338
+recits,pret,oui,5265,,A,oui,0,0,0,0,0,0,,,13646
+forge,pret,non,29,jOSForge jOSGame jOSOp jOSPlug,A,oui,0,0,0,0,0,0,,,44861
+builder,pret,non,58,jOSForge,A,oui,0,0,0,0,0,0,,,24031
+craft,pret,non,37,jOSBions jOSForge,A,oui,0,0,0,0,0,0,,,26689
+simplification,pret,non,26,jOSForge,A,oui,0,0,0,0,0,0,,,11441
+banc,pret,non,215,jOSForge,A,oui,0,0,0,0,0,0,,,7860
+atlas,pret,non,402,jOSForge,A,oui,0,0,0,0,0,0,GET /cubions.json,,10149
+jeu,pret,non,674,jOSOp,A,oui,0,0,0,0,0,0,GET /wiki/bions.json,,22755
+glyphed,casse,non,0,,A,non,0,0,0,0,0,0,,Ce ploxion n'a pas pu s'ouvrir : ResizeObserver is not defined,9785
+techtree,pret,non,303,jOSXerb,A,oui,0,0,0,0,0,0,GET /bions.json GET /cubions.json,,6475
+preuve,pret,non,585,jOSXerb,A,oui,0,0,0,0,0,0,GET /bions.json,,8261
+instances,pret,non,184,jOSInstances,A,oui,0,0,0,0,0,0,,,7727
+ram,pret,oui,80,,A,oui,0,0,0,0,0,0,GET /sys/ram.json,,5450
+frontieres,pret,oui,4556,,A,oui,0,0,0,0,0,0,,,20947
+graphe,pret,oui,250,,A,oui,0,0,0,0,0,0,,,18544
+cablage,pret,non,253,jOSWire,A,oui,0,0,0,0,0,0,GET /ploxion-io.json GET /cubion-wires.json,,15512
+dj,pret,non,214,jOSSound jOSStore,A,oui,0,0,0,0,0,0,,,20633
+ondes,pret,non,76,jOSSound jOSStore,A,oui,0,0,0,0,0,0,,,16802
+arbre-a-son,pret,non,49,jOSStore,A,oui,0,0,0,0,0,0,,,13779
+murion,pret,non,115,jOSOp jOSStore,A,oui,0,0,0,0,0,0,,,16891
+room-map,pret,non,95,jOSStore,A,oui,0,0,0,0,0,0,,,13249
+wordion,pret,non,127,jOSStore,A,oui,0,0,0,0,0,0,GET /wiki/bions.json,,15944
+geste,pret,non,237,jOSStore,A,oui,0,0,0,0,0,0,,,16405
+vald,pret,non,3106,jOSGame,A,oui,0,0,0,0,0,0,,,14869
+pink-guy,pret,non,3801,jOSGame,A,oui,0,0,0,0,0,0,,,15693
+squeezie,pret,non,3390,jOSGame,A,oui,0,0,0,0,0,0,,,15509
+fuzeiii,pret,non,3257,jOSGame,A,oui,0,0,0,0,0,0,,,15306
+bob-lennon,pret,non,3447,jOSGame,A,oui,0,0,0,0,0,0,,,16120
+jules-verne,pret,non,5122,jOSPorte,A,oui,0,0,0,0,0,0,,,18661
+asimov,pret,non,4653,jOSPorte,A,oui,0,0,0,0,0,0,,,17488
+sillage,pret,non,3180,jOSPorte,A,oui,0,0,0,0,0,0,,,12547
+one-piece,pret,non,4563,jOSPorte,A,oui,0,0,0,0,0,0,,,18081
+naruto,pret,oui,4327,,A,oui,0,0,0,0,0,0,,,16794
+saga-mp3,pret,non,3852,jOSGame jOSPorte,A,oui,0,0,0,0,0,0,,,21716
+survivaure,pret,non,4255,jOSPorte,A,oui,0,0,0,0,0,0,,,17186
+clyde-vanilla,pret,non,3529,jOSPorte,A,oui,0,0,0,0,0,0,,,17001
+antoine-daniel,pret,non,3632,jOSGame jOSPorte,A,oui,0,0,0,0,0,0,,,19879
+nolan,pret,oui,903,,A,oui,0,0,0,0,0,0,,,36844
+pays,pret,non,76,jOSApi jOSGame,A,oui,0,0,0,0,0,0,GET /px/countries.json,,13489
+musee,pret,non,132,jOSApi,A,oui,0,0,0,0,0,0,,,7579
+dev-ploxions,pret,oui,143,,A,oui,0,0,0,0,0,0,GET /dev/ploxions.json,,15222
+premier-ploxion,pret,oui,837,,A,oui,0,0,0,0,0,0,,,41599
+contribuer,pret,oui,2086,,A,oui,0,0,0,0,0,0,,,7904
+xerax,pret,non,907,jOSWikiLink,A,oui,0,0,0,0,0,0,GET /px/xerax.json GET /px/xerax-decisions.json,,42119
+fes-main,pret,oui,4457,,A,oui,0,0,0,0,0,0,,,153499
+xerbot,pret,non,2056,jOSCache jOSCarte jOSStore jOSWikiLink jOSXerbotSim jOSXui,A,oui,0,0,0,0,0,0,GET /xerbot-devices.json GET /xerbot-contract.json,,51854
+galaxion,pret,non,132,jOSOp jOSStore,A,oui,0,0,0,0,0,0,GET /cubions.json,,24837
+ask,pret,non,185,jOSOp jOSStore,A,oui,0,0,0,0,0,0,,,18577
+claude,pret,non,335,jOSStore,A,oui,0,0,0,0,0,0,,,16176
+message,pret,non,193,jOSStore,A,oui,0,0,0,0,0,0,,,18295
+mail,pret,non,95,jOSStore,A,oui,0,0,0,0,0,0,,,17023
+code,pret,non,134,jOSEditeurCode jOSFiles jOSStore jOSTheme jOSTools,A,oui,0,0,0,0,0,0,,,99895
+script,a-revoir,non,465,jOSStore,A,oui,0,0,0,0,0,0,,Uncaught [TypeError: Cannot read properties of undefined (reading 'value')],18792
+branches,pret,non,356,jOSStore,A,oui,0,0,0,0,0,0,,,24561
+reception,pret,non,233,jOSForge,A,oui,0,0,0,0,0,0,,,18293
+bions,pret,oui,39,,A,oui,0,0,0,0,0,0,GET /bions-census.json,,15593
+portion,casse,non,0,jOSEntrees jOSFiles,A,non,0,0,0,0,0,0,,Ce ploxion n'a pas pu s'ouvrir : ResizeObserver is not defined,49095
+wormion,casse,non,0,jOSEntrees jOSFiles jOSTransport,A,non,0,0,0,0,0,0,,Ce ploxion n'a pas pu s'ouvrir : ResizeObserver is not defined,46803
+koin,casse,non,0,,A,non,0,0,0,0,0,0,,Ce ploxion n'a pas pu s'ouvrir : ResizeObserver is not defined,8615
+trion,casse,non,0,,A,non,0,0,0,0,0,0,,Ce ploxion n'a pas pu s'ouvrir : ResizeObserver is not defined,9532
+xerkion,pret,non,94,jOSKion jOSKoinAct jOSOp,A,oui,0,0,0,0,0,0,,,18521
+kion,pret,non,299,jOSComptes jOSKion jOSKionFocus jOSKoinAct jOSStore jOSWire,A,oui,0,0,0,0,0,0,GET /cubion-wires.json,,36551
+edit-ui,pret,non,274,jOSTheme,A,oui,0,0,0,0,0,0,,,7352
+mixer,casse,non,0,jOSSound jOSWire,A,non,0,0,0,0,0,0,,Ce ploxion n'a pas pu s'ouvrir : Cannot read properties of undefined (reading 'subscribe'),20911
+tv,pret,oui,50,,A,oui,0,0,0,0,0,0,,,1788
+cosmos,pret,non,33,jOSForge,A,oui,0,0,0,0,0,0,,,16576
+spherion,pret,oui,202,,A,oui,0,0,0,0,0,0,,,8554
+connexions,pret,non,257,jOSDeviceBions jOSTheme,A,oui,0,0,0,0,0,0,,,16524
+bt-scan,pret,oui,310,,A,oui,0,0,0,0,0,0,,,8145
+bt-player,pret,non,259,jOSAudioBions,A,oui,0,0,0,0,0,0,,,6487
+bt-eq,pret,non,189,jOSAudioBions,A,oui,0,0,0,0,0,0,,,6303
+bt-tones,pret,non,135,jOSAudioBions,A,oui,0,0,0,0,0,0,,,4209
+bt-surround,pret,non,323,jOSAudioBions,A,oui,0,0,0,0,0,0,,,6614
+pomodoro,pret,oui,103,,A,oui,0,0,0,0,1,0,,,1419
+xerb,pret,oui,359,,A,oui,0,0,0,0,0,0,GET /bions.json GET /bion-cubions.json,,10871
+cubmap,pret,non,357,jOSCarte,A,oui,0,0,0,0,0,0,,,16017
+cublumiere,a-revoir,non,102,,A,oui,0,0,1,0,0,0,GET /xerbot-devices.json,,15414
+hotbar,pret,oui,53,,A,oui,0,0,0,0,0,0,,,1840
+nexus3d,pret,oui,148,,A,oui,0,0,0,0,0,0,,,11838
+cockpit,a-revoir,non,277,,A,oui,0,0,1,0,0,0,,,11343
+actuariat,pret,non,755,jOSActuary,A,oui,0,0,0,0,0,0,,,84289
+evolution,pret,non,3302,jOSEvo jOSGame,A,oui,0,0,0,0,0,0,,,86393
+tsoin-engine,pret,non,648,jOSEvo jOSForgeFrom jOSTsoinEngine,A,oui,0,0,0,0,1,0,GET /px/registry.json,,26111
+chemin,pret,non,224,jOSChemin jOSForge jOSMachine jOSPipeline,A,oui,0,0,0,0,0,0,,,35847
+flow,pret,non,744,jOSFlowstate jOSPulse jOSSouffle,A,oui,0,0,0,0,0,0,,,33959
+symbiose,pret,non,163,jOSHud jOSMachine jOSSymbiose jOSTsoinEngine jOSXerDoc,A,oui,0,0,0,0,0,0,,,43068

@@ -1,0 +1,18 @@
+
+  .lng{display:flex;flex-direction:column;height:100%;background:var(--xr-bg,#070b12);color:var(--xr-text,#e7f0ff);font-family:var(--xr-font-ui,system-ui)}
+  .lng__bar{flex:0 0 auto;display:flex;align-items:center;gap:9px;padding:9px 11px;border-bottom:1px solid var(--xr-border,#22324f)}
+  .lng__t{font-weight:700;color:var(--xr-accent,#3fe0d0);white-space:nowrap}
+  .lng__s{flex:1;min-width:0;background:var(--xr-bg,#0b1220);color:var(--xr-text,#e7f0ff);border:1px solid var(--xr-border,#22324f);border-radius:9px;padding:7px 10px;font:14px system-ui}
+  .lng__grid{flex:1;min-height:0;overflow:auto;padding:10px;display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));align-content:start}
+  .lng__c{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:11px;cursor:pointer;
+    border:1px solid var(--xr-border,#22324f);background:color-mix(in srgb,var(--xr-accent,#3fe0d0) 5%,transparent);color:var(--xr-text,#e7f0ff)}
+  .lng__c:hover{border-color:var(--xr-accent,#3fe0d0);transform:translateY(-1px)}
+  .lng__c.on{border-color:var(--xr-accent,#3fe0d0);background:color-mix(in srgb,var(--xr-accent,#3fe0d0) 16%,transparent)}
+  .lng__c.cur{outline:2px solid var(--xr-accent,#3fe0d0)}
+  .lng__fl{font-size:22px;line-height:1}.lng__nm{display:flex;flex-direction:column;min-width:0}
+  /* drapeaux SVG vendorisés (les emoji 🇫🇷 rendent « FR » sur Windows) — cf. public/vendor/flags/LICENSE (MIT lipis/flag-icons) */
+  .lng__fli{display:inline-block;vertical-align:middle;border-radius:3px;border:1px solid var(--xr-border,#22324f);background:var(--xr-bg2,#0b1626)}
+  .lng__na{font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lng__en{font-size:.68rem;color:var(--xr-muted,#8aa0c0)}
+  .lng__c.soon{opacity:.55}.lng__badge{margin-left:auto;font-size:.6rem;color:var(--xr-muted,#8aa0c0)}
+  .lng__foot{flex:0 0 auto;padding:7px 12px;border-top:1px solid var(--xr-border,#22324f);font-size:.7rem;color:var(--xr-muted,#8aa0c0);text-align:center}

@@ -1,0 +1,21 @@
+
+    .phor{display:flex;flex-direction:column;height:100%;background:radial-gradient(circle at 50% 25%,#08120e,#04060a);color:rgba(220,240,235,.92);font-family:ui-sans-serif,system-ui,sans-serif}
+    .phor__utc{flex:0 0 auto;text-align:center;padding:16px 12px 4px}
+    .phor__utcv{font-family:'Share Tech Mono',ui-monospace,monospace;font-size:clamp(3rem,16vw,5rem);line-height:1;color:#dffbe9;text-shadow:0 0 26px rgba(0,255,159,.5);letter-spacing:.03em}
+    .phor__utcl{font-size:.66rem;color:rgba(180,210,200,.55);margin-top:6px;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
+    .phor__utcm{font-family:inherit;font-size:.66rem;background:rgba(0,255,159,.06);border:1px solid rgba(0,255,159,.3);color:#dffbe9;border-radius:6px;padding:3px 8px;cursor:pointer}
+    .phor__big{flex:0 0 auto;display:flex;align-items:center;gap:16px;justify-content:center;padding:18px 12px 8px;flex-wrap:wrap}
+    .phor__face{width:96px;height:96px;flex:0 0 auto}
+    .phor__face circle{fill:rgba(0,255,159,.04);stroke:rgba(0,255,159,.3)}
+    .phor__txt{text-align:center}
+    .phor__time{font-family:'Share Tech Mono',ui-monospace,monospace;font-size:2.4rem;color:#dffbe9;text-shadow:0 0 18px rgba(0,255,159,.4);letter-spacing:.04em}
+    .phor__date{font-size:.82rem;color:rgba(180,210,200,.6);margin-top:2px}
+    .phor__loc{font-size:.66rem;color:rgba(180,210,200,.45)}
+    .phor__add{flex:0 0 auto;display:flex;gap:6px;padding:6px 14px;justify-content:center;flex-wrap:wrap}
+    .phor__add select,.phor__add button{font-family:inherit;font-size:.76rem;background:rgba(0,255,159,.06);border:1px solid rgba(0,255,159,.3);color:#dffbe9;border-radius:7px;padding:5px 9px;cursor:pointer}
+    .phor__zones{flex:1;overflow-y:auto;padding:8px 14px 16px;display:flex;flex-direction:column;gap:7px}
+    .phor__z{display:flex;align-items:baseline;gap:10px;padding:8px 12px;border-radius:9px;background:rgba(0,255,159,.05);border:1px solid rgba(0,255,159,.16)}
+    .phor__zn{flex:1;font-size:.84rem;color:rgba(220,240,235,.85)}
+    .phor__zt{font-family:'Share Tech Mono',ui-monospace,monospace;font-size:1rem;color:rgba(0,255,159,.9)}
+    .phor__zd{font-size:.66rem;color:rgba(180,210,200,.45)}
+    .phor__x{cursor:pointer;border:0;background:none;color:rgba(255,140,140,.6);font-size:.8rem}

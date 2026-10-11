@@ -9,6 +9,46 @@
    "hash": "c77332a2c78938795d33f220dbe9ada04c5a657af650b4ecfde045cbac5d882b",
    "deps": [],
    "octets": 1017
+  },
+  {
+   "id": "horloge",
+   "nom": "Horloge",
+   "icone": "🕐",
+   "hash": "e2ddb9ce96063227f0b9f958cb12d03ce7f284820f9c0497525581e4abdf0f7d",
+   "deps": [],
+   "octets": 8414
+  },
+  {
+   "id": "piano",
+   "nom": "Piano",
+   "icone": "🎹",
+   "hash": "7f86b15fae1b6780c02df7c81462fe4a7b65f2eb5b5909c9b9a05d3de5a2e360",
+   "deps": [],
+   "octets": 19613
+  },
+  {
+   "id": "couleurs",
+   "nom": "Couleurs",
+   "icone": "🎨",
+   "hash": "2bb2ea32ca9e1ba3401c2583e390e316c6c75dc6113150bf0f24518f81041d96",
+   "deps": [],
+   "octets": 35847
+  },
+  {
+   "id": "langues",
+   "nom": "Langues",
+   "icone": "🌐",
+   "hash": "25daede5e50a17937b1bb87748a546a3131dcdf9ce5a397a37ea2e06e91d1662",
+   "deps": [],
+   "octets": 6874
+  },
+  {
+   "id": "recits",
+   "nom": "Récits",
+   "icone": "📖",
+   "hash": "ca419da6673faf2aa0e6da5f07af1817f5c62b4d6f9426305e91fe5726c69b68",
+   "deps": [],
+   "octets": 12864
   }
  ]
 }

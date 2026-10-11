@@ -1,4 +1,11 @@
 {
-  "note": "Les ploxions embarqués dans le binaire v1 (classe A, choisis par RS-7 parmi ploxions-audit.md) ; provisoires tant qu'il n'a pas choisi.",
-  "ploxions": []
+ "note": "PROVISOIRE (11.10) : 6 ploxions « prêts et complets » de ploxions-compat.md, en attendant le choix de RS-7 (3 à 5).",
+ "ploxions": [
+  "pomodoro",
+  "horloge",
+  "piano",
+  "couleurs",
+  "langues",
+  "recits"
+ ]
 }

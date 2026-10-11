@@ -24,6 +24,9 @@ void registre;
 // les bions que le shim fournit ; les autres sont « absents » (le ploxion doit tester leur existence, et il perd la fonction)
 const FOURNIS = new Set(['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb']);
 const res = [];
+let courant = null;   // une exception échappée (une promesse, un écouteur) est attribuée au ploxion en cours, jamais fatale
+process.on('uncaughtException', (e) => { if (courant) courant.push('non rattrapée : ' + (e && e.message)); });
+process.on('unhandledRejection', (e) => { if (courant) courant.push('promesse rejetée : ' + (e && e.message)); });
 let i = 0;
 for (const c of cibles) {
   i++;
@@ -34,6 +37,7 @@ for (const c of cibles) {
     const d = decouper(readFileSync(path.join(LABO, 'resources/views/ploxions', app, 'app.blade.php'), 'utf8'));
     if (BLADE.test(d.js) || d.deps.length) { r.erreurs = d.deps.length ? 'dépendances : ' + d.deps.join(' ') : 'Blade'; res.push(r); continue; }
     p = await page({ avion: true, bundles: [{ id: c.id, js: d.js }] });
+    courant = p.erreurs;
     const avant = p.compte.photo();
     if (!p.w.jOSApps || !p.w.jOSApps[c.id]) throw new Error('ne s\'enregistre pas dans jOSApps');
     await p.routeur.ouvrir(c.id);
@@ -51,7 +55,7 @@ for (const c of cibles) {
     r.reseau = p.tentatives.length; r.manques = [...new Set(p.shim.manques())].join(' ');
     r.erreurs = p.erreurs.slice(0, 3).join(' | ').slice(0, 300);
   } catch (e) { r.erreurs = (e.message || String(e)).slice(0, 300); }
-  finally { try { if (p) p.w.close(); } catch (e) { /* */ } }
+  finally { courant = null; try { if (p) p.w.close(); } catch (e) { /* */ } }
   r.verdict = r.monte !== 'oui' ? 'casse' : (r.erreurs || r.interval || r.raf || r.ecoute || r.blob || r.reseau) ? 'a-revoir' : 'pret';
   r.complet = r.verdict === 'pret' && !r.absents ? 'oui' : 'non';
   res.push(r);
