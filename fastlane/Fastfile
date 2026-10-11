@@ -35,5 +35,34 @@ platform :ios do
     end
 
     upload_to_testflight(api_key: cle, skip_waiting_for_build_processing: true)
+    testeurs_internes
+  end
+
+  # Le groupe de testeurs internes « ploxi0n interne » reçoit AUTOMATIQUEMENT chaque build (pas d'attente du traitement d'Apple,
+  # donc pas de minutes macOS perdues) ; TESTFLIGHT_EMAIL (secret, l'Apple ID de RS-7) y est ajouté et invité (betaTesterInvitations).
+  # Jamais bloquant : un échec ici n'annule pas le build envoyé.
+  private_lane :testeurs_internes do
+    email = ENV["TESTFLIGHT_EMAIL"].to_s
+    next UI.important("TESTFLIGHT_EMAIL absent : personne à inviter") if email.empty?
+    begin
+      app = Spaceship::ConnectAPI::App.find(APP_ID)
+      groupe = app.get_beta_groups(filter: { name: "ploxi0n interne" }).first ||
+               app.create_beta_group(group_name: "ploxi0n interne", is_internal_group: true, has_access_to_all_builds: true)
+      testeur = Spaceship::ConnectAPI::BetaTester.all(filter: { email: email }).first
+      if testeur.nil?
+        Spaceship::ConnectAPI.post_beta_tester_assignment(beta_group_ids: [groupe.id], attributes: { email: email, firstName: "RS", lastName: "7" })
+        UI.success("testeur ajouté au groupe « ploxi0n interne » : l'invitation TestFlight part")
+      else
+        begin
+          Spaceship::ConnectAPI.add_beta_tester_to_group(beta_group_id: groupe.id, beta_tester_ids: [testeur.id])
+        rescue => e
+          UI.message("déjà dans le groupe ? #{e.message}")
+        end
+        Spaceship::ConnectAPI.post_beta_tester_invitation(app_id: app.id, beta_tester_id: testeur.id) rescue UI.message("invitation déjà envoyée")
+        UI.success("testeur présent : invitation (re)envoyée")
+      end
+    rescue => e
+      UI.important("testeurs internes non configurés (le build est quand même envoyé) : #{e.message}")
+    end
   end
 end

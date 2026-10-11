@@ -3,7 +3,7 @@
 # Secrets à poser par RS-7 dans le dépôt (Settings › Secrets and variables › Actions), JAMAIS sur le Boxion ni dans un agent :
 #   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (le contenu du fichier .p8), APPLE_TEAM_ID
 #   signature : MATCH_PAT (jeton GitHub, Contents lecture/écriture sur J0bot/ploxi0n-certificats seulement) et MATCH_PASSWORD (la phrase qui
-#   chiffre les certificats) ; sans eux, la CI tente la signature automatique (qui exige un iPhone enregistré dans le compte)
+#   chiffre les certificats) ; TESTFLIGHT_EMAIL (l'Apple ID à inviter dans le groupe de testeurs internes) ; sans eux, la CI tente la signature automatique (qui exige un iPhone enregistré dans le compte)
 name: iOS TestFlight
 on:
   push:
@@ -54,6 +54,7 @@ jobs:
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          TESTFLIGHT_EMAIL: ${{ secrets.TESTFLIGHT_EMAIL }}
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: build-logs, path: ~/Library/Logs/gym, if-no-files-found: ignore }
