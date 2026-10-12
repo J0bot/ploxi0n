@@ -1,0 +1,13 @@
+ploxi0n met les ploxions du xerboxion sur ton iPhone : de petites apps qui tournent sur le téléphone, même en mode avion, et qui parlent à ton boxion quand tu es connecté.
+
+LE NATIF, PARTOUT
+Chaque ploxion utilise l'iPhone pour de vrai, sans être réécrit : le Taptic Engine, la position, les notifications, la dictée, les codes QR, le gyroscope, Bluetooth, NFC, le partage et le presse-papiers d'iOS.
+
+TES DONNÉES CHEZ TOI
+Tout reste sur le téléphone (chiffré par iOS quand il est verrouillé). Connecté à ton compte xerboxion.org, tes ploxions retrouvent leur historique ; hors ligne, une file envoie tout au retour.
+
+SANTÉ
+Pas, sommeil, cœur, entraînements, tes appareils : lus dans Apple Santé, sur le téléphone. Si tu le choisis, un résumé part sur ton propre boxion — jamais les mesures brutes, jamais de pub.
+
+ET AUSSI
+Widgets, Raccourcis et Siri (« Dis à ploxi0n… »), les vocaux transcrits sur le téléphone, les tsoins, Face ID par ploxion, le plein écran, les gestes des bords, un thème vivant qui suit le téléphone, un marketplace de ploxions.
