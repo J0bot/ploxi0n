@@ -26,7 +26,7 @@ async function sha256(texte) {
   return Array.from(new Uint8Array(h), b => b.toString(16).padStart(2, '0')).join('');
 }
 
-export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLocal = [], lireLocal = null, lireBionLocal = null }) {
+export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLocal = [], lireLocal = null, lireBionLocal = null, estAdmin = () => false }) {
   const NS = 'ploxions', META = 'marketplace';
   async function liste() { const l = await boxion.get(META, 'installes'); return Array.isArray(l) ? l : []; }
   async function garderListe(l) { await boxion.put(META, 'installes', [...new Set(l)]); }
@@ -73,8 +73,8 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
           const r = await http.get(source + '/px/registry.json', { headers: { Accept: 'application/json' } });
           if (r.status !== 200) throw new Error('registre : HTTP ' + r.status);
           const brut = JSON.parse(r.texte);
-          const items = (Array.isArray(brut) ? brut : brut.ploxions || brut.items || []).filter(p => p && p.id && p.hasScreen && p.enabled !== false && !p.admin && p.status === 'live')
-            .map(p => ({ id: p.id, nom: p.name || p.id, icone: p.icon || '▣', description: String(p.description || '').slice(0, 400), categorie: p.cat_label || 'Autres', cat_icone: p.cat_icon || '📦', compat: compat[p.id] || null, mtime: +p.mtime || 0, fournit: Array.isArray(p.provides) ? p.provides.slice(0, 8).map(String) : [] }));
+          const items = (Array.isArray(brut) ? brut : brut.ploxions || brut.items || []).filter(p => p && p.id && p.hasScreen && p.enabled !== false && (!p.admin || estAdmin()) && p.status === 'live')
+            .map(p => ({ id: p.id, nom: p.name || p.id, icone: p.icon || '▣', description: String(p.description || '').slice(0, 400), categorie: p.cat_label || 'Autres', cat_icone: p.cat_icon || '📦', compat: compat[p.id] || null, admin: !!p.admin, mtime: +p.mtime || 0, fournit: Array.isArray(p.provides) ? p.provides.slice(0, 8).map(String) : [] }));
           const c = { maj: new Date().toISOString(), source, items };
           await boxion.put(META, 'catalogue', c);
           return { ...c, horsLigne: false };

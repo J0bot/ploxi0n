@@ -21,7 +21,7 @@ import { brancherPlugions } from './natif/plugions.js';
 import { installerLecteur } from './natif/lecteur.js';
 import { creerHaptique } from './natif/haptique.js';
 
-const VERSION = '0.20.0';
+const VERSION = '0.21.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -78,7 +78,8 @@ async function demarrer() {
   const lireJson = async (u, defaut) => { try { return await (await fetch(u)).json(); } catch (e) { return defaut; } };
   const indexPack = await lireJson('/ploxions/index.json', { ploxions: [] }), pack = indexPack.ploxions || [];
   const compat = await lireJson('/marketplace/compat.json', {});
-  const depot = creerDepot({ boxion, http: creerHttp(window, enTetes), compat, packLocal: pack, lireLocal: async (id) => (await fetch('/ploxions/' + encodeURIComponent(id) + '/app.js')).text(),
+  let compteRef = null;   // le compte (plus bas) : admin → les ploxions admin dans le marketplace
+  const depot = creerDepot({ boxion, http: creerHttp(window, enTetes), estAdmin: () => !!(compteRef && compteRef.etat().admin), compat, packLocal: pack, lireLocal: async (id) => (await fetch('/ploxions/' + encodeURIComponent(id) + '/app.js')).text(),
     lireBionLocal: async (b) => { const r = await fetch('/bions/' + encodeURIComponent(b) + '.js'); if (!r.ok) throw new Error('bion absent'); return r.text(); } });
   // les ploxions de base (index.json « base » : bother me pour les testeurs) : installés une fois, au premier lancement ; retirables ensuite
   const deja = (await boxion.get('reglages', 'base-installes')) || [];
@@ -106,7 +107,8 @@ async function demarrer() {
     if (raccourcis) raccourcis.publier(liste).catch(() => {});   // l'app Raccourcis et Siri proposent les ploxions installés
   }
   const compte = creerCompte({ boxion, http: creerHttp(window) });
-  await compte.pret;
+  await compte.pret; compteRef = compte;
+  if (navigator.onLine !== false) compte.rafraichir().catch(() => {});   // le rang et « admin » à jour (un jeton expiré → déconnecté)
   const reglerModeConnecte = (v) => { if (v != null) { modeConnecte = !!v; boxion.put('reglages', 'mode-connecte', modeConnecte); } return modeConnecte; };
   const hud = creerHud({ compte, boxion, trouver: (id) => routeur && routeur.catalogue().find(p => p.id === id), modeConnecte: () => modeConnecte });
   await hud.pret;
@@ -143,6 +145,7 @@ async function demarrer() {
   brancherLiens({ routeur, compte, installer: (id) => routeurProxy.ouvrir(id) });   // une icône de l'écran d'accueil vers un ploxion absent : installé à la volée
   raccourcis = creerRaccourcis({ routeur, boxion });
   // les valeurs pour « Lire une valeur de ploxi0n » (Raccourcis, Siri ; les widgets ensuite) ; un ploxion publie les siennes (préfixe px.)
+  window.ploxi0nWidgets = { publier: () => publierValeurs(), etat: async () => { try { const { Preferences } = await import('@capacitor/preferences'); return JSON.parse((await Preferences.get({ key: 'ploxi0n.widgets-etat' })).value || 'null'); } catch (e) { return null; } } };
   window.jOSRaccourcis = { publierValeur: (cle, titre, valeur) => raccourcis.valeur('px.' + String(cle), titre, valeur) };
   async function publierValeurs() {
     const jour = new Date().toISOString().slice(0, 10), e = compte.etat();

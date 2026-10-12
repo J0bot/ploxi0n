@@ -42,24 +42,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     private func versLesWidgets() {
-        guard let g = UserDefaults(suiteName: "group.ch.j0bot.ploxi0n") else { return }
-        var change = false
+        // l'état de la copie, lisible par l'app (⚙ › À propos) : RS-7 12.10, les widgets restaient vides — on saura pourquoi
+        let ecrireEtat: ([String: Any]) -> Void = { etat in
+            if let d = try? JSONSerialization.data(withJSONObject: etat), let s = String(data: d, encoding: .utf8),
+               UserDefaults.standard.string(forKey: "CapacitorStorage.ploxi0n.widgets-etat") != s { UserDefaults.standard.set(s, forKey: "CapacitorStorage.ploxi0n.widgets-etat") }
+        }
+        guard let g = UserDefaults(suiteName: "group.ch.j0bot.ploxi0n") else { ecrireEtat(["groupe": false]); return }
+        let conteneur = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.ch.j0bot.ploxi0n") != nil
+        var change = false, tailles: [String: Int] = [:]
         for k in ["ploxi0n.epingles", "ploxi0n.valeurs"] {
             let v = UserDefaults.standard.string(forKey: "CapacitorStorage." + k)
+            tailles[k] = v?.count ?? -1
             if v != nil && g.string(forKey: k) != v { g.set(v, forKey: k); change = true }
         }
         if change { WidgetCenter.shared.reloadAllTimelines() }
+        ecrireEtat(["groupe": true, "conteneur": conteneur, "epingles": tailles["ploxi0n.epingles"] ?? -1, "valeurs": tailles["ploxi0n.valeurs"] ?? -1,
+                    "relu": g.string(forKey: "ploxi0n.epingles")?.count ?? -1, "le": Int(Date().timeIntervalSince1970)])
     }
 
-    func applicationWillResignActive(_ application: UIApplication) {
-        // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
-        // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
-    }
+    func applicationWillResignActive(_ application: UIApplication) { versLesWidgets() }
+    func applicationDidEnterBackground(_ application: UIApplication) { versLesWidgets() }
 
-    func applicationDidEnterBackground(_ application: UIApplication) {
-        // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
-        // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
-    }
+
 
     func applicationWillEnterForeground(_ application: UIApplication) {
         // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.

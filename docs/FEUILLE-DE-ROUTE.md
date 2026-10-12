@@ -39,7 +39,7 @@
 |---|---|---|
 | ✅ 0.6 | Se connecter avec son compte xerboxion.org (PKCE), bouton dans le HUD | |
 | ✅ 0.8 | Jetons d'app de 180 j (Sanctum lisait 30 **minutes**) | |
-| ⏭ ❓ | **Sign in with Apple** → un compte **bion** seulement | route labo qui vérifie le jeton d'Apple |
+| ✅ 0.21 | **Sign in with Apple** → un compte **bion** (labo : jeton Apple vérifié, signature JWKS, nonce ; mail déjà pris → 409) | |
 | ⏭ | Monter de rang : **code d'un xerion** (→ zion) ; **installer son boxion** (→ xeroction) | |
 | ⏭ | **L'icône qui évolue avec le rang** (icônes alternatives iOS : bion → … → xeroction) | |
 | 💭 | **L'app xeroction** : au rang xeroction, l'accueil montre tous les xers et le Nexus | |
@@ -55,7 +55,7 @@
 | ✅ 0.7 | Popularité = **heures du Nexus** (pas les vues), « zéro heure », « souvent utilisé avec » | |
 | ✅ 0.8 | Refait : vitrine, grille, A–Z, découvrir (glisser), à moi, fiche, recherche instantanée | |
 | ⏭ | « **Un xer de cette app** » : proposer le xer d'un ploxion (chaque ploxion devient un xerboxion) | |
-| ⏭ | Les ploxions **admin** visibles pour l'admin (pourriture-4…) | pourriture-4 reste personnel |
+| ✅ 0.21 | Les ploxions **admin** dans le marketplace quand on est admin (🛡) | pourriture-4 reste personnel |
 | ⏭ | Le **marketplace des raccourcis** : des recettes Raccourcis prêtes (liens iCloud) | plan-suite 13 |
 | 💭 | **Plusieurs sources** : le boxion de chaque xeroction du Nexus, après le banc de compatibilité | plan-suite 7 |
 | 💭 | **Umbrel** : une inspiration d'architecture et le terrain d'une collaboration future (docs/UMBREL.md) ; formats compatibles (7 types de widgets, manifestes) ; CasaOS / Runtipi (licences libres) comme sources possibles | RS-7 : « eux ont les avis des customers, nous un écosystème entier » |
@@ -125,6 +125,8 @@
 |---|---|---|
 | ✅ 0.3 | Banc iPhone (~60 sondes : capteurs, caméra, QR, voix, santé, NFC, Wi-Fi, BLE, Face ID…) | tout vert sauf WASM threads |
 | ✅ 0.4 | **Face ID** : verrous par ploxion, coffre | |
+| ✅ 0.21 | Face ID : chaque échec dit sa raison (iOS), « réessayer » | RS-7 : « Face ID ne fonctionne pas » |
+| ⏭ | **Le journal du mode test** : tout logger ; des modes de consentement (xerboxion : demander de faire un tsoin ; chill-tekk : un tampon envoyé seulement si on veut ; par ploxion : partager son journal au Nexus ou au chaoxion) | RS-7 12.10 |
 | ⏭ | **ultimate-bluetooth** sur iPhone (bluetooth-le en bion) | |
 | ⏭ | Santé (pas, sommeil) en bions lisibles par les ploxions | lecture seule, sur accord |
 | 💭 | NFC → tags qui ouvrent des ploxions ou lancent des tsoins (les **kions** dans le réel) | |

@@ -180,6 +180,12 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
       pageCourante = i; vibrer('page'); racine.querySelectorAll('.px-point').forEach((b, k) => b.classList.toggle('on', k === i));
     }, { passive: true });
   }
+  /** une bulle de message, quelques secondes (Face ID qui échoue, etc.) */
+  function signaler(texteMsg) {
+    let b = racine.querySelector('.px-bulle'); if (!b) { b = D.createElement('div'); b.className = 'px-bulle'; racine.appendChild(b); }
+    b.textContent = texteMsg; b.hidden = false; W.clearTimeout(b._t); b._t = W.setTimeout(() => { b.hidden = true; }, 4500);
+  }
+  const raisonFaceId = () => (verrou && verrou.derniereErreur && verrou.derniereErreur()) || 'raison inconnue';
   function demander(question, defaut) { try { return W.prompt(question, defaut); } catch (er) { return null; } }
   function ranger(id, quoi, donne) {
     const liste = quoi === 'page' ? 'pages' : 'dossiers';
@@ -228,7 +234,11 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
       if (m === 'ouvrir') return ouvrir(id);
       if (m === 'iphone') return ecranAccueil(id);
       if (m === 'epingler') { const c = hud.config(); c.epingles = c.epingles.includes(id) ? c.epingles.filter(x => x !== id) : [...c.epingles, id].slice(-4); const el = c.elements.find(x => x.k === 'epingles'); if (el) el.on = true; await hud.regler(c); return accueil(); }
-      if (m === 'verrou') { if (verrous.has(id)) { if (!(await verrou.ouvrir('Retirer le verrou de ' + (p.nom || id)))) return; verrous.delete(id); } else { if (!(await verrou.dispo()).ok) return; verrous.add(id); } garder(); return accueil(); }
+      if (m === 'verrou') {
+        if (verrous.has(id)) { if (!(await verrou.ouvrir('Retirer le verrou de ' + (p.nom || id)))) return signaler('🔒 Face ID : ' + raisonFaceId()); verrous.delete(id); }
+        else { const dsp = await verrou.dispo(); if (!dsp.ok) return signaler('🔒 Face ID indisponible : ' + (dsp.erreur || raisonFaceId())); if (!(await verrou.ouvrir('Verrouiller ' + (p.nom || id)))) return signaler('🔒 Face ID : ' + raisonFaceId()); verrous.add(id); signaler('🔒 ' + (p.nom || id) + ' ne s\'ouvre plus qu\'avec ton visage'); }
+        garder(); return accueil();
+      }
       if (m === 'retirer') { tuer(id); await retirer(id); return accueil(); }
     });
   }
@@ -255,6 +265,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (b.hasAttribute('data-sortir')) { dossierOuvert = null; return accueil(); }
     if (b.hasAttribute('data-dossier')) { dossierOuvert = +b.getAttribute('data-dossier'); return accueil(); }
     if (b.hasAttribute('data-retour')) return retour();
+    if (b.hasAttribute('data-reessayer')) return ouvrir(b.getAttribute('data-reessayer'));
     if (b.hasAttribute('data-minimiser')) return minimiser();
     if (b.hasAttribute('data-reprendre')) return ouvrir(b.getAttribute('data-reprendre'));
     if (b.hasAttribute('data-tuer')) { tuer(b.getAttribute('data-tuer')); return courant ? null : accueil(); }
@@ -290,8 +301,8 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     const bv = ecran.querySelector('[data-verrou]');
     if (bv) bv.onclick = async (e) => {
       e.stopPropagation();
-      if (verrous.has(id)) { if (!(await verrou.ouvrir('Retirer le verrou de ' + (p.nom || id)))) return; verrous.delete(id); }
-      else { if (!(await verrou.dispo()).ok) { bv.textContent = '⚠'; return; } verrous.add(id); }
+      if (verrous.has(id)) { if (!(await verrou.ouvrir('Retirer le verrou de ' + (p.nom || id)))) return signaler('🔒 Face ID : ' + raisonFaceId()); verrous.delete(id); }
+      else { const dsp = await verrou.dispo(); if (!dsp.ok) { bv.textContent = '⚠'; return signaler('🔒 Face ID indisponible : ' + (dsp.erreur || raisonFaceId())); } verrous.add(id); }
       garder(); bv.textContent = verrous.has(id) ? '🔒' : '🔓';
     };
   }
@@ -310,7 +321,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     const p = parId.get(id);
     if (courant && courant.id === id && !params) return true;
     if (verrous.has(id) && !(vivants.has(id)) && !(verrou && await verrou.ouvrir('Ouvrir ' + (p.nom || id)))) {
-      if (!courant) { racine.classList.add('px-mode-ploxion'); racine.classList.remove('px-mode-accueil'); ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">‹</button><span>🔒 ' + texte(p.nom || id) + '</span></div><p class="px-erreur">Ce ploxion ne s\'ouvre qu\'avec ton visage.</p>'; }
+      if (!courant) { racine.classList.add('px-mode-ploxion'); racine.classList.remove('px-mode-accueil'); ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">‹</button><span>🔒 ' + texte(p.nom || id) + '</span></div><p class="px-erreur">Ce ploxion ne s\'ouvre qu\'avec ton visage.<br><small>' + texte(raisonFaceId()) + '</small></p><p class="px-pad"><button class="px-modif" data-reessayer="' + texte(id) + '">réessayer</button></p>'; }
       return false;
     }
     // ouvert DEPUIS un ploxion : celui-ci reste vivant, en dessous (la pile) ; « ‹ » y reviendra

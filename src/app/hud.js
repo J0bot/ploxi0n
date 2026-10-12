@@ -58,12 +58,12 @@ export function creerHud({ W = globalThis.window, compte, boxion = null, trouver
     ouvrir() {
       const e = compte.etat();
       if (!e.connecte) {
-        feuille('<h2>Se connecter</h2><p>Relie ploxi0n à ton compte du xerboxion : tes ploxions connectés, tes fichiers, tes autres xers. Sans compte, tout reste sur ton téléphone.</p>'
+        feuille('<h2>Se connecter</h2><p>Relie ploxi0n à ton compte du xerboxion : tes ploxions connectés, tes fichiers, tes autres xers. Sans compte, tout reste sur ton téléphone.</p><p>Avec Apple : un nouveau compte <b>bion</b> (pour monter : le code d\'un xerion, ou installer ton boxion).</p>'
           + '<button class="p" data-a="xer">Avec mon compte xerboxion.org</button>'
           + '<button class="apple" data-a="apple">  Continuer avec Apple</button>'
           + '<button data-a="fermer">Plus tard</button>', {
           xer: () => compte.connecter(),
-          apple: async () => { throw new Error('bientôt : la création de compte avec Apple arrive'); },
+          apple: () => compte.connecterApple(),
           fermer: async () => {},
         });
       } else {

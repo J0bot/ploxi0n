@@ -1,6 +1,6 @@
 {
   "name": "ploxi0n",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "private": true,
   "type": "module",
   "description": "ploxi0n v1 : les ploxions du xerboxion sur iOS, 100 % hors ligne (Capacitor + boxion_local)",
@@ -13,9 +13,11 @@
     "extraire": "node tools/extraire-ploxions.mjs",
     "audit": "node tools/audit-ploxions.mjs",
     "test": "node --test tests/*.test.mjs",
-    "sync": "npx cap sync ios"
+    "sync": "npx cap sync ios",
+    "postinstall": "node tools/spm-capacitor8.mjs"
   },
   "dependencies": {
+    "@capacitor-community/apple-sign-in": "^7.1.0",
     "@capacitor-community/bluetooth-le": "^8.3.0",
     "@capacitor-community/sqlite": "^8.1.1",
     "@capacitor-community/text-to-speech": "^8.0.2",

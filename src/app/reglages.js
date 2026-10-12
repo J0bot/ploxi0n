@@ -102,10 +102,15 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         + section('donnees', 'Données', '<div class="bloc"><div class="l"><span>Réponses gardées pour le mode avion<small>' + nRoutes + ' route' + (nRoutes > 1 ? 's' : '') + '</small></span><button data-a="routes">vider</button></div>'
           + '<div class="l"><span>Réinitialiser les réglages<small>accueil, HUD, apparence, verrous… (tes ploxions, tes tsoins et ton compte restent)</small></span><button class="danger" data-a="reset">réinitialiser</button></div></div>')
         + section('apropos', 'À propos', '<div class="bloc"><div class="l"><span>ploxi0n ' + esc(version) + '<small>' + esc(W.navigator.onLine !== false ? 'en ligne' : 'hors ligne') + ' · cycle ' + (new Date().getFullYear() + 5000) + '</small></span></div>'
+          + '<div class="l"><span>▦ Widgets<small data-widgets-etat>…</small></span><button data-a="widgets">rafraîchir</button></div>'
           + '<div class="l"><span>⌨ Tester le clavier<small>si le clavier ne s\'ouvre pas : le rapport dit où ça casse</small></span><button class="p" data-a="clavier">tester</button></div>'
           + '<div class="l"><span>🧪 Banc iPhone</span><button data-ouvrir="banc">ouvrir</button></div><div class="l"><span>🐛 Bother me (un souci, une idée)</span><button data-ouvrir="bother">ouvrir</button></div></div>')
         + '<p class="msg" data-msg></p>';
       filtrer();
+      if (W.ploxi0nWidgets) W.ploxi0nWidgets.etat().then(e => { const el = zone.querySelector('[data-widgets-etat]'); if (!el) return;
+        el.textContent = !e ? 'pas encore copié (ouvre puis quitte l\'app)' : !e.groupe ? '⚠ App Group inaccessible pour l\'app' : (e.conteneur ? '' : '⚠ conteneur du groupe absent · ')
+          + 'épinglés ' + (e.epingles >= 0 ? e.epingles + ' car.' : 'jamais publiés') + ' · valeurs ' + (e.valeurs >= 0 ? e.valeurs + ' car.' : 'jamais publiées') + ' · relu ' + e.relu + ' · ' + (e.le ? new Date(e.le * 1000).toLocaleTimeString('fr-CH') : '');
+      }).catch(() => {});
     }
     function filtrer() {
       const t = norm(q).trim();
@@ -161,7 +166,8 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       const a = b.getAttribute('data-a'); if (!a) return;
       b.disabled = true;
       try {
-        if (a === 'clavier') { await testerClavier({ W, version }); }
+        if (a === 'widgets') { if (W.ploxi0nWidgets) { await W.ploxi0nWidgets.publier(); await new Promise(r => W.setTimeout(r, 700)); } await peindre(); msg('✓ republié : regarde tes widgets (iOS peut prendre quelques secondes)'); }
+        else if (a === 'clavier') { await testerClavier({ W, version }); }
         else if (a === 'notif') { await notifs.tester(); msg('✓ elle arrive dans 5 secondes'); }
         else if (a === 'apps') { if (W.jOSEcranAccueil) await W.jOSEcranAccueil(); }
         else if (a === 'connecter') await compte.connecter();

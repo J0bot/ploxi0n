@@ -50,6 +50,37 @@ export function creerCompte({ W = globalThis.window, boxion, http, source = SOUR
       etat = { connecte: true, ...r.data.compte }; signaler();
       return etat;
     },
+    /** SE CONNECTER AVEC APPLE (12.10) : la feuille native d'Apple ; un nonce aléatoire (son sha256 part chez Apple, le brut au labo, qui
+     *  vérifie que le jeton d'Apple est bien celui de CETTE demande) ; le labo crée un compte BION ou retrouve le sien (docs/dev/57) */
+    async connecterApple() {
+      if (!natif()) throw new Error('Se connecter avec Apple : sur l\'iPhone');
+      const a = new Uint8Array(32); W.crypto.getRandomValues(a);
+      const brut = Array.from(a, b => b.toString(16).padStart(2, '0')).join('');
+      const hache = Array.from(new Uint8Array(await W.crypto.subtle.digest('SHA-256', new TextEncoder().encode(brut))), b => b.toString(16).padStart(2, '0')).join('');
+      const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
+      const r = await SignInWithApple.authorize({ clientId: 'ch.j0bot.ploxi0n', redirectURI: source, scopes: 'email name', nonce: hache, state: brut.slice(0, 16) });
+      const x = (r && r.response) || {};
+      if (!x.identityToken) throw new Error('Apple n\'a pas donné de jeton');
+      const nom = [x.givenName, x.familyName].filter(Boolean).join(' ');
+      const rep = await poster('/api/app/apple', { identity_token: x.identityToken, nonce: brut, nom });
+      if (rep.status !== 200 || !rep.data.jeton) throw new Error((rep.data && rep.data.message) || 'connexion Apple refusée');
+      await boxion.put('compte', 'courant', { jeton: rep.data.jeton, compte: rep.data.compte, le: new Date().toISOString(), via: 'apple' });
+      await boxion.append('tsoins', { kind: 'compte', action: 'connecter-apple', palier: rep.data.compte && rep.data.compte.palier });
+      etat = { connecte: true, ...rep.data.compte }; signaler();
+      return etat;
+    },
+    /** le compte vu par le labo (rang, admin) : au démarrage, en ligne ; un jeton révoqué ou expiré → déconnecté */
+    async rafraichir() {
+      const c = await boxion.get('compte', 'courant'); if (!c || !c.jeton) return etat;
+      try {
+        let r;
+        if (natif()) { const { CapacitorHttp } = await import('@capacitor/core'); const x = await CapacitorHttp.get({ url: source + '/api/app/moi', headers: { Accept: 'application/json', Authorization: 'Bearer ' + c.jeton } }); r = { status: x.status, data: typeof x.data === 'string' ? JSON.parse(x.data || '{}') : x.data }; }
+        else { const x = await W.fetch(source + '/api/app/moi', { headers: { Accept: 'application/json', Authorization: 'Bearer ' + c.jeton } }); r = { status: x.status, data: await x.json().catch(() => ({})) }; }
+        if (r.status === 401) { await boxion.del('compte', 'courant'); etat = { connecte: false }; signaler(); return etat; }
+        if (r.status === 200 && r.data.compte) { await boxion.put('compte', 'courant', { ...c, compte: r.data.compte }); etat = { connecte: true, ...r.data.compte }; signaler(); }
+      } catch (e) { /* hors ligne : on garde ce qu'on sait */ }
+      return etat;
+    },
     async jeton() { const c = await boxion.get('compte', 'courant'); return c ? c.jeton : null; },
     async deconnecter() {
       const c = await boxion.get('compte', 'courant');

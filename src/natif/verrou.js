@@ -12,16 +12,22 @@ export function creerVerrou({ W = globalThis.window, charger = () => import('@ca
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
   async function plugin() { return (await charger()).NativeBiometric; }
   const TYPES = { 1: 'touchid', 2: 'faceid', 7: 'code' };
+  let derniere = null;   // la dernière erreur d'iOS, telle quelle (RS-7 12.10 : « Face ID ne fonctionne pas » — elle s'affiche désormais)
+  const noter = (e) => { derniere = (e && (e.message || e.code || e.errorMessage)) ? String(e.message || e.errorMessage || e.code) + (e.code && e.message ? ' (' + e.code + ')' : '') : String(e); return derniere; };
   return {
+    derniereErreur: () => derniere,
     async dispo() {
-      if (!natif()) return { ok: false, type: null };
-      const r = await (await plugin()).isAvailable({ useFallback: true });
-      return { ok: !!r.isAvailable, type: TYPES[r.biometryType] || (r.deviceIsSecure ? 'code' : null) };
+      if (!natif()) { derniere = 'Face ID : seulement sur l\'iPhone'; return { ok: false, type: null, erreur: derniere }; }
+      try {
+        const r = await (await plugin()).isAvailable({ useFallback: true });
+        if (!r.isAvailable) noter({ message: 'Face ID indisponible', code: r.errorCode });
+        return { ok: !!r.isAvailable, type: TYPES[r.biometryType] || (r.deviceIsSecure ? 'code' : null), erreur: r.isAvailable ? null : derniere };
+      } catch (e) { return { ok: false, type: null, erreur: noter(e) }; }
     },
     async ouvrir(raison = 'Ouvrir dans ploxi0n') {
       if (!natif()) return false;
-      try { await (await plugin()).verifyIdentity({ reason: raison, title: 'ploxi0n', useFallback: true, maxAttempts: 3 }); return true; }
-      catch (e) { return false; }
+      try { await (await plugin()).verifyIdentity({ reason: raison, title: 'ploxi0n', useFallback: true, maxAttempts: 3 }); derniere = null; return true; }
+      catch (e) { noter(e); return false; }
     },
     async garder(cle, secret) {
       if (!natif()) throw new Error('Face ID : iPhone seulement');
