@@ -32,6 +32,11 @@
     #px-boot .log b{font-weight:400;color:#3a3050;min-width:4.6em;text-align:right;flex:none}
     #px-boot .log i{font-style:normal;overflow:hidden;text-overflow:ellipsis}
     #px-boot .v{margin-top:6px;font-size:10px;color:#3a3050;letter-spacing:.12em}
+    #px-boot .sos{display:none;width:100%;max-width:440px;margin-top:10px;gap:8px;flex-wrap:wrap}
+    #px-boot.bloque .sos{display:flex}
+    #px-boot .sos p{width:100%;margin:0 0 4px;font-size:12px;color:#e8a0b8;text-align:center}
+    #px-boot .sos button{flex:1;min-height:50px;border-radius:13px;border:2px solid #3a3050;background:#151021;color:#ddd6ea;font:700 14px -apple-system,system-ui,sans-serif}
+    #px-boot .sos button.p{background:#a597cf;border-color:#a597cf;color:#0d0a16}
     @media (prefers-reduced-motion:no-preference){ #px-boot .coin{animation:pxb 1.6s ease-in-out infinite} }
     @keyframes pxb{0%,100%{opacity:.3}50%{opacity:1}}
   </style>
@@ -54,6 +59,7 @@
     <div class="e" id="px-boot-e">éveil</div>
     <div class="astuce" id="px-boot-a"></div>
     <div class="log" id="px-boot-l" aria-live="polite"></div>
+    <div class="sos"><p id="px-boot-sos"></p><button data-sos="recharger">recharger</button><button class="p" data-sos="sur">mode sûr</button><button data-sos="journal">copier le journal</button></div>
     <div class="v" id="px-boot-v"></div>
   </div>
   <script>
@@ -61,7 +67,7 @@
     // de chargement qui fait un carré entier ») : la barre fait le tour du carré ; chaque étape s'inscrit au journal avec son temps
     // (+ ms depuis l'ouverture) ; une astuce change toutes les 2,5 s. window.__boot(pct, étape) · __bootLog(texte) · __bootFin().
     (function () {
-      var t0 = (window.performance && performance.now) ? performance.now() : Date.now(), dernier = t0, p = 0, journal = [];
+      var t0 = (window.performance && performance.now) ? performance.now() : Date.now(), dernier = t0, vu = t0, p = 0, journal = [], fini = false;
       var r = document.getElementById('px-boot-r'), c = document.getElementById('px-boot-c'), pc = document.getElementById('px-boot-p'),
           e = document.getElementById('px-boot-e'), l = document.getElementById('px-boot-l'), a = document.getElementById('px-boot-a');
       var maintenant = function () { return (window.performance && performance.now) ? performance.now() : Date.now(); };
@@ -71,6 +77,7 @@
         var n = maintenant(), ligne = { t: Math.round(n - t0), d: Math.round(n - dernier), x: String(texte) }; dernier = n; journal.push(ligne);
         if (!l) return; var div = document.createElement('div'); div.innerHTML = '<b></b><i></i>'; div.firstChild.textContent = '+' + ligne.t + ' ms'; div.lastChild.textContent = ligne.x + (ligne.d > 150 ? '  · ' + ligne.d + ' ms' : '');
         l.appendChild(div); while (l.children.length > 8) l.removeChild(l.firstChild);
+        vu = n; try { localStorage.setItem('ploxi0n.boot-journal', JSON.stringify(journal.slice(-40))); } catch (e2) { /* */ }
       };
       window.__boot = function (pct, etape) {
         if (pct > p) { p = Math.min(100, pct); if (r) r.setAttribute('stroke-dashoffset', String(100 - p)); if (c) point(p / 100); if (pc) pc.textContent = Math.round(p) + ' %'; }
@@ -82,7 +89,20 @@
         'Fichiers › Sur mon iPhone › ploxi0n : ton dossier', '⚙ › Apparence : ton fond d\'écran', '▁ minimise, ⧉ bascule, ‹ revient', 'chaque ploxion a sa vibration d\'ouverture'];
       var ia = Math.floor(Math.random() * ASTUCES.length), astuce = function () { if (a) a.textContent = ASTUCES[ia++ % ASTUCES.length]; };
       astuce(); var minuteAstuce = setInterval(astuce, 2500);
-      window.__bootFin = function () { var b = document.getElementById('px-boot'); if (!b || b.classList.contains('fin')) return; window.__boot(100, 'prêt'); clearInterval(minuteAstuce); b.classList.add('fin'); setTimeout(function () { b.remove(); }, 350); };
+      // LE CHIEN DE GARDE (RS-7 12.10 : « ça reste systématiquement bloqué ») : rien de neuf depuis 6 s → dire où, et trois issues
+      var garde = setInterval(function () {
+        if (fini) return clearInterval(garde);
+        if (maintenant() - vu > 6000) { var b = document.getElementById('px-boot'); if (b && !b.classList.contains('bloque')) { b.classList.add('bloque');
+          var der = journal[journal.length - 1]; document.getElementById('px-boot-sos').textContent = '⚠ bloqué depuis 6 s après « ' + (der ? der.x : '?') + ' »'; } }
+      }, 1000);
+      document.addEventListener('click', function (ev) {
+        var k = ev.target && ev.target.getAttribute && ev.target.getAttribute('data-sos'); if (!k) return;
+        if (k === 'recharger') location.reload();
+        if (k === 'sur') { try { localStorage.setItem('ploxi0n.mode-sur-js', '1'); } catch (e) { /* */ } location.reload(); }
+        if (k === 'journal') { var t = 'ploxi0n ' + (document.getElementById('px-boot-v').textContent || '') + ' · ' + navigator.userAgent + '\n' + journal.map(function (x) { return '+' + x.t + ' ms (' + x.d + ') ' + x.x; }).join('\n');
+          try { navigator.clipboard.writeText(t).then(function () { ev.target.textContent = '✓ copié'; }); } catch (e) { ev.target.textContent = '⚠'; } }
+      });
+      window.__bootFin = function () { fini = true; var b = document.getElementById('px-boot'); if (!b || b.classList.contains('fin')) return; window.__boot(100, 'prêt'); clearInterval(minuteAstuce); b.classList.add('fin'); setTimeout(function () { b.remove(); }, 350); };
       setTimeout(function () { window.__bootLog('⚠ plus de 20 s : on ouvre quand même'); window.__bootFin(); }, 20000);
       window.__bootLog('la page est là');
     })();

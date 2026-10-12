@@ -4,6 +4,9 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.40.0', titre: 'Plus jamais coincé au démarrage', points: [
+    '🛟 Si le chargement ne bouge plus pendant 6 s : il dit où il est bloqué, et propose recharger, mode sûr (sans les ajouts lourds), ou copier le journal.',
+  ] },
   { v: '0.39.0', titre: 'Le démarrage ne bloque plus', points: [
     '🩹 Corrigé : l\'app pouvait rester bloquée à « les ploxions de base » sur un réseau faible (un fichier de l\'app partait sur internet, sans délai).',
   ] },

@@ -36,7 +36,7 @@ import { creerFond } from './app/fond.js';
 import { creerDossier } from './natif/dossier.js';
 import { creerMouvement } from './app/mouvement.js';
 
-const VERSION = '0.39.0';
+const VERSION = '0.40.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -69,7 +69,13 @@ function clavierAuToucher() {
 
 const boot = (p, t) => { try { window.__boot && window.__boot(p, t); } catch (e) { /* */ } };
 const bootLog = (t) => { try { window.__bootLog && window.__bootLog(t); } catch (e) { /* */ } };
+// LE MODE SÛR DU DÉMARRAGE (RS-7 12.10 : « ça reste systématiquement bloqué ») : demandé par l'écran de chargement (bloqué 6 s → « mode sûr »)
+// → ce lancement-ci SANS le fond photo, le thème vivant, la reprise de session, la barre du haut, le dossier Fichiers ni les notifications
+// (les ajouts récents et lourds) ; une seule fois : le lancement suivant réessaie tout.
+let modeSurJs = false;
+try { modeSurJs = localStorage.getItem('ploxi0n.mode-sur-js') === '1'; localStorage.removeItem('ploxi0n.mode-sur-js'); } catch (e) { /* */ }
 async function demarrer() {
+  if (modeSurJs) bootLog('🛟 mode sûr : sans fond photo, thème vivant, session, barre du haut, dossier, notifications');
   boot(8, 'le clavier, l\'écran');
   try { document.getElementById('px-boot-v').textContent = 'v' + VERSION.replace(/\.0$/, ''); } catch (e) { /* */ }
   let compteRef = null;   // le compte (plus bas) : admin → les ploxions admin du marketplace ; connecté → jOSBoxion sur le boxion
@@ -84,8 +90,8 @@ async function demarrer() {
   const prefs = creerPrefs({ boxion }); await prefs.pret; prefs.appliquer();   // l'apparence avant le premier dessin
   boot(16, 'réglages · apparence');
   // 🖼 le fond d'écran (photo ou motif gravé), avant le premier dessin aussi
-  const fond = creerFond({ boxion, vibrer: (x) => { try { window.jOSNatif && window.jOSNatif.vibrer && window.jOSNatif.vibrer(x); } catch (e) { /* */ } } }); await fond.pret; window.ploxi0nFond = fond;
-  boot(19, 'fond : ' + fond.reglage().type);
+  const fond = modeSurJs ? null : creerFond({ boxion, vibrer: (x) => { try { window.jOSNatif && window.jOSNatif.vibrer && window.jOSNatif.vibrer(x); } catch (e) { /* */ } } }); if (fond) { await fond.pret; window.ploxi0nFond = fond; }
+  boot(19, 'fond : ' + (fond ? fond.reglage().type : 'sauté (mode sûr)'));
   // le plein écran complet : la barre d'état cachée (StatusBar) ; l'indicateur d'accueil et les bords haut/bas (PloxionVC, natif, lit la préférence)
   async function pleinEcran(p) {
     if (!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) return;
@@ -249,9 +255,9 @@ async function demarrer() {
   const barreHaut = creerBarreHaut({ boxion, compte, vibrer: (x) => vibrer(x), actif: () => { const q = prefs.lire(); return !!q.pleinEcran && q.barreHaut !== false; },
     courant: () => { const c = routeur.courant(); return c ? ((routeur.catalogue().find(p => p.id === c) || {}).nom || c) : null; },
     ouverts: () => routeur.vivants().length + routeur.endormis().length });
-  barreHaut.installer(document.body);
+  if (!modeSurJs) barreHaut.installer(document.body);
   // 🌀 le thème vivant : il suit le gyroscope et l'accéléromètre (seulement à l'accueil, visible, hors Calme)
-  creerMouvement({ prefs, racine });
+  if (!modeSurJs) creerMouvement({ prefs, racine });
   prefs.surChangement(() => barreHaut.mesurer());
   window.ploxi0nBarreHaut = barreHaut;
   const rafraichir = () => { if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); };
@@ -341,7 +347,7 @@ async function demarrer() {
   if (id && routeur.connait(id)) await routeur.ouvrir(id);
   else {
     // la session d'avant (fermée, tuée par iOS, plantée) : le ploxion de devant revient ; après un plantage au lancement, tout dort 💤
-    const sess = prefs.lire().reprendre !== false ? await boxion.get('reglages', 'session').catch(() => null) : null;
+    const sess = !modeSurJs && prefs.lire().reprendre !== false ? await boxion.get('reglages', 'session').catch(() => null) : null;
     if (sess && Array.isArray(sess.vivants) && sess.vivants.length) {
       await routeur.restaurer(sess, { devant: plantesAvant === 0 }).catch(() => routeur.accueil());
       if (plantesAvant > 0) { const b = document.createElement('div'); b.className = 'px-bulle'; b.textContent = '💤 tes ' + sess.vivants.length + ' ploxion(s) d\'avant dorment dans ⧉ (glisse un bord pour y revenir)'; racine.appendChild(b); setTimeout(() => b.remove(), 6000); }
@@ -354,8 +360,9 @@ async function demarrer() {
   // 📁 le dossier « Sur mon iPhone › ploxi0n » (l'app Fichiers) : en différé au lancement, puis à chaque passage en arrière-plan
   const dossier = creerDossier({ boxion, depot });
   window.jOSNatif.fichiers = dossier.api;
-  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) setTimeout(() => dossier.synchroniser().catch(() => {}), 4000);
-  notifs.demarrer();
+  if (!modeSurJs && window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) setTimeout(() => dossier.synchroniser().catch(() => {}), 4000);
+  if (!modeSurJs) notifs.demarrer();
+  else { const b = document.createElement('div'); b.className = 'px-bulle'; b.textContent = '🛟 mode sûr pour ce lancement (le prochain réessaie tout). S\'il s\'est ouvert : le coupable est le fond photo, le thème vivant ou la session — dis-le à bother me.'; racine.appendChild(b); setTimeout(() => b.remove(), 9000); }
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
     import('@capacitor/app').then(({ App }) => App.addListener('appStateChange', (e) => { if (e.isActive) { raccourcis.recevoir().catch(() => {}); notifs.demarrer(); } else { notifs.arreter(); publierValeurs().catch(() => {}); dossier.synchroniser().catch(() => {}); } })).catch(() => {});
   }
