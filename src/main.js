@@ -36,7 +36,7 @@ import { creerFond } from './app/fond.js';
 import { creerDossier } from './natif/dossier.js';
 import { creerMouvement } from './app/mouvement.js';
 
-const VERSION = '0.38.0';
+const VERSION = '0.39.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -161,11 +161,13 @@ async function demarrer() {
     return URL.createObjectURL(await r.blob());
   } });
   window.jOSVerrou = creerVerrou();   // Face ID pour les ploxions
-  const lireJson = async (u, defaut) => { try { return await (await fetch(u)).json(); } catch (e) { return defaut; } };
+  // les fichiers de l'app : le fetch d'origine (jamais le relais) et jamais plus de 3 s (le démarrage n'attend jamais le réseau)
+  const sous3s = (pr) => Promise.race([pr, new Promise((_, ko) => setTimeout(() => ko(new Error('délai')), 3000))]);
+  const lireJson = async (u, defaut) => { try { return await sous3s(fetchOrigine(u).then(r => r.json())); } catch (e) { bootLog('⚠ ' + u + ' : ' + e.message); return defaut; } };
   const indexPack = await lireJson('/ploxions/index.json', { ploxions: [] }), pack = indexPack.ploxions || [];
   const compat = await lireJson('/marketplace/compat.json', {});
   const depot = creerDepot({ boxion, http: creerHttp(window, enTetes), estAdmin: () => !!(compteRef && compteRef.etat().admin), compat, packLocal: pack, lireLocal: async (id) => (await fetch('/ploxions/' + encodeURIComponent(id) + '/app.js')).text(),
-    lireBionLocal: async (b) => { const r = await fetch('/bions/' + encodeURIComponent(b) + '.js'); if (!r.ok) throw new Error('bion absent'); return r.text(); } });
+    lireBionLocal: async (b) => { const r = await fetchOrigine('/bions/' + encodeURIComponent(b) + '.js'); if (!r.ok) throw new Error('bion absent'); return r.text(); } });
   // les ploxions de base (index.json « base » : bother me pour les testeurs) : installés une fois, au premier lancement ; retirables ensuite
   const deja = (await boxion.get('reglages', 'base-installes')) || [];
   for (const id of (indexPack.base || []).filter(b => !deja.includes(b))) {
