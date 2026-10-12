@@ -348,3 +348,18 @@ test('🛟 la garde du boxion local : un appel qui ne répond plus ne fige rien 
   assert.ok(Date.now() - t0 < 60 * 2 + 40 * 2 + 200, 'après 2 lents, les suivants vont plus vite');
   assert.equal(g.lents().length, 4); assert.match(lents[0], /get a\/k/);
 });
+
+test('🧊 le gel du démarrage (0.37→0.43) : CoreMotion refusé ne boucle plus (les minuteurs tournent, une seule tentative)', async () => {
+  const { creerMouvement } = await import('../src/app/mouvement.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    let n = 0;
+    const plugin = { addListener: async () => { n++; return { remove: async () => {} }; }, mouvementDebut: async () => { throw new Error('refusé'); }, mouvementFin: async () => {} };
+    const racine = W.document.getElementById('ploxi0n'); racine.classList.add('px-mode-accueil');
+    const m = creerMouvement({ W, prefs: { lire: () => ({}), surChangement: () => {} }, plugin, racine });
+    await new Promise(ok => setTimeout(ok, 100));   // ce minuteur ne tournait JAMAIS (boucle de micro-tâches)
+    assert.equal(n, 1, 'une seule tentative'); assert.equal(m.actif(), false);
+    racine.classList.replace('px-mode-accueil', 'px-mode-ploxion'); racine.classList.replace('px-mode-ploxion', 'px-mode-accueil');
+    await new Promise(ok => setTimeout(ok, 30)); assert.equal(n, 1, 'un échec est définitif pour la session');
+  } finally { p.fin(); }
+});

@@ -12,10 +12,10 @@ const borne = (x) => Math.max(-1, Math.min(1, x));
 export function creerMouvement({ W = globalThis.window, prefs, plugin = null, racine = null }) {
   const D = W.document, h = D.documentElement;
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
-  let P = plugin, ecoute = null, actif = false, b = null, s = { x: 0, y: 0 }, dernier = { x: 0, y: 0 }, chocT = 0;
+  let P = plugin, ecoute = null, actif = false, echec = false, enCours = false, b = null, s = { x: 0, y: 0 }, dernier = { x: 0, y: 0 }, chocT = 0;
   const veut = () => {
     const p = prefs.lire();
-    if (p.themeVivant === false || p.calme || D.hidden) return false;
+    if (echec || p.themeVivant === false || p.calme || D.hidden) return false;
     if (!P && !natif()) return false;
     const R = racine || D.getElementById('ploxi0n');
     return !R || R.classList.contains('px-mode-accueil') || h.classList.contains('px-fond-partout');
@@ -35,14 +35,18 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
     const a = Math.hypot(+m.ax || 0, +m.ay || 0, +m.az || 0), t = Date.now();
     if (a > 0.9 && t - chocT > 900) { chocT = t; h.classList.remove('px-choc'); void h.offsetWidth; h.classList.add('px-choc'); W.setTimeout(() => h.classList.remove('px-choc'), 320); }
   }
+  // (0.44) LE GEL DU DÉMARRAGE (0.37 → 0.43, RS-7 sur iPhone ET iPad) : un échec ici retirait px-vivant de <html>, que ce module observait
+  // lui-même → suivre() → redémarrer → échouer → retirer… une boucle de micro-tâches infinie : plus aucun dessin, plus aucun minuteur.
+  // Désormais : <html> n'est plus observé, un échec est définitif pour la session, jamais deux démarrages en même temps.
   async function demarrer() {
-    if (actif) return; actif = true; b = null;
-    h.classList.add('px-vivant');
+    if (actif || enCours || echec) return; enCours = true; b = null;
     try {
       if (!P) P = (await import('@capacitor/core')).registerPlugin('PloxiApple');
       ecoute = await P.addListener('mouvement', mesure);
       await P.mouvementDebut({ hz: 30 });
-    } catch (e) { actif = false; h.classList.remove('px-vivant'); }
+      actif = true; h.classList.add('px-vivant');
+    } catch (e) { echec = true; try { if (ecoute) await ecoute.remove(); } catch (e2) { /* */ } ecoute = null; }
+    finally { enCours = false; }
   }
   async function arreter() {
     if (!actif) return; actif = false;
@@ -54,7 +58,6 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
   prefs.surChangement(suivre);
   const R = racine || D.getElementById('ploxi0n');
   if (R) new W.MutationObserver(suivre).observe(R, { attributes: true, attributeFilter: ['class'] });
-  new W.MutationObserver(suivre).observe(h, { attributes: true, attributeFilter: ['class'] });
   suivre();
   return { mesure, demarrer, arreter, actif: () => actif, suivre };
 }
