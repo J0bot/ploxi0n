@@ -133,6 +133,19 @@ struct ChercherPloxion: AppIntent {
 }
 
 @available(iOS 16.0, *)
+struct CommandePloxi0n: AppIntent {
+    // « Dis à ploxi0n … » (12.10) : Siri demande la commande, on la dicte ; l'app l'exécute (ouvre X, cherche X, note X, accueil…)
+    static var title: LocalizedStringResource = "Dire à ploxi0n"
+    static var description = IntentDescription("Une phrase pour ploxi0n : « ouvre stremio », « cherche météo », « note … », « accueil ».")
+    static var openAppWhenRun: Bool = true
+    @Parameter(title: "Commande") var commande: String
+    @MainActor func perform() async throws -> some IntentResult {
+        ecrire("ploxi0n.commande", commande)
+        return .result()
+    }
+}
+
+@available(iOS 16.0, *)
 struct OuvrirPloxi0n: AppIntent {
     static var title: LocalizedStringResource = "Ouvrir ploxi0n"
     static var openAppWhenRun: Bool = true
@@ -145,6 +158,7 @@ struct RaccourcisPloxi0n: AppShortcutsProvider {
         AppShortcut(intent: OuvrirPloxion(), phrases: ["Ouvre \(\.$ploxion) dans \(.applicationName)", "Ouvre \(\.$ploxion) avec \(.applicationName)"],
                     shortTitle: "Ouvrir un ploxion", systemImageName: "square.grid.2x2")
         AppShortcut(intent: NoterTsoin(), phrases: ["Note un tsoin dans \(.applicationName)"], shortTitle: "Noter un tsoin", systemImageName: "hourglass")
+        AppShortcut(intent: CommandePloxi0n(), phrases: ["Dis à \(.applicationName)", "Demande à \(.applicationName)", "\(.applicationName) commande"], shortTitle: "Dire à ploxi0n", systemImageName: "waveform")
         AppShortcut(intent: LireValeur(), phrases: ["Lis une valeur de \(.applicationName)", "Que dit \(.applicationName)"], shortTitle: "Lire une valeur", systemImageName: "text.bubble")
         AppShortcut(intent: ChercherPloxion(), phrases: ["Cherche un ploxion dans \(.applicationName)"], shortTitle: "Chercher un ploxion", systemImageName: "magnifyingglass")
         AppShortcut(intent: OuvrirPloxi0n(), phrases: ["Ouvre \(.applicationName)"], shortTitle: "Ouvrir ploxi0n", systemImageName: "diamond")

@@ -21,8 +21,9 @@ import { brancherPlugions } from './natif/plugions.js';
 import { installerLecteur } from './natif/lecteur.js';
 import { creerHaptique } from './natif/haptique.js';
 import { installerImages } from './natif/images.js';
+import { installerClavierIos, barreClavier, comprendre } from './natif/clavier-ios.js';
 
-const VERSION = '0.23.0';
+const VERSION = '0.24.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -57,6 +58,7 @@ async function demarrer() {
   garderViewport();
   clavierNatif();
   clavierAuToucher();
+  installerClavierIos({ W: window });   // les bons attributs pour le clavier d'iOS (dictée, trousseau, codes SMS, Entrée)
   const racine = document.getElementById('ploxi0n');
   const boxion = await ouvrirBoxionLocal();
   const prefs = creerPrefs({ boxion }); await prefs.pret; prefs.appliquer();   // l'apparence avant le premier dessin
@@ -67,6 +69,7 @@ async function demarrer() {
     try { const { StatusBar } = await import('@capacitor/status-bar'); if (p.pleinEcran) await StatusBar.hide(); else await StatusBar.show(); } catch (e) { /* */ }
   }
   pleinEcran(prefs.lire()); prefs.surChangement(pleinEcran);
+  barreClavier(prefs.lire().barreClavier !== false); prefs.surChangement((p) => barreClavier(p.barreClavier !== false));
   installerJosNatif(window);   // ⚡ le bion natif : toutes les capacités de l'iPhone, pour tous les ploxions
   // l'haptique de l'app (ouvrir, revenir, minimiser, les bords, les pages…) : par jOSNatif, coupée dans ⚙ › Apparence
   // 🎞 le lecteur natif : chaque <video>/<audio>/<iframe YouTube> des ploxions (écran verrouillé, AirPlay, PiP, YouTube par https, haptique du son)
@@ -179,7 +182,24 @@ async function demarrer() {
   };
   window.ploxi0n = { boxion, shim, routeur, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte };
   brancherLiens({ routeur, compte, installer: (id) => routeurProxy.ouvrir(id) });   // une icône de l'écran d'accueil vers un ploxion absent : installé à la volée
-  raccourcis = creerRaccourcis({ routeur, boxion });
+  // « Dis à ploxi0n … » (Siri, la dictée) : une phrase → une action
+  const norm = (x) => String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  async function commande(texte) {
+    const c = comprendre(texte);
+    await boxion.append('tsoins', { kind: 'action', k: 'siri', d: String(texte).slice(0, 300), action: c.action, source: 'siri' }).catch(() => {});
+    if (c.action === 'ouvrir') {
+      const q = norm(c.quoi), l = routeur.catalogue();
+      const p = l.find(x => norm(x.nom) === q || norm(x.id) === q) || l.find(x => norm(x.nom).startsWith(q)) || l.find(x => norm(x.nom).includes(q) || norm(x.id).includes(q));
+      if (p) return routeur.ouvrir(p.id);
+      return routeur.ouvrir('marketplace', { chercher: '1', q: c.quoi });
+    }
+    if (c.action === 'chercher') return routeur.ouvrir('marketplace', { chercher: '1', q: c.quoi });
+    if (c.action === 'noter') { await boxion.append('tsoins', { kind: 'action', k: 'raccourci', d: c.quoi.slice(0, 500), source: 'siri' }); vibrer('succes'); return true; }
+    if (c.action === 'accueil') return routeur.accueil();
+    if (c.action === 'minimiser') return routeur.minimiser();
+  }
+  window.ploxi0nCommande = commande;
+  raccourcis = creerRaccourcis({ routeur, boxion, commande });
   // les valeurs pour « Lire une valeur de ploxi0n » (Raccourcis, Siri ; les widgets ensuite) ; un ploxion publie les siennes (préfixe px.)
   window.ploxi0nWidgets = { publier: () => publierValeurs(), etat: async () => { try { const { Preferences } = await import('@capacitor/preferences'); return JSON.parse((await Preferences.get({ key: 'ploxi0n.widgets-etat' })).value || 'null'); } catch (e) { return null; } } };
   window.jOSRaccourcis = { publierValeur: (cle, titre, valeur) => raccourcis.valeur('px.' + String(cle), titre, valeur) };

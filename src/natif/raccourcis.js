@@ -3,7 +3,7 @@
 //   recevoir()       au lancement et à chaque retour au premier plan : ouvre le ploxion demandé, verse les tsoins notés par raccourci,
 //                    « Envoyer à un ploxion » (l'ouvre, puis jOSPorts.emit(id, port, texte)), « Chercher un ploxion » (le marketplace)
 //   valeur(cle, titre, valeur)  une valeur pour « Lire une valeur de ploxi0n » (et les widgets) ; les ploxions : jOSRaccourcis.publierValeur
-export function creerRaccourcis({ W = globalThis.window, routeur, boxion, charger = () => import('@capacitor/preferences') } = {}) {
+export function creerRaccourcis({ W = globalThis.window, routeur, boxion, commande = null, charger = () => import('@capacitor/preferences') } = {}) {
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
   async function P() { return (await charger()).Preferences; }
   const valeurs = {};
@@ -32,6 +32,8 @@ export function creerRaccourcis({ W = globalThis.window, routeur, boxion, charge
           await boxion.append('tsoins', { kind: 'action', k: 'raccourci-envoyer', d: m.id + '.' + port, source: 'raccourci' });
         } catch (er) { /* illisible : ignoré */ }
       }
+      const cmd = (await Pr.get({ key: 'ploxi0n.commande' })).value;
+      if (cmd) { await Pr.remove({ key: 'ploxi0n.commande' }); if (commande) await commande(cmd); }
       const q = (await Pr.get({ key: 'ploxi0n.chercher' })).value;
       if (q) { await Pr.remove({ key: 'ploxi0n.chercher' }); if (routeur.connait('marketplace')) await routeur.ouvrir('marketplace', { chercher: '1', q: q.trim() }); }
     },

@@ -516,3 +516,22 @@ test('le clavier natif gagne : un bion qui pose inputmode="none" est défait ; j
   const d = creerDepot({ boxion, http: s.http }); await d.installer('chat');
   assert.ok(!demandes.some(u => u.includes('jOSKeyboard')), 'la version web n\'est jamais demandée');
 });
+
+test('le clavier d\'iOS : les bons attributs selon le champ ; Siri : une phrase → une action', async () => {
+  const { regler, comprendre } = await import('../src/natif/clavier-ios.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    const f = (html) => { const d = W.document.createElement('div'); d.innerHTML = html; const el = d.firstElementChild; regler(el); return el; };
+    const mdp = f('<input type="password">'); assert.equal(mdp.getAttribute('autocomplete'), 'current-password');
+    const mail = f('<input name="email">'); assert.equal(mail.getAttribute('inputmode'), 'email'); assert.equal(mail.getAttribute('autocapitalize'), 'off');
+    const code = f('<input placeholder="code de vérification">'); assert.equal(code.getAttribute('autocomplete'), 'one-time-code');
+    const ch = f('<input type="search">'); assert.equal(ch.getAttribute('enterkeyhint'), 'search');
+    const msg = f('<textarea></textarea>'); assert.equal(msg.getAttribute('autocapitalize'), 'sentences'); assert.equal(msg.getAttribute('enterkeyhint'), 'send');
+    const garde = f('<input autocomplete="off" name="email">'); assert.equal(garde.getAttribute('autocomplete'), 'off', 'un attribut voulu par le ploxion reste');
+  } finally { p.fin(); }
+  assert.deepEqual(comprendre('Ouvre Stremio'), { action: 'ouvrir', quoi: 'stremio' });
+  assert.deepEqual(comprendre('cherche la Météo de demain'), { action: 'chercher', quoi: 'Météo de demain' });
+  assert.deepEqual(comprendre('note un tsoin acheter du café'), { action: 'noter', quoi: 'acheter du café' });
+  assert.deepEqual(comprendre('accueil'), { action: 'accueil' });
+  assert.deepEqual(comprendre('youtube'), { action: 'chercher', quoi: 'youtube' });
+});
