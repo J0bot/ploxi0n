@@ -229,7 +229,17 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate {
         CAPPluginMethod(name: "gameCenterScore", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "mouvementDebut", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "mouvementFin", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "ecranEveille", returnType: CAPPluginReturnPromise),
     ]
+
+    // ☀ L'ÉCRAN RESTE ALLUMÉ (0.47, navigator.wakeLock des ploxions → web-natif.js) : tant qu'un ploxion le tient, iOS ne met pas l'écran en veille
+    @objc func ecranEveille(_ call: CAPPluginCall) {
+        let actif = call.getBool("actif") ?? true
+        DispatchQueue.main.async {
+            UIApplication.shared.isIdleTimerDisabled = actif
+            call.resolve(["actif": actif])
+        }
+    }
 
     // LE MOUVEMENT (RS-7 12.10 : « des effets avec le gyroscope et l'accéléromètre ») : CoreMotion, sans permission à demander.
     // mouvementDebut({ hz }) → l'événement « mouvement » : attitude (roll, pitch, yaw), gravité (gx, gy, gz), accélération propre

@@ -75,7 +75,7 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
     if (!actif) return; actif = false;
     h.classList.remove('px-vivant'); h.style.setProperty('--mx', '0'); h.style.setProperty('--my', '0');
     if (web) { W.removeEventListener('devicemotion', surWeb); web = false; return; }
-    try { if (ecoute) await ecoute.remove(); ecoute = null; if (P) await P.mouvementFin(); } catch (e) { /* */ }
+    try { if (ecoute) await ecoute.remove(); ecoute = null; if (P && !(W.__pxMouvementWeb > 0)) await P.mouvementFin(); } catch (e) { /* */ }   // (0.47) pas si un ploxion écoute encore devicemotion (web-natif.js)
   }
   const suivre = () => (veut() ? demarrer() : arreter());
   D.addEventListener('visibilitychange', suivre);

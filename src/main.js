@@ -36,6 +36,7 @@ import { creerFond } from './app/fond.js';
 import { creerDossier } from './natif/dossier.js';
 import { creerMouvement } from './app/mouvement.js';
 import { garderBoxion } from './boxion-local/garde.js';
+import { installerWebNatif } from './natif/web-natif.js';
 
 const VERSION = '0.46.0';
 
@@ -121,6 +122,12 @@ async function demarrer() {
   window.jOSNatif.haptique = (x) => haptique.jouer(x);   // les ploxions (le clicker…) jouent un style, un motif ou un événement
   const bionsCharges = new Set();   // un seul chargement par bion, pour toute l'app
   let routeur = null;
+  // ⚡ le web devient natif : vibrate, geolocation, Notification, la dictée, les QR, le gyroscope, Bluetooth, NFC, wakeLock… de TOUS les ploxions
+  try {
+    installerWebNatif({ W: window, prefs: () => prefs.lire(), courant: () => routeur && routeur.courant(), ouvrirPloxion: (id) => { if (routeur && routeur.connait(id)) routeur.ouvrir(id); },
+      mouvementActif: () => document.documentElement.classList.contains('px-vivant') });
+  } catch (e) { bootLog('⚠ web natif : ' + (e && e.message)); }
+  boot(24, 'le web devient natif');
   // un ploxion en ouvre un autre (jOSXerPrefs.ouvrir, jOS.openPloxion) : s'il n'est pas installé et qu'il y a du réseau, on l'installe à la volée
   const routeurProxy = {
     async ouvrir(id, params) {
