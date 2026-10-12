@@ -282,3 +282,26 @@ html.px-haut-on #ploxi0n{padding-top:max(env(safe-area-inset-top,0px),22px)}
 .px-sante-barres rect{fill:var(--acc)}.px-sante-barres rect:last-of-type{fill:var(--bio)}
 .px-sante-barres text{font:600 9px var(--mono);fill:var(--muted)}
 .px-journal-bas.px-puces{display:flex;gap:8px;justify-content:center}
+
+/* ---- ⬇ la barre d'installation · 📦 le gestionnaire ---- */
+.px-installation{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 88px);z-index:70;background:var(--surface) var(--grain);border:var(--trait) solid var(--bord2);border-radius:16px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.px-inst-tete{display:flex;gap:12px;align-items:center}
+.px-inst-tete div{min-width:0;flex:1}.px-inst-tete b{display:block}
+.px-inst-tete small{display:block;font:600 11px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-inst-barre{height:6px;border-radius:3px;background:var(--creux);margin-top:10px;overflow:hidden}
+.px-inst-barre i{display:block;height:100%;background:var(--acc);transition:width .25s}
+.px-installation.ok .px-inst-barre i{background:var(--bio)}
+.px-installation.ko{border-color:#7a3a3a}.px-installation.ko .px-inst-barre i{background:#c46a5a}
+.px-installation>button{margin-top:10px;width:100%;min-height:44px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt)}
+.px-calme .px-inst-barre i{transition:none}
+.px-gestion{padding:12px 14px 110px}
+.px-gest-l{border-bottom:1px solid var(--filet)}
+.px-gest-h{display:flex;gap:10px;padding:11px 0;align-items:flex-start}
+.px-gest-h .g{width:26px;text-align:center;flex:none;font-size:1.2rem}
+.px-gest-h div{flex:1;min-width:0}.px-gest-h small{display:block;color:var(--muted);font:600 11px var(--mono);margin-top:2px}
+.px-gest-jauge{display:flex;height:4px;border-radius:2px;background:var(--creux);margin-top:7px;overflow:hidden}
+.px-gest-jauge i{display:block;height:100%;background:var(--acc)}.px-gest-jauge i.b{background:var(--bord2)}
+.px-gest-deps{display:flex;flex-wrap:wrap;gap:6px;padding:0 0 12px 36px}
+.px-gest-deps .px-puce{font-size:11px}.px-gest-deps .seul{border-color:var(--acc)}
+.px-gest-act{display:flex;gap:8px;width:100%;margin-top:6px}
+.px-gest-act button{flex:1;min-height:44px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:600 14px var(--police)}

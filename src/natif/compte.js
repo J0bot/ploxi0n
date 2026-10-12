@@ -15,6 +15,18 @@ export function creerCompte({ W = globalThis.window, boxion, http, source = SOUR
   const signaler = () => { for (const f of abonnes) { try { f(etat); } catch (e) { /* */ } } };
   const pret = boxion.get('compte', 'courant').then(c => { if (c && c.jeton) etat = { connecte: true, ...c.compte }; signaler(); }).catch(() => {});
 
+  /** la feuille Apple : un nonce frais (le labo vérifie son sha256 dans le jeton), le jeton d'identité */
+  async function jetonApple() {
+    if (!natif()) throw new Error('Apple : sur l\'iPhone');
+    const a = new Uint8Array(32); W.crypto.getRandomValues(a);
+    const brut = Array.from(a, b => b.toString(16).padStart(2, '0')).join('');
+    const hache = Array.from(new Uint8Array(await W.crypto.subtle.digest('SHA-256', new TextEncoder().encode(brut))), b => b.toString(16).padStart(2, '0')).join('');
+    const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
+    const r = await SignInWithApple.authorize({ clientId: 'ch.j0bot.ploxi0n', redirectURI: source, scopes: 'email name', nonce: hache, state: brut.slice(0, 16) });
+    const x = (r && r.response) || {};
+    if (!x.identityToken) throw new Error('Apple n\'a pas donné de jeton');
+    return { x, brut };
+  }
   async function poster(chemin, corps, jeton) {
     const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
     if (jeton) headers.Authorization = 'Bearer ' + jeton;
@@ -53,19 +65,32 @@ export function creerCompte({ W = globalThis.window, boxion, http, source = SOUR
     /** SE CONNECTER AVEC APPLE (12.10) : la feuille native d'Apple ; un nonce aléatoire (son sha256 part chez Apple, le brut au labo, qui
      *  vérifie que le jeton d'Apple est bien celui de CETTE demande) ; le labo crée un compte BION ou retrouve le sien (docs/dev/57) */
     async connecterApple() {
-      if (!natif()) throw new Error('Se connecter avec Apple : sur l\'iPhone');
-      const a = new Uint8Array(32); W.crypto.getRandomValues(a);
-      const brut = Array.from(a, b => b.toString(16).padStart(2, '0')).join('');
-      const hache = Array.from(new Uint8Array(await W.crypto.subtle.digest('SHA-256', new TextEncoder().encode(brut))), b => b.toString(16).padStart(2, '0')).join('');
-      const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
-      const r = await SignInWithApple.authorize({ clientId: 'ch.j0bot.ploxi0n', redirectURI: source, scopes: 'email name', nonce: hache, state: brut.slice(0, 16) });
-      const x = (r && r.response) || {};
-      if (!x.identityToken) throw new Error('Apple n\'a pas donné de jeton');
+      const { x, brut } = await jetonApple();
       const nom = [x.givenName, x.familyName].filter(Boolean).join(' ');
       const rep = await poster('/api/app/apple', { identity_token: x.identityToken, nonce: brut, nom });
       if (rep.status !== 200 || !rep.data.jeton) throw new Error((rep.data && rep.data.message) || 'connexion Apple refusée');
       await boxion.put('compte', 'courant', { jeton: rep.data.jeton, compte: rep.data.compte, le: new Date().toISOString(), via: 'apple' });
       await boxion.append('tsoins', { kind: 'compte', action: 'connecter-apple', palier: rep.data.compte && rep.data.compte.palier });
+      etat = { connecte: true, ...rep.data.compte }; signaler();
+      return etat;
+    },
+    /** LIER son Apple ID au compte connecté (RS-7 12.10 : « connecté en xerboxion.org, il faut aussi pouvoir se connecter avec Apple ID —
+     *  que l'un des deux ») : ensuite « Continuer avec Apple » ouvre CE compte. delierApple() : le compte revient à sa seule connexion xer. */
+    async lierApple() {
+      const c = await boxion.get('compte', 'courant'); if (!c || !c.jeton) throw new Error('connecte-toi d\'abord avec ton compte xerboxion.org');
+      const { x, brut } = await jetonApple();
+      const rep = await poster('/api/app/apple/lier', { identity_token: x.identityToken, nonce: brut }, c.jeton);
+      if (rep.status !== 200) throw new Error((rep.data && rep.data.message) || 'liaison Apple refusée (' + rep.status + ')');
+      await boxion.put('compte', 'courant', { ...c, compte: rep.data.compte });
+      await boxion.append('tsoins', { kind: 'compte', action: 'lier-apple' });
+      etat = { connecte: true, ...rep.data.compte }; signaler();
+      return etat;
+    },
+    async delierApple() {
+      const c = await boxion.get('compte', 'courant'); if (!c || !c.jeton) throw new Error('pas connecté');
+      const rep = await poster('/api/app/apple/delier', {}, c.jeton);
+      if (rep.status !== 200) throw new Error((rep.data && rep.data.message) || 'refusé (' + rep.status + ')');
+      await boxion.put('compte', 'courant', { ...c, compte: rep.data.compte });
       etat = { connecte: true, ...rep.data.compte }; signaler();
       return etat;
     },

@@ -70,7 +70,11 @@ export function creerHud({ W = globalThis.window, compte, boxion = null, trouver
         });
       } else {
         feuille('<h2>' + esc(e.glyphe || '·') + ' ' + esc(e.nom) + '</h2><p>Connecté au xerboxion, rang <b>' + esc(e.palier) + '</b>. Pour monter de rang : le code d\'un xerion (→ zion), ou installer ton boxion (→ xeroction).</p>'
+          + (e.apple ? '<p class="px-sous">  Apple ID lié : « Continuer avec Apple » ouvre aussi ce compte.</p><button data-a="delier">Délier mon Apple ID</button>'
+            : '<button class="apple" data-a="lier">  Lier mon Apple ID</button><p class="px-sous">ensuite, Apple ou ton compte xerboxion.org : l\'un ou l\'autre ouvre ce compte</p>')
           + '<button data-a="sortir">Se déconnecter</button><button data-a="fermer">Fermer</button>', {
+          lier: () => compte.lierApple(),
+          delier: () => compte.delierApple(),
           sortir: () => compte.deconnecter(),
           fermer: async () => {},
         });

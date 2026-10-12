@@ -7,6 +7,28 @@
 
 ---
 
+## 0. Le 12.10 au soir (0.29 → 0.33) et la direction
+
+**RS-7 : « ton taff c'est d'ajouter la couche iOS à tous les bions ».** Chaque bion du labo garde son API ; dans ploxi0n il reçoit sa
+contrepartie native (FOURNIS + src/natif/<bion>.js). Un ploxion qui « charge à l'infini » = un bion global du web qui manque ici.
+
+| | | |
+|---|---|---|
+| ✅ 0.29 | Boîte noire du lancement, mode sûr après 2 plantages ; lane fastlane `crashs` | |
+| ✅ 0.30 | Plantages partagés (build 37) : boucle versLesWidgets ← didChangeNotification → copie planifiée, état sans heure | 3 crash logs |
+| ✅ 0.30 | **Reprise de session** (devant rouvert, les autres 💤) · **⧗ tsoins natifs** + journal · **▔ barre du haut** composable · **🧭 tuto** | |
+| ✅ 0.31 | **✦ Nouveautés** à la 1re ouverture après une mise à jour (src/app/nouveautes.js, une entrée par version) | |
+| ✅ labo | Registre : 33 ploxions sans clé (zone, files, word, excel, rockets…) publiés « 0…32 » en stub → clés = id | 7e8f6f44 |
+| ✅ 0.32 | **jOSBoxion connecté lit vraiment le boxion** (le serveur rend le document tel quel, pas `{item}`) ; la file : rien sans compte, jamais par-dessus plus récent | « zone pas connectée » |
+| ✅ 0.32 | **Iframes du site** → xerboxion.org (wiki, calendar, notes, player…) · **❤ Santé** (HealthKit) · **🧭 jOSUsage natif** (tél + web) | |
+| ✅ labo | **Idle synchronisé** (jOSBoxion xp/idle) + gains pendant l'absence | 76cf1e0f |
+| ✅ 0.33 | **⬇ barre d'installation** (ploxion puis bion par bion) · **📦 gestionnaire** (place, dépendances, libérer, orphelins) · **◇ écran de chargement** | |
+| ✅ 0.33 | **Lier son Apple ID** au compte xerboxion.org (l'un ou l'autre ouvre le même compte) ; Hotspot, mémoire augmentée, notifications de communication | labo 4f12ba02, banc 91/91 |
+| ⏭ | **Les vrais glyphes au lieu des emojis** (koin △ kion ▢, le codec) : dock, HUD, réglages, ploxions internes | RS-7 12.10 |
+| ⏭ | **Recensement bions → couche iOS** : chaque bion global du web (jOSToast, jOSComptes, jOSGame, jOSCache, jOSGeo…), fait / à faire | RS-7 12.10 |
+| ⏭ | **Le clicker du xerboxion** pour de vrai (l'idle de xp n'en est qu'un jouet : 7 paliers) — voir §1 | RS-7 : « pas autant avancé que la vision » |
+| ⏭ | Iframes connectées (calendar, notes… ont besoin du compte dans l'iframe : clé de session comme les icônes) | |
+
 ## 1. Le socle (ce qui fait tourner les ploxions)
 
 | | Quoi | Notes |

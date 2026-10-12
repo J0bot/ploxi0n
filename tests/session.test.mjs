@@ -181,3 +181,40 @@ test('🧭 jOSUsage dans l\'app : le téléphone + le web (lu, jamais écrasé),
     assert.deepEqual(fusionner(null, { px: {} }), { px: {}, days: {} });
   } finally { p.fin(); }
 });
+
+test('⬇ la barre d\'installation suit le ploxion puis ses bions ; 📦 le gestionnaire : place, dépendances, retirer libère', async () => {
+  const { installerAvecBarre } = await import('../src/app/installation.js');
+  const { enregistrerGestion } = await import('../src/app/gestion.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    const vus = [];
+    const depot = {
+      async installer(id, meta, progres) { progres({ etape: 'ploxion' }); progres({ etape: 'recu', octets: 120000 }); vus.push(W.document.querySelector('.px-installation [data-etape]').textContent);
+        progres({ etape: 'bion', nom: 'jOSStore', fait: 1, connus: 2 }); vus.push(W.document.querySelector('.px-installation [data-barre]').style.width); return { octets: 120000, bions: ['jOSStore', 'jOSZone'], manquants: [] }; },
+    };
+    const r = await installerAvecBarre({ W, depot, id: 'zone', meta: { nom: 'Zone', icone: '🫧' } });
+    assert.equal(r.bions.length, 2);
+    assert.match(vus[0], /120 ko/); assert.equal(vus[1], '63%');
+    assert.match(W.document.querySelector('.px-installation').textContent, /prêt · 120 ko · 2 bions/);
+    await assert.rejects(installerAvecBarre({ W, depot: { installer: async () => { throw new Error('HTTP 404'); } }, id: 'x' }), /404/);
+    assert.ok(W.document.querySelector('.px-installation.ko'), 'l\'erreur reste lisible');
+    // le gestionnaire
+    const retires = [], bionsRetires = [];
+    const inv = { ploxions: [{ id: 'zone', nom: 'Zone', icone: '🫧', bundle: 100000, liberable: 150000, total: 400000, deps: [{ nom: 'jOSZone', octets: 50000, partage: 1 }, { nom: 'jOSStore', octets: 250000, partage: 3 }] }, { id: 'notes', nom: 'Notes', bundle: 20000, liberable: 20000, total: 270000, deps: [{ nom: 'jOSStore', octets: 250000, partage: 3 }] }],
+      bions: [], totaux: { bundles: 120000, bions: 300000, tout: 420000, orphelins: [{ nom: 'jOSVieux', octets: 9000 }] } };
+    const gd = { inventaire: async () => inv, retirerBion: async (n) => bionsRetires.push(n), aJour: async () => [] };
+    enregistrerGestion({ W, depot: gd, retirer: async (id) => retires.push(id) });
+    const h = W.document.createElement('div'); W.document.body.appendChild(h);
+    W.jOSApps.gestion.mount(h); await attendre(20);
+    assert.match(h.textContent, /420 ko/); assert.match(h.textContent, /orphelins · 1/);
+    assert.ok(h.textContent.indexOf('Zone') < h.textContent.indexOf('Notes'), 'le plus lourd d\'abord');
+    h.querySelector('[data-p="zone"]').click(); await attendre(20);
+    assert.match(h.textContent, /jOSZone · 50 ko · à lui seul/); assert.match(h.textContent, /jOSStore · 250 ko · ×3/);
+    const b = h.querySelector('[data-retirer="zone"]'); b.click(); await attendre(10);
+    assert.equal(retires.length, 0, 'un premier toucher demande « sûr ? »');
+    h.querySelector('[data-retirer="zone"]').click(); await attendre(30);
+    assert.deepEqual(retires, ['zone']); assert.deepEqual(bionsRetires, ['jOSZone'], 'seuls ses bions à lui partent');
+    h.querySelector('[data-orphelins]').click(); await attendre(30);
+    assert.ok(bionsRetires.includes('jOSVieux'));
+  } finally { p.fin(); }
+});

@@ -35,13 +35,16 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
   // les bions d'un code, RÉCURSIVEMENT (les bions d'un bion), dépendances d'abord ; servis seuls par le labo (/px/bion-app/<jOSNom>.js).
   // « manquants » = ceux que le bundle DÉCLARE et que personne ne sert (un bion seulement touché et introuvable : ignoré, le code teste son
   // existence). Un bion déjà dans boxion_local ne se retélécharge pas. 80 bions au plus par ploxion.
-  async function resoudreBions(js) {
+  // progres({ etape, nom, fait, connus }) : la barre d'installation (RS-7 12.10 : « une barre de chargement qui montre que le ploxion s'installe »)
+  async function resoudreBions(js, progres = null) {
     const vus = new Set(), ordre = [], manquants = [], declares = new Set(bionsDuBundle(js));
+    const signaler = (nom) => { if (progres) try { progres({ etape: 'bion', nom, fait: ordre.length + manquants.length, connus: Math.max(vus.size, declares.size) }); } catch (e) { /* */ } };
     async function visiter(b) {
       if (vus.has(b) || FOURNIS.has(b) || vus.size >= 80) return;
       vus.add(b);
       let x = await boxion.get('bions', b);
       if (!x) {
+        signaler(b);
         try {
           const rb = await http.get(source + '/px/bion-app/' + b + '.js', { headers: { Accept: 'application/javascript' } });
           if (rb.status === 200 && rb.texte.includes(b)) { x = { js: rb.texte, hash: await sha256(rb.texte), le: new Date().toISOString() }; await boxion.put('bions', b, x); }
@@ -49,7 +52,7 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       }
       if (!x) { if (declares.has(b)) manquants.push(b); return; }
       for (const c of bionsTouches(x.js, b)) await visiter(c);
-      ordre.push(b);
+      ordre.push(b); signaler(b);
     }
     for (const b of [...declares, ...bionsTouches(js)]) await visiter(b);
     return { bions: ordre, manquants };
@@ -93,11 +96,13 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       for (const id of await liste()) { const p = await boxion.get(NS, id); if (p) out.push({ id, nom: p.nom, icone: p.icone, origine: p.origine, hash: p.hash, installe: p.installe, maj: p.maj || null }); }
       return out;
     },
-    async installer(id, meta = {}) {
+    async installer(id, meta = {}, progres = null) {
+      if (progres) progres({ etape: 'ploxion', nom: id, fait: 0, connus: 1 });
       const r = await http.get(source + '/px/' + encodeURIComponent(id) + '/app.js', { headers: { Accept: 'application/javascript' } });
       if (r.status !== 200) throw new Error(`le serveur refuse ${id} (HTTP ${r.status})`);
       if (!valide(r.texte, id)) throw new Error(`${id} : ce n'est pas un ploxion installable (pas d'enregistrement jOSApps)`);
-      const { bions, manquants } = await resoudreBions(r.texte);
+      if (progres) progres({ etape: 'recu', nom: id, octets: r.texte.length, fait: 0, connus: 1 });
+      const { bions, manquants } = await resoudreBions(r.texte, progres);
       const doc = { id, nom: meta.nom || id, icone: meta.icone || '▣', js: r.texte, hash: await sha256(r.texte), etag: (r.entetes && (r.entetes.etag || r.entetes.ETag)) || null, origine: source, installe: new Date().toISOString(), bions, manquants };
       await boxion.put(NS, id, doc);
       await garderListe([...(await liste()), id]);
@@ -185,6 +190,19 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       if (b && b.utilisePar.length) throw new Error(nom + ' sert encore à ' + b.utilisePar.join(', '));
       await boxion.del('bions', nom);
       await boxion.append('tsoins', { kind: 'marketplace', action: 'retirer-bion', id: nom });
+    },
+    /** LE GESTIONNAIRE (RS-7 12.10 : « voir les ploxions installés, la place qu'ils prennent et les dépendances ») : par ploxion, son bundle,
+     *  ses bions (partagés avec combien d'autres), ce qu'on libérerait en le retirant (le bundle + les bions qui ne servent qu'à lui) */
+    async inventaire() {
+      const bs = await this.bions(), parNom = new Map(bs.map(b => [b.nom, b])), out = [];
+      for (const id of await liste()) {
+        const p = await boxion.get(NS, id); if (!p) continue;
+        const deps = (p.bions || []).map(n => { const b = parNom.get(n); return { nom: n, octets: b ? b.octets : 0, partage: b ? b.utilisePar.length : 1, coupe: !!(b && b.coupe) }; });
+        const bundle = (p.js || '').length, seuls = deps.filter(d => d.partage <= 1).reduce((a, d) => a + d.octets, 0);
+        out.push({ id, nom: p.nom, icone: p.icone, origine: p.origine, installe: p.installe, maj: p.maj || null, bundle, liberable: bundle + seuls, total: bundle + deps.reduce((a, d) => a + d.octets, 0), deps });
+      }
+      const bions = bs.reduce((a, b) => a + b.octets, 0), bundles = out.reduce((a, x) => a + x.bundle, 0);
+      return { ploxions: out.sort((a, b) => b.liberable - a.liberable), bions: bs, totaux: { bundles, bions, tout: bundles + bions, orphelins: bs.filter(b => !b.utilisePar.length) } };
     },
     /** la taille d'un ploxion installé (son bundle seul) */
     async taille(id) { const p = await boxion.get(NS, id); return p ? (p.js || '').length : 0; },

@@ -10,6 +10,7 @@
 //     ✓ à moi      les installés : mises à jour, retirer
 //   chaque ploxion ouvre une fiche (feuille du bas) : badges, heures du Nexus, ce qu'il fournit, installer/ouvrir/retirer, souvent utilisé avec.
 // Pi 4 / iPhone : aucune minuterie, aucun rAF ; les gestes sont des pointer events.
+import { installerAvecBarre } from '../app/installation.js';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const heures = (s) => !s ? '0 h' : s < 3600 ? Math.max(1, Math.round(s / 60)) + ' min' : (Math.round(s / 360) / 10).toLocaleString('fr-CH') + ' h';
@@ -184,7 +185,7 @@ export function enregistrerMarketplace({ W = globalThis.window, depot, surChange
     async function installer(id) {
       const x = d.parId.get(id) || { id, nom: id, icone: '▣' };
       // le pack d'abord quand il l'a (sans réseau, et c'est la version testée avec l'app)
-      const r = d.pack.has(id) ? await depot.installerLocal(id) : await depot.installer(id, { nom: x.nom, icone: x.icone });
+      const r = d.pack.has(id) ? await depot.installerLocal(id) : await installerAvecBarre({ depot, id, meta: { nom: x.nom, icone: x.icone }, vibrer });
       d.installes.add(id); await surChangement();
       vibrer('installe');
       return r;

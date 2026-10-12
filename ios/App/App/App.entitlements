@@ -43,5 +43,15 @@
 	<true/>
 	<key>aps-environment</key>
 	<string>production</string>
+	<!-- 0.33 (RS-7 12.10 : « j'ai activé tous les trucs en plus ») : de retour, maintenant cochés sur l'identifiant de l'app -->
+	<!-- le Wi-Fi d'un geste (jOSNatif.wifi : NEHotspotConfiguration l'exige) -->
+	<key>com.apple.developer.networking.HotspotConfiguration</key>
+	<true/>
+	<!-- plus de mémoire : les gros ploxions (2 Mo de bundle) et plusieurs ouverts à la fois, sans que iOS tue l'app -->
+	<key>com.apple.developer.kernel.increased-memory-limit</key>
+	<true/>
+	<!-- les notifications de communication (un message de coord, avec qui l'envoie) -->
+	<key>com.apple.developer.usernotifications.communication</key>
+	<true/>
 </dict>
 </plist>
