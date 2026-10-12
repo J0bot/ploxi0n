@@ -4,6 +4,11 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.38.0', titre: 'Un démarrage qui se raconte', points: [
+    '◇ L\'écran de chargement : la barre fait le tour d\'un carré, chaque étape s\'inscrit au journal avec son temps, une astuce change en attendant.',
+    '⚡ Plus rapide à ouvrir : l\'accueil ne relit plus chaque ploxion en entier, et l\'écran s\'en va dès que l\'accueil est là.',
+    '⏱ ⚙ › À propos › Dernier démarrage : combien de temps, et ce qui a été le plus lent.',
+  ] },
   { v: '0.37.0', titre: 'Le thème vivant', points: [
     '🌀 Le thème suit ton téléphone (gyroscope, accéléromètre) : le fond glisse, les icônes flottent et attrapent la lumière, les inscriptions se creusent.',
     '◉ Penche-le comme tu veux : l\'angle où tu le tiens devient le neutre. Un choc fait tressauter les icônes.',

@@ -128,5 +128,10 @@
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+	<!-- ITMS-90894 (Apple, 12.10) : l'entitlement usernotifications.communication exige INSendMessageIntent ici -->
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>INSendMessageIntent</string>
+	</array>
 </dict>
 </plist>

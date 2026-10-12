@@ -91,9 +91,14 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       return c ? { ...c, horsLigne: true } : { maj: null, items: [], horsLigne: true };
     },
     packLocal: () => packLocal.slice(),
+    // (12.10, RS-7 : « c'est ultra lent à ouvrir ») installes() relisait CHAQUE ploxion EN ENTIER (son bundle : jusqu'à 2 Mo) pour son nom et
+    // son icône, deux fois par lancement : un index léger (META « installes ») suffit ; reconstruit une fois s'il manque ou s'il diverge
     async installes() {
-      const out = [];
-      for (const id of await liste()) { const p = await boxion.get(NS, id); if (p) out.push({ id, nom: p.nom, icone: p.icone, origine: p.origine, hash: p.hash, installe: p.installe, maj: p.maj || null }); }
+      const ids = await liste(), idx = (await boxion.get(META, 'installes-index').catch(() => null)) || {};
+      if (ids.every(id => idx[id])) return ids.map(id => ({ id, ...idx[id] }));
+      const out = [], neuf = {};
+      for (const id of ids) { const p = await boxion.get(NS, id); if (!p) continue; neuf[id] = { nom: p.nom, icone: p.icone, origine: p.origine, hash: p.hash, installe: p.installe, maj: p.maj || null }; out.push({ id, ...neuf[id] }); }
+      await boxion.put(META, 'installes-index', neuf).catch(() => {});
       return out;
     },
     async installer(id, meta = {}, progres = null) {
@@ -104,7 +109,7 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       if (progres) progres({ etape: 'recu', nom: id, octets: r.texte.length, fait: 0, connus: 1 });
       const { bions, manquants } = await resoudreBions(r.texte, progres);
       const doc = { id, nom: meta.nom || id, icone: meta.icone || '▣', js: r.texte, hash: await sha256(r.texte), etag: (r.entetes && (r.entetes.etag || r.entetes.ETag)) || null, origine: source, installe: new Date().toISOString(), bions, manquants };
-      await boxion.put(NS, id, doc);
+      await boxion.put(NS, id, doc); await boxion.del(META, 'installes-index').catch(() => {});
       await garderListe([...(await liste()), id]);
       await boxion.append('tsoins', { kind: 'marketplace', action: 'installer', id, hash: doc.hash });
       return { id, hash: doc.hash, octets: r.texte.length, bions, manquants };
@@ -119,7 +124,7 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
         const bj = lireBionLocal ? await lireBionLocal(b).catch(() => null) : null;
         if (bj && bj.includes(b)) { await boxion.put('bions', b, { js: bj, hash: await sha256(bj), le: new Date().toISOString() }); bions.push(b); }
       }
-      await boxion.put(NS, id, { id, nom: p.nom, icone: p.icone, js, hash: await sha256(js), etag: null, origine: 'pack', installe: new Date().toISOString(), bions });
+      await boxion.put(NS, id, { id, nom: p.nom, icone: p.icone, js, hash: await sha256(js), etag: null, origine: 'pack', installe: new Date().toISOString(), bions }); await boxion.del(META, 'installes-index').catch(() => {});
       await garderListe([...(await liste()), id]);
       await boxion.append('tsoins', { kind: 'marketplace', action: 'installer', id, origine: 'pack' });
       return { id };
@@ -134,7 +139,7 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
           if (r.status !== 200 || !valide(r.texte, id)) { res.push({ id, etat: 'erreur', detail: 'HTTP ' + r.status }); continue; }
           const h = await sha256(r.texte);
           if (h === p.hash) { res.push({ id, etat: 'a-jour' }); continue; }
-          await boxion.put(NS, id, { ...p, js: r.texte, hash: h, etag: (r.entetes && (r.entetes.etag || r.entetes.ETag)) || null, maj: new Date().toISOString() });
+          await boxion.put(NS, id, { ...p, js: r.texte, hash: h, etag: (r.entetes && (r.entetes.etag || r.entetes.ETag)) || null, maj: new Date().toISOString() }); await boxion.del(META, 'installes-index').catch(() => {});
           await boxion.append('tsoins', { kind: 'marketplace', action: 'mettre-a-jour', id, hash: h });
           res.push({ id, etat: 'mis-a-jour' });
         } catch (e) { res.push({ id, etat: 'erreur', detail: e.message }); }
@@ -142,7 +147,7 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       return res;
     },
     async retirer(id) {
-      await boxion.del(NS, id);
+      await boxion.del(NS, id); await boxion.del(META, 'installes-index').catch(() => {});
       await garderListe((await liste()).filter(x => x !== id));
       await boxion.append('tsoins', { kind: 'marketplace', action: 'retirer', id });
     },

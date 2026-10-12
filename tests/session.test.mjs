@@ -300,3 +300,19 @@ test('🌀 le thème vivant : la gravité → --mx/--my (neutre recentré, liss�
     P = { calme: true }; abonnes.forEach(f => f(P)); await attendre(10); assert.ok(!m.actif(), 'Calme coupe');
   } finally { p.fin(); }
 });
+
+test('◇ l\'index léger des ploxions installés : installes() ne relit plus les bundles ; invalidé à chaque installation', async () => {
+  const { creerDepot } = await import('../src/marketplace/depot.js');
+  const { creerMemoire } = await import('../src/boxion-local/memoire.js');
+  const boxion = creerMemoire(); let lectures = 0; const get = boxion.get.bind(boxion);
+  boxion.get = async (ns, k) => { if (ns === 'ploxions') lectures++; return get(ns, k); };
+  const js = (id) => `window.jOSApps=window.jOSApps||{};window.jOSApps[${JSON.stringify(id)}]={manifest:{id:${JSON.stringify(id)}},mount(){return{}}};`;
+  const http = { get: async (u) => { const m = u.match(/\/px\/([^/]+)\/app\.js$/); return m ? { status: 200, texte: js(m[1]), entetes: {} } : { status: 404, texte: '' }; } };
+  const d = creerDepot({ boxion, http });
+  await d.installer('a', { nom: 'A' }); await d.installer('b', { nom: 'B' });
+  assert.deepEqual((await d.installes()).map(x => x.nom), ['A', 'B']);
+  const n = lectures; await d.installes(); await d.installes();
+  assert.equal(lectures, n, 'deux lectures de plus : aucun bundle relu');
+  await d.installer('c', { nom: 'C' }); assert.deepEqual((await d.installes()).map(x => x.id), ['a', 'b', 'c'], 'invalidé à l\'installation');
+  await d.retirer('a'); assert.deepEqual((await d.installes()).map(x => x.id), ['b', 'c']);
+});

@@ -36,7 +36,7 @@ import { creerFond } from './app/fond.js';
 import { creerDossier } from './natif/dossier.js';
 import { creerMouvement } from './app/mouvement.js';
 
-const VERSION = '0.37.0';
+const VERSION = '0.38.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -68,6 +68,7 @@ function clavierAuToucher() {
 }
 
 const boot = (p, t) => { try { window.__boot && window.__boot(p, t); } catch (e) { /* */ } };
+const bootLog = (t) => { try { window.__bootLog && window.__bootLog(t); } catch (e) { /* */ } };
 async function demarrer() {
   boot(8, 'le clavier, l\'écran');
   try { document.getElementById('px-boot-v').textContent = 'v' + VERSION.replace(/\.0$/, ''); } catch (e) { /* */ }
@@ -79,9 +80,12 @@ async function demarrer() {
   const racine = document.getElementById('ploxi0n');
   boot(14, 'boxion local');
   const boxion = await ouvrirBoxionLocal();
+  boot(12, 'boxion local ouvert');
   const prefs = creerPrefs({ boxion }); await prefs.pret; prefs.appliquer();   // l'apparence avant le premier dessin
+  boot(16, 'réglages · apparence');
   // 🖼 le fond d'écran (photo ou motif gravé), avant le premier dessin aussi
   const fond = creerFond({ boxion, vibrer: (x) => { try { window.jOSNatif && window.jOSNatif.vibrer && window.jOSNatif.vibrer(x); } catch (e) { /* */ } } }); await fond.pret; window.ploxi0nFond = fond;
+  boot(19, 'fond : ' + fond.reglage().type);
   // le plein écran complet : la barre d'état cachée (StatusBar) ; l'indicateur d'accueil et les bords haut/bas (PloxionVC, natif, lit la préférence)
   async function pleinEcran(p) {
     if (!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) return;
@@ -92,7 +96,7 @@ async function demarrer() {
   }
   pleinEcran(prefs.lire()); prefs.surChangement(pleinEcran);
   barreClavier(prefs.lire().barreClavier !== false); prefs.surChangement((p) => barreClavier(p.barreClavier !== false));
-  installerJosNatif(window);   // ⚡ le bion natif : toutes les capacités de l'iPhone, pour tous les ploxions
+  installerJosNatif(window); boot(23, 'jOSNatif · ' + (window.jOSNatif.natif ? 'iPhone' : 'navigateur'));   // ⚡ le bion natif : toutes les capacités de l'iPhone, pour tous les ploxions
   // l'haptique de l'app (ouvrir, revenir, minimiser, les bords, les pages…) : par jOSNatif, coupée dans ⚙ › Apparence
   // 🎞 le lecteur natif : chaque <video>/<audio>/<iframe YouTube> des ploxions (écran verrouillé, AirPlay, PiP, YouTube par https, haptique du son)
   const lecteur = installerLecteur({ boxion, vibrer: (s) => vibrer(s), titre: () => (routeur && routeur.courant() && (routeur.catalogue().find(p => p.id === routeur.courant()) || {}).nom) || 'ploxi0n' });
@@ -136,6 +140,7 @@ async function demarrer() {
   };
   boot(30, 'le shim jOS · tsoins');
   const shim = await installerShim({ boxion, routeur: routeurProxy, relais, distant });
+  boot(40, 'shim jOS · ' + ((window.jOSTsoin && window.jOSTsoin.list) ? window.jOSTsoin.list().length : 0) + ' tsoins relus');
   boot(45, 'les ploxions de base');
   window.addEventListener('online', () => { if (window.jOSBoxion && window.jOSBoxion.pousser) window.jOSBoxion.pousser().catch(() => {}); });
   // les images des ploxions en chemins du site → xerboxion.org ; celles qui exigent le compte → récupérées avec le jeton (data: URL)
@@ -167,6 +172,7 @@ async function demarrer() {
     try { await depot.installerLocal(id); deja.push(id); } catch (e) { console.warn('ploxion de base', id, e); }
   }
   await boxion.put('reglages', 'base-installes', deja);
+  boot(50, deja.length + ' ploxions de base');
   // 0.8 : les bions TOUCHÉS (pas seulement déclarés) ; les ploxions installés avant sont complétés une fois, en ligne, sans bloquer le démarrage
   if (!(await boxion.get('reglages', 'bions-v2')) && navigator.onLine !== false) {
     depot.completerBions().then(r => { boxion.put('reglages', 'bions-v2', { le: new Date().toISOString(), r }); }).catch(() => {});
@@ -189,6 +195,7 @@ async function demarrer() {
   const compte = creerCompte({ boxion, http: creerHttp(window) });
   boot(62, 'ton compte');
   await compte.pret; compteRef = compte;
+  { const e = compte.etat(); boot(64, e.connecte ? 'compte : ' + e.nom + ' · ' + e.palier : 'sans compte (tout reste ici)'); }
   if (navigator.onLine !== false) { compte.rafraichir().catch(() => {}); if (window.jOSBoxion.pousser) window.jOSBoxion.pousser().catch(() => {}); }   // le rang et « admin » à jour (un jeton expiré → déconnecté)
   const reglerModeConnecte = (v) => { if (v != null) { modeConnecte = !!v; boxion.put('reglages', 'mode-connecte', modeConnecte); } return modeConnecte; };
   // 🎙 les vocaux : enregistrer, transcrire (iOS, le vocabulaire du xerboxion), garder ; jOSNatif.vocal pour les ploxions
@@ -207,10 +214,12 @@ async function demarrer() {
   window.jOSNatif.tsoin = (o) => tsoinNatif.ouvrir(o || {});
   const hud = creerHud({ compte, boxion, vocalEnCours: () => vocal.enCours(), trouver: (id) => routeur && routeur.catalogue().find(p => p.id === id), modeConnecte: () => modeConnecte });
   await hud.pret;
+  boot(70, 'HUD · dock');
   // ⚙ les réglages : un ploxion interne, au bout du ⚙ de l'accueil (jamais retirable)
   // les notifications (test, et les messages de coord tant que l'app est au premier plan ; la vraie « app fermée » demande APNs)
   const notifs = creerNotifs({ boxion, vibrer, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id) => routeurProxy.ouvrir(id) });
   await notifs.pret;
+  boot(73, 'notifications');
   internes.push(enregistrerReglages({ compte, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, prefs, vibrer, haptique, lecteur, version: VERSION }));
   // le vecteur xerion de ce téléphone : le temps passé par ploxion (même forme que jOSUsage du labo : { px: { id: { opens, seconds, lastAt } } })
   async function surUsage(id, sec) {
@@ -248,6 +257,7 @@ async function demarrer() {
   hud.surChangement(() => routeur.rafraichirHud());
   window.addEventListener('online', () => routeur.rafraichirHud()); window.addEventListener('offline', () => routeur.rafraichirHud());
   await majAccueil();
+  boot(86, routeur.catalogue().length + ' ploxions à l\'accueil');
   // jOSApps.monter / peut, comme dans le labo : un ploxion en monte un autre dans un coin (fill the gaps, les « ultimate »). Démontable.
   window.jOSApps.peut = (id) => routeur.connait(id);
   window.jOSApps.monter = (id, hote, ctx) => {
@@ -289,7 +299,7 @@ async function demarrer() {
     await raccourcis.epingles(hud.config().epingles.map(id => routeur.catalogue().find(p => p.id === id)).filter(Boolean));
   }
   hud.surChangement(() => publierValeurs().catch(() => {}));
-  await majAccueil();
+  raccourcis.publier(routeur.catalogue()).catch(() => {});   // le catalogue est déjà là : seulement le publier vers Raccourcis
   // 🧭 le tuto d'accueil : une fois (par version du tuto) ; ⚙ › À propos › « revoir le tuto »
   const tuto = creerOnboarding({ boxion, vibrer: (x) => vibrer(x), connecter: () => compte.connecter() });
   window.ploxi0nTuto = tuto;
@@ -300,7 +310,7 @@ async function demarrer() {
   // « ok » pour la boîte noire seulement APRÈS la reprise de la session : un ploxion qui plante en se rouvrant compte comme un plantage
   // au lancement, et la fois suivante il restera endormi
   let plantesAvant = 0;
-  const lancementOk = async () => { boot(100, 'prêt'); try { window.__bootFin && window.__bootFin(); } catch (e) { /* */ } try { const { Preferences } = await import('@capacitor/preferences'); await Preferences.set({ key: 'ploxi0n.lancement', value: 'ok' }); } catch (e) { /* hors iPhone */ } };
+  const lancementOk = async () => { boot(100, 'prêt'); try { const j = window.__bootJournal && window.__bootJournal(); if (j) boxion.put('reglages', 'demarrage', { ...j, version: VERSION, le: new Date().toISOString() }).catch(() => {}); } catch (e) { /* */ } try { window.__bootFin && window.__bootFin(); } catch (e) { /* */ } try { const { Preferences } = await import('@capacitor/preferences'); await Preferences.set({ key: 'ploxi0n.lancement', value: 'ok' }); } catch (e) { /* hors iPhone */ } };
   // la boîte noire (AppDelegate) : la page a fini de démarrer → « ok » ; un lancement planté avant est signalé (et le mode sûr)
   try {
     const { Preferences } = await import('@capacitor/preferences');
@@ -322,6 +332,10 @@ async function demarrer() {
     if (await routeurProxy.ouvrir(pid, Object.keys(params).length ? params : null)) { lancementOk(); return; }
   }
   const id = decodeURIComponent((location.hash.match(/^#\/(.+)$/) || [])[1] || '');
+  // l'écran de chargement s'en va dès que l'accueil est là ; la session d'avant se rouvre ensuite, sous les yeux (le ploxion qui monte)
+  await routeur.accueil();
+  boot(94, 'accueil prêt');
+  try { window.__bootFin && window.__bootFin(); } catch (e) { /* */ }
   if (id && routeur.connait(id)) await routeur.ouvrir(id);
   else {
     // la session d'avant (fermée, tuée par iOS, plantée) : le ploxion de devant revient ; après un plantage au lancement, tout dort 💤

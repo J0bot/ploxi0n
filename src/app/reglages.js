@@ -124,6 +124,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         + section('donnees', 'Données', '<div class="bloc"><div class="l"><span>Réponses gardées pour le mode avion<small>' + nRoutes + ' route' + (nRoutes > 1 ? 's' : '') + '</small></span><button data-a="routes">vider</button></div>'
           + '<div class="l"><span>Réinitialiser les réglages<small>accueil, HUD, apparence, verrous… (tes ploxions, tes tsoins et ton compte restent)</small></span><button class="danger" data-a="reset">réinitialiser</button></div></div>')
         + section('apropos', 'À propos', '<div class="bloc"><div class="l"><span>ploxi0n ' + esc(version) + '<small>' + esc(W.navigator.onLine !== false ? 'en ligne' : 'hors ligne') + ' · cycle ' + (new Date().getFullYear() + 5000) + '</small></span></div>'
+          + '<div class="l ls"><span>◇ Dernier démarrage<small data-demarrage>…</small></span></div>'
           + '<div class="l"><span>📁 Dossier dans Fichiers<small data-dossier>Sur mon iPhone › ploxi0n : tsoins, vocaux, fond, Dépôt</small></span><button data-a="dossier">mettre à jour</button></div>'
           + '<div class="l"><span>📦 Ploxions installés<small>la place qu\'ils prennent, leurs bions, retirer</small></span><button data-a="gestion">ouvrir</button></div>'
           + '<div class="l"><span>✦ Nouveautés<small>ce qui a changé, version par version</small></span><button data-a="nouveautes">voir</button></div>'
@@ -133,6 +134,10 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + '<div class="l"><span>🧪 Banc iPhone</span><button data-ouvrir="banc">ouvrir</button></div><div class="l"><span>🐛 Bother me (un souci, une idée)</span><button data-ouvrir="bother">ouvrir</button></div></div>')
         + '<p class="msg" data-msg></p>';
       filtrer();
+      // le journal du dernier démarrage (l'écran de chargement) : le total, et les étapes les plus lentes
+      boxion.get('reglages', 'demarrage').then(d => { const el = zone.querySelector('[data-demarrage]'); if (!el || !d) return;
+        const lentes = (d.etapes || []).filter(x => x.d > 120).sort((a, b) => b.d - a.d).slice(0, 3);
+        el.textContent = (d.total / 1000).toFixed(1) + ' s (v' + String(d.version || '').replace(/\.0$/, '') + ')' + (lentes.length ? ' · le plus lent : ' + lentes.map(x => x.x + ' ' + x.d + ' ms').join(', ') : ''); }).catch(() => {});
       if (W.ploxi0nWidgets) W.ploxi0nWidgets.etat().then(e => { const el = zone.querySelector('[data-widgets-etat]'); if (!el) return;
         el.textContent = !e ? 'pas encore copié (ouvre puis quitte l\'app)' : !e.groupe ? '⚠ App Group inaccessible pour l\'app' : (e.conteneur ? '' : '⚠ conteneur du groupe absent · ')
           + 'épinglés ' + (e.epingles >= 0 ? e.epingles + ' car.' : 'jamais publiés') + ' · valeurs ' + (e.valeurs >= 0 ? e.valeurs + ' car.' : 'jamais publiées') + ' · relu ' + e.relu + ' · ' + (e.le ? new Date(e.le * 1000).toLocaleTimeString('fr-CH') : '');

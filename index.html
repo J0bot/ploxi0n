@@ -10,49 +10,81 @@
        se peint avant tout le reste ; main.js le fait avancer (window.__boot(pct, étape)) et le retire quand l'accueil est là. -->
   <style>
     html,body{margin:0;background:#07050c}
-    #px-boot{position:fixed;inset:0;z-index:90;background:#07050c;color:#ddd6ea;display:flex;flex-direction:column;align-items:center;justify-content:space-between;
-      padding:calc(env(safe-area-inset-top,0px) + 18vh) 32px calc(env(safe-area-inset-bottom,0px) + 34px);box-sizing:border-box;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;transition:opacity .35s}
+    #px-boot{position:fixed;inset:0;z-index:90;background:#07050c;color:#ddd6ea;display:flex;flex-direction:column;align-items:center;
+      padding:calc(env(safe-area-inset-top,0px) + 9vh) 26px calc(env(safe-area-inset-bottom,0px) + 22px);box-sizing:border-box;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;transition:opacity .3s}
     #px-boot.fin{opacity:0;pointer-events:none}
-    #px-boot .c{display:flex;flex-direction:column;align-items:center;gap:22px}
-    #px-boot svg{width:118px;height:118px}
-    #px-boot svg .t{fill:none;stroke:#a597cf;stroke-width:2.2;stroke-linejoin:round}
-    #px-boot svg .u{fill:none;stroke:#3a3050;stroke-width:1.2;stroke-dasharray:2 5}
-    #px-boot svg .n{fill:#79d9a2}
-    #px-boot .m{font-weight:700;font-size:26px;letter-spacing:.32em;margin-left:.32em;color:#ddd6ea}
-    #px-boot .s{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#5f5878}
-    #px-boot .b{width:min(320px,78vw);display:flex;flex-direction:column;gap:9px}
-    #px-boot .r{height:4px;border-radius:2px;background:#0f0b18;box-shadow:inset 0 0 0 1px #272036;overflow:hidden}
-    #px-boot .r i{display:block;height:100%;width:3%;background:#a597cf;transition:width .3s}
-    #px-boot .e{display:flex;justify-content:space-between;font-size:10.5px;letter-spacing:.12em;text-transform:lowercase;color:#7f7699}
-    @media (prefers-reduced-motion:no-preference){ #px-boot svg .n{animation:pxb 2.4s ease-in-out infinite} #px-boot svg .u{animation:pxr 14s linear infinite;transform-origin:60px 60px} }
-    @keyframes pxb{0%,100%{opacity:.35}50%{opacity:1}}
-    @keyframes pxr{to{transform:rotate(360deg)}}
+    #px-boot .q{position:relative;width:min(58vw,220px);aspect-ratio:1}
+    #px-boot .q svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+    #px-boot .q .fond{fill:none;stroke:#1a1426;stroke-width:3}
+    #px-boot .q .barre{fill:none;stroke:#a597cf;stroke-width:3;stroke-linecap:square;transition:stroke-dashoffset .25s ease-out}
+    #px-boot .q .coin{fill:#79d9a2}
+    #px-boot .q .in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+    #px-boot .q .in svg{position:static;width:46%;height:auto}
+    #px-boot .t{fill:none;stroke:#a597cf;stroke-width:2.2;stroke-linejoin:round}
+    #px-boot .pc{font-size:22px;font-weight:700;letter-spacing:.06em;color:#ddd6ea}
+    #px-boot .m{margin-top:20px;font-weight:700;font-size:20px;letter-spacing:.32em;margin-left:.32em}
+    #px-boot .e{margin-top:6px;font-size:11px;letter-spacing:.14em;text-transform:lowercase;color:#79d9a2;min-height:1.3em;text-align:center}
+    #px-boot .astuce{margin-top:14px;font-size:12px;line-height:1.5;color:#7f7699;text-align:center;max-width:330px;min-height:3em;font-family:-apple-system,system-ui,sans-serif}
+    #px-boot .log{margin-top:auto;width:100%;max-width:440px;height:9.6em;overflow:hidden;font-size:10.5px;line-height:1.2em;color:#5f5878;
+      display:flex;flex-direction:column;justify-content:flex-end;border-top:1px solid #1a1426;padding-top:8px}
+    #px-boot .log div{display:flex;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #px-boot .log div:last-child{color:#a597cf}
+    #px-boot .log b{font-weight:400;color:#3a3050;min-width:4.6em;text-align:right;flex:none}
+    #px-boot .log i{font-style:normal;overflow:hidden;text-overflow:ellipsis}
+    #px-boot .v{margin-top:6px;font-size:10px;color:#3a3050;letter-spacing:.12em}
+    @media (prefers-reduced-motion:no-preference){ #px-boot .coin{animation:pxb 1.6s ease-in-out infinite} }
+    @keyframes pxb{0%,100%{opacity:.3}50%{opacity:1}}
   </style>
   <link rel="stylesheet" href="/src/app/app.css">
 </head>
 <body>
   <div id="px-boot" role="status" aria-label="ploxi0n démarre">
-    <div class="c">
-      <svg viewBox="0 0 120 120" aria-hidden="true">
-        <circle class="u" cx="60" cy="60" r="54"/>
-        <path class="t" d="M60 14 L100 37 L100 83 L60 106 L20 83 L20 37 Z"/>
-        <path class="t" d="M60 34 L82 60 L60 86 L38 60 Z" style="stroke-width:1.6;opacity:.7"/>
-        <circle class="n" cx="60" cy="60" r="4.5"/>
+    <div class="q">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <rect class="fond" x="2" y="2" width="96" height="96"/>
+        <path id="px-boot-r" class="barre" d="M50 2 H98 V98 H2 V2 Z" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>
+        <circle id="px-boot-c" class="coin" cx="50" cy="2" r="2.6"/>
       </svg>
-      <div class="m">PLOXI0N</div>
-      <div class="s">cycle 7026 · le xerboxion dans la poche</div>
+      <div class="in">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><path class="t" d="M60 14 L100 37 L100 83 L60 106 L20 83 L20 37 Z"/><path class="t" d="M60 34 L82 60 L60 86 L38 60 Z" style="stroke-width:1.6;opacity:.7"/></svg>
+        <span class="pc" id="px-boot-p">0 %</span>
+      </div>
     </div>
-    <div class="b">
-      <div class="r"><i id="px-boot-r"></i></div>
-      <div class="e"><span id="px-boot-e">éveil</span><span id="px-boot-v"></span></div>
-    </div>
+    <div class="m">PLOXI0N</div>
+    <div class="e" id="px-boot-e">éveil</div>
+    <div class="astuce" id="px-boot-a"></div>
+    <div class="log" id="px-boot-l" aria-live="polite"></div>
+    <div class="v" id="px-boot-v"></div>
   </div>
   <script>
+    // L'ÉCRAN DE CHARGEMENT v2 (RS-7 12.10 : « pas assez d'info ; rien pour occuper le cerveau ; un log de ce qui se passe ; une barre
+    // de chargement qui fait un carré entier ») : la barre fait le tour du carré ; chaque étape s'inscrit au journal avec son temps
+    // (+ ms depuis l'ouverture) ; une astuce change toutes les 2,5 s. window.__boot(pct, étape) · __bootLog(texte) · __bootFin().
     (function () {
-      var r = document.getElementById('px-boot-r'), e = document.getElementById('px-boot-e'), p = 3;
-      window.__boot = function (pct, etape) { if (pct > p) { p = Math.min(100, pct); if (r) r.style.width = p + '%'; } if (etape && e) e.textContent = etape; };
-      window.__bootFin = function () { var b = document.getElementById('px-boot'); if (!b || b.classList.contains('fin')) return; window.__boot(100); b.classList.add('fin'); setTimeout(function () { b.remove(); }, 400); };
-      setTimeout(window.__bootFin, 20000);   // jamais bloqué derrière l'écran de chargement
+      var t0 = (window.performance && performance.now) ? performance.now() : Date.now(), dernier = t0, p = 0, journal = [];
+      var r = document.getElementById('px-boot-r'), c = document.getElementById('px-boot-c'), pc = document.getElementById('px-boot-p'),
+          e = document.getElementById('px-boot-e'), l = document.getElementById('px-boot-l'), a = document.getElementById('px-boot-a');
+      var maintenant = function () { return (window.performance && performance.now) ? performance.now() : Date.now(); };
+      // le point vert court sur le carré (départ en haut au milieu, sens horaire)
+      var point = function (f) { var d = f * 384, x, y; if (d < 48) { x = 50 + d; y = 2; } else if (d < 144) { x = 98; y = 2 + (d - 48); } else if (d < 240) { x = 98 - (d - 144); y = 98; } else if (d < 336) { x = 2; y = 98 - (d - 240); } else { x = 2 + (d - 336); y = 2; } c.setAttribute('cx', x); c.setAttribute('cy', y); };
+      window.__bootLog = function (texte) {
+        var n = maintenant(), ligne = { t: Math.round(n - t0), d: Math.round(n - dernier), x: String(texte) }; dernier = n; journal.push(ligne);
+        if (!l) return; var div = document.createElement('div'); div.innerHTML = '<b></b><i></i>'; div.firstChild.textContent = '+' + ligne.t + ' ms'; div.lastChild.textContent = ligne.x + (ligne.d > 150 ? '  · ' + ligne.d + ' ms' : '');
+        l.appendChild(div); while (l.children.length > 8) l.removeChild(l.firstChild);
+      };
+      window.__boot = function (pct, etape) {
+        if (pct > p) { p = Math.min(100, pct); if (r) r.setAttribute('stroke-dashoffset', String(100 - p)); if (c) point(p / 100); if (pc) pc.textContent = Math.round(p) + ' %'; }
+        if (etape) { if (e) e.textContent = etape; window.__bootLog(etape); }
+      };
+      window.__bootJournal = function () { return { total: Math.round(maintenant() - t0), etapes: journal.slice() }; };
+      var ASTUCES = ['glisse depuis un bord : passe d\'une app à l\'autre', 'les deux bords ensemble, au milieu : portion', 'appui long sur un ploxion : épingler, déplacer, Face ID',
+        '⧗ dans le dock : note ce que tu fais, en un geste', '« Tell ploxi0n … » à Siri', 'penche le téléphone : le thème suit',
+        'Fichiers › Sur mon iPhone › ploxi0n : ton dossier', '⚙ › Apparence : ton fond d\'écran', '▁ minimise, ⧉ bascule, ‹ revient', 'chaque ploxion a sa vibration d\'ouverture'];
+      var ia = Math.floor(Math.random() * ASTUCES.length), astuce = function () { if (a) a.textContent = ASTUCES[ia++ % ASTUCES.length]; };
+      astuce(); var minuteAstuce = setInterval(astuce, 2500);
+      window.__bootFin = function () { var b = document.getElementById('px-boot'); if (!b || b.classList.contains('fin')) return; window.__boot(100, 'prêt'); clearInterval(minuteAstuce); b.classList.add('fin'); setTimeout(function () { b.remove(); }, 350); };
+      setTimeout(function () { window.__bootLog('⚠ plus de 20 s : on ouvre quand même'); window.__bootFin(); }, 20000);
+      window.__bootLog('la page est là');
     })();
   </script>
   <main id="ploxi0n"></main>
