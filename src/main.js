@@ -35,8 +35,9 @@ import { enregistrerGestion } from './app/gestion.js';
 import { creerFond } from './app/fond.js';
 import { creerDossier } from './natif/dossier.js';
 import { creerMouvement } from './app/mouvement.js';
+import { garderBoxion } from './boxion-local/garde.js';
 
-const VERSION = '0.41.0';
+const VERSION = '0.42.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -85,7 +86,8 @@ async function demarrer() {
   installerClavierIos({ W: window });   // les bons attributs pour le clavier d'iOS (dictée, trousseau, codes SMS, Entrée)
   const racine = document.getElementById('ploxi0n');
   boot(14, 'boxion local');
-  const boxion = await ouvrirBoxionLocal();
+  // la garde : un appel au boxion local ne fige plus jamais l'app (5 s au plus, puis la valeur par défaut, noté)
+  const boxion = garderBoxion(await ouvrirBoxionLocal(), { delai: 5000, surLent: (i) => bootLog('⚠ boxion lent : ' + i.appel + ' > 5 s') });
   boot(12, 'boxion local ouvert');
   const prefs = creerPrefs({ boxion }); await prefs.pret; prefs.appliquer();   // l'apparence avant le premier dessin
   boot(16, 'réglages · apparence');
@@ -354,6 +356,17 @@ async function demarrer() {
     } else routeur.accueil();
   }
   lancementOk();
+  // le boxion local a été lent : le dire ; et, plus tard, ranger le cache des routes (il grossissait sans fin : une clé par sondage)
+  if (boxion.lents().length) { const b = document.createElement('div'); b.className = 'px-bulle'; b.textContent = '⚠ le stockage du téléphone a été lent (' + boxion.lents().length + ' appel(s) > 5 s) : l\'app s\'est ouverte quand même ; ⚙ › Données › vider le cache peut aider'; racine.appendChild(b); setTimeout(() => b.remove(), 9000); }
+  setTimeout(async () => {
+    try {
+      const l = await boxion.list('routes'); let n = 0;
+      const vieux = l.filter(x => /[?&](since|t|_|after|ts|depuis)=/.test(x.key));
+      const reste = l.filter(x => !vieux.includes(x)).sort((a, b) => (b.maj || 0) - (a.maj || 0)).slice(300);
+      for (const x of [...vieux, ...reste]) { await boxion.del('routes', x.key); n++; }
+      if (n) console.info('[ploxi0n] cache des routes rangé :', n, 'entrées');
+    } catch (e) { /* */ }
+  }, 15000);
   // un raccourci (Siri, l'app Raccourcis, une automatisation) a pu demander un ploxion ou noter un tsoin
   raccourcis.recevoir().catch(() => {});
   publierValeurs().catch(() => {});

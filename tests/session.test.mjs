@@ -332,3 +332,19 @@ test('📶 un ploxion caché arrête ses vidéos (7 Go en un jour : des vidéos 
     assert.equal(pauses, 1, 'la vidéo cachée s\'arrête'); assert.equal(v.preload, 'none');
   } finally { p.fin(); }
 });
+
+test('🛟 la garde du boxion local : un appel qui ne répond plus ne fige rien (défaut après le délai, puis délai court)', async () => {
+  const { garderBoxion } = await import('../src/boxion-local/garde.js');
+  const { creerMemoire } = await import('../src/boxion-local/memoire.js');
+  const vrai = creerMemoire(); await vrai.put('a', 'k', 1);
+  let coince = false; const lents = [];
+  const b = Object.create(vrai); for (const n of ['get', 'list', 'put', 'lire']) b[n] = (...a) => coince ? new Promise(() => {}) : vrai[n](...a);
+  const g = garderBoxion(b, { delai: 60, surLent: (i) => lents.push(i.appel) });
+  assert.equal(await g.get('a', 'k'), 1, 'normal : la vraie valeur');
+  coince = true;
+  const t0 = Date.now();
+  assert.equal(await g.get('a', 'k'), null); assert.deepEqual(await g.list('a'), []); assert.deepEqual(await g.lire('tsoins'), []);
+  assert.equal(await g.put('a', 'k', 2), undefined);
+  assert.ok(Date.now() - t0 < 60 * 2 + 40 * 2 + 200, 'après 2 lents, les suivants vont plus vite');
+  assert.equal(g.lents().length, 4); assert.match(lents[0], /get a\/k/);
+});

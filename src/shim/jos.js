@@ -260,7 +260,9 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
         delete h['X-CSRF-TOKEN']; delete h['x-csrf-token'];
         const r = await relais.envoyer({ methode, url: cible, headers: { Accept: 'application/json', ...h }, corps });
         const type = (r.entetes && (r.entetes['content-type'] || r.entetes['Content-Type'])) || 'application/json';
-        if (methode === 'GET' && r.status === 200 && r.texte && r.texte.length < 2e6) boxion.put('routes', cle, { texte: r.texte, type, le: Date.now() }).catch(() => {});
+        // (0.42) jamais une réponse horodatée (?since=, ?t=, ?_=, ?after= : une clé neuve à chaque sondage → le cache grossissait sans fin et
+        // SQLite ralentissait jusqu'à figer le démarrage), jamais au-delà de 200 Ko
+        if (methode === 'GET' && r.status === 200 && r.texte && r.texte.length < 2e5 && !/[?&](since|t|_|after|ts|depuis)=/.test(url.search)) boxion.put('routes', cle, { texte: r.texte, type, le: Date.now() }).catch(() => {});
         return new W.Response(r.status === 204 || r.status === 304 ? null : r.texte, { status: r.status, headers: { 'Content-Type': type } });
       } catch (e) {
         const c = methode === 'GET' ? await boxion.get('routes', cle).catch(() => null) : null;
