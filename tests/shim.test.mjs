@@ -168,3 +168,32 @@ test('le MODE CONNECTÉ : toute route du serveur part sur xerboxion.org (en-têt
   assert.deepEqual(p.tentatives, []);
   p.fin();
 });
+
+test('jOSBoxion connecté : le boxion fait foi en ligne, copie locale hors ligne, les écritures hors ligne repartent au retour', async () => {
+  const serveur = { 'p4\u0000logs': { ns: 'p4', key: 'logs', name: 'logs', data: [{ t: 'log du xer' }], savedAt: 'x' } };
+  let enLigne = true; const appels = [];
+  const distant = { actif: () => enLigne, appel: async (m, chemin, corps) => {
+    appels.push(m + ' ' + chemin.split('?')[0]);
+    const u = new URL('https://x' + chemin), k = (u.searchParams.get('ns') || (corps && corps.ns)) + '\u0000' + (u.searchParams.get('key') || (corps && corps.key));
+    if (chemin.startsWith('/px/boxion/load')) return { status: 200, data: { item: serveur[k] || null } };
+    if (chemin.startsWith('/px/boxion/save')) { serveur[k] = { ...corps, savedAt: 'y' }; return { status: 200, data: { ok: true } }; }
+    if (chemin.startsWith('/px/boxion/list')) return { status: 200, data: { items: Object.values(serveur).map(d => ({ ns: d.ns, key: d.key })) } };
+    return { status: 404, data: null };
+  } };
+  const { page: pg } = await import('./aide.mjs');
+  const p = await pg({ ploxions: [] });
+  try {
+    const { installerShim } = await import('../src/shim/jos.js');
+    await installerShim({ boxion: p.boxion, fenetre: p.w, distant });
+    const B = p.w.jOSBoxion;
+    assert.deepEqual(await B.get('p4', 'logs'), [{ t: 'log du xer' }], 'l\'historique vient du boxion');
+    enLigne = false;
+    assert.deepEqual(await B.get('p4', 'logs'), [{ t: 'log du xer' }], 'hors ligne : la copie locale');
+    await B.save('p4', 'logs', [{ t: 'écrit dans le métro' }]);
+    assert.equal(serveur['p4\u0000logs'].data[0].t, 'log du xer', 'pas encore parti');
+    enLigne = true;
+    assert.deepEqual(await B.get('p4', 'logs'), [{ t: 'écrit dans le métro' }], 'en attente : la copie locale gagne');
+    assert.equal(await B.pousser(), 1);
+    assert.equal(serveur['p4\u0000logs'].data[0].t, 'écrit dans le métro', 'reparti au boxion');
+  } finally { p.fin(); }
+});

@@ -25,7 +25,7 @@ import { installerClavierIos, barreClavier, comprendre } from './natif/clavier-i
 import { trouverPloxion } from './natif/vocabulaire.js';
 import { creerVocal } from './natif/vocal.js';
 
-const VERSION = '0.27.0';
+const VERSION = '0.28.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -57,6 +57,7 @@ function clavierAuToucher() {
 }
 
 async function demarrer() {
+  let compteRef = null;   // le compte (plus bas) : admin → les ploxions admin du marketplace ; connecté → jOSBoxion sur le boxion
   garderViewport();
   clavierNatif();
   clavierAuToucher();
@@ -106,9 +107,23 @@ async function demarrer() {
   const fetchOrigine = window.fetch.bind(window), httpRelais = creerHttp(window, enTetes);
   const relais = { routes: [{ prefixe: '/bother', vers: (p) => SOURCE + '/api/app' + p }], general: () => modeConnecte && navigator.onLine !== false, vers: (p) => SOURCE + p,
     envoyer: (q) => httpRelais.requete(q, fetchOrigine) };
-  const shim = await installerShim({ boxion, routeur: routeurProxy, relais });
+  // jOSBoxion connecté : le boxion fait foi quand on est connecté et en ligne (pourriture-4, les notes… retrouvent leur historique)
+  const distant = {
+    actif: () => modeConnecte && navigator.onLine !== false && !!(compteRef && compteRef.etat().connecte),
+    appel: async (methode, chemin, corps) => {
+      const r = await httpRelais.requete({ methode, url: SOURCE + chemin, headers: { Accept: 'application/json', ...(corps ? { 'Content-Type': 'application/json' } : {}) }, corps: corps ? JSON.stringify(corps) : undefined }, fetchOrigine);
+      let data = null; try { data = JSON.parse(r.texte || 'null'); } catch (e) { /* */ }
+      return { status: r.status, data };
+    },
+  };
+  const shim = await installerShim({ boxion, routeur: routeurProxy, relais, distant });
+  window.addEventListener('online', () => { if (window.jOSBoxion && window.jOSBoxion.pousser) window.jOSBoxion.pousser().catch(() => {}); });
   // les images des ploxions en chemins du site → xerboxion.org ; celles qui exigent le compte → récupérées avec le jeton (data: URL)
-  installerImages({ W: window, source: SOURCE, avecJeton: async (url) => {
+  installerImages({ W: window, source: SOURCE, signer: async (chemins) => {
+    if (!(compteRef && compteRef.etat().connecte)) return {};
+    const r = await httpRelais.requete({ methode: 'POST', url: SOURCE + '/api/app/media', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, corps: JSON.stringify({ chemins }) }, fetchOrigine);
+    try { return r.status === 200 ? (JSON.parse(r.texte).urls || {}) : {}; } catch (e) { return {}; }
+  }, avecJeton: async (url) => {
     const h = await enTetes();
     if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
       const { CapacitorHttp } = await import('@capacitor/core');
@@ -124,7 +139,6 @@ async function demarrer() {
   const lireJson = async (u, defaut) => { try { return await (await fetch(u)).json(); } catch (e) { return defaut; } };
   const indexPack = await lireJson('/ploxions/index.json', { ploxions: [] }), pack = indexPack.ploxions || [];
   const compat = await lireJson('/marketplace/compat.json', {});
-  let compteRef = null;   // le compte (plus bas) : admin → les ploxions admin dans le marketplace
   const depot = creerDepot({ boxion, http: creerHttp(window, enTetes), estAdmin: () => !!(compteRef && compteRef.etat().admin), compat, packLocal: pack, lireLocal: async (id) => (await fetch('/ploxions/' + encodeURIComponent(id) + '/app.js')).text(),
     lireBionLocal: async (b) => { const r = await fetch('/bions/' + encodeURIComponent(b) + '.js'); if (!r.ok) throw new Error('bion absent'); return r.text(); } });
   // les ploxions de base (index.json « base » : bother me pour les testeurs) : installés une fois, au premier lancement ; retirables ensuite
@@ -154,7 +168,7 @@ async function demarrer() {
   }
   const compte = creerCompte({ boxion, http: creerHttp(window) });
   await compte.pret; compteRef = compte;
-  if (navigator.onLine !== false) compte.rafraichir().catch(() => {});   // le rang et « admin » à jour (un jeton expiré → déconnecté)
+  if (navigator.onLine !== false) { compte.rafraichir().catch(() => {}); if (window.jOSBoxion.pousser) window.jOSBoxion.pousser().catch(() => {}); }   // le rang et « admin » à jour (un jeton expiré → déconnecté)
   const reglerModeConnecte = (v) => { if (v != null) { modeConnecte = !!v; boxion.put('reglages', 'mode-connecte', modeConnecte); } return modeConnecte; };
   // 🎙 les vocaux : enregistrer, transcrire (iOS, le vocabulaire du xerboxion), garder ; jOSNatif.vocal pour les ploxions
   const vocal = creerVocal({ boxion, catalogue: () => (routeur ? routeur.catalogue() : []), vibrer: (x) => vibrer(x), ouvrir: (id, p) => routeurProxy.ouvrir(id, p), surEtat: () => routeur && routeur.rafraichirHud() });

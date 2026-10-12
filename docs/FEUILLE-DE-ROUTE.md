@@ -111,6 +111,9 @@
 | ✅ 0.24 | **Le clavier d'iOS à fond** : chaque champ reçoit les bons attributs (majuscules, correction, Entrée « Rechercher/Envoyer », claviers e-mail/URL/chiffres, trousseau des mots de passe, codes SMS) ; la barre au-dessus du clavier visible (QuickType, mots de passe, dictée) | RS-7 12.10 |
 | ✅ 0.24 | **« Dis à ploxi0n … »** (Siri) : une phrase dictée → ouvrir, chercher, noter un tsoin, accueil, minimiser | |
 | ✅ 0.24 | **Le vocabulaire du xerboxion** pour Siri : ce que Siri a cru entendre est corrigé (ploxion, xerboxion, tsoin, koin…, FR et EN), les ploxions retrouvés phonétiquement ; les phrases Siri en anglais (« Tell ploxi0n », « Open … in ploxi0n ») | iPhone en anglais |
+| ✅ 0.28 | **jOSBoxion connecté** : connecté et en ligne, le boxion fait foi (pourriture-4 et les autres retrouvent leur historique) ; copie locale et file d'écritures hors ligne | « j'ai pas l'historique de pourriture-4 » |
+| ✅ 0.28 | **Les médias du boxion** (vidéos, images, sons) par adresse signée : en flux dans le lecteur natif | |
+| ✅ 0.28 | **L'icône d'écran d'accueil EST le ploxion** (seul, depuis xerboxion.org) ; ou « ouvre ploxi0n dessus », au choix | « utiliser les ploxions ajoutés en app sur eux-mêmes » |
 | ✅ 0.27 | **🏠 HomeKit** (jOSNatif.maison : liste, allumer/éteindre — les kions dans le réel), **📶 Wi-Fi** d'un geste, **🎮 Game Center** (connexion, scores) ; **liens universels** et trousseau de xerboxion.org (Associated Domains) ; mémoire augmentée, notifications urgentes/communication, push (préparés) | RS-7 : « j'ai tout activé » |
 | ⏭ | Paquet suivant : iCloud (sauvegarde du boxion_local), Matter, Wallet (cartes du Nexus), VPN vers son boxion, App Attest, polices chill-tekk | |
 | ✅ 0.26 | **Chaque ploxion a sa signature haptique d'ouverture** (tirée de son nom ; remplaçable dans ⚙ › Haptique ; ou déclarée dans son manifeste `haptique`) | RS-7 12.10 |

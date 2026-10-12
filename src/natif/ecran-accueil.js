@@ -32,8 +32,9 @@ export function creerEcranAccueil({ W = globalThis.window, trouver, liste, boxio
     try { if (natif()) { const { Clipboard } = await import('@capacitor/clipboard'); await Clipboard.write({ string: t }); return true; } await W.navigator.clipboard.writeText(t); return true; } catch (e) { return false; }
   }
   /** fabrique le profil (labo) et l'ouvre dans Safari ; rend l'URL */
+  let dansApp = false;   // (12.10) par défaut l'icône EST le ploxion (seul, depuis xerboxion.org) ; sinon ploxi0n s'ouvre dessus
   async function installer(ids) {
-    const apps = ids.map(id => trouver(id)).filter(Boolean).slice(0, 40).map(p => ({ id: p.id, nom: String(p.nom || p.id).slice(0, 40), icone: iconePng(W, p.icone, 180, teinteDe(p.id)) }));
+    const apps = ids.map(id => trouver(id)).filter(Boolean).slice(0, 40).map(p => ({ id: p.id, nom: String(p.nom || p.id).slice(0, 40), icone: iconePng(W, p.icone, 180, teinteDe(p.id)), mode: dansApp ? 'app' : 'seul' }));
     if (!apps.length) throw new Error('choisis au moins un ploxion');
     if (apps.some(a => !a.icone)) throw new Error('impossible de dessiner les icônes');
     const r = await envoyer({ methode: 'POST', url: source + '/api/app/accueil', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, corps: JSON.stringify({ apps }) });
@@ -52,8 +53,9 @@ export function creerEcranAccueil({ W = globalThis.window, trouver, liste, boxio
     const f = W.document.createElement('div'); f.className = 'px-voile';
     const peindre = () => {
       f.innerHTML = '<div class="px-tiroir px-guide"><p class="px-ft">📲 Tes ploxions en apps</p>'
-        + '<p class="px-sous" style="margin:0 0 10px">Coche-les : chacun devient une icône de l\'écran d\'accueil qui ouvre ploxi0n directement dessus. Safari s\'ouvre, puis Réglages → « Profil téléchargé » → Installer.</p>'
+        + '<p class="px-sous" style="margin:0 0 10px">Coche-les : chacun devient une icône de l\'écran d\'accueil. Safari s\'ouvre, puis Réglages → « Profil téléchargé » → Installer.</p>'
         + '<div class="px-choix">' + tous.map(p => '<button class="px-tuile' + (choix.has(p.id) ? ' on' : '') + '" data-c="' + esc(p.id) + '"><span class="px-ic" style="--t:' + teinteDe(p.id) + '">' + esc(p.icone || '▣') + '</span><span>' + esc(p.nom || p.id) + '</span></button>').join('') + '</div>'
+        + '<div class="px-puces" style="margin:0 0 8px"><button class="px-puce' + (!dansApp ? ' on' : '') + '" data-mode="seul">l\'icône EST le ploxion</button><button class="px-puce' + (dansApp ? ' on' : '') + '" data-mode="app">ouvre ploxi0n dessus</button></div>'
         + '<button class="p" data-g="installer"' + (choix.size ? '' : ' disabled') + '>' + (choix.size ? 'Mettre ' + choix.size + ' app' + (choix.size > 1 ? 's' : '') + ' sur l\'écran d\'accueil' : 'coche au moins un ploxion') + '</button>'
         + '<p class="px-sous" data-msg style="margin:6px 2px"></p>'
         + (id ? '<button class="px-lien" data-g="raccourcis">ou avec Raccourcis (« Ouvrir un ploxion »)</button>' : '') + '<button data-g="">fermer</button></div>';
@@ -61,6 +63,7 @@ export function creerEcranAccueil({ W = globalThis.window, trouver, liste, boxio
     peindre();
     (W.document.getElementById('ploxi0n') || W.document.body).appendChild(f);
     f.addEventListener('click', async (e) => {
+      const md = e.target.closest('[data-mode]'); if (md) { dansApp = md.getAttribute('data-mode') === 'app'; peindre(); return; }
       const c = e.target.closest('[data-c]');
       if (c) { const k = c.getAttribute('data-c'); if (choix.has(k)) choix.delete(k); else choix.add(k); peindre(); return; }
       const b = e.target.closest('[data-g]'); if (!b && e.target !== f) return;

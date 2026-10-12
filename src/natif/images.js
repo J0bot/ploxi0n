@@ -5,13 +5,32 @@
 //   une image qui refuse quand même (une route qui exige le compte : 401/403/404 sans cookie) → récupérée AVEC le jeton (CapacitorHttp)
 //   et posée en data: URL. Les fichiers de l'app (/assets, /ploxions, /bions, /vendor, /icons, /marketplace) ne bougent pas.
 const LOCAL = /^\/(assets|ploxions|bions|vendor|icons|marketplace|fonts)\//;
-export function installerImages({ W = globalThis.window, source = 'https://xerboxion.org', avecJeton = null } = {}) {
+// (12.10) les MÉDIAS DU BOXION (/fs/read, /chaoxion/read, /coord/img|piece) : une adresse SIGNÉE (signer(chemins) → { chemin: url }, labo
+// AppMediaController) — une vidéo se lit en flux dans le lecteur natif d'iOS, une image sans détour ; gardée 90 min.
+const SIGNABLE = /^\/(fs\/read\?path=|chaoxion\/read\?path=|coord\/img\/\d+$|coord\/piece\/\d+$)/;
+export function installerImages({ W = globalThis.window, source = 'https://xerboxion.org', avecJeton = null, signer = null } = {}) {
+  const signees = new Map();   // chemin → { url, t }
+  async function signee(chemin) {
+    const c = signees.get(chemin); if (c && Date.now() - c.t < 90 * 60000) return c.url;
+    const r = await signer([chemin]); const url = r && r[chemin]; if (url) signees.set(chemin, { url, t: Date.now() }); return url || null;
+  }
   const D = W.document;
   const distant = (u) => typeof u === 'string' && u.startsWith('/') && !u.startsWith('//') && !LOCAL.test(u);
   const abs = (u) => source + u;
   const essaye = new WeakSet();
   function img(el) {
-    for (const a of ['src', 'poster']) { const v = el.getAttribute(a); if (distant(v)) el.setAttribute(a, abs(v)); }
+    for (const a of ['src', 'poster']) {
+      const v = el.getAttribute(a);
+      if (!distant(v)) continue;
+      if (signer && SIGNABLE.test(v)) {
+        el.setAttribute('data-px-signe', v);
+        const poser = (u) => { if (el.getAttribute('data-px-signe') !== v) return; el.setAttribute(a, u); if (el.tagName === 'SOURCE' && el.parentElement && el.parentElement.load) el.parentElement.load(); };
+        signee(v).then(u => poser(u || abs(v))).catch(() => poser(abs(v)));
+        if (el.tagName !== 'SOURCE') el.removeAttribute(a);   // pas de requête vouée à l'échec en attendant l'adresse signée
+        continue;
+      }
+      el.setAttribute(a, abs(v));
+    }
     const ss = el.getAttribute('srcset');
     if (ss && /(^|,)\s*\/[^/]/.test(ss)) el.setAttribute('srcset', ss.split(',').map(p => { const t = p.trim(); return distant(t) ? abs(t) : t; }).join(', '));
     const st = el.getAttribute('style');

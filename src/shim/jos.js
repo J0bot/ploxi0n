@@ -23,7 +23,7 @@ const NS_LS = 'localStorage';
 const NS_BOX = (ns) => 'box:' + ns;
 const ASSETS = /^\/(ploxions|assets|vendor|icons|fonts|img|data)\//;
 
-export async function installerShim({ boxion, fenetre = globalThis.window, routeur = null, journalSortant = null, relais = null } = {}) {
+export async function installerShim({ boxion, fenetre = globalThis.window, routeur = null, journalSortant = null, relais = null, distant = null } = {}) {
   if (!boxion) throw new Error('shim jOS : boxion_local manquant');
   const W = fenetre, D = W.document;
   const etat = { sortants: [], manques: [], tsoins: [], subs: new Map() };
@@ -123,6 +123,51 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
   // l'index des espaces de noms de jOSBoxion (pour list() sans ns)
   const saveBrut = jb.save;
   jb.save = async (ns, key, data, name) => { const r = await saveBrut(ns, key, data, name); if (r.ok) boxion.put('box-index', String(ns), 1).catch(() => {}); return r; };
+  // ---- jOSBoxion CONNECTÉ (RS-7 12.10 : « j'ai pas l'historique de pourriture-4 ») : connecté et en ligne, LE BOXION fait foi (les mêmes routes
+  // /px/boxion/* que le xer, avec le jeton) et chaque lecture rafraîchit la copie locale ; hors ligne, la copie locale ; ce qu'on y écrit
+  // est mis en file (boxion_local « boxion-a-pousser ») et repart au boxion au retour (jOSBoxion.pousser()). distant = { actif(), appel(m, chemin, corps) }
+  if (distant) {
+    const local = { save: jb.save, load: jb.load, list: jb.list, del: jb.del };
+    const enc = encodeURIComponent, cle = (ns, key) => enc(String(ns)) + '/' + enc(String(key));   // jamais \u0000 : le séparateur interne de boxion_local
+    const tenter = async (f) => { if (!distant.actif()) return null; try { const r = await f(); return r && r.status >= 200 && r.status < 300 ? r : null; } catch (e) { return null; } };
+    const enAttente = async (ns, key) => !!(await boxion.get('boxion-a-pousser', cle(ns, key)).catch(() => null));
+    jb.load = async (ns, key) => {
+      ns = String(ns); key = String(key); if (!valide(ns, key)) return null;
+      if (!(await enAttente(ns, key))) {
+        const r = await tenter(() => distant.appel('GET', '/px/boxion/load?ns=' + enc(ns) + '&key=' + enc(key)));
+        if (r && r.data && 'item' in r.data) { const it = r.data.item; if (it) await boxion.put(NS_BOX(ns), key, it).catch(() => {}); return it || null; }
+      }
+      return local.load(ns, key);
+    };
+    jb.lire = async (ns, key) => { ns = ns == null ? '' : String(ns); key = key == null ? '' : String(key); if (!valide(ns, key)) return { ok: false, status: 0, horsLigne: false, raison: 'invalide' }; const it = await jb.load(ns, key); return { ok: true, existe: !!it, item: it || null }; };
+    jb.save = async (ns, key, data, name) => {
+      const r0 = await local.save(ns, key, data, name); if (!r0.ok) return r0;
+      const r = await tenter(() => distant.appel('POST', '/px/boxion/save', { ns: String(ns), key: String(key), data: data === undefined ? null : data, name: name || String(key) }));
+      if (r) { await boxion.del('boxion-a-pousser', cle(ns, key)).catch(() => {}); return (r.data && r.data.ok !== undefined) ? r.data : r0; }
+      await boxion.put('boxion-a-pousser', cle(ns, key), { ns: String(ns), key: String(key), le: Date.now() }).catch(() => {});
+      return { ...r0, enAttente: true };
+    };
+    jb.list = async (ns) => {
+      const r = await tenter(() => distant.appel('GET', '/px/boxion/list' + (ns ? '?ns=' + enc(ns) : '')));
+      if (r && r.data && Array.isArray(r.data.items)) return r.data.items;
+      return local.list(ns);
+    };
+    jb.del = async (ns, key) => {
+      await local.del(ns, key);
+      const r = await tenter(() => distant.appel('POST', '/px/boxion/del', { ns: String(ns), key: String(key) }));
+      return r && r.data ? r.data : { ok: true, local: true };
+    };
+    jb.pousser = async () => {
+      let n = 0;
+      for (const { key } of await boxion.list('boxion-a-pousser').catch(() => [])) {
+        const a = await boxion.get('boxion-a-pousser', key); if (!a) continue;
+        const doc = await local.load(a.ns, a.key);
+        const r = doc ? await tenter(() => distant.appel('POST', '/px/boxion/save', { ns: a.ns, key: a.key, data: doc.data, name: doc.name })) : { status: 200 };
+        if (r) { await boxion.del('boxion-a-pousser', key); n++; }
+      }
+      return n;
+    };
+  }
   W.jOSBoxion = jb;
 
   // ---- le routeur et l'écran ------------------------------------------------------------------------------------------------------------
@@ -179,7 +224,7 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
       const b = await corpsDe(init);
       if (b && b.kind === 'tsoin') { const r = await marquer({ ...b, kind: 'tsoin' }); return json({ ok: true, seq: r.seq }); }
     }
-    if (p.startsWith('/px/boxion/')) {
+    if (p.startsWith('/px/boxion/') && !(distant && distant.actif())) {   // connecté : la route part au boxion (le relais, plus bas)
       const q = url.searchParams, b = methode === 'POST' ? await corpsDe(init) : {};
       if (p === '/px/boxion/save') return json(await jb.save(b.ns, b.key, b.data, b.name));
       if (p === '/px/boxion/load') { const d = await jb.load(q.get('ns'), q.get('key')); return json(d || { item: null }); }

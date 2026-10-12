@@ -567,3 +567,20 @@ test('chaque ploxion a sa signature haptique d\'ouverture : stable, différente,
   joue.length = 0; await h.jouerPloxion('bother', 'ouvrir', [['succes', 0]]); assert.deepEqual(joue, ['succes'], 'le manifeste du ploxion');
   await h.assigner('ouvrir', 'aucun'); joue.length = 0; await h.jouerPloxion('notes'); assert.deepEqual(joue, [], '« ouvrir = rien » coupe tout');
 });
+
+test('les médias du boxion : /fs/read passe par une adresse signée (vidéo en flux), les autres chemins vont simplement sur xerboxion.org', async () => {
+  const { installerImages } = await import('../src/natif/images.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    const demandes = [];
+    installerImages({ W, source: 'https://xerboxion.org', signer: async (c) => { demandes.push(...c); return Object.fromEntries(c.map(x => [x, 'https://xerboxion.org/app/m/' + 'a'.repeat(40)])); } });
+    const h = W.document.createElement('div');
+    h.innerHTML = '<video src="/fs/read?path=pourriture-4/log.mp4"></video><img src="/fs/read?path=a.png"><img src="/img/logo.png">';
+    W.document.body.appendChild(h); await attendre(30);
+    const [v] = h.querySelectorAll('video'), [i1, i2] = h.querySelectorAll('img');
+    assert.equal(v.getAttribute('src'), 'https://xerboxion.org/app/m/' + 'a'.repeat(40));
+    assert.equal(i1.getAttribute('src'), 'https://xerboxion.org/app/m/' + 'a'.repeat(40));
+    assert.equal(i2.getAttribute('src'), 'https://xerboxion.org/img/logo.png', 'un chemin public : pas de signature');
+    assert.deepEqual(demandes.sort(), ['/fs/read?path=a.png', '/fs/read?path=pourriture-4/log.mp4']);
+  } finally { p.fin(); }
+});
