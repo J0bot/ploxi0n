@@ -15,7 +15,7 @@ const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
   + R.map(r => `M512 ${512 - r}L${512 + r} 512L512 ${512 + r}L${512 - r} 512Z`).join('') + '"/></svg>';
 
-export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {} } = {}) {
+export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null } = {}) {
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
   // PLUSIEURS PLOXIONS VIVANTS (RS-7 12.10 : « pouvoir ouvrir des ploxions depuis des ploxions, et pouvoir minimiser un ploxion ») :
@@ -34,10 +34,32 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   // de tout ; glisser depuis le bord droit vers la gauche = l'app suivante, depuis le bord gauche vers la droite = la précédente.
   // L'ordre : l'accueil, puis les ploxions vivants dans l'ordre où ils ont été ouverts. Pointer events seulement, aucune minuterie.
   const SEUIL = 64;
+  // LES DEUX BORDS EN MÊME TEMPS (RS-7 12.10 : « quand on swipe bord droit et gauche en même temps, ça ouvre le portion ») : doubleBord()
+  // LES GESTES DES BORDS (RS-7 12.10 : « pas seulement sur le milieu, mais sur les bords aussi, pour des actions différentes ») : chaque bord a
+  // trois zones (haut, milieu, bas) ; les deux bords ensemble aussi — chaque geste fait l'action choisie (⚙ › Navigation, prefs().gestes)
+  const GESTES_DEFAUT = { 'g-haut': 'accueil', 'g-milieu': 'precedente', 'g-bas': 'basculer', 'd-haut': 'chercher', 'd-milieu': 'suivante', 'd-bas': 'minimiser',
+    'deux-haut': 'reglages', 'deux-milieu': 'portion', 'deux-bas': 'rien' };
+  const geste = (k) => { const g = prefs().gestes || {}; return g[k] || GESTES_DEFAUT[k]; };
+  function faire(action) {
+    if (!action || action === 'rien') return;
+    if (action === 'precedente' || action === 'suivante') { if (vivants.size) aCote(action === 'suivante' ? 1 : -1); return; }
+    if (action === 'accueil') { if (courant) { cacher(courant); courant = null; } pile = []; vibrer('bord'); return accueil(); }
+    if (action === 'minimiser') return courant ? minimiser() : null;
+    if (action === 'basculer') return vivants.size ? basculer() : null;
+    vibrer(action === 'portion' ? 'portion' : 'bord');
+    if (action === 'chercher') return ouvrir('marketplace', { chercher: '1' });
+    if (action === 'reglages') return ouvrir('reglages-app');
+    if (action === 'portion') return doubleBord ? doubleBord() : (ouvrirExterne && ouvrirExterne('portion'));
+    if (action.startsWith('ouvrir:')) { const id = action.slice(7); return parId.has(id) ? ouvrir(id) : (ouvrirExterne && ouvrirExterne(id)); }
+  }
+  const tenus = { g: false, d: false }, zones = { g: 'milieu', d: 'milieu' }; let lesDeux = false;
   for (const cote of ['g', 'd']) {
     const b = D.createElement('div'); b.className = 'px-bord px-bord-' + cote; b.setAttribute('aria-hidden', 'true'); racine.appendChild(b);
     let x0 = null, id0 = null;
-    b.addEventListener('pointerdown', (e) => { if (vivants.size === 0 || prefs().bords === false) return; x0 = e.clientX; id0 = e.pointerId; try { b.setPointerCapture(e.pointerId); } catch (er) { /* */ } b.classList.add('px-tire'); e.preventDefault(); });
+    b.addEventListener('pointerdown', (e) => {
+      if (prefs().bords === false) return; tenus[cote] = true; if (tenus.g && tenus.d) lesDeux = true;
+      const r = b.getBoundingClientRect(), f = r.height ? (e.clientY - r.top) / r.height : 0.5; zones[cote] = f < 0.33 ? 'haut' : f > 0.66 ? 'bas' : 'milieu';
+      b.dataset.zone = zones[cote]; x0 = e.clientX; id0 = e.pointerId; try { b.setPointerCapture(e.pointerId); } catch (er) { /* */ } b.classList.add('px-tire'); e.preventDefault(); });
     b.addEventListener('pointermove', (e) => {
       if (x0 == null || e.pointerId !== id0) return;
       const dx = (e.clientX - x0) * (cote === 'g' ? 1 : -1);
@@ -47,8 +69,9 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     const lacher = (e) => {
       if (x0 == null) return;
       const dx = ((e.clientX == null ? x0 : e.clientX) - x0) * (cote === 'g' ? 1 : -1);
-      x0 = null; b.classList.remove('px-tire'); b.style.removeProperty('--p');
-      if (e.type === 'pointerup' && dx > SEUIL) aCote(cote === 'd' ? 1 : -1);
+      x0 = null; tenus[cote] = false; b.classList.remove('px-tire'); b.style.removeProperty('--p');
+      if (lesDeux) { if (!tenus.g && !tenus.d) { lesDeux = false; if (e.type === 'pointerup') faire(geste('deux-' + zones.g)); } return; }
+      if (e.type === 'pointerup' && dx > SEUIL) faire(geste(cote + '-' + zones[cote]));
     };
     b.addEventListener('pointerup', lacher); b.addEventListener('pointercancel', lacher);
   }
@@ -250,6 +273,24 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     appui = { x0, y0, t: W.setTimeout(() => { appui = null; avaler = Date.now(); vibrer('appui'); actions(id); }, 450) };
   });
   const annulerAppui = () => { if (appui) { W.clearTimeout(appui.t); appui = null; } };
+  // L'APPUI LONG = LE CLIC DROIT dans les ploxions (RS-7 12.10 : « quand on presse longtemps quelque part, ça fait comme un clic droit ») :
+  // 500 ms sans bouger → un vrai « contextmenu » à l'élément sous le doigt (les menus du labo s'ouvrent) ; jamais sur un champ (l'appui
+  // long d'iOS y reste : sélection, loupe) ; le clic qui suit est avalé. Interrupteur : prefs().clicDroit === false.
+  let droit = null, avalerDroit = 0;
+  racine.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' || prefs().clicDroit === false) return;
+    const t = e.target; if (!t.closest || !t.closest('.px-hote') || t.closest('input,textarea,select,[contenteditable]:not([contenteditable=false])')) return;
+    const x0 = e.clientX, y0 = e.clientY;
+    droit = { x0, y0, t: W.setTimeout(() => {
+      droit = null;
+      const ev = new W.MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: x0, clientY: y0, screenX: x0, screenY: y0, button: 2, buttons: 2, view: W });
+      t.dispatchEvent(ev); vibrer('appui'); avalerDroit = Date.now();
+    }, 500) };
+  }, true);
+  const annulerDroit = () => { if (droit) { W.clearTimeout(droit.t); droit = null; } };
+  racine.addEventListener('pointermove', (e) => { if (droit && Math.hypot(e.clientX - droit.x0, e.clientY - droit.y0) > 10) annulerDroit(); }, true);
+  racine.addEventListener('pointerup', annulerDroit, true); racine.addEventListener('pointercancel', annulerDroit, true);
+  racine.addEventListener('click', (e) => { if (avalerDroit && Date.now() - avalerDroit < 800) { avalerDroit = 0; e.stopPropagation(); e.preventDefault(); } }, true);
   racine.addEventListener('pointermove', (e) => { if (appui && Math.hypot(e.clientX - appui.x0, e.clientY - appui.y0) > 10) annulerAppui(); });
   racine.addEventListener('pointerup', annulerAppui); racine.addEventListener('pointercancel', annulerAppui);
   racine.addEventListener('click', (e) => { if (avaler && Date.now() - avaler < 800 && e.target.closest('[data-id]') && !e.target.closest('.px-voile')) { avaler = 0; e.stopPropagation(); e.preventDefault(); } }, true);
@@ -373,7 +414,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   }
 
   return {
-    accueil, ouvrir, fermer, charger, retour, minimiser, aCote,
+    accueil, ouvrir, fermer, charger, retour, minimiser, aCote, faire, GESTES_DEFAUT,
     vivants: () => [...vivants.keys()], pile: () => pile.slice(),
     connait: (id) => parId.has(id), courant: () => (courant ? courant.id : null),
     majCatalogue(liste) { parId = new Map(liste.map(p => [p.id, p])); },

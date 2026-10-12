@@ -20,8 +20,9 @@ import { installerJosNatif } from './natif/jos-natif.js';
 import { brancherPlugions } from './natif/plugions.js';
 import { installerLecteur } from './natif/lecteur.js';
 import { creerHaptique } from './natif/haptique.js';
+import { installerImages } from './natif/images.js';
 
-const VERSION = '0.21.0';
+const VERSION = '0.22.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -44,6 +45,13 @@ async function demarrer() {
   const racine = document.getElementById('ploxi0n');
   const boxion = await ouvrirBoxionLocal();
   const prefs = creerPrefs({ boxion }); await prefs.pret; prefs.appliquer();   // l'apparence avant le premier dessin
+  // le plein écran complet : la barre d'état cachée (StatusBar) ; l'indicateur d'accueil et les bords haut/bas (PloxionVC, natif, lit la préférence)
+  async function pleinEcran(p) {
+    if (!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) return;
+    try { const { Preferences } = await import('@capacitor/preferences'); await Preferences.set({ key: 'ploxi0n.plein-ecran', value: p.pleinEcran ? '1' : '0' }); } catch (e) { /* */ }
+    try { const { StatusBar } = await import('@capacitor/status-bar'); if (p.pleinEcran) await StatusBar.hide(); else await StatusBar.show(); } catch (e) { /* */ }
+  }
+  pleinEcran(prefs.lire()); prefs.surChangement(pleinEcran);
   installerJosNatif(window);   // ⚡ le bion natif : toutes les capacités de l'iPhone, pour tous les ploxions
   // l'haptique de l'app (ouvrir, revenir, minimiser, les bords, les pages…) : par jOSNatif, coupée dans ⚙ › Apparence
   // 🎞 le lecteur natif : chaque <video>/<audio>/<iframe YouTube> des ploxions (écran verrouillé, AirPlay, PiP, YouTube par https, haptique du son)
@@ -74,6 +82,19 @@ async function demarrer() {
   const relais = { routes: [{ prefixe: '/bother', vers: (p) => SOURCE + '/api/app' + p }], general: () => modeConnecte && navigator.onLine !== false, vers: (p) => SOURCE + p,
     envoyer: (q) => httpRelais.requete(q, fetchOrigine) };
   const shim = await installerShim({ boxion, routeur: routeurProxy, relais });
+  // les images des ploxions en chemins du site → xerboxion.org ; celles qui exigent le compte → récupérées avec le jeton (data: URL)
+  installerImages({ W: window, source: SOURCE, avecJeton: async (url) => {
+    const h = await enTetes();
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+      const { CapacitorHttp } = await import('@capacitor/core');
+      const r = await CapacitorHttp.get({ url, headers: h, responseType: 'blob' });
+      if (r.status !== 200 || !r.data) return null;
+      const type = (r.headers && (r.headers['Content-Type'] || r.headers['content-type'])) || 'image/png';
+      return 'data:' + String(type).split(';')[0] + ';base64,' + r.data;
+    }
+    const r = await fetchOrigine(url, { headers: h }); if (!r.ok) return null;
+    return URL.createObjectURL(await r.blob());
+  } });
   window.jOSVerrou = creerVerrou();   // Face ID pour les ploxions
   const lireJson = async (u, defaut) => { try { return await (await fetch(u)).json(); } catch (e) { return defaut; } };
   const indexPack = await lireJson('/ploxions/index.json', { ploxions: [] }), pack = indexPack.ploxions || [];
@@ -127,7 +148,7 @@ async function demarrer() {
   // un ploxion sur l'écran d'accueil de l'iPhone (via Raccourcis) : depuis l'édition de l'accueil et la fiche du marketplace
   const ecranAccueil = creerEcranAccueil({ trouver: (id) => routeur.catalogue().find(p => p.id === id), liste: () => routeur.catalogue(), boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine) });
   window.jOSEcranAccueil = ecranAccueil;
-  routeur = creerRouteur({ racine, catalogue: internes, boxion, vibrer, prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}) });
+  routeur = creerRouteur({ racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), ouvrirExterne: (id) => routeurProxy.ouvrir(id), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}) });
   const rafraichir = () => { if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); };
   compte.surChangement(rafraichir);
   hud.surChangement(() => routeur.rafraichirHud());

@@ -57,6 +57,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         + (P ? section('apparence', 'Apparence', '<div class="bloc">'
           + seg('vue', [['grille', 'grille'], ['compacte', 'compacte'], ['liste', 'liste'], ['usage', 'usage'], ['recents', 'récents'], ['categories', 'catégories']], R().vueAccueil ? R().vueAccueil() : 'grille', 'Vue de l\'accueil')
           + seg('icones', [['petites', 'petites'], ['normales', 'normales'], ['grandes', 'grandes']], P.icones, 'Taille des icônes')
+          + bascule('data-pb="pleinEcran"', !!P.pleinEcran, 'Plein écran complet', 'sans barre d\'état ; la barre du bas s\'efface ; les bords haut et bas vont d\'abord à l\'app (un 2e glissé pour iOS)')
           + bascule('data-pb="haptique"', P.haptique !== false, 'Haptique', 'de petites vibrations : ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs')
           + bascule('data-pb="grain"', P.grain, 'Patine', 'le grain usé des plaques')
           + bascule('data-pb="contraste"', P.contraste === 'fort', 'Contraste fort', 'textes et bords plus clairs')
@@ -78,9 +79,19 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + bascule('data-lect="haptiqueSon"', lecteur.reglage().haptiqueSon, 'Haptique du son', 'les basses deviennent des vibrations — pour les sons lisibles par l\'app (pas YouTube ni la plupart des flux)')
           + '<div class="l"><span>Le son continue écran verrouillé et en silencieux<small>contrôles sur l\'écran verrouillé et le Centre de contrôle, AirPlay, Picture in Picture ; plein écran = le lecteur d\'iOS</small></span></div></div>') : '')
         + (P ? section('navigation', 'Navigation', '<div class="bloc">'
+          + bascule('data-pb="telecommande"', P.telecommande !== false, 'Télécommande', 'les barres en bas de l\'écran : tout au pouce (chill-tekk : on est tous des flemmards)')
           + bascule('data-pb="bords"', P.bords, 'Les bords', 'glisser depuis le bord gauche ou droit pour passer d\'une app à l\'autre')
-          + bascule('data-pb="appuiLong"', P.appuiLong, 'Appui long', 'le menu d\'un ploxion (épingler, déplacer, retirer…)')
-          + seg('maxVivants', [[3, '3'], [5, '5'], [8, '8']], P.maxVivants, 'Ploxions vivants en arrière-plan', 'au-delà, le plus ancien se ferme') + '</div>') : '')
+          + bascule('data-pb="appuiLong"', P.appuiLong, 'Appui long sur l\'accueil', 'le menu d\'un ploxion (épingler, déplacer, retirer…)')
+          + bascule('data-pb="clicDroit"', P.clicDroit !== false, 'Appui long = clic droit', 'dans les ploxions : leurs menus du clic droit s\'ouvrent')
+          + seg('maxVivants', [[3, '3'], [5, '5'], [8, '8']], P.maxVivants, 'Ploxions vivants en arrière-plan', 'au-delà, le plus ancien se ferme') + '</div>'
+          + '<p class="msg">Les gestes des bords : glisser depuis une zone d\'un bord (ou les deux bords ensemble)</p><div class="bloc">'
+          + (() => { const D0 = (R().GESTES_DEFAUT || {}), G = P.gestes || {}, cat2 = R().catalogue();
+              const ACTIONS = [['precedente', '← app précédente'], ['suivante', 'app suivante →'], ['accueil', '⌂ accueil'], ['minimiser', '▁ minimiser'], ['basculer', '⧉ basculer'], ['chercher', '🔎 chercher'], ['reglages', '⚙ réglages'], ['portion', '◈ portion'], ['rien', '— rien']]
+                .concat(cat2.filter(p => !p.interne).slice(0, 60).map(p => ['ouvrir:' + p.id, '▶ ' + (p.nom || p.id)]));
+              const ZONES = [['g-haut', 'gauche · haut'], ['g-milieu', 'gauche · milieu'], ['g-bas', 'gauche · bas'], ['d-haut', 'droit · haut'], ['d-milieu', 'droit · milieu'], ['d-bas', 'droit · bas'], ['deux-haut', 'les deux · haut'], ['deux-milieu', 'les deux · milieu'], ['deux-bas', 'les deux · bas']];
+              return ZONES.map(([z, n]) => { const v = G[z] || D0[z] || 'rien'; return '<div class="l"><span>' + esc(n) + '</span><select data-geste="' + z + '" style="max-width:52%;background:var(--surface2,#151021);color:inherit;border:2px solid var(--bord,#272036);border-radius:10px;padding:6px;font:13px inherit">'
+                + ACTIONS.map(([k, t]) => '<option value="' + esc(k) + '"' + (k === v ? ' selected' : '') + '>' + esc(t) + '</option>').join('') + '</select></div>'; }).join(''); })()
+          + '</div>') : '')
         + section('hud', 'HUD et dock', '<div class="bloc">' + (P ? bascule('data-pb="dock"', P.dock, 'Le dock en bas', 'compte, épinglés, ⚙') : '')
           + c.elements.map((x, i) => '<label class="l"><span>' + esc(ELS[x.k] || x.k) + '</span><button class="bas" data-monter="' + i + '"' + (i ? '' : ' disabled') + ' aria-label="monter">↑</button><input type="checkbox" data-el="' + i + '"' + (x.on ? ' checked' : '') + '></label>').join('')
           + '<div class="l"><span>⚙ réglages<small>toujours là</small></span></div></div>'
@@ -130,6 +141,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       if (t.matches('[data-t="coord"]')) { try { await notifs.coord(t.checked); const n = t.checked ? await notifs.verifierCoord() : []; msg(t.checked ? '✓ coord surveillé' + (n.length ? ' : ' + n.length + ' nouveau(x)' : '') : 'coord : plus de notifications'); } catch (er) { t.checked = false; await notifs.coord(false); msg('⚠ ' + (er.message || er)); } return; }
       if (t.matches('[data-el]')) return majHud(c => { c.elements[+t.getAttribute('data-el')].on = t.checked; });
       if (t.matches('[data-pb]') && prefs) { const k = t.getAttribute('data-pb'); await prefs.regler({ [k]: k === 'contraste' ? (t.checked ? 'fort' : 'normal') : t.checked }); return; }
+      if (t.matches('[data-geste]') && prefs) { const g = { ...(prefs.lire().gestes || {}), [t.getAttribute('data-geste')]: t.value }; await prefs.regler({ gestes: g }); return; }
       if (t.matches('[data-ev]') && haptique) { await haptique.assigner(t.getAttribute('data-ev'), t.value); haptique.jouer(t.value, { force: true }); return; }
       if (t.matches('[data-lect]') && lecteur) { await lecteur.regler({ [t.getAttribute('data-lect')]: t.checked }); return; }
       if (t.matches('[data-bion-on]')) { await depot.couperBion(t.getAttribute('data-bion-on'), !t.checked); msg(t.checked ? '✓ rallumé : il revient à la prochaine ouverture du ploxion' : '✓ coupé : il ne se charge plus (les ploxions qui l\'utilisent perdent sa fonction)'); t.closest('.l').classList.toggle('eteint', !t.checked); return; }

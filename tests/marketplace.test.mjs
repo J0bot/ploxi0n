@@ -314,6 +314,7 @@ test('multitâche : ouvrir un ploxion DEPUIS un ploxion (la pile, « ‹ » y re
     assert.ok(racine.querySelector('[data-basculer]'));
     // les bords : depuis c, le bord gauche → a (la précédente), encore → l'accueil ; le bord droit depuis l'accueil → a
     const tirer = (cote, dx) => { const b = racine.querySelector('.px-bord-' + cote), x = cote === 'g' ? 2 : 380;
+      b.getBoundingClientRect = () => ({ top: 0, height: 0, left: 0, width: 16 });   // jsdom : hauteur 0 → la zone du milieu
       b.dispatchEvent(new W.MouseEvent('pointerdown', { clientX: x, bubbles: true })); b.dispatchEvent(new W.MouseEvent('pointermove', { clientX: x + dx, bubbles: true })); b.dispatchEvent(new W.MouseEvent('pointerup', { clientX: x + dx, bubbles: true })); };
     tirer('g', 90); await attendre(20); assert.equal(r.courant(), 'a');
     tirer('g', 90); await attendre(20); assert.equal(r.courant(), null, 'l\'accueil');
@@ -446,4 +447,61 @@ test('haptique inventée : un motif sauvé, assigné à un événement, joué pa
   await h.assigner('page', 'aucun'); joue.length = 0; h.jouer('page'); assert.deepEqual(joue, []);
   await h.supprimer('coeur '); assert.equal(h.config().evenements.ouvrir, 'leger', 'un motif supprimé rend la main au défaut');
   assert.deepEqual((await boxion.get('reglages', 'haptique')).evenements.page, 'aucun', 'gardé');
+});
+
+test('les deux bords en même temps ouvrent portion (même depuis l\'accueil vide)', async () => {
+  const { creerRouteur } = await import('../src/app/routeur.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    const racine = W.document.createElement('div'); W.document.body.appendChild(racine);
+    const ouverts = [], vib = [];
+    const r = creerRouteur({ fenetre: W, racine, catalogue: [], vibrer: (x) => vib.push(x), doubleBord: () => ouverts.push('portion') });
+    await r.accueil();
+    const g = racine.querySelector('.px-bord-g'), d = racine.querySelector('.px-bord-d');
+    g.getBoundingClientRect = d.getBoundingClientRect = () => ({ top: 0, height: 0 });   // le milieu
+    const ev = (el, t, x) => el.dispatchEvent(new W.MouseEvent(t, { clientX: x, bubbles: true }));
+    ev(g, 'pointerdown', 2); ev(d, 'pointerdown', 380); ev(g, 'pointermove', 80); ev(d, 'pointermove', 300);
+    ev(g, 'pointerup', 80); assert.deepEqual(ouverts, [], 'pas avant d\'avoir lâché les deux');
+    ev(d, 'pointerup', 300);
+    assert.deepEqual(ouverts, ['portion']); assert.ok(vib.includes('portion'));
+    ev(d, 'pointerdown', 380); ev(d, 'pointerup', 300); assert.deepEqual(ouverts, ['portion'], 'un seul bord ne l\'ouvre pas');
+  } finally { p.fin(); }
+});
+
+test('appui long dans un ploxion = clic droit (contextmenu), jamais sur un champ', async () => {
+  const { creerRouteur } = await import('../src/app/routeur.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    W.jOSApps = W.jOSApps || {}; const recus = [];
+    W.jOSApps.menu = { manifest: { id: 'menu' }, mount(h) { h.innerHTML = '<div class="zone">x</div><input>'; h.querySelector('.zone').addEventListener('contextmenu', (e) => recus.push([e.button, e.clientX])); return { unmount() {} }; } };
+    const racine = W.document.createElement('div'); W.document.body.appendChild(racine);
+    const r = creerRouteur({ fenetre: W, racine, catalogue: [{ id: 'menu', nom: 'Menu' }] });
+    await r.ouvrir('menu'); await attendre(10);
+    const z = racine.querySelector('.zone'), i = racine.querySelector('.px-hote input');
+    z.dispatchEvent(new W.MouseEvent('pointerdown', { bubbles: true, clientX: 40, clientY: 50 })); await attendre(560);
+    assert.deepEqual(recus, [[2, 40]], 'le menu du clic droit reçoit l\'événement');
+    i.dispatchEvent(new W.MouseEvent('pointerdown', { bubbles: true, clientX: 40, clientY: 90 })); await attendre(560);
+    assert.equal(recus.length, 1, 'pas sur un champ');
+    z.dispatchEvent(new W.MouseEvent('pointerdown', { bubbles: true, clientX: 40, clientY: 50 })); z.dispatchEvent(new W.MouseEvent('pointerup', { bubbles: true })); await attendre(560);
+    assert.equal(recus.length, 1, 'un appui court reste un clic');
+  } finally { p.fin(); }
+});
+
+test('les images des ploxions : les chemins du site vont sur xerboxion.org ; les fichiers de l\'app ne bougent pas', async () => {
+  const { installerImages } = await import('../src/natif/images.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    installerImages({ W, source: 'https://xerboxion.org' });
+    const h = W.document.createElement('div');
+    h.innerHTML = '<img src="/storage/a.png" srcset="/img/b.png 2x, https://x.org/c.png 3x"><img src="/icons/ploxi0n.svg"><div style="background-image:url(\'/img/fond.jpg\')"></div><video poster="/px/v/p.jpg"></video>';
+    W.document.body.appendChild(h); await attendre(10);
+    const [a, b] = h.querySelectorAll('img');
+    assert.equal(a.getAttribute('src'), 'https://xerboxion.org/storage/a.png');
+    assert.equal(a.getAttribute('srcset'), 'https://xerboxion.org/img/b.png 2x, https://x.org/c.png 3x');
+    assert.equal(b.getAttribute('src'), '/icons/ploxi0n.svg', 'un fichier de l\'app reste local');
+    assert.match(h.querySelector('div').getAttribute('style'), /url\('https:\/\/xerboxion\.org\/img\/fond\.jpg'\)/);
+    assert.equal(h.querySelector('video').getAttribute('poster'), 'https://xerboxion.org/px/v/p.jpg');
+    a.setAttribute('src', '/coord/img/3'); await attendre(10);
+    assert.equal(a.getAttribute('src'), 'https://xerboxion.org/coord/img/3', 'une image changée plus tard aussi');
+  } finally { p.fin(); }
 });

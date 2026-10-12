@@ -128,7 +128,7 @@ button{font-family:inherit;-webkit-user-select:none;user-select:none}
 .px-bord::after{content:"";position:absolute;top:50%;width:4px;height:calc(40px + 80px * var(--p));transform:translateY(-50%);border-radius:2px;background:var(--bio);opacity:0;box-shadow:0 0 10px var(--glow)}
 .px-bord-g::after{left:2px}.px-bord-d::after{right:2px}
 .px-bord.px-tire::after{opacity:calc(.25 + .75 * var(--p))}
-.px-bord{pointer-events:none}.px-a-vivants .px-bord{pointer-events:auto}.px-sans-bords .px-bord{pointer-events:none !important}
+.px-bord{pointer-events:auto}.px-sans-bords .px-bord{pointer-events:none !important}
 
 /* ---- le DOCK en bas (RS-7 12.10 : « la barre boxion avec les épinglés en bas ») : compte, épinglés, ⚙, au pouce ---- */
 .px-accueil{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
@@ -192,3 +192,21 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]
 /* la bulle de message (Face ID…) */
 .px-bulle{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:60;padding:12px 16px;border-radius:14px;background:var(--surface2) var(--grain);border:var(--trait) solid var(--bord2);color:var(--txt);font:600 13.5px var(--police);box-shadow:0 12px 30px -10px rgba(0,0,0,.8)}
 .px-bulle[hidden]{display:none}
+.px-hote{-webkit-touch-callout:none}
+
+/* ---- LA TÉLÉCOMMANDE (RS-7 12.10 : « tout le monde est un gros flemmard en chill-tekk : la plupart des boutons en bas de l'écran, tout au
+   pouce, comme une télécommande ») : la barre d'un ploxion, la recherche et les vues du marketplace, la tête des réglages passent en bas. ---- */
+.px-telecommande .px-mode-ploxion .px-ecran{order:2}
+.px-telecommande .px-mode-ploxion .px-barre{border-bottom:0;border-top:var(--trait) solid var(--bord);padding-bottom:calc(8px + env(safe-area-inset-bottom,0px));min-height:56px}
+.px-telecommande #ploxi0n.px-mode-ploxion,.px-telecommande .px-mode-ploxion{padding-bottom:0}
+.px-telecommande .px-mode-ploxion .px-retour,.px-telecommande .px-mode-ploxion .px-mini,.px-telecommande .px-mode-ploxion .px-verrou{min-width:46px;min-height:46px}
+.px-telecommande .mk{display:flex;flex-direction:column-reverse}
+.px-telecommande .mk-top{top:auto;bottom:0;border-bottom:0;border-top:var(--trait,2px) solid var(--l)}
+.px-telecommande .mk-sec{top:0}
+.px-telecommande .rg{display:flex;flex-direction:column-reverse}
+.px-telecommande .rg-tete{top:auto;bottom:0;border-bottom:0;border-top:1px solid var(--bord)}
+.px-telecommande .px-bulle{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
+.px-telecommande .mk{padding:0;min-height:100%;box-sizing:border-box}
+.px-telecommande .mk>div[data-c]{flex:1}
+.px-telecommande .rg{padding-bottom:0;min-height:100%;box-sizing:border-box}
+.px-telecommande .rg>div[data-c]{flex:1;padding-bottom:16px}

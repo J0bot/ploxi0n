@@ -7,12 +7,12 @@
 // boxion_local « reglages/haptique » = { motifs: { nom: [[style, pause], …] }, evenements: { ev: cible } }.
 export const STYLES = [['leger', 'léger'], ['moyen', 'moyen'], ['fort', 'fort'], ['selection', 'cran'], ['succes', 'succès'], ['erreur', 'erreur']];
 export const EVENEMENTS = [['ouvrir', 'ouvrir un ploxion'], ['reprendre', 'reprendre un ploxion'], ['revenir', '‹ revenir'], ['minimiser', '▁ minimiser'],
-  ['bord', 'changer d\'app par un bord'], ['bord-seuil', 'le seuil du bord'], ['appui', 'appui long'], ['page', 'changer de page'], ['vue', 'changer de vue'],
+  ['bord', 'changer d\'app par un bord'], ['bord-seuil', 'le seuil du bord'], ['portion', 'les deux bords : portion'], ['appui', 'appui long'], ['page', 'changer de page'], ['vue', 'changer de vue'],
   ['interrupteur', 'interrupteur'], ['installe', 'ploxion installé'], ['erreur', 'erreur'], ['garder', 'découvrir : garder'], ['passer', 'découvrir : passer'],
   ['notification', 'notification']];
 const DEFAUT = {
   motifs: { notification: [['moyen', 90], ['leger', 70], ['leger', 0]], battement: [['fort', 140], ['moyen', 0]], vague: [['leger', 60], ['moyen', 60], ['fort', 60], ['moyen', 60], ['leger', 0]] },
-  evenements: { ouvrir: 'leger', reprendre: 'leger', revenir: 'leger', minimiser: 'moyen', bord: 'moyen', 'bord-seuil': 'selection', appui: 'moyen', page: 'selection', vue: 'selection',
+  evenements: { ouvrir: 'leger', reprendre: 'leger', revenir: 'leger', minimiser: 'moyen', bord: 'moyen', 'bord-seuil': 'selection', portion: 'motif:vague', appui: 'moyen', page: 'selection', vue: 'selection',
     interrupteur: 'selection', installe: 'succes', erreur: 'erreur', garder: 'moyen', passer: 'leger', notification: 'motif:notification' },
 };
 const STYLE = new Set(STYLES.map(s => s[0]));

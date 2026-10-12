@@ -88,6 +88,11 @@
 | ✅ 0.12 | **Ouvrir un ploxion depuis un ploxion** (pile : « ‹ » y revient vivant) | |
 | ✅ 0.12 | **▁ Minimiser**, « en arrière-plan » sur l'accueil, **⧉ basculer** | 5 vivants au plus |
 | ✅ 0.12 | **Les bords** gauche/droit : glisser pour passer d'une app à l'autre | |
+| ✅ 0.22 | **Les gestes des bords** : 3 zones par bord (haut, milieu, bas) + les deux bords ensemble, chacun son action (⚙ › Navigation) ; les deux bords au milieu = **portion** | RS-7 12.10 |
+| ✅ 0.22 | **Appui long = clic droit** dans les ploxions (leurs menus contextuels) | |
+| ✅ 0.22 | **Plein écran complet** : sans barre d'état, la barre du bas s'efface, les bords haut/bas d'abord à l'app (PloxionVC) | |
+| ✅ 0.22 | **La télécommande** : la barre d'un ploxion, la recherche du marketplace, la tête des réglages en bas (tout au pouce) | « on est tous des flemmards » |
+| ✅ 0.22 | **Les images des ploxions** : chemins du site → xerboxion.org ; avec le jeton si la route l'exige | « les images ne s'affichent jamais » |
 | ✅ 0.13 | Le **dock en bas** (compte, épinglés, ⚙) | RS-7 : « la barre boxion avec les épinglés en bas » |
 | ✅ 0.13 | **Six façons de voir ses ploxions** : grille, compacte, liste, usage (ses heures), récents, catégories | |
 | ✅ 0.13 | Le **droit au silence** appliqué : ce qu'un ploxion accroche à la page se cache, revient et part avec lui | le carré lilas flottant |
