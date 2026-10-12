@@ -9,7 +9,7 @@
 // http = { get(url, { headers }) → { status, texte, entetes } } : CapacitorHttp sur l'iPhone (pas de CORS), fetch ailleurs, un faux en test.
 export const SOURCE = 'https://xerboxion.org';
 // les bions que l'app fournit déjà (le shim, Face ID, le pack) : jamais téléchargés
-export const FOURNIS = new Set(['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou', 'jOSNatif', 'jOSRaccourcis', 'jOSEcranAccueil']);
+export const FOURNIS = new Set(['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou', 'jOSNatif', 'jOSRaccourcis', 'jOSEcranAccueil', 'jOSKeyboard']);
 /** les bions qu'un bundle du labo déclare attendre (window.__PLOXIONS_BIONS__[id] = [...]) */
 export function bionsDuBundle(js) {
   const m = /__PLOXIONS_BIONS__[\s\S]{0,200}?\]\s*=\s*(\[[^\]]*\])/.exec(js || '');
@@ -147,7 +147,7 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       const p = await boxion.get(NS, id); if (!p) return null;
       const coupes = new Set((await boxion.get('reglages', 'bions-coupes')) || []);
       let avant = '';
-      for (const b of p.bions || []) { if (coupes.has(b) || (deja && deja.has(b))) continue; if (deja) deja.add(b); const x = await boxion.get('bions', b); if (x && x.js) avant += '\n;/* bion ' + b + ' */\n' + x.js + '\n;'; }   // chaque bion se garde lui-même d'une double définition
+      for (const b of p.bions || []) { if (coupes.has(b) || FOURNIS.has(b) || (deja && deja.has(b))) continue; if (deja) deja.add(b); const x = await boxion.get('bions', b); if (x && x.js) avant += '\n;/* bion ' + b + ' */\n' + x.js + '\n;'; }   // chaque bion se garde lui-même d'une double définition
       return avant + '\n' + p.js;
     },
     // ---- GÉRER LES BIONS (RS-7 12.10 : « on doit pouvoir manager les bions ») ----

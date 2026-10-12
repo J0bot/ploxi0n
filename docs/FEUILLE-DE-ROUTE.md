@@ -108,6 +108,7 @@
 | | Quoi | Notes |
 |---|---|---|
 | ✅ 0.15 | **Réglages v2** : recherche, catégories, apparence (patine, contraste, calme, taille des icônes, plaque), navigation (bords, appui long, vivants), dock | |
+| ✅ 0.23 | **LE vrai coupable du clavier** : le bion jOSKeyboard (clavier maison du xer) posait inputmode="none" partout → fourni par l'app, le clavier d'iOS gagne toujours | le rapport du test clavier |
 | ✅ 0.16 | **Le clavier s'ouvre** : correctif natif (tout focus compte comme un toucher, comme Cordova/Ionic) + focus pendant le geste | RS-7 : « le clavier n'apparaît pas quand il faut » |
 | ✅ 0.15 | Écrire partout : les champs gagnent toujours contre un user-select:none d'un bion | RS-7 : « je peux jamais écrire nulle part » |
 | ✅ 0.11 | **Chill-tekk-7026** : presque noir, violets délavés, aucun dégradé, arrondi chill usé, patine, inscriptions gravées | |

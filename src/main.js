@@ -22,7 +22,7 @@ import { installerLecteur } from './natif/lecteur.js';
 import { creerHaptique } from './natif/haptique.js';
 import { installerImages } from './natif/images.js';
 
-const VERSION = '0.22.0';
+const VERSION = '0.23.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -34,6 +34,20 @@ function garderViewport() {
 
 // le clavier : toucher un champ lui donne le focus PENDANT le geste (en capture, avant qu'un bion n'annule le toucher) ; iOS n'ouvre le
 // clavier que dans ce cas. Complète le correctif natif (AppDelegate.clavierSansGeste).
+// LE CLAVIER NATIF GAGNE (RS-7 12.10, le rapport du test : focus pris puis perdu, pas de clavier) : le bion du labo jOSKeyboard (le clavier
+// maison du xer) pose inputmode="none" sur tous les champs pour REMPLACER le clavier d'iOS — servi seul, sans sa partie HTML, il n'y a
+// plus aucun clavier. Dans ploxi0n : jOSKeyboard est fourni par l'app (même API, il laisse faire iOS ; la version web n'est jamais chargée)
+// et tout inputmode="none" posé par un bion est retiré aussitôt.
+function clavierNatif() {
+  window.jOSKeyboard = { v: 'ploxi0n', natif: true, attach() {}, show() {}, hide() { try { document.activeElement && document.activeElement.blur(); } catch (e) { /* */ } }, isMobile: () => true };
+  const nettoyer = (el) => { if (el && el.getAttribute && el.getAttribute('inputmode') === 'none' && !el.hasAttribute('data-inputmode-voulu')) el.removeAttribute('inputmode'); };
+  try {
+    new MutationObserver((l) => { for (const m of l) { if (m.type === 'attributes') nettoyer(m.target); else for (const n of m.addedNodes) { if (n.nodeType === 1) { nettoyer(n); if (n.querySelectorAll) n.querySelectorAll('[inputmode="none"]').forEach(nettoyer); } } } })
+      .observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['inputmode'] });
+  } catch (e) { /* */ }
+  document.querySelectorAll('[inputmode="none"]').forEach(nettoyer);
+}
+
 function clavierAuToucher() {
   const champ = (t) => t && t.closest && t.closest('input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]):not([type=submit]):not([disabled]):not([readonly]),textarea:not([disabled]):not([readonly]),[contenteditable]:not([contenteditable=false])');
   document.addEventListener('touchend', (e) => { const c = champ(e.target); if (c && document.activeElement !== c) { try { c.focus(); } catch (er) { /* */ } } }, { capture: true, passive: true });
@@ -41,6 +55,7 @@ function clavierAuToucher() {
 
 async function demarrer() {
   garderViewport();
+  clavierNatif();
   clavierAuToucher();
   const racine = document.getElementById('ploxi0n');
   const boxion = await ouvrirBoxionLocal();

@@ -505,3 +505,14 @@ test('les images des ploxions : les chemins du site vont sur xerboxion.org ; les
     assert.equal(a.getAttribute('src'), 'https://xerboxion.org/coord/img/3', 'une image changée plus tard aussi');
   } finally { p.fin(); }
 });
+
+test('le clavier natif gagne : un bion qui pose inputmode="none" est défait ; jOSKeyboard est fourni (jamais téléchargé)', async () => {
+  const { FOURNIS } = await import('../src/marketplace/depot.js');
+  assert.ok(FOURNIS.has('jOSKeyboard'));
+  const s = serveur(), boxion = creerMemoire();
+  s.js.chat = BUNDLE('chat') + '\nif (window.jOSKeyboard) jOSKeyboard.attach();';
+  const demandes = []; const get = s.http.get;
+  s.http.get = async (url, o) => { if (url.includes('/px/bion-app/')) { demandes.push(url); return { status: 404, texte: '', entetes: {} }; } return get(url, o); };
+  const d = creerDepot({ boxion, http: s.http }); await d.installer('chat');
+  assert.ok(!demandes.some(u => u.includes('jOSKeyboard')), 'la version web n\'est jamais demandée');
+});
