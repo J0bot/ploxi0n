@@ -14,8 +14,7 @@
 //   parler(texte, { langue })          la synthèse vocale d'iOS
 //   meteo() WeatherKit · shazam() ShazamKit · musique.chercher/jouer/pause MusicKit (Apple Music)
 //   capacites() → la liste de ce qui est disponible ici
-import { registerPlugin } from '@capacitor/core';
-const PloxiApple = registerPlugin('PloxiApple');
+import { PloxiApple } from './plugins-app.js';
 
 export function installerJosNatif(W = globalThis.window) {
   const natif = !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());

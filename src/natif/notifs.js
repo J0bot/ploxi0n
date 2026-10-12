@@ -5,12 +5,13 @@
 //                   (iOS endort une app en arrière-plan : la vraie notification « app fermée » demande APNs, voir docs/FEUILLE-DE-ROUTE.md)
 //   toucher une notification de coord ouvre le ploxion 📡 coord
 // Réglages : boxion_local « reglages/notifs » = { coord: bool, dernierCoord: id }. Rien au premier passage (on ne réveille pas l'historique).
+import { surPromesse } from './plugin-sur.js';
 export function creerNotifs({ W = globalThis.window, boxion, vibrer = () => {}, envoyer, source = 'https://xerboxion.org', ouvrir = () => {}, charger = () => import('@capacitor/local-notifications') }) {
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
   let reglage = { coord: false, dernierCoord: 0 }, minuterie = null, ecoute = false;
   const pret = boxion.get('reglages', 'notifs').then(v => { if (v && typeof v === 'object') reglage = { ...reglage, ...v }; }).catch(() => {});
   const garder = () => boxion.put('reglages', 'notifs', reglage).catch(() => {});
-  async function LN() { return (await charger()).LocalNotifications; }
+  async function LN() { return surPromesse((await charger()).LocalNotifications); }
   async function permission() {
     const L = await LN(); const p = await L.requestPermissions();
     if (p.display !== 'granted') throw new Error('notifications refusées : Réglages iOS › ploxi0n › Notifications');

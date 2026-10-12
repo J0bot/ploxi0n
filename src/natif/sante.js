@@ -7,6 +7,7 @@
 //   - 7 ou 30 jours : les pas, le sommeil, la FC au repos, en barres (SVG, aucune bibliothèque) ;
 //   - les entraînements, et les APPAREILS qui ont écrit ces données (leur nom, leur type).
 // Rien ne quitte le téléphone. jOSNatif.sante pour les autres ploxions : chaque ploxion demande une fois (une feuille), refus = rien.
+import { surPromesse } from './plugin-sur.js';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 export const LECTURE = ['steps', 'distance', 'calories', 'flightsClimbed', 'exerciseTime', 'heartRate', 'restingHeartRate', 'heartRateVariability', 'oxygenSaturation',
   'respiratoryRate', 'vo2Max', 'weight', 'height', 'bodyFat', 'sleep', 'mindfulness', 'dietaryWater', 'appleStandHour', 'bloodPressure', 'bodyTemperature',
@@ -54,7 +55,7 @@ export function appareils(listes) {
 export function creerSante({ W = globalThis.window, boxion, vibrer = () => {}, plugin = null, courant = () => null }) {
   const D = W.document;
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
-  const H = async () => { if (plugin) return plugin; if (!natif()) throw new Error('Santé : sur l\'iPhone'); return (await import('@capgo/capacitor-health')).Health; };
+  const H = async () => { if (plugin) return surPromesse(plugin); if (!natif()) throw new Error('Santé : sur l\'iPhone'); return surPromesse((await import('@capgo/capacitor-health')).Health); };
   async function dispo() { try { const h = await H(); const r = await h.isAvailable(); return r && r.available ? { ok: true } : { ok: false, raison: (r && r.reason) || 'HealthKit indisponible' }; } catch (e) { return { ok: false, raison: e.message || String(e) }; } }
   async function autoriser() { const h = await H(); const r = await h.requestAuthorization({ read: LECTURE, write: [], requestHistoryAccess: true }); await boxion.put('reglages', 'sante', { demande: new Date().toISOString() }).catch(() => {}); vibrer('succes'); return r; }
   const dejaDemande = async () => !!(await boxion.get('reglages', 'sante').catch(() => null));

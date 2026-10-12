@@ -44,7 +44,7 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
   async function demarrer() {
     if (actif || enCours || echec) return; enCours = true; b = null;
     try {
-      if (!P) P = (await import('@capacitor/core')).registerPlugin('PloxiApple');
+      if (!P) P = (await import('../natif/plugins-app.js')).PloxiApple;
       ecoute = await P.addListener('mouvement', mesure);
       await P.mouvementDebut({ hz: 30 });
       actif = true; h.classList.add('px-vivant');

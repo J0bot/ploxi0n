@@ -3,9 +3,10 @@
 //   recevoir()       au lancement et à chaque retour au premier plan : ouvre le ploxion demandé, verse les tsoins notés par raccourci,
 //                    « Envoyer à un ploxion » (l'ouvre, puis jOSPorts.emit(id, port, texte)), « Chercher un ploxion » (le marketplace)
 //   valeur(cle, titre, valeur)  une valeur pour « Lire une valeur de ploxi0n » (et les widgets) ; les ploxions : jOSRaccourcis.publierValeur
+import { surPromesse } from './plugin-sur.js';
 export function creerRaccourcis({ W = globalThis.window, routeur, boxion, commande = null, charger = () => import('@capacitor/preferences') } = {}) {
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
-  async function P() { return (await charger()).Preferences; }
+  async function P() { return surPromesse((await charger()).Preferences); }
   const valeurs = {};
   boxion.get('reglages', 'valeurs').then(v => { if (v && typeof v === 'object') Object.assign(valeurs, v); }).catch(() => {});
   return {
