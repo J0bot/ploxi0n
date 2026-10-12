@@ -17,7 +17,7 @@ import { creerHud } from './app/hud.js';
 import { enregistrerReglages } from './app/reglages.js';
 import { creerPrefs } from './app/prefs.js';
 
-const VERSION = '0.15.0';
+const VERSION = '0.16.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -27,8 +27,16 @@ function garderViewport() {
   fixer();
 }
 
+// le clavier : toucher un champ lui donne le focus PENDANT le geste (en capture, avant qu'un bion n'annule le toucher) ; iOS n'ouvre le
+// clavier que dans ce cas. Complète le correctif natif (AppDelegate.clavierSansGeste).
+function clavierAuToucher() {
+  const champ = (t) => t && t.closest && t.closest('input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]):not([type=submit]):not([disabled]):not([readonly]),textarea:not([disabled]):not([readonly]),[contenteditable]:not([contenteditable=false])');
+  document.addEventListener('touchend', (e) => { const c = champ(e.target); if (c && document.activeElement !== c) { try { c.focus(); } catch (er) { /* */ } } }, { capture: true, passive: true });
+}
+
 async function demarrer() {
   garderViewport();
+  clavierAuToucher();
   const racine = document.getElementById('ploxi0n');
   const boxion = await ouvrirBoxionLocal();
   const prefs = creerPrefs({ boxion }); await prefs.pret; prefs.appliquer();   // l'apparence avant le premier dessin

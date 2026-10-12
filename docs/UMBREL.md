@@ -1,3 +1,6 @@
+> **La direction de RS-7 (12.10.2026)** : « Umbrel, c'est juste une inspiration qu'on peut prendre sur l'architecture, et aussi pour déjà préparer le terrain pour des collaborations futures. » « Eux, ils ont les avis des customers ; nous, on essaie de faire un écosystème entier. »
+> Donc : on n'intègre pas leur code ni leur catalogue maintenant ; on s'inspire de leur architecture (app store = dépôt git, auth par app, widgets typés, MCP, sessions natives courtes) et on garde nos formats compatibles (widgets, manifestes) pour qu'une collaboration soit simple le jour venu.
+
 # Umbrel : ce que c'est, ce qu'on peut en tirer
 
 > Recherche du 12.10.2026, en lecture seule. Sources : `getumbrel/umbrel` (umbrelOS 2.0.0, sorti le 22.09.2026), `getumbrel/umbrel-apps` (état du 12.10), `getumbrel/umbrel-community-app-store`, `getumbrel/umbrel-apps-gallery`, apps.umbrel.com, umbrel.com/legal. Les chiffres viennent d'un comptage sur l'archive du dépôt d'apps (pas d'estimation). Rien ici n'est un avis juridique : la partie licence dit ce que disent les textes, et où il faut demander.

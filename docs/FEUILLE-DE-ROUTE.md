@@ -48,6 +48,7 @@
 | ⏭ | Les ploxions **admin** visibles pour l'admin (pourriture-4…) | pourriture-4 reste personnel |
 | ⏭ | Le **marketplace des raccourcis** : des recettes Raccourcis prêtes (liens iCloud) | plan-suite 13 |
 | 💭 | **Plusieurs sources** : le boxion de chaque xeroction du Nexus, après le banc de compatibilité | plan-suite 7 |
+| 💭 | **Umbrel** : une inspiration d'architecture et le terrain d'une collaboration future (docs/UMBREL.md) ; formats compatibles (7 types de widgets, manifestes) ; CasaOS / Runtipi (licences libres) comme sources possibles | RS-7 : « eux ont les avis des customers, nous un écosystème entier » |
 | 💭 | Le **Steam Workshop** comme source (miroir labo `/px/workshop/*.json`, clé Steam sur le boxion) | plan-suite 12 |
 | 💭 | Les **ploxions comme joueurs** : rangs, stats, commits, l'usage par feature (pas seulement par ploxion) | braindump machine à tsoin |
 
@@ -91,6 +92,7 @@
 | | Quoi | Notes |
 |---|---|---|
 | ✅ 0.15 | **Réglages v2** : recherche, catégories, apparence (patine, contraste, calme, taille des icônes, plaque), navigation (bords, appui long, vivants), dock | |
+| ✅ 0.16 | **Le clavier s'ouvre** : correctif natif (tout focus compte comme un toucher, comme Cordova/Ionic) + focus pendant le geste | RS-7 : « le clavier n'apparaît pas quand il faut » |
 | ✅ 0.15 | Écrire partout : les champs gagnent toujours contre un user-select:none d'un bion | RS-7 : « je peux jamais écrire nulle part » |
 | ✅ 0.11 | **Chill-tekk-7026** : presque noir, violets délavés, aucun dégradé, arrondi chill usé, patine, inscriptions gravées | |
 | ⏭ | Les **trois modes** : chill-tekk (tsoin engine seul, chill absolu) · xerboxion (tout tourne) · xeroction (voir ce qu'on a fait) | braindump 11.10 |
