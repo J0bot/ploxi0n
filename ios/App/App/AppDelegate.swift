@@ -35,6 +35,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         d.set(plantages, forKey: "ploxi0n.plantages")
         d.set(String(plantages), forKey: "CapacitorStorage.ploxi0n.plantages")
         d.set("en-cours", forKey: "CapacitorStorage.ploxi0n.lancement")
+        // L'ESPACE LIBRE (RS-7 12.10 : figé au démarrage, à un endroit différent chaque fois, entre +16 et +161 ms ; « j'ai pas beaucoup de
+        // place sur mon tel ») : un disque plein fige SQLite et WebKit. Mesuré à chaque lancement (la page le montre au journal) ; sous 1,5 Go,
+        // les CACHES de l'app sont vidés (WebKit, réseau : régénérables — jamais Documents ni la base).
+        let fm = FileManager.default
+        if let attrs = try? fm.attributesOfFileSystem(forPath: NSHomeDirectory()), let libre = attrs[.systemFreeSize] as? NSNumber {
+            d.set(String(libre.int64Value), forKey: "CapacitorStorage.ploxi0n.espace-libre")
+            if libre.int64Value < 1_500_000_000, let caches = fm.urls(for: .cachesDirectory, in: .userDomainMask).first,
+               let items = try? fm.contentsOfDirectory(at: caches, includingPropertiesForKeys: nil) {
+                var vide: Int64 = 0
+                for u in items {
+                    if let t = try? u.resourceValues(forKeys: [.totalFileAllocatedSizeKey, .isDirectoryKey]) { vide += Int64(t.totalFileAllocatedSize ?? 0) }
+                    try? fm.removeItem(at: u)
+                }
+                d.set(String(items.count) + " éléments, " + String(vide / 1_000_000) + " Mo", forKey: "CapacitorStorage.ploxi0n.caches-vides")
+            } else { d.removeObject(forKey: "CapacitorStorage.ploxi0n.caches-vides") }
+        }
         let sur = plantages >= 2
         d.set(sur ? "1" : "0", forKey: "CapacitorStorage.ploxi0n.mode-sur")
         if !sur && d.string(forKey: "CapacitorStorage.ploxi0n.clavier-libre") != "off" { AppDelegate.clavierSansGeste() }

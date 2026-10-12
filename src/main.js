@@ -37,7 +37,7 @@ import { creerDossier } from './natif/dossier.js';
 import { creerMouvement } from './app/mouvement.js';
 import { garderBoxion } from './boxion-local/garde.js';
 
-const VERSION = '0.42.0';
+const VERSION = '0.43.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -73,6 +73,7 @@ const bootLog = (t) => { try { window.__bootLog && window.__bootLog(t); } catch 
 // LE MODE SÛR DU DÉMARRAGE (RS-7 12.10 : « ça reste systématiquement bloqué ») : demandé par l'écran de chargement (bloqué 6 s → « mode sûr »)
 // → ce lancement-ci SANS le fond photo, le thème vivant, la reprise de session, la barre du haut, le dossier Fichiers ni les notifications
 // (les ajouts récents et lourds) ; une seule fois : le lancement suivant réessaie tout.
+const sous3sPre = (pr) => Promise.race([pr, new Promise((_, ko) => setTimeout(() => ko(new Error('délai')), 3000))]);
 let modeSurJs = false;
 try { modeSurJs = localStorage.getItem('ploxi0n.mode-sur-js') === '1'; localStorage.removeItem('ploxi0n.mode-sur-js'); } catch (e) { /* */ }
 async function demarrer() {
@@ -89,6 +90,9 @@ async function demarrer() {
   // la garde : un appel au boxion local ne fige plus jamais l'app (5 s au plus, puis la valeur par défaut, noté)
   const boxion = garderBoxion(await ouvrirBoxionLocal(), { delai: 5000, surLent: (i) => bootLog('⚠ boxion lent : ' + i.appel + ' > 5 s') });
   boot(12, 'boxion local ouvert');
+  // l'espace libre du téléphone (AppDelegate) : au journal ; un disque presque plein fige tout
+  try { const { Preferences } = await import('@capacitor/preferences'); const l = +((await sous3sPre(Preferences.get({ key: 'ploxi0n.espace-libre' }))).value || 0), v = (await sous3sPre(Preferences.get({ key: 'ploxi0n.caches-vides' }))).value;
+    if (l) bootLog('espace libre : ' + (l / 1e9).toFixed(1) + ' Go' + (l < 1.5e9 ? ' ⚠ presque plein' : '') + (v ? ' · caches vidés (' + v + ')' : '')); } catch (e) { /* */ }
   const prefs = creerPrefs({ boxion }); await prefs.pret; prefs.appliquer();   // l'apparence avant le premier dessin
   boot(16, 'réglages · apparence');
   // 🖼 le fond d'écran (photo ou motif gravé), avant le premier dessin aussi

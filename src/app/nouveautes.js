@@ -4,6 +4,9 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.43.0', titre: 'Quand le téléphone est plein', points: [
+    '💾 Au lancement, l\'app mesure l\'espace libre ; sous 1,5 Go elle vide ses caches (jamais tes données). L\'espace libre s\'affiche au journal du chargement.',
+  ] },
   { v: '0.42.0', titre: 'L\'app s\'ouvre toujours', points: [
     '🛟 Corrigé : le stockage du téléphone pouvait figer le démarrage. Chaque accès a maintenant un délai : l\'app s\'ouvre quoi qu\'il arrive (et le dit si le stockage a été lent).',
     '🧹 Le cache des réponses du serveur ne grossit plus sans fin (il gardait chaque sondage) ; il se range tout seul.',
