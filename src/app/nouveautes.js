@@ -4,6 +4,13 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.47.0', titre: 'Le natif, partout', points: [
+    '⚡ Tous tes ploxions deviennent natifs : vibrer (Taptic Engine), la position, les notifications, la dictée, les QR, le gyroscope, Bluetooth, NFC, garder l\'écran allumé, le partage et le presse-papiers passent par l\'iPhone. ⚙ › Natif les montre.',
+    '🛠 Corrigé, enfin : Raccourcis et Siri (ouvrir un ploxion, noter un tsoin, « Dis à ploxi0n »), les widgets (épinglés, valeurs), Face ID, les notifications et Santé échouaient en silence sur l\'iPhone depuis le début.',
+    '❤ Santé lit vraiment Apple Santé ; « ☁ envoyer » met un résumé (jamais les mesures brutes) sur ton boxion, pour le hub 🌸 Santé et tes autres appareils. Éteint par défaut.',
+    '⚙ Les réglages, plus calmes : un accueil court, une page par catégorie, des sous-pages (gestes des bords, haptique).',
+    '📐 Corrigé : avec le thème vivant, l\'accueil débordait sur le côté (la 5e colonne coupée, une barre verte à gauche).',
+  ] },
   { v: '0.46.0', titre: 'Le natif, pour de vrai', points: [
     '🔌 Corrigé : les capacités natives de l\'app n\'étaient jamais branchées (gyroscope, météo, Shazam, Apple Music, HomeKit, Wi-Fi, Game Center, les vocaux). Le thème vivant bouge enfin.',
   ] },

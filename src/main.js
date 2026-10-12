@@ -38,7 +38,7 @@ import { creerMouvement } from './app/mouvement.js';
 import { garderBoxion } from './boxion-local/garde.js';
 import { installerWebNatif } from './natif/web-natif.js';
 
-const VERSION = '0.46.0';
+const VERSION = '0.47.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
