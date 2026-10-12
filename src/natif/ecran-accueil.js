@@ -68,7 +68,7 @@ export function creerEcranAccueil({ W = globalThis.window, trouver, liste, boxio
       const g = b ? b.getAttribute('data-g') : '';
       const msg = f.querySelector('[data-msg]');
       try {
-        if (g === 'installer') { b.disabled = true; b.textContent = '⏳'; await installer([...choix]); msg.textContent = '✓ profil prêt : installe-le dans Réglages (Profil téléchargé)'; b.disabled = false; b.textContent = 'renvoyer le profil'; return; }
+        if (g === 'installer') { b.disabled = true; b.textContent = '⏳'; await installer([...choix]); msg.innerHTML = '✓ profil envoyé à Safari. Ensuite :<ol class="px-etapes"><li>Safari : <b>Autoriser</b> le téléchargement</li><li>ouvre <b>Réglages</b> : tout en haut, <b>Profil téléchargé</b> (sinon Général › VPN et gestion de l\'appareil)</li><li><b>Installer</b> (3 fois), puis ton code ; « non vérifié » est normal</li></ol>Si une erreur s\'affiche, envoie-moi une capture (bother me).'; b.disabled = false; b.textContent = 'renvoyer le profil'; return; }
         if (g === 'raccourcis') { await copier('ploxi0n://px/' + encodeURIComponent(id)); W.location.href = 'shortcuts://create-shortcut'; return; }
       } catch (er) { msg.textContent = '⚠ ' + (er.message || er); if (b) { b.disabled = false; b.textContent = 'réessayer'; } return; }
       f.remove();
