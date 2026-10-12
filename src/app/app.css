@@ -265,3 +265,20 @@ html.px-haut-on #ploxi0n{padding-top:max(env(safe-area-inset-top,0px),22px)}
 .px-nv-liste section:first-child h3{color:var(--bio);margin-top:4px}
 .px-nv-liste ul{margin:0;padding:0;list-style:none}
 .px-nv-liste li{padding:8px 0;border-bottom:1px solid var(--filet);line-height:1.45;color:var(--txt)}
+
+/* ---- ❤ la santé ---- */
+.px-sante{padding:12px 14px 110px}
+.px-sante h2{font:700 1.3rem var(--police);margin:8px 0}
+.px-sante h3{font:600 .7rem var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin:20px 0 8px}
+.px-sante-tuiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.px-sante-t{background:var(--surface) var(--grain);border:var(--trait) solid var(--bord);border-radius:14px;padding:10px 11px;min-width:0}
+.px-sante-t small{display:block;font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-sante-t b{display:block;font:700 1.15rem var(--police);margin-top:4px;color:var(--txt)}
+.px-sante-gros{font:700 1.8rem var(--police);margin:0 0 8px}
+.px-sante-phases{display:flex;gap:3px;border-radius:10px;overflow:hidden}
+.px-sante-phases span{min-width:0;padding:8px 6px;font:600 10px var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--surface2);color:var(--txt)}
+.px-sante-phases .ph-deep{background:#3a2f6e}.px-sante-phases .ph-rem{background:#5b4a9a}.px-sante-phases .ph-light{background:#2e3d5c}.px-sante-phases .ph-awake{background:#5a3a3a}
+.px-sante-barres{width:100%;height:110px;display:block}
+.px-sante-barres rect{fill:var(--acc)}.px-sante-barres rect:last-of-type{fill:var(--bio)}
+.px-sante-barres text{font:600 9px var(--mono);fill:var(--muted)}
+.px-journal-bas.px-puces{display:flex;gap:8px;justify-content:center}

@@ -9,7 +9,7 @@
 // http = { get(url, { headers }) → { status, texte, entetes } } : CapacitorHttp sur l'iPhone (pas de CORS), fetch ailleurs, un faux en test.
 export const SOURCE = 'https://xerboxion.org';
 // les bions que l'app fournit déjà (le shim, Face ID, le pack) : jamais téléchargés
-export const FOURNIS = new Set(['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou', 'jOSNatif', 'jOSRaccourcis', 'jOSEcranAccueil', 'jOSKeyboard']);
+export const FOURNIS = new Set(['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou', 'jOSNatif', 'jOSRaccourcis', 'jOSEcranAccueil', 'jOSKeyboard', 'jOSUsage']);
 /** les bions qu'un bundle du labo déclare attendre (window.__PLOXIONS_BIONS__[id] = [...]) */
 export function bionsDuBundle(js) {
   const m = /__PLOXIONS_BIONS__[\s\S]{0,200}?\]\s*=\s*(\[[^\]]*\])/.exec(js || '');
@@ -74,7 +74,7 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
           if (r.status !== 200) throw new Error('registre : HTTP ' + r.status);
           const brut = JSON.parse(r.texte);
           const items = (Array.isArray(brut) ? brut : brut.ploxions || brut.items || []).filter(p => p && p.id && p.hasScreen && p.enabled !== false && (!p.admin || estAdmin()) && p.status === 'live')
-            .map(p => ({ id: p.id, nom: p.name || p.id, icone: p.icon || '▣', description: String(p.description || '').slice(0, 400), categorie: p.cat_label || 'Autres', cat_icone: p.cat_icon || '📦', compat: compat[p.id] || null, admin: !!p.admin, mtime: +p.mtime || 0, fournit: Array.isArray(p.provides) ? p.provides.slice(0, 8).map(String) : [] }));
+            .map(p => ({ id: p.id, nom: p.name || p.id, icone: p.icon || '▣', description: String(p.description || '').slice(0, 400), categorie: p.cat_label || 'Autres', cat: p.category || null, cat_icone: p.cat_icon || '📦', compat: compat[p.id] || null, admin: !!p.admin, mtime: +p.mtime || 0, fournit: Array.isArray(p.provides) ? p.provides.slice(0, 8).map(String) : [] }));
           const c = { maj: new Date().toISOString(), source, items };
           await boxion.put(META, 'catalogue', c);
           return { ...c, horsLigne: false };

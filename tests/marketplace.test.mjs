@@ -503,6 +503,13 @@ test('les images des ploxions : les chemins du site vont sur xerboxion.org ; les
     assert.equal(h.querySelector('video').getAttribute('poster'), 'https://xerboxion.org/px/v/p.jpg');
     a.setAttribute('src', '/coord/img/3'); await attendre(10);
     assert.equal(a.getAttribute('src'), 'https://xerboxion.org/coord/img/3', 'une image changée plus tard aussi');
+    // un ploxion qui encadre une page du site (le wiki) : la page vient du site, pas de capacitor://localhost
+    const f = W.document.createElement('iframe'); f.src = '/wiki/cubion?embed=1'; h.appendChild(f); await attendre(10);
+    assert.equal(f.getAttribute('src'), 'https://xerboxion.org/wiki/cubion?embed=1');
+    f.setAttribute('src', '/wiki/kion'); await attendre(10);
+    assert.equal(f.getAttribute('src'), 'https://xerboxion.org/wiki/kion', 'le wiki qui navigue (jOSWire) aussi');
+    const g = W.document.createElement('iframe'); g.src = 'https://www.youtube-nocookie.com/embed/x'; h.appendChild(g); await attendre(10);
+    assert.equal(g.getAttribute('src'), 'https://www.youtube-nocookie.com/embed/x', 'une adresse complète ne bouge pas');
   } finally { p.fin(); }
 });
 

@@ -131,11 +131,16 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
     const enc = encodeURIComponent, cle = (ns, key) => enc(String(ns)) + '/' + enc(String(key));   // jamais \u0000 : le séparateur interne de boxion_local
     const tenter = async (f) => { if (!distant.actif()) return null; try { const r = await f(); return r && r.status >= 200 && r.status < 300 ? r : null; } catch (e) { return null; } };
     const enAttente = async (ns, key) => !!(await boxion.get('boxion-a-pousser', cle(ns, key)).catch(() => null));
+    // (12.10, RS-7 : « le ploxion zone n'est pas connecté au boxion ») la réponse de GET /px/boxion/load (BoxionKvController, Rust ou PHP) :
+    // une clé ABSENTE → { item: null } ; une clé PRÉSENTE → le DOCUMENT LUI-MÊME { ns, key, name, data, savedAt } (le fichier tel quel).
+    // Avant, seule la forme { item } était reconnue : tout ce que le boxion avait vraiment était ignoré, l'app relisait sa copie locale.
+    const docDe = (d) => { if (!d || typeof d !== 'object') return undefined; if ('item' in d) return d.item || null; if ('data' in d || 'savedAt' in d) return d; return undefined; };
     jb.load = async (ns, key) => {
       ns = String(ns); key = String(key); if (!valide(ns, key)) return null;
       if (!(await enAttente(ns, key))) {
         const r = await tenter(() => distant.appel('GET', '/px/boxion/load?ns=' + enc(ns) + '&key=' + enc(key)));
-        if (r && r.data && 'item' in r.data) { const it = r.data.item; if (it) await boxion.put(NS_BOX(ns), key, it).catch(() => {}); return it || null; }
+        const it = r ? docDe(r.data) : undefined;
+        if (it !== undefined) { if (it) await boxion.put(NS_BOX(ns), key, it).catch(() => {}); return it; }
       }
       return local.load(ns, key);
     };
@@ -144,6 +149,9 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
       const r0 = await local.save(ns, key, data, name); if (!r0.ok) return r0;
       const r = await tenter(() => distant.appel('POST', '/px/boxion/save', { ns: String(ns), key: String(key), data: data === undefined ? null : data, name: name || String(key) }));
       if (r) { await boxion.del('boxion-a-pousser', cle(ns, key)).catch(() => {}); return (r.data && r.data.ok !== undefined) ? r.data : r0; }
+      // en file SEULEMENT pour un compte connecté (hors ligne, mode connecté coupé) : ce qu'on écrit sans compte reste sur le téléphone,
+      // il ne se déverse jamais dans le boxion d'un compte qui se connecte ensuite
+      if (distant.connecte && !distant.connecte()) return r0;
       await boxion.put('boxion-a-pousser', cle(ns, key), { ns: String(ns), key: String(key), le: Date.now() }).catch(() => {});
       return { ...r0, enAttente: true };
     };
@@ -162,6 +170,10 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
       for (const { key } of await boxion.list('boxion-a-pousser').catch(() => [])) {
         const a = await boxion.get('boxion-a-pousser', key); if (!a) continue;
         const doc = await local.load(a.ns, a.key);
+        // jamais par-dessus plus récent : si le boxion a été écrit APRÈS la mise en file (le web, un autre appareil), il gagne
+        const dist = await tenter(() => distant.appel('GET', '/px/boxion/load?ns=' + enc(a.ns) + '&key=' + enc(a.key)));
+        const dd = dist ? docDe(dist.data) : undefined;
+        if (dd && dd.savedAt && Date.parse(dd.savedAt) > (a.le || 0)) { await boxion.put(NS_BOX(a.ns), a.key, dd).catch(() => {}); await boxion.del('boxion-a-pousser', key); continue; }
         const r = doc ? await tenter(() => distant.appel('POST', '/px/boxion/save', { ns: a.ns, key: a.key, data: doc.data, name: doc.name })) : { status: 200 };
         if (r) { await boxion.del('boxion-a-pousser', key); n++; }
       }

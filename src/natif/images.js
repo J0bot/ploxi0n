@@ -19,6 +19,9 @@ export function installerImages({ W = globalThis.window, source = 'https://xerbo
   const abs = (u) => source + u;
   const essaye = new WeakSet();
   function img(el) {
+    // (12.10, RS-7 : « le wiki s'ouvre pas ») un ploxion qui ENCADRE une page du site (<iframe src="/wiki">, calendar, notes, player…) :
+    // dans l'app, « /wiki » = capacitor://localhost/wiki, qui n'existe pas → une page blanche. Même règle que les images : le site.
+    if (el.tagName === 'IFRAME') { const v = el.getAttribute('src'); if (distant(v)) el.setAttribute('src', abs(v)); return; }
     for (const a of ['src', 'poster']) {
       const v = el.getAttribute(a);
       if (!distant(v)) continue;
@@ -45,8 +48,8 @@ export function installerImages({ W = globalThis.window, source = 'https://xerbo
   }
   function balayer(n) {
     if (!n || n.nodeType !== 1) return;
-    if (/^(IMG|SOURCE|VIDEO|AUDIO)$/.test(n.tagName) || n.hasAttribute('style')) img(n);
-    if (n.querySelectorAll) for (const x of n.querySelectorAll('img,source,video,audio,[style*="url("]')) img(x);
+    if (/^(IMG|SOURCE|VIDEO|AUDIO|IFRAME)$/.test(n.tagName) || n.hasAttribute('style')) img(n);
+    if (n.querySelectorAll) for (const x of n.querySelectorAll('img,source,video,audio,iframe,[style*="url("]')) img(x);
   }
   balayer(D.body);
   new W.MutationObserver((l) => {

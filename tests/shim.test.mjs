@@ -170,13 +170,13 @@ test('le MODE CONNECTÉ : toute route du serveur part sur xerboxion.org (en-têt
 });
 
 test('jOSBoxion connecté : le boxion fait foi en ligne, copie locale hors ligne, les écritures hors ligne repartent au retour', async () => {
-  const serveur = { 'p4\u0000logs': { ns: 'p4', key: 'logs', name: 'logs', data: [{ t: 'log du xer' }], savedAt: 'x' } };
-  let enLigne = true; const appels = [];
-  const distant = { actif: () => enLigne, appel: async (m, chemin, corps) => {
+  const serveur = { 'p4\u0000logs': { ns: 'p4', key: 'logs', name: 'logs', data: [{ t: 'log du xer' }], savedAt: '2026-10-01T00:00:00Z' } };
+  let enLigne = true, connecte = true; const appels = [];
+  const distant = { actif: () => enLigne && connecte, connecte: () => connecte, appel: async (m, chemin, corps) => {
     appels.push(m + ' ' + chemin.split('?')[0]);
     const u = new URL('https://x' + chemin), k = (u.searchParams.get('ns') || (corps && corps.ns)) + '\u0000' + (u.searchParams.get('key') || (corps && corps.key));
-    if (chemin.startsWith('/px/boxion/load')) return { status: 200, data: { item: serveur[k] || null } };
-    if (chemin.startsWith('/px/boxion/save')) { serveur[k] = { ...corps, savedAt: 'y' }; return { status: 200, data: { ok: true } }; }
+    if (chemin.startsWith('/px/boxion/load')) return { status: 200, data: serveur[k] || { item: null } };   // comme BoxionKvController : le document tel quel, ou { item: null }
+    if (chemin.startsWith('/px/boxion/save')) { serveur[k] = { ...corps, savedAt: new Date().toISOString() }; return { status: 200, data: { ok: true } }; }
     if (chemin.startsWith('/px/boxion/list')) return { status: 200, data: { items: Object.values(serveur).map(d => ({ ns: d.ns, key: d.key })) } };
     return { status: 404, data: null };
   } };
@@ -195,5 +195,16 @@ test('jOSBoxion connecté : le boxion fait foi en ligne, copie locale hors ligne
     assert.deepEqual(await B.get('p4', 'logs'), [{ t: 'écrit dans le métro' }], 'en attente : la copie locale gagne');
     assert.equal(await B.pousser(), 1);
     assert.equal(serveur['p4\u0000logs'].data[0].t, 'écrit dans le métro', 'reparti au boxion');
+    assert.deepEqual(await B.get('absent', 'k'), null, '{ item: null } : rien');
+    // le web écrit APRÈS la mise en file : le boxion gagne, la file ne l'écrase pas
+    enLigne = false; await B.save('zones', 'items', [{ id: 'vieux' }]); enLigne = true;
+    await new Promise(r => setTimeout(r, 5));
+    serveur['zones\u0000items'] = { ns: 'zones', key: 'items', name: 'zones', data: [{ id: 'web' }], savedAt: new Date().toISOString() };
+    await B.pousser();
+    assert.deepEqual(serveur['zones\u0000items'].data, [{ id: 'web' }], 'jamais par-dessus plus récent');
+    assert.deepEqual(await B.get('zones', 'items'), [{ id: 'web' }], 'et la copie locale suit le boxion');
+    // sans compte : rien en file, rien ne se déverse au compte qui se connecte ensuite
+    connecte = false; await B.save('perso', 'k', [{ id: 'anonyme' }]); connecte = true;
+    assert.equal(await B.pousser(), 0); assert.equal(serveur['perso\u0000k'], undefined);
   } finally { p.fin(); }
 });

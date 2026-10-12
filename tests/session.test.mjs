@@ -121,3 +121,63 @@ test('✦ les nouveautés : rien au premier lancement, ce qui a changé après u
     assert.equal(t.querySelectorAll('section').length, 3, 'l\'historique, sans le futur');
   } finally { p.fin(); }
 });
+
+test('❤ la santé : autoriser d\'abord, puis les tuiles, la nuit, les séries, les appareils ; jOSNatif.sante sur accord par ploxion', async () => {
+  const { creerSante, sommeil } = await import('../src/natif/sante.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    const iso = (h) => new Date(Date.now() - h * 3600e3).toISOString();
+    const demandes = [];
+    const H = {
+      isAvailable: async () => ({ available: true }),
+      requestAuthorization: async (o) => { demandes.push(o); return { readAuthorized: o.read, readDenied: [] }; },
+      readSamples: async ({ dataType }) => ({ samples: {
+        steps: [{ value: 4000, endDate: iso(1), startDate: iso(2), sourceName: 'iPhone', deviceType: 'iPhone' }, { value: 2500, endDate: iso(0.5), startDate: iso(1), sourceName: 'Apple Watch', deviceType: 'Watch' }],
+        heartRate: [{ value: 62, endDate: iso(0.2), startDate: iso(0.2), sourceName: 'Apple Watch', deviceType: 'Watch' }],
+        sleep: [{ startDate: iso(9), endDate: iso(2), sourceName: 'Apple Watch', stages: [{ stage: 'deep', durationMinutes: 90 }, { stage: 'rem', durationMinutes: 100 }, { stage: 'light', durationMinutes: 200 }, { stage: 'awake', durationMinutes: 20 }] }],
+      }[dataType] || [] }),
+      queryAggregated: async ({ dataType }) => ({ samples: dataType === 'steps' ? [{ startDate: iso(30), endDate: iso(6), value: 8000, values: { sum: 8000 } }] : [] }),
+      queryWorkouts: async () => ({ workouts: [{ workoutType: 'running', duration: 1800, totalDistance: 5200, totalEnergyBurned: 310, startDate: iso(20), endDate: iso(19.5), sourceName: 'Apple Watch' }] }),
+    };
+    assert.equal(sommeil([{ stages: [{ stage: 'deep', durationMinutes: 60 }, { stage: 'awake', durationMinutes: 10 }] }]).total, 60, 'éveillé ne compte pas');
+    let ici = 'sante';
+    const s = creerSante({ W, boxion: p.boxion, plugin: H, courant: () => ici });
+    const h = W.document.createElement('div'); W.document.body.appendChild(h);
+    W.jOSApps.sante.mount(h); await attendre(30);
+    assert.ok(h.querySelector('[data-autoriser]'), 'd\'abord : autoriser');
+    h.querySelector('[data-autoriser]').click(); await attendre(80);
+    assert.ok(demandes[0].read.includes('sleep') && demandes[0].read.includes('workouts'));
+    assert.match(h.textContent, /6 ?500|6.500|6 500/, 'les pas du jour, additionnés');
+    assert.match(h.textContent, /62 bpm/);
+    assert.match(h.textContent, /6 h 30/, 'la nuit : 390 min endormi');
+    assert.match(h.textContent, /course/); assert.match(h.textContent, /5\.2 km/);
+    assert.match(h.textContent, /Apple Watch/); assert.match(h.textContent, /iPhone/);
+    // un autre ploxion : il demande, une fois
+    ici = 'xp';
+    const lu = s.api.lire('steps');
+    await attendre(10); W.document.querySelector('.px-voile [data-ok]').click();
+    assert.equal((await lu).length, 2);
+    assert.deepEqual(await p.boxion.get('reglages', 'sante-ploxions'), { xp: true });
+    ici = 'espion'; const non = s.api.lire('steps'); await attendre(10); W.document.querySelector('.px-voile [data-non]').click();
+    await assert.rejects(non, /refusée/);
+  } finally { p.fin(); }
+});
+
+test('🧭 jOSUsage dans l\'app : le téléphone + le web (lu, jamais écrasé), top, jours, vecteur par catégorie', async () => {
+  const { creerUsage, fusionner, jourCle } = await import('../src/natif/usage.js');
+  const p = await page({ avion: true, ploxions: [] });
+  try {
+    const k = jourCle();
+    await p.boxion.put('usage', 'stats', { px: { xp: { opens: 2, seconds: 600, lastAt: 1 } }, days: { [k]: { opens: 2, seconds: 600, px: { xp: { o: 2, s: 600 } } } } });
+    const ecrits = [];
+    const web = { px: { xp: { opens: 1, seconds: 400, lastAt: 2 }, notes: { opens: 3, seconds: 3000, lastAt: 3 } }, days: { [k]: { opens: 4, seconds: 3400, px: { notes: { o: 3, s: 3000 } } } } };
+    const u = creerUsage({ boxion: p.boxion, distant: () => ({ get: async () => web, set: async (...a) => ecrits.push(a) }), registre: async () => ({ xp: { c: 'jeu' }, notes: { c: 'creation' } }) });
+    await u.pret;
+    assert.equal(u.stats().px.xp.seconds, 1000, 'additionnés');
+    assert.deepEqual(u.top(1).map(x => x.id), ['notes']);
+    assert.equal(u.days(7).at(-1).seconds, 4000);
+    const v = await u.vecteur(); assert.ok(v.creation > v.jeu && Math.abs(v.creation + v.jeu - 1) < 0.01);
+    assert.equal(ecrits.length, 0, 'le web n\'est jamais écrasé');
+    assert.deepEqual(fusionner(null, { px: {} }), { px: {}, days: {} });
+  } finally { p.fin(); }
+});

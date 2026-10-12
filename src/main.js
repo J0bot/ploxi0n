@@ -28,8 +28,10 @@ import { creerOnboarding } from './app/onboarding.js';
 import { creerNouveautes } from './app/nouveautes.js';
 import { creerTsoinNatif } from './natif/tsoin-natif.js';
 import { creerBarreHaut } from './app/barre-haut.js';
+import { creerSante } from './natif/sante.js';
+import { creerUsage, jourCle } from './natif/usage.js';
 
-const VERSION = '0.31.0';
+const VERSION = '0.32.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -114,6 +116,7 @@ async function demarrer() {
   // jOSBoxion connecté : le boxion fait foi quand on est connecté et en ligne (pourriture-4, les notes… retrouvent leur historique)
   const distant = {
     actif: () => modeConnecte && navigator.onLine !== false && !!(compteRef && compteRef.etat().connecte),
+    connecte: () => !!(compteRef && compteRef.etat().connecte),
     appel: async (methode, chemin, corps) => {
       const r = await httpRelais.requete({ methode, url: SOURCE + chemin, headers: { Accept: 'application/json', ...(corps ? { 'Content-Type': 'application/json' } : {}) }, corps: corps ? JSON.stringify(corps) : undefined }, fetchOrigine);
       let data = null; try { data = JSON.parse(r.texte || 'null'); } catch (e) { /* */ }
@@ -181,6 +184,10 @@ async function demarrer() {
   const tsoinNatif = creerTsoinNatif({ boxion, vibrer: (x) => vibrer(x), vocal, contexte: () => (routeur ? routeur.courant() : null),
     distant: () => (compte.etat().connecte && modeConnecte && navigator.onLine !== false ? window.jOSBoxion : null) });
   internes.push(tsoinNatif.ploxion);
+  // ❤ la santé : Apple Santé lue sur le téléphone (le ploxion « Santé ») ; jOSNatif.sante pour les ploxions, sur accord
+  const sante = creerSante({ boxion, vibrer: (x) => vibrer(x), courant: () => (routeur ? routeur.courant() : null) });
+  internes.push(sante.ploxion);
+  window.jOSNatif.sante = sante.api;
   window.jOSNatif.tsoin = (o) => tsoinNatif.ouvrir(o || {});
   const hud = creerHud({ compte, boxion, vocalEnCours: () => vocal.enCours(), trouver: (id) => routeur && routeur.catalogue().find(p => p.id === id), modeConnecte: () => modeConnecte });
   await hud.pret;
@@ -194,13 +201,22 @@ async function demarrer() {
     const u = (await boxion.get('usage', 'stats')) || { px: {} };
     const p = u.px[id] = u.px[id] || { opens: 0, seconds: 0, lastAt: 0 };
     p.opens++; p.seconds += sec; p.lastAt = Date.now();
+    // les jours aussi (comme jOSUsage du labo : 60 jours) — xp › Vecteur les montre
+    u.days = u.days || {}; const k = jourCle(), d = u.days[k] = u.days[k] || { opens: 0, seconds: 0, px: {} };
+    d.opens++; d.seconds += sec; const dp = d.px[id] = d.px[id] || { o: 0, s: 0 }; dp.o++; dp.s += sec;
+    const ks = Object.keys(u.days).sort(); while (ks.length > 60) delete u.days[ks.shift()];
     await boxion.put('usage', 'stats', u);
+    usage.relire().catch(() => {});
   }
+  // 🧭 jOSUsage : le temps de ce téléphone + celui du web (lu sur le boxion, connecté) — xp › Vecteur, les quêtes, l'ultimate-xp
+  const usage = creerUsage({ boxion, distant: () => (compte.etat().connecte && modeConnecte ? window.jOSBoxion : null),
+    registre: async () => Object.fromEntries((((await depot.catalogue({ reseau: false }).catch(() => null)) || {}).items || []).map(p => [p.id, { c: p.cat || p.categorie || 'autre', l: p.categorie || 'Autre', i: p.cat_icone || '📦', n: p.nom, ic: p.icone }])) });
+  window.jOSUsage = usage;
   // un ploxion sur l'écran d'accueil de l'iPhone (via Raccourcis) : depuis l'édition de l'accueil et la fiche du marketplace
   const ecranAccueil = creerEcranAccueil({ trouver: (id) => routeur.catalogue().find(p => p.id === id), liste: () => routeur.catalogue(), boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine) });
   window.jOSEcranAccueil = ecranAccueil;
   routeur = creerRouteur({ racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id) => routeurProxy.ouvrir(id), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
-    tsoin: () => tsoinNatif.ouvrir(), surSession: (x) => { boxion.put('reglages', 'session', x).catch(() => {}); barreHaut.peindre(); } });
+    tsoin: () => tsoinNatif.ouvrir(), surSession: (x) => { boxion.put('reglages', 'session', x).catch(() => {}); barreHaut.peindre(); usage.track(x.courant); } });
   // ▔ notre barre du haut, en plein écran (la place de la barre d'état d'iOS) : composable, appui long dessus
   const barreHaut = creerBarreHaut({ boxion, compte, vibrer: (x) => vibrer(x), actif: () => { const q = prefs.lire(); return !!q.pleinEcran && q.barreHaut !== false; },
     courant: () => { const c = routeur.courant(); return c ? ((routeur.catalogue().find(p => p.id === c) || {}).nom || c) : null; },
