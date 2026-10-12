@@ -4,6 +4,7 @@
 //   compte · réseau · notifications · apparence · navigation · HUD et dock · écran d'accueil iPhone · accueil · ploxions · bions · Face ID ·
 //   données · à propos
 // Les bions : chacun avec sa taille et les ploxions qui l'utilisent ; le couper (plus chargé), le mettre à jour, le retirer s'il ne sert plus.
+import { testerClavier } from './clavier.js';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const ko = (n) => n < 1024 ? n + ' o' : n < 1048576 ? Math.round(n / 1024) + ' Ko' : (Math.round(n / 104857.6) / 10) + ' Mo';
@@ -81,6 +82,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         + section('donnees', 'Données', '<div class="bloc"><div class="l"><span>Réponses gardées pour le mode avion<small>' + nRoutes + ' route' + (nRoutes > 1 ? 's' : '') + '</small></span><button data-a="routes">vider</button></div>'
           + '<div class="l"><span>Réinitialiser les réglages<small>accueil, HUD, apparence, verrous… (tes ploxions, tes tsoins et ton compte restent)</small></span><button class="danger" data-a="reset">réinitialiser</button></div></div>')
         + section('apropos', 'À propos', '<div class="bloc"><div class="l"><span>ploxi0n ' + esc(version) + '<small>' + esc(W.navigator.onLine !== false ? 'en ligne' : 'hors ligne') + ' · cycle ' + (new Date().getFullYear() + 5000) + '</small></span></div>'
+          + '<div class="l"><span>⌨ Tester le clavier<small>si le clavier ne s\'ouvre pas : le rapport dit où ça casse</small></span><button class="p" data-a="clavier">tester</button></div>'
           + '<div class="l"><span>🧪 Banc iPhone</span><button data-ouvrir="banc">ouvrir</button></div><div class="l"><span>🐛 Bother me (un souci, une idée)</span><button data-ouvrir="bother">ouvrir</button></div></div>')
         + '<p class="msg" data-msg></p>';
       filtrer();
@@ -123,7 +125,8 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       const a = b.getAttribute('data-a'); if (!a) return;
       b.disabled = true;
       try {
-        if (a === 'notif') { await notifs.tester(); msg('✓ elle arrive dans 5 secondes'); }
+        if (a === 'clavier') { await testerClavier({ W, version }); }
+        else if (a === 'notif') { await notifs.tester(); msg('✓ elle arrive dans 5 secondes'); }
         else if (a === 'apps') { if (W.jOSEcranAccueil) await W.jOSEcranAccueil(); }
         else if (a === 'connecter') await compte.connecter();
         else if (a === 'sortir') { await compte.deconnecter(); }

@@ -17,7 +17,7 @@ import { creerHud } from './app/hud.js';
 import { enregistrerReglages } from './app/reglages.js';
 import { creerPrefs } from './app/prefs.js';
 
-const VERSION = '0.16.0';
+const VERSION = '0.17.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
