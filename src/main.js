@@ -18,8 +18,10 @@ import { enregistrerReglages } from './app/reglages.js';
 import { creerPrefs } from './app/prefs.js';
 import { installerJosNatif } from './natif/jos-natif.js';
 import { brancherPlugions } from './natif/plugions.js';
+import { installerLecteur } from './natif/lecteur.js';
+import { creerHaptique } from './natif/haptique.js';
 
-const VERSION = '0.19.0';
+const VERSION = '0.20.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -44,7 +46,12 @@ async function demarrer() {
   const prefs = creerPrefs({ boxion }); await prefs.pret; prefs.appliquer();   // l'apparence avant le premier dessin
   installerJosNatif(window);   // ⚡ le bion natif : toutes les capacités de l'iPhone, pour tous les ploxions
   // l'haptique de l'app (ouvrir, revenir, minimiser, les bords, les pages…) : par jOSNatif, coupée dans ⚙ › Apparence
-  const vibrer = (style) => { if (prefs.lire().haptique === false || !window.jOSNatif || !window.jOSNatif.natif) return; window.jOSNatif.vibrer(style).catch(() => {}); };
+  // 🎞 le lecteur natif : chaque <video>/<audio>/<iframe YouTube> des ploxions (écran verrouillé, AirPlay, PiP, YouTube par https, haptique du son)
+  const lecteur = installerLecteur({ boxion, vibrer: (s) => vibrer(s), titre: () => (routeur && routeur.courant() && (routeur.catalogue().find(p => p.id === routeur.courant()) || {}).nom) || 'ploxi0n' });
+  window.jOSNatif.lecteur = { pip: (m) => lecteur.pip(m), pleinEcran: (m) => lecteur.pleinEcran(m), airplay: (m) => lecteur.airplay(m) };
+  const haptique = creerHaptique({ boxion, actif: () => prefs.lire().haptique !== false && !!(window.jOSNatif && window.jOSNatif.natif) }); await haptique.pret;
+  const vibrer = (ev) => haptique.jouer(ev);   // un événement de l'app, un style, ou un motif inventé
+  window.jOSNatif.haptique = (x) => haptique.jouer(x);   // les ploxions (le clicker…) jouent un style, un motif ou un événement
   const bionsCharges = new Set();   // un seul chargement par bion, pour toute l'app
   let routeur = null;
   // un ploxion en ouvre un autre (jOSXerPrefs.ouvrir, jOS.openPloxion) : s'il n'est pas installé et qu'il y a du réseau, on l'installe à la volée
@@ -105,9 +112,9 @@ async function demarrer() {
   await hud.pret;
   // ⚙ les réglages : un ploxion interne, au bout du ⚙ de l'accueil (jamais retirable)
   // les notifications (test, et les messages de coord tant que l'app est au premier plan ; la vraie « app fermée » demande APNs)
-  const notifs = creerNotifs({ boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id) => routeurProxy.ouvrir(id) });
+  const notifs = creerNotifs({ boxion, vibrer, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id) => routeurProxy.ouvrir(id) });
   await notifs.pret;
-  internes.push(enregistrerReglages({ compte, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, prefs, vibrer, version: VERSION }));
+  internes.push(enregistrerReglages({ compte, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, prefs, vibrer, haptique, lecteur, version: VERSION }));
   // le vecteur xerion de ce téléphone : le temps passé par ploxion (même forme que jOSUsage du labo : { px: { id: { opens, seconds, lastAt } } })
   async function surUsage(id, sec) {
     const u = (await boxion.get('usage', 'stats')) || { px: {} };
@@ -150,6 +157,13 @@ async function demarrer() {
   }
   hud.surChangement(() => publierValeurs().catch(() => {}));
   await majAccueil();
+  // un ploxion a navigué la page vers /px/<id>?… (labo) : l'app s'est rechargée là — on rouvre CE ploxion, avec ses paramètres
+  const chemin = location.pathname.match(/^\/px\/([^/?#]+)/);
+  if (chemin) {
+    const pid = decodeURIComponent(chemin[1]), params = Object.fromEntries(new URLSearchParams(location.search));
+    try { history.replaceState(null, '', '/'); } catch (e) { /* */ }
+    if (await routeurProxy.ouvrir(pid, Object.keys(params).length ? params : null)) return;
+  }
   const id = decodeURIComponent((location.hash.match(/^#\/(.+)$/) || [])[1] || '');
   if (id && routeur.connait(id)) routeur.ouvrir(id); else routeur.accueil();
   // un raccourci (Siri, l'app Raccourcis, une automatisation) a pu demander un ploxion ou noter un tsoin

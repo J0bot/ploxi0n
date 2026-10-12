@@ -21,6 +21,10 @@
 | ✅ 0.18 | **⚡ jOSNatif** : LE bion natif (partager, vibrer, copier/coller, photo, position, notifier, ouvrir un lien, appareil, batterie, réseau, parler) | RS-7 : « le but d'une app native, c'est d'utiliser les choses natives » |
 | ✅ 0.18 | **Les plugions** : brancher un bion du labo sur le natif sans le réécrire (jOSAppareil, jOSShare.natif) | RS-7 : « les meilleurs plugions entre les bions » |
 | ✅ 0.19 | **L'haptique** : ouvrir, revenir, minimiser, les bords (un cran au seuil), l'appui long, les pages, les vues, les interrupteurs, installé (succès) / erreur — coupable dans ⚙ › Apparence | RS-7 : « jouer avec les haptics » |
+| ✅ 0.20 | **Le lecteur natif** : le son continue écran verrouillé et en silencieux (AVAudioSession, mode audio), contrôles sur l'écran verrouillé (Media Session), AirPlay, PiP, flux http permis (ATS), YouTube par une page https sandboxée (152/153), les ploxions « seuls » ne font plus sortir l'app | RS-7 : « le lecteur, surtout Stremio ou YouTube » |
+| ✅ 0.20 | **L'haptique du son** (les basses → des vibrations, pour les sons lisibles par l'app) | |
+| ✅ 0.20 | **🫧 Les haptiques qu'on invente** (le studio, des motifs nommés) et chaque événement → un style ou un motif, dont **notification** ; `jOSNatif.haptique()` pour les ploxions | RS-7 : « inventer ses propres haptics » |
+| 💭 | **Le clicker du xerboxion** : découvrir tout le xerboxion, googolplex, 10^24 fps, 10^5 années de Minecraft ; connecté à tous les clickers (leurs sauvegardes) ; la progression passive = le tsoin engine | braindump labo 2026-10-12 |
 | ⏭ | Plus de plugions : jOSGeo → position native, jOSCache → boxion_local, jOSScanQR → caméra native, le son → audio natif… (au cas par cas : seulement quand la version native fait EXACTEMENT la même chose) | |
 | ⏭ | « La version la plus optimisée du même bion » : quand plusieurs sources servent un même bion (labo, boxion de chacun, natif), choisir la plus rapide et la plus légère | |
 | ⏭ | Les bions qui manquent encore : jOSComptes, jOSToast, jOSXerkionsForge (404 sur /px/bion-app) | côté labo : les servir seuls |

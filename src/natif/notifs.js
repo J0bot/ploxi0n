@@ -5,7 +5,7 @@
 //                   (iOS endort une app en arrière-plan : la vraie notification « app fermée » demande APNs, voir docs/FEUILLE-DE-ROUTE.md)
 //   toucher une notification de coord ouvre le ploxion 📡 coord
 // Réglages : boxion_local « reglages/notifs » = { coord: bool, dernierCoord: id }. Rien au premier passage (on ne réveille pas l'historique).
-export function creerNotifs({ W = globalThis.window, boxion, envoyer, source = 'https://xerboxion.org', ouvrir = () => {}, charger = () => import('@capacitor/local-notifications') }) {
+export function creerNotifs({ W = globalThis.window, boxion, vibrer = () => {}, envoyer, source = 'https://xerboxion.org', ouvrir = () => {}, charger = () => import('@capacitor/local-notifications') }) {
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
   let reglage = { coord: false, dernierCoord: 0 }, minuterie = null, ecoute = false;
   const pret = boxion.get('reglages', 'notifs').then(v => { if (v && typeof v === 'object') reglage = { ...reglage, ...v }; }).catch(() => {});
@@ -27,6 +27,7 @@ export function creerNotifs({ W = globalThis.window, boxion, envoyer, source = '
     if (l.length) { reglage.dernierCoord = Math.max(reglage.dernierCoord || 0, ...l.map(m => +m.id || 0)); await garder(); }
     if (premier || !l.length) return [];
     const L = await permission();
+    vibrer('notification');   // le motif « notification » (inventable, ⚙ › Haptique)
     const montrer = l.length > 3 ? [...l.slice(-2), null] : l;
     await L.schedule({ notifications: montrer.map((m, i) => m ? {
       id: 700000 + (m.id % 100000), title: '📡 ' + String(m.agent || 'coord') + (m.topic ? ' · #' + m.topic : ''), body: String(m.content || '').slice(0, 220), extra: { ouvrir: 'coord' },

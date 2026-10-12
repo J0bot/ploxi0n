@@ -166,7 +166,7 @@ export function enregistrerMarketplace({ W = globalThis.window, depot, surChange
       c.addEventListener('pointerup', lacher); c.addEventListener('pointercancel', lacher);
     }
     async function decider(id, prendre) {
-      vibrer(prendre ? 'moyen' : 'leger');
+      vibrer(prendre ? 'garder' : 'passer');
       const c = zone.querySelector('.mk-dc'); if (c) { c.style.transform = 'translateX(' + (prendre ? 120 : -120) + '%) rotate(' + (prendre ? 14 : -14) + 'deg)'; c.style.opacity = '0'; }
       if (prendre) { try { await installer(id); } catch (e) { d.passes.add(id); } } else d.passes.add(id);
       garder(); peindre();
@@ -186,7 +186,7 @@ export function enregistrerMarketplace({ W = globalThis.window, depot, surChange
       // le pack d'abord quand il l'a (sans réseau, et c'est la version testée avec l'app)
       const r = d.pack.has(id) ? await depot.installerLocal(id) : await depot.installer(id, { nom: x.nom, icone: x.icone });
       d.installes.add(id); await surChangement();
-      vibrer('succes');
+      vibrer('installe');
       return r;
     }
 
@@ -216,7 +216,7 @@ export function enregistrerMarketplace({ W = globalThis.window, depot, surChange
     champ.addEventListener('keydown', (e) => { if (e.key === 'Enter') { try { champ.blur(); } catch (er) { /* */ } } });
     hote.addEventListener('click', async (e) => {
       const b = e.target.closest('button,[data-fiche],[data-voir]'); if (!b || !hote.contains(b)) return;
-      if (b.hasAttribute('data-vue')) { vibrer('selection'); vue = b.getAttribute('data-vue'); q = ''; champ.value = ''; cat = ''; garder(); peindre(); return; }
+      if (b.hasAttribute('data-vue')) { vibrer('vue'); vue = b.getAttribute('data-vue'); q = ''; champ.value = ''; cat = ''; garder(); peindre(); return; }
       if (b.hasAttribute('data-cat')) { cat = b.getAttribute('data-cat'); return peindre(); }
       if (b.hasAttribute('data-voir')) { const v = b.getAttribute('data-voir'); if (v.startsWith('cat:')) { cat = v.slice(4); vue = 'grille'; } else { vue = v; cat = ''; } garder(); return peindre(); }
       if (b.hasAttribute('data-passer')) return decider(b.getAttribute('data-passer'), false);

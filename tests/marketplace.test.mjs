@@ -428,6 +428,22 @@ test('haptique : ouvrir (léger), minimiser (moyen), revenir (léger), changer d
     await r.accueil(); await r.ouvrir('h'); r.minimiser(); await attendre(10);
     await r.ouvrir('h'); r.retour(); await attendre(10);
     racine.querySelector('[data-vue-accueil="liste"]').click(); await attendre(20);
-    assert.deepEqual(vib, ['leger', 'moyen', 'leger', 'leger', 'selection']);
+    assert.deepEqual(vib, ['ouvrir', 'minimiser', 'reprendre', 'revenir', 'vue']);
   } finally { p.fin(); }
+});
+
+test('haptique inventée : un motif sauvé, assigné à un événement, joué pas à pas ; un événement peut jouer « rien »', async () => {
+  const { creerHaptique } = await import('../src/natif/haptique.js');
+  const boxion = creerMemoire(), joue = [];
+  const h = creerHaptique({ boxion, natif: () => ({ vibrer: async (s) => joue.push(s) }), attendre: async () => {} });
+  await h.pret;
+  h.jouer('ouvrir'); assert.deepEqual(joue, ['leger'], 'défaut : ouvrir = léger');
+  const nom = await h.sauver('Coeur !', [['fort', 120], ['leger', 0], ['inconnu', 50]]);
+  assert.equal(nom, 'coeur '); assert.deepEqual(h.config().motifs['coeur '], [['fort', 120], ['leger', 0]], 'nettoyé');
+  await h.assigner('ouvrir', 'motif:coeur '); joue.length = 0;
+  await h.jouer('ouvrir'); assert.deepEqual(joue, ['fort', 'leger']);
+  joue.length = 0; await h.jouer('notification'); assert.deepEqual(joue, ['moyen', 'leger', 'leger'], 'le motif « notification » par défaut');
+  await h.assigner('page', 'aucun'); joue.length = 0; h.jouer('page'); assert.deepEqual(joue, []);
+  await h.supprimer('coeur '); assert.equal(h.config().evenements.ouvrir, 'leger', 'un motif supprimé rend la main au défaut');
+  assert.deepEqual((await boxion.get('reglages', 'haptique')).evenements.page, 'aucun', 'gardé');
 });

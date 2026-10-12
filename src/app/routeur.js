@@ -41,7 +41,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     b.addEventListener('pointermove', (e) => {
       if (x0 == null || e.pointerId !== id0) return;
       const dx = (e.clientX - x0) * (cote === 'g' ? 1 : -1);
-      const p = Math.max(0, Math.min(1, dx / SEUIL)); if (p >= 1 && b.style.getPropertyValue('--p') !== '1') vibrer('selection');
+      const p = Math.max(0, Math.min(1, dx / SEUIL)); if (p >= 1 && b.style.getPropertyValue('--p') !== '1') vibrer('bord-seuil');
       b.style.setProperty('--p', String(p));
     });
     const lacher = (e) => {
@@ -67,7 +67,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     const i = file.indexOf(courant ? courant.id : null);
     const cible = file[(i + sens + file.length) % file.length];
     if (cible === (courant ? courant.id : null)) return false;
-    vibrer('moyen');
+    vibrer('bord');
     if (courant) { cacher(courant); courant = null; }
     pile = [];
     if (cible == null) { accueil(); return true; }
@@ -177,7 +177,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (pageCourante && conteneur.children[pageCourante]) conteneur.scrollLeft = conteneur.children[pageCourante].offsetLeft;
     conteneur.addEventListener('scroll', () => {
       const i = Math.round(conteneur.scrollLeft / Math.max(1, conteneur.clientWidth)); if (i === pageCourante) return;
-      pageCourante = i; vibrer('selection'); racine.querySelectorAll('.px-point').forEach((b, k) => b.classList.toggle('on', k === i));
+      pageCourante = i; vibrer('page'); racine.querySelectorAll('.px-point').forEach((b, k) => b.classList.toggle('on', k === i));
     }, { passive: true });
   }
   function demander(question, defaut) { try { return W.prompt(question, defaut); } catch (er) { return null; } }
@@ -237,7 +237,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   racine.addEventListener('pointerdown', (e) => {
     const t = e.target.closest('[data-id]'); if (!t || !racine.contains(t) || t.closest('.px-hote,.px-voile') || prefs().appuiLong === false) return;
     const x0 = e.clientX, y0 = e.clientY, id = t.getAttribute('data-id');
-    appui = { x0, y0, t: W.setTimeout(() => { appui = null; avaler = Date.now(); vibrer('moyen'); actions(id); }, 450) };
+    appui = { x0, y0, t: W.setTimeout(() => { appui = null; avaler = Date.now(); vibrer('appui'); actions(id); }, 450) };
   });
   const annulerAppui = () => { if (appui) { W.clearTimeout(appui.t); appui = null; } };
   racine.addEventListener('pointermove', (e) => { if (appui && Math.hypot(e.clientX - appui.x0, e.clientY - appui.y0) > 10) annulerAppui(); });
@@ -251,7 +251,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (b.hasAttribute('data-chercher')) return ouvrir('marketplace', { chercher: '1' });
     if (b.hasAttribute('data-hud-px')) return ouvrir(b.getAttribute('data-hud-px'));
     if (b.hasAttribute('data-edition')) { edition = !edition; return accueil(); }
-    if (b.hasAttribute('data-vue-accueil')) { vibrer('selection'); accueilDoc.vue = b.getAttribute('data-vue-accueil'); garder(); return accueil(); }
+    if (b.hasAttribute('data-vue-accueil')) { vibrer('vue'); accueilDoc.vue = b.getAttribute('data-vue-accueil'); garder(); return accueil(); }
     if (b.hasAttribute('data-sortir')) { dossierOuvert = null; return accueil(); }
     if (b.hasAttribute('data-dossier')) { dossierOuvert = +b.getAttribute('data-dossier'); return accueil(); }
     if (b.hasAttribute('data-retour')) return retour();
@@ -316,18 +316,20 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     // ouvert DEPUIS un ploxion : celui-ci reste vivant, en dessous (la pile) ; « ‹ » y reviendra
     if (courant && courant.id !== id) { pile = pile.filter(x => x !== courant.id && x !== id); pile.push(courant.id); cacher(courant); courant = null; }
     // déjà vivant (minimisé, ou dans la pile) : on le reprend tel quel ; avec une demande (params), on le remonte frais
-    if (vivants.has(id)) { if (!params) { pile = pile.filter(x => x !== id); vibrer('leger'); montrer(vivants.get(id)); return true; } tuer(id); }
+    if (vivants.has(id)) { if (!params) { pile = pile.filter(x => x !== id); vibrer('reprendre'); montrer(vivants.get(id)); return true; } tuer(id); }
     // la place : au-delà de MAX_VIVANTS, le plus anciennement vu s'endort pour de bon
     while (vivants.size >= maxVivants()) { const vieux = [...vivants.values()].sort((a, b) => a.vu - b.vu)[0]; tuer(vieux.id); }
-    vibrer('leger');
+    vibrer('ouvrir');
     const hote = D.createElement('div'); hote.className = 'px-hote'; hote.dataset.ploxion = id; scene.appendChild(hote);
     const v = { id, inst: {}, hote, debut: 0, vu: Date.now() };
     vivants.set(id, v); montrer(v);
     try {
       const app = await charger(id);
       if (!vivants.has(id)) return false;   // fermé pendant le chargement
+      // standalone:false : dans le labo, un ploxion « seul » (/px/<id>) fait parfois location.replace('/px/autre?tab=…') — dans l'app, ça
+      // rechargerait tout ploxi0n ; non seul, il passe par jOS.openPloxion, c'est-à-dire par ce routeur
       if (apresChargement) { try { apresChargement(id); } catch (er) { /* un plugion ne casse pas l'ouverture */ } }
-      v.inst = app.mount(hote, { embed: false, standalone: true, host: 'ploxi0n', params: params || null, onglet: params && params.onglet }) || {};
+      v.inst = app.mount(hote, { embed: false, standalone: false, plein: true, host: 'ploxi0n', params: params || null, onglet: params && params.onglet }) || {};
     } catch (er) {
       hote.innerHTML = '<p class="px-erreur">Ce ploxion n\'a pas pu s\'ouvrir : ' + texte(er.message) + '</p>';
     }
@@ -338,13 +340,13 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   function fermer() { if (courant) tuer(courant.id); }
   /** « ‹ » : ferme le ploxion visible ; revient à celui d'où l'on venait (la pile), sinon à l'accueil */
   function retour() {
-    vibrer('leger');
+    vibrer('revenir');
     fermer();
     while (pile.length) { const id = pile.pop(); if (vivants.has(id)) { montrer(vivants.get(id)); return true; } }
     return accueil();
   }
   /** ▁ : le ploxion visible reste vivant, en arrière-plan ; l'accueil revient */
-  function minimiser() { vibrer('moyen'); if (courant) { cacher(courant); courant = null; } pile = []; return accueil(); }
+  function minimiser() { vibrer('minimiser'); if (courant) { cacher(courant); courant = null; } pile = []; return accueil(); }
   /** ⧉ : la liste des ploxions vivants, pour passer de l'un à l'autre */
   function basculer() {
     const f = D.createElement('div'); f.className = 'px-voile';
