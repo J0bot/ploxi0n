@@ -143,10 +143,49 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
     },
     async bundle(id) {
       const p = await boxion.get(NS, id); if (!p) return null;
+      const coupes = new Set((await boxion.get('reglages', 'bions-coupes')) || []);
       let avant = '';
-      for (const b of p.bions || []) { const x = await boxion.get('bions', b); if (x && x.js) avant += '\n;/* bion ' + b + ' */\n' + x.js + '\n;'; }   // chaque bion se garde lui-même d'une double définition
+      for (const b of p.bions || []) { if (coupes.has(b)) continue; const x = await boxion.get('bions', b); if (x && x.js) avant += '\n;/* bion ' + b + ' */\n' + x.js + '\n;'; }   // chaque bion se garde lui-même d'une double définition
       return avant + '\n' + p.js;
     },
+    // ---- GÉRER LES BIONS (RS-7 12.10 : « on doit pouvoir manager les bions ») ----
+    /** les bions installés : taille, quels ploxions les utilisent, coupés ou non */
+    async bions() {
+      const coupes = new Set((await boxion.get('reglages', 'bions-coupes')) || []), par = new Map();
+      for (const id of await liste()) { const p = await boxion.get(NS, id); for (const b of (p && p.bions) || []) { if (!par.has(b)) par.set(b, []); par.get(b).push(id); } }
+      const out = [];
+      for (const { key } of await boxion.list('bions')) {
+        const x = await boxion.get('bions', key); if (!x) continue;
+        out.push({ nom: key, octets: (x.js || '').length, hash: x.hash || '', le: x.le || null, utilisePar: par.get(key) || [], coupe: coupes.has(key) });
+      }
+      return out.sort((a, b) => b.utilisePar.length - a.utilisePar.length || a.nom.localeCompare(b.nom));
+    },
+    /** couper un bion : il n'est plus chargé avec les ploxions (ils testent son existence) ; réversible */
+    async couperBion(nom, coupe = true) {
+      const l = new Set((await boxion.get('reglages', 'bions-coupes')) || []);
+      if (coupe) l.add(nom); else l.delete(nom);
+      await boxion.put('reglages', 'bions-coupes', [...l]);
+      await boxion.append('tsoins', { kind: 'marketplace', action: coupe ? 'couper-bion' : 'rallumer-bion', id: nom });
+    },
+    /** retélécharger un bion depuis le labo ; rend 'a-jour' | 'mis-a-jour' */
+    async majBion(nom) {
+      const rb = await http.get(source + '/px/bion-app/' + encodeURIComponent(nom) + '.js', { headers: { Accept: 'application/javascript' } });
+      if (rb.status !== 200 || !rb.texte.includes(nom)) throw new Error(nom + ' : HTTP ' + rb.status);
+      const h = await sha256(rb.texte), x = await boxion.get('bions', nom);
+      if (x && x.hash === h) return 'a-jour';
+      await boxion.put('bions', nom, { js: rb.texte, hash: h, le: new Date().toISOString() });
+      await boxion.append('tsoins', { kind: 'marketplace', action: 'mettre-a-jour-bion', id: nom, hash: h });
+      return 'mis-a-jour';
+    },
+    /** retirer un bion que plus aucun ploxion n'utilise */
+    async retirerBion(nom) {
+      const b = (await this.bions()).find(x => x.nom === nom);
+      if (b && b.utilisePar.length) throw new Error(nom + ' sert encore à ' + b.utilisePar.join(', '));
+      await boxion.del('bions', nom);
+      await boxion.append('tsoins', { kind: 'marketplace', action: 'retirer-bion', id: nom });
+    },
+    /** la taille d'un ploxion installé (son bundle seul) */
+    async taille(id) { const p = await boxion.get(NS, id); return p ? (p.js || '').length : 0; },
     // les plus utilisés : les heures passées, tout le Nexus (labo : /px/marketplace/populaires.json), en cache pour le mode avion
     async populaires({ reseau = true } = {}) {
       if (!reseau) { const d = await boxion.get(META, 'populaires'); return d ? { ...d, horsLigne: true } : { ploxions: [], zero: [], horsLigne: true }; }

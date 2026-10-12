@@ -18,7 +18,7 @@
 | ✅ 0.8 | jOSXerPrefs complet (get/set/ouvrir/params/demande) | |
 | ⏭ | **Envoi de fichiers** par le mode connecté (FormData / multipart) | aujourd'hui : 503 « pas encore relayé » |
 | ⏭ | Les bions qui manquent encore : jOSComptes, jOSToast, jOSXerkionsForge (404 sur /px/bion-app) | côté labo : les servir seuls |
-| ⏭ | Mettre à jour les **bions** (pas seulement les ploxions) dans « vérifier les mises à jour » | |
+| ✅ 0.15 | **Gérer les bions** (⚙ › Bions) : taille, qui les utilise, couper, mettre à jour, retirer | |
 | 💭 | jOSPorts relié au **bus du boxion** (xion en direct, SSE) en mode connecté | le phone devient un nœud du xion |
 | 💭 | Le **boxion de chacun** comme source (pas seulement xerboxion.org) : choisir son boxion | topologie 2 boxions |
 | 💭 | Fil threads WASM (COOP/COEP) : impossible dans la WebView Capacitor → serveur local natif | seul échec du banc |
@@ -90,6 +90,8 @@
 
 | | Quoi | Notes |
 |---|---|---|
+| ✅ 0.15 | **Réglages v2** : recherche, catégories, apparence (patine, contraste, calme, taille des icônes, plaque), navigation (bords, appui long, vivants), dock | |
+| ✅ 0.15 | Écrire partout : les champs gagnent toujours contre un user-select:none d'un bion | RS-7 : « je peux jamais écrire nulle part » |
 | ✅ 0.11 | **Chill-tekk-7026** : presque noir, violets délavés, aucun dégradé, arrondi chill usé, patine, inscriptions gravées | |
 | ⏭ | Les **trois modes** : chill-tekk (tsoin engine seul, chill absolu) · xerboxion (tout tourne) · xeroction (voir ce qu'on a fait) | braindump 11.10 |
 | ⏭ | Les ploxions eux-mêmes en chill-tekk-7026 (le thème du labo appliqué dans l'app) | |

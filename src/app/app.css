@@ -128,7 +128,7 @@ button{font-family:inherit;-webkit-user-select:none;user-select:none}
 .px-bord::after{content:"";position:absolute;top:50%;width:4px;height:calc(40px + 80px * var(--p));transform:translateY(-50%);border-radius:2px;background:var(--bio);opacity:0;box-shadow:0 0 10px var(--glow)}
 .px-bord-g::after{left:2px}.px-bord-d::after{right:2px}
 .px-bord.px-tire::after{opacity:calc(.25 + .75 * var(--p))}
-.px-bord{pointer-events:none}.px-a-vivants .px-bord{pointer-events:auto}
+.px-bord{pointer-events:none}.px-a-vivants .px-bord{pointer-events:auto}.px-sans-bords .px-bord{pointer-events:none !important}
 
 /* ---- le DOCK en bas (RS-7 12.10 : « la barre boxion avec les épinglés en bas ») : compte, épinglés, ⚙, au pouce ---- */
 .px-accueil{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
@@ -174,3 +174,17 @@ input,textarea,select{font-size:max(16px,1em)}
 .px-tiroir .px-puces .px-puce.on{border-color:var(--bio);color:var(--txt)}
 .px-tiroir .px-danger{color:#e8a0b8}.px-tiroir .px-danger.sur{border-color:#e8a0b8}
 .px-tiroir .px-puces .px-puce:last-child{border-color:var(--bord);background:var(--surface2);color:var(--muted);box-shadow:inset 0 0 0 1px var(--filet)}
+
+/* ---- les préférences (prefs.js) ---- */
+.px-sans-grain{--grain:none}
+.px-calme *,.px-calme *::before,.px-calme *::after{transition:none !important;animation:none !important}
+.px-contraste{--txt:#f4f0fb;--muted:#b4abcc;--grave:#8d84a8;--bord:#3b3252;--bord2:#564a74}
+.px-icones-petites .px-grille{grid-template-columns:repeat(auto-fill,minmax(62px,1fr))}.px-icones-petites .px-accueil .px-ic{width:52px;height:52px;font-size:1.5rem}
+.px-icones-grandes .px-grille{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}.px-icones-grandes .px-accueil .px-ic{width:80px;height:80px;font-size:2.4rem;border-radius:20px}
+.px-sans-dock .px-dock{display:none}.px-sans-dock .px-accueil{padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))}
+.px-sans-plaque .px-accueil>.px-grave{display:none}
+
+/* ---- ÉCRIRE, PARTOUT, TOUJOURS (RS-7 12.10 : « je peux jamais écrire nulle part ») : sur iOS, un user-select:none posé par un bion ou un
+   ploxion sur un parent rend les champs en dessous impossibles à remplir. Les champs et les éditables gagnent toujours. ---- */
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]):not([type=submit]),textarea,[contenteditable]:not([contenteditable=false]),[contenteditable] *{
+  -webkit-user-select:text !important;user-select:text !important;-webkit-touch-callout:default !important;pointer-events:auto}

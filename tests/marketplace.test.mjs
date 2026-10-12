@@ -195,7 +195,7 @@ test('⚙ réglages et HUD composé : éléments, ordre, épinglés, ⚙ toujour
     let routeur = null;
     const hud = creerHud({ W, compte, boxion, trouver: (id) => routeur.catalogue().find(x => x.id === id), modeConnecte: () => mc });
     await hud.pret;
-    const depot = { completerBions: async () => [], aJour: async () => [] };
+    const depot = { completerBions: async () => [], aJour: async () => [], installes: async () => [{ id: 'pomo', nom: 'Pomodoro', icone: '🍅', origine: 'pack' }], bions: async () => [{ nom: 'jOSGpg', octets: 2048, utilisePar: ['pomo'], coupe: false }], taille: async () => 1500, couperBion: async (n, c) => { coupes.push([n, c]); } }; const coupes = [];
     const reg = enregistrerReglages({ W, compte, hud, routeur: () => routeur, depot, boxion, modeConnecte: (v) => { if (v != null) mc = v; return mc; }, version: 't' });
     const racine = W.document.createElement('div'); W.document.body.appendChild(racine);
     routeur = creerRouteur({ fenetre: W, racine, catalogue: [reg, { id: 'pomo', nom: 'Pomodoro', icone: '🍅' }], boxion, hud });
@@ -224,6 +224,12 @@ test('⚙ réglages et HUD composé : éléments, ordre, épinglés, ⚙ toujour
     racine.querySelector('[data-reglages]').click(); await attendre(40);
     const m = racine.querySelector('[data-t="mode"]'); m.checked = false; m.dispatchEvent(new W.Event('change', { bubbles: true })); await attendre(20);
     assert.equal(mc, false);
+    // les bions : couper un bion depuis les réglages ; la recherche filtre les lignes
+    const hb = racine.querySelector('.px-hote:not([hidden])');   // les réglages sont encore ouverts
+    const bc = hb.querySelector('[data-bion-on="jOSGpg"]'); bc.checked = false; bc.dispatchEvent(new W.Event('change', { bubbles: true })); await attendre(20);
+    assert.deepEqual(coupes, [['jOSGpg', true]]);
+    const q = hb.querySelector('[data-q]'); q.value = 'bion'; q.dispatchEvent(new W.Event('input', { bubbles: true }));
+    assert.equal(hb.querySelector('[data-s="compte"]').hidden, true, 'la recherche cache les sections sans rapport'); assert.equal(hb.querySelector('[data-s="bions"]').hidden, false);
     // une configuration reprise d'un ancien format, ou abîmée, se répare
     await hud.regler({ elements: [{ k: 'inconnu', on: true }, { k: 'compte', on: true }, { k: 'compte', on: false }], epingles: ['a', 'b', 'c', 'd', 'e', 3] });
     assert.deepEqual(hud.config().elements.map(x => x.k), ['compte', 'reseau', 'heure', 'chercher', 'epingles']); assert.equal(hud.config().epingles.length, 4);

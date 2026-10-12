@@ -1,60 +1,125 @@
-// ⚙ LES RÉGLAGES de ploxi0n (RS-7 11.10 : « il faut vraiment un vrai bouton réglages dans l'app, et un moyen de customiser son HUD »).
-// Un ploxion interne, toujours au bout du ⚙ de l'accueil (il ne se retire pas). Sections :
-//   compte · mode connecté · HUD (quels éléments, dans quel ordre, les ploxions épinglés) · accueil (dossiers et pages) · Face ID ·
-//   ploxions (compléter les bions, mettre à jour) · données (le cache des routes) · à propos (version, banc, bother me)
+// ⚙ LES RÉGLAGES de ploxi0n (RS-7 11.10 : « un vrai bouton réglages » ; 12.10 : « améliorer au max les réglages, on a tellement d'options
+// qu'on peut activer ou désactiver ; on doit pouvoir manager les bions »). Un ploxion interne, toujours au bout du ⚙ (il ne se retire pas).
+// Une page, une recherche (« chercher un réglage » filtre chaque ligne), une rangée de catégories pour sauter d'une section à l'autre :
+//   compte · réseau · notifications · apparence · navigation · HUD et dock · écran d'accueil iPhone · accueil · ploxions · bions · Face ID ·
+//   données · à propos
+// Les bions : chacun avec sa taille et les ploxions qui l'utilisent ; le couper (plus chargé), le mettre à jour, le retirer s'il ne sert plus.
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const ko = (n) => n < 1024 ? n + ' o' : n < 1048576 ? Math.round(n / 1024) + ' Ko' : (Math.round(n / 104857.6) / 10) + ' Mo';
+const heures = (s) => !s ? '0 h' : s < 3600 ? Math.max(1, Math.round(s / 60)) + ' min' : (Math.round(s / 360) / 10).toLocaleString('fr-CH') + ' h';
+export const FOURNIS_APP = ['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou', 'jOSRaccourcis', 'jOSEcranAccueil'];
+const SECTIONS = [['compte', '👤', 'compte'], ['reseau', '🌐', 'réseau'], ['notifs', '🔔', 'notifications'], ['apparence', '🎨', 'apparence'], ['navigation', '🧭', 'navigation'],
+  ['hud', '🧩', 'HUD et dock'], ['iphone', '📲', 'écran d\'accueil'], ['accueil', '🏠', 'accueil'], ['ploxions', '▣', 'ploxions'], ['bions', '⬡', 'bions'], ['faceid', '🔒', 'Face ID'],
+  ['donnees', '💾', 'données'], ['apropos', '◇', 'à propos']];
 
-export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, notifs = null, version = '?' }) {
+export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, version = '?' }) {
   const ELS = { compte: '👤 compte', reseau: '📶 réseau et mode connecté', heure: '🕐 heure', chercher: '🔎 chercher un ploxion', epingles: '📌 ploxions épinglés' };
   function mount(hote) {
-    let vivant = true;
+    let vivant = true, q = '';
     const R = () => routeur();
     hote.innerHTML = '<div class="rg"><style>'
-      + '.rg{padding:6px 16px 70px;max-width:640px;margin:0 auto}.rg h3{margin:22px 6px 8px;font:600 10.5px var(--mono,monospace);letter-spacing:.2em;text-transform:uppercase;color:var(--muted,#8aa0c0)}'
-      + '.rg .bloc{background:var(--surface,#0f0b18) var(--grain,none);border:var(--trait,2px) solid var(--bord,#272036);border-radius:18px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--filet,rgba(190,175,230,.06))}.rg .l{display:flex;align-items:center;gap:10px;padding:12px 16px;min-height:30px;border-top:1px solid rgba(178,140,255,.14)}.rg .l:first-child{border-top:0}'
-      + '.rg .l>span{flex:1;min-width:0}.rg .l small{display:block;color:var(--muted,#8aa0c0);font-size:.78rem}.rg button{border:var(--trait,2px) solid var(--bord,#22324f);background:var(--surface2,#251754);color:inherit;border-radius:11px;padding:6px 14px;min-height:34px;font:500 14px inherit}'
-      + '.rg .bas{border:0;min-height:30px;padding:2px 8px;color:var(--muted,#8aa0c0)}.rg .p{border-color:rgba(182,156,255,.65);color:var(--acc,#b69cff)}.rg .msg{color:var(--muted,#8aa0c0);font-size:.82rem;margin:6px 4px}'
+      + '.rg{padding:0 16px 80px;max-width:640px;margin:0 auto}.rg h3{margin:24px 6px 8px;font:600 10.5px var(--mono,monospace);letter-spacing:.2em;text-transform:uppercase;color:var(--muted,#8aa0c0)}'
+      + '.rg-tete{position:sticky;top:0;z-index:3;background:var(--bg,#07050c);padding:12px 0 8px;margin:0 -16px;padding-left:16px;padding-right:16px;border-bottom:1px solid var(--bord,#272036)}'
+      + '.rg-q{width:100%;box-sizing:border-box;padding:11px 14px;border-radius:14px;border:var(--trait,2px) solid var(--bord,#272036);background:var(--creux,#0a0712);color:inherit;font:16px var(--police,system-ui);-webkit-appearance:none;appearance:none}.rg-q:focus{outline:none;border-color:var(--bord2,#3a3050)}'
+      + '.rg-nav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:8px}.rg-nav::-webkit-scrollbar{display:none}.rg-nav button{flex:none;font:600 10.5px var(--mono,monospace);letter-spacing:.08em;text-transform:uppercase;min-height:32px;padding:0 11px;color:var(--muted,#8aa0c0)}'
+      + '.rg .bloc{background:var(--surface,#0f0b18) var(--grain,none);border:var(--trait,2px) solid var(--bord,#272036);border-radius:18px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--filet,rgba(190,175,230,.06))}'
+      + '.rg .l{display:flex;align-items:center;gap:10px;padding:12px 16px;min-height:30px;border-top:1px solid rgba(178,140,255,.12)}.rg .l:first-child{border-top:0}.rg .l[hidden],.rg section[hidden]{display:none}'
+      + '.rg .l>span{flex:1;min-width:0}.rg .l small{display:block;color:var(--muted,#8aa0c0);font-size:.78rem;overflow-wrap:anywhere}.rg button{border:var(--trait,2px) solid var(--bord,#22324f);background:var(--surface2,#251754);color:inherit;border-radius:11px;padding:6px 12px;min-height:34px;font:500 14px inherit;flex:none}'
+      + '.rg .bas{border:0;min-height:30px;padding:2px 8px;color:var(--muted,#8aa0c0)}.rg .p{border-color:var(--acc2,#7a6aa8);color:var(--acc,#b69cff)}.rg .msg{color:var(--muted,#8aa0c0);font-size:.82rem;margin:8px 4px}.rg .danger{color:#e8a0b8}'
       + '.rg input[type=checkbox]{appearance:none;-webkit-appearance:none;width:48px;height:29px;border-radius:10px;background:var(--creux,#160d35);border:3px solid var(--bord,#3b2775);box-sizing:content-box;position:relative;flex:none;margin:0;transition:background .15s}'
-      + '.rg input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:7px;background:#8a82a3;transition:transform .15s}.rg input:checked{background:#16301f;border-color:var(--bio,#79d9a2)}.rg input:checked::after{background:var(--bio,#79d9a2);box-shadow:0 0 8px var(--glow,rgba(121,217,162,.3))}.rg input:checked::after{transform:translateX(18px)}'
-      + '.rg .pins{display:flex;gap:10px;flex-wrap:wrap;padding:12px 16px}.rg .pin{font-size:1.4rem;width:50px;height:50px;border-radius:var(--blob1);padding:0;opacity:.5}.rg .pin.on{opacity:1;border-color:var(--bio,#79d9a2);background:var(--surface2,#151021);box-shadow:0 0 10px var(--glow,rgba(121,217,162,.28))}'
-      + '</style><div data-c></div></div>';
+      + '.rg input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:7px;background:#8a82a3;transition:transform .15s}.rg input:checked{background:#16301f;border-color:var(--bio,#79d9a2)}.rg input:checked::after{background:var(--bio,#79d9a2);box-shadow:0 0 8px var(--glow,rgba(121,217,162,.3));transform:translateX(18px)}'
+      + '.rg .l.ls{flex-wrap:wrap}.rg .l.ls>span{flex:1 1 100%}.rg .seg{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-start}.rg .seg button{min-height:32px;padding:0 10px;font-size:12.5px;color:var(--muted,#8aa0c0)}.rg .seg button.on{color:var(--txt,#eee);border-color:var(--bio,#79d9a2)}'
+      + '.rg .pins{display:flex;gap:10px;flex-wrap:wrap;padding:12px 16px}.rg .pin{font-size:1.4rem;width:50px;height:50px;border-radius:var(--blob1,14px);padding:0;opacity:.5}.rg .pin.on{opacity:1;border-color:var(--bio,#79d9a2);box-shadow:0 0 10px var(--glow,rgba(121,217,162,.28))}'
+      + '.rg .ic{font-size:1.25rem;width:30px;text-align:center;flex:none}.rg .eteint{opacity:.5}.rg .l .act{display:flex;gap:6px;align-items:center;flex:none}'
+      + '</style><div class="rg-tete"><input class="rg-q" data-q type="search" autocomplete="off" placeholder="chercher un réglage"><div class="rg-nav">' + SECTIONS.map(([k, i, n]) => '<button data-aller="' + k + '">' + i + ' ' + esc(n) + '</button>').join('') + '</div></div><div data-c></div></div>';
     const zone = hote.querySelector('[data-c]');
+    const section = (k, titre, corps) => '<section data-s="' + k + '"><h3>' + titre + '</h3>' + corps + '</section>';
+    const bascule = (attr, on, texte, sous) => '<label class="l"><span>' + texte + (sous ? '<small>' + sous + '</small>' : '') + '</span><input type="checkbox" ' + attr + (on ? ' checked' : '') + '></label>';
+    const seg = (cle, valeurs, actuel, texte, sous) => '<div class="l ls"><span>' + texte + (sous ? '<small>' + sous + '</small>' : '') + '</span><div class="seg">' + valeurs.map(([v, n]) => '<button data-pv="' + cle + '" data-v="' + esc(v) + '"' + (String(v) === String(actuel) ? ' class="on"' : '') + '>' + esc(n) + '</button>').join('') + '</div></div>';
+
     async function peindre() {
       if (!vivant) return;
-      const e = compte.etat(), c = hud.config(), verrous = R().verrous(), cat = R().catalogue().filter(p => !p.interne);
-      const nRoutes = (await boxion.list('routes').catch(() => [])).length;
-      zone.innerHTML = '<h3>Compte</h3><div class="bloc"><div class="l"><span>' + (e.connecte ? esc((e.glyphe || '·') + ' ' + e.nom) + '<small>rang ' + esc(e.palier) + ' · xerboxion.org</small>' : 'Pas connecté<small>tout reste sur ton téléphone</small>') + '</span>'
-        + (e.connecte ? '<button data-a="sortir">se déconnecter</button>' : '<button class="p" data-a="connecter">se connecter</button>') + '</div></div>'
-        + '<h3>Réseau</h3><div class="bloc"><label class="l"><span>Mode connecté<small>les ploxions joignent xerboxion.org' + (e.connecte ? ' avec ton compte' : '') + ' ; hors ligne, leur dernière réponse</small></span><input type="checkbox" data-t="mode"' + (modeConnecte() ? ' checked' : '') + '></label></div>'
-        + (notifs ? '<h3>Notifications</h3><div class="bloc"><div class="l"><span>Une notification de test<small>elle arrive 5 s après : verrouille le téléphone</small></span><button data-a="notif">tester</button></div>'
-          + '<label class="l"><span>Messages de coord<small>' + (e.connecte ? 'tant que l\'app est ouverte ; app fermée : bientôt (APNs)' : 'connecte-toi avec le compte admin') + '</small></span><input type="checkbox" data-t="coord"' + (notifs.reglage().coord ? ' checked' : '') + '></label></div>' : '')
-        + '<h3>HUD</h3><div class="bloc">' + c.elements.map((x, i) => '<label class="l"><span>' + esc(ELS[x.k] || x.k) + '</span><button class="bas" data-monter="' + i + '"' + (i ? '' : ' disabled') + ' aria-label="monter">↑</button><input type="checkbox" data-el="' + i + '"' + (x.on ? ' checked' : '') + '></label>').join('')
-        + '<div class="l"><span>⚙ réglages<small>toujours sur l\'accueil</small></span></div></div>'
-        + '<p class="msg">📌 épinglés dans le HUD (4 au plus) : touche pour épingler ou retirer</p><div class="bloc"><div class="pins">' + (cat.length ? cat.map(p => '<button class="pin' + (c.epingles.includes(p.id) ? ' on' : '') + '" data-pin="' + esc(p.id) + '" title="' + esc(p.nom) + '">' + esc(p.icone || '▣') + '</button>').join('') : '<span class="msg">installe des ploxions d\'abord</span>') + '</div></div>'
-        + '<h3>Écran d\'accueil de l\'iPhone</h3><div class="bloc"><div class="l"><span>📲 Tes ploxions en apps<small>une icône par ploxion, qui ouvre ploxi0n directement dessus</small></span><button class="p" data-a="apps">choisir</button></div></div>'
-        + '<h3>Accueil</h3><div class="bloc"><div class="l"><span>Dossiers et pages<small>✎ sur l\'accueil, puis touche un ploxion</small></span><button data-a="accueil">tout remettre</button></div></div>'
-        + '<h3>Face ID</h3><div class="bloc">' + (verrous.length ? verrous.map(id => { const p = cat.find(x => x.id === id) || { nom: id, icone: '🔒' }; return '<div class="l"><span>' + esc(p.icone + ' ' + p.nom) + '</span><button data-deverrou="' + esc(id) + '">retirer le verrou</button></div>'; }).join('') : '<div class="l"><span>Aucun ploxion verrouillé<small>🔓 dans la barre d\'un ploxion</small></span></div>') + '</div>'
-        + '<h3>Ploxions</h3><div class="bloc"><div class="l"><span>Compléter leurs bions<small>ce que chaque ploxion touche, servi par le labo</small></span><button data-a="bions">compléter</button></div>'
-        + '<div class="l"><span>Mises à jour</span><button data-a="ajour">vérifier</button></div></div>'
-        + '<h3>Données</h3><div class="bloc"><div class="l"><span>Réponses gardées pour le mode avion<small>' + nRoutes + ' route' + (nRoutes > 1 ? 's' : '') + '</small></span><button data-a="routes">vider</button></div></div>'
-        + '<h3>À propos</h3><div class="bloc"><div class="l"><span>ploxi0n ' + esc(version) + '<small>' + esc(W.navigator.onLine !== false ? 'en ligne' : 'hors ligne') + '</small></span></div>'
-        + '<div class="l"><span>🧪 Banc iPhone</span><button data-ouvrir="banc">ouvrir</button></div><div class="l"><span>🐛 Bother me (un souci, une idée)</span><button data-ouvrir="bother">ouvrir</button></div></div>'
+      const e = compte.etat(), c = hud.config(), verrous = R().verrous(), cat = R().catalogue().filter(p => !p.interne), P = prefs ? prefs.lire() : null;
+      const [nRoutes, installes, bions, u] = await Promise.all([boxion.list('routes').then(l => l.length).catch(() => 0), depot.installes().catch(() => []), depot.bions ? depot.bions().catch(() => []) : [], boxion.get('usage', 'stats').catch(() => null)]);
+      const usage = (u && u.px) || {};
+      const tailles = {}; for (const p of installes) tailles[p.id] = depot.taille ? await depot.taille(p.id) : 0;
+      zone.innerHTML =
+        section('compte', 'Compte', '<div class="bloc"><div class="l"><span>' + (e.connecte ? esc((e.glyphe || '·') + ' ' + e.nom) + '<small>rang ' + esc(e.palier) + ' · xerboxion.org</small>' : 'Pas connecté<small>tout reste sur ton téléphone</small>') + '</span>'
+          + (e.connecte ? '<button data-a="sortir">se déconnecter</button>' : '<button class="p" data-a="connecter">se connecter</button>') + '</div></div>')
+        + section('reseau', 'Réseau', '<div class="bloc">' + bascule('data-t="mode"', modeConnecte(), 'Mode connecté', 'les ploxions joignent xerboxion.org' + (e.connecte ? ' avec ton compte' : '') + ' ; hors ligne, leur dernière réponse')
+          + '<div class="l"><span>Source<small>xerboxion.org (le marketplace, les bions, le mode connecté)</small></span></div></div>')
+        + (notifs ? section('notifs', 'Notifications', '<div class="bloc"><div class="l"><span>Une notification de test<small>elle arrive 5 s après : verrouille le téléphone</small></span><button data-a="notif">tester</button></div>'
+          + bascule('data-t="coord"', notifs.reglage().coord, 'Messages de coord', e.connecte ? 'tant que l\'app est ouverte ; app fermée : bientôt (APNs)' : 'connecte-toi avec le compte admin') + '</div>') : '')
+        + (P ? section('apparence', 'Apparence', '<div class="bloc">'
+          + seg('vue', [['grille', 'grille'], ['compacte', 'compacte'], ['liste', 'liste'], ['usage', 'usage'], ['recents', 'récents'], ['categories', 'catégories']], R().vueAccueil ? R().vueAccueil() : 'grille', 'Vue de l\'accueil')
+          + seg('icones', [['petites', 'petites'], ['normales', 'normales'], ['grandes', 'grandes']], P.icones, 'Taille des icônes')
+          + bascule('data-pb="grain"', P.grain, 'Patine', 'le grain usé des plaques')
+          + bascule('data-pb="contraste"', P.contraste === 'fort', 'Contraste fort', 'textes et bords plus clairs')
+          + bascule('data-pb="calme"', P.calme, 'Calme', 'plus aucune animation, même aux gestes')
+          + bascule('data-pb="plaque"', P.plaque, 'Plaque gravée', '« cycle 7026 · … » sur l\'accueil') + '</div>') : '')
+        + (P ? section('navigation', 'Navigation', '<div class="bloc">'
+          + bascule('data-pb="bords"', P.bords, 'Les bords', 'glisser depuis le bord gauche ou droit pour passer d\'une app à l\'autre')
+          + bascule('data-pb="appuiLong"', P.appuiLong, 'Appui long', 'le menu d\'un ploxion (épingler, déplacer, retirer…)')
+          + seg('maxVivants', [[3, '3'], [5, '5'], [8, '8']], P.maxVivants, 'Ploxions vivants en arrière-plan', 'au-delà, le plus ancien se ferme') + '</div>') : '')
+        + section('hud', 'HUD et dock', '<div class="bloc">' + (P ? bascule('data-pb="dock"', P.dock, 'Le dock en bas', 'compte, épinglés, ⚙') : '')
+          + c.elements.map((x, i) => '<label class="l"><span>' + esc(ELS[x.k] || x.k) + '</span><button class="bas" data-monter="' + i + '"' + (i ? '' : ' disabled') + ' aria-label="monter">↑</button><input type="checkbox" data-el="' + i + '"' + (x.on ? ' checked' : '') + '></label>').join('')
+          + '<div class="l"><span>⚙ réglages<small>toujours là</small></span></div></div>'
+          + '<p class="msg">📌 épinglés au dock et au widget (4 au plus)</p><div class="bloc"><div class="pins">' + (cat.length ? cat.map(p => '<button class="pin' + (c.epingles.includes(p.id) ? ' on' : '') + '" data-pin="' + esc(p.id) + '" title="' + esc(p.nom) + '">' + esc(p.icone || '▣') + '</button>').join('') : '<span class="msg">installe des ploxions d\'abord</span>') + '</div></div>')
+        + section('iphone', 'Écran d\'accueil de l\'iPhone', '<div class="bloc"><div class="l"><span>📲 Tes ploxions en apps<small>une icône par ploxion, qui ouvre ploxi0n directement dessus</small></span><button class="p" data-a="apps">choisir</button></div></div>')
+        + section('accueil', 'Accueil', '<div class="bloc"><div class="l"><span>Dossiers et pages<small>appui long sur un ploxion pour le ranger</small></span><button data-a="accueil">tout remettre</button></div></div>')
+        + section('ploxions', 'Ploxions · ' + installes.length, '<div class="bloc"><div class="l"><span>Mises à jour<small>les ploxions installés depuis le réseau</small></span><button data-a="ajour">vérifier</button></div>'
+          + installes.map(p => '<div class="l"><span class="ic">' + esc(p.icone || '▣') + '</span><span>' + esc(p.nom || p.id) + '<small>' + ko(tailles[p.id] || 0) + ' · ' + heures((usage[p.id] || {}).seconds) + ' · ' + (p.origine === 'pack' ? 'pack' : 'réseau') + (verrous.includes(p.id) ? ' · 🔒' : '') + '</small></span>'
+            + '<span class="act"><button class="danger" data-retirer="' + esc(p.id) + '" aria-label="retirer">🗑</button></span></div>').join('') + '</div>')
+        + section('bions', 'Bions · ' + bions.length, '<div class="bloc"><div class="l"><span>Compléter<small>ce que chaque ploxion touche, servi par le labo</small></span><button data-a="bions">compléter</button></div>'
+          + '<div class="l"><span>Tout mettre à jour<small>retélécharge chaque bion, garde ceux qui n\'ont pas changé</small></span><button data-a="bions-maj">mettre à jour</button></div>'
+          + bions.map(b => '<div class="l' + (b.coupe ? ' eteint' : '') + '"><span class="ic">⬡</span><span>' + esc(b.nom) + '<small>' + ko(b.octets) + ' · ' + (b.utilisePar.length ? 'sert à ' + esc(b.utilisePar.slice(0, 4).join(', ')) + (b.utilisePar.length > 4 ? ' +' + (b.utilisePar.length - 4) : '') : 'ne sert plus') + (b.coupe ? ' · coupé' : '') + '</small></span>'
+            + '<span class="act"><button class="bas" data-bion-maj="' + esc(b.nom) + '" aria-label="mettre à jour">⟳</button>' + (b.utilisePar.length ? '' : '<button class="bas danger" data-bion-retirer="' + esc(b.nom) + '" aria-label="retirer">🗑</button>')
+            + '<input type="checkbox" data-bion-on="' + esc(b.nom) + '"' + (b.coupe ? '' : ' checked') + ' aria-label="allumé"></span></div>').join('')
+          + '<div class="l"><span>Fournis par l\'app<small>' + FOURNIS_APP.join(' · ') + '</small></span></div></div>')
+        + section('faceid', 'Face ID', '<div class="bloc">' + (verrous.length ? verrous.map(id => { const p = cat.find(x => x.id === id) || { nom: id, icone: '🔒' }; return '<div class="l"><span>' + esc(p.icone + ' ' + p.nom) + '</span><button data-deverrou="' + esc(id) + '">retirer le verrou</button></div>'; }).join('') : '<div class="l"><span>Aucun ploxion verrouillé<small>appui long sur un ploxion › verrouiller</small></span></div>') + '</div>')
+        + section('donnees', 'Données', '<div class="bloc"><div class="l"><span>Réponses gardées pour le mode avion<small>' + nRoutes + ' route' + (nRoutes > 1 ? 's' : '') + '</small></span><button data-a="routes">vider</button></div>'
+          + '<div class="l"><span>Réinitialiser les réglages<small>accueil, HUD, apparence, verrous… (tes ploxions, tes tsoins et ton compte restent)</small></span><button class="danger" data-a="reset">réinitialiser</button></div></div>')
+        + section('apropos', 'À propos', '<div class="bloc"><div class="l"><span>ploxi0n ' + esc(version) + '<small>' + esc(W.navigator.onLine !== false ? 'en ligne' : 'hors ligne') + ' · cycle ' + (new Date().getFullYear() + 5000) + '</small></span></div>'
+          + '<div class="l"><span>🧪 Banc iPhone</span><button data-ouvrir="banc">ouvrir</button></div><div class="l"><span>🐛 Bother me (un souci, une idée)</span><button data-ouvrir="bother">ouvrir</button></div></div>')
         + '<p class="msg" data-msg></p>';
+      filtrer();
+    }
+    function filtrer() {
+      const t = norm(q).trim();
+      for (const s of zone.querySelectorAll('section')) {
+        let n = 0; const titre = norm(s.querySelector('h3').textContent);
+        for (const l of s.querySelectorAll('.l')) { const ok = !t || titre.includes(t) || norm(l.textContent).includes(t); l.hidden = !ok; if (ok) n++; }
+        s.hidden = !!t && !n;
+      }
     }
     const msg = (t) => { const m = zone.querySelector('[data-msg]'); if (m) { m.textContent = t; try { m.scrollIntoView({ block: 'nearest' }); } catch (e) { /* */ } } };
     async function majHud(f) { const c = hud.config(); f(c); await hud.regler(c); peindre(); }
+    hote.querySelector('[data-q]').addEventListener('input', (ev) => { q = ev.target.value; filtrer(); });
     hote.addEventListener('change', async (ev) => {
       const t = ev.target;
       if (t.matches('[data-t="mode"]')) { modeConnecte(t.checked); hud.regler(hud.config()); return; }
       if (t.matches('[data-t="coord"]')) { try { await notifs.coord(t.checked); const n = t.checked ? await notifs.verifierCoord() : []; msg(t.checked ? '✓ coord surveillé' + (n.length ? ' : ' + n.length + ' nouveau(x)' : '') : 'coord : plus de notifications'); } catch (er) { t.checked = false; await notifs.coord(false); msg('⚠ ' + (er.message || er)); } return; }
       if (t.matches('[data-el]')) return majHud(c => { c.elements[+t.getAttribute('data-el')].on = t.checked; });
+      if (t.matches('[data-pb]') && prefs) { const k = t.getAttribute('data-pb'); await prefs.regler({ [k]: k === 'contraste' ? (t.checked ? 'fort' : 'normal') : t.checked }); return; }
+      if (t.matches('[data-bion-on]')) { await depot.couperBion(t.getAttribute('data-bion-on'), !t.checked); msg(t.checked ? '✓ rallumé : il revient à la prochaine ouverture du ploxion' : '✓ coupé : il ne se charge plus (les ploxions qui l\'utilisent perdent sa fonction)'); t.closest('.l').classList.toggle('eteint', !t.checked); return; }
     });
     hote.addEventListener('click', async (ev) => {
       const b = ev.target.closest('button'); if (!b || !hote.contains(b)) return;
+      if (b.hasAttribute('data-aller')) { const s = zone.querySelector('[data-s="' + b.getAttribute('data-aller') + '"]'); q = ''; hote.querySelector('[data-q]').value = ''; filtrer(); if (s && s.scrollIntoView) s.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
       if (b.hasAttribute('data-monter')) { ev.preventDefault(); const i = +b.getAttribute('data-monter'); return majHud(c => { const [x] = c.elements.splice(i, 1); c.elements.splice(i - 1, 0, x); }); }
       if (b.hasAttribute('data-pin')) { const id = b.getAttribute('data-pin'); return majHud(c => { c.epingles = c.epingles.includes(id) ? c.epingles.filter(x => x !== id) : [...c.epingles, id].slice(-4); if (!c.elements.find(x => x.k === 'epingles').on) c.elements.find(x => x.k === 'epingles').on = true; }); }
+      if (b.hasAttribute('data-pv') && prefs) { ev.preventDefault(); const k = b.getAttribute('data-pv'), v = b.getAttribute('data-v'); if (k === 'vue') { if (R().vueAccueil) R().vueAccueil(v); } else await prefs.regler({ [k]: k === 'maxVivants' ? +v : v }); return peindre(); }
       if (b.hasAttribute('data-ouvrir')) return R().ouvrir(b.getAttribute('data-ouvrir'));
       if (b.hasAttribute('data-deverrou')) { if (await R().deverrouiller(b.getAttribute('data-deverrou'))) peindre(); return; }
+      // les gestes qui détruisent : un premier toucher demande « sûr ? »
+      const destructif = b.hasAttribute('data-retirer') || b.hasAttribute('data-bion-retirer') || b.getAttribute('data-a') === 'reset';
+      if (destructif && !b.classList.contains('sur')) { b.classList.add('sur'); b.dataset.avant = b.textContent; b.textContent = 'sûr ?'; return; }
+      try {
+        if (b.hasAttribute('data-retirer')) { const id = b.getAttribute('data-retirer'); await (R().retirerPloxion ? R().retirerPloxion(id) : depot.retirer(id)); msg('✓ ' + id + ' retiré'); return peindre(); }
+        if (b.hasAttribute('data-bion-retirer')) { await depot.retirerBion(b.getAttribute('data-bion-retirer')); msg('✓ bion retiré'); return peindre(); }
+        if (b.hasAttribute('data-bion-maj')) { b.disabled = true; const r = await depot.majBion(b.getAttribute('data-bion-maj')); msg(r === 'a-jour' ? '✓ déjà à jour' : '✓ mis à jour'); b.disabled = false; return; }
+      } catch (er) { msg('⚠ ' + (er.message || er)); b.disabled = false; return; }
       const a = b.getAttribute('data-a'); if (!a) return;
       b.disabled = true;
       try {
@@ -64,8 +129,10 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         else if (a === 'sortir') { await compte.deconnecter(); }
         else if (a === 'accueil') { R().reinitialiserAccueil(); msg('✓ accueil remis à zéro'); }
         else if (a === 'bions') { const r = await depot.completerBions(); msg(r.length ? '✓ ' + r.map(x => x.id + ' +' + (x.apres - x.avant)).join(' · ') : '✓ rien à compléter'); }
+        else if (a === 'bions-maj') { let n = 0; for (const x of await depot.bions()) { try { if ((await depot.majBion(x.nom)) === 'mis-a-jour') n++; } catch (er) { /* un bion introuvable n'arrête pas les autres */ } } msg('✓ ' + n + ' bion' + (n > 1 ? 's' : '') + ' mis à jour'); }
         else if (a === 'ajour') { const r = await depot.aJour(); msg(r.length ? r.map(x => x.id + ' : ' + ({ 'a-jour': 'à jour', 'mis-a-jour': 'mis à jour ✓', erreur: 'erreur' }[x.etat])).join(' · ') : 'rien à vérifier'); }
         else if (a === 'routes') { for (const r of await boxion.list('routes')) await boxion.del('routes', r.key); await peindre(); msg('✓ vidé'); }
+        else if (a === 'reset') { for (const k of ['accueil', 'verrous', 'hud', 'app', 'marketplace', 'notifs', 'mode-connecte', 'bions-coupes']) await boxion.del('reglages', k); msg('✓ réinitialisé : ploxi0n redémarre'); try { W.location.reload(); } catch (er) { /* */ } }
       } catch (er) { msg('⚠ ' + (er.message || er)); }
       b.disabled = false;
       if (a === 'sortir' || a === 'accueil' || a === 'bions') { const m = zone.querySelector('[data-msg]').textContent; await peindre(); msg(m); }

@@ -15,7 +15,7 @@ const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
   + R.map(r => `M512 ${512 - r}L${512 + r} 512L512 ${512 + r}L${512 - r} 512Z`).join('') + '"/></svg>';
 
-export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null } = {}) {
+export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}) } = {}) {
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
   // PLUSIEURS PLOXIONS VIVANTS (RS-7 12.10 : « pouvoir ouvrir des ploxions depuis des ploxions, et pouvoir minimiser un ploxion ») :
@@ -23,7 +23,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   //   pile     les ploxions d'où l'on vient : ouvrir un ploxion DEPUIS un ploxion empile le premier ; « ‹ » ferme le second et y revient
   //   minimiser : le ploxion reste vivant, l'accueil revient ; la rangée « en arrière-plan » le reprend d'un geste
   // Au plus MAX_VIVANTS : au-delà, le plus anciennement vu (hors celui qu'on regarde) est fermé (le droit au silence).
-  const MAX_VIVANTS = 5;
+  const maxVivants = () => Math.max(1, Math.min(8, +prefs().maxVivants || 5));
   let courant = null;     // l'instance visible
   const vivants = new Map(); let pile = [];
   racine.innerHTML = ''; racine.classList.add('px-mode-accueil');
@@ -37,7 +37,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   for (const cote of ['g', 'd']) {
     const b = D.createElement('div'); b.className = 'px-bord px-bord-' + cote; b.setAttribute('aria-hidden', 'true'); racine.appendChild(b);
     let x0 = null, id0 = null;
-    b.addEventListener('pointerdown', (e) => { if (vivants.size === 0) return; x0 = e.clientX; id0 = e.pointerId; try { b.setPointerCapture(e.pointerId); } catch (er) { /* */ } b.classList.add('px-tire'); e.preventDefault(); });
+    b.addEventListener('pointerdown', (e) => { if (vivants.size === 0 || prefs().bords === false) return; x0 = e.clientX; id0 = e.pointerId; try { b.setPointerCapture(e.pointerId); } catch (er) { /* */ } b.classList.add('px-tire'); e.preventDefault(); });
     b.addEventListener('pointermove', (e) => {
       if (x0 == null || e.pointerId !== id0) return;
       const dx = (e.clientX - x0) * (cote === 'g' ? 1 : -1);
@@ -233,7 +233,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   // l'APPUI LONG (450 ms sans bouger) sur une tuile ou une ligne : le menu ; le clic qui suit est avalé
   let appui = null, avaler = 0;
   racine.addEventListener('pointerdown', (e) => {
-    const t = e.target.closest('[data-id]'); if (!t || !racine.contains(t) || t.closest('.px-hote,.px-voile')) return;
+    const t = e.target.closest('[data-id]'); if (!t || !racine.contains(t) || t.closest('.px-hote,.px-voile') || prefs().appuiLong === false) return;
     const x0 = e.clientX, y0 = e.clientY, id = t.getAttribute('data-id');
     appui = { x0, y0, t: W.setTimeout(() => { appui = null; avaler = Date.now(); try { const h = W.Capacitor && W.Capacitor.Plugins && W.Capacitor.Plugins.Haptics; if (h) h.impact({ style: 'MEDIUM' }); } catch (er) { /* */ } actions(id); }, 450) };
   });
@@ -316,7 +316,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     // déjà vivant (minimisé, ou dans la pile) : on le reprend tel quel ; avec une demande (params), on le remonte frais
     if (vivants.has(id)) { if (!params) { pile = pile.filter(x => x !== id); montrer(vivants.get(id)); return true; } tuer(id); }
     // la place : au-delà de MAX_VIVANTS, le plus anciennement vu s'endort pour de bon
-    while (vivants.size >= MAX_VIVANTS) { const vieux = [...vivants.values()].sort((a, b) => a.vu - b.vu)[0]; tuer(vieux.id); }
+    while (vivants.size >= maxVivants()) { const vieux = [...vivants.values()].sort((a, b) => a.vu - b.vu)[0]; tuer(vieux.id); }
     const hote = D.createElement('div'); hote.className = 'px-hote'; hote.dataset.ploxion = id; scene.appendChild(hote);
     const v = { id, inst: {}, hote, debut: 0, vu: Date.now() };
     vivants.set(id, v); montrer(v);
@@ -365,6 +365,9 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     /** retirer un verrou Face ID (il faut le visage) */
     async deverrouiller(id) { if (!verrous.has(id)) return true; if (!(verrou && await verrou.ouvrir('Retirer le verrou de ' + ((parId.get(id) || {}).nom || id)))) return false; verrous.delete(id); garder(); return true; },
     /** l'accueil d'origine : plus de dossiers ni de pages */
+    /** la vue de l'accueil (sans argument : la lire) */
+    vueAccueil(v) { if (v === undefined) return accueilDoc.vue || 'grille'; accueilDoc.vue = v; garder(); return v; },
+    async retirerPloxion(id) { tuer(id); if (retirer) await retirer(id); },
     reinitialiserAccueil() { accueilDoc = { dossiers: [], pages: [] }; pageCourante = 0; dossierOuvert = null; garder(); },
   };
 }
