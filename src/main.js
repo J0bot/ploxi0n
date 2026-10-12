@@ -25,7 +25,7 @@ import { installerClavierIos, barreClavier, comprendre } from './natif/clavier-i
 import { trouverPloxion } from './natif/vocabulaire.js';
 import { creerVocal } from './natif/vocal.js';
 
-const VERSION = '0.25.0';
+const VERSION = '0.26.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {

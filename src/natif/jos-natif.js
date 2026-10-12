@@ -12,7 +12,11 @@
 //   ouvrirLien(url)                    Safari (hors de l'app)
 //   appareil() → { modele, systeme, version, nom } · batterie() → { niveau, enCharge } · reseau() → { connecte, type }
 //   parler(texte, { langue })          la synthèse vocale d'iOS
+//   meteo() WeatherKit · shazam() ShazamKit · musique.chercher/jouer/pause MusicKit (Apple Music)
 //   capacites() → la liste de ce qui est disponible ici
+import { registerPlugin } from '@capacitor/core';
+const PloxiApple = registerPlugin('PloxiApple');
+
 export function installerJosNatif(W = globalThis.window) {
   const natif = !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
   const api = {
@@ -57,7 +61,15 @@ export function installerJosNatif(W = globalThis.window) {
       if (natif) { const { TextToSpeech } = await import('@capacitor-community/text-to-speech'); return TextToSpeech.speak({ text: String(texte), lang: langue, rate: 1 }); }
       const u = new W.SpeechSynthesisUtterance(String(texte)); u.lang = langue; W.speechSynthesis.speak(u);
     },
-    capacites() { return natif ? ['partager', 'vibrer', 'copier', 'coller', 'photo', 'position', 'notifier', 'ouvrirLien', 'appareil', 'batterie', 'reseau', 'parler'] : ['partager', 'vibrer', 'copier', 'position', 'parler'].filter(k => k !== 'partager' || W.navigator.share); },
+    // 🍎 les services d'Apple (AppDelegate.swift, PloxiApple)
+    async meteo(pos) { if (!natif) throw new Error('WeatherKit : sur l\'iPhone'); const p = pos || await api.position(); return PloxiApple.meteo({ lat: p.lat, lng: p.lng }); },
+    async shazam() { if (!natif) throw new Error('Shazam : sur l\'iPhone'); return PloxiApple.shazam(); },
+    musique: {
+      chercher: (q) => PloxiApple.musiqueChercher({ q: String(q || '') }),
+      jouer: (id) => PloxiApple.musiqueJouer({ id: String(id) }),
+      pause: () => PloxiApple.musiquePause(),
+    },
+    capacites() { return natif ? ['partager', 'vibrer', 'copier', 'coller', 'photo', 'position', 'notifier', 'ouvrirLien', 'appareil', 'batterie', 'reseau', 'parler', 'meteo', 'shazam', 'musique', 'vocal', 'haptique'] : ['partager', 'vibrer', 'copier', 'position', 'parler'].filter(k => k !== 'partager' || W.navigator.share); },
   };
   W.jOSNatif = api;
   return api;

@@ -3,6 +3,10 @@ import Capacitor
 import WidgetKit
 import AVFoundation
 import Speech
+import WeatherKit
+import ShazamKit
+import MusicKit
+import CoreLocation
 import WebKit
 import ObjectiveC
 
@@ -154,9 +158,106 @@ public class PloxiVocal: CAPPlugin, CAPBridgedPlugin {
     }
 }
 
+// 🍎 LES SERVICES D'APPLE (RS-7 12.10 : « ajoute MusicKit, ShazamKit, WeatherKit comme utilisables ») : un plugin de l'app, jOSNatif côté page.
+//   meteo({lat,lng})        WeatherKit : maintenant + 7 jours (l'attribution « Apple Weather » doit être affichée : rendue avec)
+//   shazam()                ShazamKit (iOS 17+) : écoute le micro, rend titre, artiste, pochette, lien Apple Music
+//   musiqueChercher({q})    MusicKit : le catalogue Apple Music · musiqueJouer({id}) · musiquePause()  (jouer : un abonnement Apple Music)
+@objc(PloxiApple)
+public class PloxiApple: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "PloxiApple"
+    public let jsName = "PloxiApple"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "meteo", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "shazam", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "musiqueChercher", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "musiqueJouer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "musiquePause", returnType: CAPPluginReturnPromise),
+    ]
+
+    @objc func meteo(_ call: CAPPluginCall) {
+        guard #available(iOS 16.0, *) else { call.reject("WeatherKit : iOS 16 ou plus"); return }
+        guard let lat = call.getDouble("lat"), let lng = call.getDouble("lng") else { call.reject("lat et lng manquants"); return }
+        Task {
+            do {
+                let w = try await WeatherService.shared.weather(for: CLLocation(latitude: lat, longitude: lng))
+                let c = w.currentWeather
+                let iso = ISO8601DateFormatter()
+                var jours: [[String: Any]] = []
+                for d in w.dailyForecast.forecast.prefix(7) {
+                    jours.append(["date": iso.string(from: d.date), "min": d.lowTemperature.converted(to: .celsius).value, "max": d.highTemperature.converted(to: .celsius).value,
+                                  "symbole": d.symbolName, "pluie": d.precipitationChance])
+                }
+                call.resolve(["temperature": c.temperature.converted(to: .celsius).value, "ressentie": c.apparentTemperature.converted(to: .celsius).value,
+                              "condition": c.condition.description, "symbole": c.symbolName, "humidite": c.humidity, "vent": c.wind.speed.converted(to: .kilometersPerHour).value,
+                              "uv": c.uvIndex.value, "jours": jours, "attribution": " Weather", "attributionLien": "https://weatherkit.apple.com/legal-attribution.html"])
+            } catch { call.reject("météo : \(error.localizedDescription)") }
+        }
+    }
+
+    @objc func shazam(_ call: CAPPluginCall) {
+        guard #available(iOS 17.0, *) else { call.reject("Shazam : iOS 17 ou plus"); return }
+        Task {
+            try? AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+            let session = SHManagedSession()
+            let r = await session.result()
+            try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [.allowAirPlay])
+            switch r {
+            case .match(let m):
+                let i = m.mediaItems.first
+                call.resolve(["trouve": true, "titre": i?.title ?? "", "artiste": i?.artist ?? "", "image": i?.artworkURL?.absoluteString ?? "",
+                              "appleMusic": i?.appleMusicURL?.absoluteString ?? "", "isrc": i?.isrc ?? ""])
+            case .noMatch(_):
+                call.resolve(["trouve": false])
+            case .error(let e, _):
+                call.reject("Shazam : \(e.localizedDescription)")
+            @unknown default:
+                call.reject("Shazam : réponse inconnue")
+            }
+        }
+    }
+
+    @objc func musiqueChercher(_ call: CAPPluginCall) {
+        let q = call.getString("q") ?? ""
+        Task {
+            let st = await MusicAuthorization.request()
+            guard st == .authorized else { call.reject("Apple Music refusé : Réglages iOS › ploxi0n › Médias et Apple Music"); return }
+            do {
+                var req = MusicCatalogSearchRequest(term: q, types: [Song.self])
+                req.limit = 15
+                let res = try await req.response()
+                var l: [[String: Any]] = []
+                for s in res.songs {
+                    l.append(["id": s.id.rawValue, "titre": s.title, "artiste": s.artistName, "album": s.albumTitle ?? "",
+                              "image": s.artwork?.url(width: 300, height: 300)?.absoluteString ?? "", "duree": s.duration ?? 0])
+                }
+                call.resolve(["morceaux": l])
+            } catch { call.reject("Apple Music : \(error.localizedDescription)") }
+        }
+    }
+
+    @objc func musiqueJouer(_ call: CAPPluginCall) {
+        guard let id = call.getString("id") else { call.reject("id manquant"); return }
+        Task {
+            do {
+                let req = MusicCatalogResourceRequest<Song>(matching: \.id, equalTo: MusicItemID(id))
+                let res = try await req.response()
+                guard let s = res.items.first else { call.reject("morceau introuvable"); return }
+                await MainActor.run { ApplicationMusicPlayer.shared.queue = ApplicationMusicPlayer.Queue(for: [s]) }
+                try await ApplicationMusicPlayer.shared.play()
+                call.resolve(["ok": true])
+            } catch { call.reject("lecture : \(error.localizedDescription) (il faut un abonnement Apple Music)") }
+        }
+    }
+
+    @objc func musiquePause(_ call: CAPPluginCall) {
+        Task { await MainActor.run { ApplicationMusicPlayer.shared.pause() }; call.resolve() }
+    }
+}
+
 class PloxionVC: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(PloxiVocal())
+        bridge?.registerPluginInstance(PloxiApple())
     }
     private var plein: Bool { UserDefaults.standard.string(forKey: "CapacitorStorage.ploxi0n.plein-ecran") == "1" }
     // l'indicateur d'accueil : le plugin SystemBars de Capacitor 8 le gère déjà (CAPBridgeViewController.prefersHomeIndicatorAutoHidden n'est
