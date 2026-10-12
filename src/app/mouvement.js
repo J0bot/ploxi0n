@@ -47,7 +47,7 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
       if (!P) P = (await import('../natif/plugins-app.js')).PloxiApple;
       ecoute = await P.addListener('mouvement', mesure);
       await P.mouvementDebut({ hz: 30 });
-      actif = true; h.classList.add('px-vivant');
+      actif = true; h.classList.add('px-anime');
     } catch (e) {
       erreur = 'natif : ' + String((e && e.message) || e).slice(0, 160);
       try { if (ecoute) await ecoute.remove(); } catch (e2) { /* */ } ecoute = null;
@@ -62,7 +62,7 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
     mesure({ gx: -(g.x || 0) / 9.81, gy: -(g.y || 0) / 9.81, gz: -(g.z || 0) / 9.81, ax: (a.x || 0) / 9.81, ay: (a.y || 0) / 9.81, az: (a.z || 0) / 9.81 });
   }
   function repliWeb() {
-    const brancher = () => { W.addEventListener('devicemotion', surWeb); web = true; actif = true; h.classList.add('px-vivant'); };
+    const brancher = () => { W.addEventListener('devicemotion', surWeb); web = true; actif = true; h.classList.add('px-anime'); };
     const demander = W.DeviceMotionEvent && W.DeviceMotionEvent.requestPermission;
     if (!demander) return brancher();
     const unGeste = () => {
@@ -73,7 +73,7 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
   }
   async function arreter() {
     if (!actif) return; actif = false;
-    h.classList.remove('px-vivant'); h.style.setProperty('--mx', '0'); h.style.setProperty('--my', '0');
+    h.classList.remove('px-anime'); h.style.setProperty('--mx', '0'); h.style.setProperty('--my', '0');
     if (web) { W.removeEventListener('devicemotion', surWeb); web = false; return; }
     try { if (ecoute) await ecoute.remove(); ecoute = null; if (P && !(W.__pxMouvementWeb > 0)) await P.mouvementFin(); } catch (e) { /* */ }   // (0.47) pas si un ploxion écoute encore devicemotion (web-natif.js)
   }

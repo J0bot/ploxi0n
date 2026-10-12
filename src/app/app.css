@@ -282,6 +282,9 @@ html.px-haut-on #ploxi0n{padding-top:max(env(safe-area-inset-top,0px),22px)}
 .px-sante-barres rect{fill:var(--acc)}.px-sante-barres rect:last-of-type{fill:var(--bio)}
 .px-sante-barres text{font:600 9px var(--mono);fill:var(--muted)}
 .px-journal-bas.px-puces{display:flex;gap:8px;justify-content:center}
+/* (0.47) les puces du bas (Santé, journal) : une rangée, pas cinq gros boutons empilés */
+.px-journal-bas.px-puces .px-puce{width:auto;flex:1 1 auto;min-height:40px;padding:0 12px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:600 13px var(--police)}
+.px-journal-bas.px-puces .px-puce.on{border-color:var(--acc);background:var(--acc);color:#0d0a16}
 
 /* ---- ⬇ la barre d'installation · 📦 le gestionnaire ---- */
 .px-installation{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 88px);z-index:70;background:var(--surface) var(--grain);border:var(--trait) solid var(--bord2);border-radius:16px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
@@ -347,26 +350,27 @@ html:not(.px-fond-partout):has(#ploxi0n.px-mode-ploxion) .px-fond{display:none}
 @media (prefers-reduced-motion:reduce){.px-entree .px-accueil .px-tuile,.px-scene>.px-hote,.px-voile,.px-voile>.px-tiroir,.px-feuille>div,.px-bulle,.px-barre{animation:none}}
 
 /* ---- 🌀 LE THÈME VIVANT : chill-tekk suit le téléphone (gyroscope + accéléromètre, src/app/mouvement.js → --mx, --my de −1 à 1) ----
-   Tout passe par html.px-vivant : éteint (Calme, réglage, hors iPhone) rien ne bouge. Aucun dégradé : des décalages, des ombres, une arête. */
-html.px-vivant .px-fond i{transform:translate3d(calc(var(--mx,0) * -16px),calc(var(--my,0) * -16px),0) scale(1.07)}
-html.px-vivant body{background-position:calc(var(--mx,0) * -5px) calc(var(--my,0) * -5px)}
-html.px-vivant .px-tuile .px-ic{translate:calc(var(--mx,0) * 3px) calc(var(--my,0) * 3px);
+   Tout passe par html.px-anime (0.47 : px-vivant, le nom d'avant, était AUSSI la carte d'un ploxion vivant → <html> devenait une carte flex,
+   la page débordait de côté avec une barre verte à gauche) : éteint (Calme, réglage, hors iPhone) rien ne bouge. Aucun dégradé : des décalages, des ombres, une arête. */
+html.px-anime .px-fond i{transform:translate3d(calc(var(--mx,0) * -16px),calc(var(--my,0) * -16px),0) scale(1.07)}
+html.px-anime body{background-position:calc(var(--mx,0) * -5px) calc(var(--my,0) * -5px)}
+html.px-anime .px-tuile .px-ic{translate:calc(var(--mx,0) * 3px) calc(var(--my,0) * 3px);
   background-position:calc(var(--mx,0) * 4px) calc(var(--my,0) * 4px);
   box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -5px) calc(var(--my,0) * -5px + 6px) 14px rgba(0,0,0,.5)}
 /* l'arête du haut attrape la lumière quand on incline le haut du téléphone vers soi */
-html.px-vivant .px-tuile .px-ic::after{content:'';position:absolute;inset:-1px;border-radius:inherit;border-top:1.5px solid var(--acc);pointer-events:none;
+html.px-anime .px-tuile .px-ic::after{content:'';position:absolute;inset:-1px;border-radius:inherit;border-top:1.5px solid var(--acc);pointer-events:none;
   opacity:calc(max(0, var(--my,0) * -1) * .55 + max(0, var(--mx,0)) * .2)}
-html.px-vivant .px-tete h1,html.px-vivant .px-grave{text-shadow:calc(var(--mx,0) * -1.4px) calc(var(--my,0) * -1.4px) 0 rgba(0,0,0,.85)}
-html.px-vivant .px-logo{translate:calc(var(--mx,0) * 2px) calc(var(--my,0) * 2px)}
-html.px-vivant .px-dock{box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -4px) calc(var(--my,0) * -3px + 8px) 22px rgba(0,0,0,.55)}
+html.px-anime .px-tete h1,html.px-anime .px-grave{text-shadow:calc(var(--mx,0) * -1.4px) calc(var(--my,0) * -1.4px) 0 rgba(0,0,0,.85)}
+html.px-anime .px-logo{translate:calc(var(--mx,0) * 2px) calc(var(--my,0) * 2px)}
+html.px-anime .px-dock{box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -4px) calc(var(--my,0) * -3px + 8px) 22px rgba(0,0,0,.55)}
 /* un choc : les icônes tressautent une fois */
 html.px-choc .px-tuile .px-ic{animation:px-choc .32s cubic-bezier(.3,1.6,.4,1)}
 @keyframes px-choc{30%{transform:translateY(-4px) rotate(-3deg)}60%{transform:translateY(2px) rotate(2deg)}}
-@media (prefers-reduced-motion:reduce){html.px-vivant .px-fond i{transform:none}html.px-choc .px-tuile .px-ic{animation:none}}
+@media (prefers-reduced-motion:reduce){html.px-anime .px-fond i{transform:none}html.px-choc .px-tuile .px-ic{animation:none}}
 
 /* (0.45) le thème vivant partout : la barre d'un ploxion, les feuilles, les bulles suivent aussi le téléphone ; les ploxions lisent
    var(--mx) / var(--my) sur <html> ou jOSNatif.mouvement.ecouter() */
-html.px-vivant .px-barre{box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -3px) calc(var(--my,0) * -3px + 5px) 16px rgba(0,0,0,.45)}
-html.px-vivant .px-tiroir{translate:calc(var(--mx,0) * 4px) calc(var(--my,0) * 3px);box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -6px) calc(var(--my,0) * -6px + 10px) 30px rgba(0,0,0,.55)}
-html.px-vivant .px-bulle{translate:calc(var(--mx,0) * 5px) calc(var(--my,0) * 4px)}
-html.px-vivant .px-barre .px-retour,html.px-vivant .px-mini{translate:calc(var(--mx,0) * 1.5px) calc(var(--my,0) * 1.5px)}
+html.px-anime .px-barre{box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -3px) calc(var(--my,0) * -3px + 5px) 16px rgba(0,0,0,.45)}
+html.px-anime .px-tiroir{translate:calc(var(--mx,0) * 4px) calc(var(--my,0) * 3px);box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -6px) calc(var(--my,0) * -6px + 10px) 30px rgba(0,0,0,.55)}
+html.px-anime .px-bulle{translate:calc(var(--mx,0) * 5px) calc(var(--my,0) * 4px)}
+html.px-anime .px-barre .px-retour,html.px-anime .px-mini{translate:calc(var(--mx,0) * 1.5px) calc(var(--my,0) * 1.5px)}

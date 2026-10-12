@@ -125,7 +125,7 @@ async function demarrer() {
   // ⚡ le web devient natif : vibrate, geolocation, Notification, la dictée, les QR, le gyroscope, Bluetooth, NFC, wakeLock… de TOUS les ploxions
   try {
     installerWebNatif({ W: window, prefs: () => prefs.lire(), courant: () => routeur && routeur.courant(), ouvrirPloxion: (id) => { if (routeur && routeur.connait(id)) routeur.ouvrir(id); },
-      mouvementActif: () => document.documentElement.classList.contains('px-vivant') });
+      mouvementActif: () => document.documentElement.classList.contains('px-anime') });
   } catch (e) { bootLog('⚠ web natif : ' + (e && e.message)); }
   boot(24, 'le web devient natif');
   // un ploxion en ouvre un autre (jOSXerPrefs.ouvrir, jOS.openPloxion) : s'il n'est pas installé et qu'il y a du réseau, on l'installe à la volée
@@ -229,9 +229,11 @@ async function demarrer() {
   // 📦 le gestionnaire : les ploxions installés, leur place, leurs bions
   internes.push(enregistrerGestion({ depot, vibrer: (x) => vibrer(x), ouvrir: (id) => routeurProxy.ouvrir(id), retirer: async (id) => { await routeur.retirerPloxion(id); await majAccueil(); } }));
   // ❤ la santé : Apple Santé lue sur le téléphone (le ploxion « Santé ») ; jOSNatif.sante pour les ploxions, sur accord
-  const sante = creerSante({ boxion, vibrer: (x) => vibrer(x), courant: () => (routeur ? routeur.courant() : null) });
+  const sante = creerSante({ boxion, vibrer: (x) => vibrer(x), courant: () => (routeur ? routeur.courant() : null),
+    distant: () => (compte.etat().connecte && modeConnecte && navigator.onLine !== false ? window.jOSBoxion : null) });   // ☁ le résumé sur ton boxion (si activé)
   internes.push(sante.ploxion);
   window.jOSNatif.sante = sante.api;
+  setTimeout(() => sante.synchroniser().catch(() => {}), 5000);   // ☁ hors du chemin critique : le résumé santé (si activé et connecté)
   window.jOSNatif.tsoin = (o) => tsoinNatif.ouvrir(o || {});
   const hud = creerHud({ compte, boxion, vocalEnCours: () => vocal.enCours(), trouver: (id) => routeur && routeur.catalogue().find(p => p.id === id), modeConnecte: () => modeConnecte });
   await hud.pret;
@@ -390,7 +392,7 @@ async function demarrer() {
   if (!modeSurJs) notifs.demarrer();
   else { const b = document.createElement('div'); b.className = 'px-bulle'; b.textContent = '🛟 mode sûr pour ce lancement (le prochain réessaie tout). S\'il s\'est ouvert : le coupable est le fond photo, le thème vivant ou la session — dis-le à bother me.'; racine.appendChild(b); setTimeout(() => b.remove(), 9000); }
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-    import('@capacitor/app').then(({ App }) => App.addListener('appStateChange', (e) => { if (e.isActive) { raccourcis.recevoir().catch(() => {}); notifs.demarrer(); } else { notifs.arreter(); publierValeurs().catch(() => {}); dossier.synchroniser().catch(() => {}); couperVideosArrierePlan(); } })).catch(() => {});
+    import('@capacitor/app').then(({ App }) => App.addListener('appStateChange', (e) => { if (e.isActive) { raccourcis.recevoir().catch(() => {}); notifs.demarrer(); sante.synchroniser().catch(() => {}); } else { notifs.arreter(); publierValeurs().catch(() => {}); dossier.synchroniser().catch(() => {}); couperVideosArrierePlan(); } })).catch(() => {});
   }
 }
 demarrer().catch((e) => { try { window.__bootFin && window.__bootFin(); } catch (er) { /* */ } document.getElementById('ploxi0n').innerHTML = '<p class="px-erreur">ploxi0n n\'a pas pu démarrer : ' + String(e && e.message).replace(/[<&]/g, '') + '</p>'; });

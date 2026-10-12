@@ -286,7 +286,7 @@ test('🌀 le thème vivant : la gravité → --mx/--my (neutre recentré, liss�
     const plugin = { addListener: async (n, f) => { ecouteur = f; return { remove: async () => { ecouteur = null; } }; }, mouvementDebut: async (o) => appels.push(['debut', o.hz]), mouvementFin: async () => appels.push(['fin']) };
     const racine = W.document.getElementById('ploxi0n'); racine.classList.add('px-mode-accueil');
     const m = creerMouvement({ W, prefs, plugin, racine }); await attendre(20);
-    assert.ok(m.actif() && h.classList.contains('px-vivant')); assert.deepEqual(appels[0], ['debut', 30]);
+    assert.ok(m.actif() && h.classList.contains('px-anime')); assert.deepEqual(appels[0], ['debut', 30]);
     ecouteur({ gx: 0, gy: -0.7 });                                  // tenu debout : le neutre
     for (let i = 0; i < 20; i++) ecouteur({ gx: 0.3, gy: -0.7 });  // incliné à droite
     const mx = +h.style.getPropertyValue('--mx'); assert.ok(mx > 0.5 && mx <= 1, 'incliné → --mx ' + mx);

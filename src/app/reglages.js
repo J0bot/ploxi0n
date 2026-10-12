@@ -11,7 +11,7 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const ko = (n) => n < 1024 ? n + ' o' : n < 1048576 ? Math.round(n / 1024) + ' Ko' : (Math.round(n / 104857.6) / 10) + ' Mo';
 const heures = (s) => !s ? '0 h' : s < 3600 ? Math.max(1, Math.round(s / 60)) + ' min' : (Math.round(s / 360) / 10).toLocaleString('fr-CH') + ' h';
-export const FOURNIS_APP = ['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou', 'jOSRaccourcis', 'jOSEcranAccueil', 'jOSKeyboard (le clavier d\'iOS)'];
+export const FOURNIS_APP = ['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou', 'jOSRaccourcis', 'jOSEcranAccueil', 'jOSKeyboard (le clavier d\'iOS)', 'jOSSante (Apple Santé)'];
 const SECTIONS = [['compte', '👤', 'compte'], ['reseau', '🌐', 'réseau'], ['notifs', '🔔', 'notifications'], ['apparence', '🎨', 'apparence'], ['haptique', '🫧', 'haptique'], ['lecteur', '🎞', 'lecteur'], ['navigation', '🧭', 'navigation'],
   ['hud', '🧩', 'HUD et dock'], ['iphone', '📲', 'écran d\'accueil'], ['accueil', '🏠', 'accueil'], ['ploxions', '▣', 'ploxions'], ['bions', '⬡', 'bions'], ['faceid', '🔒', 'Face ID'],
   ['donnees', '💾', 'données'], ['apropos', '◇', 'à propos']];
