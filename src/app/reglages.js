@@ -1,33 +1,43 @@
 // ⚙ LES RÉGLAGES de ploxi0n (RS-7 11.10 : « un vrai bouton réglages » ; 12.10 : « améliorer au max les réglages, on a tellement d'options
 // qu'on peut activer ou désactiver ; on doit pouvoir manager les bions »). Un ploxion interne, toujours au bout du ⚙ (il ne se retire pas).
-// Une page, une recherche (« chercher un réglage » filtre chaque ligne), une rangée de catégories pour sauter d'une section à l'autre :
-//   compte · réseau · notifications · apparence · navigation · HUD et dock · écran d'accueil iPhone · accueil · ploxions · bions · Face ID ·
-//   données · à propos
+// (0.47, RS-7 : « réorganiser les paramètres pour les rendre plus chill, des paramètres de sous-paramètres ») : comme les Réglages d'iOS —
+// un accueil court (cinq groupes, une ligne par catégorie avec son état en un mot et ›), chaque catégorie sur sa page (‹ pour revenir),
+// et des sous-pages pour ce qui est long (les gestes des bords ; l'haptique : motifs, événements, signatures). La recherche fouille tout.
 // Les bions : chacun avec sa taille et les ploxions qui l'utilisent ; le couper (plus chargé), le mettre à jour, le retirer s'il ne sert plus.
 import { testerClavier } from './clavier.js';
 import { PLUGIONS } from '../natif/plugions.js';
 import { STYLES, EVENEMENTS } from '../natif/haptique.js';
+import { BRANCHEMENTS } from '../natif/web-natif.js';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const ko = (n) => n < 1024 ? n + ' o' : n < 1048576 ? Math.round(n / 1024) + ' Ko' : (Math.round(n / 104857.6) / 10) + ' Mo';
 const heures = (s) => !s ? '0 h' : s < 3600 ? Math.max(1, Math.round(s / 60)) + ' min' : (Math.round(s / 360) / 10).toLocaleString('fr-CH') + ' h';
 export const FOURNIS_APP = ['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou', 'jOSRaccourcis', 'jOSEcranAccueil', 'jOSKeyboard (le clavier d\'iOS)', 'jOSSante (Apple Santé)'];
-const SECTIONS = [['compte', '👤', 'compte'], ['reseau', '🌐', 'réseau'], ['notifs', '🔔', 'notifications'], ['apparence', '🎨', 'apparence'], ['haptique', '🫧', 'haptique'], ['lecteur', '🎞', 'lecteur'], ['navigation', '🧭', 'navigation'],
-  ['hud', '🧩', 'HUD et dock'], ['iphone', '📲', 'écran d\'accueil'], ['accueil', '🏠', 'accueil'], ['ploxions', '▣', 'ploxions'], ['bions', '⬡', 'bions'], ['faceid', '🔒', 'Face ID'],
-  ['donnees', '💾', 'données'], ['apropos', '◇', 'à propos']];
+// l'accueil des réglages : [groupe, [[page, icône, nom]]] ; SOUS : une sous-page → sa page parente (‹ y revient)
+export const GROUPES = [
+  ['toi', [['compte', '👤', 'Compte'], ['reseau', '🌐', 'Réseau et mode connecté']]],
+  ['l\'iPhone', [['natif', '⚡', 'Natif'], ['sante', '❤', 'Santé'], ['notifs', '🔔', 'Notifications'], ['faceid', '🔒', 'Face ID'], ['iphone', '📲', 'Écran d\'accueil de l\'iPhone']]],
+  ['le look', [['apparence', '🎨', 'Apparence'], ['haptique', '🫧', 'Haptique'], ['lecteur', '🎞', 'Lecteur']]],
+  ['les gestes', [['navigation', '🧭', 'Navigation'], ['hud', '🧩', 'HUD et dock'], ['accueil', '🏠', 'Accueil']]],
+  ['tes ploxions', [['ploxions', '▣', 'Ploxions'], ['bions', '⬡', 'Bions'], ['donnees', '💾', 'Données']]],
+  ['', [['apropos', '◇', 'À propos']]],
+];
+export const SOUS = { gestes: 'navigation', 'haptique-motifs': 'haptique', 'haptique-evenements': 'haptique', 'haptique-ploxions': 'haptique' };
 
-export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, vibrer = () => {}, haptique = null, lecteur = null, version = '?' }) {
+export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, vibrer = () => {}, haptique = null, lecteur = null, sante = null, version = '?' }) {
   const ELS = { tsoin: '⧗ noter un tsoin', vocal: '🎙 vocal', compte: '👤 compte', reseau: '📶 réseau et mode connecté', heure: '🕐 heure', chercher: '🔎 chercher un ploxion', epingles: '📌 ploxions épinglés' };
   function mount(hote) {
-    let vivant = true, q = '', composition = [];
+    let vivant = true, q = '', composition = [], page = null;   // page : null = l'accueil des réglages
     const R = () => routeur();
     hote.innerHTML = '<div class="rg"><style>'
       + '.rg{padding:0 16px 80px;max-width:640px;margin:0 auto}.rg h3{margin:24px 6px 8px;font:600 10.5px var(--mono,monospace);letter-spacing:.2em;text-transform:uppercase;color:var(--muted,#8aa0c0)}'
       + '.rg-tete{position:sticky;top:0;z-index:3;background:var(--bg,#07050c);padding:12px 0 8px;margin:0 -16px;padding-left:16px;padding-right:16px;border-bottom:1px solid var(--bord,#272036)}'
       + '.rg-q{width:100%;box-sizing:border-box;padding:11px 14px;border-radius:14px;border:var(--trait,2px) solid var(--bord,#272036);background:var(--creux,#0a0712);color:inherit;font:16px var(--police,system-ui);-webkit-appearance:none;appearance:none}.rg-q:focus{outline:none;border-color:var(--bord2,#3a3050)}'
-      + '.rg-nav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:8px}.rg-nav::-webkit-scrollbar{display:none}.rg-nav button{flex:none;font:600 10.5px var(--mono,monospace);letter-spacing:.08em;text-transform:uppercase;min-height:32px;padding:0 11px;color:var(--muted,#8aa0c0)}'
+      + '.rg-fil{display:flex;align-items:center;gap:10px;margin-bottom:8px;min-height:34px}.rg-fil b{font:600 11px var(--mono,monospace);letter-spacing:.24em;text-transform:uppercase;color:var(--txt,#eee);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rg-fil .rg-retour{min-height:34px;padding:0 12px;font-size:15px}'
+      + '.rg .lien{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;text-align:left;border:0;border-top:1px solid rgba(178,140,255,.12);border-radius:0;background:none;padding:11px 14px;min-height:54px;font:inherit;color:inherit}.rg .bloc>.lien:first-child{border-top:0}'
+      + '.rg .lien .ic{font-size:1.15rem;width:30px;height:30px;line-height:30px;text-align:center;flex:0 0 30px;border-radius:9px;background:var(--surface2,#151021)}.rg .lien>span:nth-child(2){flex:1;min-width:0}.rg .lien small{display:block;color:var(--muted,#8aa0c0);font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rg .lien .chev{color:var(--muted,#8aa0c0);font-size:1.2rem;flex:none}'
       + '.rg .bloc{background:var(--surface,#0f0b18) var(--grain,none);border:var(--trait,2px) solid var(--bord,#272036);border-radius:18px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--filet,rgba(190,175,230,.06))}'
-      + '.rg .l{display:flex;align-items:center;gap:10px;padding:12px 16px;min-height:30px;border-top:1px solid rgba(178,140,255,.12)}.rg .l:first-child{border-top:0}.rg .l[hidden],.rg section[hidden]{display:none}'
+      + '.rg .l{display:flex;align-items:center;gap:10px;padding:12px 16px;min-height:30px;border-top:1px solid rgba(178,140,255,.12)}.rg .l:first-child{border-top:0}.rg .l[hidden],.rg section[hidden],.rg .lien[hidden],.rg [data-accueil][hidden]{display:none}'
       + '.rg .l>span{flex:1;min-width:0}.rg .l small{display:block;color:var(--muted,#8aa0c0);font-size:.78rem;overflow-wrap:anywhere}.rg button{border:var(--trait,2px) solid var(--bord,#22324f);background:var(--surface2,#251754);color:inherit;border-radius:11px;padding:6px 12px;min-height:34px;font:500 14px inherit;flex:none}'
       + '.rg .bas{border:0;min-height:30px;padding:2px 8px;color:var(--muted,#8aa0c0)}.rg .p{border-color:var(--acc2,#7a6aa8);color:var(--acc,#b69cff)}.rg .msg{color:var(--muted,#8aa0c0);font-size:.82rem;margin:8px 4px}.rg .danger{color:#e8a0b8}'
       + '.rg input[type=checkbox]{appearance:none;-webkit-appearance:none;width:48px;height:29px;border-radius:10px;background:var(--creux,#160d35);border:3px solid var(--bord,#3b2775);box-sizing:content-box;position:relative;flex:none;margin:0;transition:background .15s}'
@@ -35,9 +45,11 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       + '.rg .l.ls{flex-wrap:wrap}.rg .l.ls>span{flex:1 1 100%}.rg .seg{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-start}.rg .seg button{min-height:32px;padding:0 10px;font-size:12.5px;color:var(--muted,#8aa0c0)}.rg .seg button.on{color:var(--txt,#eee);border-color:var(--bio,#79d9a2)}'
       + '.rg .pins{display:flex;gap:10px;flex-wrap:wrap;padding:12px 16px}.rg .pin{font-size:1.4rem;width:50px;height:50px;border-radius:var(--blob1,14px);padding:0;opacity:.5}.rg .pin.on{opacity:1;border-color:var(--bio,#79d9a2);box-shadow:0 0 10px var(--glow,rgba(121,217,162,.28))}'
       + '.rg .l>span.ic{font-size:1.25rem;width:30px;text-align:center;flex:0 0 30px}.rg .eteint{opacity:.5}.rg .l .act{display:flex;gap:6px;align-items:center;flex:none}'
-      + '</style><div class="rg-tete"><input class="rg-q" data-q type="search" autocomplete="off" placeholder="chercher un réglage"><div class="rg-nav">' + SECTIONS.map(([k, i, n]) => '<button data-aller="' + k + '">' + i + ' ' + esc(n) + '</button>').join('') + '</div></div><div data-c></div></div>';
+      + '</style><div class="rg-tete"><div class="rg-fil"><button class="rg-retour" data-rg-retour hidden aria-label="retour">‹</button><b data-titre>⚙ réglages</b></div><input class="rg-q" data-q type="search" autocomplete="off" placeholder="chercher un réglage"></div><div data-c></div></div>';
     const zone = hote.querySelector('[data-c]');
     const section = (k, titre, corps) => '<section data-s="' + k + '"><h3>' + titre + '</h3>' + corps + '</section>';
+    const lien = (k, ic, titre, sous) => '<button class="lien" data-aller="' + k + '"><span class="ic">' + ic + '</span><span>' + esc(titre) + (sous ? '<small>' + esc(sous) + '</small>' : '') + '</span><span class="chev">›</span></button>';
+    const TITRES = Object.fromEntries([...GROUPES.flatMap(([, l]) => l.map(([k, i, n]) => [k, i + ' ' + n])), ['gestes', '🧭 Gestes des bords'], ['haptique-motifs', '🫧 Tes motifs'], ['haptique-evenements', '🫧 Les événements'], ['haptique-ploxions', '🫧 La signature des ploxions']]);
     const bascule = (attr, on, texte, sous) => '<label class="l"><span>' + texte + (sous ? '<small>' + sous + '</small>' : '') + '</span><input type="checkbox" ' + attr + (on ? ' checked' : '') + '></label>';
     const seg = (cle, valeurs, actuel, texte, sous) => '<div class="l ls"><span>' + texte + (sous ? '<small>' + sous + '</small>' : '') + '</span><div class="seg">' + valeurs.map(([v, n]) => '<button data-pv="' + cle + '" data-v="' + esc(v) + '"' + (String(v) === String(actuel) ? ' class="on"' : '') + '>' + esc(n) + '</button>').join('') + '</div></div>';
 
@@ -47,8 +59,27 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       const [nRoutes, installes, bions, u] = await Promise.all([boxion.list('routes').then(l => l.length).catch(() => 0), depot.installes().catch(() => []), depot.bions ? depot.bions().catch(() => []) : [], boxion.get('usage', 'stats').catch(() => null)]);
       const usage = (u && u.px) || {};
       const tailles = {}; for (const p of installes) tailles[p.id] = depot.taille ? await depot.taille(p.id) : 0;
-      zone.innerHTML =
-        section('compte', 'Compte', '<div class="bloc"><div class="l"><span>' + (e.connecte ? esc((e.glyphe || '·') + ' ' + e.nom) + '<small>rang ' + esc(e.palier) + ' · xerboxion.org</small>' : 'Pas connecté<small>tout reste sur ton téléphone</small>') + '</span>'
+      const wn = W.ploxi0nWebNatif ? W.ploxi0nWebNatif.etat() : { natif: false, faits: [], erreurs: {} }, sp = sante ? await sante.partage().catch(() => ({})) : null;
+      // l'état de chaque catégorie, en quelques mots (la ligne de l'accueil des réglages)
+      const etats = {
+        compte: e.connecte ? (e.glyphe || '·') + ' ' + e.nom + ' · ' + e.palier : 'pas connecté', reseau: modeConnecte() ? 'mode connecté' : 'hors ligne seulement',
+        natif: wn.natif ? (P && P.webNatif === false ? 'coupé' : wn.faits.length + ' API du web → le natif de l\'iPhone') : 'sur l\'iPhone', sante: sp ? (sp.actif ? '☁ résumé envoyé à ton boxion' : 'lu sur le téléphone, rien n\'est envoyé') : '',
+        notifs: notifs && notifs.reglage().coord ? 'coord surveillé' : 'test, coord', faceid: verrous.length ? verrous.length + ' ploxion(s) verrouillé(s)' : 'aucun verrou', iphone: 'tes ploxions en vraies apps',
+        apparence: P ? [P.themeVivant !== false ? 'thème vivant' : null, P.pleinEcran ? 'plein écran' : null, P.calme ? 'calme' : null, 'icônes ' + P.icones].filter(Boolean).join(' · ') : '',
+        haptique: P && P.haptique === false ? 'coupée' : 'motifs, événements, signatures', lecteur: 'écran verrouillé, AirPlay, YouTube',
+        navigation: P ? [P.bords ? 'les bords' : null, P.telecommande !== false ? 'télécommande' : null, 'gestes'].filter(Boolean).join(' · ') : '', hud: c.epingles.length + ' épinglé(s)' + (P && P.dock === false ? ' · sans dock' : ''),
+        accueil: 'dossiers et pages', ploxions: installes.length + ' installé(s)', bions: bions.length + ' bion(s)', donnees: nRoutes + ' réponse(s) gardée(s)', apropos: 'ploxi0n ' + version,
+      };
+      zone.innerHTML = '<div data-accueil>' + GROUPES.map(([g, l]) => (g ? '<h3>' + esc(g) + '</h3>' : '<h3>&nbsp;</h3>') + '<div class="bloc">' + l.filter(([k]) => k !== 'sante' || sante).filter(([k]) => k !== 'notifs' || notifs).map(([k, i, n]) => lien(k, i, n, etats[k])).join('') + '</div>').join('') + '</div>'
+        + section('natif', '⚡ Natif', '<div class="bloc">' + bascule('data-pb="webNatif"', !P || P.webNatif !== false, 'Le web devient natif', 'les API web de TOUS les ploxions passent par l\'iPhone (au prochain lancement si tu changes)')
+          + BRANCHEMENTS.map(([k, ic, api, quoi]) => '<div class="l"><span class="ic">' + ic + '</span><span>' + esc(api) + '<small>→ ' + esc(quoi) + (wn.erreurs[k] ? ' · ⚠ ' + esc(wn.erreurs[k]) : '') + '</small></span><span class="act">' + (wn.faits.includes(k) ? '✓' : '—') + '</span></div>').join('') + '</div>'
+          + '<p class="msg">Pour les ploxions qui veulent plus : jOSNatif, le bion natif</p><div class="bloc"><div class="l"><span class="ic">⚡</span><span>jOSNatif<small>' + esc((W.jOSNatif ? W.jOSNatif.capacites() : []).join(' · ') || 'non chargé') + '</small></span></div>'
+          + PLUGIONS.map(pg => '<div class="l"><span class="ic">🔌</span><span>plugion · ' + esc(pg.bion) + '<small>' + esc(pg.quoi) + (W[pg.bion] ? (W[pg.bion].__plugion ? ' · branché' : ' · en attente') : ' · bion pas encore chargé') + '</small></span></div>').join('')
+          + '<div class="l"><span>🧪 Le banc iPhone<small>essayer chaque capacité sur cet appareil</small></span><button data-ouvrir="banc">ouvrir</button></div></div>')
+        + (sante ? section('sante', '❤ Santé', '<div class="bloc"><div class="l"><span>❤ Santé iPhone<small>pas, sommeil, cœur, entraînements, tes appareils</small></span><button class="p" data-ouvrir="sante">ouvrir</button></div>'
+          + bascule('data-t="sante-partage"', !!(sp && sp.actif), '☁ Envoyer un résumé à mon boxion', 'agrégats du jour et de la semaine, jamais les mesures brutes ; le hub 🌸 Santé du xerkion et tes autres appareils le lisent' + (sp && sp.dernier ? ' · dernier envoi ' + new Date(sp.dernier).toLocaleString('fr-CH', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : ''))
+          + '<div class="l"><span>Les ploxions qui lisent ta santé<small>chacun demande une fois (jOSSante) ; Réglages iOS › Santé › Accès aux données › ploxi0n pour ce qu\'iOS partage</small></span></div></div>') : '')
+        + section('compte', 'Compte', '<div class="bloc"><div class="l"><span>' + (e.connecte ? esc((e.glyphe || '·') + ' ' + e.nom) + '<small>rang ' + esc(e.palier) + ' · xerboxion.org</small>' : 'Pas connecté<small>tout reste sur ton téléphone</small>') + '</span>'
           + (e.connecte ? '<button data-a="sortir">se déconnecter</button>' : '<button class="p" data-a="connecter">se connecter</button>') + '</div></div>')
         + section('reseau', 'Réseau', '<div class="bloc">' + bascule('data-t="mode"', modeConnecte(), 'Mode connecté', 'les ploxions joignent xerboxion.org' + (e.connecte ? ' avec ton compte' : '') + ' ; hors ligne, leur dernière réponse')
           + '<div class="l"><span>Source<small>xerboxion.org (le marketplace, les bions, le mode connecté)</small></span></div></div>')
@@ -63,7 +94,6 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + '<div class="l"><span>Composer la barre du haut<small>quels éléments, à gauche ou à droite</small></span><button data-a="barre-haut">composer</button></div>'
           + bascule('data-pb="themeVivant"', P.themeVivant !== false, 'Thème vivant', 'le thème suit le téléphone (gyroscope, accéléromètre) : le fond glisse, les icônes flottent et attrapent la lumière, un choc les fait tressauter')
           + '<div class="l ls"><span>État du mouvement<small data-mouvement>…</small></span></div>'
-          + bascule('data-pb="haptique"', P.haptique !== false, 'Haptique', 'de petites vibrations : ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs')
           + bascule('data-pb="grain"', P.grain, 'Patine', 'le grain usé des plaques')
           + bascule('data-pb="contraste"', P.contraste === 'fort', 'Contraste fort', 'textes et bords plus clairs')
           + bascule('data-pb="calme"', P.calme, 'Calme', 'plus aucune animation, même aux gestes')
@@ -71,14 +101,17 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         + (haptique ? (() => { const hc = haptique.config(), noms = Object.keys(hc.motifs);
             const options = (actuel) => '<option value="aucun"' + (actuel === 'aucun' ? ' selected' : '') + '>— rien</option>' + STYLES.map(([k, n]) => '<option value="' + k + '"' + (actuel === k ? ' selected' : '') + '>' + esc(n) + '</option>').join('')
               + noms.map(m => '<option value="motif:' + esc(m) + '"' + (actuel === 'motif:' + m ? ' selected' : '') + '>🫧 ' + esc(m) + '</option>').join('');
-            return section('haptique', 'Haptique', '<div class="bloc">'
+            return section('haptique', 'Haptique', '<div class="bloc">' + (P ? bascule('data-pb="haptique"', P.haptique !== false, 'Haptique', 'de petites vibrations : ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs — et navigator.vibrate des ploxions') : '')
+              + lien('haptique-motifs', '🫧', 'Tes motifs', noms.length ? noms.length + ' motif(s) inventé(s)' : 'en inventer un') + lien('haptique-evenements', '⚡', 'Les événements', 'ouvrir, revenir, notification… un style ou un motif chacun')
+              + lien('haptique-ploxions', '▣', 'La signature des ploxions', 'chaque ploxion se sent à l\'ouverture') + '</div>')
+              + section('haptique-motifs', 'Tes motifs', '<div class="bloc">'
               + '<div class="l ls"><span>Inventer un motif<small>touche les pas dans l\'ordre (· = une pause), donne un nom, ▶ pour l\'essayer</small></span><div class="seg" data-studio>'
               + STYLES.map(([k, n]) => '<button data-pas="' + k + '">' + esc(n) + '</button>').join('') + '<button data-pas="pause">· pause</button><button data-pas="effacer">⌫</button></div>'
               + '<input class="rg-q" data-motif-nom placeholder="nom du motif" style="margin-top:8px"><div class="seg" style="margin-top:8px"><span data-motif-pas style="flex:1;color:var(--muted,#8aa0c0);font:12px var(--mono,monospace);align-self:center">(vide)</span><button data-motif="essayer">▶ essayer</button><button class="p" data-motif="sauver">sauver</button></div></div>'
               + noms.map(m => '<div class="l"><span class="ic">🫧</span><span>' + esc(m) + '<small>' + esc(hc.motifs[m].map(([st, ms]) => st + (ms ? ' ' + ms + 'ms' : '')).join(' · ')) + '</small></span><span class="act"><button class="bas" data-jouer="motif:' + esc(m) + '">▶</button><button class="bas danger" data-motif-suppr="' + esc(m) + '">🗑</button></span></div>').join('')
-              + '</div><p class="msg">Chaque événement joue un style ou un de tes motifs :</p><div class="bloc">'
+              + '</div>') + section('haptique-evenements', 'Les événements', '<p class="msg">Chaque événement joue un style ou un de tes motifs :</p><div class="bloc">'
               + EVENEMENTS.map(([ev, n]) => '<div class="l"><span>' + esc(n) + '</span><select data-ev="' + ev + '" style="max-width:48%;background:var(--surface2,#151021);color:inherit;border:2px solid var(--bord,#272036);border-radius:10px;padding:6px;font:13px inherit">' + options(hc.evenements[ev] || 'aucun') + '</select></div>').join('')
-              + '</div><p class="msg">Chaque ploxion a sa signature d\'ouverture (▶ pour la sentir), ou celle que tu choisis :</p><div class="bloc">'
+              + '</div>') + section('haptique-ploxions', 'La signature des ploxions', '<p class="msg">Chaque ploxion a sa signature d\'ouverture (▶ pour la sentir), ou celle que tu choisis :</p><div class="bloc">'
               + R().catalogue().filter(p => !p.interne).slice(0, 80).map(p => { const v = (hc.ploxions || {})[p.id] || 'signature';
                   return '<div class="l"><span class="ic">' + esc(p.icone || '▣') + '</span><span>' + esc(p.nom || p.id) + '<small>' + esc(v === 'signature' ? haptique.signature(p.id).map(([st]) => st).join(' · ') : v.replace('motif:', '🫧 ')) + '</small></span>'
                     + '<span class="act"><button class="bas" data-sentir="' + esc(p.id) + '">▶</button><select data-hpx="' + esc(p.id) + '" style="max-width:34vw;background:var(--surface2,#151021);color:inherit;border:2px solid var(--bord,#272036);border-radius:10px;padding:5px;font:12px inherit">'
@@ -95,8 +128,8 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + bascule('data-pb="bords"', P.bords, 'Les bords', 'glisser depuis le bord gauche ou droit pour passer d\'une app à l\'autre')
           + bascule('data-pb="appuiLong"', P.appuiLong, 'Appui long sur l\'accueil', 'le menu d\'un ploxion (épingler, déplacer, retirer…)')
           + bascule('data-pb="clicDroit"', P.clicDroit !== false, 'Appui long = clic droit', 'dans les ploxions : leurs menus du clic droit s\'ouvrent')
-          + seg('maxVivants', [[3, '3'], [5, '5'], [8, '8']], P.maxVivants, 'Ploxions vivants en arrière-plan', 'au-delà, le plus ancien se ferme') + '</div>'
-          + '<p class="msg">Les gestes des bords : glisser depuis une zone d\'un bord (ou les deux bords ensemble)</p><div class="bloc">'
+          + seg('maxVivants', [[3, '3'], [5, '5'], [8, '8']], P.maxVivants, 'Ploxions vivants en arrière-plan', 'au-delà, le plus ancien se ferme')
+          + lien('gestes', '↔', 'Gestes des bords', '9 zones, une action chacune') + '</div>') + section('gestes', 'Gestes des bords', '<p class="msg">Glisser depuis une zone d\'un bord (ou les deux bords ensemble) :</p><div class="bloc">'
           + (() => { const D0 = (R().GESTES_DEFAUT || {}), G = P.gestes || {}, cat2 = R().catalogue();
               const ACTIONS = [['precedente', '← app précédente'], ['suivante', 'app suivante →'], ['accueil', '⌂ accueil'], ['minimiser', '▁ minimiser'], ['basculer', '⧉ basculer'], ['chercher', '🔎 chercher'], ['reglages', '⚙ réglages'], ['portion', '◈ portion'], ['tsoin', '⧗ noter un tsoin'], ['rien', '— rien']]
                 .concat(cat2.filter(p => !p.interne).slice(0, 60).map(p => ['ouvrir:' + p.id, '▶ ' + (p.nom || p.id)]));
@@ -118,8 +151,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + bions.map(b => '<div class="l' + (b.coupe ? ' eteint' : '') + '"><span class="ic">⬡</span><span>' + esc(b.nom) + '<small>' + ko(b.octets) + ' · ' + (b.utilisePar.length ? 'sert à ' + esc(b.utilisePar.slice(0, 4).join(', ')) + (b.utilisePar.length > 4 ? ' +' + (b.utilisePar.length - 4) : '') : 'ne sert plus') + (b.coupe ? ' · coupé' : '') + '</small></span>'
             + '<span class="act"><button class="bas" data-bion-maj="' + esc(b.nom) + '" aria-label="mettre à jour">⟳</button>' + (b.utilisePar.length ? '' : '<button class="bas danger" data-bion-retirer="' + esc(b.nom) + '" aria-label="retirer">🗑</button>')
             + '<input type="checkbox" data-bion-on="' + esc(b.nom) + '"' + (b.coupe ? '' : ' checked') + ' aria-label="allumé"></span></div>').join('')
-          + '<div class="l"><span class="ic">⚡</span><span>jOSNatif · le bion natif<small>' + esc((W.jOSNatif ? W.jOSNatif.capacites() : []).join(' · ') || 'non chargé') + ' — un seul bion, toutes les capacités de l\'iPhone, pour tous les ploxions</small></span></div>'
-          + PLUGIONS.map(pg => '<div class="l"><span class="ic">🔌</span><span>plugion · ' + esc(pg.bion) + '<small>' + esc(pg.quoi) + (W[pg.bion] ? (W[pg.bion].__plugion ? ' · branché' : ' · en attente') : ' · bion pas encore chargé') + '</small></span></div>').join('')
+          + '<div class="l"><span>⚡ jOSNatif, les plugions<small>dans ⚙ › Natif</small></span><button data-aller="natif">voir</button></div>'
           + '<div class="l"><span>Fournis par l\'app<small>' + FOURNIS_APP.join(' · ') + ' · jOSNatif</small></span></div></div>')
         + section('faceid', 'Face ID', '<div class="bloc">' + (verrous.length ? verrous.map(id => { const p = cat.find(x => x.id === id) || { nom: id, icone: '🔒' }; return '<div class="l"><span>' + esc(p.icone + ' ' + p.nom) + '</span><button data-deverrou="' + esc(id) + '">retirer le verrou</button></div>'; }).join('') : '<div class="l"><span>Aucun ploxion verrouillé<small>appui long sur un ploxion › verrouiller</small></span></div>') + '</div>')
         + section('donnees', 'Données', '<div class="bloc"><div class="l"><span>Réponses gardées pour le mode avion<small>' + nRoutes + ' route' + (nRoutes > 1 ? 's' : '') + '</small></span><button data-a="routes">vider</button></div>'
@@ -145,13 +177,23 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + 'épinglés ' + (e.epingles >= 0 ? e.epingles + ' car.' : 'jamais publiés') + ' · valeurs ' + (e.valeurs >= 0 ? e.valeurs + ' car.' : 'jamais publiées') + ' · relu ' + e.relu + ' · ' + (e.le ? new Date(e.le * 1000).toLocaleTimeString('fr-CH') : '');
       }).catch(() => {});
     }
+    // ce qui se voit : l'accueil des réglages, UNE page (et ses sous-pages par leurs liens), ou — en cherchant — toutes les lignes trouvées
     function filtrer() {
       const t = norm(q).trim();
+      const acc = zone.querySelector('[data-accueil]'); if (acc) acc.hidden = !!t || !!page;
       for (const s of zone.querySelectorAll('section')) {
+        if (!t) { for (const l of s.querySelectorAll('.l')) l.hidden = false; s.hidden = s.getAttribute('data-s') !== page; continue; }
         let n = 0; const titre = norm(s.querySelector('h3').textContent);
-        for (const l of s.querySelectorAll('.l')) { const ok = !t || titre.includes(t) || norm(l.textContent).includes(t); l.hidden = !ok; if (ok) n++; }
-        s.hidden = !!t && !n;
+        for (const l of s.querySelectorAll('.l')) { const ok = titre.includes(t) || norm(l.textContent).includes(t); l.hidden = !ok; if (ok) n++; }
+        s.hidden = !n;
       }
+      const ti = hote.querySelector('[data-titre]'), re = hote.querySelector("[data-rg-retour]");
+      if (ti) ti.textContent = t ? '🔎 « ' + q.trim() + ' »' : page ? (TITRES[page] || page) : '⚙ réglages';
+      if (re) re.hidden = !page || !!t;
+    }
+    function aller(p) {
+      page = p; q = ''; const ch = hote.querySelector('[data-q]'); if (ch) ch.value = ''; filtrer(); vibrer('selection');
+      for (const el of [hote, hote.closest && hote.closest('.px-hote'), hote.parentElement]) { try { if (el) el.scrollTop = 0; } catch (e) { /* */ } }
     }
     const msg = (t) => { const m = zone.querySelector('[data-msg]'); if (m) { m.textContent = t; try { m.scrollIntoView({ block: 'nearest' }); } catch (e) { /* */ } } };
     async function majHud(f) { const c = hud.config(); f(c); await hud.regler(c); peindre(); }
@@ -159,6 +201,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
     hote.addEventListener('change', async (ev) => {
       const t = ev.target;
       if (t.type === 'checkbox') vibrer('interrupteur');
+      if (t.matches('[data-t="sante-partage"]') && sante) { const p = await sante.partager(t.checked); msg(t.checked ? (p.dernier ? '✓ envoyé à ton boxion' : '✓ activé : il partira dès que tu es connecté') : '✓ plus rien n\'est envoyé'); return; }
       if (t.matches('[data-t="mode"]')) { modeConnecte(t.checked); hud.regler(hud.config()); return; }
       if (t.matches('[data-t="coord"]')) { try { await notifs.coord(t.checked); const n = t.checked ? await notifs.verifierCoord() : []; msg(t.checked ? '✓ coord surveillé' + (n.length ? ' : ' + n.length + ' nouveau(x)' : '') : 'coord : plus de notifications'); } catch (er) { t.checked = false; await notifs.coord(false); msg('⚠ ' + (er.message || er)); } return; }
       if (t.matches('[data-el]')) return majHud(c => { c.elements[+t.getAttribute('data-el')].on = t.checked; });
@@ -185,7 +228,8 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       if (b.hasAttribute('data-sentir')) { haptique.jouerPloxion(b.getAttribute('data-sentir'), 'ouvrir', null, { force: true }); return; }
       if (b.hasAttribute('data-jouer')) { haptique.jouer(b.getAttribute('data-jouer'), { force: true }); return; }
       if (b.hasAttribute('data-motif-suppr')) { await haptique.supprimer(b.getAttribute('data-motif-suppr')); return peindre(); }
-      if (b.hasAttribute('data-aller')) { const s = zone.querySelector('[data-s="' + b.getAttribute('data-aller') + '"]'); q = ''; hote.querySelector('[data-q]').value = ''; filtrer(); if (s && s.scrollIntoView) s.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
+      if (b.hasAttribute('data-aller')) return aller(b.getAttribute('data-aller'));
+      if (b.hasAttribute("data-rg-retour")) return aller(SOUS[page] || null);
       if (b.hasAttribute('data-monter')) { ev.preventDefault(); const i = +b.getAttribute('data-monter'); return majHud(c => { const [x] = c.elements.splice(i, 1); c.elements.splice(i - 1, 0, x); }); }
       if (b.hasAttribute('data-pin')) { const id = b.getAttribute('data-pin'); return majHud(c => { c.epingles = c.epingles.includes(id) ? c.epingles.filter(x => x !== id) : [...c.epingles, id].slice(-4); if (!c.elements.find(x => x.k === 'epingles').on) c.elements.find(x => x.k === 'epingles').on = true; }); }
       if (b.hasAttribute('data-pv') && prefs) { ev.preventDefault(); const k = b.getAttribute('data-pv'), v = b.getAttribute('data-v'); if (k === 'vue') { if (R().vueAccueil) R().vueAccueil(v); } else await prefs.regler({ [k]: k === 'maxVivants' ? +v : v }); return peindre(); }
