@@ -4,6 +4,9 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.41.0', titre: 'Tes données mobiles', points: [
+    '📶 Corrigé : un ploxion caché (▁, ⧉) gardait ses vidéos en lecture, invisibles — et l\'app restait éveillée pour le son. Caché ou app fermée : les vidéos s\'arrêtent (ta musique continue).',
+  ] },
   { v: '0.40.0', titre: 'Plus jamais coincé au démarrage', points: [
     '🛟 Si le chargement ne bouge plus pendant 6 s : il dit où il est bloqué, et propose recharger, mode sûr (sans les ajouts lourds), ou copier le journal.',
   ] },

@@ -316,3 +316,19 @@ test('◇ l\'index léger des ploxions installés : installes() ne relit plus le
   await d.installer('c', { nom: 'C' }); assert.deepEqual((await d.installes()).map(x => x.id), ['a', 'b', 'c'], 'invalidé à l\'installation');
   await d.retirer('a'); assert.deepEqual((await d.installes()).map(x => x.id), ['b', 'c']);
 });
+
+test('📶 un ploxion caché arrête ses vidéos (7 Go en un jour : des vidéos invisibles en lecture)', async () => {
+  const { creerRouteur } = await import('../src/app/routeur.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    W.jOSApps = W.jOSApps || {};
+    for (const id of ['film', 'notes']) W.jOSApps[id] = { manifest: { id }, mount(h) { h.innerHTML = id === 'film' ? '<video src="x.mp4"></video>' : '<b>n</b>'; return {}; } };
+    const racine = W.document.createElement('div'); W.document.body.appendChild(racine);
+    const r = creerRouteur({ fenetre: W, racine, catalogue: [{ id: 'film', nom: 'Film', interne: true }, { id: 'notes', nom: 'Notes', interne: true }], boxion: p.boxion });
+    await r.ouvrir('film');
+    const v = racine.querySelector('video'); let pauses = 0;
+    Object.defineProperty(v, 'paused', { get: () => pauses > 0, configurable: true }); v.pause = () => { pauses++; };   // en lecture au départ
+    await r.ouvrir('notes');                         // film passe dessous, vivant
+    assert.equal(pauses, 1, 'la vidéo cachée s\'arrête'); assert.equal(v.preload, 'none');
+  } finally { p.fin(); }
+});
