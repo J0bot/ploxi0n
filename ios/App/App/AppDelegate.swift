@@ -7,6 +7,9 @@ import WeatherKit
 import ShazamKit
 import MusicKit
 import CoreLocation
+import HomeKit
+import NetworkExtension
+import GameKit
 import WebKit
 import ObjectiveC
 
@@ -163,7 +166,7 @@ public class PloxiVocal: CAPPlugin, CAPBridgedPlugin {
 //   shazam()                ShazamKit (iOS 17+) : écoute le micro, rend titre, artiste, pochette, lien Apple Music
 //   musiqueChercher({q})    MusicKit : le catalogue Apple Music · musiqueJouer({id}) · musiquePause()  (jouer : un abonnement Apple Music)
 @objc(PloxiApple)
-public class PloxiApple: CAPPlugin, CAPBridgedPlugin {
+public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate {
     public let identifier = "PloxiApple"
     public let jsName = "PloxiApple"
     public let pluginMethods: [CAPPluginMethod] = [
@@ -172,7 +175,95 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "musiqueChercher", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "musiqueJouer", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "musiquePause", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "maisonListe", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "maisonBasculer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "wifiRejoindre", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "gameCenter", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "gameCenterScore", returnType: CAPPluginReturnPromise),
     ]
+
+    // ---- 🏠 HomeKit (RS-7 12.10 : les capabilities « pour aller de l'avant » — les KIONS dans le réel) ----
+    private var maison: HMHomeManager?
+    private var maisonChargee = false
+    private var enAttente: [(HMHomeManager) -> Void] = []
+    private func quandMaisonPrete(_ f: @escaping (HMHomeManager) -> Void) {
+        DispatchQueue.main.async {
+            if let m = self.maison, self.maisonChargee { f(m); return }
+            self.enAttente.append(f)
+            if self.maison == nil { let m = HMHomeManager(); m.delegate = self; self.maison = m }
+        }
+    }
+    public func homeManagerDidUpdateHomes(_ manager: HMHomeManager) {
+        maisonChargee = true
+        let l = enAttente; enAttente = []
+        l.forEach { $0(manager) }
+    }
+    private func interrupteur(_ a: HMAccessory) -> HMCharacteristic? {
+        for s in a.services { for c in s.characteristics where c.characteristicType == HMCharacteristicTypePowerState { return c } }
+        return nil
+    }
+    @objc func maisonListe(_ call: CAPPluginCall) {
+        quandMaisonPrete { m in
+            var l: [[String: Any]] = []
+            for home in m.homes {
+                for a in home.accessories {
+                    let c = self.interrupteur(a)
+                    l.append(["id": a.uniqueIdentifier.uuidString, "nom": a.name, "piece": a.room?.name ?? "", "maison": home.name,
+                              "allume": (c?.value as? Bool) ?? false, "basculable": c != nil, "joignable": a.isReachable])
+                }
+            }
+            call.resolve(["accessoires": l])
+        }
+    }
+    @objc func maisonBasculer(_ call: CAPPluginCall) {
+        guard let id = call.getString("id") else { call.reject("id manquant"); return }
+        quandMaisonPrete { m in
+            for home in m.homes {
+                for a in home.accessories where a.uniqueIdentifier.uuidString == id {
+                    guard let c = self.interrupteur(a) else { call.reject("cet accessoire n'a pas d'interrupteur"); return }
+                    let v: Bool = call.getBool("allume") ?? !((c.value as? Bool) ?? false)
+                    c.writeValue(v) { err in
+                        if let err = err { call.reject("HomeKit : \(err.localizedDescription)") } else { call.resolve(["allume": v]) }
+                    }
+                    return
+                }
+            }
+            call.reject("accessoire introuvable")
+        }
+    }
+
+    // ---- 📶 rejoindre un Wi-Fi (le boxion, depuis un QR) ----
+    @objc func wifiRejoindre(_ call: CAPPluginCall) {
+        guard let ssid = call.getString("ssid"), !ssid.isEmpty else { call.reject("ssid manquant"); return }
+        let mdp = call.getString("mdp") ?? ""
+        let conf = mdp.isEmpty ? NEHotspotConfiguration(ssid: ssid) : NEHotspotConfiguration(ssid: ssid, passphrase: mdp, isWEP: false)
+        conf.joinOnce = false
+        NEHotspotConfigurationManager.shared.apply(conf) { err in
+            if let e = err as NSError?, e.code != NEHotspotConfigurationError.alreadyAssociated.rawValue { call.reject("Wi-Fi : \(e.localizedDescription)") }
+            else { call.resolve(["ok": true, "ssid": ssid]) }
+        }
+    }
+
+    // ---- 🎮 Game Center (le clicker du xerboxion, pourriture-4) ----
+    @objc func gameCenter(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            if GKLocalPlayer.local.isAuthenticated { call.resolve(["connecte": true, "nom": GKLocalPlayer.local.displayName]); return }
+            var fini = false
+            GKLocalPlayer.local.authenticateHandler = { vc, err in
+                if let vc = vc { self.bridge?.viewController?.present(vc, animated: true); return }
+                if fini { return }
+                fini = true
+                if let err = err { call.reject("Game Center : \(err.localizedDescription)"); return }
+                call.resolve(["connecte": GKLocalPlayer.local.isAuthenticated, "nom": GKLocalPlayer.local.displayName])
+            }
+        }
+    }
+    @objc func gameCenterScore(_ call: CAPPluginCall) {
+        guard let classement = call.getString("classement"), let score = call.getInt("score") else { call.reject("classement et score manquants"); return }
+        GKLeaderboard.submitScore(score, context: 0, player: GKLocalPlayer.local, leaderboardIDs: [classement]) { err in
+            if let err = err { call.reject("Game Center : \(err.localizedDescription)") } else { call.resolve(["ok": true]) }
+        }
+    }
 
     @objc func meteo(_ call: CAPPluginCall) {
         guard #available(iOS 16.0, *) else { call.reject("WeatherKit : iOS 16 ou plus"); return }

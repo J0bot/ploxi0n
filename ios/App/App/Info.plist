@@ -104,6 +104,8 @@
 		<key>NSAllowsArbitraryLoadsForMedia</key>
 		<true/>
 	</dict>
+	<key>NSHomeKitUsageDescription</key>
+	<string>ploxi0n allume, éteint et montre les accessoires de ta maison depuis tes ploxions.</string>
 	<key>NSAppleMusicUsageDescription</key>
 	<string>ploxi0n cherche et joue la musique d'Apple Music dans tes ploxions.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>

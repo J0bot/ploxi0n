@@ -69,7 +69,13 @@ export function installerJosNatif(W = globalThis.window) {
       jouer: (id) => PloxiApple.musiqueJouer({ id: String(id) }),
       pause: () => PloxiApple.musiquePause(),
     },
-    capacites() { return natif ? ['partager', 'vibrer', 'copier', 'coller', 'photo', 'position', 'notifier', 'ouvrirLien', 'appareil', 'batterie', 'reseau', 'parler', 'meteo', 'shazam', 'musique', 'vocal', 'haptique'] : ['partager', 'vibrer', 'copier', 'position', 'parler'].filter(k => k !== 'partager' || W.navigator.share); },
+    maison: {   // 🏠 HomeKit
+      liste: async () => (await PloxiApple.maisonListe()).accessoires || [],
+      basculer: (id, allume) => PloxiApple.maisonBasculer(allume === undefined ? { id: String(id) } : { id: String(id), allume: !!allume }),
+    },
+    wifi: (ssid, mdp) => PloxiApple.wifiRejoindre({ ssid: String(ssid), mdp: mdp ? String(mdp) : '' }),   // 📶 rejoindre un Wi-Fi
+    jeu: { connecter: () => PloxiApple.gameCenter(), score: (classement, score) => PloxiApple.gameCenterScore({ classement: String(classement), score: Math.round(+score || 0) }) },   // 🎮 Game Center
+    capacites() { return natif ? ['partager', 'vibrer', 'copier', 'coller', 'photo', 'position', 'notifier', 'ouvrirLien', 'appareil', 'batterie', 'reseau', 'parler', 'meteo', 'shazam', 'musique', 'vocal', 'haptique', 'maison', 'wifi', 'jeu'] : ['partager', 'vibrer', 'copier', 'position', 'parler'].filter(k => k !== 'partager' || W.navigator.share); },
   };
   W.jOSNatif = api;
   return api;

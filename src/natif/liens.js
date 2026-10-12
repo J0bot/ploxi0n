@@ -17,6 +17,8 @@ export function brancherLiens({ W = globalThis.window, routeur, compte = null, i
         if (compte && code) compte.recevoirCode(code).then(() => routeur.accueil()).catch((er) => { try { W.alert('Connexion : ' + er.message); } catch (x) { /* */ } });
         return;
       }
+      // les liens universels (Associated Domains, 0.27) : https://xerboxion.org/px/<id>… et /app/ouvrir/<id>
+      if (/^https?:$/.test(u.protocol)) { const r = /^\/(?:px|app\/ouvrir)\/([^/?#]+)/.exec(u.pathname); if (r) aller(decodeURIComponent(r[1])); else routeur.accueil(); return; }
       const m = (u.host === 'px' ? u.pathname : u.pathname.replace(/^\/px/, '')).replace(/^\/+/, ''); aller(decodeURIComponent(m.split('/')[0]));
     } catch (er) { /* lien illisible */ }
   })).catch(() => {});
