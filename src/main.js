@@ -25,10 +25,11 @@ import { installerClavierIos, barreClavier, comprendre } from './natif/clavier-i
 import { trouverPloxion } from './natif/vocabulaire.js';
 import { creerVocal } from './natif/vocal.js';
 import { creerOnboarding } from './app/onboarding.js';
+import { creerNouveautes } from './app/nouveautes.js';
 import { creerTsoinNatif } from './natif/tsoin-natif.js';
 import { creerBarreHaut } from './app/barre-haut.js';
 
-const VERSION = '0.30.0';
+const VERSION = '0.31.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -257,7 +258,10 @@ async function demarrer() {
   // 🧭 le tuto d'accueil : une fois (par version du tuto) ; ⚙ › À propos › « revoir le tuto »
   const tuto = creerOnboarding({ boxion, vibrer: (x) => vibrer(x), connecter: () => compte.connecter() });
   window.ploxi0nTuto = tuto;
-  tuto.auDemarrage().catch(() => {});
+  // ✦ après une mise à jour : ce qui a changé (pas au tout premier lancement : le tuto)
+  const nouveautes = creerNouveautes({ boxion, version: VERSION, vibrer: (x) => vibrer(x) });
+  window.ploxi0nNouveautes = nouveautes;
+  tuto.auDemarrage().then((premier) => nouveautes.auDemarrage({ premierLancement: premier })).catch(() => {});
   // « ok » pour la boîte noire seulement APRÈS la reprise de la session : un ploxion qui plante en se rouvrant compte comme un plantage
   // au lancement, et la fois suivante il restera endormi
   let plantesAvant = 0;

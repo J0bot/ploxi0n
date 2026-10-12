@@ -257,3 +257,11 @@ html.px-haut-on #ploxi0n{padding-top:max(env(safe-area-inset-top,0px),22px)}
 .px-journal-bas{position:sticky;bottom:0;padding:10px 14px calc(env(safe-area-inset-bottom,0px) + 10px);background:var(--bg)}
 .px-journal-bas button{width:100%;min-height:54px;border-radius:14px;border:var(--trait) solid var(--acc);background:var(--acc);color:#0d0a16;font:700 16px var(--police)}
 .px-endormi{opacity:.75}
+
+/* ---- ✦ les nouveautés ---- */
+.px-nouveautes .px-tiroir{max-height:82vh;display:flex;flex-direction:column}
+.px-nv-liste{overflow-y:auto;-webkit-overflow-scrolling:touch;margin:0 -2px 8px;padding:0 2px}
+.px-nv-liste h3{font:600 .72rem var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--acc);margin:14px 0 6px}
+.px-nv-liste section:first-child h3{color:var(--bio);margin-top:4px}
+.px-nv-liste ul{margin:0;padding:0;list-style:none}
+.px-nv-liste li{padding:8px 0;border-bottom:1px solid var(--filet);line-height:1.45;color:var(--txt)}

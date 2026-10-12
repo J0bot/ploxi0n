@@ -46,5 +46,5 @@ export function creerOnboarding({ W = globalThis.window, boxion, vibrer = () => 
     (D.getElementById('ploxi0n') || D.body).appendChild(f);
     peindre();
   }
-  return { montrer, async auDemarrage() { if (!(await dejaVu())) montrer(); }, CARTES };
+  return { montrer, async auDemarrage() { if (await dejaVu()) return false; montrer(); return true; }, CARTES };
 }

@@ -96,3 +96,28 @@ test('▔ la barre du haut : visible seulement en plein écran, composée gauche
     assert.deepEqual(b.config(), HAUT_DEFAUT);
   } finally { p.fin(); }
 });
+
+test('✦ les nouveautés : rien au premier lancement, ce qui a changé après une mise à jour, une seule fois', async () => {
+  const { creerNouveautes } = await import('../src/app/nouveautes.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    const L = [{ v: '0.32.0', titre: 'futur', points: ['pas encore'] }, { v: '0.31.0', titre: 'c', points: ['trois'] }, { v: '0.30.0', titre: 'b', points: ['deux'] }, { v: '0.29.0', titre: 'a', points: ['un'] }];
+    const n0 = creerNouveautes({ W, boxion: p.boxion, version: '0.29.0', liste: L });
+    assert.equal(await n0.auDemarrage({ premierLancement: true }), null, 'premier lancement : le tuto, pas le changelog');
+    assert.equal(await p.boxion.get('reglages', 'version-vue'), '0.29.0');
+    // deux versions plus tard : 0.30 et 0.31, pas 0.29 ni la future 0.32
+    const n1 = creerNouveautes({ W, boxion: p.boxion, version: '0.31.0', liste: L });
+    const f = await n1.auDemarrage();
+    assert.ok(f); assert.match(f.textContent, /trois/); assert.match(f.textContent, /deux/); assert.doesNotMatch(f.textContent, /\bun\b|pas encore/);
+    assert.ok(f.textContent.indexOf('trois') < f.textContent.indexOf('deux'), 'la plus récente en haut');
+    f.querySelector('[data-nv]').click(); assert.equal(W.document.querySelector('.px-nouveautes'), null);
+    assert.equal(await creerNouveautes({ W, boxion: p.boxion, version: '0.31.0', liste: L }).auDemarrage(), null, 'une seule fois');
+    // une installation d'avant la feuille (rien de noté, tuto déjà vu) : seulement la version installée
+    await p.boxion.del('reglages', 'version-vue');
+    const g = await creerNouveautes({ W, boxion: p.boxion, version: '0.31.0', liste: L }).auDemarrage();
+    assert.match(g.textContent, /trois/); assert.doesNotMatch(g.textContent, /deux/);
+    g.remove();
+    const t = creerNouveautes({ W, boxion: p.boxion, version: '0.31.0', liste: L }).tout();
+    assert.equal(t.querySelectorAll('section').length, 3, 'l\'historique, sans le futur');
+  } finally { p.fin(); }
+});

@@ -122,6 +122,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         + section('donnees', 'Données', '<div class="bloc"><div class="l"><span>Réponses gardées pour le mode avion<small>' + nRoutes + ' route' + (nRoutes > 1 ? 's' : '') + '</small></span><button data-a="routes">vider</button></div>'
           + '<div class="l"><span>Réinitialiser les réglages<small>accueil, HUD, apparence, verrous… (tes ploxions, tes tsoins et ton compte restent)</small></span><button class="danger" data-a="reset">réinitialiser</button></div></div>')
         + section('apropos', 'À propos', '<div class="bloc"><div class="l"><span>ploxi0n ' + esc(version) + '<small>' + esc(W.navigator.onLine !== false ? 'en ligne' : 'hors ligne') + ' · cycle ' + (new Date().getFullYear() + 5000) + '</small></span></div>'
+          + '<div class="l"><span>✦ Nouveautés<small>ce qui a changé, version par version</small></span><button data-a="nouveautes">voir</button></div>'
           + '<div class="l"><span>🧭 Le tuto d\'accueil<small>les gestes et les features, en 9 cartes</small></span><button data-a="tuto">revoir</button></div>'
           + '<div class="l"><span>▦ Widgets<small data-widgets-etat>…</small></span><button data-a="widgets">rafraîchir</button></div>'
           + '<div class="l"><span>⌨ Tester le clavier<small>si le clavier ne s\'ouvre pas : le rapport dit où ça casse</small></span><button class="p" data-a="clavier">tester</button></div>'
@@ -190,7 +191,8 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       const a = b.getAttribute('data-a'); if (!a) return;
       b.disabled = true;
       try {
-        if (a === 'barre-haut') { if (W.ploxi0nBarreHaut) W.ploxi0nBarreHaut.composer(); }
+        if (a === 'nouveautes') { if (W.ploxi0nNouveautes) W.ploxi0nNouveautes.tout(); }
+        else if (a === 'barre-haut') { if (W.ploxi0nBarreHaut) W.ploxi0nBarreHaut.composer(); }
         else if (a === 'tuto') { if (W.ploxi0nTuto) W.ploxi0nTuto.montrer(); }
         else if (a === 'widgets') { if (W.ploxi0nWidgets) { await W.ploxi0nWidgets.publier(); await new Promise(r => W.setTimeout(r, 700)); } await peindre(); msg('✓ republié : regarde tes widgets (iOS peut prendre quelques secondes)'); }
         else if (a === 'clavier') { await testerClavier({ W, version }); }
