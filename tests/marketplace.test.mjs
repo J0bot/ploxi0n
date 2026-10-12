@@ -552,3 +552,18 @@ test('le vocabulaire du xerboxion : ce que Siri a cru entendre est corrigé ; en
   assert.equal(trouverPloxion('zerkions', l).id, 'xerkions');
   assert.equal(trouverPloxion('banane', l), null, 'rien d\'assez proche');
 });
+
+test('chaque ploxion a sa signature haptique d\'ouverture : stable, différente, remplaçable', async () => {
+  const { creerHaptique } = await import('../src/natif/haptique.js');
+  const boxion = creerMemoire(), joue = [];
+  const h = creerHaptique({ boxion, natif: () => ({ vibrer: async (s) => joue.push(s) }), attendre: async () => {} });
+  await h.pret;
+  assert.deepEqual(h.signature('stremio'), h.signature('stremio'), 'stable');
+  const ids = ['stremio', 'bother', 'coord', 'pourriture-4', 'xerkions', 'post-it', 'social', 'notes'];
+  const sig = new Set(ids.map(id => JSON.stringify(h.signature(id))));
+  assert.ok(sig.size >= 6, 'des signatures différentes : ' + sig.size + '/' + ids.length);
+  await h.jouerPloxion('coord'); assert.deepEqual(joue, h.signature('coord').map(p => p[0]));
+  await h.choisirPloxion('coord', 'fort'); joue.length = 0; await h.jouerPloxion('coord'); assert.deepEqual(joue, ['fort'], 'le choix gagne');
+  joue.length = 0; await h.jouerPloxion('bother', 'ouvrir', [['succes', 0]]); assert.deepEqual(joue, ['succes'], 'le manifeste du ploxion');
+  await h.assigner('ouvrir', 'aucun'); joue.length = 0; await h.jouerPloxion('notes'); assert.deepEqual(joue, [], '« ouvrir = rien » coupe tout');
+});

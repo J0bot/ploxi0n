@@ -73,6 +73,11 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
               + noms.map(m => '<div class="l"><span class="ic">🫧</span><span>' + esc(m) + '<small>' + esc(hc.motifs[m].map(([st, ms]) => st + (ms ? ' ' + ms + 'ms' : '')).join(' · ')) + '</small></span><span class="act"><button class="bas" data-jouer="motif:' + esc(m) + '">▶</button><button class="bas danger" data-motif-suppr="' + esc(m) + '">🗑</button></span></div>').join('')
               + '</div><p class="msg">Chaque événement joue un style ou un de tes motifs :</p><div class="bloc">'
               + EVENEMENTS.map(([ev, n]) => '<div class="l"><span>' + esc(n) + '</span><select data-ev="' + ev + '" style="max-width:48%;background:var(--surface2,#151021);color:inherit;border:2px solid var(--bord,#272036);border-radius:10px;padding:6px;font:13px inherit">' + options(hc.evenements[ev] || 'aucun') + '</select></div>').join('')
+              + '</div><p class="msg">Chaque ploxion a sa signature d\'ouverture (▶ pour la sentir), ou celle que tu choisis :</p><div class="bloc">'
+              + R().catalogue().filter(p => !p.interne).slice(0, 80).map(p => { const v = (hc.ploxions || {})[p.id] || 'signature';
+                  return '<div class="l"><span class="ic">' + esc(p.icone || '▣') + '</span><span>' + esc(p.nom || p.id) + '<small>' + esc(v === 'signature' ? haptique.signature(p.id).map(([st]) => st).join(' · ') : v.replace('motif:', '🫧 ')) + '</small></span>'
+                    + '<span class="act"><button class="bas" data-sentir="' + esc(p.id) + '">▶</button><select data-hpx="' + esc(p.id) + '" style="max-width:34vw;background:var(--surface2,#151021);color:inherit;border:2px solid var(--bord,#272036);border-radius:10px;padding:5px;font:12px inherit">'
+                    + '<option value="signature"' + (v === 'signature' ? ' selected' : '') + '>signature</option>' + options(v).replace('<option value="aucun"', '<option value="aucun"') + '</select></span></div>'; }).join('')
               + '</div>'); })() : '')
         + (lecteur ? section('lecteur', 'Lecteur', '<div class="bloc">'
           + bascule('data-lect="yt"', lecteur.reglage().yt, 'YouTube par xerboxion.org', 'une page https : YouTube refuse l\'intégration directe dans l\'app (erreurs 152/153)')
@@ -143,6 +148,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       if (t.matches('[data-el]')) return majHud(c => { c.elements[+t.getAttribute('data-el')].on = t.checked; });
       if (t.matches('[data-pb]') && prefs) { const k = t.getAttribute('data-pb'); await prefs.regler({ [k]: k === 'contraste' ? (t.checked ? 'fort' : 'normal') : t.checked }); return; }
       if (t.matches('[data-geste]') && prefs) { const g = { ...(prefs.lire().gestes || {}), [t.getAttribute('data-geste')]: t.value }; await prefs.regler({ gestes: g }); return; }
+      if (t.matches('[data-hpx]') && haptique) { const id = t.getAttribute('data-hpx'); await haptique.choisirPloxion(id, t.value); haptique.jouerPloxion(id, 'ouvrir', null, { force: true }); return; }
       if (t.matches('[data-ev]') && haptique) { await haptique.assigner(t.getAttribute('data-ev'), t.value); haptique.jouer(t.value, { force: true }); return; }
       if (t.matches('[data-lect]') && lecteur) { await lecteur.regler({ [t.getAttribute('data-lect')]: t.checked }); return; }
       if (t.matches('[data-bion-on]')) { await depot.couperBion(t.getAttribute('data-bion-on'), !t.checked); msg(t.checked ? '✓ rallumé : il revient à la prochaine ouverture du ploxion' : '✓ coupé : il ne se charge plus (les ploxions qui l\'utilisent perdent sa fonction)'); t.closest('.l').classList.toggle('eteint', !t.checked); return; }
@@ -160,6 +166,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           const nom = await haptique.sauver(zone.querySelector('[data-motif-nom]').value, composition); composition = []; await peindre(); msg('✓ motif « ' + nom + ' » sauvé : choisis-le pour un événement');
         } catch (er) { msg('⚠ ' + (er.message || er)); } return;
       }
+      if (b.hasAttribute('data-sentir')) { haptique.jouerPloxion(b.getAttribute('data-sentir'), 'ouvrir', null, { force: true }); return; }
       if (b.hasAttribute('data-jouer')) { haptique.jouer(b.getAttribute('data-jouer'), { force: true }); return; }
       if (b.hasAttribute('data-motif-suppr')) { await haptique.supprimer(b.getAttribute('data-motif-suppr')); return peindre(); }
       if (b.hasAttribute('data-aller')) { const s = zone.querySelector('[data-s="' + b.getAttribute('data-aller') + '"]'); q = ''; hote.querySelector('[data-q]').value = ''; filtrer(); if (s && s.scrollIntoView) s.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }

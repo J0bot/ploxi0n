@@ -111,6 +111,7 @@
 | ✅ 0.24 | **Le clavier d'iOS à fond** : chaque champ reçoit les bons attributs (majuscules, correction, Entrée « Rechercher/Envoyer », claviers e-mail/URL/chiffres, trousseau des mots de passe, codes SMS) ; la barre au-dessus du clavier visible (QuickType, mots de passe, dictée) | RS-7 12.10 |
 | ✅ 0.24 | **« Dis à ploxi0n … »** (Siri) : une phrase dictée → ouvrir, chercher, noter un tsoin, accueil, minimiser | |
 | ✅ 0.24 | **Le vocabulaire du xerboxion** pour Siri : ce que Siri a cru entendre est corrigé (ploxion, xerboxion, tsoin, koin…, FR et EN), les ploxions retrouvés phonétiquement ; les phrases Siri en anglais (« Tell ploxi0n », « Open … in ploxi0n ») | iPhone en anglais |
+| ✅ 0.26 | **Chaque ploxion a sa signature haptique d'ouverture** (tirée de son nom ; remplaçable dans ⚙ › Haptique ; ou déclarée dans son manifeste `haptique`) | RS-7 12.10 |
 | ✅ 0.26 | **🍎 WeatherKit, ShazamKit, MusicKit** : jOSNatif.meteo() (avec l'attribution Apple Weather), shazam(), musique.chercher/jouer/pause | RS-7 12.10 |
 | ✅ 0.25 | **🎙 Les vocaux** : le bouton du dock (enregistrer / arrêter), la transcription d'iOS sur le téléphone avec le vocabulaire du xerboxion, la feuille (tsoin, pourriture-4, copier, partager), jOSNatif.vocal pour les ploxions | RS-7 12.10 |
 | ⏭ | La dictée DANS l'app (jOSNatif.ecouter : la reconnaissance vocale d'iOS pour les ploxions) ; les commandes vocales sans Siri | |

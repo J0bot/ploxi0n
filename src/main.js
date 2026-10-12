@@ -80,7 +80,10 @@ async function demarrer() {
   const lecteur = installerLecteur({ boxion, vibrer: (s) => vibrer(s), titre: () => (routeur && routeur.courant() && (routeur.catalogue().find(p => p.id === routeur.courant()) || {}).nom) || 'ploxi0n' });
   window.jOSNatif.lecteur = { pip: (m) => lecteur.pip(m), pleinEcran: (m) => lecteur.pleinEcran(m), airplay: (m) => lecteur.airplay(m) };
   const haptique = creerHaptique({ boxion, actif: () => prefs.lire().haptique !== false && !!(window.jOSNatif && window.jOSNatif.natif) }); await haptique.pret;
-  const vibrer = (ev) => haptique.jouer(ev);   // un événement de l'app, un style, ou un motif inventé
+  // un événement de l'app, un style, ou un motif inventé ; ouvrir/reprendre un ploxion = SA signature (ou son choix, ou son manifeste)
+  const vibrer = (ev, id) => ((ev === 'ouvrir' || ev === 'reprendre') && id
+    ? haptique.jouerPloxion(id, ev, window.jOSApps && window.jOSApps[id] && window.jOSApps[id].manifest && window.jOSApps[id].manifest.haptique)
+    : haptique.jouer(ev));
   window.jOSNatif.haptique = (x) => haptique.jouer(x);   // les ploxions (le clicker…) jouent un style, un motif ou un événement
   const bionsCharges = new Set();   // un seul chargement par bion, pour toute l'app
   let routeur = null;

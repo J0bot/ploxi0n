@@ -19,7 +19,7 @@ const STYLE = new Set(STYLES.map(s => s[0]));
 
 export function creerHaptique({ boxion, natif = () => globalThis.window && globalThis.window.jOSNatif, actif = () => true, attendre = (ms) => new Promise(r => setTimeout(r, ms)) }) {
   let c = JSON.parse(JSON.stringify(DEFAUT)), jeton = 0;
-  const pret = boxion.get('reglages', 'haptique').then(v => { if (v && typeof v === 'object') c = { motifs: { ...DEFAUT.motifs, ...(v.motifs || {}) }, evenements: { ...DEFAUT.evenements, ...(v.evenements || {}) } }; }).catch(() => {});
+  const pret = boxion.get('reglages', 'haptique').then(v => { if (v && typeof v === 'object') c = { motifs: { ...DEFAUT.motifs, ...(v.motifs || {}) }, evenements: { ...DEFAUT.evenements, ...(v.evenements || {}) }, ploxions: v.ploxions || {} }; }).catch(() => {});
   const garder = () => boxion.put('reglages', 'haptique', c).catch(() => {});
   async function motif(pas) {
     const n = natif(); if (!n || !n.vibrer) return;
@@ -39,8 +39,26 @@ export function creerHaptique({ boxion, natif = () => globalThis.window && globa
     if (STYLE.has(cible)) { const n = natif(); if (n && n.vibrer) n.vibrer(cible).catch(() => {}); return; }
     if (c.motifs[cible]) return motif(c.motifs[cible]);
   }
+  /** LA SIGNATURE d'un ploxion (RS-7 12.10 : « chaque ploxion a une haptique d'ouverture différente ») : 2 à 3 pas tirés de son id —
+   *  toujours la même pour lui, différente des autres ; courte (< 300 ms) */
+  function signature(id) {
+    let h = 2166136261; for (const ch of String(id)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; }
+    const st = ['leger', 'moyen', 'fort', 'selection'], n = 2 + (h % 2), pas = [];
+    for (let i = 0; i < n; i++) { pas.push([st[(h >>> (i * 5 + 2)) % 4], i < n - 1 ? 50 + ((h >>> (i * 7 + 3)) % 5) * 15 : 0]); }
+    return pas;
+  }
+  /** l'ouverture d'un ploxion : son haptique choisie, sinon celle de son manifeste, sinon sa signature ; « ouvrir = rien » coupe tout */
+  function jouerPloxion(id, ev = 'ouvrir', manifeste = null, { force = false } = {}) {
+    if (!force && !actif()) return;
+    if (c.evenements[ev] === 'aucun') return;
+    const choisi = (c.ploxions || {})[id];
+    if (choisi && choisi !== 'signature') return jouer(choisi, { force: true });
+    if (manifeste && Array.isArray(manifeste)) return motif(manifeste.filter(p => Array.isArray(p) && STYLE.has(p[0])));
+    return motif(signature(id));
+  }
   return {
-    pret, jouer,
+    pret, jouer, signature, jouerPloxion,
+    async choisirPloxion(id, cible) { c.ploxions = { ...(c.ploxions || {}), [id]: cible }; await garder(); },
     /** jouer une suite de pas sans la sauver (le studio) */
     essayer: (pas) => motif((pas || []).filter(p => Array.isArray(p) && STYLE.has(p[0]))),
     config: () => JSON.parse(JSON.stringify(c)),

@@ -369,10 +369,10 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     // ouvert DEPUIS un ploxion : celui-ci reste vivant, en dessous (la pile) ; « ‹ » y reviendra
     if (courant && courant.id !== id) { pile = pile.filter(x => x !== courant.id && x !== id); pile.push(courant.id); cacher(courant); courant = null; }
     // déjà vivant (minimisé, ou dans la pile) : on le reprend tel quel ; avec une demande (params), on le remonte frais
-    if (vivants.has(id)) { if (!params) { pile = pile.filter(x => x !== id); vibrer('reprendre'); montrer(vivants.get(id)); return true; } tuer(id); }
+    if (vivants.has(id)) { if (!params) { pile = pile.filter(x => x !== id); vibrer('reprendre', id); montrer(vivants.get(id)); return true; } tuer(id); }
     // la place : au-delà de MAX_VIVANTS, le plus anciennement vu s'endort pour de bon
     while (vivants.size >= maxVivants()) { const vieux = [...vivants.values()].sort((a, b) => a.vu - b.vu)[0]; tuer(vieux.id); }
-    vibrer('ouvrir');
+    vibrer('ouvrir', id);
     const hote = D.createElement('div'); hote.className = 'px-hote'; hote.dataset.ploxion = id; scene.appendChild(hote);
     const v = { id, inst: {}, hote, debut: 0, vu: Date.now() };
     vivants.set(id, v); montrer(v);
