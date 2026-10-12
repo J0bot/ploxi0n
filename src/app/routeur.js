@@ -151,7 +151,14 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   const tuile = (p) => '<button class="px-tuile' + (edition && !p.interne ? ' px-edite' : '') + '" data-id="' + texte(p.id) + '"><span class="px-ic" style="--t:' + teinte(p.id) + '">' + texte(p.icone || '▣') + '</span><span>' + (verrous.has(p.id) ? '🔒 ' : '') + texte(p.nom || p.id) + '</span></button>';
   const dansDossier = () => new Set([...accueilDoc.dossiers.flatMap(d => d.ids), ...accueilDoc.pages.flatMap(pg => pg.ids)]);
 
-  function vueAccueil() { racine.classList.add('px-mode-accueil'); racine.classList.remove('px-mode-ploxion'); majBords(); }
+  // la cascade des tuiles (app.css « snappy et vivant ») : seulement quand on ARRIVE sur l'accueil (lancement, retour d'un ploxion), pas à
+  // chaque redessin (édition, glisser une tuile)
+  let surAccueil = false, minuteEntree = null;
+  function vueAccueil() {
+    if (!surAccueil) { racine.classList.add('px-entree'); if (minuteEntree) W.clearTimeout(minuteEntree); minuteEntree = W.setTimeout(() => racine.classList.remove('px-entree'), 800); }
+    surAccueil = true;
+    racine.classList.add('px-mode-accueil'); racine.classList.remove('px-mode-ploxion'); majBords();
+  }
   function majBords() { racine.classList.toggle('px-a-vivants', vivants.size + endormis.length > 0); noterSession(); }
   /** un endormi (restauré de la dernière session) : monté maintenant, avec ses paramètres */
   function reveiller(id) { const e = endormis.find(x => x.id === id); endormis = endormis.filter(x => x.id !== id); return ouvrir(id, e ? e.params : null); }
@@ -370,6 +377,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     for (const x of vivants.values()) if (x !== v) x.hote.hidden = true;
     v.hote.hidden = false; v.debut = Date.now(); v.vu = Date.now(); courant = v; majBords();
     accrochesDe(v.id, n => { if (n.hasAttribute('data-px-cache')) { n.style.display = n.getAttribute('data-px-cache'); n.removeAttribute('data-px-cache'); } });
+    surAccueil = false;
     racine.classList.add('px-mode-ploxion'); racine.classList.remove('px-mode-accueil');
     barre(parId.get(v.id) || { nom: v.id }, v.id);
     try { W.history.replaceState(null, '', '#/' + encodeURIComponent(v.id)); } catch (er) { /* */ }

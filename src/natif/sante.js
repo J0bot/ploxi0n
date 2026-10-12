@@ -130,7 +130,7 @@ export function creerSante({ W = globalThis.window, boxion, vibrer = () => {}, p
     return { unmount() { vivant = false; hote.innerHTML = ''; } };
   }
   W.jOSApps = W.jOSApps || {};
-  W.jOSApps.sante = { manifest: { id: 'sante', name: 'Santé', icon: '❤' }, mount };
+  W.jOSApps.sante = { manifest: { id: 'sante', name: 'Santé iPhone', icon: '❤' }, mount };
 
   // ---- jOSNatif.sante : pour les autres ploxions, sur accord (une fois par ploxion) ---------------------------------------------------------
   async function permis() {
@@ -154,5 +154,5 @@ export function creerSante({ W = globalThis.window, boxion, vibrer = () => {}, p
     async entrainements(o) { await permis(); return entrainements(o); },
     async resume(o) { await permis(); return resume(o); },
   };
-  return { api, mount, resume, autoriser, ploxion: { id: 'sante', nom: 'Santé', icone: '❤', interne: true } };
+  return { api, mount, resume, autoriser, ploxion: { id: 'sante', nom: 'Santé iPhone', icone: '❤', interne: true } };
 }

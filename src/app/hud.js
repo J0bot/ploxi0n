@@ -73,7 +73,20 @@ export function creerHud({ W = globalThis.window, compte, boxion = null, trouver
           + (e.apple ? '<p class="px-sous">  Apple ID lié : « Continuer avec Apple » ouvre aussi ce compte.</p><button data-a="delier">Délier mon Apple ID</button>'
             : '<button class="apple" data-a="lier">  Lier mon Apple ID</button><p class="px-sous">ensuite, Apple ou ton compte xerboxion.org : l\'un ou l\'autre ouvre ce compte</p>')
           + '<button data-a="sortir">Se déconnecter</button><button data-a="fermer">Fermer</button>', {
-          lier: () => compte.lierApple(),
+          lier: async () => {
+            try { await compte.lierApple(); }
+            catch (er) {
+              if (!er.fusionnable) throw er;
+              // l'Apple ID a déjà son compte (un bion né d'Apple) : le fondre dans celui-ci, sur confirmation
+              const a = er.autre || {};
+              W.setTimeout(() => feuille('<h2>Fusionner les deux comptes ?</h2><p>Ton Apple ID a déjà son propre compte : <b>' + esc(a.nom || 'un bion') + '</b>' + (a.cree ? ' (créé le ' + esc(a.cree) + ')' : '') + '.</p>'
+                + '<p>Il se fond dans <b>' + esc(e.nom) + '</b> : ses données sont <b>copiées</b> ici (rien n\'est effacé ; en cas de doublon, ce compte-ci gagne), ses fichiers vont dans « depuis-apple ». Ensuite, Apple ou xerboxion.org : l\'un ou l\'autre ouvre ce compte.</p>'
+                + '<button class="p" data-a="fusion">Fusionner (Apple redemande)</button><button data-a="fermer">Annuler</button>', {
+                fusion: () => compte.lierApple({ fusionner: true }),
+                fermer: async () => {},
+              }), 50);
+            }
+          },
           delier: () => compte.delierApple(),
           sortir: () => compte.deconnecter(),
           fermer: async () => {},

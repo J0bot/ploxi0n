@@ -316,3 +316,32 @@ html:not(.px-fond-partout):has(#ploxi0n.px-mode-ploxion) .px-fond{display:none}
 .px-fond-apercu span{display:block;width:100%;height:100%;background-size:cover;background-position:center}
 .px-fond-apercu em{color:var(--muted);font:600 12px var(--mono)}
 .px-fond-feuille input[type=range]{width:46%;accent-color:var(--acc)}
+
+
+/* ---- ⚡ SNAPPY ET VIVANT (RS-7 12.10 : « manque plus que tout devienne plus snap'y et plus vivant ») ----
+   Seulement des réactions courtes à un geste (jamais une boucle : Pi 4) ; « Calme » (et iOS « réduire les animations ») coupe tout.
+   - le doigt : chaque bouton s'enfonce sous le doigt (90 ms) et s'éclaire, l'icône d'une tuile se tasse ;
+   - l'accueil se pose en cascade (14 ms d'une tuile à l'autre) ; un ploxion s'ouvre en montant (200 ms) ;
+   - les feuilles montent du bas, le voile fond ; les bulles glissent. */
+.px-tuile,.px-dock button,.px-h-b,.px-puce,.px-tiroir button,.px-feuille button,.px-mini,.px-retour,.px-compte,.px-ligne,.px-tuto-btn button,.px-journal-bas button,.px-gest-act button{transition:transform .09s cubic-bezier(.3,.7,.4,1),filter .09s,background-color .15s,border-color .15s;will-change:transform}
+.px-tuile:active,.px-dock button:active,.px-h-b:active,.px-puce:active,.px-tiroir button:active,.px-feuille button:active,.px-mini:active,.px-retour:active,.px-compte:active,.px-ligne:active,.px-tuto-btn button:active,.px-journal-bas button:active,.px-gest-act button:active{transform:scale(.93);filter:brightness(1.3)}
+.px-tuile .px-ic{transition:transform .12s cubic-bezier(.3,.7,.4,1),box-shadow .12s}
+.px-tuile:active .px-ic{transform:scale(.88);box-shadow:0 0 0 2px var(--acc),0 0 14px var(--glow)}
+.px-entree .px-accueil .px-tuile{animation:px-pose .28s cubic-bezier(.2,.9,.3,1.25) both}
+.px-entree .px-accueil .px-tuile:nth-child(1){animation-delay:14ms}.px-entree .px-accueil .px-tuile:nth-child(2){animation-delay:28ms}.px-entree .px-accueil .px-tuile:nth-child(3){animation-delay:42ms}.px-entree .px-accueil .px-tuile:nth-child(4){animation-delay:56ms}.px-entree .px-accueil .px-tuile:nth-child(5){animation-delay:70ms}.px-entree .px-accueil .px-tuile:nth-child(6){animation-delay:84ms}.px-entree .px-accueil .px-tuile:nth-child(7){animation-delay:98ms}.px-entree .px-accueil .px-tuile:nth-child(8){animation-delay:112ms}
+.px-entree .px-accueil .px-tuile:nth-child(9){animation-delay:126ms}.px-entree .px-accueil .px-tuile:nth-child(10){animation-delay:140ms}.px-entree .px-accueil .px-tuile:nth-child(11){animation-delay:154ms}.px-entree .px-accueil .px-tuile:nth-child(12){animation-delay:168ms}.px-entree .px-accueil .px-tuile:nth-child(13){animation-delay:182ms}.px-entree .px-accueil .px-tuile:nth-child(14){animation-delay:196ms}.px-entree .px-accueil .px-tuile:nth-child(15){animation-delay:210ms}.px-entree .px-accueil .px-tuile:nth-child(16){animation-delay:224ms}
+.px-entree .px-accueil .px-tuile:nth-child(17){animation-delay:238ms}.px-entree .px-accueil .px-tuile:nth-child(18){animation-delay:252ms}.px-entree .px-accueil .px-tuile:nth-child(19){animation-delay:266ms}.px-entree .px-accueil .px-tuile:nth-child(20){animation-delay:280ms}.px-entree .px-accueil .px-tuile:nth-child(21){animation-delay:294ms}.px-entree .px-accueil .px-tuile:nth-child(22){animation-delay:308ms}.px-entree .px-accueil .px-tuile:nth-child(23){animation-delay:322ms}.px-entree .px-accueil .px-tuile:nth-child(24){animation-delay:336ms}
+.px-entree .px-accueil .px-tuile:nth-child(25){animation-delay:350ms}.px-entree .px-accueil .px-tuile:nth-child(26){animation-delay:364ms}.px-entree .px-accueil .px-tuile:nth-child(27){animation-delay:378ms}.px-entree .px-accueil .px-tuile:nth-child(28){animation-delay:392ms}.px-entree .px-accueil .px-tuile:nth-child(29){animation-delay:406ms}.px-entree .px-accueil .px-tuile:nth-child(30){animation-delay:420ms}.px-entree .px-accueil .px-tuile:nth-child(31){animation-delay:434ms}.px-entree .px-accueil .px-tuile:nth-child(32){animation-delay:448ms}
+
+@keyframes px-pose{from{opacity:0;transform:translateY(10px) scale(.94)}}
+.px-scene>.px-hote:not([hidden]){animation:px-entre .2s cubic-bezier(.2,.9,.3,1) both}
+@keyframes px-entre{from{opacity:0;transform:translateY(14px) scale(.985)}}
+.px-voile{animation:px-fondu .16s ease-out both}
+.px-voile>.px-tiroir,.px-feuille>div{animation:px-monte .24s cubic-bezier(.2,.9,.3,1.1) both}
+@keyframes px-fondu{from{background-color:transparent}}
+@keyframes px-monte{from{opacity:.4;transform:translateY(48px)}}
+.px-bulle{animation:px-bulle .22s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes px-bulle{from{opacity:0;transform:translateY(12px) scale(.96)}}
+.px-barre{animation:px-fondu-barre .18s ease-out both}
+@keyframes px-fondu-barre{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){.px-entree .px-accueil .px-tuile,.px-scene>.px-hote,.px-voile,.px-voile>.px-tiroir,.px-feuille>div,.px-bulle,.px-barre{animation:none}}

@@ -35,7 +35,7 @@ import { enregistrerGestion } from './app/gestion.js';
 import { creerFond } from './app/fond.js';
 import { creerDossier } from './natif/dossier.js';
 
-const VERSION = '0.35.0';
+const VERSION = '0.36.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {

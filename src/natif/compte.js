@@ -76,11 +76,17 @@ export function creerCompte({ W = globalThis.window, boxion, http, source = SOUR
     },
     /** LIER son Apple ID au compte connecté (RS-7 12.10 : « connecté en xerboxion.org, il faut aussi pouvoir se connecter avec Apple ID —
      *  que l'un des deux ») : ensuite « Continuer avec Apple » ouvre CE compte. delierApple() : le compte revient à sa seule connexion xer. */
-    async lierApple() {
+    async lierApple({ fusionner = false } = {}) {
       const c = await boxion.get('compte', 'courant'); if (!c || !c.jeton) throw new Error('connecte-toi d\'abord avec ton compte xerboxion.org');
       const { x, brut } = await jetonApple();
-      const rep = await poster('/api/app/apple/lier', { identity_token: x.identityToken, nonce: brut }, c.jeton);
-      if (rep.status !== 200) throw new Error((rep.data && rep.data.message) || 'liaison Apple refusée (' + rep.status + ')');
+      const rep = await poster('/api/app/apple/lier', { identity_token: x.identityToken, nonce: brut, fusionner }, c.jeton);
+      if (rep.status !== 200) {
+        // 409 « fusionnable » : cet Apple ID a déjà son compte (né d'Apple) — le HUD propose de le fondre dans celui-ci (RS-7 : « il faut pouvoir merge »)
+        const e = new Error((rep.data && rep.data.message) || 'liaison Apple refusée (' + rep.status + ')');
+        if (rep.data && rep.data.fusionnable) { e.fusionnable = true; e.autre = rep.data.autre || null; }
+        throw e;
+      }
+      if (rep.data.fusion) await boxion.append('tsoins', { kind: 'compte', action: 'fusion-apple', ...rep.data.fusion }).catch(() => {});
       await boxion.put('compte', 'courant', { ...c, compte: rep.data.compte });
       await boxion.append('tsoins', { kind: 'compte', action: 'lier-apple' });
       etat = { connecte: true, ...rep.data.compte }; signaler();
