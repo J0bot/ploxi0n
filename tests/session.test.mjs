@@ -244,3 +244,34 @@ test('🖼 le fond d\'écran : motif gravé, photo (gardée), assombrir, l\'accu
     assert.equal(await p.boxion.get('reglages', 'fond-image'), null); assert.ok(!h.classList.contains('px-a-fond'));
   } finally { p.fin(); }
 });
+
+test('📁 le dossier Fichiers : Lisez-moi, journal des tsoins par mois, vocaux une fois, Dépôt ; jamais hors du dossier', async () => {
+  const { creerDossier, sur, journalMois } = await import('../src/natif/dossier.js');
+  const p = await page({ avion: true, ploxions: [] });
+  try {
+    const disque = new Map(); let ecritures = 0;
+    const fs = { Directory: { Documents: 'DOCUMENTS' }, Encoding: { UTF8: 'utf8' }, Filesystem: {
+      writeFile: async ({ path, data, encoding }) => { ecritures++; disque.set(path, { data, texte: !!encoding }); },
+      readdir: async ({ path }) => ({ files: [...disque.keys()].filter(k => k.startsWith(path + '/')).map(k => ({ name: k.slice(path.length + 1), type: 'file', size: disque.get(k).data.length })) }),
+      readFile: async ({ path }) => ({ data: disque.get(path).data }) } };
+    await p.boxion.append('tsoins', { kind: 'tsoin', genre: 'idee', d: 'un dossier dans Fichiers', ploxion: 'zone' });
+    await p.boxion.append('tsoins', { kind: 'marketplace', action: 'installer' });
+    await p.boxion.put('vocaux', 'v1', { id: 'v1', le: '2026-10-12T17:30:00Z', texte: 'bonjour le xerboxion', audio: 'data:audio/mp4;base64,AAAA' });
+    const d = creerDossier({ boxion: p.boxion, fs, depot: { inventaire: async () => ({ ploxions: [{ id: 'zone', nom: 'Zone', total: 5, deps: [{ nom: 'jOSZone' }] }] }) } });
+    const l = await d.synchroniser();
+    assert.ok(disque.has('Lisez-moi.txt') && disque.has('Dépôt/.ploxi0n'));
+    const m = [...disque.keys()].find(k => /^Tsoins\/\d{4}-\d{2}\.md$/.test(k));
+    assert.match(disque.get(m).data, /idée|idee/); assert.match(disque.get(m).data, /un dossier dans Fichiers \(⧉ zone\)/);
+    assert.doesNotMatch(disque.get(m).data, /installer/, 'seulement les tsoins natifs');
+    const voc = [...disque.keys()].filter(k => k.startsWith('Vocaux/'));
+    assert.equal(voc.length, 2); assert.ok(voc.some(k => k.endsWith('.m4a') && !disque.get(k).texte), 'le son en binaire');
+    assert.ok(disque.has('Ploxions/installés.json'));
+    const n = ecritures; await d.synchroniser();
+    assert.equal([...disque.keys()].filter(k => k.startsWith('Vocaux/')).length, 2); assert.ok(ecritures - n < l.length, 'un vocal déjà copié ne l\'est plus');
+    // les ploxions : lire le Dépôt, y écrire ; jamais en dehors
+    assert.equal(await d.api.ecrire('../../etc/passwd', 'x'), 'Dépôt/passwd');
+    assert.deepEqual((await d.api.lister()).map(f => f.nom), ['passwd'], 'les fichiers cachés ne sont pas listés');
+    assert.throws(() => sur('Dépôt/../../x'), /interdit/);
+    assert.match(journalMois('2026-10', []), /# Tsoins · 2026-10/);
+  } finally { p.fin(); }
+});

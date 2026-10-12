@@ -33,8 +33,9 @@ import { creerUsage, jourCle } from './natif/usage.js';
 import { installerAvecBarre } from './app/installation.js';
 import { enregistrerGestion } from './app/gestion.js';
 import { creerFond } from './app/fond.js';
+import { creerDossier } from './natif/dossier.js';
 
-const VERSION = '0.34.0';
+const VERSION = '0.35.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -331,9 +332,13 @@ async function demarrer() {
   // un raccourci (Siri, l'app Raccourcis, une automatisation) a pu demander un ploxion ou noter un tsoin
   raccourcis.recevoir().catch(() => {});
   publierValeurs().catch(() => {});
+  // 📁 le dossier « Sur mon iPhone › ploxi0n » (l'app Fichiers) : en différé au lancement, puis à chaque passage en arrière-plan
+  const dossier = creerDossier({ boxion, depot });
+  window.jOSNatif.fichiers = dossier.api;
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) setTimeout(() => dossier.synchroniser().catch(() => {}), 4000);
   notifs.demarrer();
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-    import('@capacitor/app').then(({ App }) => App.addListener('appStateChange', (e) => { if (e.isActive) { raccourcis.recevoir().catch(() => {}); notifs.demarrer(); } else { notifs.arreter(); publierValeurs().catch(() => {}); } })).catch(() => {});
+    import('@capacitor/app').then(({ App }) => App.addListener('appStateChange', (e) => { if (e.isActive) { raccourcis.recevoir().catch(() => {}); notifs.demarrer(); } else { notifs.arreter(); publierValeurs().catch(() => {}); dossier.synchroniser().catch(() => {}); } })).catch(() => {});
   }
 }
 demarrer().catch((e) => { try { window.__bootFin && window.__bootFin(); } catch (er) { /* */ } document.getElementById('ploxi0n').innerHTML = '<p class="px-erreur">ploxi0n n\'a pas pu démarrer : ' + String(e && e.message).replace(/[<&]/g, '') + '</p>'; });

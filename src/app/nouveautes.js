@@ -4,6 +4,10 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.35.0', titre: 'Ton dossier dans Fichiers', points: [
+    '📁 L\'app Fichiers › Sur mon iPhone › ploxi0n : tes tsoins (un journal par mois), tes vocaux (le son et le texte), ton fond, tes ploxions.',
+    '⇣ Le dossier Dépôt : glisses-y des fichiers depuis Fichiers, tes ploxions peuvent les lire.',
+  ] },
   { v: '0.34.0', titre: 'Ton fond d\'écran', points: [
     '🖼 ⚙ › Apparence › Fond d\'écran : une photo (ou en prendre une), ou un motif gravé — grille, hexagones, points, courbes de niveau, cubes.',
     '◐ Assombrir et flouter la photo pour que tes ploxions restent lisibles ; sur l\'accueil seulement, ou partout.',

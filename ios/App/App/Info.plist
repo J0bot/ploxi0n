@@ -123,5 +123,10 @@
 			</array>
 		</dict>
 	</array>
+	<!-- 📁 le dossier ploxi0n dans l'app Fichiers (« Sur mon iPhone › ploxi0n ») — RS-7 12.10 -->
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 </dict>
 </plist>

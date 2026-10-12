@@ -123,6 +123,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         + section('donnees', 'Données', '<div class="bloc"><div class="l"><span>Réponses gardées pour le mode avion<small>' + nRoutes + ' route' + (nRoutes > 1 ? 's' : '') + '</small></span><button data-a="routes">vider</button></div>'
           + '<div class="l"><span>Réinitialiser les réglages<small>accueil, HUD, apparence, verrous… (tes ploxions, tes tsoins et ton compte restent)</small></span><button class="danger" data-a="reset">réinitialiser</button></div></div>')
         + section('apropos', 'À propos', '<div class="bloc"><div class="l"><span>ploxi0n ' + esc(version) + '<small>' + esc(W.navigator.onLine !== false ? 'en ligne' : 'hors ligne') + ' · cycle ' + (new Date().getFullYear() + 5000) + '</small></span></div>'
+          + '<div class="l"><span>📁 Dossier dans Fichiers<small data-dossier>Sur mon iPhone › ploxi0n : tsoins, vocaux, fond, Dépôt</small></span><button data-a="dossier">mettre à jour</button></div>'
           + '<div class="l"><span>📦 Ploxions installés<small>la place qu\'ils prennent, leurs bions, retirer</small></span><button data-a="gestion">ouvrir</button></div>'
           + '<div class="l"><span>✦ Nouveautés<small>ce qui a changé, version par version</small></span><button data-a="nouveautes">voir</button></div>'
           + '<div class="l"><span>🧭 Le tuto d\'accueil<small>les gestes et les features, en 9 cartes</small></span><button data-a="tuto">revoir</button></div>'
@@ -193,7 +194,8 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       const a = b.getAttribute('data-a'); if (!a) return;
       b.disabled = true;
       try {
-        if (a === 'fond') { if (W.ploxi0nFond) W.ploxi0nFond.composer(); }
+        if (a === 'dossier') { const s = zone.querySelector('[data-dossier]'); try { const l = await W.jOSNatif.fichiers.synchroniser(); if (s) s.textContent = '✓ ' + l.length + ' fichier(s) · ouvre Fichiers › Sur mon iPhone › ploxi0n'; } catch (er) { if (s) s.textContent = '⚠ ' + (er.message || er); } }
+        else if (a === 'fond') { if (W.ploxi0nFond) W.ploxi0nFond.composer(); }
         else if (a === 'gestion') { R().ouvrir('gestion'); }
         else if (a === 'nouveautes') { if (W.ploxi0nNouveautes) W.ploxi0nNouveautes.tout(); }
         else if (a === 'barre-haut') { if (W.ploxi0nBarreHaut) W.ploxi0nBarreHaut.composer(); }
