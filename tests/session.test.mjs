@@ -294,10 +294,12 @@ test('🌀 le thème vivant : la gravité → --mx/--my (neutre recentré, liss�
     assert.ok(Math.abs(+h.style.getPropertyValue('--mx')) < 0.05, 'le neutre se recentre');
     ecouteur({ gx: 0.3, gy: -0.7, ax: 1.2 }); assert.ok(h.classList.contains('px-choc'), 'un choc');
     racine.classList.replace('px-mode-accueil', 'px-mode-ploxion'); await attendre(20);
-    assert.ok(!m.actif() && appels.some(a => a[0] === 'fin'), 'dans un ploxion : arrêté');
-    assert.equal(h.style.getPropertyValue('--mx'), '0');
-    racine.classList.replace('px-mode-ploxion', 'px-mode-accueil'); await attendre(20); assert.ok(m.actif());
+    assert.ok(m.actif(), '(0.45) dans un ploxion aussi');
+    const vus = []; const off = m.ecouter(e => vus.push(e)); ecouteur({ gx: 0.5, gy: -0.7 }); off();
+    assert.ok(vus.length === 1 && vus[0].x > 0, 'les ploxions reçoivent le mouvement');
+    assert.equal(W.jOSNatif.mouvement.etat().source, 'CoreMotion');
     P = { calme: true }; abonnes.forEach(f => f(P)); await attendre(10); assert.ok(!m.actif(), 'Calme coupe');
+    assert.ok(appels.some(a => a[0] === 'fin')); assert.equal(h.style.getPropertyValue('--mx'), '0');
   } finally { p.fin(); }
 });
 
@@ -358,7 +360,8 @@ test('🧊 le gel du démarrage (0.37→0.43) : CoreMotion refusé ne boucle plu
     const racine = W.document.getElementById('ploxi0n'); racine.classList.add('px-mode-accueil');
     const m = creerMouvement({ W, prefs: { lire: () => ({}), surChangement: () => {} }, plugin, racine });
     await new Promise(ok => setTimeout(ok, 100));   // ce minuteur ne tournait JAMAIS (boucle de micro-tâches)
-    assert.equal(n, 1, 'une seule tentative'); assert.equal(m.actif(), false);
+    assert.equal(n, 1, 'une seule tentative native');
+    assert.match(m.etat().erreur, /natif : refusé/, 'la raison est gardée (⚙ › Apparence)'); assert.notEqual(m.etat().source, 'CoreMotion');
     racine.classList.replace('px-mode-accueil', 'px-mode-ploxion'); racine.classList.replace('px-mode-ploxion', 'px-mode-accueil');
     await new Promise(ok => setTimeout(ok, 30)); assert.equal(n, 1, 'un échec est définitif pour la session');
   } finally { p.fin(); }

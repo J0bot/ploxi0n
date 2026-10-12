@@ -37,7 +37,7 @@ import { creerDossier } from './natif/dossier.js';
 import { creerMouvement } from './app/mouvement.js';
 import { garderBoxion } from './boxion-local/garde.js';
 
-const VERSION = '0.44.0';
+const VERSION = '0.45.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {

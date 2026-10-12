@@ -12,13 +12,12 @@ const borne = (x) => Math.max(-1, Math.min(1, x));
 export function creerMouvement({ W = globalThis.window, prefs, plugin = null, racine = null }) {
   const D = W.document, h = D.documentElement;
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
-  let P = plugin, ecoute = null, actif = false, echec = false, enCours = false, b = null, s = { x: 0, y: 0 }, dernier = { x: 0, y: 0 }, chocT = 0;
+  let P = plugin, ecoute = null, actif = false, echec = false, enCours = false, erreur = null, web = false, b = null, abonnes = new Set(), envoiT = 0, s = { x: 0, y: 0 }, dernier = { x: 0, y: 0 }, chocT = 0;
   const veut = () => {
     const p = prefs.lire();
     if (echec || p.themeVivant === false || p.calme || D.hidden) return false;
     if (!P && !natif()) return false;
-    const R = racine || D.getElementById('ploxi0n');
-    return !R || R.classList.contains('px-mode-accueil') || h.classList.contains('px-fond-partout');
+    return true;   // (0.45, RS-7 : « les intégrer à tout ») l'accueil ET les ploxions ; seulement app visible
   };
   /** une mesure : la gravité (gx, gy) → --mx, --my ; l'accélération propre (ax, ay, az) → un choc */
   function mesure(m) {
@@ -32,6 +31,10 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
       dernier = { x: s.x, y: s.y };
       h.style.setProperty('--mx', s.x.toFixed(3)); h.style.setProperty('--my', (-s.y).toFixed(3));
     }
+    // les ploxions s'abonnent (jOSNatif.mouvement.ecouter) ; le bus jOSPorts reçoit « natif/mouvement » à 10 Hz
+    const ev = { x: s.x, y: -s.y, gx, gy, gz: +m.gz || 0, ax: +m.ax || 0, ay: +m.ay || 0, az: +m.az || 0 };
+    for (const f of abonnes) { try { f(ev); } catch (e) { /* */ } }
+    if (Date.now() - envoiT > 100 && W.jOSPorts && W.jOSPorts.emit) { envoiT = Date.now(); try { W.jOSPorts.emit('natif', 'mouvement', ev); } catch (e) { /* */ } }
     const a = Math.hypot(+m.ax || 0, +m.ay || 0, +m.az || 0), t = Date.now();
     if (a > 0.9 && t - chocT > 900) { chocT = t; h.classList.remove('px-choc'); void h.offsetWidth; h.classList.add('px-choc'); W.setTimeout(() => h.classList.remove('px-choc'), 320); }
   }
@@ -45,12 +48,33 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
       ecoute = await P.addListener('mouvement', mesure);
       await P.mouvementDebut({ hz: 30 });
       actif = true; h.classList.add('px-vivant');
-    } catch (e) { echec = true; try { if (ecoute) await ecoute.remove(); } catch (e2) { /* */ } ecoute = null; }
-    finally { enCours = false; }
+    } catch (e) {
+      erreur = 'natif : ' + String((e && e.message) || e).slice(0, 160);
+      try { if (ecoute) await ecoute.remove(); } catch (e2) { /* */ } ecoute = null;
+      // le repli : DeviceMotion du web (iOS demande la permission sur un geste : le premier toucher)
+      if (W.DeviceMotionEvent) { enCours = false; return repliWeb(); }
+      echec = true;
+    } finally { enCours = false; }
+  }
+  function surWeb(e) {
+    const g = e.accelerationIncludingGravity || {}, a = e.acceleration || {};
+    // iOS : m/s², gravité vers le bas → les mêmes unités (g) et le même sens que CoreMotion
+    mesure({ gx: -(g.x || 0) / 9.81, gy: -(g.y || 0) / 9.81, gz: -(g.z || 0) / 9.81, ax: (a.x || 0) / 9.81, ay: (a.y || 0) / 9.81, az: (a.z || 0) / 9.81 });
+  }
+  function repliWeb() {
+    const brancher = () => { W.addEventListener('devicemotion', surWeb); web = true; actif = true; h.classList.add('px-vivant'); };
+    const demander = W.DeviceMotionEvent && W.DeviceMotionEvent.requestPermission;
+    if (!demander) return brancher();
+    const unGeste = () => {
+      W.removeEventListener('pointerdown', unGeste, true);
+      Promise.resolve(W.DeviceMotionEvent.requestPermission()).then((r) => { if (r === 'granted') brancher(); else { echec = true; erreur += ' · web : ' + r; } }).catch((e) => { echec = true; erreur += ' · web : ' + (e && e.message); });
+    };
+    W.addEventListener('pointerdown', unGeste, true);
   }
   async function arreter() {
     if (!actif) return; actif = false;
     h.classList.remove('px-vivant'); h.style.setProperty('--mx', '0'); h.style.setProperty('--my', '0');
+    if (web) { W.removeEventListener('devicemotion', surWeb); web = false; return; }
     try { if (ecoute) await ecoute.remove(); ecoute = null; if (P) await P.mouvementFin(); } catch (e) { /* */ }
   }
   const suivre = () => (veut() ? demarrer() : arreter());
@@ -59,5 +83,12 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
   const R = racine || D.getElementById('ploxi0n');
   if (R) new W.MutationObserver(suivre).observe(R, { attributes: true, attributeFilter: ['class'] });
   suivre();
-  return { mesure, demarrer, arreter, actif: () => actif, suivre };
+  const api = {
+    /** un ploxion suit le téléphone : cb({ x, y (−1…1, lissés), gx, gy, gz, ax, ay, az }) → off() */
+    ecouter(cb) { abonnes.add(cb); return () => abonnes.delete(cb); },
+    etat: () => ({ actif, source: web ? 'web' : actif ? 'CoreMotion' : null, erreur }),
+  };
+  W.jOSNatif = W.jOSNatif || {}; W.jOSNatif.mouvement = api;
+  W.ploxi0nMouvement = api;
+  return { mesure, demarrer, arreter, actif: () => actif, suivre, ...api };
 }

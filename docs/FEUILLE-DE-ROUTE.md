@@ -27,6 +27,7 @@ contrepartie native (FOURNIS + src/natif/<bion>.js). Un ploxion qui « charge à
 | ⏭ | **Les vrais glyphes au lieu des emojis** (koin △ kion ▢, le codec) : dock, HUD, réglages, ploxions internes | RS-7 12.10 |
 | ⏭ | **Recensement bions → couche iOS** : chaque bion global du web (jOSToast, jOSComptes, jOSGame, jOSCache, jOSGeo…), fait / à faire | RS-7 12.10 |
 | ⏭ | **Le clicker du xerboxion** pour de vrai (l'idle de xp n'en est qu'un jouet : 7 paliers) — voir §1 | RS-7 : « pas autant avancé que la vision » |
+| ⏭ | **Le regard (eye tracking)** pour zoomer : ARKit + caméra TrueDepth (ARFaceTrackingConfiguration, lookAtPoint) → là où l'on regarde grossit | RS-7 12.10 « par la suite » |
 | ⏭ | Iframes connectées (calendar, notes… ont besoin du compte dans l'iframe : clé de session comme les icônes) | |
 
 ## 1. Le socle (ce qui fait tourner les ploxions)

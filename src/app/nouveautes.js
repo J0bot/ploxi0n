@@ -4,6 +4,10 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.45.0', titre: 'Le vivant, partout', points: [
+    '🌀 Le thème vivant suit le téléphone aussi dans les ploxions : la barre, les feuilles, les bulles flottent ; les ploxions reçoivent le mouvement (jOSNatif.mouvement, var(--mx)/--my).',
+    '🩺 Si le gyroscope refuse : la raison s\'affiche dans ⚙ › Apparence › État du mouvement, et le capteur du navigateur prend le relais au premier toucher.',
+  ] },
   { v: '0.44.0', titre: 'Le gel du démarrage, trouvé', points: [
     '🧊 Corrigé : depuis 0.37, si le gyroscope refusait de démarrer, le thème vivant tournait en rond sans fin et figeait toute l\'app au chargement (iPhone et iPad).',
   ] },
