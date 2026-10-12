@@ -5,9 +5,11 @@
 #   signature : MATCH_PAT (jeton GitHub, Contents lecture/écriture sur J0bot/ploxi0n-certificats seulement) et MATCH_PASSWORD (la phrase qui
 #   chiffre les certificats) ; TESTFLIGHT_EMAIL (l'Apple ID à inviter dans le groupe de testeurs internes) ; sans eux, la CI tente la signature automatique (qui exige un iPhone enregistré dans le compte)
 name: iOS TestFlight
+# (12.10, RS-7 : « on a utilisé toutes les minutes Actions jusqu'au 1er novembre ») plus de build à CHAQUE push (≈ 45 builds macOS
+# ce mois, minutes ×10) : seulement sur un tag v* (git tag v0.46 && git push --tags) ou à la main (workflow_dispatch).
 on:
   push:
-    branches: [main]
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       regenerer_profil: { description: 'régénérer le profil de signature (après un changement de capabilities)', type: boolean, default: false }
