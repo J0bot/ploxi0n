@@ -32,8 +32,9 @@ import { creerSante } from './natif/sante.js';
 import { creerUsage, jourCle } from './natif/usage.js';
 import { installerAvecBarre } from './app/installation.js';
 import { enregistrerGestion } from './app/gestion.js';
+import { creerFond } from './app/fond.js';
 
-const VERSION = '0.33.0';
+const VERSION = '0.34.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -77,6 +78,8 @@ async function demarrer() {
   boot(14, 'boxion local');
   const boxion = await ouvrirBoxionLocal();
   const prefs = creerPrefs({ boxion }); await prefs.pret; prefs.appliquer();   // l'apparence avant le premier dessin
+  // 🖼 le fond d'écran (photo ou motif gravé), avant le premier dessin aussi
+  const fond = creerFond({ boxion, vibrer: (x) => { try { window.jOSNatif && window.jOSNatif.vibrer && window.jOSNatif.vibrer(x); } catch (e) { /* */ } } }); await fond.pret; window.ploxi0nFond = fond;
   // le plein écran complet : la barre d'état cachée (StatusBar) ; l'indicateur d'accueil et les bords haut/bas (PloxionVC, natif, lit la préférence)
   async function pleinEcran(p) {
     if (!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) return;

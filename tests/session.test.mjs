@@ -218,3 +218,29 @@ test('⬇ la barre d\'installation suit le ploxion puis ses bions ; 📦 le gest
     assert.ok(bionsRetires.includes('jOSVieux'));
   } finally { p.fin(); }
 });
+
+test('🖼 le fond d\'écran : motif gravé, photo (gardée), assombrir, l\'accueil ou partout, retirer', async () => {
+  const { creerFond, MOTIFS } = await import('../src/app/fond.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w, h = W.document.documentElement;
+  try {
+    const f = creerFond({ W, boxion: p.boxion }); await f.pret;
+    assert.ok(!h.classList.contains('px-a-fond'), 'aucun par défaut');
+    await f.regler({ type: 'motif', motif: 'hex' });
+    assert.ok(h.classList.contains('px-a-fond'));
+    assert.equal(W.document.querySelector('.px-fond i').style.backgroundImage.includes('svg'), true);
+    assert.doesNotMatch(Object.values(MOTIFS).map(m => decodeURIComponent(m.css)).join(''), /Gradient/i, 'aucun dégradé');
+    // une photo (hors iPhone : jOSNatif.photo), gardée d'un lancement à l'autre
+    W.jOSNatif = { photo: async () => 'data:image/png;base64,iVBORw0KGgo=' };
+    await f.choisirPhoto('galerie');
+    assert.equal(f.reglage().type, 'photo');
+    await f.regler({ sombre: 60, partout: true });
+    assert.equal(W.document.querySelector('.px-fond b').style.opacity, '0.6');
+    assert.ok(h.classList.contains('px-fond-partout'));
+    const f2 = creerFond({ W, boxion: p.boxion }); await f2.pret;
+    assert.match(f2.image(), /^data:image/); assert.equal(f2.reglage().sombre, 60);
+    f2.composer(); const s = W.document.querySelector('.px-fond-feuille');
+    assert.ok(s.querySelector('[data-r="sombre"]') && s.querySelector('[data-motif="cubes"]'));
+    s.querySelector('[data-f="aucun"]').click(); await attendre(30);
+    assert.equal(await p.boxion.get('reglages', 'fond-image'), null); assert.ok(!h.classList.contains('px-a-fond'));
+  } finally { p.fin(); }
+});

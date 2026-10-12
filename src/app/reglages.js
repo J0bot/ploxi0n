@@ -58,6 +58,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + seg('vue', [['grille', 'grille'], ['compacte', 'compacte'], ['liste', 'liste'], ['usage', 'usage'], ['recents', 'récents'], ['categories', 'catégories']], R().vueAccueil ? R().vueAccueil() : 'grille', 'Vue de l\'accueil')
           + seg('icones', [['petites', 'petites'], ['normales', 'normales'], ['grandes', 'grandes']], P.icones, 'Taille des icônes')
           + bascule('data-pb="pleinEcran"', !!P.pleinEcran, 'Plein écran complet', 'sans barre d\'état ; la barre du bas s\'efface ; les bords haut et bas vont d\'abord à l\'app (un 2e glissé pour iOS)')
+          + '<div class="l"><span>🖼 Fond d\'écran<small>une photo, un motif gravé ; assombrir, flouter ; l\'accueil ou partout</small></span><button data-a="fond">changer</button></div>'
           + bascule('data-pb="barreHaut"', P.barreHaut !== false, 'Notre barre du haut', 'en plein écran : l\'heure, la batterie, tes tsoins… à gauche et à droite de l\'île ; appui long dessus pour la composer')
           + '<div class="l"><span>Composer la barre du haut<small>quels éléments, à gauche ou à droite</small></span><button data-a="barre-haut">composer</button></div>'
           + bascule('data-pb="haptique"', P.haptique !== false, 'Haptique', 'de petites vibrations : ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs')
@@ -192,7 +193,8 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       const a = b.getAttribute('data-a'); if (!a) return;
       b.disabled = true;
       try {
-        if (a === 'gestion') { R().ouvrir('gestion'); }
+        if (a === 'fond') { if (W.ploxi0nFond) W.ploxi0nFond.composer(); }
+        else if (a === 'gestion') { R().ouvrir('gestion'); }
         else if (a === 'nouveautes') { if (W.ploxi0nNouveautes) W.ploxi0nNouveautes.tout(); }
         else if (a === 'barre-haut') { if (W.ploxi0nBarreHaut) W.ploxi0nBarreHaut.composer(); }
         else if (a === 'tuto') { if (W.ploxi0nTuto) W.ploxi0nTuto.montrer(); }

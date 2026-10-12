@@ -305,3 +305,14 @@ html.px-haut-on #ploxi0n{padding-top:max(env(safe-area-inset-top,0px),22px)}
 .px-gest-deps .px-puce{font-size:11px}.px-gest-deps .seul{border-color:var(--acc)}
 .px-gest-act{display:flex;gap:8px;width:100%;margin-top:6px}
 .px-gest-act button{flex:1;min-height:44px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:600 14px var(--police)}
+
+/* ---- 🖼 le fond d'écran ---- */
+.px-fond{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.px-fond i{position:absolute;inset:0;background-position:center}
+.px-fond b{position:absolute;inset:0;background:#07050c}
+#ploxi0n{position:relative;z-index:1}
+html:not(.px-fond-partout):has(#ploxi0n.px-mode-ploxion) .px-fond{display:none}
+.px-fond-apercu{height:150px;border-radius:14px;overflow:hidden;border:var(--trait) solid var(--bord);background:var(--creux);margin:4px 0 10px;display:flex;align-items:center;justify-content:center}
+.px-fond-apercu span{display:block;width:100%;height:100%;background-size:cover;background-position:center}
+.px-fond-apercu em{color:var(--muted);font:600 12px var(--mono)}
+.px-fond-feuille input[type=range]{width:46%;accent-color:var(--acc)}
