@@ -19,7 +19,7 @@ import { creerPrefs } from './app/prefs.js';
 import { installerJosNatif } from './natif/jos-natif.js';
 import { brancherPlugions } from './natif/plugions.js';
 
-const VERSION = '0.18.0';
+const VERSION = '0.19.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -43,6 +43,8 @@ async function demarrer() {
   const boxion = await ouvrirBoxionLocal();
   const prefs = creerPrefs({ boxion }); await prefs.pret; prefs.appliquer();   // l'apparence avant le premier dessin
   installerJosNatif(window);   // ⚡ le bion natif : toutes les capacités de l'iPhone, pour tous les ploxions
+  // l'haptique de l'app (ouvrir, revenir, minimiser, les bords, les pages…) : par jOSNatif, coupée dans ⚙ › Apparence
+  const vibrer = (style) => { if (prefs.lire().haptique === false || !window.jOSNatif || !window.jOSNatif.natif) return; window.jOSNatif.vibrer(style).catch(() => {}); };
   const bionsCharges = new Set();   // un seul chargement par bion, pour toute l'app
   let routeur = null;
   // un ploxion en ouvre un autre (jOSXerPrefs.ouvrir, jOS.openPloxion) : s'il n'est pas installé et qu'il y a du réseau, on l'installe à la volée
@@ -82,7 +84,7 @@ async function demarrer() {
     depot.completerBions().then(r => { boxion.put('reglages', 'bions-v2', { le: new Date().toISOString(), r }); }).catch(() => {});
   }
   const internes = [
-    enregistrerMarketplace({ depot, surChangement: () => majAccueil(), usage: () => boxion.get('usage', 'stats'), prefs: { lire: () => boxion.get('reglages', 'marketplace'), ecrire: (v) => boxion.put('reglages', 'marketplace', v) } }),
+    enregistrerMarketplace({ depot, vibrer, surChangement: () => majAccueil(), usage: () => boxion.get('usage', 'stats'), prefs: { lire: () => boxion.get('reglages', 'marketplace'), ecrire: (v) => boxion.put('reglages', 'marketplace', v) } }),
     enregistrerXerEnLigne({}),
     enregistrerBanc({ boxion, version: VERSION }),
   ];
@@ -105,7 +107,7 @@ async function demarrer() {
   // les notifications (test, et les messages de coord tant que l'app est au premier plan ; la vraie « app fermée » demande APNs)
   const notifs = creerNotifs({ boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id) => routeurProxy.ouvrir(id) });
   await notifs.pret;
-  internes.push(enregistrerReglages({ compte, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, prefs, version: VERSION }));
+  internes.push(enregistrerReglages({ compte, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, prefs, vibrer, version: VERSION }));
   // le vecteur xerion de ce téléphone : le temps passé par ploxion (même forme que jOSUsage du labo : { px: { id: { opens, seconds, lastAt } } })
   async function surUsage(id, sec) {
     const u = (await boxion.get('usage', 'stats')) || { px: {} };
@@ -116,7 +118,7 @@ async function demarrer() {
   // un ploxion sur l'écran d'accueil de l'iPhone (via Raccourcis) : depuis l'édition de l'accueil et la fiche du marketplace
   const ecranAccueil = creerEcranAccueil({ trouver: (id) => routeur.catalogue().find(p => p.id === id), liste: () => routeur.catalogue(), boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine) });
   window.jOSEcranAccueil = ecranAccueil;
-  routeur = creerRouteur({ racine, catalogue: internes, boxion, prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}) });
+  routeur = creerRouteur({ racine, catalogue: internes, boxion, vibrer, prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}) });
   const rafraichir = () => { if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); };
   compte.surChangement(rafraichir);
   hud.surChangement(() => routeur.rafraichirHud());

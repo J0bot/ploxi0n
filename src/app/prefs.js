@@ -5,7 +5,8 @@
 //   bords       glisser depuis les bords pour changer d'app appuiLong le menu d'un ploxion à l'appui long
 //   maxVivants  ploxions gardés vivants en arrière-plan    dock       le dock en bas de l'accueil
 //   plaque      la plaque gravée « cycle … » de l'accueil
-export const PREFS_DEFAUT = { grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 5, dock: true, plaque: true };
+//   haptique    les retours haptiques (ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs…)
+export const PREFS_DEFAUT = { haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 5, dock: true, plaque: true };
 
 export function creerPrefs({ W = globalThis.window, boxion }) {
   let p = { ...PREFS_DEFAUT };

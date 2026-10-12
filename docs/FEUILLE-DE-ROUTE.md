@@ -20,6 +20,7 @@
 | ✅ 0.18 | **Un seul chargement par bion** pour toute l'app (un bion déjà exécuté n'est plus rechargé par le ploxion suivant) | RS-7 : « un seul bion pour tout » |
 | ✅ 0.18 | **⚡ jOSNatif** : LE bion natif (partager, vibrer, copier/coller, photo, position, notifier, ouvrir un lien, appareil, batterie, réseau, parler) | RS-7 : « le but d'une app native, c'est d'utiliser les choses natives » |
 | ✅ 0.18 | **Les plugions** : brancher un bion du labo sur le natif sans le réécrire (jOSAppareil, jOSShare.natif) | RS-7 : « les meilleurs plugions entre les bions » |
+| ✅ 0.19 | **L'haptique** : ouvrir, revenir, minimiser, les bords (un cran au seuil), l'appui long, les pages, les vues, les interrupteurs, installé (succès) / erreur — coupable dans ⚙ › Apparence | RS-7 : « jouer avec les haptics » |
 | ⏭ | Plus de plugions : jOSGeo → position native, jOSCache → boxion_local, jOSScanQR → caméra native, le son → audio natif… (au cas par cas : seulement quand la version native fait EXACTEMENT la même chose) | |
 | ⏭ | « La version la plus optimisée du même bion » : quand plusieurs sources servent un même bion (labo, boxion de chacun, natif), choisir la plus rapide et la plus légère | |
 | ⏭ | Les bions qui manquent encore : jOSComptes, jOSToast, jOSXerkionsForge (404 sur /px/bion-app) | côté labo : les servir seuls |

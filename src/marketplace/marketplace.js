@@ -76,7 +76,7 @@ const CSS = '.mk{padding:0 0 70px;--a:var(--acc,#a597cf);--n:var(--muted,#8aa0c0
   + '.mk-feuille p{line-height:1.5;color:rgba(225,225,240,.82)}.mk-tags{display:flex;gap:6px;flex-wrap:wrap}.mk-tags span{font-size:.72rem;color:var(--n);border:var(--trait,2px) solid var(--l);border-radius:99px;padding:2px 9px}'
   + '.mk-feuille .mk-defile{padding:4px 0 8px}';
 
-export function enregistrerMarketplace({ W = globalThis.window, depot, surChangement = () => {}, usage = async () => null, prefs = null }) {
+export function enregistrerMarketplace({ W = globalThis.window, depot, surChangement = () => {}, usage = async () => null, prefs = null, vibrer = () => {} }) {
   function mount(hote, ctx) {
     const params = (ctx && ctx.params) || {};
     let vue = params.vue || params.onglet || 'vitrine', q = params.q || '', cat = '', vivant = true, feuille = null;
@@ -166,6 +166,7 @@ export function enregistrerMarketplace({ W = globalThis.window, depot, surChange
       c.addEventListener('pointerup', lacher); c.addEventListener('pointercancel', lacher);
     }
     async function decider(id, prendre) {
+      vibrer(prendre ? 'moyen' : 'leger');
       const c = zone.querySelector('.mk-dc'); if (c) { c.style.transform = 'translateX(' + (prendre ? 120 : -120) + '%) rotate(' + (prendre ? 14 : -14) + 'deg)'; c.style.opacity = '0'; }
       if (prendre) { try { await installer(id); } catch (e) { d.passes.add(id); } } else d.passes.add(id);
       garder(); peindre();
@@ -185,7 +186,7 @@ export function enregistrerMarketplace({ W = globalThis.window, depot, surChange
       // le pack d'abord quand il l'a (sans réseau, et c'est la version testée avec l'app)
       const r = d.pack.has(id) ? await depot.installerLocal(id) : await depot.installer(id, { nom: x.nom, icone: x.icone });
       d.installes.add(id); await surChangement();
-      try { const h = W.Capacitor && W.Capacitor.Plugins && W.Capacitor.Plugins.Haptics; if (h) h.impact({ style: 'LIGHT' }); } catch (e) { /* pas de vibreur */ }
+      vibrer('succes');
       return r;
     }
 
@@ -215,7 +216,7 @@ export function enregistrerMarketplace({ W = globalThis.window, depot, surChange
     champ.addEventListener('keydown', (e) => { if (e.key === 'Enter') { try { champ.blur(); } catch (er) { /* */ } } });
     hote.addEventListener('click', async (e) => {
       const b = e.target.closest('button,[data-fiche],[data-voir]'); if (!b || !hote.contains(b)) return;
-      if (b.hasAttribute('data-vue')) { vue = b.getAttribute('data-vue'); q = ''; champ.value = ''; cat = ''; garder(); peindre(); return; }
+      if (b.hasAttribute('data-vue')) { vibrer('selection'); vue = b.getAttribute('data-vue'); q = ''; champ.value = ''; cat = ''; garder(); peindre(); return; }
       if (b.hasAttribute('data-cat')) { cat = b.getAttribute('data-cat'); return peindre(); }
       if (b.hasAttribute('data-voir')) { const v = b.getAttribute('data-voir'); if (v.startsWith('cat:')) { cat = v.slice(4); vue = 'grille'; } else { vue = v; cat = ''; } garder(); return peindre(); }
       if (b.hasAttribute('data-passer')) return decider(b.getAttribute('data-passer'), false);
@@ -235,7 +236,7 @@ export function enregistrerMarketplace({ W = globalThis.window, depot, surChange
         }
         if (b.hasAttribute('data-retirer')) { const id = b.getAttribute('data-retirer'); await depot.retirer(id); d.installes.delete(id); await surChangement(); fermerFiche(); return peindre(); }
         if (b.hasAttribute('data-ajour')) { const m = zone.querySelector('[data-msg]'); m.textContent = '⏳'; const r = await depot.aJour(); await surChangement(); m.textContent = r.length ? r.map(x => x.id + ' : ' + ({ 'a-jour': 'à jour', 'mis-a-jour': 'mis à jour ✓', erreur: 'erreur ' + (x.detail || '') }[x.etat])).join(' · ') : 'rien à vérifier (le pack se met à jour avec l\'app)'; return; }
-      } catch (er) { b.disabled = false; b.textContent = '⚠ ' + String(er.message || er).slice(0, 60); }
+      } catch (er) { vibrer('erreur'); b.disabled = false; b.textContent = '⚠ ' + String(er.message || er).slice(0, 60); }
     });
 
     // d'abord le cache (immédiat, même en mode avion), puis le réseau derrière

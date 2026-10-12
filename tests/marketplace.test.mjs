@@ -416,3 +416,18 @@ test('un seul chargement par bion : deux ploxions qui partagent un bion ne le r�
   assert.deepEqual(brancherPlugions(W), [], 'idempotent');
   assert.deepEqual(brancherPlugions({ jOSShare: { open() {} } }, new Set(['jOSShare'])), [], 'un bion coupé n\'est pas branché');
 });
+
+test('haptique : ouvrir (léger), minimiser (moyen), revenir (léger), changer de vue (un cran) ; rien quand les bords ne passent pas le seuil', async () => {
+  const { creerRouteur } = await import('../src/app/routeur.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    W.jOSApps = W.jOSApps || {}; W.jOSApps.h = { manifest: { id: 'h' }, mount(x) { x.textContent = 'h'; return { unmount() {} }; } };
+    const racine = W.document.createElement('div'); W.document.body.appendChild(racine);
+    const vib = [];
+    const r = creerRouteur({ fenetre: W, racine, catalogue: [{ id: 'h', nom: 'H' }], vibrer: (s) => vib.push(s) });
+    await r.accueil(); await r.ouvrir('h'); r.minimiser(); await attendre(10);
+    await r.ouvrir('h'); r.retour(); await attendre(10);
+    racine.querySelector('[data-vue-accueil="liste"]').click(); await attendre(20);
+    assert.deepEqual(vib, ['leger', 'moyen', 'leger', 'leger', 'selection']);
+  } finally { p.fin(); }
+});

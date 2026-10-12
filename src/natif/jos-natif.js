@@ -4,7 +4,7 @@
 // et par le web ailleurs (le xer de xerboxion.org n'a pas jOSNatif : un ploxion teste « if (window.jOSNatif) »).
 //   jOSNatif.natif                     vrai sur l'iPhone
 //   partager({ texte, url, titre })    la feuille de partage d'iOS
-//   vibrer('leger'|'moyen'|'fort'|'succes'|'erreur')
+//   vibrer('leger'|'moyen'|'fort'|'selection'|'succes'|'erreur')
 //   copier(texte) · coller() → texte
 //   photo({ source: 'camera'|'galerie' }) → dataURL (jpeg)
 //   position() → { lat, lng, precision }
@@ -26,6 +26,7 @@ export function installerJosNatif(W = globalThis.window) {
       if (natif) {
         const { Haptics, ImpactStyle, NotificationType } = await import('@capacitor/haptics');
         if (style === 'succes' || style === 'erreur') return Haptics.notification({ type: style === 'succes' ? NotificationType.Success : NotificationType.Error });
+        if (style === 'selection') { await Haptics.selectionStart(); await Haptics.selectionChanged(); return Haptics.selectionEnd(); }   // un cran, comme une molette
         return Haptics.impact({ style: { leger: ImpactStyle.Light, moyen: ImpactStyle.Medium, fort: ImpactStyle.Heavy }[style] || ImpactStyle.Light });
       }
       if (W.navigator.vibrate) W.navigator.vibrate(style === 'fort' ? 40 : 15);

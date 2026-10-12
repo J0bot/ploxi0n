@@ -15,7 +15,7 @@ const SECTIONS = [['compte', '👤', 'compte'], ['reseau', '🌐', 'réseau'], [
   ['hud', '🧩', 'HUD et dock'], ['iphone', '📲', 'écran d\'accueil'], ['accueil', '🏠', 'accueil'], ['ploxions', '▣', 'ploxions'], ['bions', '⬡', 'bions'], ['faceid', '🔒', 'Face ID'],
   ['donnees', '💾', 'données'], ['apropos', '◇', 'à propos']];
 
-export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, version = '?' }) {
+export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, vibrer = () => {}, version = '?' }) {
   const ELS = { compte: '👤 compte', reseau: '📶 réseau et mode connecté', heure: '🕐 heure', chercher: '🔎 chercher un ploxion', epingles: '📌 ploxions épinglés' };
   function mount(hote) {
     let vivant = true, q = '';
@@ -56,6 +56,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         + (P ? section('apparence', 'Apparence', '<div class="bloc">'
           + seg('vue', [['grille', 'grille'], ['compacte', 'compacte'], ['liste', 'liste'], ['usage', 'usage'], ['recents', 'récents'], ['categories', 'catégories']], R().vueAccueil ? R().vueAccueil() : 'grille', 'Vue de l\'accueil')
           + seg('icones', [['petites', 'petites'], ['normales', 'normales'], ['grandes', 'grandes']], P.icones, 'Taille des icônes')
+          + bascule('data-pb="haptique"', P.haptique !== false, 'Haptique', 'de petites vibrations : ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs')
           + bascule('data-pb="grain"', P.grain, 'Patine', 'le grain usé des plaques')
           + bascule('data-pb="contraste"', P.contraste === 'fort', 'Contraste fort', 'textes et bords plus clairs')
           + bascule('data-pb="calme"', P.calme, 'Calme', 'plus aucune animation, même aux gestes')
@@ -103,6 +104,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
     hote.querySelector('[data-q]').addEventListener('input', (ev) => { q = ev.target.value; filtrer(); });
     hote.addEventListener('change', async (ev) => {
       const t = ev.target;
+      if (t.type === 'checkbox') vibrer('selection');
       if (t.matches('[data-t="mode"]')) { modeConnecte(t.checked); hud.regler(hud.config()); return; }
       if (t.matches('[data-t="coord"]')) { try { await notifs.coord(t.checked); const n = t.checked ? await notifs.verifierCoord() : []; msg(t.checked ? '✓ coord surveillé' + (n.length ? ' : ' + n.length + ' nouveau(x)' : '') : 'coord : plus de notifications'); } catch (er) { t.checked = false; await notifs.coord(false); msg('⚠ ' + (er.message || er)); } return; }
       if (t.matches('[data-el]')) return majHud(c => { c.elements[+t.getAttribute('data-el')].on = t.checked; });
