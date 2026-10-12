@@ -395,3 +395,24 @@ test('appui long : le menu d\'un ploxion (épingler au dock, déplacer vers une 
     assert.equal(racine.querySelector('.px-menu'), null, 'pas de menu sur un appui court');
   } finally { p.fin(); }
 });
+
+test('un seul chargement par bion : deux ploxions qui partagent un bion ne le réexécutent pas ; un plugion branche jOSShare sur le natif', async () => {
+  const s = serveur(), boxion = creerMemoire();
+  s.js.un = BUNDLE('un') + '\nif (window.jOSStore) jOSStore.x();'; s.js.deux = BUNDLE('deux') + '\nif (window.jOSStore) jOSStore.y();';
+  const get = s.http.get;
+  s.http.get = async (url, o) => url.endsWith('/px/bion-app/jOSStore.js') ? { status: 200, texte: 'window.jOSStore={x(){},y(){}};', entetes: {} } : url.includes('/px/bion-app/') ? { status: 404, texte: '', entetes: {} } : get(url, o);
+  const d = creerDepot({ boxion, http: s.http });
+  await d.installer('un'); await d.installer('deux');
+  const deja = new Set();
+  const b1 = await d.bundle('un', { deja }), b2 = await d.bundle('deux', { deja });
+  assert.match(b1, /window\.jOSStore=/); assert.doesNotMatch(b2, /window\.jOSStore=/, 'le second ne recharge pas le bion');
+  assert.deepEqual([...deja], ['jOSStore']);
+  const { brancherPlugions } = await import('../src/natif/plugions.js');
+  const partages = [];
+  const W = { localStorage: { getItem: () => null }, jOSNatif: { natif: false, partager: async (p) => partages.push(p) }, jOSShare: { open() {} } };
+  assert.deepEqual(brancherPlugions(W), ['jOSShare']);
+  await W.jOSShare.natif({ text: 'salut', url: 'https://x' });
+  assert.deepEqual(partages, [{ texte: 'salut', url: 'https://x', titre: undefined }]);
+  assert.deepEqual(brancherPlugions(W), [], 'idempotent');
+  assert.deepEqual(brancherPlugions({ jOSShare: { open() {} } }, new Set(['jOSShare'])), [], 'un bion coupé n\'est pas branché');
+});

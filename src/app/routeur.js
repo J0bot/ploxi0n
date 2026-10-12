@@ -15,7 +15,7 @@ const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
   + R.map(r => `M512 ${512 - r}L${512 + r} 512L512 ${512 + r}L${512 - r} 512Z`).join('') + '"/></svg>';
 
-export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}) } = {}) {
+export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null } = {}) {
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
   // PLUSIEURS PLOXIONS VIVANTS (RS-7 12.10 : « pouvoir ouvrir des ploxions depuis des ploxions, et pouvoir minimiser un ploxion ») :
@@ -323,6 +323,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     try {
       const app = await charger(id);
       if (!vivants.has(id)) return false;   // fermé pendant le chargement
+      if (apresChargement) { try { apresChargement(id); } catch (er) { /* un plugion ne casse pas l'ouverture */ } }
       v.inst = app.mount(hote, { embed: false, standalone: true, host: 'ploxi0n', params: params || null, onglet: params && params.onglet }) || {};
     } catch (er) {
       hote.innerHTML = '<p class="px-erreur">Ce ploxion n\'a pas pu s\'ouvrir : ' + texte(er.message) + '</p>';

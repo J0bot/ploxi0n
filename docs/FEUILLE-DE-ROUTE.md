@@ -17,6 +17,11 @@
 | ✅ 0.8 | Bions **touchés** résolus récursivement, rattrapage des anciens | xerkions, réglages, ultimate-social |
 | ✅ 0.8 | jOSXerPrefs complet (get/set/ouvrir/params/demande) | |
 | ⏭ | **Envoi de fichiers** par le mode connecté (FormData / multipart) | aujourd'hui : 503 « pas encore relayé » |
+| ✅ 0.18 | **Un seul chargement par bion** pour toute l'app (un bion déjà exécuté n'est plus rechargé par le ploxion suivant) | RS-7 : « un seul bion pour tout » |
+| ✅ 0.18 | **⚡ jOSNatif** : LE bion natif (partager, vibrer, copier/coller, photo, position, notifier, ouvrir un lien, appareil, batterie, réseau, parler) | RS-7 : « le but d'une app native, c'est d'utiliser les choses natives » |
+| ✅ 0.18 | **Les plugions** : brancher un bion du labo sur le natif sans le réécrire (jOSAppareil, jOSShare.natif) | RS-7 : « les meilleurs plugions entre les bions » |
+| ⏭ | Plus de plugions : jOSGeo → position native, jOSCache → boxion_local, jOSScanQR → caméra native, le son → audio natif… (au cas par cas : seulement quand la version native fait EXACTEMENT la même chose) | |
+| ⏭ | « La version la plus optimisée du même bion » : quand plusieurs sources servent un même bion (labo, boxion de chacun, natif), choisir la plus rapide et la plus légère | |
 | ⏭ | Les bions qui manquent encore : jOSComptes, jOSToast, jOSXerkionsForge (404 sur /px/bion-app) | côté labo : les servir seuls |
 | ✅ 0.15 | **Gérer les bions** (⚙ › Bions) : taille, qui les utilise, couper, mettre à jour, retirer | |
 | 💭 | jOSPorts relié au **bus du boxion** (xion en direct, SSE) en mode connecté | le phone devient un nœud du xion |

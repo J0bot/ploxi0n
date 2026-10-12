@@ -5,6 +5,7 @@
 //   données · à propos
 // Les bions : chacun avec sa taille et les ploxions qui l'utilisent ; le couper (plus chargé), le mettre à jour, le retirer s'il ne sert plus.
 import { testerClavier } from './clavier.js';
+import { PLUGIONS } from '../natif/plugions.js';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const ko = (n) => n < 1024 ? n + ' o' : n < 1048576 ? Math.round(n / 1024) + ' Ko' : (Math.round(n / 104857.6) / 10) + ' Mo';
@@ -77,7 +78,9 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + bions.map(b => '<div class="l' + (b.coupe ? ' eteint' : '') + '"><span class="ic">⬡</span><span>' + esc(b.nom) + '<small>' + ko(b.octets) + ' · ' + (b.utilisePar.length ? 'sert à ' + esc(b.utilisePar.slice(0, 4).join(', ')) + (b.utilisePar.length > 4 ? ' +' + (b.utilisePar.length - 4) : '') : 'ne sert plus') + (b.coupe ? ' · coupé' : '') + '</small></span>'
             + '<span class="act"><button class="bas" data-bion-maj="' + esc(b.nom) + '" aria-label="mettre à jour">⟳</button>' + (b.utilisePar.length ? '' : '<button class="bas danger" data-bion-retirer="' + esc(b.nom) + '" aria-label="retirer">🗑</button>')
             + '<input type="checkbox" data-bion-on="' + esc(b.nom) + '"' + (b.coupe ? '' : ' checked') + ' aria-label="allumé"></span></div>').join('')
-          + '<div class="l"><span>Fournis par l\'app<small>' + FOURNIS_APP.join(' · ') + '</small></span></div></div>')
+          + '<div class="l"><span class="ic">⚡</span><span>jOSNatif · le bion natif<small>' + esc((W.jOSNatif ? W.jOSNatif.capacites() : []).join(' · ') || 'non chargé') + ' — un seul bion, toutes les capacités de l\'iPhone, pour tous les ploxions</small></span></div>'
+          + PLUGIONS.map(pg => '<div class="l"><span class="ic">🔌</span><span>plugion · ' + esc(pg.bion) + '<small>' + esc(pg.quoi) + (W[pg.bion] ? (W[pg.bion].__plugion ? ' · branché' : ' · en attente') : ' · bion pas encore chargé') + '</small></span></div>').join('')
+          + '<div class="l"><span>Fournis par l\'app<small>' + FOURNIS_APP.join(' · ') + ' · jOSNatif</small></span></div></div>')
         + section('faceid', 'Face ID', '<div class="bloc">' + (verrous.length ? verrous.map(id => { const p = cat.find(x => x.id === id) || { nom: id, icone: '🔒' }; return '<div class="l"><span>' + esc(p.icone + ' ' + p.nom) + '</span><button data-deverrou="' + esc(id) + '">retirer le verrou</button></div>'; }).join('') : '<div class="l"><span>Aucun ploxion verrouillé<small>appui long sur un ploxion › verrouiller</small></span></div>') + '</div>')
         + section('donnees', 'Données', '<div class="bloc"><div class="l"><span>Réponses gardées pour le mode avion<small>' + nRoutes + ' route' + (nRoutes > 1 ? 's' : '') + '</small></span><button data-a="routes">vider</button></div>'
           + '<div class="l"><span>Réinitialiser les réglages<small>accueil, HUD, apparence, verrous… (tes ploxions, tes tsoins et ton compte restent)</small></span><button class="danger" data-a="reset">réinitialiser</button></div></div>')
