@@ -87,3 +87,15 @@ Le vrai mode xerboxion = des pages d'écran d'accueil faites d'icônes de ploxio
 13. **Les actions Raccourcis = des ploxions aussi** : chaque action (App Intent) est déclarée dans l'app ; les ajouter au vol n'est pas possible (iOS les lit à la compilation). La voie : un petit nombre d'actions GÉNÉRIQUES (ouvrir un ploxion, envoyer un port à un ploxion `ploxion.port(payload)`, lire la valeur d'un bion, noter un tsoin, lancer un tsoin rejouable) ; le marketplace propose des **recettes** (un raccourci tout fait = une suite de ces actions avec ses paramètres, partageable en lien iCloud) : « le marketplace des raccourcis ».
 14. **Le vu du xerboxion (vision de ce qu'on regarde)** : un bion `jOSVu` (journal de visionnage : titre, source, durée, quand) alimenté par les ploxions médias (YouTube, Stremio, cinéma) ; Trakt en adaptateur (API OAuth, l'historique Netflix/Disney y arrive via ses intégrations) ; l'export Netflix (CSV) en import. Un ploxion « 👁 vu » : la frise, les heures par source, ce qui reste à finir. Rien ne sort du boxion (degré O par défaut).
 15. **Les réglages de ploxi0n** : un ploxion interne ⚙ toujours accessible (HUD) : compte, mode connecté, verrous Face ID, pages, vue du marketplace, version et banc ; **le HUD se compose** (quels éléments, dans quel ordre : compte, réseau, mode, heure, des ploxions épinglés).
+
+## Posé (suite, 12.10) : le trackpad haptique
+
+- « Le but, ce serait par la suite de faire un truc un peu haptique, genre **comme un trackpad**, et avec les haptiques **on peut ressentir les commandes qu'on veut faire**. »
+- « Ça, c'est un truc qui sera **inutile au début**, parce que tu ne connais pas encore **le pattern haptique des applis** ; mais **à force, ça va venir**, et au bout d'un moment tu pourras **juste utiliser le trackpad pour toutes les actions**, parce que tu sais comment les haptiques fonctionnent. »
+
+## Lecture (suite)
+
+16. **Le trackpad haptique = une langue qu'on apprend avec la main** : une surface (le bas de l'écran, au pouce : la télécommande) où le doigt glisse sans regarder ; chaque zone, chaque direction, chaque action a SA signature haptique (les motifs du studio 🫧) — on sent ce qu'on va faire AVANT de le faire (un cran = « tu es sur ouvrir », un battement = « portion »), et on valide en levant le doigt.
+    - **Le pattern haptique des applis** : chaque ploxion publie ses actions avec leur motif (comme ses App Intents) ; ploxi0n les range sur le trackpad. Au début, des libellés s'affichent sous le doigt (on apprend) ; plus on s'en sert, plus ils s'effacent — le tsoin engine mesure ce qui est appris (les gestes réussis sans regarder) et retire l'aide visuelle geste par geste.
+    - **Toutes les actions** : à terme, le trackpad pilote tout (ouvrir, basculer, chercher, les actions des ploxions, les tsoins) — l'écran devient facultatif ; même chose sur la montre, le casque VR, un vrai trackpad (le xer de bureau) : la même langue haptique partout (« le xer fractal du ploxion »).
+    - Les briques existent déjà : jOSNatif.vibrer / haptique (motifs, événements), les gestes des bords, l'appui long = clic droit.

@@ -98,6 +98,7 @@
 | ✅ 0.13 | Le **droit au silence** appliqué : ce qu'un ploxion accroche à la page se cache, revient et part avec lui | le carré lilas flottant |
 | ✅ 0.14 | **Appui long** sur un ploxion : ouvrir, épingler au dock (et au widget), sur l'écran d'accueil de l'iPhone, déplacer vers une page ou un dossier d'un toucher, Face ID, retirer | |
 | ✅ 0.14 | **Plus de zooms** : viewport fixé (gardé contre les bions), pas de double-tap, champs à 16 px | |
+| 💭 | **Le trackpad haptique** : une surface au pouce où l'on SENT les commandes (chaque action, son motif) ; une langue qui s'apprend, l'aide visuelle s'efface à mesure, puis on fait tout sans regarder (plan-suite 16) | RS-7 12.10 |
 | ⏭ | Glisser-déposer une tuile (vers le dock, vers une autre page) | |
 | ⏭ | Deux ploxions côte à côte (iPad, iPhone en paysage) ; **fill the gaps** dans l'app (jOSGaps) | |
 | 💭 | Le **cube** / la carte géante des apps (vision originelle 14.09) comme accueil alternatif | |
