@@ -4,7 +4,7 @@ name: TestFlight testeurs et infos
 on:
   workflow_dispatch:
     inputs:
-      lane: { description: 'testeurs ou capabilities', default: 'testeurs' }
+      lane: { description: 'testeurs, capabilities ou crashs', default: 'testeurs' }
 jobs:
   testeurs:
     runs-on: ubuntu-latest

@@ -25,14 +25,30 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // DIRECTEMENT d'un toucher ; les ploxions et leurs bions (le « clic rapide » de _toucher, les cartes du swipe…) annulent souvent le
         // toucher et donnent le focus un instant après → pas de clavier. Comme Cordova / Ionic (KeyboardDisplayRequiresUserAction=false) :
         // tout focus compte comme venu de l'utilisateur. Interrupteur : UserDefaults « CapacitorStorage.ploxi0n.clavier-libre » = "off".
-        if UserDefaults.standard.string(forKey: "CapacitorStorage.ploxi0n.clavier-libre") != "off" { AppDelegate.clavierSansGeste() }
+        // LA BOÎTE NOIRE (RS-7 12.10 : « ça crash quand j'ouvre, des fois deux fois d'affilée ») : « en-cours » ici, « ok » quand la page a fini
+        // de démarrer (main.js) ; un lancement resté « en-cours » = un plantage. Après 2 plantages d'affilée : le MODE SÛR — sans le correctif
+        // clavier (une méthode privée de WebKit) ni la copie vers les widgets (les deux suspects natifs) ; la page le dit et propose bother me.
+        let d = UserDefaults.standard
+        var plantages = d.integer(forKey: "ploxi0n.plantages")
+        plantages = d.string(forKey: "CapacitorStorage.ploxi0n.lancement") == "en-cours" ? plantages + 1 : 0
+        d.set(plantages, forKey: "ploxi0n.plantages")
+        d.set(String(plantages), forKey: "CapacitorStorage.ploxi0n.plantages")
+        d.set("en-cours", forKey: "CapacitorStorage.ploxi0n.lancement")
+        let sur = plantages >= 2
+        d.set(sur ? "1" : "0", forKey: "CapacitorStorage.ploxi0n.mode-sur")
+        if !sur && d.string(forKey: "CapacitorStorage.ploxi0n.clavier-libre") != "off" { AppDelegate.clavierSansGeste() }
         // LE SON (RS-7 12.10 : « améliorer le lecteur, utiliser les trucs natifs ») : la catégorie « lecture » d'iOS — le son des ploxions
         // continue écran verrouillé et joue même en mode silencieux, comme une vraie app de musique ou de vidéo (avec UIBackgroundModes audio)
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [.allowAirPlay])
         // les WIDGETS (extension PloxionWidgets) lisent l'App Group : chaque fois que l'app réécrit ses Préférences, on y recopie les
         // ploxions épinglés et les valeurs, et on redessine les widgets seulement si quelque chose a changé
-        NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in self?.versLesWidgets() }
-        versLesWidgets()
+        // hors du chemin critique du lancement (le premier dessin d'abord) ; jamais en mode sûr
+        if !sur {
+            DispatchQueue.main.async { [weak self] in
+                NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in self?.versLesWidgets() }
+                self?.versLesWidgets()
+            }
+        }
         return true
     }
 
@@ -49,7 +65,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         method_setImplementation(methode, imp_implementationWithBlock(remplacante))
     }
 
+    private var enCopie = false   // la copie écrit elle-même des préférences : jamais de réentrance
     private func versLesWidgets() {
+        if enCopie { return }
+        enCopie = true
+        defer { enCopie = false }
         // l'état de la copie, lisible par l'app (⚙ › À propos) : RS-7 12.10, les widgets restaient vides — on saura pourquoi
         let ecrireEtat: ([String: Any]) -> Void = { etat in
             if let d = try? JSONSerialization.data(withJSONObject: etat), let s = String(data: d, encoding: .utf8),

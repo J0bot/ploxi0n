@@ -130,6 +130,24 @@ platform :ios do
     UI.success("#{caps.size} capabilities sur #{APP_ID} : #{caps.join(', ')}")
   end
 
+  desc "Les plantages partagés depuis TestFlight (12.10 : « ça crash quand j'ouvre ») : les 8 derniers, avec le début de leur journal"
+  lane :crashs do
+    app_store_connect_api_key(key_id: ENV["ASC_KEY_ID"], issuer_id: ENV["ASC_ISSUER_ID"], key_content: ENV["ASC_KEY_P8"], in_house: false)
+    app = asc(:get, "apps?filter[bundleId]=#{APP_ID}")["data"].first || UI.user_error!("app #{APP_ID} absente")
+    l = asc(:get, "apps/#{app['id']}/betaFeedbackCrashSubmissions?limit=8&sort=-createdDate")["data"] rescue (UI.important("API des plantages indisponible : #{$!.message}"); [])
+    UI.message("#{l.size} plantage(s) partagé(s)")
+    l.each do |c|
+      a = c["attributes"] || {}
+      UI.header("#{a['createdDate']} · #{a['deviceModel']} · iOS #{a['osVersion']} · build #{a['buildBundleId']} — #{a['comment']}")
+      begin
+        log = asc(:get, "betaFeedbackCrashSubmissions/#{c['id']}/crashLog").dig("data", "attributes", "logText").to_s
+        puts log.lines.first(90).join
+      rescue => e
+        UI.important("journal : #{e.message}")
+      end
+    end
+  end
+
   desc "Crée le groupe de testeurs internes et invite TESTFLIGHT_EMAIL (sans build : tourne sur Linux)"
   lane :testeurs do
     app_store_connect_api_key(key_id: ENV["ASC_KEY_ID"], issuer_id: ENV["ASC_ISSUER_ID"], key_content: ENV["ASC_KEY_P8"], in_house: false)

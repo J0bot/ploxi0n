@@ -25,7 +25,7 @@ import { installerClavierIos, barreClavier, comprendre } from './natif/clavier-i
 import { trouverPloxion } from './natif/vocabulaire.js';
 import { creerVocal } from './natif/vocal.js';
 
-const VERSION = '0.28.0';
+const VERSION = '0.29.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -238,6 +238,19 @@ async function demarrer() {
   }
   hud.surChangement(() => publierValeurs().catch(() => {}));
   await majAccueil();
+  // la boîte noire (AppDelegate) : la page a fini de démarrer → « ok » ; un lancement planté avant est signalé (et le mode sûr)
+  try {
+    const { Preferences } = await import('@capacitor/preferences');
+    const n = +((await Preferences.get({ key: 'ploxi0n.plantages' })).value || 0), sur = (await Preferences.get({ key: 'ploxi0n.mode-sur' })).value === '1';
+    await Preferences.set({ key: 'ploxi0n.lancement', value: 'ok' });
+    if (n > 0) {
+      await boxion.append('tsoins', { kind: 'app', action: 'plantage-au-lancement', n, sur }).catch(() => {});
+      const b = document.createElement('div'); b.className = 'px-bulle';
+      b.innerHTML = '⚠ ploxi0n a planté ' + n + ' fois au lancement' + (sur ? ' — <b>mode sûr</b> (clavier et widgets en pause)' : '') + '. <u data-rapport>envoyer à bother me</u>';
+      racine.appendChild(b); setTimeout(() => b.remove(), 9000);
+      b.addEventListener('click', () => { b.remove(); routeurProxy.ouvrir('bother', { texte: 'ploxi0n ' + VERSION + ' : ' + n + ' plantage(s) au lancement' + (sur ? ', mode sûr' : '') + ' — ' + navigator.userAgent }); });
+    }
+  } catch (e) { /* hors iPhone */ }
   // un ploxion a navigué la page vers /px/<id>?… (labo) : l'app s'est rechargée là — on rouvre CE ploxion, avec ses paramètres
   const chemin = location.pathname.match(/^\/px\/([^/?#]+)/);
   if (chemin) {
