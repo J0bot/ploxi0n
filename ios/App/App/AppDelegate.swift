@@ -2,6 +2,7 @@ import UIKit
 import Capacitor
 import WidgetKit
 import AVFoundation
+import Speech
 import WebKit
 import ObjectiveC
 
@@ -91,7 +92,72 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 // Le contrôleur de la vue web (Main.storyboard → PloxionVC) : quand ⚙ › Apparence › Plein écran est allumé (Préférences « ploxi0n.plein-ecran » = "1") :
 //   l'indicateur d'accueil (la barre du bas) s'efface tant qu'on ne touche pas l'écran ; les bords HAUT et BAS donnent la priorité à
 //   l'app (un premier glissé va aux ploxions, un second à iOS : l'accueil, le centre de notifications). La barre d'état : le plugin StatusBar.
+// 🎙 LES VOCAUX (RS-7 12.10 : « j'aime beaucoup faire des vocaux, mais je veux aussi une transcription de ce que je raconte ») : un plugin de
+// l'app (enregistré par PloxionVC) — enregistrer (AVAudioRecorder, m4a), arrêter, transcrire avec la reconnaissance vocale d'iOS, sur le
+// téléphone quand il le peut ; le VOCABULAIRE du xerboxion (ploxion, tsoin, xeroction…) est donné comme mots à privilégier (contextualStrings).
+@objc(PloxiVocal)
+public class PloxiVocal: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "PloxiVocal"
+    public let jsName = "PloxiVocal"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "commencer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "arreter", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "transcrire", returnType: CAPPluginReturnPromise),
+    ]
+    private var enregistreur: AVAudioRecorder?
+    private var debut = Date()
+
+    @objc func commencer(_ call: CAPPluginCall) {
+        AVAudioSession.sharedInstance().requestRecordPermission { ok in
+            guard ok else { call.reject("micro refusé : Réglages iOS › ploxi0n › Micro"); return }
+            DispatchQueue.main.async {
+                do {
+                    try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+                    try AVAudioSession.sharedInstance().setActive(true)
+                    let url = FileManager.default.temporaryDirectory.appendingPathComponent("vocal-\(Int(Date().timeIntervalSince1970)).m4a")
+                    let r = try AVAudioRecorder(url: url, settings: [AVFormatIDKey: Int(kAudioFormatMPEG4AAC), AVSampleRateKey: 44100, AVNumberOfChannelsKey: 1, AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue])
+                    r.record(); self.enregistreur = r; self.debut = Date()
+                    call.resolve(["chemin": url.path])
+                } catch { call.reject("enregistrement impossible : \(error.localizedDescription)") }
+            }
+        }
+    }
+
+    @objc func arreter(_ call: CAPPluginCall) {
+        guard let r = enregistreur else { call.reject("aucun enregistrement en cours"); return }
+        r.stop(); enregistreur = nil
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [.allowAirPlay])
+        let data = (try? Data(contentsOf: r.url)) ?? Data()
+        call.resolve(["chemin": r.url.path, "duree": Date().timeIntervalSince(debut), "base64": data.base64EncodedString(), "type": "audio/mp4"])
+    }
+
+    @objc func transcrire(_ call: CAPPluginCall) {
+        guard let chemin = call.getString("chemin") else { call.reject("chemin manquant"); return }
+        let langue = call.getString("langue") ?? Locale.current.identifier
+        let mots = call.getArray("vocabulaire", String.self) ?? []
+        SFSpeechRecognizer.requestAuthorization { statut in
+            guard statut == .authorized else { call.reject("reconnaissance vocale refusée : Réglages iOS › ploxi0n"); return }
+            guard let rec = SFSpeechRecognizer(locale: Locale(identifier: langue)) ?? SFSpeechRecognizer(), rec.isAvailable else { call.reject("reconnaissance vocale indisponible pour \(langue)"); return }
+            let req = SFSpeechURLRecognitionRequest(url: URL(fileURLWithPath: chemin))
+            req.contextualStrings = Array(mots.prefix(100))
+            req.shouldReportPartialResults = false
+            if rec.supportsOnDeviceRecognition { req.requiresOnDeviceRecognition = true }
+            var fini = false
+            rec.recognitionTask(with: req) { res, err in
+                if fini { return }
+                if let err = err { fini = true; call.reject("transcription : \(err.localizedDescription)"); return }
+                guard let res = res, res.isFinal else { return }
+                fini = true
+                call.resolve(["texte": res.bestTranscription.formattedString, "langue": langue, "surLeTelephone": req.requiresOnDeviceRecognition])
+            }
+        }
+    }
+}
+
 class PloxionVC: CAPBridgeViewController {
+    override func capacitorDidLoad() {
+        bridge?.registerPluginInstance(PloxiVocal())
+    }
     private var plein: Bool { UserDefaults.standard.string(forKey: "CapacitorStorage.ploxi0n.plein-ecran") == "1" }
     override var prefersHomeIndicatorAutoHidden: Bool { plein }
     override var preferredScreenEdgesDeferringSystemGestures: UIRectEdge { plein ? [.bottom, .top] : [] }

@@ -15,7 +15,7 @@ const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
   + R.map(r => `M512 ${512 - r}L${512 + r} 512L512 ${512 + r}L${512 - r} 512Z`).join('') + '"/></svg>';
 
-export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null } = {}) {
+export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null } = {}) {
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
   // PLUSIEURS PLOXIONS VIVANTS (RS-7 12.10 : « pouvoir ouvrir des ploxions depuis des ploxions, et pouvoir minimiser un ploxion ») :
@@ -300,6 +300,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (b.hasAttribute('data-compte')) { if (hud) hud.ouvrir(); return; }
     if (b.hasAttribute('data-reglages')) return ouvrir('reglages-app');
     if (b.hasAttribute('data-chercher')) return ouvrir('marketplace', { chercher: '1' });
+    if (b.hasAttribute('data-vocal')) return surVocal ? surVocal() : null;
     if (b.hasAttribute('data-hud-px')) return ouvrir(b.getAttribute('data-hud-px'));
     if (b.hasAttribute('data-edition')) { edition = !edition; return accueil(); }
     if (b.hasAttribute('data-vue-accueil')) { vibrer('vue'); accueilDoc.vue = b.getAttribute('data-vue-accueil'); garder(); return accueil(); }

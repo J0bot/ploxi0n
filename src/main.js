@@ -23,8 +23,9 @@ import { creerHaptique } from './natif/haptique.js';
 import { installerImages } from './natif/images.js';
 import { installerClavierIos, barreClavier, comprendre } from './natif/clavier-ios.js';
 import { trouverPloxion } from './natif/vocabulaire.js';
+import { creerVocal } from './natif/vocal.js';
 
-const VERSION = '0.24.0';
+const VERSION = '0.25.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -150,7 +151,10 @@ async function demarrer() {
   await compte.pret; compteRef = compte;
   if (navigator.onLine !== false) compte.rafraichir().catch(() => {});   // le rang et « admin » à jour (un jeton expiré → déconnecté)
   const reglerModeConnecte = (v) => { if (v != null) { modeConnecte = !!v; boxion.put('reglages', 'mode-connecte', modeConnecte); } return modeConnecte; };
-  const hud = creerHud({ compte, boxion, trouver: (id) => routeur && routeur.catalogue().find(p => p.id === id), modeConnecte: () => modeConnecte });
+  // 🎙 les vocaux : enregistrer, transcrire (iOS, le vocabulaire du xerboxion), garder ; jOSNatif.vocal pour les ploxions
+  const vocal = creerVocal({ boxion, catalogue: () => (routeur ? routeur.catalogue() : []), vibrer: (x) => vibrer(x), ouvrir: (id, p) => routeurProxy.ouvrir(id, p), surEtat: () => routeur && routeur.rafraichirHud() });
+  window.jOSNatif.vocal = vocal.api;
+  const hud = creerHud({ compte, boxion, vocalEnCours: () => vocal.enCours(), trouver: (id) => routeur && routeur.catalogue().find(p => p.id === id), modeConnecte: () => modeConnecte });
   await hud.pret;
   // ⚙ les réglages : un ploxion interne, au bout du ⚙ de l'accueil (jamais retirable)
   // les notifications (test, et les messages de coord tant que l'app est au premier plan ; la vraie « app fermée » demande APNs)
@@ -167,7 +171,7 @@ async function demarrer() {
   // un ploxion sur l'écran d'accueil de l'iPhone (via Raccourcis) : depuis l'édition de l'accueil et la fiche du marketplace
   const ecranAccueil = creerEcranAccueil({ trouver: (id) => routeur.catalogue().find(p => p.id === id), liste: () => routeur.catalogue(), boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine) });
   window.jOSEcranAccueil = ecranAccueil;
-  routeur = creerRouteur({ racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), ouvrirExterne: (id) => routeurProxy.ouvrir(id), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}) });
+  routeur = creerRouteur({ racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id) => routeurProxy.ouvrir(id), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}) });
   const rafraichir = () => { if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); };
   compte.surChangement(rafraichir);
   hud.surChangement(() => routeur.rafraichirHud());

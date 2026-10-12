@@ -217,7 +217,7 @@ test('⚙ réglages et HUD composé : éléments, ordre, épinglés, ⚙ toujour
     for (let i = hud.config().elements.findIndex(x => x.k === 'heure'); i > 0; i--) { h.querySelector('[data-monter="' + i + '"]').click(); await attendre(20); }
     assert.equal(hud.config().elements[0].k, 'heure');
     // tout éteindre : le ⚙ reste sur l'accueil
-    for (let i = 0; i < 5; i++) { const c = h.querySelector('[data-el="' + i + '"]'); if (c.checked) { c.checked = false; c.dispatchEvent(new W.Event('change', { bubbles: true })); await attendre(20); } }
+    for (let i = 0; i < 6; i++) { const c = h.querySelector('[data-el="' + i + '"]'); if (c.checked) { c.checked = false; c.dispatchEvent(new W.Event('change', { bubbles: true })); await attendre(20); } }
     await routeur.accueil();
     assert.equal(racine.querySelector('.px-hud-c').querySelectorAll('button,span').length, 1); assert.ok(racine.querySelector('[data-reglages]'), 'on ne s\'enferme jamais dehors');
     // le mode connecté
@@ -232,7 +232,7 @@ test('⚙ réglages et HUD composé : éléments, ordre, épinglés, ⚙ toujour
     assert.equal(hb.querySelector('[data-s="compte"]').hidden, true, 'la recherche cache les sections sans rapport'); assert.equal(hb.querySelector('[data-s="bions"]').hidden, false);
     // une configuration reprise d'un ancien format, ou abîmée, se répare
     await hud.regler({ elements: [{ k: 'inconnu', on: true }, { k: 'compte', on: true }, { k: 'compte', on: false }], epingles: ['a', 'b', 'c', 'd', 'e', 3] });
-    assert.deepEqual(hud.config().elements.map(x => x.k), ['compte', 'reseau', 'heure', 'chercher', 'epingles']); assert.equal(hud.config().epingles.length, 4);
+    assert.deepEqual(hud.config().elements.map(x => x.k), ['compte', 'vocal', 'reseau', 'heure', 'chercher', 'epingles']); assert.equal(hud.config().epingles.length, 4);
   } finally { p.fin(); }
 });
 

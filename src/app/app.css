@@ -210,3 +210,4 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]
 .px-telecommande .mk>div[data-c]{flex:1}
 .px-telecommande .rg{padding-bottom:0;min-height:100%;box-sizing:border-box}
 .px-telecommande .rg>div[data-c]{flex:1;padding-bottom:16px}
+.px-h-b.px-rec{background:#3a1220;border-color:#e8708f;color:#ffb3c6;box-shadow:0 0 12px rgba(232,112,143,.45)}

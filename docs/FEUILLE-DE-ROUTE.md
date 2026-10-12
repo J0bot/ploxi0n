@@ -111,7 +111,7 @@
 | ✅ 0.24 | **Le clavier d'iOS à fond** : chaque champ reçoit les bons attributs (majuscules, correction, Entrée « Rechercher/Envoyer », claviers e-mail/URL/chiffres, trousseau des mots de passe, codes SMS) ; la barre au-dessus du clavier visible (QuickType, mots de passe, dictée) | RS-7 12.10 |
 | ✅ 0.24 | **« Dis à ploxi0n … »** (Siri) : une phrase dictée → ouvrir, chercher, noter un tsoin, accueil, minimiser | |
 | ✅ 0.24 | **Le vocabulaire du xerboxion** pour Siri : ce que Siri a cru entendre est corrigé (ploxion, xerboxion, tsoin, koin…, FR et EN), les ploxions retrouvés phonétiquement ; les phrases Siri en anglais (« Tell ploxi0n », « Open … in ploxi0n ») | iPhone en anglais |
-| ⏭ | **Les vocaux** : enregistrer, la transcription, dans pourriture-4 (le journal personnel) | RS-7 12.10 |
+| ✅ 0.25 | **🎙 Les vocaux** : le bouton du dock (enregistrer / arrêter), la transcription d'iOS sur le téléphone avec le vocabulaire du xerboxion, la feuille (tsoin, pourriture-4, copier, partager), jOSNatif.vocal pour les ploxions | RS-7 12.10 |
 | ⏭ | La dictée DANS l'app (jOSNatif.ecouter : la reconnaissance vocale d'iOS pour les ploxions) ; les commandes vocales sans Siri | |
 | ✅ 0.23 | **LE vrai coupable du clavier** : le bion jOSKeyboard (clavier maison du xer) posait inputmode="none" partout → fourni par l'app, le clavier d'iOS gagne toujours | le rapport du test clavier |
 | ✅ 0.16 | **Le clavier s'ouvre** : correctif natif (tout focus compte comme un toucher, comme Cordova/Ionic) + focus pendant le geste | RS-7 : « le clavier n'apparaît pas quand il faut » |

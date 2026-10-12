@@ -104,6 +104,8 @@
 		<key>NSAllowsArbitraryLoadsForMedia</key>
 		<true/>
 	</dict>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>ploxi0n transcrit tes vocaux en texte, sur ton téléphone quand c'est possible.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>ploxi0n utilise Face ID pour ouvrir les ploxions et les secrets que tu as verrouillés.</string>
 	<key>CFBundleURLTypes</key>
