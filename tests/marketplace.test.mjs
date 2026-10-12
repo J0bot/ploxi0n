@@ -217,7 +217,7 @@ test('⚙ réglages et HUD composé : éléments, ordre, épinglés, ⚙ toujour
     for (let i = hud.config().elements.findIndex(x => x.k === 'heure'); i > 0; i--) { h.querySelector('[data-monter="' + i + '"]').click(); await attendre(20); }
     assert.equal(hud.config().elements[0].k, 'heure');
     // tout éteindre : le ⚙ reste sur l'accueil
-    for (let i = 0; i < 6; i++) { const c = h.querySelector('[data-el="' + i + '"]'); if (c.checked) { c.checked = false; c.dispatchEvent(new W.Event('change', { bubbles: true })); await attendre(20); } }
+    for (let i = 0; i < hud.config().elements.length; i++) { const c = h.querySelector('[data-el="' + i + '"]'); if (c.checked) { c.checked = false; c.dispatchEvent(new W.Event('change', { bubbles: true })); await attendre(20); } }
     await routeur.accueil();
     assert.equal(racine.querySelector('.px-hud-c').querySelectorAll('button,span').length, 1); assert.ok(racine.querySelector('[data-reglages]'), 'on ne s\'enferme jamais dehors');
     // le mode connecté
@@ -232,7 +232,7 @@ test('⚙ réglages et HUD composé : éléments, ordre, épinglés, ⚙ toujour
     assert.equal(hb.querySelector('[data-s="compte"]').hidden, true, 'la recherche cache les sections sans rapport'); assert.equal(hb.querySelector('[data-s="bions"]').hidden, false);
     // une configuration reprise d'un ancien format, ou abîmée, se répare
     await hud.regler({ elements: [{ k: 'inconnu', on: true }, { k: 'compte', on: true }, { k: 'compte', on: false }], epingles: ['a', 'b', 'c', 'd', 'e', 3] });
-    assert.deepEqual(hud.config().elements.map(x => x.k), ['compte', 'vocal', 'reseau', 'heure', 'chercher', 'epingles']); assert.equal(hud.config().epingles.length, 4);
+    assert.deepEqual(hud.config().elements.map(x => x.k), ['compte', 'vocal', 'tsoin', 'reseau', 'heure', 'chercher', 'epingles']); assert.equal(hud.config().epingles.length, 4);
   } finally { p.fin(); }
 });
 
@@ -582,5 +582,24 @@ test('les médias du boxion : /fs/read passe par une adresse signée (vidéo en 
     assert.equal(i1.getAttribute('src'), 'https://xerboxion.org/app/m/' + 'a'.repeat(40));
     assert.equal(i2.getAttribute('src'), 'https://xerboxion.org/img/logo.png', 'un chemin public : pas de signature');
     assert.deepEqual(demandes.sort(), ['/fs/read?path=a.png', '/fs/read?path=pourriture-4/log.mp4']);
+  } finally { p.fin(); }
+});
+
+test('le tuto d\'accueil : une fois, 9 cartes au pouce, glisser pour avancer, « passer » le marque vu', async () => {
+  const { creerOnboarding } = await import('../src/app/onboarding.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w;
+  try {
+    const vib = [];
+    const t = creerOnboarding({ W, boxion: p.boxion, vibrer: (x) => vib.push(x) });
+    await t.auDemarrage();
+    const f = W.document.querySelector('.px-tuto'); assert.ok(f, 'montré au premier lancement');
+    assert.match(f.textContent, /1 \/ 9/);
+    f.querySelector('[data-t="suivant"]').click(); assert.match(f.textContent, /2 \/ 9/);
+    f.dispatchEvent(new W.MouseEvent('pointerdown', { clientX: 300 })); f.dispatchEvent(new W.MouseEvent('pointerup', { clientX: 100 }));
+    assert.match(f.textContent, /3 \/ 9/, 'glisser avance');
+    assert.ok(vib.length >= 3, 'chaque carte vibre');
+    f.querySelector('[data-t="passer"]').click(); await attendre(10);
+    assert.equal(W.document.querySelector('.px-tuto'), null);
+    await t.auDemarrage(); assert.equal(W.document.querySelector('.px-tuto'), null, 'pas deux fois');
   } finally { p.fin(); }
 });

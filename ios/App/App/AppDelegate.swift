@@ -45,7 +45,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // hors du chemin critique du lancement (le premier dessin d'abord) ; jamais en mode sûr
         if !sur {
             DispatchQueue.main.async { [weak self] in
-                NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in self?.versLesWidgets() }
+                NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in self?.planifierCopie() }
                 self?.versLesWidgets()
             }
         }
@@ -66,6 +66,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     private var enCopie = false   // la copie écrit elle-même des préférences : jamais de réentrance
+    // 0.30 — les 3 plantages partagés (build 37, iPhone14,7, iOS 26.4.2) : « Thread stack size exceeded due to excessive recursion » dans
+    // versLesWidgets ← didChangeNotification ← l'écriture de la copie elle-même. Garde de réentrance (0.29) + ici : la notification ne fait
+    // que PLANIFIER une copie (regroupée, 0,6 s), et l'état écrit ne contient plus d'heure → une copie qui ne change rien n'écrit rien,
+    // donc ne renotifie rien : la boucle ne peut plus exister, ni en récursion, ni en différé.
+    private var copiePrevue = false
+    private func planifierCopie() {
+        if enCopie || copiePrevue { return }
+        copiePrevue = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in self?.copiePrevue = false; self?.versLesWidgets() }
+    }
     private func versLesWidgets() {
         if enCopie { return }
         enCopie = true
@@ -85,7 +95,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         if change { WidgetCenter.shared.reloadAllTimelines() }
         ecrireEtat(["groupe": true, "conteneur": conteneur, "epingles": tailles["ploxi0n.epingles"] ?? -1, "valeurs": tailles["ploxi0n.valeurs"] ?? -1,
-                    "relu": g.string(forKey: "ploxi0n.epingles")?.count ?? -1, "le": Int(Date().timeIntervalSince1970)])
+                    "relu": g.string(forKey: "ploxi0n.epingles")?.count ?? -1])
     }
 
     func applicationWillResignActive(_ application: UIApplication) { versLesWidgets() }

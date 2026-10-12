@@ -17,7 +17,7 @@ const SECTIONS = [['compte', '👤', 'compte'], ['reseau', '🌐', 'réseau'], [
   ['donnees', '💾', 'données'], ['apropos', '◇', 'à propos']];
 
 export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, vibrer = () => {}, haptique = null, lecteur = null, version = '?' }) {
-  const ELS = { compte: '👤 compte', reseau: '📶 réseau et mode connecté', heure: '🕐 heure', chercher: '🔎 chercher un ploxion', epingles: '📌 ploxions épinglés' };
+  const ELS = { tsoin: '⧗ noter un tsoin', vocal: '🎙 vocal', compte: '👤 compte', reseau: '📶 réseau et mode connecté', heure: '🕐 heure', chercher: '🔎 chercher un ploxion', epingles: '📌 ploxions épinglés' };
   function mount(hote) {
     let vivant = true, q = '', composition = [];
     const R = () => routeur();
@@ -58,6 +58,8 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + seg('vue', [['grille', 'grille'], ['compacte', 'compacte'], ['liste', 'liste'], ['usage', 'usage'], ['recents', 'récents'], ['categories', 'catégories']], R().vueAccueil ? R().vueAccueil() : 'grille', 'Vue de l\'accueil')
           + seg('icones', [['petites', 'petites'], ['normales', 'normales'], ['grandes', 'grandes']], P.icones, 'Taille des icônes')
           + bascule('data-pb="pleinEcran"', !!P.pleinEcran, 'Plein écran complet', 'sans barre d\'état ; la barre du bas s\'efface ; les bords haut et bas vont d\'abord à l\'app (un 2e glissé pour iOS)')
+          + bascule('data-pb="barreHaut"', P.barreHaut !== false, 'Notre barre du haut', 'en plein écran : l\'heure, la batterie, tes tsoins… à gauche et à droite de l\'île ; appui long dessus pour la composer')
+          + '<div class="l"><span>Composer la barre du haut<small>quels éléments, à gauche ou à droite</small></span><button data-a="barre-haut">composer</button></div>'
           + bascule('data-pb="haptique"', P.haptique !== false, 'Haptique', 'de petites vibrations : ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs')
           + bascule('data-pb="grain"', P.grain, 'Patine', 'le grain usé des plaques')
           + bascule('data-pb="contraste"', P.contraste === 'fort', 'Contraste fort', 'textes et bords plus clairs')
@@ -86,13 +88,14 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         + (P ? section('navigation', 'Navigation', '<div class="bloc">'
           + bascule('data-pb="barreClavier"', P.barreClavier !== false, 'La barre au-dessus du clavier', 'QuickType, les mots de passe du trousseau, « OK » ; la dictée marche dans tous les champs')
           + bascule('data-pb="telecommande"', P.telecommande !== false, 'Télécommande', 'les barres en bas de l\'écran : tout au pouce (chill-tekk : on est tous des flemmards)')
+          + bascule('data-pb="reprendre"', P.reprendre !== false, 'Reprendre là où j\'en étais', 'après une fermeture ou un plantage : le ploxion de devant rouvert, les autres endormis 💤 dans ⧉')
           + bascule('data-pb="bords"', P.bords, 'Les bords', 'glisser depuis le bord gauche ou droit pour passer d\'une app à l\'autre')
           + bascule('data-pb="appuiLong"', P.appuiLong, 'Appui long sur l\'accueil', 'le menu d\'un ploxion (épingler, déplacer, retirer…)')
           + bascule('data-pb="clicDroit"', P.clicDroit !== false, 'Appui long = clic droit', 'dans les ploxions : leurs menus du clic droit s\'ouvrent')
           + seg('maxVivants', [[3, '3'], [5, '5'], [8, '8']], P.maxVivants, 'Ploxions vivants en arrière-plan', 'au-delà, le plus ancien se ferme') + '</div>'
           + '<p class="msg">Les gestes des bords : glisser depuis une zone d\'un bord (ou les deux bords ensemble)</p><div class="bloc">'
           + (() => { const D0 = (R().GESTES_DEFAUT || {}), G = P.gestes || {}, cat2 = R().catalogue();
-              const ACTIONS = [['precedente', '← app précédente'], ['suivante', 'app suivante →'], ['accueil', '⌂ accueil'], ['minimiser', '▁ minimiser'], ['basculer', '⧉ basculer'], ['chercher', '🔎 chercher'], ['reglages', '⚙ réglages'], ['portion', '◈ portion'], ['rien', '— rien']]
+              const ACTIONS = [['precedente', '← app précédente'], ['suivante', 'app suivante →'], ['accueil', '⌂ accueil'], ['minimiser', '▁ minimiser'], ['basculer', '⧉ basculer'], ['chercher', '🔎 chercher'], ['reglages', '⚙ réglages'], ['portion', '◈ portion'], ['tsoin', '⧗ noter un tsoin'], ['rien', '— rien']]
                 .concat(cat2.filter(p => !p.interne).slice(0, 60).map(p => ['ouvrir:' + p.id, '▶ ' + (p.nom || p.id)]));
               const ZONES = [['g-haut', 'gauche · haut'], ['g-milieu', 'gauche · milieu'], ['g-bas', 'gauche · bas'], ['d-haut', 'droit · haut'], ['d-milieu', 'droit · milieu'], ['d-bas', 'droit · bas'], ['deux-haut', 'les deux · haut'], ['deux-milieu', 'les deux · milieu'], ['deux-bas', 'les deux · bas']];
               return ZONES.map(([z, n]) => { const v = G[z] || D0[z] || 'rien'; return '<div class="l"><span>' + esc(n) + '</span><select data-geste="' + z + '" style="max-width:52%;background:var(--surface2,#151021);color:inherit;border:2px solid var(--bord,#272036);border-radius:10px;padding:6px;font:13px inherit">'
@@ -119,6 +122,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         + section('donnees', 'Données', '<div class="bloc"><div class="l"><span>Réponses gardées pour le mode avion<small>' + nRoutes + ' route' + (nRoutes > 1 ? 's' : '') + '</small></span><button data-a="routes">vider</button></div>'
           + '<div class="l"><span>Réinitialiser les réglages<small>accueil, HUD, apparence, verrous… (tes ploxions, tes tsoins et ton compte restent)</small></span><button class="danger" data-a="reset">réinitialiser</button></div></div>')
         + section('apropos', 'À propos', '<div class="bloc"><div class="l"><span>ploxi0n ' + esc(version) + '<small>' + esc(W.navigator.onLine !== false ? 'en ligne' : 'hors ligne') + ' · cycle ' + (new Date().getFullYear() + 5000) + '</small></span></div>'
+          + '<div class="l"><span>🧭 Le tuto d\'accueil<small>les gestes et les features, en 9 cartes</small></span><button data-a="tuto">revoir</button></div>'
           + '<div class="l"><span>▦ Widgets<small data-widgets-etat>…</small></span><button data-a="widgets">rafraîchir</button></div>'
           + '<div class="l"><span>⌨ Tester le clavier<small>si le clavier ne s\'ouvre pas : le rapport dit où ça casse</small></span><button class="p" data-a="clavier">tester</button></div>'
           + '<div class="l"><span>🧪 Banc iPhone</span><button data-ouvrir="banc">ouvrir</button></div><div class="l"><span>🐛 Bother me (un souci, une idée)</span><button data-ouvrir="bother">ouvrir</button></div></div>')
@@ -186,7 +190,9 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       const a = b.getAttribute('data-a'); if (!a) return;
       b.disabled = true;
       try {
-        if (a === 'widgets') { if (W.ploxi0nWidgets) { await W.ploxi0nWidgets.publier(); await new Promise(r => W.setTimeout(r, 700)); } await peindre(); msg('✓ republié : regarde tes widgets (iOS peut prendre quelques secondes)'); }
+        if (a === 'barre-haut') { if (W.ploxi0nBarreHaut) W.ploxi0nBarreHaut.composer(); }
+        else if (a === 'tuto') { if (W.ploxi0nTuto) W.ploxi0nTuto.montrer(); }
+        else if (a === 'widgets') { if (W.ploxi0nWidgets) { await W.ploxi0nWidgets.publier(); await new Promise(r => W.setTimeout(r, 700)); } await peindre(); msg('✓ republié : regarde tes widgets (iOS peut prendre quelques secondes)'); }
         else if (a === 'clavier') { await testerClavier({ W, version }); }
         else if (a === 'notif') { await notifs.tester(); msg('✓ elle arrive dans 5 secondes'); }
         else if (a === 'apps') { if (W.jOSEcranAccueil) await W.jOSEcranAccueil(); }

@@ -15,7 +15,7 @@ const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
   + R.map(r => `M512 ${512 - r}L${512 + r} 512L512 ${512 + r}L${512 - r} 512Z`).join('') + '"/></svg>';
 
-export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null } = {}) {
+export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null } = {}) {
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
   // PLUSIEURS PLOXIONS VIVANTS (RS-7 12.10 : « pouvoir ouvrir des ploxions depuis des ploxions, et pouvoir minimiser un ploxion ») :
@@ -26,6 +26,19 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   const maxVivants = () => Math.max(1, Math.min(8, +prefs().maxVivants || 5));
   let courant = null;     // l'instance visible
   const vivants = new Map(); let pile = [];
+  // LA SESSION (RS-7 12.10 : « quand on ferme l'app ou qu'elle crash, on ne retrouve jamais les apps ouvertes avant ») : à chaque changement,
+  // { vivants: [{ id, params }], courant, pile } part à surSession (boxion_local « reglages/session ») ; au lancement, restaurer() rouvre le
+  // ploxion qui était devant, et les autres reviennent ENDORMIS : dans ⧉ et sous les bords, montés seulement quand on y va (la mémoire).
+  let endormis = [], minuteSession = null;
+  function noterSession() {
+    if (!surSession) return;
+    if (minuteSession) W.clearTimeout(minuteSession);
+    minuteSession = W.setTimeout(() => {
+      minuteSession = null;
+      const petit = (x) => { try { return x && JSON.stringify(x).length < 4000 ? x : null; } catch (e) { return null; } };
+      try { surSession({ vivants: [...[...vivants.values()].map(v => ({ id: v.id, params: petit(v.params) })), ...endormis.map(e => ({ id: e.id, params: e.params }))], courant: courant ? courant.id : null, pile: pile.slice(), le: Date.now() }); } catch (e) { /* */ }
+    }, 250);
+  }
   racine.innerHTML = ''; racine.classList.add('px-mode-accueil');
   const ecran = D.createElement('div'); ecran.className = 'px-ecran';
   const scene = D.createElement('div'); scene.className = 'px-scene';
@@ -38,15 +51,16 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   // LES GESTES DES BORDS (RS-7 12.10 : « pas seulement sur le milieu, mais sur les bords aussi, pour des actions différentes ») : chaque bord a
   // trois zones (haut, milieu, bas) ; les deux bords ensemble aussi — chaque geste fait l'action choisie (⚙ › Navigation, prefs().gestes)
   const GESTES_DEFAUT = { 'g-haut': 'accueil', 'g-milieu': 'precedente', 'g-bas': 'basculer', 'd-haut': 'chercher', 'd-milieu': 'suivante', 'd-bas': 'minimiser',
-    'deux-haut': 'reglages', 'deux-milieu': 'portion', 'deux-bas': 'rien' };
+    'deux-haut': 'reglages', 'deux-milieu': 'portion', 'deux-bas': 'tsoin' };
   const geste = (k) => { const g = prefs().gestes || {}; return g[k] || GESTES_DEFAUT[k]; };
   function faire(action) {
     if (!action || action === 'rien') return;
     if (action === 'precedente' || action === 'suivante') { if (vivants.size) aCote(action === 'suivante' ? 1 : -1); return; }
     if (action === 'accueil') { if (courant) { cacher(courant); courant = null; } pile = []; vibrer('bord'); return accueil(); }
     if (action === 'minimiser') return courant ? minimiser() : null;
-    if (action === 'basculer') return vivants.size ? basculer() : null;
+    if (action === 'basculer') return vivants.size + endormis.length ? basculer() : null;
     vibrer(action === 'portion' ? 'portion' : 'bord');
+    if (action === 'tsoin') return tsoin ? tsoin() : null;
     if (action === 'chercher') return ouvrir('marketplace', { chercher: '1' });
     if (action === 'reglages') return ouvrir('reglages-app');
     if (action === 'portion') return doubleBord ? doubleBord() : (ouvrirExterne && ouvrirExterne('portion'));
@@ -86,7 +100,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   function accrochesDe(id, f) { for (const [n, x] of accroches) if (x === id) f(n); }
   /** passer à l'app d'à côté : sens +1 (suivante), -1 (précédente) ; l'accueil est au bout de la file */
   function aCote(sens) {
-    const file = [null, ...vivants.keys()];
+    const file = [null, ...vivants.keys(), ...endormis.map(e => e.id)];
     const i = file.indexOf(courant ? courant.id : null);
     const cible = file[(i + sens + file.length) % file.length];
     if (cible === (courant ? courant.id : null)) return false;
@@ -94,6 +108,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (courant) { cacher(courant); courant = null; }
     pile = [];
     if (cible == null) { accueil(); return true; }
+    if (!vivants.has(cible)) { reveiller(cible); return true; }
     montrer(vivants.get(cible));
     return true;
   }
@@ -137,7 +152,9 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   const dansDossier = () => new Set([...accueilDoc.dossiers.flatMap(d => d.ids), ...accueilDoc.pages.flatMap(pg => pg.ids)]);
 
   function vueAccueil() { racine.classList.add('px-mode-accueil'); racine.classList.remove('px-mode-ploxion'); majBords(); }
-  function majBords() { racine.classList.toggle('px-a-vivants', vivants.size > 0); }
+  function majBords() { racine.classList.toggle('px-a-vivants', vivants.size + endormis.length > 0); noterSession(); }
+  /** un endormi (restauré de la dernière session) : monté maintenant, avec ses paramètres */
+  function reveiller(id) { const e = endormis.find(x => x.id === id); endormis = endormis.filter(x => x.id !== id); return ouvrir(id, e ? e.params : null); }
   function arriere() {
     const l = [...vivants.values()].filter(v => v !== courant);
     if (!l.length) return '';
@@ -167,7 +184,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     return [...groupes.entries()].sort((a, b) => b[1].l.length - a[1].l.length).map(([k, g]) => '<h2 class="px-titre-page">' + texte(g.icone + ' ' + k) + ' · ' + g.l.length + '</h2><div class="px-grille px-cat">' + g.l.map(tuile).join('') + '</div>').join('');
   }
   async function accueil() {
-    fermer();
+    fermer(); noterSession();
     vueAccueil();
     await pret;
     const tous = [...parId.values()];
@@ -301,6 +318,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (b.hasAttribute('data-reglages')) return ouvrir('reglages-app');
     if (b.hasAttribute('data-chercher')) return ouvrir('marketplace', { chercher: '1' });
     if (b.hasAttribute('data-vocal')) return surVocal ? surVocal() : null;
+    if (b.hasAttribute('data-tsoin')) return tsoin ? tsoin() : null;
     if (b.hasAttribute('data-hud-px')) return ouvrir(b.getAttribute('data-hud-px'));
     if (b.hasAttribute('data-edition')) { edition = !edition; return accueil(); }
     if (b.hasAttribute('data-vue-accueil')) { vibrer('vue'); accueilDoc.vue = b.getAttribute('data-vue-accueil'); garder(); return accueil(); }
@@ -334,7 +352,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     accrochesDe(id, n => { accroches.delete(n); try { n.remove(); } catch (e) { /* */ } });
   }
   function barre(p, id) {
-    const autres = vivants.size - 1;
+    const autres = vivants.size - 1 + endormis.length;
     ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">‹</button><span>' + texte((p.icone || '') + ' ' + (p.nom || id)) + '</span>'
       + '<span class="px-hud"><span class="px-hud-c">' + (hud ? hud.html(true) : '') + '</span>'
       + (autres > 0 ? '<button class="px-mini" data-basculer aria-label="basculer entre les ploxions ouverts">⧉<b>' + (autres + 1) + '</b></button>' : '')
@@ -362,6 +380,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     await pret;
     const p = parId.get(id);
     if (courant && courant.id === id && !params) return true;
+    endormis = endormis.filter(x => x.id !== id);
     if (verrous.has(id) && !(vivants.has(id)) && !(verrou && await verrou.ouvrir('Ouvrir ' + (p.nom || id)))) {
       if (!courant) { racine.classList.add('px-mode-ploxion'); racine.classList.remove('px-mode-accueil'); ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">‹</button><span>🔒 ' + texte(p.nom || id) + '</span></div><p class="px-erreur">Ce ploxion ne s\'ouvre qu\'avec ton visage.<br><small>' + texte(raisonFaceId()) + '</small></p><p class="px-pad"><button class="px-modif" data-reessayer="' + texte(id) + '">réessayer</button></p>'; }
       return false;
@@ -374,7 +393,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     while (vivants.size >= maxVivants()) { const vieux = [...vivants.values()].sort((a, b) => a.vu - b.vu)[0]; tuer(vieux.id); }
     vibrer('ouvrir', id);
     const hote = D.createElement('div'); hote.className = 'px-hote'; hote.dataset.ploxion = id; scene.appendChild(hote);
-    const v = { id, inst: {}, hote, debut: 0, vu: Date.now() };
+    const v = { id, inst: {}, hote, debut: 0, vu: Date.now(), params: params || null };
     vivants.set(id, v); montrer(v);
     try {
       const app = await charger(id);
@@ -399,23 +418,35 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     return accueil();
   }
   /** ▁ : le ploxion visible reste vivant, en arrière-plan ; l'accueil revient */
-  function minimiser() { vibrer('minimiser'); if (courant) { cacher(courant); courant = null; } pile = []; return accueil(); }
+  function minimiser() { vibrer('minimiser'); if (courant) { cacher(courant); courant = null; } pile = []; noterSession(); return accueil(); }
   /** ⧉ : la liste des ploxions vivants, pour passer de l'un à l'autre */
   function basculer() {
     const f = D.createElement('div'); f.className = 'px-voile';
     f.innerHTML = '<div class="px-tiroir"><p class="px-ft">⧉ ouverts</p>' + [...vivants.values()].sort((a, b) => b.vu - a.vu).map(v => { const p = parId.get(v.id) || { nom: v.id };
       return '<button data-b="' + texte(v.id) + '"' + (v === courant ? ' class="on"' : '') + '><span class="px-ic" style="--t:' + teinte(v.id) + '">' + texte(p.icone || '▣') + '</span> ' + texte(p.nom || v.id) + (v === courant ? ' · ici' : '') + '</button>'; }).join('')
+      + endormis.map(e => { const p = parId.get(e.id) || { nom: e.id }; return '<button data-b="' + texte(e.id) + '" class="px-endormi"><span class="px-ic" style="--t:' + teinte(e.id) + '">' + texte(p.icone || '▣') + '</span> ' + texte(p.nom || e.id) + ' · 💤</button>'; }).join('')
+      + (endormis.length ? '<button data-oublier>oublier les 💤</button>' : '')
       + '<button data-b="">fermer</button></div>';
     racine.appendChild(f);
     f.addEventListener('click', (e) => {
+      if (e.target.closest('[data-oublier]')) { e.stopPropagation(); f.remove(); endormis = []; majBords(); return courant ? barre(parId.get(courant.id) || { nom: courant.id }, courant.id) : accueil(); }
       const b = e.target.closest('[data-b]'); if (!b && e.target !== f) return;
       e.stopPropagation(); f.remove();
-      const id = b && b.getAttribute('data-b'); if (id && (!courant || courant.id !== id)) ouvrir(id);
+      const id = b && b.getAttribute('data-b'); if (id && (!courant || courant.id !== id)) { if (endormis.some(x => x.id === id)) reveiller(id); else ouvrir(id); }
     });
   }
 
   return {
     accueil, ouvrir, fermer, charger, retour, minimiser, aCote, faire, GESTES_DEFAUT,
+    endormis: () => endormis.map(e => e.id),
+    /** la dernière session : le ploxion de devant rouvert, les autres endormis (montés quand on y va) */
+    async restaurer(sess, { devant = true } = {}) {
+      const l = (sess && Array.isArray(sess.vivants) ? sess.vivants : []).filter(x => x && parId.has(x.id));
+      endormis = l.filter(x => !devant || x.id !== sess.courant).slice(0, 12).map(x => ({ id: x.id, params: x.params || null }));
+      majBords();
+      if (devant && sess.courant && parId.has(sess.courant)) { const e = l.find(x => x.id === sess.courant); return ouvrir(sess.courant, e && e.params); }
+      return accueil();
+    },
     vivants: () => [...vivants.keys()], pile: () => pile.slice(),
     connait: (id) => parId.has(id), courant: () => (courant ? courant.id : null),
     majCatalogue(liste) { parId = new Map(liste.map(p => [p.id, p])); },

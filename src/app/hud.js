@@ -6,8 +6,8 @@
 //   epingles = au plus 4 ploxions, une icône chacun, ouverts d'un geste. ⚙ (les réglages) est toujours là : on ne s'enferme jamais dehors.
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-export const ELEMENTS = [['compte', '👤 compte'], ['vocal', '🎙 vocal (enregistrer, transcrire)'], ['reseau', '📶 réseau et mode connecté'], ['heure', '🕐 heure'], ['chercher', '🔎 chercher un ploxion'], ['epingles', '📌 ploxions épinglés']];
-export const HUD_DEFAUT = { elements: ELEMENTS.map(([k]) => ({ k, on: k === 'compte' || k === 'epingles' || k === 'reseau' || k === 'vocal' })), epingles: [] };
+export const ELEMENTS = [['compte', '👤 compte'], ['vocal', '🎙 vocal (enregistrer, transcrire)'], ['tsoin', '⧗ noter un tsoin'], ['reseau', '📶 réseau et mode connecté'], ['heure', '🕐 heure'], ['chercher', '🔎 chercher un ploxion'], ['epingles', '📌 ploxions épinglés']];
+export const HUD_DEFAUT = { elements: ELEMENTS.map(([k]) => ({ k, on: k === 'compte' || k === 'epingles' || k === 'reseau' || k === 'vocal' || k === 'tsoin' })), epingles: [] };
 
 export function creerHud({ W = globalThis.window, compte, boxion = null, trouver = () => null, modeConnecte = () => true, vocalEnCours = () => false }) {
   const D = W.document;
@@ -43,6 +43,7 @@ export function creerHud({ W = globalThis.window, compte, boxion = null, trouver
     reseau: () => { const en = W.navigator.onLine !== false, mc = modeConnecte(); return '<span class="px-h-ic" title="' + (en ? (mc ? 'en ligne, mode connecté' : 'en ligne, mode connecté coupé') : 'hors ligne') + '">' + (en ? (mc ? '📶' : '📶◌') : '📴') + '</span>'; },
     heure: () => '<span class="px-h-ic px-heure">' + new Date().toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' }) + '</span>',
     chercher: () => '<button class="px-h-b" data-chercher aria-label="chercher un ploxion">🔎</button>',
+    tsoin: () => '<button class="px-h-b" data-tsoin aria-label="noter un tsoin">⧗</button>',
     vocal: () => '<button class="px-h-b' + (vocalEnCours() ? ' px-rec' : '') + '" data-vocal aria-label="vocal">' + (vocalEnCours() ? '■' : '🎙') + '</button>',
     epingles: () => config.epingles.map(id => { const p = trouver(id); return p ? '<button class="px-h-b" data-hud-px="' + esc(id) + '" aria-label="' + esc(p.nom || id) + '">' + esc(p.icone || '▣') + '</button>' : ''; }).join(''),
   };

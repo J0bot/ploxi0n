@@ -24,8 +24,11 @@ import { installerImages } from './natif/images.js';
 import { installerClavierIos, barreClavier, comprendre } from './natif/clavier-ios.js';
 import { trouverPloxion } from './natif/vocabulaire.js';
 import { creerVocal } from './natif/vocal.js';
+import { creerOnboarding } from './app/onboarding.js';
+import { creerTsoinNatif } from './natif/tsoin-natif.js';
+import { creerBarreHaut } from './app/barre-haut.js';
 
-const VERSION = '0.29.0';
+const VERSION = '0.30.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -173,6 +176,11 @@ async function demarrer() {
   // 🎙 les vocaux : enregistrer, transcrire (iOS, le vocabulaire du xerboxion), garder ; jOSNatif.vocal pour les ploxions
   const vocal = creerVocal({ boxion, catalogue: () => (routeur ? routeur.catalogue() : []), vibrer: (x) => vibrer(x), ouvrir: (id, p) => routeurProxy.ouvrir(id, p), surEtat: () => routeur && routeur.rafraichirHud() });
   window.jOSNatif.vocal = vocal.api;
+  // ⧗ les tsoins natifs : le composeur (dock, geste, Siri, jOSNatif.tsoin) et le journal ; connecté, ils partent aussi au boxion
+  const tsoinNatif = creerTsoinNatif({ boxion, vibrer: (x) => vibrer(x), vocal, contexte: () => (routeur ? routeur.courant() : null),
+    distant: () => (compte.etat().connecte && modeConnecte && navigator.onLine !== false ? window.jOSBoxion : null) });
+  internes.push(tsoinNatif.ploxion);
+  window.jOSNatif.tsoin = (o) => tsoinNatif.ouvrir(o || {});
   const hud = creerHud({ compte, boxion, vocalEnCours: () => vocal.enCours(), trouver: (id) => routeur && routeur.catalogue().find(p => p.id === id), modeConnecte: () => modeConnecte });
   await hud.pret;
   // ⚙ les réglages : un ploxion interne, au bout du ⚙ de l'accueil (jamais retirable)
@@ -190,7 +198,15 @@ async function demarrer() {
   // un ploxion sur l'écran d'accueil de l'iPhone (via Raccourcis) : depuis l'édition de l'accueil et la fiche du marketplace
   const ecranAccueil = creerEcranAccueil({ trouver: (id) => routeur.catalogue().find(p => p.id === id), liste: () => routeur.catalogue(), boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine) });
   window.jOSEcranAccueil = ecranAccueil;
-  routeur = creerRouteur({ racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id) => routeurProxy.ouvrir(id), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}) });
+  routeur = creerRouteur({ racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id) => routeurProxy.ouvrir(id), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
+    tsoin: () => tsoinNatif.ouvrir(), surSession: (x) => { boxion.put('reglages', 'session', x).catch(() => {}); barreHaut.peindre(); } });
+  // ▔ notre barre du haut, en plein écran (la place de la barre d'état d'iOS) : composable, appui long dessus
+  const barreHaut = creerBarreHaut({ boxion, compte, vibrer: (x) => vibrer(x), actif: () => { const q = prefs.lire(); return !!q.pleinEcran && q.barreHaut !== false; },
+    courant: () => { const c = routeur.courant(); return c ? ((routeur.catalogue().find(p => p.id === c) || {}).nom || c) : null; },
+    ouverts: () => routeur.vivants().length + routeur.endormis().length });
+  barreHaut.installer(document.body);
+  prefs.surChangement(() => barreHaut.mesurer());
+  window.ploxi0nBarreHaut = barreHaut;
   const rafraichir = () => { if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); };
   compte.surChangement(rafraichir);
   hud.surChangement(() => routeur.rafraichirHud());
@@ -216,7 +232,7 @@ async function demarrer() {
       return routeur.ouvrir('marketplace', { chercher: '1', q: c.quoi });
     }
     if (c.action === 'chercher') return routeur.ouvrir('marketplace', { chercher: '1', q: c.quoi });
-    if (c.action === 'noter') { await boxion.append('tsoins', { kind: 'action', k: 'raccourci', d: c.quoi.slice(0, 500), source: 'siri' }); vibrer('succes'); return true; }
+    if (c.action === 'noter') { await tsoinNatif.enregistrer({ texte: c.quoi, genre: 'note' }); return true; }
     if (c.action === 'accueil') return routeur.accueil();
     if (c.action === 'minimiser') return routeur.minimiser();
   }
@@ -238,11 +254,19 @@ async function demarrer() {
   }
   hud.surChangement(() => publierValeurs().catch(() => {}));
   await majAccueil();
+  // 🧭 le tuto d'accueil : une fois (par version du tuto) ; ⚙ › À propos › « revoir le tuto »
+  const tuto = creerOnboarding({ boxion, vibrer: (x) => vibrer(x), connecter: () => compte.connecter() });
+  window.ploxi0nTuto = tuto;
+  tuto.auDemarrage().catch(() => {});
+  // « ok » pour la boîte noire seulement APRÈS la reprise de la session : un ploxion qui plante en se rouvrant compte comme un plantage
+  // au lancement, et la fois suivante il restera endormi
+  let plantesAvant = 0;
+  const lancementOk = async () => { try { const { Preferences } = await import('@capacitor/preferences'); await Preferences.set({ key: 'ploxi0n.lancement', value: 'ok' }); } catch (e) { /* hors iPhone */ } };
   // la boîte noire (AppDelegate) : la page a fini de démarrer → « ok » ; un lancement planté avant est signalé (et le mode sûr)
   try {
     const { Preferences } = await import('@capacitor/preferences');
     const n = +((await Preferences.get({ key: 'ploxi0n.plantages' })).value || 0), sur = (await Preferences.get({ key: 'ploxi0n.mode-sur' })).value === '1';
-    await Preferences.set({ key: 'ploxi0n.lancement', value: 'ok' });
+    plantesAvant = n;
     if (n > 0) {
       await boxion.append('tsoins', { kind: 'app', action: 'plantage-au-lancement', n, sur }).catch(() => {});
       const b = document.createElement('div'); b.className = 'px-bulle';
@@ -256,10 +280,19 @@ async function demarrer() {
   if (chemin) {
     const pid = decodeURIComponent(chemin[1]), params = Object.fromEntries(new URLSearchParams(location.search));
     try { history.replaceState(null, '', '/'); } catch (e) { /* */ }
-    if (await routeurProxy.ouvrir(pid, Object.keys(params).length ? params : null)) return;
+    if (await routeurProxy.ouvrir(pid, Object.keys(params).length ? params : null)) { lancementOk(); return; }
   }
   const id = decodeURIComponent((location.hash.match(/^#\/(.+)$/) || [])[1] || '');
-  if (id && routeur.connait(id)) routeur.ouvrir(id); else routeur.accueil();
+  if (id && routeur.connait(id)) await routeur.ouvrir(id);
+  else {
+    // la session d'avant (fermée, tuée par iOS, plantée) : le ploxion de devant revient ; après un plantage au lancement, tout dort 💤
+    const sess = prefs.lire().reprendre !== false ? await boxion.get('reglages', 'session').catch(() => null) : null;
+    if (sess && Array.isArray(sess.vivants) && sess.vivants.length) {
+      await routeur.restaurer(sess, { devant: plantesAvant === 0 }).catch(() => routeur.accueil());
+      if (plantesAvant > 0) { const b = document.createElement('div'); b.className = 'px-bulle'; b.textContent = '💤 tes ' + sess.vivants.length + ' ploxion(s) d\'avant dorment dans ⧉ (glisse un bord pour y revenir)'; racine.appendChild(b); setTimeout(() => b.remove(), 6000); }
+    } else routeur.accueil();
+  }
+  lancementOk();
   // un raccourci (Siri, l'app Raccourcis, une automatisation) a pu demander un ploxion ou noter un tsoin
   raccourcis.recevoir().catch(() => {});
   publierValeurs().catch(() => {});
