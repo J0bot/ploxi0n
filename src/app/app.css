@@ -345,3 +345,21 @@ html:not(.px-fond-partout):has(#ploxi0n.px-mode-ploxion) .px-fond{display:none}
 .px-barre{animation:px-fondu-barre .18s ease-out both}
 @keyframes px-fondu-barre{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){.px-entree .px-accueil .px-tuile,.px-scene>.px-hote,.px-voile,.px-voile>.px-tiroir,.px-feuille>div,.px-bulle,.px-barre{animation:none}}
+
+/* ---- 🌀 LE THÈME VIVANT : chill-tekk suit le téléphone (gyroscope + accéléromètre, src/app/mouvement.js → --mx, --my de −1 à 1) ----
+   Tout passe par html.px-vivant : éteint (Calme, réglage, hors iPhone) rien ne bouge. Aucun dégradé : des décalages, des ombres, une arête. */
+html.px-vivant .px-fond i{transform:translate3d(calc(var(--mx,0) * -16px),calc(var(--my,0) * -16px),0) scale(1.07)}
+html.px-vivant body{background-position:calc(var(--mx,0) * -5px) calc(var(--my,0) * -5px)}
+html.px-vivant .px-tuile .px-ic{translate:calc(var(--mx,0) * 3px) calc(var(--my,0) * 3px);
+  background-position:calc(var(--mx,0) * 4px) calc(var(--my,0) * 4px);
+  box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -5px) calc(var(--my,0) * -5px + 6px) 14px rgba(0,0,0,.5)}
+/* l'arête du haut attrape la lumière quand on incline le haut du téléphone vers soi */
+html.px-vivant .px-tuile .px-ic::after{content:'';position:absolute;inset:-1px;border-radius:inherit;border-top:1.5px solid var(--acc);pointer-events:none;
+  opacity:calc(max(0, var(--my,0) * -1) * .55 + max(0, var(--mx,0)) * .2)}
+html.px-vivant .px-tete h1,html.px-vivant .px-grave{text-shadow:calc(var(--mx,0) * -1.4px) calc(var(--my,0) * -1.4px) 0 rgba(0,0,0,.85)}
+html.px-vivant .px-logo{translate:calc(var(--mx,0) * 2px) calc(var(--my,0) * 2px)}
+html.px-vivant .px-dock{box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -4px) calc(var(--my,0) * -3px + 8px) 22px rgba(0,0,0,.55)}
+/* un choc : les icônes tressautent une fois */
+html.px-choc .px-tuile .px-ic{animation:px-choc .32s cubic-bezier(.3,1.6,.4,1)}
+@keyframes px-choc{30%{transform:translateY(-4px) rotate(-3deg)}60%{transform:translateY(2px) rotate(2deg)}}
+@media (prefers-reduced-motion:reduce){html.px-vivant .px-fond i{transform:none}html.px-choc .px-tuile .px-ic{animation:none}}

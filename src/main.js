@@ -34,8 +34,9 @@ import { installerAvecBarre } from './app/installation.js';
 import { enregistrerGestion } from './app/gestion.js';
 import { creerFond } from './app/fond.js';
 import { creerDossier } from './natif/dossier.js';
+import { creerMouvement } from './app/mouvement.js';
 
-const VERSION = '0.36.0';
+const VERSION = '0.37.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -238,6 +239,8 @@ async function demarrer() {
     courant: () => { const c = routeur.courant(); return c ? ((routeur.catalogue().find(p => p.id === c) || {}).nom || c) : null; },
     ouverts: () => routeur.vivants().length + routeur.endormis().length });
   barreHaut.installer(document.body);
+  // 🌀 le thème vivant : il suit le gyroscope et l'accéléromètre (seulement à l'accueil, visible, hors Calme)
+  creerMouvement({ prefs, racine });
   prefs.surChangement(() => barreHaut.mesurer());
   window.ploxi0nBarreHaut = barreHaut;
   const rafraichir = () => { if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); };

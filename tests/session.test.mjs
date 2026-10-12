@@ -275,3 +275,28 @@ test('📁 le dossier Fichiers : Lisez-moi, journal des tsoins par mois, vocaux 
     assert.match(journalMois('2026-10', []), /# Tsoins · 2026-10/);
   } finally { p.fin(); }
 });
+
+test('🌀 le thème vivant : la gravité → --mx/--my (neutre recentré, lissé, borné), un choc fait tressauter, éteint en Calme / hors accueil', async () => {
+  const { creerMouvement } = await import('../src/app/mouvement.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w, h = W.document.documentElement;
+  try {
+    let P = { calme: false, themeVivant: true }; const abonnes = [];
+    const prefs = { lire: () => P, surChangement: (f) => abonnes.push(f) };
+    const appels = []; let ecouteur = null;
+    const plugin = { addListener: async (n, f) => { ecouteur = f; return { remove: async () => { ecouteur = null; } }; }, mouvementDebut: async (o) => appels.push(['debut', o.hz]), mouvementFin: async () => appels.push(['fin']) };
+    const racine = W.document.getElementById('ploxi0n'); racine.classList.add('px-mode-accueil');
+    const m = creerMouvement({ W, prefs, plugin, racine }); await attendre(20);
+    assert.ok(m.actif() && h.classList.contains('px-vivant')); assert.deepEqual(appels[0], ['debut', 30]);
+    ecouteur({ gx: 0, gy: -0.7 });                                  // tenu debout : le neutre
+    for (let i = 0; i < 20; i++) ecouteur({ gx: 0.3, gy: -0.7 });  // incliné à droite
+    const mx = +h.style.getPropertyValue('--mx'); assert.ok(mx > 0.5 && mx <= 1, 'incliné → --mx ' + mx);
+    for (let i = 0; i < 2000; i++) ecouteur({ gx: 0.3, gy: -0.7 });  // gardé longtemps : devient le neutre
+    assert.ok(Math.abs(+h.style.getPropertyValue('--mx')) < 0.05, 'le neutre se recentre');
+    ecouteur({ gx: 0.3, gy: -0.7, ax: 1.2 }); assert.ok(h.classList.contains('px-choc'), 'un choc');
+    racine.classList.replace('px-mode-accueil', 'px-mode-ploxion'); await attendre(20);
+    assert.ok(!m.actif() && appels.some(a => a[0] === 'fin'), 'dans un ploxion : arrêté');
+    assert.equal(h.style.getPropertyValue('--mx'), '0');
+    racine.classList.replace('px-mode-ploxion', 'px-mode-accueil'); await attendre(20); assert.ok(m.actif());
+    P = { calme: true }; abonnes.forEach(f => f(P)); await attendre(10); assert.ok(!m.actif(), 'Calme coupe');
+  } finally { p.fin(); }
+});

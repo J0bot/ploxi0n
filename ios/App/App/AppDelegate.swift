@@ -12,6 +12,7 @@ import NetworkExtension
 import GameKit
 import WebKit
 import ObjectiveC
+import CoreMotion
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -210,7 +211,31 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate {
         CAPPluginMethod(name: "wifiRejoindre", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "gameCenter", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "gameCenterScore", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "mouvementDebut", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "mouvementFin", returnType: CAPPluginReturnPromise),
     ]
+
+    // LE MOUVEMENT (RS-7 12.10 : « des effets avec le gyroscope et l'accéléromètre ») : CoreMotion, sans permission à demander.
+    // mouvementDebut({ hz }) → l'événement « mouvement » : attitude (roll, pitch, yaw), gravité (gx, gy, gz), accélération propre
+    // (ax, ay, az, en g), rotation (rx, ry, rz). La page l'arrête dès qu'elle n'est plus visible (mouvementFin).
+    private let mouvements = CMMotionManager()
+    @objc func mouvementDebut(_ call: CAPPluginCall) {
+        guard mouvements.isDeviceMotionAvailable else { call.reject("pas de gyroscope sur cet appareil"); return }
+        let hz = max(5.0, min(60.0, call.getDouble("hz") ?? 30))
+        mouvements.deviceMotionUpdateInterval = 1.0 / hz
+        if !mouvements.isDeviceMotionActive {
+            mouvements.startDeviceMotionUpdates(to: .main) { [weak self] m, _ in
+                guard let m = m else { return }
+                self?.notifyListeners("mouvement", data: [
+                    "roll": m.attitude.roll, "pitch": m.attitude.pitch, "yaw": m.attitude.yaw,
+                    "gx": m.gravity.x, "gy": m.gravity.y, "gz": m.gravity.z,
+                    "ax": m.userAcceleration.x, "ay": m.userAcceleration.y, "az": m.userAcceleration.z,
+                    "rx": m.rotationRate.x, "ry": m.rotationRate.y, "rz": m.rotationRate.z])
+            }
+        }
+        call.resolve()
+    }
+    @objc func mouvementFin(_ call: CAPPluginCall) { mouvements.stopDeviceMotionUpdates(); call.resolve() }
 
     // ---- 🏠 HomeKit (RS-7 12.10 : les capabilities « pour aller de l'avant » — les KIONS dans le réel) ----
     private var maison: HMHomeManager?

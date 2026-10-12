@@ -4,6 +4,11 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.37.0', titre: 'Le thème vivant', points: [
+    '🌀 Le thème suit ton téléphone (gyroscope, accéléromètre) : le fond glisse, les icônes flottent et attrapent la lumière, les inscriptions se creusent.',
+    '◉ Penche-le comme tu veux : l\'angle où tu le tiens devient le neutre. Un choc fait tressauter les icônes.',
+    '⚙ › Apparence › Thème vivant pour l\'éteindre (Calme l\'éteint aussi).',
+  ] },
   { v: '0.36.0', titre: 'Plus vif, plus vivant', points: [
     '⚡ Chaque bouton s\'enfonce sous le doigt ; l\'accueil se pose en cascade ; un ploxion s\'ouvre en montant ; les feuilles montent du bas. (⚙ › Apparence › Calme coupe tout.)',
     '⇄ Fusionner : ton Apple ID avait déjà son propre compte (un bion) ? 👤 › Lier mon Apple ID propose de le fondre dans ton compte — ses données sont copiées, rien n\'est effacé.',
