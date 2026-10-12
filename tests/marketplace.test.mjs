@@ -530,8 +530,25 @@ test('le clavier d\'iOS : les bons attributs selon le champ ; Siri : une phrase 
     const garde = f('<input autocomplete="off" name="email">'); assert.equal(garde.getAttribute('autocomplete'), 'off', 'un attribut voulu par le ploxion reste');
   } finally { p.fin(); }
   assert.deepEqual(comprendre('Ouvre Stremio'), { action: 'ouvrir', quoi: 'stremio' });
-  assert.deepEqual(comprendre('cherche la Météo de demain'), { action: 'chercher', quoi: 'Météo de demain' });
+  assert.deepEqual(comprendre('cherche la Météo de demain'), { action: 'chercher', quoi: 'meteo de demain' });
   assert.deepEqual(comprendre('note un tsoin acheter du café'), { action: 'noter', quoi: 'acheter du café' });
   assert.deepEqual(comprendre('accueil'), { action: 'accueil' });
-  assert.deepEqual(comprendre('youtube'), { action: 'chercher', quoi: 'youtube' });
+  assert.deepEqual(comprendre('youtube'), { action: 'ouvrir-ou-chercher', quoi: 'youtube' });
+});
+
+test('le vocabulaire du xerboxion : ce que Siri a cru entendre est corrigé ; en anglais aussi ; les ploxions retrouvés phonétiquement', async () => {
+  const { corriger, trouverPloxion } = await import('../src/natif/vocabulaire.js');
+  const { comprendre } = await import('../src/natif/clavier-ios.js');
+  assert.equal(corriger('open the zero box ion marketplace'), 'open the xerboxion marketplace');
+  assert.equal(corriger('note a swan'), 'note a tsoin');
+  assert.deepEqual(comprendre('Open Stream io'), { action: 'ouvrir', quoi: 'stremio' });
+  assert.deepEqual(comprendre('search for weather'), { action: 'chercher', quoi: 'weather' });
+  assert.deepEqual(comprendre('Note a tsoin buy coffee'), { action: 'noter', quoi: 'buy coffee' });
+  assert.deepEqual(comprendre('go home'), { action: 'accueil' });
+  const l = [{ id: 'stremio', nom: 'Stremio' }, { id: 'pourriture-4', nom: 'pourriture-4' }, { id: 'post-it', nom: 'Post-it' }, { id: 'xerkions', nom: 'Xerkions' }];
+  assert.equal(trouverPloxion('stream yo', l).id, 'stremio');
+  assert.equal(trouverPloxion('rot four', l).id, 'pourriture-4');
+  assert.equal(trouverPloxion('post it', l).id, 'post-it');
+  assert.equal(trouverPloxion('zerkions', l).id, 'xerkions');
+  assert.equal(trouverPloxion('banane', l), null, 'rien d\'assez proche');
 });

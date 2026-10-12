@@ -22,6 +22,7 @@ import { installerLecteur } from './natif/lecteur.js';
 import { creerHaptique } from './natif/haptique.js';
 import { installerImages } from './natif/images.js';
 import { installerClavierIos, barreClavier, comprendre } from './natif/clavier-ios.js';
+import { trouverPloxion } from './natif/vocabulaire.js';
 
 const VERSION = '0.24.0';
 
@@ -183,13 +184,11 @@ async function demarrer() {
   window.ploxi0n = { boxion, shim, routeur, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte };
   brancherLiens({ routeur, compte, installer: (id) => routeurProxy.ouvrir(id) });   // une icône de l'écran d'accueil vers un ploxion absent : installé à la volée
   // « Dis à ploxi0n … » (Siri, la dictée) : une phrase → une action
-  const norm = (x) => String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   async function commande(texte) {
     const c = comprendre(texte);
     await boxion.append('tsoins', { kind: 'action', k: 'siri', d: String(texte).slice(0, 300), action: c.action, source: 'siri' }).catch(() => {});
-    if (c.action === 'ouvrir') {
-      const q = norm(c.quoi), l = routeur.catalogue();
-      const p = l.find(x => norm(x.nom) === q || norm(x.id) === q) || l.find(x => norm(x.nom).startsWith(q)) || l.find(x => norm(x.nom).includes(q) || norm(x.id).includes(q));
+    if (c.action === 'ouvrir' || c.action === 'ouvrir-ou-chercher') {
+      const p = trouverPloxion(c.quoi, routeur.catalogue());   // le vocabulaire du xerboxion + un rapprochement phonétique
       if (p) return routeur.ouvrir(p.id);
       return routeur.ouvrir('marketplace', { chercher: '1', q: c.quoi });
     }

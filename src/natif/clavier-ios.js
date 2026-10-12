@@ -35,15 +35,16 @@ export async function barreClavier(visible = true) {
   try { const { Keyboard } = await import('@capacitor/keyboard'); await Keyboard.setAccessoryBarVisible({ isVisible: !!visible }); } catch (e) { /* hors iPhone */ }
 }
 
+import { corriger } from './vocabulaire.js';
 /** une commande dite à Siri (« Dis à ploxi0n … ») → une action de l'app */
 export function comprendre(texte) {
-  const t = String(texte || '').trim(), m = t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const t = String(texte || '').trim(), m = corriger(t);
   let r;
-  if ((r = /^(ouvre|ouvrir|lance|lancer|va sur|montre)( le| la| les| l'| mon| ma)?\s+(.+)$/.exec(m))) return { action: 'ouvrir', quoi: r[3].trim() };
-  if ((r = /^(cherche|chercher|trouve|recherche)( un| une| le| la)?\s+(.+)$/.exec(m))) return { action: 'chercher', quoi: t.slice(t.length - r[3].length).trim() };
-  if ((r = /^(note|noter|tsoin|ecris|retiens)( un tsoin| que| :)?\s*(.+)$/.exec(m))) return { action: 'noter', quoi: t.slice(t.length - r[3].length).trim() };
-  if (/^(accueil|maison|retour a l'?accueil)$/.test(m)) return { action: 'accueil' };
-  if (/^(minimise|minimiser|cache)$/.test(m)) return { action: 'minimiser' };
-  if (/^(reglages|parametres)$/.test(m)) return { action: 'ouvrir', quoi: 'reglages' };
-  return { action: 'chercher', quoi: t };
+  if ((r = /^(go to|va sur|ouvre|ouvrir|lance|lancer|montre|open|launch|start|show)( le| la| les| l'| mon| ma| the| my)?( ploxion)?\s+(.+)$/.exec(m))) return { action: 'ouvrir', quoi: r[4].trim() };
+  if ((r = /^(search for|look for|cherche|chercher|trouve|recherche|search|find)( un| une| le| la| a| the)?( ploxion)?\s+(.+)$/.exec(m))) return { action: 'chercher', quoi: r[4].trim() };
+  if ((r = /^(note|noter|ecris|retiens|remember|write|tsoin|add a tsoin|new tsoin)( un tsoin| a tsoin| tsoin| que| that| :)?\s*(.+)$/.exec(m))) { const brut = t.split(/\s+/), n = r[3].split(/\s+/).length; return { action: 'noter', quoi: brut.slice(-n).join(' ') }; }
+  if (/^(accueil|maison|retour a l'?accueil|home|go home)$/.test(m)) return { action: 'accueil' };
+  if (/^(minimise|minimiser|cache|minimize|hide)$/.test(m)) return { action: 'minimiser' };
+  if (/^(reglages|parametres|settings)$/.test(m)) return { action: 'ouvrir', quoi: 'reglages' };
+  return { action: 'ouvrir-ou-chercher', quoi: m };
 }

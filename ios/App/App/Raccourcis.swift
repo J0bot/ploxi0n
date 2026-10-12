@@ -155,12 +155,12 @@ struct OuvrirPloxi0n: AppIntent {
 @available(iOS 16.0, *)
 struct RaccourcisPloxi0n: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
-        AppShortcut(intent: OuvrirPloxion(), phrases: ["Ouvre \(\.$ploxion) dans \(.applicationName)", "Ouvre \(\.$ploxion) avec \(.applicationName)"],
+        AppShortcut(intent: OuvrirPloxion(), phrases: ["Ouvre \(\.$ploxion) dans \(.applicationName)", "Ouvre \(\.$ploxion) avec \(.applicationName)", "Open \(\.$ploxion) in \(.applicationName)", "Open \(\.$ploxion) with \(.applicationName)", "Launch \(\.$ploxion) in \(.applicationName)"],
                     shortTitle: "Ouvrir un ploxion", systemImageName: "square.grid.2x2")
-        AppShortcut(intent: NoterTsoin(), phrases: ["Note un tsoin dans \(.applicationName)"], shortTitle: "Noter un tsoin", systemImageName: "hourglass")
-        AppShortcut(intent: CommandePloxi0n(), phrases: ["Dis à \(.applicationName)", "Demande à \(.applicationName)", "\(.applicationName) commande"], shortTitle: "Dire à ploxi0n", systemImageName: "waveform")
-        AppShortcut(intent: LireValeur(), phrases: ["Lis une valeur de \(.applicationName)", "Que dit \(.applicationName)"], shortTitle: "Lire une valeur", systemImageName: "text.bubble")
-        AppShortcut(intent: ChercherPloxion(), phrases: ["Cherche un ploxion dans \(.applicationName)"], shortTitle: "Chercher un ploxion", systemImageName: "magnifyingglass")
-        AppShortcut(intent: OuvrirPloxi0n(), phrases: ["Ouvre \(.applicationName)"], shortTitle: "Ouvrir ploxi0n", systemImageName: "diamond")
+        AppShortcut(intent: NoterTsoin(), phrases: ["Note un tsoin dans \(.applicationName)", "Note a tsoin in \(.applicationName)", "New tsoin in \(.applicationName)", "Add a tsoin to \(.applicationName)"], shortTitle: "Noter un tsoin", systemImageName: "hourglass")
+        AppShortcut(intent: CommandePloxi0n(), phrases: ["Dis à \(.applicationName)", "Demande à \(.applicationName)", "\(.applicationName) commande", "Tell \(.applicationName)", "Ask \(.applicationName)", "Talk to \(.applicationName)", "Hey \(.applicationName)"], shortTitle: "Dire à ploxi0n", systemImageName: "waveform")
+        AppShortcut(intent: LireValeur(), phrases: ["Lis une valeur de \(.applicationName)", "Que dit \(.applicationName)", "Read a value from \(.applicationName)", "What does \(.applicationName) say"], shortTitle: "Lire une valeur", systemImageName: "text.bubble")
+        AppShortcut(intent: ChercherPloxion(), phrases: ["Cherche un ploxion dans \(.applicationName)", "Search \(.applicationName)", "Find a ploxion in \(.applicationName)"], shortTitle: "Chercher un ploxion", systemImageName: "magnifyingglass")
+        AppShortcut(intent: OuvrirPloxi0n(), phrases: ["Ouvre \(.applicationName)", "Open \(.applicationName)"], shortTitle: "Ouvrir ploxi0n", systemImageName: "diamond")
     }
 }
