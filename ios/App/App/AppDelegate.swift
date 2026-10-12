@@ -159,12 +159,12 @@ class PloxionVC: CAPBridgeViewController {
         bridge?.registerPluginInstance(PloxiVocal())
     }
     private var plein: Bool { UserDefaults.standard.string(forKey: "CapacitorStorage.ploxi0n.plein-ecran") == "1" }
-    override var prefersHomeIndicatorAutoHidden: Bool { plein }
+    // l'indicateur d'accueil : le plugin SystemBars de Capacitor 8 le gère déjà (CAPBridgeViewController.prefersHomeIndicatorAutoHidden n'est
+    // pas ouvert à la redéfinition) — la page appelle SystemBars.hide({ bar: NavigationBar })
     override var preferredScreenEdgesDeferringSystemGestures: UIRectEdge { plein ? [.bottom, .top] : [] }
     override func viewDidLoad() {
         super.viewDidLoad()
         NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in
-            self?.setNeedsUpdateOfHomeIndicatorAutoHidden()
             self?.setNeedsUpdateOfScreenEdgesDeferringSystemGestures()
         }
     }

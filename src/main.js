@@ -68,7 +68,9 @@ async function demarrer() {
   async function pleinEcran(p) {
     if (!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) return;
     try { const { Preferences } = await import('@capacitor/preferences'); await Preferences.set({ key: 'ploxi0n.plein-ecran', value: p.pleinEcran ? '1' : '0' }); } catch (e) { /* */ }
-    try { const { StatusBar } = await import('@capacitor/status-bar'); if (p.pleinEcran) await StatusBar.hide(); else await StatusBar.show(); } catch (e) { /* */ }
+    // la barre d'état et l'indicateur d'accueil : SystemBars (Capacitor 8)
+    try { const { SystemBars, SystemBarType } = await import('@capacitor/core');
+      for (const bar of [SystemBarType.StatusBar, SystemBarType.NavigationBar]) { if (p.pleinEcran) await SystemBars.hide({ bar }); else await SystemBars.show({ bar }); } } catch (e) { /* */ }
   }
   pleinEcran(prefs.lire()); prefs.surChangement(pleinEcran);
   barreClavier(prefs.lire().barreClavier !== false); prefs.surChangement((p) => barreClavier(p.barreClavier !== false));
