@@ -15,15 +15,13 @@ jobs:
           ruby-version: "3.3"
           bundler-cache: true
 
-      - name: Configure git credential
-        run: |
-          git config --global credential.helper store
-          echo "https://x-access-token:${{ secrets.CERTS_TOKEN }}@github.com" > ~/.git-credentials
-
       - name: Wipe & reinit match
         run: |
           bundle exec fastlane match appstore \
-            -r "https://github.com/j0bot/ploxion-certifs.git" \
+            -r "https://x-access-token:${{ secrets.MATCH_PAT }}@github.com/j0bot/ploxi0n-certificats.git" \
             --force
         env:
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}   
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
