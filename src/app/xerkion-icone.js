@@ -14,14 +14,15 @@
 // restent légères.
 import { GLYPHES, nomGlyphe, glyphePloxion } from './glyphes.js';
 
-/** les six palettes des xerkions du labo (jOSXerkionHub : bg, a = le trait, b = le cœur) */
+/** les six palettes des xerkions du labo (jOSXerkionHub), ADOUCIES (0.58, RS-7 : « des couleurs moins flashy, là ça explose les yeux ») :
+ *  les mêmes teintes, saturation et lumière baissées. bg = le fond, a = le trait, b = le cœur, f = l'aplat de la forme pleine (glyphe seul) */
 export const GPAL = [
-  { bg: '#070b12', a: '#3fe0d0', b: '#7fd7ff', n: 'teal' },
-  { bg: '#0a0510', a: '#c14bff', b: '#ff5fd0', n: 'magenta' },
-  { bg: '#0c0a04', a: '#ffc857', b: '#ff8a3d', n: 'ambre' },
-  { bg: '#050e07', a: '#7ee081', b: '#c9ff6e', n: 'vert' },
-  { bg: '#060a14', a: '#6ee7ff', b: '#a78bfa', n: 'glace' },
-  { bg: '#0a0714', a: '#a78bfa', b: '#ff9ecb', n: 'violet' },
+  { bg: '#0a0f13', a: '#7dbfb8', b: '#95b7c6', f: '#59a69e', n: 'teal' },
+  { bg: '#0e0a12', a: '#a87dbf', b: '#c695b7', f: '#8b59a6', n: 'magenta' },
+  { bg: '#100e0a', a: '#bfa97d', b: '#c6a895', f: '#a68d59', n: 'ambre' },
+  { bg: '#0a100b', a: '#7dbf7f', b: '#b4c695', f: '#59a65c', n: 'vert' },
+  { bg: '#0a0e14', a: '#7db4bf', b: '#a195c6', f: '#5999a6', n: 'glace' },
+  { bg: '#0d0b14', a: '#8e7dbf', b: '#c695ac', f: '#6d59a6', n: 'violet' },
 ];
 export const CENTRES = ['wormion', 'portion', 'kion'];
 /** (0.56, RS-7 : « avoir que le glyphe de base, et aussi le glyphe xerboxion ») le style : la forme du type, ou le glyphe seul, en grand */
@@ -130,7 +131,7 @@ function forme(s, P) {
  *  PLEINE, d'une seule couleur (quelques traits creusés pour la reconnaître : la face du cube, les koins du kion, le couvercle du boxion) ;
  *  le glyphe est découpé dessus, en sombre. Rend [svg, cx, cy, taille du glyphe]. */
 function formePleine(s, P) {
-  const A = P.a, B = P.b, C = P.bg, creux = (op = '.55', w = '1.8') => ' fill="none" stroke="' + C + '" stroke-width="' + w + '" stroke-opacity="' + op + '"';
+  const A = P.f, B = P.b, C = P.bg, creux = (op = '.55', w = '1.8') => ' fill="none" stroke="' + C + '" stroke-width="' + w + '" stroke-opacity="' + op + '"';
   switch (s.type) {
     case 'xerkion': { const v = sommets(s.cotes, 46), ri = 46 * Math.cos(Math.PI / s.cotes); return ['<polygon points="' + pts(v) + '" fill="' + A + '" stroke="' + A + '" stroke-width="3" stroke-linejoin="round"/>', 50, s.cotes === 3 ? 60 : 50, s.cotes === 3 ? 42 : Math.min(56, ri * 1.5)]; }
     case 'xer': return ['<polygon points="' + pts(sommets(8, 46, -67.5)) + '" fill="' + A + '"/><polygon points="' + pts(sommets(8, 39, -67.5)) + '"' + creux() + '/>', 50, 50, 50];

@@ -40,8 +40,8 @@ test('le SVG se suffit (ni classe à styler, ni id, ni filtre) et se met en cach
 test('(0.56) le glyphe seul, en grand ; le style d\'une app passe devant celui de l\'app', () => {
   const x = svgXerkion({ id: 'pomodoro', nom: 'Pomodoro' }), g = svgXerkion({ id: 'pomodoro', nom: 'Pomodoro' }, { seul: true });
   assert.match(x, /data-style="xerboxion"/); assert.match(g, /data-style="glyphe"/);
-  assert.match(g, /<polygon points="50,4 96,50 50,96 4,50" fill="#3fe0d0"/, '(0.57) le losange, plein'); assert.match(g, /scale\(0\.480\)/, 'le glyphe, en grand');
-  assert.match(g, /stroke="#070b12" stroke-width="9"/, 'le glyphe découpé (sombre) sur la forme pleine');
+  assert.match(g, /<polygon points="50,4 96,50 50,96 4,50" fill="#59a69e"/, '(0.57) le losange, plein'); assert.match(g, /scale\(0\.480\)/, 'le glyphe, en grand');
+  assert.match(g, /stroke="#0a0f13" stroke-width="9"/, 'le glyphe découpé (sombre) sur la forme pleine');
   assert.match(svgXerkion({ id: 'cubion' }, { seul: true }), /data-type="cubion"/); assert.match(svgXerkion({ id: 'xerkion-a', koins: 5 }, { seul: true }), /<polygon points="[^"]+" fill="#/);
   assert.match(x, /scale\(0\.437\)/, 'dans la forme, le glyphe est plus grand qu\'en 0.55 (0.344)');
   assert.match(svgXerkion({ id: 'pomodoro' }, { seul: true, perso: { style: 'xerboxion' } }), /data-style="xerboxion"/);

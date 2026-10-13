@@ -64,6 +64,8 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
   global (⚙ › Apparence) et par app (perso `style`, l'atelier).
 - **0.57 — le glyphe seul garde la forme.** `formePleine()` (src/app/xerkion-icone.js) : la forme du type, pleine (quelques creux pour la
   reconnaître : face claire du cube, koins du kion, couvercle du boxion), le glyphe découpé en sombre (RS-7 : « pas juste des ronds »).
+- **0.58 — couleurs douces.** `GPAL` adoucie (mêmes teintes que le labo, saturation ≈ 0.34, lumière ≈ 0.62 ; `f` = l'aplat des formes
+  pleines, plus sombre) : RS-7 « moins flashy, là ça explose les yeux ».
 
 ## 3. Ce qui reste, par ordre
 

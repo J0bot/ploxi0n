@@ -4,6 +4,9 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.58.0', titre: 'Des couleurs douces', points: [
+    'Les icônes gardent les teintes des xerkions du labo, mais adoucies : moins saturées, moins lumineuses. Ça n\'explose plus les yeux.',
+  ] },
   { v: '0.57.0', titre: 'Le glyphe seul garde sa forme', points: [
     'Style « glyphe seul » : la forme du type reste (losange, xerkion à N côtés, cube, kion, koin, anneaux, sphère, portion, bion, boîte), pleine, d\'une couleur, et le glyphe est découpé dessus, en grand.',
   ] },
