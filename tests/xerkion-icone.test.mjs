@@ -36,3 +36,12 @@ test('le SVG se suffit (ni classe à styler, ni id, ni filtre) et se met en cach
   assert.match(svg, /data-type="ploxion"/); assert.match(svg, /points="50.0,6.0 94.0,50.0 50.0,94.0 6.0,50.0"/, "le losange");
   assert.equal(svgXerkion({ id: 'pomodoro', nom: 'Pomodoro' }), svg);
 });
+
+test('(0.56) le glyphe seul, en grand ; le style d\'une app passe devant celui de l\'app', () => {
+  const x = svgXerkion({ id: 'pomodoro', nom: 'Pomodoro' }), g = svgXerkion({ id: 'pomodoro', nom: 'Pomodoro' }, { seul: true });
+  assert.match(x, /data-style="xerboxion"/); assert.match(g, /data-style="glyphe"/);
+  assert.ok(!/94\.0,50\.0/.test(g), 'pas de losange'); assert.match(g, /scale\(0\.640\)/, 'le glyphe occupe 64 % de la tuile');
+  assert.match(x, /scale\(0\.437\)/, 'dans la forme, le glyphe est plus grand qu\'en 0.55 (0.344)');
+  assert.match(svgXerkion({ id: 'pomodoro' }, { seul: true, perso: { style: 'xerboxion' } }), /data-style="xerboxion"/);
+  assert.match(svgXerkion({ id: 'pomodoro' }, { perso: { style: 'glyphe' } }), /data-style="glyphe"/);
+});

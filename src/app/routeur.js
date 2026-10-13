@@ -26,7 +26,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   //   pile     les ploxions d'où l'on vient : ouvrir un ploxion DEPUIS un ploxion empile le premier ; « ‹ » ferme le second et y revient
   //   minimiser : le ploxion reste vivant, l'accueil revient ; la rangée « en arrière-plan » le reprend d'un geste
   // Au plus MAX_VIVANTS : au-delà, le plus anciennement vu (hors celui qu'on regarde) est fermé (le droit au silence).
-  const maxVivants = () => Math.max(1, Math.min(8, +prefs().maxVivants || 5));
+  const maxVivants = () => { const n = +prefs().maxVivants; return n === 0 ? Infinity : Math.max(1, Math.min(99, n || 12)); };   // 0 = sans limite (0.56)
   let courant = null;     // l'instance visible
   const vivants = new Map(); let pile = [];
   // LA SESSION (RS-7 12.10 : « quand on ferme l'app ou qu'elle crash, on ne retrouve jamais les apps ouvertes avant ») : à chaque changement,
@@ -164,7 +164,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   const texte = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   // ◇ (0.54) un ploxion a son GLYPHE (src/app/glyphes.js : le trait du xerboxion) ; ⚙ › Apparence › « Les emoji du labo » pour les garder
   // ⬡ (0.55) l'icône d'un ploxion = son xerkion (src/app/xerkion-icone.js) ; ⚙ › Apparence peut revenir au glyphe seul, ou aux emoji du labo
-  const icone = (p) => (prefs().glyphes === false ? texte((p && p.icone) || '▣') : prefs().xerkions === false ? glyphePloxion(p) : svgXerkion(p));
+  const icone = (p) => (prefs().glyphes === false ? texte((p && p.icone) || '▣') : svgXerkion(p, { seul: prefs().styleIcones === 'glyphe' }));
   const G = (n) => glyphe(n);
   // la teinte d'un ploxion (chill-tekk : chaque icône de verre a sa couleur, stable, tirée de son id)
   const teinte = (id) => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return 160 + (h % 160); };

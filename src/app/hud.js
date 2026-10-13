@@ -4,7 +4,7 @@
 // 0.9 (RS-7 : « un vrai bouton réglages, et un moyen de customiser son HUD ») : le HUD se COMPOSE (boxion_local « reglages/hud ») :
 //   elements = [{ k, on }] dans l'ordre : compte · reseau (📶/📴 + le mode connecté) · heure · chercher (le marketplace) · epingles
 //   epingles = au plus 4 ploxions, une icône chacun, ouverts d'un geste. ⚙ (les réglages) est toujours là : on ne s'enferme jamais dehors.
-import { glyphe as G, glyphePloxion } from './glyphes.js';
+import { glyphe as G } from './glyphes.js';
 import { svgXerkion } from './xerkion-icone.js';   // ◇ (0.54) des glyphes, plus d'emoji
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -48,7 +48,7 @@ export function creerHud({ W = globalThis.window, compte, boxion = null, trouver
     chercher: () => '<button class="px-h-b" data-chercher aria-label="chercher un ploxion">' + G('chercher') + '</button>',
     tsoin: () => '<button class="px-h-b" data-tsoin aria-label="noter un tsoin">' + G('tsoin') + '</button>',
     vocal: () => '<button class="px-h-b' + (vocalEnCours() ? ' px-rec' : '') + '" data-vocal aria-label="vocal">' + (vocalEnCours() ? '■' : G('vocal')) + '</button>',
-    epingles: () => config.epingles.map(id => { const p = trouver(id); return p ? '<button class="px-h-b" data-hud-px="' + esc(id) + '" aria-label="' + esc(p.nom || id) + '" style="--t:' + teinte(id) + '">' + (prefs().xerkions === false ? glyphePloxion(p) : svgXerkion(p)) + '</button>' : ''; }).join(''),
+    epingles: () => config.epingles.map(id => { const p = trouver(id); return p ? '<button class="px-h-b" data-hud-px="' + esc(id) + '" aria-label="' + esc(p.nom || id) + '" style="--t:' + teinte(id) + '">' + svgXerkion(p, { seul: prefs().styleIcones === 'glyphe' }) + '</button>' : ''; }).join(''),
   };
   return {
     pret,

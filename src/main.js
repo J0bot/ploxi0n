@@ -48,7 +48,7 @@ import { creerCadresLabo } from './natif/cadres-labo.js';
 import { installerGel } from './app/gel.js';
 import { installerSansEmoji } from './app/sans-emoji.js';
 
-const VERSION = '0.55.0';
+const VERSION = '0.56.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -311,7 +311,7 @@ async function demarrer() {
   // un ploxion sur l'écran d'accueil de l'iPhone (via Raccourcis) : depuis l'édition de l'accueil et la fiche du marketplace
   // (0.55) les verrous Face ID (un ploxion verrouillé passe par l'app), le jeton du compte (les propositions d'icônes), l'atelier → l'accueil
   const ecranAccueil = creerEcranAccueil({ trouver: (id) => routeur.catalogue().find(p => p.id === id), liste: () => routeur.catalogue(), boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine), source: SOURCE,
-    verrous: () => (routeur ? routeur.verrous() : []), jeton: () => boxion.get('compte', 'courant').then(c => (c && c.jeton) || null), surPerso: () => { majAccueil({ redessiner: true }).catch(() => {}); } });
+    verrous: () => (routeur ? routeur.verrous() : []), jeton: () => boxion.get('compte', 'courant').then(c => (c && c.jeton) || null), surPerso: () => { majAccueil({ redessiner: true }).catch(() => {}); }, seul: () => prefs.lire().styleIcones === 'glyphe' });
   window.jOSEcranAccueil = ecranAccueil;
   boot(78, 'l\'accueil');
   // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xerbot (le monde physique)
@@ -327,7 +327,7 @@ async function demarrer() {
   // (0.54) une vidéo passe en plein écran : les ploxions cachés s'endorment (la mémoire ; iOS tuait la page : « ça crash »)
   document.addEventListener('webkitbeginfullscreen', () => { try { routeur.endormirCaches(); } catch (e) { /* */ } }, true);
   installerSansEmoji({ interne: (id) => !!(routeur.catalogue().find(p => p.id === id) || {}).interne, actif: () => prefs.lire().glyphes !== false });
-  { let g = prefs.lire().glyphes; prefs.surChangement((p) => { if (p.glyphes === g) return; g = p.glyphes; if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); }); }
+  { const cle = (p) => p.glyphes + '|' + p.styleIcones; let g = cle(prefs.lire()); prefs.surChangement((p) => { if (cle(p) === g) return; g = cle(p); if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); }); }
   // ▔ notre barre du haut, en plein écran (la place de la barre d'état d'iOS) : composable, appui long dessus
   const barreHaut = creerBarreHaut({ boxion, compte, vibrer: (x) => vibrer(x), actif: () => { const q = prefs.lire(); return !!q.pleinEcran && q.barreHaut !== false; },
     courant: () => { const c = routeur.courant(); return c ? ((routeur.catalogue().find(p => p.id === c) || {}).nom || c) : null; },

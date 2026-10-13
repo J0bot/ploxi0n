@@ -59,6 +59,9 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
   **Côté labo (à faire par RS-7)** : `/api/app/icones` (recevoir, relire, poser `xerkion` dans le registre) ; `/api/app/accueil` doit
   respecter `verrou`/`url` (le clip ouvre `ploxi0n://px/<id>`, jamais `/px/<id>` en ligne) ; `type` dans le registre pour ce que l'id ne
   dit pas ; `frame-ancestors capacitor:` (le wiki dans l'app).
+- **0.56 — vivants et lisibilité.** `maxVivants` : 12 par défaut, 0 = ∞ (RS-7 : « le max 8 ploxions ça devient chiant ») ; le disque
+  et le glyphe des icônes agrandis (RS-7 : « ultra petit, illisible ») ; `styleIcones` = `xerboxion` | `glyphe` (le glyphe seul, 64 %),
+  global (⚙ › Apparence) et par app (perso `style`, l'atelier).
 
 ## 3. Ce qui reste, par ordre
 

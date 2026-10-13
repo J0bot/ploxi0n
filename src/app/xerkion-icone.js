@@ -24,6 +24,8 @@ export const GPAL = [
   { bg: '#0a0714', a: '#a78bfa', b: '#ff9ecb', n: 'violet' },
 ];
 export const CENTRES = ['wormion', 'portion', 'kion'];
+/** (0.56, RS-7 : « avoir que le glyphe de base, et aussi le glyphe xerboxion ») le style : la forme du type, ou le glyphe seul, en grand */
+export const STYLES = ['xerboxion', 'glyphe'];
 export const TYPES = ['ploxion', 'xerkion', 'xer', 'cubion', 'kion', 'koin', 'wormion', 'spherion', 'portion', 'bion', 'boxion'];
 /** la forme de chaque type, en mots (la légende) */
 export const FORMES = { ploxion: 'losange', xerkion: 'polygone à N koins', xer: 'octogone double', cubion: 'cube', kion: 'carré à 4 koins', koin: 'triangle',
@@ -78,6 +80,7 @@ export function specXerkion(p, perso = null) {
     cotes: type === 'xerkion' ? (n > 0 ? Math.max(3, Math.min(12, n)) : 8) : null,
     centre: CENTRES.includes(m.centre) ? m.centre : CENTRES.includes(p && p.centre) ? p.centre : CENTRES[(h >>> 16) % CENTRES.length],
     // un xerkion porte le mot « xerkion » : son glyphe vient du reste (xerkion-son → musique), pas du mot
+    style: STYLES.includes(m.style) ? m.style : null,
     glyphe: (m.glyphe && GLYPHES[m.glyphe]) ? m.glyphe : (nomGlyphe(type === 'xerkion' ? { id: id.replace(/^xerkions?-?/i, ''), nom: String((p && p.nom) || '').replace(/xerkions?/i, ''), categorie: p.categorie } : p) || (cat ? CATEGORIES[cat][0] : null)),
   };
 }
@@ -103,23 +106,23 @@ function forme(s, P) {
     case 'xerkion': {
       const v = sommets(s.cotes, 44);
       return [coeur(s.centre, B) + '<g stroke="' + A + '" stroke-width=".9" stroke-opacity=".45">' + v.map(([x, y]) => '<line x1="50" y1="50" x2="' + f1(x) + '" y2="' + f1(y) + '"/>').join('') + '</g>'
-        + trace('<polygon points="' + pts(v) + '"/>', A) + noeuds(v, A), 50, 50, 21];
+        + trace('<polygon points="' + pts(v) + '"/>', A) + noeuds(v, A), 50, 50, 27];
     }
-    case 'xer': return [trace('<polygon points="' + pts(sommets(8, 44, -67.5)) + '"/>', A) + '<polygon points="' + pts(sommets(8, 36, -67.5)) + '"' + fin(B, '.7', '1.4') + '/>', 50, 50, 21];
+    case 'xer': return [trace('<polygon points="' + pts(sommets(8, 44, -67.5)) + '"/>', A) + '<polygon points="' + pts(sommets(8, 36, -67.5)) + '"' + fin(B, '.7', '1.4') + '/>', 50, 50, 28];
     case 'cubion': {
       const v = sommets(6, 45);
-      return [trace('<polygon points="' + pts(v) + '"/>', A) + '<g stroke="' + A + '" stroke-width="1.6" stroke-opacity=".75">' + [v[1], v[3], v[5]].map(([x, y]) => '<line x1="50" y1="50" x2="' + f1(x) + '" y2="' + f1(y) + '"/>').join('') + '</g>' + noeuds(v, A, 2.2), 50, 50, 19];
+      return [trace('<polygon points="' + pts(v) + '"/>', A) + '<g stroke="' + A + '" stroke-width="1.6" stroke-opacity=".75">' + [v[1], v[3], v[5]].map(([x, y]) => '<line x1="50" y1="50" x2="' + f1(x) + '" y2="' + f1(y) + '"/>').join('') + '</g>' + noeuds(v, A, 2.2), 50, 50, 25];
     }
-    case 'kion': return [trace('<rect x="9" y="9" width="82" height="82"/>', A) + '<g fill="' + A + '" fill-opacity=".8"><polygon points="9,9 25,9 9,25"/><polygon points="91,9 75,9 91,25"/><polygon points="91,91 75,91 91,75"/><polygon points="9,91 25,91 9,75"/></g>', 50, 50, 21];
-    case 'koin': return [trace('<polygon points="50,7 94,88 6,88"/>', A) + '<polygon points="50,25 81,80 19,80"' + fin(B, '.6') + '/>' + noeuds([[50, 7], [94, 88], [6, 88]], A), 50, 62, 17];
-    case 'wormion': return [trace('<circle cx="50" cy="50" r="44"/>', A) + '<circle cx="50" cy="50" r="37"' + fin(B, '.6', '1.3') + '/><circle cx="50" cy="50" r="30"' + fin(B, '.45') + ' stroke-dasharray="3 3"/>', 50, 50, 21];
-    case 'spherion': return [trace('<circle cx="50" cy="50" r="44"/>', A) + '<ellipse cx="50" cy="50" rx="44" ry="15"' + fin(B, '.6', '1.2') + '/><ellipse cx="50" cy="50" rx="15" ry="44"' + fin(B, '.6', '1.2') + '/>', 50, 50, 19];
-    case 'portion': return [trace('<rect x="8" y="8" width="84" height="84"/>', A) + '<rect x="16" y="16" width="68" height="68"' + fin(B, '.65', '1.3') + '/><rect x="23" y="23" width="54" height="54"' + fin(B, '.4') + '/>', 50, 50, 19];
-    case 'bion': return [trace('<circle cx="50" cy="50" r="43"/>', A, 'rgba(0,0,0,.25)', ' stroke-dasharray="5 3.5"') + '<circle cx="50" cy="50" r="35"' + fin(B, '.55', '1.2') + '/>', 50, 50, 20];
-    case 'boxion': return [trace('<rect x="10" y="12" width="80" height="78" rx="9"/>', A) + '<line x1="10" y1="30" x2="90" y2="30"' + fin(A, '.8', '1.6') + '/>' + noeuds([[22, 21], [30, 21]], A, 2.4), 50, 59, 19];
+    case 'kion': return [trace('<rect x="9" y="9" width="82" height="82"/>', A) + '<g fill="' + A + '" fill-opacity=".8"><polygon points="9,9 25,9 9,25"/><polygon points="91,9 75,9 91,25"/><polygon points="91,91 75,91 91,75"/><polygon points="9,91 25,91 9,75"/></g>', 50, 50, 29];
+    case 'koin': return [trace('<polygon points="50,7 94,88 6,88"/>', A) + '<polygon points="50,25 81,80 19,80"' + fin(B, '.6') + '/>' + noeuds([[50, 7], [94, 88], [6, 88]], A), 50, 62, 23];
+    case 'wormion': return [trace('<circle cx="50" cy="50" r="44"/>', A) + '<circle cx="50" cy="50" r="37"' + fin(B, '.6', '1.3') + '/><circle cx="50" cy="50" r="30"' + fin(B, '.45') + ' stroke-dasharray="3 3"/>', 50, 50, 28];
+    case 'spherion': return [trace('<circle cx="50" cy="50" r="44"/>', A) + '<ellipse cx="50" cy="50" rx="44" ry="15"' + fin(B, '.6', '1.2') + '/><ellipse cx="50" cy="50" rx="15" ry="44"' + fin(B, '.6', '1.2') + '/>', 50, 50, 26];
+    case 'portion': return [trace('<rect x="8" y="8" width="84" height="84"/>', A) + '<rect x="16" y="16" width="68" height="68"' + fin(B, '.65', '1.3') + '/><rect x="23" y="23" width="54" height="54"' + fin(B, '.4') + '/>', 50, 50, 26];
+    case 'bion': return [trace('<circle cx="50" cy="50" r="43"/>', A, 'rgba(0,0,0,.25)', ' stroke-dasharray="5 3.5"') + '<circle cx="50" cy="50" r="35"' + fin(B, '.55', '1.2') + '/>', 50, 50, 29];
+    case 'boxion': return [trace('<rect x="10" y="12" width="80" height="78" rx="9"/>', A) + '<line x1="10" y1="30" x2="90" y2="30"' + fin(A, '.8', '1.6') + '/>' + noeuds([[22, 21], [30, 21]], A, 2.4), 50, 60, 26];
     default: {   // ploxion : le losange
       const v = [[50, 6], [94, 50], [50, 94], [6, 50]];
-      return [trace('<polygon points="' + pts(v) + '"/>', A) + '<polygon points="50,17 83,50 50,83 17,50"' + fin(B, '.5') + '/>' + noeuds(v, A), 50, 50, 20];
+      return [trace('<polygon points="' + pts(v) + '"/>', A) + '<polygon points="50,17 83,50 50,83 17,50"' + fin(B, '.5') + '/>' + noeuds(v, A), 50, 50, 27];
     }
   }
 }
@@ -133,21 +136,23 @@ const memo = new Map();
 /**
  * l'icône d'un ploxion (ou d'un xerkion, d'un cubion…), en SVG.
  * @param {object} p        { id, nom, categorie, cat, type?, koins?, centre?, xerkion? }
- * @param {object} [o]      { perso: { pal, centre, glyphe }, fond: true, photo: dataURL (à la place du glyphe), cls }
+ * @param {object} [o]      { perso: { pal, centre, glyphe, style }, fond: true, photo: dataURL (à la place du glyphe), cls,
+ *                          seul: le style par défaut est « glyphe seul » (⚙ › Apparence) ; le style d'une perso passe devant }
  */
-export function svgXerkion(p, { perso = null, fond = true, photo = null, cls = 'xki' } = {}) {
-  const k = !photo && JSON.stringify([p && p.id, p && p.nom, p && p.categorie, p && p.cat, p && p.type, p && p.koins, p && p.centre, p && p.xerkion, perso, fond, cls]);
+export function svgXerkion(p, { perso = null, fond = true, photo = null, cls = 'xki', seul = false } = {}) {
+  const k = !photo && JSON.stringify([p && p.id, p && p.nom, p && p.categorie, p && p.cat, p && p.type, p && p.koins, p && p.centre, p && p.xerkion, perso, fond, cls, seul]);
   if (k && memo.has(k)) return memo.get(k);
-  const s = specXerkion(p, perso), P = GPAL[s.pal];
-  const [corps, cx, cy, r] = forme(s, P), e = r * 1.72, z = e / 100;
+  const s = specXerkion(p, perso), P = GPAL[s.pal], glypheSeul = s.style ? s.style === 'glyphe' : !!seul;
+  // glyphe seul : pas de forme, le glyphe occupe la tuile (62 %) ; sinon la forme du type et le glyphe dans son disque
+  const [corps, cx, cy, r] = glypheSeul ? ['', 50, 50, 36] : forme(s, P), e = glypheSeul ? 64 : r * 1.62, z = e / 100;
   const centre = photo
     ? '<clipPath id="xkc"><circle cx="' + cx + '" cy="' + cy + '" r="' + r + '"/></clipPath><image href="' + photo + '" x="' + f1(cx - r) + '" y="' + f1(cy - r) + '" width="' + r * 2 + '" height="' + r * 2 + '" preserveAspectRatio="xMidYMid slice" clip-path="url(#xkc)"/>'
-    : '<g transform="translate(' + f1(cx - e / 2) + ' ' + f1(cy - e / 2) + ') scale(' + z.toFixed(3) + ')" fill="none" stroke="' + P.a + '" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">' + interieur(p, s.glyphe) + '</g>';
-  const svg = '<svg class="' + cls + '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" aria-hidden="true" focusable="false" data-type="' + s.type + '">'
+    : '<g transform="translate(' + f1(cx - e / 2) + ' ' + f1(cy - e / 2) + ') scale(' + z.toFixed(3) + ')" fill="none" stroke="' + P.a + '" stroke-width="' + (glypheSeul ? 6.5 : 7.5) + '" stroke-linecap="round" stroke-linejoin="round">' + interieur(p, s.glyphe) + '</g>';
+  const svg = '<svg class="' + cls + '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" aria-hidden="true" focusable="false" data-type="' + s.type + '" data-style="' + (glypheSeul ? 'glyphe' : 'xerboxion') + '">'
     // le fond sans dégradé ni id (une tuile cachée qui porterait le dégradé le casserait pour les autres sous WebKit)
     + (fond ? '<rect width="100" height="100" fill="' + P.bg + '"/><circle cx="50" cy="42" r="48" fill="' + P.a + '" fill-opacity=".07"/>' : '')
     + corps
-    + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="rgba(0,0,0,.72)" stroke="' + P.a + '" stroke-width="1.4"/>'
+    + (glypheSeul ? '' : '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="rgba(0,0,0,.72)" stroke="' + P.a + '" stroke-width="1.4"/>')
     + centre + '</svg>';
   // les classes des glyphes (.f = plein, .p = pointillé) en attributs : le SVG se suffit (DOM comme canvas)
   const sortie = svg.replace(/ class="f"/g, ' fill="' + P.a + '" stroke="none"').replace(/ class="p"/g, ' stroke-dasharray="7 7" stroke-width="4.5"');
@@ -156,7 +161,7 @@ export function svgXerkion(p, { perso = null, fond = true, photo = null, cls = '
 }
 
 /** le PNG (base64 sans préfixe) d'une icône, pour les clips de l'écran d'accueil ; null sans canvas */
-export function pngXerkion(W, p, { taille = 180, perso = null, photo = null } = {}) {
+export function pngXerkion(W, p, { taille = 180, perso = null, photo = null, seul = false } = {}) {
   return new Promise((res) => {
     try {
       const c = W.document.createElement('canvas'); c.width = c.height = taille;
@@ -165,7 +170,7 @@ export function pngXerkion(W, p, { taille = 180, perso = null, photo = null } = 
       const rendre = (v) => { if (fini) return; fini = true; W.clearTimeout(t); res(v); };
       img.onload = () => { try { x.drawImage(img, 0, 0, taille, taille); const u = c.toDataURL('image/png'); rendre(u && u.startsWith('data:image/png;base64,') ? u.slice(22) : null); } catch (e) { rendre(null); } };
       img.onerror = () => rendre(null);
-      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgXerkion(p, { perso, photo, cls: 'xki' }));
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgXerkion(p, { perso, photo, cls: 'xki', seul }));
     } catch (e) { res(null); }
   });
 }

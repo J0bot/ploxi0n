@@ -16,13 +16,13 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '
 export const teinteDe = (id) => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return 160 + (h % 160); };
 
 /** l'icône d'un clip (PNG, base64 sans préfixe) : son xerkion, perso compris ; null sans canvas */
-export function iconePng(W, p, taille = 180, perso = null) {
-  return pngXerkion(W, p, { taille, perso: specPerso(perso), photo: perso && perso.photo || null });
+export function iconePng(W, p, taille = 180, perso = null, seul = false) {
+  return pngXerkion(W, p, { taille, perso: specPerso(perso), photo: perso && perso.photo || null, seul });
 }
 /** ce qui, d'une perso, touche le dessin (le nom et la photo vivent à côté) */
 export function specPerso(o) {
   if (!o) return null; const r = {};
-  for (const k of ['pal', 'centre', 'glyphe']) if (o[k] != null) r[k] = o[k];
+  for (const k of ['pal', 'centre', 'glyphe', 'style']) if (o[k] != null) r[k] = o[k];
   return Object.keys(r).length ? r : null;
 }
 /** une photo → un carré de 160 px (JPEG) : léger dans le profil et dans boxion_local */
@@ -37,7 +37,7 @@ function reduirePhoto(W, fichier) {
   });
 }
 
-export function creerEcranAccueil({ W = globalThis.window, trouver, liste, boxion, envoyer, source = 'https://labo.j0bot.ch', verrous = () => [], jeton = async () => null, surPerso = () => {} }) {
+export function creerEcranAccueil({ W = globalThis.window, trouver, liste, boxion, envoyer, source = 'https://labo.j0bot.ch', verrous = () => [], jeton = async () => null, surPerso = () => {}, seul = () => false }) {
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
   async function ouvrirSafari(url) {
     if (natif()) { const { AppLauncher } = await import('@capacitor/app-launcher'); await AppLauncher.openUrl({ url }); return; }
@@ -53,7 +53,7 @@ export function creerEcranAccueil({ W = globalThis.window, trouver, liste, boxio
   function garderPerso() { retouche = true; if (boxion) ecriture = ecriture.then(() => boxion.put('reglages', 'apps-accueil-perso', perso)).catch(() => {}); }
   function fermer(f) { f.remove(); if (!retouche) return; retouche = false; ecriture.then(() => { try { surPerso(perso); } catch (e) { /* */ } }); }
   const nomDe = (p) => String((perso && perso[p.id] && perso[p.id].nom) || p.nom || p.id).slice(0, 40);
-  const icone = (p) => svgXerkion(p, { perso: specPerso(perso && perso[p.id]), photo: (perso && perso[p.id] && perso[p.id].photo) || null });
+  const icone = (p) => svgXerkion(p, { perso: specPerso(perso && perso[p.id]), photo: (perso && perso[p.id] && perso[p.id].photo) || null, seul: seul() });
 
   /** fabrique le profil (labo) et l'ouvre dans Safari ; rend l'URL */
   let dansApp = false;   // (12.10) par défaut l'icône EST le ploxion (seul, en ligne) ; sinon ploxi0n s'ouvre dessus
@@ -64,7 +64,7 @@ export function creerEcranAccueil({ W = globalThis.window, trouver, liste, boxio
     // labo est prévenu (verrou: true) : pas de repli sur /px/<id> en ligne pour lui.
     const ferme = new Set(verrous() || []);
     const ps = ids.map(id => trouver(id)).filter(Boolean).slice(0, 40);
-    const apps = await Promise.all(ps.map(async p => Object.assign({ id: p.id, nom: nomDe(p), icone: await iconePng(W, p, 180, perso[p.id]), mode: dansApp || ferme.has(p.id) ? 'app' : 'seul' },
+    const apps = await Promise.all(ps.map(async p => Object.assign({ id: p.id, nom: nomDe(p), icone: await iconePng(W, p, 180, perso[p.id], seul()), mode: dansApp || ferme.has(p.id) ? 'app' : 'seul' },
       ferme.has(p.id) ? { verrou: true, url: 'ploxi0n://px/' + encodeURIComponent(p.id) } : {})));
     if (!apps.length) throw new Error('choisis au moins un ploxion');
     if (apps.some(a => !a.icone)) throw new Error('impossible de dessiner les icônes');
@@ -86,7 +86,7 @@ export function creerEcranAccueil({ W = globalThis.window, trouver, liste, boxio
   async function proposer(id) {
     await lirePerso(); const p = trouver(id); if (!p) throw new Error('ploxion inconnu');
     const o = perso[id] || {}, s = specXerkion(p, specPerso(o));
-    const prop = { ploxion: id, xerkion: { pal: s.pal, centre: s.centre, glyphe: s.glyphe }, type: s.type, nom: o.nom || null, photo: !!o.photo, png: await iconePng(W, p, 180, o), le: new Date().toISOString() };
+    const prop = { ploxion: id, xerkion: { pal: s.pal, centre: s.centre, glyphe: s.glyphe, style: s.style || (seul() ? 'glyphe' : 'xerboxion') }, type: s.type, nom: o.nom || null, photo: !!o.photo, png: await iconePng(W, p, 180, o, seul()), le: new Date().toISOString() };
     if (await poster(prop)) return 'envoyee';
     const file = (boxion && await boxion.get('reglages', 'icones-proposees').catch(() => null)) || [];
     file.push(prop); if (boxion) await boxion.put('reglages', 'icones-proposees', file.filter((x, i, l) => l.findLastIndex(y => y.ploxion === x.ploxion) === i).slice(-30)).catch(() => {});
@@ -102,13 +102,14 @@ export function creerEcranAccueil({ W = globalThis.window, trouver, liste, boxio
 
   // L'ATELIER d'une icône : peint dans la feuille (f), rend true si la feuille doit être repeinte
   function atelierHtml(id) {
-    const p = trouver(id) || { id }, o = perso[id] || {}, s = specXerkion(p, specPerso(o));
+    const p = trouver(id) || { id }, o = perso[id] || {}, s = specXerkion(p, specPerso(o)), st = s.style || (seul() ? 'glyphe' : 'xerboxion');
     const puces = (attr, vals, cur, lib = (v) => v) => '<div class="px-puces px-at-puces">' + vals.map(v => '<button class="px-puce' + (String(v) === String(cur) ? ' on' : '') + '" ' + attr + '="' + esc(v) + '">' + esc(lib(v)) + '</button>').join('') + '</div>';
     return '<div class="px-tiroir px-guide px-atelier"><p class="px-ft">' + glyphe('editer') + ' L\'icône de ' + esc(p.nom || id) + '</p>'
       + '<div class="px-at-tete"><span class="px-at-apercu">' + icone(p) + '</span><label class="px-at-nom">le nom sous l\'icône<input data-at-nom maxlength="40" value="' + esc(nomDe(p)) + '" autocomplete="off"></label></div>'
       + '<p class="px-at-t">la palette</p><div class="px-at-pal">' + GPAL.map((P, i) => '<button class="' + (i === s.pal ? 'on' : '') + '" data-pal="' + i + '" style="--c:' + P.a + '" aria-label="' + P.n + '"></button>').join('') + '</div>'
-      + '<p class="px-sous px-at-type">' + esc(s.type) + ' · ' + esc(FORMES[s.type] || '') + (s.cotes ? ' (' + s.cotes + ')' : '') + ' : la forme dit ce qu\'il est, elle ne se change pas</p>'
-      + (s.type === 'xerkion' ? '<p class="px-at-t">le cœur</p>' + puces('data-centre', CENTRES, s.centre) : '')
+      + '<p class="px-at-t">le style</p>' + puces('data-style', ['xerboxion', 'glyphe'], st, (v) => v === 'glyphe' ? 'glyphe seul' : 'xerboxion')
+      + (st === 'xerboxion' ? '<p class="px-sous px-at-type">' + esc(s.type) + ' · ' + esc(FORMES[s.type] || '') + (s.cotes ? ' (' + s.cotes + ')' : '') + ' : la forme dit ce qu\'il est, elle ne se change pas</p>' : '')
+      + (st === 'xerboxion' && s.type === 'xerkion' ? '<p class="px-at-t">le cœur</p>' + puces('data-centre', CENTRES, s.centre) : '')
       + '<p class="px-at-t">le glyphe</p><div class="px-at-gl">' + Object.keys(GLYPHES).map(n => '<button class="' + (n === s.glyphe ? 'on' : '') + '" data-gl="' + n + '" aria-label="' + n + '">' + glyphe(n) + '</button>').join('') + '</div>'
       + '<div class="px-puces px-at-puces"><label class="px-puce">' + glyphe('photo') + ' une photo<input type="file" accept="image/*" data-at-photo hidden></label>' + (o.photo ? '<button class="px-puce" data-at-sans-photo>sans la photo</button>' : '') + '<button class="px-puce" data-at-defaut>par défaut</button></div>'
       + '<button class="p" data-at-ok>c\'est elle</button><button data-at-proposer>' + glyphe('partager') + ' proposer cette icône au labo</button><p class="px-sous" data-msg style="margin:6px 2px"></p></div>';
@@ -147,6 +148,7 @@ export function creerEcranAccueil({ W = globalThis.window, trouver, liste, boxio
       if (atelier) {
         const t = e.target; let b;
         if ((b = t.closest('[data-pal]'))) { majPerso(atelier, 'pal', +b.getAttribute('data-pal')); return peindre(); }
+        if ((b = t.closest('[data-style]'))) { majPerso(atelier, 'style', b.getAttribute('data-style')); return peindre(); }
         if ((b = t.closest('[data-centre]'))) { majPerso(atelier, 'centre', b.getAttribute('data-centre')); return peindre(); }
         if ((b = t.closest('[data-gl]'))) { majPerso(atelier, 'glyphe', b.getAttribute('data-gl')); majPerso(atelier, 'photo', null); return peindre(); }
         if (t.closest('[data-at-sans-photo]')) { majPerso(atelier, 'photo', null); return peindre(); }

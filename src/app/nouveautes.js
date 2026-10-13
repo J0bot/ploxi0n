@@ -4,6 +4,11 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.56.0', titre: 'Plus de ploxions ouverts, des glyphes lisibles', points: [
+    'Ploxions vivants en arrière-plan : 12 par défaut, jusqu\'à 20, ou ∞ (⚙ › Navigation). Cachés, ils sont gelés et leurs vidéos coupées ; au-delà de la limite, le plus ancien s\'endort dans les mini docks.',
+    'Le glyphe au centre des icônes est bien plus grand.',
+    'Deux styles d\'icônes (⚙ › Apparence) : xerboxion (la forme dit le type, le glyphe au centre) ou glyphe seul, en grand. App par app aussi : appui long › son icône › le style.',
+  ] },
   { v: '0.55.0', titre: 'Les icônes du xerboxion, et Face ID tient', points: [
     'Chaque ploxion a son icône, dessinée comme les xerkions du labo : la FORME dit ce qu\'il est (ploxion = losange, xerkion = autant de côtés que de koins, xer = octogone, cubion = cube, kion, koin, wormion, spherion, portion, bion, boxion), la COULEUR et le glyphe disent sa catégorie.',
     'L\'atelier : appui long sur un ploxion › « son icône » (ou la feuille de l\'écran d\'accueil) : sa palette, son glyphe, une photo, et le nom sous l\'icône de l\'iPhone.',

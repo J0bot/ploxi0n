@@ -28,6 +28,7 @@ const cellule = (p) => '<div class="c">' + svgXerkion(p) + '<span>' + esc(p.nom 
 const planches = [];
 planches.push({ nom: '01-app', html: '<h1>ploxi0n · les icônes xerkion</h1><p>le polygone-xer (5 à 8 côtés), ses koins, le cœur (wormion · portion · kion), le disque et le glyphe du ploxion — palettes des hubs du labo</p>'
   + '<div class="g">' + [...internesCat, ...pack].map(cellule).join('') + '</div>' });
+planches.push({ nom: '01-app-glyphe-seul', html: '<h1>ploxi0n · style « glyphe seul »</h1><p>⚙ › Apparence › Style des icônes, ou app par app (appui long › son icône)</p><div class="g">' + [...internesCat, ...pack].map(p => '<div class="c">' + svgXerkion(p, { seul: true }) + '<span>' + esc(p.nom || p.id) + '</span></div>').join('') + '</div>' });
 const exemple = { ploxion: { id: 'exemple' }, xerkion: { id: 'xerkion-ex', koins: 6, centre: 'wormion' }, xer: { id: 'xer' }, cubion: { id: 'cubion' }, kion: { id: 'kion' }, koin: { id: 'koin' },
   wormion: { id: 'wormion' }, spherion: { id: 'spherion' }, portion: { id: 'portion' }, bion: { id: 'bion' }, boxion: { id: 'boxion' } };
 const xks = [3, 4, 5, 6, 7, 8, 9, 10, 12].map(n => ({ id: 'xerkion-n' + n, nom: n + ' koins', koins: n, centre: ['wormion', 'portion', 'kion'][n % 3] }));

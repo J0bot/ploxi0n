@@ -11,7 +11,7 @@
 //     ouvre LA PAGE DE TOUS LES MINI DOCKS (une feuille : chacun avec toutes ses actions et ✕, les endormis 💤, « tout fermer »). ⧉ (la
 //     barre d'un ploxion, le geste « basculer ») ouvre cette page ; elle remplace la rangée « en arrière-plan » de l'accueil.
 // Le DOM : .px-md (dans <body>, après #ploxi0n : caché hors de l'accueil) ; <html> porte --px-md (la hauteur de la pile, pour l'accueil).
-import { glyphe, glyphePloxion, versGlyphe } from './glyphes.js';
+import { glyphe, versGlyphe } from './glyphes.js';
 import { svgXerkion } from './xerkion-icone.js';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const teinte = (id) => { let h = 0; for (const c of String(id || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0; return 160 + (h % 160); };   // comme les tuiles
@@ -60,7 +60,7 @@ export function creerMiniDocks({ W = globalThis.window, routeur = () => null, pr
   const trouver = (cle) => liste().find(m => m.cle === cle) || null;
 
   // ---- dessiner ------------------------------------------------------------------------------------------------------------------------
-  const icone = (m) => (m.image ? '<img alt="" src="' + esc(m.image) + '">' : '<span class="px-md-g">' + (m.auto && m.ploxion ? (prefs().xerkions === false ? glyphePloxion({ id: m.ploxion, nom: m.titre }) : svgXerkion({ id: m.ploxion, nom: m.titre })) : versGlyphe(m.icone || 'ion')) + '</span>');   // ◇ (0.54) des glyphes
+  const icone = (m) => (m.image ? '<img alt="" src="' + esc(m.image) + '">' : '<span class="px-md-g">' + (m.auto && m.ploxion ? svgXerkion({ id: m.ploxion, nom: m.titre }, { seul: prefs().styleIcones === 'glyphe' }) : versGlyphe(m.icone || 'ion')) + '</span>');   // ◇ (0.54) des glyphes
   function carte(m, complet) {
     const acts = complet ? m.actions : m.actions.slice(0, MAX_ACTIONS_PILE);
     return '<div class="px-md-c' + (m.enCours ? ' joue' : '') + (m.endormi ? ' dort' : '') + (m.ici ? ' ici' : '') + (!complet && !connus.has(m.cle) ? ' neuf' : '') + '" data-md="' + esc(m.cle) + '" style="--t:' + teinte(m.ploxion || m.cle) + '" role="group" aria-label="' + esc(m.titre) + '">'
