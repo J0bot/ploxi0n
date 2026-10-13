@@ -6,7 +6,7 @@
 //   maxVivants  ploxions gardés vivants en arrière-plan    dock       le dock en bas de l'accueil
 //   plaque      la plaque gravée « cycle … » de l'accueil
 //   haptique    les retours haptiques (ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs…)
-export const PREFS_DEFAUT = { barreClavier: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'chill-tekk', miniDocks: 2 };
+export const PREFS_DEFAUT = { barreClavier: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'chill-tekk', miniDocks: 2, pxChill: true };
 
 export function creerPrefs({ W = globalThis.window, boxion }) {
   let p = { ...PREFS_DEFAUT };
@@ -16,6 +16,7 @@ export function creerPrefs({ W = globalThis.window, boxion }) {
     const h = W.document.documentElement;
     h.classList.toggle('px-sans-grain', !p.grain);
     h.classList.toggle('px-calme', !!p.calme);
+    h.classList.toggle('px-px-chill', p.pxChill !== false);   // ◇ (0.52) tous les ploxions en chill-tekk
     h.classList.toggle('px-contraste', p.contraste === 'fort');
     for (const t of ['petites', 'normales', 'grandes']) h.classList.toggle('px-icones-' + t, p.icones === t);
     h.classList.toggle('px-sans-dock', !p.dock);

@@ -469,3 +469,28 @@ html.px-anime .px-md-c.joue{box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 
 .px-tiroir .px-md-bas .px-md-tout{text-align:center;color:#e8a0b8}
 .px-calme .px-md-c.neuf{animation:none}
 @media (prefers-reduced-motion:reduce){.px-md-c.neuf{animation:none}}
+/* ◇ (0.52) CHILL-TEKK POUR TOUS LES PLOXIONS (RS-7 : « il faut chill-tekk-iser tous les ploxions pour avoir un thème commun »). Les ploxions
+   du labo se peignent avec les variables du xer (--xr-accent ×334, --xr-border ×214, --xr-text, --xr-muted, --xr-bg, --xr-font-ui…, que
+   jOSTheme pose sur <html>) : l'app les redéfinit sur <body> avec les jetons chill-tekk → tous les ploxions (et ce qu'ils accrochent hors
+   de leur hôte) prennent le thème de l'app, sans réécrire une ligne. Puis une base À SPÉCIFICITÉ NULLE (:where) pour ce qu'un ploxion ne
+   style pas du tout (boutons, champs, liens, titres, tableaux, barres de défilement) : sa moindre règle à lui l'emporte. ⚙ › Apparence. */
+html.px-px-chill body{
+  --xr-bg:var(--bg); --xr-bg2:var(--creux); --xr-bg-soft:var(--surface); --xr-panel:var(--surface); --xr-surface:var(--surface); --xr-card:var(--surface2);
+  --xr-border:var(--bord); --xr-line:var(--bord); --xr-text:var(--txt); --xr-fg:var(--txt); --xr-muted:var(--muted); --xr-text-dim:var(--muted);
+  --xr-accent:var(--acc); --xr-accent2:var(--bio); --xr-accent-2:var(--bio); --xr-accent-soft:rgba(165,151,207,.16); --xr-accent-weak:rgba(165,151,207,.1);
+  --xr-glow:var(--glow); --xr-ok:var(--bio); --xr-radius:14px; --xr-font-ui:var(--police); --xr-font:var(--police); --xr-font-mono:var(--mono);
+  --neon-green:var(--bio);
+}
+:where(html.px-px-chill .px-hote){color:var(--txt);font-family:var(--police);color-scheme:dark;accent-color:var(--acc);scrollbar-color:var(--bord2) transparent}
+:where(html.px-px-chill .px-hote) :where(button,select,input:not([type=checkbox],[type=radio],[type=range],[type=color],[type=file]),textarea){
+  font:inherit;color:var(--txt);background:var(--surface2);border:var(--trait) solid var(--bord);border-radius:11px;padding:6px 12px;min-height:36px;box-sizing:border-box;box-shadow:inset 0 0 0 1px var(--filet)}
+:where(html.px-px-chill .px-hote) :where(input,textarea)::placeholder{color:var(--muted)}
+:where(html.px-px-chill .px-hote) :where(input,textarea,select):focus{outline:2px solid var(--acc2);outline-offset:1px}
+:where(html.px-px-chill .px-hote) :where(a){color:var(--acc)}
+:where(html.px-px-chill .px-hote) :where(h1,h2,h3,h4){color:var(--txt);font-family:var(--police);letter-spacing:.01em}
+:where(html.px-px-chill .px-hote) :where(hr){border:0;border-top:1px solid var(--bord)}
+:where(html.px-px-chill .px-hote) :where(th,td){border-bottom:1px solid var(--bord);padding:6px 8px}
+:where(html.px-px-chill .px-hote) :where(code,pre,kbd){font-family:var(--mono)}
+:where(html.px-px-chill .px-hote) ::selection{background:rgba(165,151,207,.35)}
+.px-labo{background:var(--bg) var(--grain)}.px-labo iframe{transition:opacity .3s}
+.px-labo-attente{position:absolute;inset:0;margin:0;display:flex;align-items:center;justify-content:center;font:600 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}

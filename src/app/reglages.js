@@ -107,6 +107,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + '<div class="l"><span>Composer la barre du haut<small>quels éléments, à gauche ou à droite</small></span><button data-a="barre-haut">composer</button></div>'
           + bascule('data-pb="themeVivant"', P.themeVivant !== false, 'Thème vivant', 'le thème suit le téléphone (gyroscope, accéléromètre) : le fond glisse, les icônes flottent et attrapent la lumière, un choc les fait tressauter')
           + '<div class="l ls"><span>État du mouvement<small data-mouvement>…</small></span></div>'
+          + bascule('data-pb="pxChill"', P.pxChill !== false, 'Chill-tekk pour tous les ploxions', 'leurs couleurs, polices, boutons et champs suivent ceux de l\'app (les variables du xer, --xr-*) ; coupé : chacun garde son style du labo')
           + bascule('data-pb="grain"', P.grain, 'Patine', 'le grain usé des plaques')
           + bascule('data-pb="contraste"', P.contraste === 'fort', 'Contraste fort', 'textes et bords plus clairs')
           + bascule('data-pb="calme"', P.calme, 'Calme', 'plus aucune animation, même aux gestes')

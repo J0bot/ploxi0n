@@ -5,7 +5,7 @@
 
 **Légende** : ✅ fait (version) · 🔨 en cours · ⏭ prochain · 💭 plus tard · ❓ attend une décision de RS-7 · ⚠ fait, mais jamais vu marcher sur l'iPhone
 
-*Dernière mise à jour : 0.51 (13.10). La 0.45 est le dernier build TestFlight ; la 0.46 à la 0.51 attendent les minutes Actions
+*Dernière mise à jour : 0.52 (13.10). La 0.45 est le dernier build TestFlight ; la 0.46 à la 0.51 attendent les minutes Actions
 (1.11) ou un build lancé à la main (`git tag v0.50 && git push origin v0.50`, ou Codemagic : docs/TESTFLIGHT.md, depuis main ; options « widgets » et « vlc » au lancement manuel).*
 
 ---
@@ -47,6 +47,10 @@ avant la 0.46. Toutes les lignes ⚠ ci-dessous sont à **revérifier sur l'iPho
 | ✅ 0.51 | 🎞 **Stremio → natif pour de vrai** : le plugion enveloppe `jOSPlayer.play` (le bion du labo ; 0.49 visait une API inventée) ; reprise `xb:resume:<key>`, `onNext`, sous-titres, repli web par événement, `jOSPlayer.natif` ; `window.open` d'un flux passe devant Safari ; les partages `capacitor://` → le lien du labo | ⚠ iPhone |
 | ✅ 0.51 | 🎧 **Spotify** : installable (le code extrait de `/px/spotify`, pas d'app.js au labo — vaut pour wiki, notes, calendar…) ; l'accroche du SDK tient dans tous les ordres, `disconnect` → fin ; la source `jOSSound` (music, Lecteur) ; le mode xerboxion reçoit `postMessage({ ploxi0n: 'lecture' })` ; `/auth/…` du serveur → Safari ; jamais de jeton en cache | ⚠ iPhone (le SDK sur WKWebView : DRM ?) |
 | ✅ 0.51 | 📶 Les bions absents (404 HTML de 3,5 Mo) notés 7 jours : ~10 Mo de moins par installation de Stremio | |
+| ✅ 0.52 | ◇ **Chill-tekk pour tous les ploxions** : les `--xr-*` du labo (jOSTheme, ×900 usages) redéfinis sur `<body>` avec les jetons de l'app + une base `:where()` (spécificité nulle) pour ce qu'un ploxion ne style pas ; `prefs.pxChill` (⚙ › Apparence). Limite : les couleurs écrites EN DUR restent (Horloge en vert) → côté labo, passer par `--xr-*` | ✅ galerie du faux iPhone |
+| ✅ 0.52 | ⬡ Mode xerboxion : l'iframe sondée avant d'être montrée (plus de blanc) ; la barre d'installation en erreur 5 s au lieu de 9 | |
+| ⏭ | 🎨 **Les peaux** (docs/LOOK.md : Ryoku d'abord, 43PR, Aperture OS) : une grammaire de panneau HUD, des palettes et des fonds | |
+| ⏭ | Pomodoro ouvre Minuteur, absent du pack hors ligne : l'ajouter au pack | |
 | ⏭ | 🪟 **La bande façon niri** (RS-7 13.10) : les ploxions vivants en colonnes sur une bande qu'on fait défiler, le nouveau s'ouvre à droite, une vue d'ensemble | |
 | ⏭ | 📚 **Le lot de ploxions** (RS-7 13.10) : Zotero, Foliate (EPUB : foliate-js), browser façon Helium (le `web` du labo + natif), Blanket (ambiances), vaults Obsidian, LocalSend (natif, LAN), AppFlowy, Manim (le `math` du labo), mpv (le lecteur intégré), btop (+ le xerminal du labo) | composer avant de créer |
 | 💭 | Le mode **xeroction** (voir ce qu'on a fait : la frise des tsoins, le Nexus) ; XERB0T : les gestes de la blouse = ordres au robot (labo-cape EXTRAPOLATION) | |

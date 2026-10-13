@@ -45,7 +45,7 @@ import { creerCape } from './cape/cape.js';
 import { creerModes } from './app/modes.js';
 import { creerMiniDocks } from './app/minidocks.js';
 
-const VERSION = '0.51.0';
+const VERSION = '0.52.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {

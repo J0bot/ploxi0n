@@ -26,7 +26,7 @@ export async function installerAvecBarre({ W = globalThis.window, depot, id, met
     f.classList.add('ko'); vibrer('erreur');
     etape.textContent = '⚠ ' + (e.message || e);
     const b = D.createElement('button'); b.textContent = 'fermer'; b.onclick = () => f.remove(); f.appendChild(b);
-    W.setTimeout(() => f.remove(), 9000);
+    W.setTimeout(() => f.remove(), 5000);   // (0.52) 9 s : elle traînait sur les ploxions suivants
     throw e;
   }
 }

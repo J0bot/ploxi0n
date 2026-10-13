@@ -34,7 +34,8 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
   const puces = () => '<div class="px-modes" role="tablist">' + MODES.map(([k, i, n]) => '<button data-mode="' + k + '" class="' + (k === mode() ? 'on' : '') + '">' + i + ' ' + n + '</button>').join('') + '</div>';
   function panneauXerboxion() {
     if (W.navigator.onLine === false) return '<div class="px-mode-p"><p class="px-grave">⬡ xerboxion</p><p>L\'UI du labo demande le réseau. Hors ligne : ◇ chill-tekk.</p></div>';
-    return '<div class="px-mode-p px-labo"><iframe title="xerboxion" src="' + esc(source + chemin) + '?app=ploxi0n" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; geolocation" referrerpolicy="origin"></iframe></div>';
+    // (0.52) l'iframe reste invisible tant que l'UI du labo n'est pas là (plus de grand rectangle blanc) ; dessous, « ça arrive »
+    return '<div class="px-mode-p px-labo"><p class="px-labo-attente">⬡ l\'UI du labo arrive…</p><iframe onload="this.dataset.charge=1;if(this.dataset.ok)this.style.opacity=1" style="opacity:0" title="xerboxion" src="' + esc(source + chemin) + '?app=ploxi0n" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; geolocation" referrerpolicy="origin"></iframe></div>';
   }
   const carte = (ic, titre, sous, actions) => '<div class="px-xb-c"><span class="ic">' + ic + '</span><span><b>' + esc(titre) + '</b><small>' + sous + '</small></span><span class="act">' + actions + '</span></div>';
   function panneauXerbot() {
@@ -50,8 +51,18 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
       + '<p class="px-grave">bus xerbot.cmd</p><div class="px-xb-bus"><input data-xb-cmd placeholder="une commande pour les robots (ex. avance 1m)" autocomplete="off"><button data-xb="envoyer">envoyer</button></div>'
       + '<pre class="px-cape-log">' + esc(xb.messages.map(x => new Date(x.le).toLocaleTimeString('fr-CH') + '  ' + x.port + ' ' + (typeof x.p === 'string' ? x.p : JSON.stringify(x.p))).join('\n') || 'rien encore : la blouse, ultimate-bluetooth et les robots y publient') + '</pre></div>';
   }
+  // (0.52) une page d'erreur dans l'iframe (hors réseau, labo injoignable) est blanche et illisible depuis ici : on sonde le labo d'abord
+  function sonder() {
+    W.setTimeout(() => {
+      const f = D.querySelector('.px-labo iframe'); if (!f || f.dataset.sonde) return; f.dataset.sonde = '1';
+      Promise.race([W.fetch(source + chemin, { mode: 'no-cors', cache: 'no-store' }), new Promise((ok, ko) => W.setTimeout(() => ko(new Error('délai')), 8000))])
+        .then(() => { f.dataset.ok = '1'; if (f.dataset.charge) f.style.opacity = '1'; })
+        .catch(() => { const p = f.closest('.px-labo'); if (p) p.innerHTML = '<p class="px-labo-attente">⬡ le labo ne répond pas · ◇ chill-tekk en attendant</p>'; });
+    }, 0);
+  }
   function panneau() {
     const m = mode();
+    if (m === 'xerboxion') sonder();
     return puces() + (m === 'xerboxion' ? panneauXerboxion() : m === 'xerbot' ? panneauXerbot() : '');
   }
   function rafraichir() { const p = D.querySelector('.px-accueil .px-mode-p.px-xerbot'); if (p) p.outerHTML = panneauXerbot(); }
