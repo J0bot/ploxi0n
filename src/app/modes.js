@@ -20,6 +20,13 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
   W.addEventListener('message', (e) => {
     if (e.origin !== source || !e.data || typeof e.data !== 'object') return;
     if (e.data.ploxi0n === 'ouvrir' && typeof e.data.id === 'string') ouvrir(e.data.id.slice(0, 80));
+    // (0.51) ce que joue l'UI du labo (Spotify dans l'iframe : l'app n'y a pas accès) → l'écran verrouillé, le mini dock ; les commandes y retournent
+    if (e.data.ploxi0n === 'lecture' && N().lecture) {
+      const d = e.data, f = e.source, cmd = (c) => () => { try { f.postMessage({ ploxi0n: 'commande', c }, source); } catch (er) { /* */ } };
+      if (!d.titre) { N().lecture.fin(); return; }
+      N().lecture.surCommande((c) => cmd(c)());
+      N().lecture.publier({ titre: String(d.titre).slice(0, 200), artiste: String(d.artiste || '').slice(0, 200), image: /^https:/.test(d.image || '') ? d.image : '', enLecture: !!d.enLecture, duree: +d.duree || 0, position: +d.position || 0 });
+    }
   });
   // XERB0T : le bus (les ploxions et la blouse y parlent) ; les derniers messages s'affichent
   try { if (W.jOSPorts && W.jOSPorts.on) W.jOSPorts.on('*', (p, topic) => { if (!/^ploxion\.xerbot\./.test(topic || '')) return; xb.messages.unshift({ le: Date.now(), port: topic.slice(15), p }); xb.messages.length = Math.min(xb.messages.length, 12); if (mode() === 'xerbot') rafraichir(); }); } catch (e) { /* */ }

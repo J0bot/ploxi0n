@@ -87,13 +87,13 @@ async function connecterBle({ ble, surMessage, surFin }) {
   };
 }
 
-export function creerCape({ W = globalThis.window, boxion, vibrer = () => {}, ble = () => import('@capacitor-community/bluetooth-le').then(m => m.BleClient), layout = BLOUSE_RS7 } = {}) {
+export function creerCape({ W = globalThis.window, boxion, vibrer = () => {}, ble = () => import('@capacitor-community/bluetooth-le').then(m => m.BleClient), layout = BLOUSE_RS7, miniDock = () => W.jOSMiniDock } = {}) {
   const D = W.document;
   const noms = Object.fromEntries(layout.components.map(c => [c.id, c.name]));
   const chauffes = layout.components.filter(c => c.kind === 'heater'), capteurs = layout.components.filter(c => c.kind === 'ntc'), leds = layout.components.filter(c => c.kind === 'led');
 
   function mount(hote) {
-    let source = null, minuteur = null, vivant = true, enreg = null, peint = 0;
+    let source = null, minuteur = null, vivant = true, enreg = null, peint = 0, mini = 0;
     const etat = { temp: {}, duty: {}, power: null, logs: [], sp: 38, on: {}, led: { mode: 'temp', bright: 0.25 }, maxT: 0 };
     const topic = (t) => 'cape.' + (source ? source.id : '?') + '.' + t;
     function recevoir(t, p) {
@@ -105,6 +105,20 @@ export function creerCape({ W = globalThis.window, boxion, vibrer = () => {}, bl
       try { if (W.jOSPorts && W.jOSPorts.emit) W.jOSPorts.emit('cape', topic(t), p); } catch (e) { /* */ }
       if (enreg) { enreg.n++; boxion.append('cape', { session: enreg.id, t: topic(t), p }).catch(() => {}); }
       if (Date.now() - peint > 250) { peint = Date.now(); W.requestAnimationFrame(dessiner); }
+      if (Date.now() - mini > 1500) versMiniDock();
+    }
+    // ▤ (0.51) le mini dock de la blouse : la plus chaude, la consigne, l'autonomie ; − + la consigne ; ⏻ éteint tout (jamais rallumer d'ici :
+    // ne pas nuire — rallumer une chauffe se fait dans le ploxion, en la regardant)
+    function versMiniDock() {
+      const md = miniDock(); if (!md) return; mini = Date.now();
+      if (!vivant || !source) { md.retirer('cape'); return; }
+      const p = etat.power, auto = p ? E.autonomyH(PILE_WH, EFFICACITE, p.wh_used || 0, p.w || 0) : null;
+      const chaud = Math.max(-Infinity, ...chauffes.map(z => +etat.temp[z.id]).filter(Number.isFinite)), allume = chauffes.some(z => etat.on[z.id] !== false);
+      md.publier({ cle: 'cape', ploxion: 'cape', titre: 'labo-cape · ' + (source.id === 'sim' ? 'simulation' : source.nom), icone: '🥼', enCours: allume,
+        sous: (Number.isFinite(chaud) ? chaud.toFixed(1) + ' °C' : '—') + ' · consigne ' + etat.sp + ' °C' + (auto == null ? '' : ' · ' + (auto === Infinity ? '∞' : auto.toFixed(1) + ' h')) + (allume ? '' : ' · éteinte'),
+        actions: [{ id: 'moins', icone: '−', nom: 'consigne −1 °C', faire: () => { etat.sp = Math.max(20, etat.sp - 1); return commander('cmd.setpoint', { zone: '*', c: etat.sp }); } },
+          { id: 'plus', icone: '+', nom: 'consigne +1 °C', faire: () => { etat.sp = Math.min(E.SETPOINT_MAX_C, etat.sp + 1); return commander('cmd.setpoint', { zone: '*', c: etat.sp }); } },
+          ...(allume ? [{ id: 'eteindre', icone: '⏻', nom: 'tout éteindre', faire: () => { for (const z of chauffes) etat.on[z.id] = false; return commander('cmd.enable', { zone: '*', on: false }); } }] : [])] });
     }
     async function commander(t, p) {
       if (!source) return;
@@ -112,8 +126,9 @@ export function creerCape({ W = globalThis.window, boxion, vibrer = () => {}, bl
       vibrer('selection');
       try { const r = await source.commande(t, p); if (r) recevoir(r[0], r[1]); else recevoir('log', t + ' ' + JSON.stringify(p)); }
       catch (e) { recevoir('log', '⚠ ' + (e.message || e)); }
+      versMiniDock();
     }
-    function arreter() { W.clearInterval(minuteur); minuteur = null; if (source) source.fermer(); source = null; }
+    function arreter() { W.clearInterval(minuteur); minuteur = null; if (source) source.fermer(); source = null; versMiniDock(); }
     function simuler() {
       arreter(); source = creerSimulation({ layout });
       recevoir('log', 'simulation : le moteur de cape-core, ×20');
@@ -164,7 +179,7 @@ export function creerCape({ W = globalThis.window, boxion, vibrer = () => {}, bl
       if (b.hasAttribute('data-lum')) { etat.led.bright = Math.round(Math.min(1, Math.max(0, etat.led.bright + +b.getAttribute('data-lum'))) * 100) / 100; return commander('cmd.led', { ...etat.led }); }
     });
     dessiner();
-    return { unmount() { vivant = false; arreter(); hote.innerHTML = ''; } };   // le silence : BLE fermé, simulation arrêtée
+    return { unmount() { vivant = false; arreter(); hote.innerHTML = ''; } };   // arreter() retire aussi le mini dock   // le silence : BLE fermé, simulation arrêtée
   }
   W.jOSApps = W.jOSApps || {};
   W.jOSApps.cape = { manifest: { id: 'cape', name: 'labo-cape', icon: '🥼' }, mount };

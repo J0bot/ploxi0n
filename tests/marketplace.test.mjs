@@ -610,3 +610,28 @@ test('le tuto d\'accueil : une fois, 9 cartes au pouce, glisser pour avancer, «
     await t.auDemarrage(); assert.equal(W.document.querySelector('.px-tuto'), null, 'pas deux fois');
   } finally { p.fin(); }
 });
+
+test('(0.51) un ploxion servi dans sa page (Spotify : pas d\'app.js) s\'installe quand même ; un bion absent n\'est pas redemandé (404 de 3,5 Mo)', async () => {
+  const { bundleDeLaPage } = await import('../src/marketplace/depot.js');
+  const PAGE = '<html><head><style>.page{}</style><script>window.jOSSound=window.jOSSound||{};</script></head><body>'
+    + '<style>.sp{color:red}</style>\n<script>(function(){ function mount(h){ h.innerHTML="<b class=sp>sp</b>"; window.jOSSound && 1; window.jOSCineJournal && 1; return { unmount(){} }; }\n'
+    + 'window.jOSApps = window.jOSApps || {}; window.jOSApps[\'spotify\'] = { manifest: { id: \'spotify\' }, mount: mount }; })();</script>\n'
+    + '<div id="pxhost"></div><script>/* le lanceur de la page */ window.jOSApps["spotify"].mount(document.getElementById("pxhost"));</script></body></html>';
+  const js = bundleDeLaPage(PAGE, 'spotify');
+  assert.ok(js.includes('.sp{color:red}') && !js.includes('.page{}'), 'seulement le style collé au script du ploxion');
+  assert.ok(!js.includes('le lanceur'), 'pas le lanceur de la page');
+  assert.equal(bundleDeLaPage('<html>rien</html>', 'spotify'), null);
+  const appels = []; const HTML404 = '<!doctype html><html>' + 'x'.repeat(50) + '</html>';
+  const http = { async get(url) { appels.push(url);
+    if (url.endsWith('/px/spotify/app.js')) return { status: 404, texte: HTML404, entetes: {} };
+    if (url.endsWith('/px/spotify')) return { status: 200, texte: PAGE, entetes: {} };
+    if (url.endsWith('/jOSSound.js')) return { status: 200, texte: 'window.jOSSound = window.jOSSound || { list: function(){ return []; } };', entetes: {} };
+    return { status: 404, texte: HTML404, entetes: {} }; } };
+  const boxion = creerMemoire(), d = creerDepot({ boxion, http });
+  const r = await d.installer('spotify', { nom: 'Spotify', icone: '🎧' });
+  assert.deepEqual(r.bions, ['jOSSound']);
+  assert.ok((await d.bundle('spotify')).includes('jOSApps[\'spotify\']'));
+  const avant = appels.filter(u => /jOSCineJournal/.test(u)).length;
+  await d.completerBions();
+  assert.equal(appels.filter(u => /jOSCineJournal/.test(u)).length, avant, 'noté absent : pas redemandé');
+});

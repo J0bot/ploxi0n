@@ -15,7 +15,8 @@ const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
   + R.map(r => `M512 ${512 - r}L${512 + r} 512L512 ${512 + r}L${512 - r} 512Z`).join('') + '"/></svg>';
 
-export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null } = {}) {
+export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null } = {}) {
+  // ▤ (0.51) les mini docks : miniDocks = { surVivants(), surFermeture(id), page() } — ⧉ ouvre leur page, ils remplacent « en arrière-plan »
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
   // PLUSIEURS PLOXIONS VIVANTS (RS-7 12.10 : « pouvoir ouvrir des ploxions depuis des ploxions, et pouvoir minimiser un ploxion ») :
@@ -159,10 +160,11 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     surAccueil = true;
     racine.classList.add('px-mode-accueil'); racine.classList.remove('px-mode-ploxion'); majBords();
   }
-  function majBords() { racine.classList.toggle('px-a-vivants', vivants.size + endormis.length > 0); noterSession(); }
+  function majBords() { racine.classList.toggle('px-a-vivants', vivants.size + endormis.length > 0); noterSession(); if (miniDocks) { try { miniDocks.surVivants(); } catch (e) { /* */ } } }
   /** un endormi (restauré de la dernière session) : monté maintenant, avec ses paramètres */
   function reveiller(id) { const e = endormis.find(x => x.id === id); endormis = endormis.filter(x => x.id !== id); return ouvrir(id, e ? e.params : null); }
   function arriere() {
+    if (miniDocks) return '';   // ▤ les mini docks, au-dessus du dock
     const l = [...vivants.values()].filter(v => v !== courant);
     if (!l.length) return '';
     return '<div class="px-arriere"><span class="px-grave">en arrière-plan</span><div class="px-arriere-l">' + l.map(v => { const p = parId.get(v.id) || { nom: v.id };
@@ -362,6 +364,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     try { if (v.inst && typeof v.inst.unmount === 'function') v.inst.unmount(); } catch (e) { console.warn('[ploxi0n] unmount', id, e); }
     v.hote.innerHTML = ''; v.hote.remove(); majBords();
     accrochesDe(id, n => { accroches.delete(n); try { n.remove(); } catch (e) { /* */ } });
+    if (miniDocks) { try { miniDocks.surFermeture(id); } catch (e) { /* */ } }
   }
   function barre(p, id) {
     const autres = vivants.size - 1 + endormis.length;
@@ -434,6 +437,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   function minimiser() { vibrer('minimiser'); if (courant) { cacher(courant); courant = null; } pile = []; noterSession(); return accueil(); }
   /** ⧉ : la liste des ploxions vivants, pour passer de l'un à l'autre */
   function basculer() {
+    if (miniDocks) return miniDocks.page();
     const f = D.createElement('div'); f.className = 'px-voile';
     f.innerHTML = '<div class="px-tiroir"><p class="px-ft">⧉ ouverts</p>' + [...vivants.values()].sort((a, b) => b.vu - a.vu).map(v => { const p = parId.get(v.id) || { nom: v.id };
       return '<button data-b="' + texte(v.id) + '"' + (v === courant ? ' class="on"' : '') + '><span class="px-ic" style="--t:' + teinte(v.id) + '">' + texte(p.icone || '▣') + '</span> ' + texte(p.nom || v.id) + (v === courant ? ' · ici' : '') + '</button>'; }).join('')
@@ -452,6 +456,12 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   return {
     accueil, ouvrir, fermer, charger, retour, minimiser, aCote, faire, GESTES_DEFAUT,
     endormis: () => endormis.map(e => e.id),
+    /** ▤ les ploxions vivants, pour les mini docks : { id, vu, ici, son } (son : un <audio>/<video> qui joue encore) */
+    etatVivants: () => [...vivants.values()].map(v => ({ id: v.id, vu: v.vu || 0, ici: v === courant, son: (() => { try { return [...v.hote.querySelectorAll('audio,video')].some(m => !m.paused && !m.ended); } catch (e) { return false; } })() })),
+    /** fermer un ploxion précis (✕ d'un mini dock) : celui qu'on regarde → comme « ‹ » ; un autre → démonté, la barre suit */
+    fermerPloxion(id) { if (courant && courant.id === id) return retour(); tuer(id); if (courant) barre(parId.get(courant.id) || { nom: courant.id }, courant.id); return true; },
+    reveiller: (id) => (endormis.some(e => e.id === id) ? reveiller(id) : ouvrir(id)),
+    oublierEndormi(id) { endormis = endormis.filter(e => e.id !== id); majBords(); if (courant) barre(parId.get(courant.id) || { nom: courant.id }, courant.id); },
     /** la dernière session : le ploxion de devant rouvert, les autres endormis (montés quand on y va) */
     async restaurer(sess, { devant = true } = {}) {
       const l = (sess && Array.isArray(sess.vivants) ? sess.vivants : []).filter(x => x && parId.has(x.id));

@@ -432,3 +432,40 @@ html.px-m-xerbot .px-accueil>.px-vues,html.px-m-xerbot .px-accueil>.px-pages,htm
 .px-xb-maison button{min-height:48px;padding:6px 10px;text-align:left;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:600 12.5px var(--police)}
 .px-xb-maison button.on{border-color:var(--bio);color:var(--bio)}.px-xb-maison small{display:block;color:var(--muted);font-weight:400}
 .px-xb-bus{display:flex;gap:6px;margin:6px 0}.px-xb-bus input{flex:1;min-width:0;padding:9px 12px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--creux);color:inherit;font:16px var(--police)}
+/* ▤ (0.51) LES MINI DOCKS : tout ce qui vit en arrière-plan (ploxions minimisés, la musique, la blouse, la Santé, la vidéo à reprendre,
+   le vocal, le tsoin pas fini), empilé au-dessus du dock ; ▤ ouvre la page de tous. Seulement sur l'accueil ; --px-md = leur hauteur. */
+.px-md{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 92px);z-index:29;display:flex;flex-direction:column-reverse;gap:6px}
+.px-md[hidden],#ploxi0n:not(.px-mode-accueil) ~ .px-md{display:none}
+.px-sans-dock .px-md{bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}
+.px-md-c{display:flex;align-items:center;gap:9px;height:52px;box-sizing:border-box;padding:5px 6px 5px 5px;border-radius:17px;border:var(--trait) solid var(--bord);background:var(--surface) var(--grain);
+  box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 0 hsl(var(--t,270) 38% 62%),0 10px 24px rgba(0,0,0,.45);touch-action:pan-y;transition:transform .18s,opacity .18s;-webkit-user-select:none;user-select:none}
+.px-md-c.joue{box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 0 var(--bio),0 10px 24px rgba(0,0,0,.45)}
+.px-md-c.neuf{animation:px-pose .26s cubic-bezier(.2,.9,.3,1.1) both}
+.px-md-ic{flex:none;width:40px;height:40px;border-radius:11px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:hsl(var(--t,270) 22% 16%);font-size:1.15rem;box-shadow:inset 0 0 0 1px var(--filet)}
+.px-md-ic img{width:100%;height:100%;object-fit:cover}
+.px-md-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.px-md-t b,.px-md-t small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-md-t b{font:600 13.5px var(--police);color:var(--txt)}.px-md-t small{font-size:11.5px;color:var(--muted)}
+.px-md-pr{display:block;height:3px;border-radius:2px;background:var(--surface2);margin-top:3px;overflow:hidden}.px-md-pr>i{display:block;height:100%;background:var(--bio)}
+.px-md-c button,.px-tiroir .px-md-c button{flex:none;width:38px;height:38px;min-height:0;margin:0;padding:0;border-radius:11px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:600 15px var(--police);text-align:center;box-shadow:none}
+.px-md-c button.on,.px-tiroir .px-md-c button.on{border-color:var(--bio);color:var(--bio)}
+.px-md-c .px-md-x,.px-tiroir .px-md-c .px-md-x{width:30px;border-color:transparent;background:none;color:var(--muted);font-size:13px}
+.px-md-tous{position:absolute;right:4px;top:-30px;height:26px;padding:0 10px;border-radius:9px;border:var(--trait) solid var(--bord);background:var(--surface) var(--grain);color:var(--muted);font:600 11.5px var(--mono);letter-spacing:.06em;box-shadow:inset 0 0 0 1px var(--filet)}
+.px-md:not(:has(.px-md-c)) .px-md-tous{position:static;align-self:flex-end}
+.px-accueil{padding-bottom:calc(110px + var(--px-md,0px) + env(safe-area-inset-bottom,0px))}
+.px-sans-dock .px-accueil{padding-bottom:calc(30px + var(--px-md,0px) + env(safe-area-inset-bottom,0px))}
+.px-mode-accueil .px-bulle{bottom:calc(env(safe-area-inset-bottom,0px) + 96px + var(--px-md,0px))}
+.px-labo{height:calc(100vh - 230px - var(--px-md,0px) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+html.px-anime .px-md-c{box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 0 hsl(var(--t,270) 38% 62%),calc(var(--mx,0) * -4px) calc(var(--my,0) * -3px + 10px) 24px rgba(0,0,0,.5)}
+html.px-anime .px-md-c.joue{box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 0 var(--bio),calc(var(--mx,0) * -4px) calc(var(--my,0) * -3px + 10px) 24px rgba(0,0,0,.5)}
+/* la page de tous les mini docks : une feuille, chaque carte avec toutes ses actions et ✕ */
+.px-md-page{max-height:84vh;overflow-y:auto;overscroll-behavior:contain}
+.px-md-page .px-md-l{display:flex;flex-direction:column;gap:7px;margin:4px 0 10px}
+.px-md-page .px-md-c{height:auto;min-height:56px;box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 0 hsl(var(--t,270) 38% 62%)}
+.px-md-page .px-md-c.joue{box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 0 var(--bio)}
+.px-md-page .px-md-c.ici{border-color:var(--bio)}.px-md-page .px-md-c.dort{opacity:.7}
+.px-md-page .px-md-t small{white-space:normal}
+.px-md-bas{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.px-tiroir .px-md-bas .px-md-tout{text-align:center;color:#e8a0b8}
+.px-calme .px-md-c.neuf{animation:none}
+@media (prefers-reduced-motion:reduce){.px-md-c.neuf{animation:none}}

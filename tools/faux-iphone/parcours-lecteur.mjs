@@ -1,16 +1,21 @@
-// 🎞 (0.49) le lecteur intégré et les bions de fichiers : jOSplayer d'un ploxion, lien vlc://, reprise, ploxi0n://lire, zip, aperçu, lampe, envoyer.
+import { readFileSync } from 'node:fs';
+// 🎞 (0.49) le lecteur intégré et les bions de fichiers : jOSPlayer (le vrai bion du labo, 0.51), lien vlc://, reprise, ploxi0n://lire, zip, aperçu, lampe, envoyer.
 export default async function ({ page, appels, emettre }) {
   await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => /passer/i.test(x.textContent)); if (b) b.click(); });
   const ouvertures = () => appels.filter(a => a.p === 'PloxiLecteur' && a.m === 'ouvrir').map(a => ({ url: a.o.url, position: a.o.position, moteur: a.o.moteur }));
   const r = {};
-  // 1. le bion jOSplayer d'un ploxion (Stremio) : une vidéo → natif ; une page → le lecteur du web
-  await page.evaluate(() => {
-    window.jOSplayer = { resolve: (u) => (/\.(mp4|webm|m3u8)/.test(u) ? { kind: 'video', src: u } : { kind: 'iframe', src: u }), open: (u) => { window.__web = u; }, embed: () => ({ kind: 'iframe' }) };
-    window.ploxi0nLecteurNatif.brancherJosPlayer(window.jOSplayer);
-    window.jOSplayer.open('https://debrid.example/films/rick.mkv'); window.jOSplayer.open('https://www.youtube.com/watch?v=abc');
-  });
+  // 1. (0.51) le VRAI bion jOSPlayer du labo (Stremio) : play() d'un flux → natif (VLC pour un DTS/MKV, sous-titres) ; YouTube → le Lecteur du web
+  await page.evaluate((code) => {
+    window.__web = []; window.__mobileAvant = window.jOSMobile && window.jOSMobile.open;
+    window.jOSMobile = window.jOSMobile || {}; window.jOSMobile.open = (id) => { window.__web.push(id); };
+    (0, eval)(code); window.ploxi0nLecteurNatif.brancherJosPlayer(window.jOSPlayer);
+  }, readFileSync(new URL('../../tests/donnees/jOSPlayer.labo.js', import.meta.url), 'utf8'));
+  await page.waitForTimeout(200);
+  await page.evaluate(() => { window.jOSPlayer.play('https://debrid.example/films/rick.DTS.mkv', { title: 'Rick and Morty S9E3', key: 'tt9:9:3', subs: [{ url: 'https://s.example/fr.srt', lang: 'fre' }] }); window.jOSPlayer.play('', { ytid: 'abc' }); });
   await page.waitForTimeout(300);
-  r.josplayer = { natif: ouvertures().map(o => o.url), web: await page.evaluate(() => window.__web) };
+  r.josPlayer = { natif: appels.filter(a => a.p === 'PloxiLecteur' && a.m === 'ouvrir').map(a => ({ url: a.o.url, titre: a.o.titre, moteur: a.o.moteur, sousTitres: a.o.sousTitres })), web: await page.evaluate(() => window.__web),
+    capacites: await page.evaluate(() => window.jOSPlayer.natif) };
+  await page.evaluate(() => { if (window.__mobileAvant) window.jOSMobile.open = window.__mobileAvant; });
   // 2. un lien vers VLC dans un ploxion
   await page.evaluate(() => { const a = document.createElement('a'); a.href = 'vlc-x-callback://x-callback-url/stream?url=' + encodeURIComponent('https://tb.example/s/9E3.mkv'); a.textContent = 'Rick and Morty S9E3'; document.body.appendChild(a); a.click(); a.remove(); });
   await page.waitForTimeout(300);

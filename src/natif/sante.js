@@ -154,6 +154,10 @@ export function creerSante({ W = globalThis.window, boxion, vibrer = () => {}, p
       const pt = await lirePartage(), co = !!distant();
       if (!vivant) return;
       const s = r.sommeil;
+      // ▤ (0.51) minimisée, la Santé reste un mini dock : les pas, la nuit, le cœur ; ↻ relit
+      { const md = W.jOSMiniDock, v = (k) => (r.tuiles.find(x => x.t === k) || {}).valeur;
+        if (md) md.publier({ cle: 'sante', ploxion: 'sante', titre: 'Santé', icone: '❤', sous: [v('steps') ? v('steps') + ' pas' : null, s.total ? '☾ ' + hm(s.total) : null, v('heartRate') ? '♥ ' + v('heartRate') : null].filter(Boolean).join(' · ') || 'rien de lisible aujourd\'hui',
+          actions: [{ id: 'relire', icone: '↻', nom: 'relire Santé', faire: () => dessiner() }] }); }
       hote.innerHTML = '<div class="px-page px-sante"><p class="px-grave">❤ santé · aujourd\'hui</p>'
         + (r.tuiles.length ? '<div class="px-sante-tuiles">' + r.tuiles.map(t => '<div class="px-sante-t"><small>' + esc(t.nom) + '</small><b>' + esc(t.valeur) + '</b></div>').join('') + '</div>'
           : '<p class="px-sous">Rien de lisible. Si tu as refusé un type : Réglages › Santé › Accès aux données › ploxi0n (iOS ne dit pas aux apps ce qui est refusé).</p>')
@@ -175,7 +179,7 @@ export function creerSante({ W = globalThis.window, boxion, vibrer = () => {}, p
       const bs = hote.querySelector('[data-synchro]'); if (bs) bs.onclick = async () => { bs.disabled = true; bs.textContent = '↥ …'; await synchroniser({ force: true }); dessiner(); };
     };
     dessiner().catch(e => { if (vivant) hote.innerHTML = '<p class="px-erreur">santé : ' + esc(e.message || e) + '</p>'; });
-    return { unmount() { vivant = false; hote.innerHTML = ''; } };
+    return { unmount() { vivant = false; hote.innerHTML = ''; if (W.jOSMiniDock) W.jOSMiniDock.retirer('sante'); } };
   }
   W.jOSApps = W.jOSApps || {};
   W.jOSApps.sante = { manifest: { id: 'sante', name: 'Santé iPhone', icon: '❤' }, mount };

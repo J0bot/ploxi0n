@@ -12,8 +12,10 @@ export const PLUGIONS = [
       if (b.get && b.get() !== type && b.set) b.set(type, 'natif');
     } },
   // 🎞 (0.49) le bion lecteur du labo (Stremio…) : une vidéo s'ouvre dans le lecteur intégré de l'iPhone (Apple, VLC en repli)
-  { bion: 'jOSplayer', quoi: 'ses vidéos → le lecteur intégré de l\'iPhone', async brancher(W, b) { if (W.ploxi0nLecteurNatif) W.ploxi0nLecteurNatif.brancherJosPlayer(b); } },
-  { bion: 'jOSPlayer', quoi: 'ses vidéos → le lecteur intégré de l\'iPhone', async brancher(W, b) { if (W.ploxi0nLecteurNatif) W.ploxi0nLecteurNatif.brancherJosPlayer(b); } },
+  // (0.51) jOSPlayer = LE bion du labo (play(url, { title, key, onNext, subs }) : Stremio, Ciné, Ouvrir, le Lecteur) ; jOSplayer = celui de
+  // boxion-rt (open/embed), que le labo ne sert pas
+  { bion: 'jOSPlayer', quoi: 'play(url, opts) : les flux de Stremio, Ciné, Ouvrir → le lecteur intégré (reprise, épisode suivant, sous-titres)', async brancher(W, b) { if (W.ploxi0nLecteurNatif) W.ploxi0nLecteurNatif.brancherJosPlayer(b); } },
+  { bion: 'jOSplayer', quoi: 'open/embed (boxion-rt) : ses vidéos → le lecteur intégré de l\'iPhone', async brancher(W, b) { if (W.ploxi0nLecteurNatif) W.ploxi0nLecteurNatif.brancherJosPlayer(b); } },
   { bion: 'jOSShare', quoi: 'jOSShare.natif : la feuille de partage d\'iOS',
     async brancher(W, b) { if (W.jOSNatif && !b.natif) b.natif = (p) => W.jOSNatif.partager({ texte: p && (p.text || p.texte), url: p && p.url, titre: p && (p.title || p.titre) }); } },
 ];

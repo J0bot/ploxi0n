@@ -5,7 +5,7 @@
 
 **Légende** : ✅ fait (version) · 🔨 en cours · ⏭ prochain · 💭 plus tard · ❓ attend une décision de RS-7 · ⚠ fait, mais jamais vu marcher sur l'iPhone
 
-*Dernière mise à jour : 0.50 (13.10). La 0.45 est le dernier build TestFlight ; la 0.46 à la 0.50 attendent les minutes Actions
+*Dernière mise à jour : 0.51 (13.10). La 0.45 est le dernier build TestFlight ; la 0.46 à la 0.51 attendent les minutes Actions
 (1.11) ou un build lancé à la main (`git tag v0.50 && git push origin v0.50`, ou Codemagic : docs/TESTFLIGHT.md, depuis main ; options « widgets » et « vlc » au lancement manuel).*
 
 ---
@@ -43,6 +43,12 @@ avant la 0.46. Toutes les lignes ⚠ ci-dessous sont à **revérifier sur l'iPho
 | ⏭ | Le bouton « ▶ ploxi0n » dans le ploxion Stremio (côté labo, docs/LECTEUR.md) ; l'import des photos DANS le boxion (attend l'envoi de fichiers relayé) | |
 | ✅ 0.50 | 🥼 **labo-cape** (lot L1 de J0bot/labo-cape) : la blouse RS-7 en BLE (contrat `docs/BLE.md`, branche `ploxi0n-l1` de labo-cape) ou sa simulation (copie de cape-engine vérifiée contre la trace du Rust) ; vue live, commandes (42 °C max), LEDs, journal, session en tsoin | à essayer avec la vraie blouse (firmware L0) |
 | ✅ 0.50 | ◈ **Les modes** : ◇ chill-tekk · ⬡ xerboxion (l'UI du labo, `xerboxion.org/home?app=ploxi0n`, le dock par-dessus ; `postMessage({ ploxi0n: 'ouvrir', id })` ouvre un ploxion en natif) · 🤖 xerbot (la blouse, Bluetooth, HomeKit, la lampe, NFC, Wi-Fi, le bus `xerbot.cmd`) | côté labo : le postMessage, la session dans l'iframe |
+| ✅ 0.51 | ▤ **Les mini docks** (RS-7 : « tout doit pouvoir être minimisé en mini dock, et une page de tous les mini docks ») : `src/app/minidocks.js`, `jOSMiniDock.publier/retirer/surAction/liste/page` ; ploxions minimisés, musique, blouse, Santé, vidéo à reprendre, vocal, brouillon de tsoin ; ⧉ = la page ; glisser = fermer | ✅ faux iPhone (parcours-minidocks) |
+| ✅ 0.51 | 🎞 **Stremio → natif pour de vrai** : le plugion enveloppe `jOSPlayer.play` (le bion du labo ; 0.49 visait une API inventée) ; reprise `xb:resume:<key>`, `onNext`, sous-titres, repli web par événement, `jOSPlayer.natif` ; `window.open` d'un flux passe devant Safari ; les partages `capacitor://` → le lien du labo | ⚠ iPhone |
+| ✅ 0.51 | 🎧 **Spotify** : installable (le code extrait de `/px/spotify`, pas d'app.js au labo — vaut pour wiki, notes, calendar…) ; l'accroche du SDK tient dans tous les ordres, `disconnect` → fin ; la source `jOSSound` (music, Lecteur) ; le mode xerboxion reçoit `postMessage({ ploxi0n: 'lecture' })` ; `/auth/…` du serveur → Safari ; jamais de jeton en cache | ⚠ iPhone (le SDK sur WKWebView : DRM ?) |
+| ✅ 0.51 | 📶 Les bions absents (404 HTML de 3,5 Mo) notés 7 jours : ~10 Mo de moins par installation de Stremio | |
+| ⏭ | 🪟 **La bande façon niri** (RS-7 13.10) : les ploxions vivants en colonnes sur une bande qu'on fait défiler, le nouveau s'ouvre à droite, une vue d'ensemble | |
+| ⏭ | 📚 **Le lot de ploxions** (RS-7 13.10) : Zotero, Foliate (EPUB : foliate-js), browser façon Helium (le `web` du labo + natif), Blanket (ambiances), vaults Obsidian, LocalSend (natif, LAN), AppFlowy, Manim (le `math` du labo), mpv (le lecteur intégré), btop (+ le xerminal du labo) | composer avant de créer |
 | 💭 | Le mode **xeroction** (voir ce qu'on a fait : la frise des tsoins, le Nexus) ; XERB0T : les gestes de la blouse = ordres au robot (labo-cape EXTRAPOLATION) | |
 | ⏭ | **Construire la 0.50 et tout revérifier sur l'iPhone** (les ⚠) : `tools/faux-iphone` dit que c'est branché, seul le téléphone dit que ça marche | |
 | ⏭ ❓ | **Supprimer son compte DANS l'app** (règle App Store 5.1.1(v), bloquante) : une route labo, puis un bouton ⚙ › Compte | côté labo |

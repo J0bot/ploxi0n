@@ -51,9 +51,18 @@ export function creerTsoinNatif({ W = globalThis.window, boxion, vibrer = () => 
           + '<div class="px-tuto-btn"><button data-j="annuler">annuler</button><button class="p" data-j="ok">noter</button></div></div>';
       };
       const msg = (m) => { const p = f.querySelector('[data-msg]'); if (p) p.textContent = m; };
-      const fermer = (r) => { f.remove(); fin(r); };
+      const fermer = (r) => { f.remove(); fin(r); if (W.jOSMiniDock) W.jOSMiniDock.retirer('tsoin-brouillon'); };
+      // ▤ (0.51) toucher à côté avec du texte = le MINIMISER : un mini dock « ⧗ brouillon » le rouvre tel quel (annuler = le jeter)
+      const minimiser = () => {
+        const texte = (f.querySelector('[data-texte]') || {}).value || '', genre = st.genre;
+        f.remove(); fin(null);
+        if (!texte.trim() || !W.jOSMiniDock) return;
+        W.jOSMiniDock.publier({ cle: 'tsoin-brouillon', titre: 'tsoin pas fini', icone: '⧗', sous: '« ' + texte.trim().slice(0, 90) + ' »', ouvrir: () => ouvrir({ texte, genre }),
+          actions: [{ id: 'noter', icone: '✓', nom: 'noter tel quel', faire: () => enregistrer({ texte, genre }).then(() => { W.jOSMiniDock.retirer('tsoin-brouillon'); vibrer('succes'); }) }] });
+        vibrer('minimiser');
+      };
       f.addEventListener('click', async (e) => {
-        if (e.target === f) return fermer(null);
+        if (e.target === f) return minimiser();
         const g = e.target.closest('[data-genre]'); if (g) { st.genre = g.getAttribute('data-genre'); vibrer('selection'); return peindre(); }
         const b = e.target.closest('[data-j]'); if (!b) return;
         const j = b.getAttribute('data-j');

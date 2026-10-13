@@ -12,7 +12,7 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const ko = (n) => n < 1024 ? n + ' o' : n < 1048576 ? Math.round(n / 1024) + ' Ko' : (Math.round(n / 104857.6) / 10) + ' Mo';
 const heures = (s) => !s ? '0 h' : s < 3600 ? Math.max(1, Math.round(s / 60)) + ' min' : (Math.round(s / 360) / 10).toLocaleString('fr-CH') + ' h';
-export const FOURNIS_APP = ['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou', 'jOSRaccourcis', 'jOSEcranAccueil', 'jOSKeyboard (le clavier d\'iOS)', 'jOSSante (Apple Santé)'];
+export const FOURNIS_APP = ['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou', 'jOSRaccourcis', 'jOSEcranAccueil', 'jOSKeyboard (le clavier d\'iOS)', 'jOSSante (Apple Santé)', 'jOSMiniDock (les mini docks)'];
 // l'accueil des réglages : [groupe, [[page, icône, nom]]] ; SOUS : une sous-page → sa page parente (‹ y revient)
 export const GROUPES = [
   ['toi', [['compte', '👤', 'Compte'], ['reseau', '🌐', 'Réseau et mode connecté']]],
@@ -68,7 +68,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         notifs: notifs && notifs.reglage().coord ? 'coord surveillé' : 'test, coord', faceid: verrous.length ? verrous.length + ' ploxion(s) verrouillé(s)' : 'aucun verrou', iphone: 'tes ploxions en vraies apps',
         apparence: P ? [P.themeVivant !== false ? 'thème vivant' : null, P.pleinEcran ? 'plein écran' : null, P.calme ? 'calme' : null, 'icônes ' + P.icones].filter(Boolean).join(' · ') : '',
         haptique: P && P.haptique === false ? 'coupée' : 'motifs, événements, signatures', lecteur: 'le lecteur intégré (Apple, VLC), écran verrouillé, AirPlay',
-        navigation: P ? [P.bords ? 'les bords' : null, P.telecommande !== false ? 'télécommande' : null, 'gestes'].filter(Boolean).join(' · ') : '', hud: c.epingles.length + ' épinglé(s)' + (P && P.dock === false ? ' · sans dock' : ''),
+        navigation: P ? [P.bords ? 'les bords' : null, P.telecommande !== false ? 'télécommande' : null, 'gestes'].filter(Boolean).join(' · ') : '', hud: c.epingles.length + ' épinglé(s)' + (P && P.dock === false ? ' · sans dock' : '') + (P ? ' · ▤ ' + (P.miniDocks == null ? 2 : P.miniDocks) + ' mini docks' : ''),
         accueil: 'dossiers et pages', ploxions: installes.length + ' installé(s)', bions: bions.length + ' bion(s)', donnees: nRoutes + ' réponse(s) gardée(s)', apropos: 'ploxi0n ' + version,
       };
       zone.innerHTML = '<div data-accueil>' + GROUPES.map(([g, l]) => (g ? '<h3>' + esc(g) + '</h3>' : '<h3>&nbsp;</h3>') + '<div class="bloc">' + l.filter(([k]) => (k !== 'sante' || sante) && (k !== 'widgets' || cube)).filter(([k]) => k !== 'notifs' || notifs).map(([k, i, n]) => lien(k, i, n, etats[k])).join('') + '</div>').join('') + '</div>'
@@ -154,7 +154,8 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
               return ZONES.map(([z, n]) => { const v = G[z] || D0[z] || 'rien'; return '<div class="l"><span>' + esc(n) + '</span><select data-geste="' + z + '" style="max-width:52%;background:var(--surface2,#151021);color:inherit;border:2px solid var(--bord,#272036);border-radius:10px;padding:6px;font:13px inherit">'
                 + ACTIONS.map(([k, t]) => '<option value="' + esc(k) + '"' + (k === v ? ' selected' : '') + '>' + esc(t) + '</option>').join('') + '</select></div>'; }).join(''); })()
           + '</div>') : '')
-        + section('hud', 'HUD et dock', '<div class="bloc">' + (P ? bascule('data-pb="dock"', P.dock, 'Le dock en bas', 'compte, épinglés, ⚙') : '')
+        + section('hud', 'HUD et dock', '<div class="bloc">' + (P ? bascule('data-pb="dock"', P.dock, 'Le dock en bas', 'compte, épinglés, ⚙')
+          + seg('miniDocks', [[0, 'aucun'], [1, '1'], [2, '2'], [3, '3']], P.miniDocks == null ? 2 : P.miniDocks, '▤ Mini docks au-dessus du dock', 'ce qui vit en arrière-plan (ploxions minimisés, musique, blouse…) ; ▤ les montre tous ; glisser de côté = fermer') : '')
           + c.elements.map((x, i) => '<label class="l"><span>' + esc(ELS[x.k] || x.k) + '</span><button class="bas" data-monter="' + i + '"' + (i ? '' : ' disabled') + ' aria-label="monter">↑</button><input type="checkbox" data-el="' + i + '"' + (x.on ? ' checked' : '') + '></label>').join('')
           + '<div class="l"><span>⚙ réglages<small>toujours là</small></span></div></div>'
           + '<p class="msg">📌 épinglés au dock et au widget (4 au plus)</p><div class="bloc"><div class="pins">' + (cat.length ? cat.map(p => '<button class="pin' + (c.epingles.includes(p.id) ? ' on' : '') + '" data-pin="' + esc(p.id) + '" title="' + esc(p.nom) + '">' + esc(p.icone || '▣') + '</button>').join('') : '<span class="msg">installe des ploxions d\'abord</span>') + '</div></div>')
@@ -253,7 +254,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       if (b.hasAttribute("data-rg-retour")) return aller(SOUS[page] || null);
       if (b.hasAttribute('data-monter')) { ev.preventDefault(); const i = +b.getAttribute('data-monter'); return majHud(c => { const [x] = c.elements.splice(i, 1); c.elements.splice(i - 1, 0, x); }); }
       if (b.hasAttribute('data-pin')) { const id = b.getAttribute('data-pin'); return majHud(c => { c.epingles = c.epingles.includes(id) ? c.epingles.filter(x => x !== id) : [...c.epingles, id].slice(-4); if (!c.elements.find(x => x.k === 'epingles').on) c.elements.find(x => x.k === 'epingles').on = true; }); }
-      if (b.hasAttribute('data-pv') && prefs) { ev.preventDefault(); const k = b.getAttribute('data-pv'), v = b.getAttribute('data-v'); if (k === 'vue') { if (R().vueAccueil) R().vueAccueil(v); } else await prefs.regler({ [k]: k === 'maxVivants' ? +v : v }); return peindre(); }
+      if (b.hasAttribute('data-pv') && prefs) { ev.preventDefault(); const k = b.getAttribute('data-pv'), v = b.getAttribute('data-v'); if (k === 'vue') { if (R().vueAccueil) R().vueAccueil(v); } else await prefs.regler({ [k]: k === 'maxVivants' || k === 'miniDocks' ? +v : v }); return peindre(); }
       if (b.hasAttribute('data-ouvrir')) return R().ouvrir(b.getAttribute('data-ouvrir'));
       if (b.hasAttribute('data-deverrou')) { if (await R().deverrouiller(b.getAttribute('data-deverrou'))) peindre(); return; }
       // les gestes qui détruisent : un premier toucher demande « sûr ? »

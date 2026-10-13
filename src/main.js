@@ -43,8 +43,9 @@ import { creerLecteurNatif } from './natif/lecteur-natif.js';
 import { creerFichiersNatif } from './natif/fichiers-natif.js';
 import { creerCape } from './cape/cape.js';
 import { creerModes } from './app/modes.js';
+import { creerMiniDocks } from './app/minidocks.js';
 
-const VERSION = '0.50.0';
+const VERSION = '0.51.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -132,16 +133,29 @@ async function demarrer() {
   window.jOSNatif.haptique = (x) => haptique.jouer(x);   // les ploxions (le clicker…) jouent un style, un motif ou un événement
   const bionsCharges = new Set();   // un seul chargement par bion, pour toute l'app
   let routeur = null;
+  // ▤ (0.51) les mini docks : tout ce qui vit en arrière-plan (ploxions minimisés, musique, blouse, Santé, vidéo, vocal, brouillon), au-dessus du dock
+  const miniDocks = creerMiniDocks({ routeur: () => routeur, prefs: () => prefs.lire(), vibrer: (x) => vibrer(x) });
+  window.jOSMiniDock = miniDocks.api; prefs.surChangement(() => miniDocks.planifier());
+  // 🎞 une vidéo fermée en cours de route : un mini dock pour la reprendre là où elle en était
+  const hms = (s) => { s = Math.round(+s || 0); const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(s % 60).padStart(2, '0'); };
+  lecteurNatif.api.surEvenement((e) => {
+    if (e.etat === 'ferme' && e.position > 30 && (!e.duree || e.position < e.duree - 60)) {
+      const reprendre = () => lecteurNatif.ouvrir(e.url, { titre: e.titre }).catch(() => {});
+      miniDocks.publier({ cle: 'video', titre: e.titre || 'la vidéo', icone: '🎞', sous: 'reprendre à ' + hms(e.position) + (e.duree ? ' / ' + hms(e.duree) : ''), progression: e.duree ? e.position / e.duree : null,
+        ouvrir: reprendre, actions: [{ id: 'reprendre', icone: '▶', nom: 'reprendre', faire: reprendre }] });
+    } else if (e.etat === 'lecture' || e.etat === 'fin') miniDocks.retirer('video');
+  });
   // ⚡ le web devient natif : vibrate, geolocation, Notification, la dictée, les QR, le gyroscope, Bluetooth, NFC, wakeLock… de TOUS les ploxions
   try {
     installerWebNatif({ W: window, prefs: () => prefs.lire(), courant: () => routeur && routeur.courant(), ouvrirPloxion: (id) => { if (routeur && routeur.connait(id)) routeur.ouvrir(id); },
-      mouvementActif: () => document.documentElement.classList.contains('px-anime') });
+      mouvementActif: () => document.documentElement.classList.contains('px-anime'), lienPublic: SOURCE });
   } catch (e) { bootLog('⚠ web natif : ' + (e && e.message)); }
+  lecteurNatif.brancherOuvrir();   // (0.51) APRÈS web-natif : window.open d'un flux → le lecteur natif, pas Safari
   boot(24, 'le web devient natif');
   // 📁 (0.49) envoyer vers, aperçu (QuickLook), zip, la galerie, le sélecteur de fichiers, Plans, Mail, la lampe
   { const fx = creerFichiersNatif(); Object.assign(window.jOSNatif, { envoyer: fx.envoyer, apercu: fx.apercu, zip: fx.zip, dezipper: fx.dezipper, photos: fx.photos, choisirFichiers: fx.ouvrir, carte: fx.carte, mail: fx.mail, lampe: fx.lampe }); }
   // ♫ à l'écoute : ce que jouent les ploxions (Spotify, Media Session) → l'écran verrouillé, le widget, le mini-lecteur (avant tout ploxion)
-  const maintenant = creerMaintenant({ courant: () => routeur && routeur.courant(), ouvrir: (id) => { if (routeur && routeur.connait(id)) routeur.ouvrir(id); },
+  const maintenant = creerMaintenant({ miniDock: miniDocks, courant: () => routeur && routeur.courant(), ouvrir: (id) => { if (routeur && routeur.connait(id)) routeur.ouvrir(id); },
     valeur: (k, t, v) => { try { return raccourcis ? raccourcis.valeur(k, t, v) : Promise.resolve(); } catch (e) { return Promise.resolve(); } } });   // raccourcis : déclaré plus bas
   window.jOSNatif.lecture = maintenant.api;
   // un ploxion en ouvre un autre (jOSXerPrefs.ouvrir, jOS.openPloxion) : s'il n'est pas installé et qu'il y a du réseau, on l'installe à la volée
@@ -175,6 +189,7 @@ async function demarrer() {
   };
   boot(30, 'le shim jOS · tsoins');
   const shim = await installerShim({ boxion, routeur: routeurProxy, relais, distant });
+  maintenant.brancherBus();   // ♫ (0.51) le bus des lecteurs du labo (jOSSound, ploxion.spotify.track) : le son sans SDK ni Media Session
   boot(40, 'shim jOS · ' + ((window.jOSTsoin && window.jOSTsoin.list) ? window.jOSTsoin.list().length : 0) + ' tsoins relus');
   boot(45, 'les ploxions de base');
   window.addEventListener('online', () => { if (window.jOSBoxion && window.jOSBoxion.pousser) window.jOSBoxion.pousser().catch(() => {}); });
@@ -236,7 +251,9 @@ async function demarrer() {
   if (navigator.onLine !== false) { compte.rafraichir().catch(() => {}); if (window.jOSBoxion.pousser) window.jOSBoxion.pousser().catch(() => {}); }   // le rang et « admin » à jour (un jeton expiré → déconnecté)
   const reglerModeConnecte = (v) => { if (v != null) { modeConnecte = !!v; boxion.put('reglages', 'mode-connecte', modeConnecte); } return modeConnecte; };
   // 🎙 les vocaux : enregistrer, transcrire (iOS, le vocabulaire du xerboxion), garder ; jOSNatif.vocal pour les ploxions
-  const vocal = creerVocal({ boxion, catalogue: () => (routeur ? routeur.catalogue() : []), vibrer: (x) => vibrer(x), ouvrir: (id, p) => routeurProxy.ouvrir(id, p), surEtat: () => routeur && routeur.rafraichirHud() });
+  const vocal = creerVocal({ boxion, catalogue: () => (routeur ? routeur.catalogue() : []), vibrer: (x) => vibrer(x), ouvrir: (id, p) => routeurProxy.ouvrir(id, p),
+    surEtat: (on) => { if (routeur) routeur.rafraichirHud(); if (!on) return miniDocks.retirer('vocal');   // ▤ 🎙 le vocal qui enregistre : ■ depuis l'accueil
+      miniDocks.publier({ cle: 'vocal', titre: 'j\'enregistre…', icone: '🎙', enCours: true, fermable: false, sous: '■ pour arrêter et transcrire', ouvrir: () => vocal.basculer(), actions: [{ id: 'stop', icone: '■', nom: 'arrêter', faire: () => vocal.basculer() }] }); } });
   window.jOSNatif.vocal = vocal.api;
   // ⧗ les tsoins natifs : le composeur (dock, geste, Siri, jOSNatif.tsoin) et le journal ; connecté, ils partent aussi au boxion
   const tsoinNatif = creerTsoinNatif({ boxion, vibrer: (x) => vibrer(x), vocal, contexte: () => (routeur ? routeur.courant() : null),
@@ -289,6 +306,7 @@ async function demarrer() {
   const modes = creerModes({ prefs, ouvrir: (id) => routeurProxy.ouvrir(id), connait: (id) => !!(routeur && routeur.connait(id)), source: SOURCE, vibrer: (x) => vibrer(x) });
   modes.attacher(racine);
   routeur = creerRouteur({ panneau: () => modes.panneau(), racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id) => routeurProxy.ouvrir(id), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
+    miniDocks: { surVivants: () => miniDocks.planifier(), surFermeture: (id) => miniDocks.surFermeture(id), page: () => miniDocks.ouvrirPage() },
     tsoin: () => tsoinNatif.ouvrir(), surSession: (x) => { boxion.put('reglages', 'session', x).catch(() => {}); barreHaut.peindre(); usage.track(x.courant); } });
   // ▔ notre barre du haut, en plein écran (la place de la barre d'état d'iOS) : composable, appui long dessus
   const barreHaut = creerBarreHaut({ boxion, compte, vibrer: (x) => vibrer(x), actif: () => { const q = prefs.lire(); return !!q.pleinEcran && q.barreHaut !== false; },

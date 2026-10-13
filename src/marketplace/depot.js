@@ -9,7 +9,7 @@
 // http = { get(url, { headers }) → { status, texte, entetes } } : CapacitorHttp sur l'iPhone (pas de CORS), fetch ailleurs, un faux en test.
 export const SOURCE = 'https://xerboxion.org';
 // les bions que l'app fournit déjà (le shim, Face ID, le pack) : jamais téléchargés
-export const FOURNIS = new Set(['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou', 'jOSNatif', 'jOSRaccourcis', 'jOSEcranAccueil', 'jOSKeyboard', 'jOSUsage', 'jOSSante']);
+export const FOURNIS = new Set(['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou', 'jOSNatif', 'jOSRaccourcis', 'jOSEcranAccueil', 'jOSKeyboard', 'jOSUsage', 'jOSSante', 'jOSMiniDock']);
 /** les bions qu'un bundle du labo déclare attendre (window.__PLOXIONS_BIONS__[id] = [...]) */
 export function bionsDuBundle(js) {
   const m = /__PLOXIONS_BIONS__[\s\S]{0,200}?\]\s*=\s*(\[[^\]]*\])/.exec(js || '');
@@ -19,6 +19,22 @@ export function bionsDuBundle(js) {
 /** les bions qu'un code TOUCHE (window.jOSX…, jOSX.f()) : beaucoup de bundles n'en déclarent aucun (RS-7 11.10 : xerkions, ultimate-social) */
 export function bionsTouches(js, sauf = '') {
   return [...new Set((String(js || '').match(/\bjOS[A-Z][A-Za-z0-9]{0,47}\b/g) || []))].filter(b => b !== sauf && !FOURNIS.has(b));
+}
+
+/** (0.51) le code d'un ploxion servi DANS sa page (/px/<id>, sans app.js : spotify, wiki, notes, calendar…) : le dernier
+ *  <style> + <script> qui enregistre jOSApps['<id>'], avant <div id="pxhost"> ; rendu comme un bundle (le style injecté par le script). */
+export function bundleDeLaPage(html, id) {
+  const h = String(html || ''); const fin = h.indexOf('<div id="pxhost"'); if (fin < 0) return null;
+  const avant = h.slice(0, fin), re = /<script\b[^>]*>([\s\S]*?)<\/script>/gi; let m, code = null, debut = -1;
+  const enregistre = new RegExp('jOSApps\\s*\\[\\s*[\'"]' + id.replace(/[^a-z0-9_-]/gi, '') + '[\'"]\\s*\\]\\s*=');
+  while ((m = re.exec(avant))) if (enregistre.test(m[1])) { code = m[1]; debut = m.index; }
+  if (!code) return null;
+  const tete = avant.slice(0, debut), i = tete.toLowerCase().lastIndexOf('<style');   // le <style> collé juste avant ce script (pas ceux de la page)
+  const st = i >= 0 ? /^<style\b[^>]*>([\s\S]*?)<\/style>\s*$/i.exec(tete.slice(i)) : null;
+  const css = st ? st[1] : '';
+  return '/* ' + id + ' : extrait de la page /px/' + id + ' par ploxi0n (le labo ne sert pas son app.js) */\n'
+    + (css ? '(function(){try{var s=document.createElement("style");s.dataset.ploxion=' + JSON.stringify(id) + ';s.textContent=' + JSON.stringify(css) + ';document.head.appendChild(s);}catch(e){}})();\n' : '')
+    + code;
 }
 
 async function sha256(texte) {
@@ -43,12 +59,16 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       if (vus.has(b) || FOURNIS.has(b) || vus.size >= 80) return;
       vus.add(b);
       let x = await boxion.get('bions', b);
-      if (!x) {
+      // (0.51) un bion que le labo ne sert pas répond par une page HTML de 3,5 Mo (Stremio : jOSCineJournal, jOSParesseux, jOSXxx → ~10 Mo
+      // par installation, en données mobiles) : noté absent, il n'est pas redemandé pendant 7 jours
+      const absent = x ? null : await boxion.get('bions-absents', b).catch(() => null);
+      if (!x && !(absent && Date.now() - (+absent.le || 0) < 7 * 864e5)) {
         signaler(b);
         try {
           const rb = await http.get(source + '/px/bion-app/' + b + '.js', { headers: { Accept: 'application/javascript' } });
-          if (rb.status === 200 && rb.texte.includes(b)) { x = { js: rb.texte, hash: await sha256(rb.texte), le: new Date().toISOString() }; await boxion.put('bions', b, x); }
-        } catch (e) { /* hors ligne : manquant */ }
+          if (rb.status === 200 && rb.texte.includes(b) && !/^\s*<(!doctype|html)/i.test(rb.texte)) { x = { js: rb.texte, hash: await sha256(rb.texte), le: new Date().toISOString() }; await boxion.put('bions', b, x); }
+          else await boxion.put('bions-absents', b, { le: Date.now(), status: rb.status }).catch(() => {});
+        } catch (e) { /* hors ligne : manquant (pas noté absent : on réessaiera) */ }
       }
       if (!x) { if (declares.has(b)) manquants.push(b); return; }
       for (const c of bionsTouches(x.js, b)) await visiter(c);
@@ -103,8 +123,14 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
     },
     async installer(id, meta = {}, progres = null) {
       if (progres) progres({ etape: 'ploxion', nom: id, fait: 0, connus: 1 });
-      const r = await http.get(source + '/px/' + encodeURIComponent(id) + '/app.js', { headers: { Accept: 'application/javascript' } });
-      if (r.status !== 200) throw new Error(`le serveur refuse ${id} (HTTP ${r.status})`);
+      let r = await http.get(source + '/px/' + encodeURIComponent(id) + '/app.js', { headers: { Accept: 'application/javascript' } });
+      // (0.51) pas d'app.js (le 404 du labo est une page HTML de 3,5 Mo) : le code est dans la page du ploxion → on l'en extrait
+      if (r.status !== 200 || /^\s*<(!doctype|html)/i.test(r.texte || '')) {
+        const pg = await http.get(source + '/px/' + encodeURIComponent(id), { headers: { Accept: 'text/html' } }).catch(() => null);
+        const js = pg && pg.status === 200 ? bundleDeLaPage(pg.texte, id) : null;
+        if (!js) throw new Error(r.status === 200 ? `${id} : ce n'est pas un ploxion installable (pas d'enregistrement jOSApps)` : `le serveur refuse ${id} (HTTP ${r.status})`);
+        r = { status: 200, texte: js, entetes: {} };
+      }
       if (!valide(r.texte, id)) throw new Error(`${id} : ce n'est pas un ploxion installable (pas d'enregistrement jOSApps)`);
       if (progres) progres({ etape: 'recu', nom: id, octets: r.texte.length, fait: 0, connus: 1 });
       const { bions, manquants } = await resoudreBions(r.texte, progres);

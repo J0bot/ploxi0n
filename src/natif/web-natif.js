@@ -107,7 +107,7 @@ const enVue = (v) => v instanceof DataView ? v : ArrayBuffer.isView(v) ? new Dat
  *   ouvrirPloxion(id), mouvementActif: () => bool (le thème vivant tourne déjà), charger: { module: () => import(...) } (tests) }
  * Rend { faits: [cle], etat() } ; ne fait rien hors de l'iPhone (sauf BarcodeDetector, utile partout).
  */
-export function installerWebNatif({ W = globalThis.window, prefs = () => ({}), courant = () => null, ouvrirPloxion = () => {}, mouvementActif = () => false, apple = PloxiApple, vocal = PloxiVocal, charger = {} } = {}) {
+export function installerWebNatif({ W = globalThis.window, prefs = () => ({}), courant = () => null, ouvrirPloxion = () => {}, mouvementActif = () => false, apple = PloxiApple, vocal = PloxiVocal, charger = {}, lienPublic = 'https://xerboxion.org' } = {}) {
   const natif = !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
   const nav = W.navigator, faits = [], erreurs = {};
   const imp = (nom, f) => (charger[nom] || f)();
@@ -139,7 +139,9 @@ export function installerWebNatif({ W = globalThis.window, prefs = () => ({}), c
       const avant = nav.share && nav.share.bind(nav);
       definir(nav, 'share', async (d = {}) => {
         if (d.files && d.files.length) { if (W.jOSNatif && W.jOSNatif.envoyer) return W.jOSNatif.envoyer([...d.files], { titre: d.title, texte: d.text }); if (avant) return avant(d); }   // (0.49) les fichiers aussi
-        await m.share().then(s => s.Share.share({ title: d.title, text: d.text, url: d.url, dialogTitle: d.title }));
+        // (0.51) un lien vers l'app elle-même (capacitor://localhost/local#stremio=…) n'ouvre rien chez l'autre : il devient celui du labo
+        const pub = (x) => (typeof x === 'string' && lienPublic ? x.split(W.location.origin + '/').join(lienPublic.replace(/\/$/, '') + '/') : x);
+        await m.share().then(s => s.Share.share({ title: d.title, text: pub(d.text), url: pub(d.url), dialogTitle: d.title }));
       });
       definir(nav, 'canShare', () => true);
     });
@@ -377,7 +379,10 @@ export function installerWebNatif({ W = globalThis.window, prefs = () => ({}), c
       const externe = (u) => { try { const x = new URL(u, W.location.href); return /^https?:$/.test(x.protocol) && x.origin !== W.location.origin ? x.href : null; } catch (e) { return null; } };
       const ouvrir = (href) => m.browser().then(b => b.Browser.open({ url: href, presentationStyle: 'popover' })).catch(() => {});
       const avant = W.open && W.open.bind(W);
-      definir(W, 'open', (u, cible, f) => { if (u && versPlans(u)) return null; const href = u && externe(String(u)); if (href && cible !== '_self') { ouvrir(href); return null; } return avant ? avant(u, cible, f) : null; });
+      // (0.51) une route de connexion du SERVEUR (window.open('/auth/spotify') : « Connecter Spotify ») mène à capacitor://localhost/auth/…,
+      // nulle part : elle part vers le labo, dans Safari (la session du labo y est ; le jeton revient ensuite par le relais)
+      const serveur = (u) => (lienPublic && /^\/(?!\/)/.test(u) && /^\/(auth|oauth|login|connect)\b|^\/[a-z0-9-]+\/(auth|oauth|login|connect)\b/i.test(u) ? lienPublic.replace(/\/$/, '') + u : null);
+      definir(W, 'open', (u, cible, f) => { if (u && versPlans(u)) return null; const href = u && (externe(String(u)) || serveur(String(u))); if (href && cible !== '_self') { ouvrir(href); return null; } return avant ? avant(u, cible, f) : null; });
       W.document.addEventListener('click', (e) => {
         const a = e.target && e.target.closest && e.target.closest('a[href]'); if (!a || e.defaultPrevented) return;
         if (versPlans(a.getAttribute('href'))) { e.preventDefault(); return; }

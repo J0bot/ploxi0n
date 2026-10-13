@@ -4,6 +4,13 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.51.0', titre: 'Les mini docks', points: [
+    '▤ Tout se minimise en mini dock : un ploxion (▁), la musique (⏮ ⏯ ⏭), la blouse (température, consigne, ⏻), la Santé (les pas), la vidéo à reprendre, le vocal qui enregistre, le tsoin pas fini (touche à côté du composeur). Au-dessus du dock ; glisse-en un de côté pour le fermer.',
+    '▤ La page de tous les mini docks : « ▤ +N » au-dessus du dock, ou ⧉ dans un ploxion — chacun avec ses actions, ✕, les 💤 de la dernière session, « tout fermer ». ⚙ › HUD et dock : combien au-dessus du dock.',
+    '🎞 Stremio lit enfin dans le lecteur de l\'iPhone : branché sur le vrai bion du labo (jOSPlayer) — la reprise de Stremio, l\'épisode suivant à la fin, ses sous-titres, VLC d\'emblée pour un DTS/MKV.',
+    '🎧 Spotify : installable dans l\'app (son code est pris dans sa page du labo), et l\'écran verrouillé suit quel que soit l\'ordre de chargement ; fermer le ploxion efface « à l\'écoute ». Les autres lecteurs du labo (jOSSound : music, le Lecteur) aussi.',
+    '📶 Moins de données : un bion que le labo ne sert pas (une page d\'erreur de 3,5 Mo) n\'est plus redemandé à chaque installation.',
+  ] },
   { v: '0.50.0', titre: 'La blouse, et trois modes', points: [
     '🥼 labo-cape : pilote la blouse RS-7 (Bluetooth) — températures, consigne (42 °C max), zones, LEDs, autonomie, journal, la session en tsoin. Sans blouse : la simulation, avec le vrai moteur de cape-core.',
     '◈ Trois modes en haut de l\'accueil : ◇ chill-tekk (tes ploxions), ⬡ xerboxion (l\'UI du labo, le dock par-dessus), 🤖 xerbot (le monde physique : la blouse, Bluetooth, la maison, la lampe, NFC, Wi-Fi, le bus des robots).',

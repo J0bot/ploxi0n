@@ -18,11 +18,11 @@ export default async function ({ page, ecrire, appels, prefs, emettre }) {
   await ecrire('lecture-accueil');
   const lecture = appels.filter(a => a.p === 'PloxiApple' && a.m === 'lecture').map(a => a.o);
   const r = { verrouille: lecture.at(-1) || null, widget: prefs.get('ploxi0n.lecture') || null, valeurs: (prefs.get('ploxi0n.valeurs') || '').includes('Keep It Psychedelic'),
-    mini: await page.evaluate(() => { const b = document.querySelector('.px-maintenant'); return b && !b.hidden ? b.innerText.replace(/\s+/g, ' ') : null; }) };
+    mini: await page.evaluate(() => { const b = document.querySelector('.px-md-c[data-md="musique"]'); return b ? b.innerText.replace(/\s+/g, ' ') : null; }) };   // ▤ (0.51) le mini dock « musique »
   for (const c of ['suivant', 'precedent', 'toggle', 'seekto']) { emettre('PloxiApple', 'lecture', { commande: c, position: 42 }); await page.waitForTimeout(150); r['commande ' + c] = await page.evaluate(() => window.__cmd); }
-  await page.evaluate(() => document.querySelector('.px-maintenant [data-lc="suivant"]').click()); await page.waitForTimeout(100);
-  r['bouton ⏭ du mini-lecteur'] = await page.evaluate(() => window.__cmd);
+  await page.evaluate(() => document.querySelector('.px-md-c[data-md="musique"] [data-md-a="suivant"]').click()); await page.waitForTimeout(100);
+  r['bouton ⏭ du mini dock'] = await page.evaluate(() => window.__cmd);
   await page.evaluate(() => window.__lecteur._etat(null)); await page.waitForTimeout(300);
-  r.fin = { lectureFin: appels.some(a => a.m === 'lectureFin'), mini: await page.evaluate(() => { const b = document.querySelector('.px-maintenant'); return !b || b.hidden; }) };
+  r.fin = { lectureFin: appels.some(a => a.m === 'lectureFin'), mini: await page.evaluate(() => !document.querySelector('.px-md-c[data-md="musique"]')) };
   return r;
 }
