@@ -44,8 +44,10 @@ import { creerFichiersNatif } from './natif/fichiers-natif.js';
 import { creerCape } from './cape/cape.js';
 import { creerModes } from './app/modes.js';
 import { creerMiniDocks } from './app/minidocks.js';
+import { creerCadresLabo } from './natif/cadres-labo.js';
+import { installerGel } from './app/gel.js';
 
-const VERSION = '0.52.0';
+const VERSION = '0.53.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -132,7 +134,7 @@ async function demarrer() {
     : haptique.jouer(ev));
   window.jOSNatif.haptique = (x) => haptique.jouer(x);   // les ploxions (le clicker…) jouent un style, un motif ou un événement
   const bionsCharges = new Set();   // un seul chargement par bion, pour toute l'app
-  let routeur = null;
+  let routeur = null, gel = null;
   // ▤ (0.51) les mini docks : tout ce qui vit en arrière-plan (ploxions minimisés, musique, blouse, Santé, vidéo, vocal, brouillon), au-dessus du dock
   const miniDocks = creerMiniDocks({ routeur: () => routeur, prefs: () => prefs.lire(), vibrer: (x) => vibrer(x) });
   window.jOSMiniDock = miniDocks.api; prefs.surChangement(() => miniDocks.planifier());
@@ -218,6 +220,8 @@ async function demarrer() {
   const lireJson = async (u, defaut) => { try { return await sous3s(fetchOrigine(u).then(r => r.json())); } catch (e) { bootLog('⚠ ' + u + ' : ' + e.message); return defaut; } };
   const indexPack = await lireJson('/ploxions/index.json', { ploxions: [] }), pack = indexPack.ploxions || [];
   const compat = await lireJson('/marketplace/compat.json', {});
+  // ⬡ (0.53) les cadres du labo : un <iframe src="/wiki"> d'un ploxion vise le labo ; refusé par sa CSP → une carte « ouvrir »
+  const cadres = creerCadresLabo({ source: SOURCE, tete: (u) => creerHttp(window, async () => ({})).tete(u), navigateur: (u) => window.jOSNatif.navigateur(u) });
   const depot = creerDepot({ boxion, http: creerHttp(window, enTetes), estAdmin: () => !!(compteRef && compteRef.etat().admin), compat, packLocal: pack, lireLocal: async (id) => (await fetch('/ploxions/' + encodeURIComponent(id) + '/app.js')).text(),
     lireBionLocal: async (b) => { const r = await fetchOrigine('/bions/' + encodeURIComponent(b) + '.js'); if (!r.ok) throw new Error('bion absent'); return r.text(); } });
   // les ploxions de base (index.json « base » : bother me pour les testeurs) : installés une fois, au premier lancement ; retirables ensuite
@@ -305,11 +309,14 @@ async function demarrer() {
   window.jOSEcranAccueil = ecranAccueil;
   boot(78, 'l\'accueil');
   // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xerbot (le monde physique)
-  const modes = creerModes({ prefs, ouvrir: (id) => routeurProxy.ouvrir(id), connait: (id) => !!(routeur && routeur.connait(id)), source: SOURCE, vibrer: (x) => vibrer(x) });
+  const modes = creerModes({ cadres, prefs, ouvrir: (id) => routeurProxy.ouvrir(id), connait: (id) => !!(routeur && routeur.connait(id)), source: SOURCE, vibrer: (x) => vibrer(x) });
   modes.attacher(racine);
   routeur = creerRouteur({ panneau: () => modes.panneau(), racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id) => routeurProxy.ouvrir(id), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
-    miniDocks: { surVivants: () => miniDocks.planifier(), surFermeture: (id) => miniDocks.surFermeture(id), page: () => miniDocks.ouvrirPage() },
+    miniDocks: { surVivants: () => miniDocks.planifier(), surFermeture: (id) => { miniDocks.surFermeture(id); if (gel) gel.liberer(id); }, page: () => miniDocks.ouvrirPage() },
+    surMontrer: (id) => { if (gel) gel.degeler(id); },
     tsoin: () => tsoinNatif.ouvrir(), surSession: (x) => { boxion.put('reglages', 'session', x).catch(() => {}); barreHaut.peindre(); usage.track(x.courant); } });
+  // ❄ (0.53) le gel : un ploxion vivant mais caché n'anime plus (requestAnimationFrame mis de côté jusqu'à ce qu'on le revoie)
+  gel = installerGel({ courant: () => routeur.courant(), vivants: () => routeur.vivants() });
   // ▔ notre barre du haut, en plein écran (la place de la barre d'état d'iOS) : composable, appui long dessus
   const barreHaut = creerBarreHaut({ boxion, compte, vibrer: (x) => vibrer(x), actif: () => { const q = prefs.lire(); return !!q.pleinEcran && q.barreHaut !== false; },
     courant: () => { const c = routeur.courant(); return c ? ((routeur.catalogue().find(p => p.id === c) || {}).nom || c) : null; },

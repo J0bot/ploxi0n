@@ -289,15 +289,21 @@ test('🌀 le thème vivant : la gravité → --mx/--my (neutre recentré, liss�
     assert.ok(m.actif() && h.classList.contains('px-anime')); assert.deepEqual(appels[0], ['debut', 30]);
     ecouteur({ gx: 0, gy: -0.7 });                                  // tenu debout : le neutre
     for (let i = 0; i < 20; i++) ecouteur({ gx: 0.3, gy: -0.7 });  // incliné à droite
+    await attendre(40);                                              // (0.53) appliqué à l'image suivante
     const mx = +h.style.getPropertyValue('--mx'); assert.ok(mx > 0.5 && mx <= 1, 'incliné → --mx ' + mx);
     for (let i = 0; i < 2000; i++) ecouteur({ gx: 0.3, gy: -0.7 });  // gardé longtemps : devient le neutre
+    await attendre(160); ecouteur({ gx: 0.3, gy: -0.7 }); await attendre(40);   // (0.53) les variables : au plus 8 fois par seconde
     assert.ok(Math.abs(+h.style.getPropertyValue('--mx')) < 0.05, 'le neutre se recentre');
     ecouteur({ gx: 0.3, gy: -0.7, ax: 1.2 }); assert.ok(h.classList.contains('px-choc'), 'un choc');
     racine.classList.replace('px-mode-accueil', 'px-mode-ploxion'); await attendre(20);
-    assert.ok(m.actif(), '(0.45) dans un ploxion aussi');
-    const vus = []; const off = m.ecouter(e => vus.push(e)); ecouteur({ gx: 0.5, gy: -0.7 }); off();
+    assert.ok(!m.actif(), '(0.53) dans un ploxion, rien ne bouge (30 événements/s pour une ombre : le lag)');
+    const vus = []; const off = m.ecouter(e => vus.push(e)); await attendre(20);
+    assert.ok(m.actif(), '… sauf si un ploxion écoute');
+    ecouteur({ gx: 0.5, gy: -0.7 });
     assert.ok(vus.length === 1 && vus[0].x > 0, 'les ploxions reçoivent le mouvement');
     assert.equal(W.jOSNatif.mouvement.etat().source, 'CoreMotion');
+    off(); await attendre(20); assert.ok(!m.actif(), 'plus personne n\'écoute : arrêté');
+    racine.classList.replace('px-mode-ploxion', 'px-mode-accueil'); await attendre(20);
     P = { calme: true }; abonnes.forEach(f => f(P)); await attendre(10); assert.ok(!m.actif(), 'Calme coupe');
     assert.ok(appels.some(a => a[0] === 'fin')); assert.equal(h.style.getPropertyValue('--mx'), '0');
   } finally { p.fin(); }

@@ -56,12 +56,23 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
   function diffuser(topic, payload) {
     for (const t of [topic, '*']) for (const cb of [...(etat.subs.get(t) || [])]) { try { cb(payload, topic); } catch (e) { /* un abonné ne casse pas le bus */ } }
   }
+  // (0.53, RS-7 : « l'app lag de malade ») chaque emit s'écrivait dans le journal xion (SQLite, par le pont natif) : le gyroscope à 10 Hz,
+  // la blouse à ~10 messages/s… Les capteurs de l'app (ploxion.natif.*) ne s'écrivent plus ; les autres, au plus une fois par seconde par
+  // sujet (la dernière valeur de la seconde gagne). Le bus local, lui, reste immédiat.
+  const journalT = new Map(), enAttente = new Map();
+  function journaliser(topic, data) {
+    if (/^ploxion\.natif\./.test(topic)) return;
+    const t = Date.now(), dernier = journalT.get(topic) || 0;
+    if (t - dernier >= 1000) { journalT.set(topic, t); boxion.append('xion', { topic, data }).catch(() => {}); return; }
+    if (!enAttente.has(topic)) W.setTimeout(() => { const d = enAttente.get(topic); enAttente.delete(topic); journalT.set(topic, Date.now()); boxion.append('xion', { topic, data: d }).catch(() => {}); }, 1000 - (t - dernier));
+    enAttente.set(topic, data);
+  }
   function emit(id, port, payload, versXion) {
     const topic = 'ploxion.' + id + (port ? '.' + port : '');
     diffuser(topic, payload);
     let data = versXion !== undefined ? versXion : payload;
     try { data = JSON.parse(JSON.stringify(data === undefined ? null : data)); } catch (e) { data = String(data); }
-    boxion.append('xion', { topic, data }).catch(() => {});
+    journaliser(topic, data);
     return topic;
   }
   function on(topic, cb) {

@@ -4,6 +4,12 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.53.0', titre: 'Snappy', points: [
+    '⚡ L\'app ne rame plus : le thème vivant ne recalcule plus toute la page 30 fois par seconde (il fait glisser le fond et la grille, c\'est tout), il dort dans les ploxions, et les 131 icônes ne sont plus 131 calques ni 131 ombres qui bougent.',
+    '❄ Un ploxion en arrière-plan (un jeu…) n\'anime plus pour rien : ses images reprennent quand tu le rouvres. La musique continue.',
+    '💾 Le bus n\'écrit plus chaque message dans la base (le gyroscope, la blouse) : au plus une fois par seconde.',
+    '📖 Le wiki (et les ploxions qui montrent une page du labo) : l\'adresse va au labo ; tant que le labo refuse d\'être affiché dans l\'app, une carte « ouvrir » au lieu d\'une page blanche. Pareil pour le mode xerboxion.',
+  ] },
   { v: '0.52.0', titre: 'Tous les ploxions en chill-tekk', points: [
     '◇ Un thème commun : les ploxions du labo prennent les couleurs, la police, les boutons et les champs de l\'app (ils se peignent avec les variables du xer : l\'app les redéfinit). Ce qu\'un ploxion ne style pas du tout devient chill-tekk aussi. ⚙ › Apparence pour le couper.',
     '⬡ Le mode xerboxion n\'affiche plus un grand rectangle blanc : « le labo arrive », ou « le labo ne répond pas » hors réseau.',

@@ -326,11 +326,11 @@ html:not(.px-fond-partout):has(#ploxi0n.px-mode-ploxion) .px-fond{display:none}
    - le doigt : chaque bouton s'enfonce sous le doigt (90 ms) et s'éclaire, l'icône d'une tuile se tasse ;
    - l'accueil se pose en cascade (14 ms d'une tuile à l'autre) ; un ploxion s'ouvre en montant (200 ms) ;
    - les feuilles montent du bas, le voile fond ; les bulles glissent. */
-.px-tuile,.px-dock button,.px-h-b,.px-puce,.px-tiroir button,.px-feuille button,.px-mini,.px-retour,.px-compte,.px-ligne,.px-tuto-btn button,.px-journal-bas button,.px-gest-act button{transition:transform .09s cubic-bezier(.3,.7,.4,1),filter .09s,background-color .15s,border-color .15s;will-change:transform}
+.px-tuile,.px-dock button,.px-h-b,.px-puce,.px-tiroir button,.px-feuille button,.px-mini,.px-retour,.px-compte,.px-ligne,.px-tuto-btn button,.px-journal-bas button,.px-gest-act button{transition:transform .09s cubic-bezier(.3,.7,.4,1),filter .09s,background-color .15s,border-color .15s}
 .px-tuile:active,.px-dock button:active,.px-h-b:active,.px-puce:active,.px-tiroir button:active,.px-feuille button:active,.px-mini:active,.px-retour:active,.px-compte:active,.px-ligne:active,.px-tuto-btn button:active,.px-journal-bas button:active,.px-gest-act button:active{transform:scale(.93);filter:brightness(1.3)}
 .px-tuile .px-ic{transition:transform .12s cubic-bezier(.3,.7,.4,1),box-shadow .12s}
 .px-tuile:active .px-ic{transform:scale(.88);box-shadow:0 0 0 2px var(--acc),0 0 14px var(--glow)}
-.px-entree .px-accueil .px-tuile{animation:px-pose .28s cubic-bezier(.2,.9,.3,1.25) both}
+.px-entree .px-accueil .px-tuile:nth-child(-n+16){animation:px-pose .28s cubic-bezier(.2,.9,.3,1.25) both}   /* (0.53) pas 131 animations d'un coup */
 .px-entree .px-accueil .px-tuile:nth-child(1){animation-delay:14ms}.px-entree .px-accueil .px-tuile:nth-child(2){animation-delay:28ms}.px-entree .px-accueil .px-tuile:nth-child(3){animation-delay:42ms}.px-entree .px-accueil .px-tuile:nth-child(4){animation-delay:56ms}.px-entree .px-accueil .px-tuile:nth-child(5){animation-delay:70ms}.px-entree .px-accueil .px-tuile:nth-child(6){animation-delay:84ms}.px-entree .px-accueil .px-tuile:nth-child(7){animation-delay:98ms}.px-entree .px-accueil .px-tuile:nth-child(8){animation-delay:112ms}
 .px-entree .px-accueil .px-tuile:nth-child(9){animation-delay:126ms}.px-entree .px-accueil .px-tuile:nth-child(10){animation-delay:140ms}.px-entree .px-accueil .px-tuile:nth-child(11){animation-delay:154ms}.px-entree .px-accueil .px-tuile:nth-child(12){animation-delay:168ms}.px-entree .px-accueil .px-tuile:nth-child(13){animation-delay:182ms}.px-entree .px-accueil .px-tuile:nth-child(14){animation-delay:196ms}.px-entree .px-accueil .px-tuile:nth-child(15){animation-delay:210ms}.px-entree .px-accueil .px-tuile:nth-child(16){animation-delay:224ms}
 .px-entree .px-accueil .px-tuile:nth-child(17){animation-delay:238ms}.px-entree .px-accueil .px-tuile:nth-child(18){animation-delay:252ms}.px-entree .px-accueil .px-tuile:nth-child(19){animation-delay:266ms}.px-entree .px-accueil .px-tuile:nth-child(20){animation-delay:280ms}.px-entree .px-accueil .px-tuile:nth-child(21){animation-delay:294ms}.px-entree .px-accueil .px-tuile:nth-child(22){animation-delay:308ms}.px-entree .px-accueil .px-tuile:nth-child(23){animation-delay:322ms}.px-entree .px-accueil .px-tuile:nth-child(24){animation-delay:336ms}
@@ -352,15 +352,10 @@ html:not(.px-fond-partout):has(#ploxi0n.px-mode-ploxion) .px-fond{display:none}
 /* ---- 🌀 LE THÈME VIVANT : chill-tekk suit le téléphone (gyroscope + accéléromètre, src/app/mouvement.js → --mx, --my de −1 à 1) ----
    Tout passe par html.px-anime (0.47 : px-vivant, le nom d'avant, était AUSSI la carte d'un ploxion vivant → <html> devenait une carte flex,
    la page débordait de côté avec une barre verte à gauche) : éteint (Calme, réglage, hors iPhone) rien ne bouge. Aucun dégradé : des décalages, des ombres, une arête. */
-html.px-anime .px-fond i{transform:translate3d(calc(var(--mx,0) * -16px),calc(var(--my,0) * -16px),0) scale(1.07)}
-html.px-anime body{background-position:calc(var(--mx,0) * -5px) calc(var(--my,0) * -5px)}
-html.px-anime .px-tuile .px-ic{translate:calc(var(--mx,0) * 3px) calc(var(--my,0) * 3px);
-  background-position:calc(var(--mx,0) * 4px) calc(var(--my,0) * 4px);
-  box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -5px) calc(var(--my,0) * -5px + 6px) 14px rgba(0,0,0,.5)}
-/* l'arête du haut attrape la lumière quand on incline le haut du téléphone vers soi */
-html.px-anime .px-tuile .px-ic::after{content:'';position:absolute;inset:-1px;border-radius:inherit;border-top:1.5px solid var(--acc);pointer-events:none;
-  opacity:calc(max(0, var(--my,0) * -1) * .55 + max(0, var(--mx,0)) * .2)}
-html.px-anime .px-tete h1,html.px-anime .px-grave{text-shadow:calc(var(--mx,0) * -1.4px) calc(var(--my,0) * -1.4px) 0 rgba(0,0,0,.85)}
+/* (0.53) le fond et la grille glissent par un transform posé par mouvement.js (composité, aucun recalcul de style) */
+html.px-anime .px-fond i,html.px-anime .px-accueil>.px-pages,html.px-anime .px-accueil>.px-plat{will-change:transform}
+/* (0.53) plus d'ombre ni d'arête par icône qui suit le téléphone : 131 ombres floues recalculées à 30 Hz, c'était le lag */
+html.px-anime .px-tuile .px-ic{box-shadow:inset 0 0 0 1px var(--filet),0 6px 14px rgba(0,0,0,.45)}
 html.px-anime .px-logo{translate:calc(var(--mx,0) * 2px) calc(var(--my,0) * 2px)}
 html.px-anime .px-dock{box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -4px) calc(var(--my,0) * -3px + 8px) 22px rgba(0,0,0,.55)}
 /* un choc : les icônes tressautent une fois */
@@ -494,3 +489,10 @@ html.px-px-chill body{
 :where(html.px-px-chill .px-hote) ::selection{background:rgba(165,151,207,.35)}
 .px-labo{background:var(--bg) var(--grain)}.px-labo iframe{transition:opacity .3s}
 .px-labo-attente{position:absolute;inset:0;margin:0;display:flex;align-items:center;justify-content:center;font:600 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+/* ⬡ (0.53) une page du labo que le labo refuse d'encadrer dans l'app : une carte, pas un blanc */
+.px-cadre-labo{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin:16px;padding:16px;border-radius:18px;border:var(--trait) solid var(--bord);background:var(--surface) var(--grain);box-shadow:inset 0 0 0 1px var(--filet)}
+.px-cadre-labo .g{font-size:1.4rem;color:var(--acc)}.px-cadre-labo b{font:600 15px var(--police);color:var(--txt)}.px-cadre-labo small{color:var(--muted);font-size:12.5px}
+.px-cadre-labo button{margin-top:6px;min-height:40px;padding:0 16px;border-radius:12px;border:var(--trait) solid var(--acc2);background:var(--surface2);color:var(--acc);font:600 14px var(--police)}
+.px-labo .px-cadre-labo{position:absolute;inset:0;margin:0;justify-content:center;align-items:center;text-align:center}
+/* ⚡ (0.53) SNAPPY : les tuiles et les lignes hors de l'écran ne sont ni mises en page ni peintes (131 ploxions) */
+.px-tuile,.px-ligne{content-visibility:auto;contain-intrinsic-size:auto 104px}

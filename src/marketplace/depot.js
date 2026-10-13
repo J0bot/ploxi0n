@@ -265,6 +265,17 @@ export function creerHttp(W = globalThis.window, enTetes = async () => ({})) {
       const h = {}; r.headers.forEach((v, k) => { h[k.toLowerCase()] = v; });
       return { status: r.status, texte: r.status === 304 ? '' : await r.text(), entetes: h };
     },
+    /** (0.53) les en-têtes seuls (HEAD) : la règle d'encadrement du labo, sans télécharger la page */
+    async tete(url) {
+      if (natif()) {
+        const { CapacitorHttp } = await import('@capacitor/core');
+        const r = await CapacitorHttp.request({ url, method: 'HEAD', headers: await enTetes() });
+        const h = {}; for (const k in (r.headers || {})) h[k.toLowerCase()] = r.headers[k];
+        return { status: r.status, entetes: h };
+      }
+      const r = await W.fetch(url, { method: 'HEAD' }); const h = {}; r.headers.forEach((v, k) => { h[k.toLowerCase()] = v; });
+      return { status: r.status, entetes: h };
+    },
     /** une requête quelconque (le relais du shim) ; fetchReseau = le fetch d'origine (le shim remplace W.fetch) */
     async requete({ methode = 'GET', url, headers = {}, corps }, fetchReseau = W.fetch.bind(W)) {
       if (natif()) {

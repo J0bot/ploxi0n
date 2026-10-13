@@ -64,6 +64,7 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
      le lecteur, la musique : ⏮ ⏯ ⏭) ;
    - au-dessus du dock : deux pastilles au plus, puis « ▤ N » ; **la page de tous les mini docks** (une feuille, ou un ploxion interne)
      avec leurs actions et ✕ pour fermer ; la section « en arrière-plan » de l'accueil (`arriere()` dans le routeur) se fond dedans.
+1b. **13.10 midi : le build Codemagic marche** (RS-7 a reçu un TestFlight). Retours : « ça lag de malade » → 0.53 snappy ; « le wiki ne marche toujours pas » → 0.53 cadres du labo ; **côté labo : ajouter `capacitor:` à `frame-ancestors`** (le wiki, `/home`, comme `/app/yt`).
 2. **Le build Codemagic (13.10, 3 essais)** : la clé API marche (build 55 préparé) ; la signature gérée par Apple ne tient pas sur CI
    (pas d'appareil, puis « Revoke certificate » : la clé privée du certificat de dev reste sur la machine jetable) ; avec match, le jeton
    `MATCH_PAT` clone bien ploxi0n-certificats mais **`MATCH_PASSWORD` est faux** (« Couldn't decrypt the repo »). À faire par RS-7, une fois :

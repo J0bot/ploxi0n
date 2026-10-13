@@ -16,6 +16,9 @@ test('jOSPorts : le bus local livre tout de suite (topic exact et « * ») et jo
   assert.equal(recu.length, 1, 'off() désabonne');
   assert.deepEqual(tous, ['ploxion.a.sortie', 'ploxion.a.sortie']);
   await attendre();
+  assert.equal((await p.boxion.lire('xion')).length, 1, '(0.53) au plus une écriture par seconde et par sujet : la 2e attend');
+  p.w.jOSPorts.emit('natif', 'mouvement', { x: 1 });   // un capteur de l'app : jamais journalisé
+  await attendre(1100);
   const j = await p.boxion.lire('xion');
   assert.deepEqual(j.map(e => e.entry), [{ topic: 'ploxion.a.sortie', data: { n: 1 } }, { topic: 'ploxion.a.sortie', data: { n: 2 } }]);
   p.w.jOSPorts.emit('a', 'gros', { secret: 'x' }, 'résumé');

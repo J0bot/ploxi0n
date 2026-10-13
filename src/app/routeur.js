@@ -15,7 +15,7 @@ const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
   + R.map(r => `M512 ${512 - r}L${512 + r} 512L512 ${512 + r}L${512 - r} 512Z`).join('') + '"/></svg>';
 
-export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null } = {}) {
+export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null, surMontrer = null } = {}) {
   // ▤ (0.51) les mini docks : miniDocks = { surVivants(), surFermeture(id), page() } — ⧉ ouvre leur page, ils remplacent « en arrière-plan »
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
@@ -384,6 +384,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   function montrer(v) {
     for (const x of vivants.values()) if (x !== v) x.hote.hidden = true;
     v.hote.hidden = false; v.debut = Date.now(); v.vu = Date.now(); courant = v; majBords();
+    if (surMontrer) { try { surMontrer(v.id); } catch (e) { /* */ } }   // ❄ (0.53) ses images reprennent (src/app/gel.js)
     accrochesDe(v.id, n => { if (n.hasAttribute('data-px-cache')) { n.style.display = n.getAttribute('data-px-cache'); n.removeAttribute('data-px-cache'); } });
     surAccueil = false;
     racine.classList.add('px-mode-ploxion'); racine.classList.remove('px-mode-accueil');

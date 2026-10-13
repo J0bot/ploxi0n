@@ -9,7 +9,7 @@
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 export const MODES = [['chill-tekk', '◇', 'chill-tekk'], ['xerboxion', '⬡', 'xerboxion'], ['xerbot', '🤖', 'xerbot']];
 
-export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, connait = () => false, source = 'https://xerboxion.org', chemin = '/home', vibrer = () => {} }) {
+export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, connait = () => false, source = 'https://xerboxion.org', chemin = '/home', vibrer = () => {}, cadres = null }) {
   const D = W.document, N = () => W.jOSNatif || {};
   const mode = () => (MODES.some(m => m[0] === (prefs.lire().mode || '')) ? prefs.lire().mode : 'chill-tekk');
   const appliquer = () => { for (const [m] of MODES) D.documentElement.classList.toggle('px-m-' + m, mode() === m); };
@@ -55,9 +55,16 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
   function sonder() {
     W.setTimeout(() => {
       const f = D.querySelector('.px-labo iframe'); if (!f || f.dataset.sonde) return; f.dataset.sonde = '1';
-      Promise.race([W.fetch(source + chemin, { mode: 'no-cors', cache: 'no-store' }), new Promise((ok, ko) => W.setTimeout(() => ko(new Error('délai')), 8000))])
-        .then(() => { f.dataset.ok = '1'; if (f.dataset.charge) f.style.opacity = '1'; })
-        .catch(() => { const p = f.closest('.px-labo'); if (p) p.innerHTML = '<p class="px-labo-attente">⬡ le labo ne répond pas · ◇ chill-tekk en attendant</p>'; });
+      // (0.53) la règle d'encadrement du labo (CSP frame-ancestors, lue par un HEAD natif) : refusé → une carte « ouvrir », pas un blanc
+      const regle = cadres ? cadres.permis(chemin) : Promise.race([W.fetch(source + chemin, { mode: 'no-cors', cache: 'no-store' }).then(() => 'oui'), new Promise((ok) => W.setTimeout(() => ok('injoignable'), 8000))]).catch(() => 'injoignable');
+      regle.then((r) => {
+        const p = f.closest('.px-labo'); if (!p) return;
+        if (r === 'oui') { f.dataset.ok = '1'; if (f.dataset.charge) f.style.opacity = '1'; return; }
+        p.innerHTML = r === 'non'
+          ? '<div class="px-cadre-labo"><span class="g">⬡</span><b>L\'UI du labo ne s\'affiche pas encore dans l\'app</b><small>le labo n\'accepte d\'être encadré que par lui-même (frame-ancestors) ; en attendant, elle s\'ouvre à côté</small><button type="button" data-xb-ouvrir>ouvrir le labo</button></div>'
+          : '<p class="px-labo-attente">⬡ le labo ne répond pas · ◇ chill-tekk en attendant</p>';
+        const b = p.querySelector('[data-xb-ouvrir]'); if (b) b.onclick = () => { if (W.jOSNatif && W.jOSNatif.navigateur) W.jOSNatif.navigateur(source + chemin + '?app=ploxi0n'); };
+      });
     }, 0);
   }
   function panneau() {
