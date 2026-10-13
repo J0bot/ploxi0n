@@ -68,12 +68,12 @@ const DISPO = {
   fractale: { s0: 0.66, k: 0.84, pas: 0.6, rot: 13, rotMax: 17, fond: 0.3 },
   slider: { s0: 0.44, k: 0.9, pas: 0.46, rot: 26, rotMax: 76, fond: 0.1 },
 };
-const CUBE = 0.62;   // la taille du cube (fraction de l'écran)
+const CUBE = 0.58, RX0 = -12, RY0 = -22;   // la taille du cube (fraction de l'écran) ; son angle de repos (trois quarts)
 export function creerFractale({ W = globalThis.window, racine, scene, file, origine, aller, fermer = null, vibrer = () => {}, calme = () => false, actif = () => true,
   gyro = () => (W.jOSNatif && W.jOSNatif.mouvement && W.jOSNatif.mouvement.ecouter ? W.jOSNatif.mouvement : null), glyphe = () => '' }) {
   const D = W.document;
   let etat = 'repos', g = null, cartes = [], focus = 0, depart = 0, departId, fond = null, calque = null, indice = null, curseur = null, dessus = null, image = 0, minuteurs = [], pressionVue = false, cran = 0;
-  let inc = { x: 0, y: 0 }, base = null, offGyro = null, penche = 0, libre = false, offLibre = null, badge = null;   // inc : l'inclinaison lissée ; penche : la face du dessus (0..1)
+  let salle = null, inc = { x: 0, y: 0 }, base = null, offGyro = null, penche = 0, libre = false, offLibre = null, badge = null;   // inc : l'inclinaison lissée ; penche : la face du dessus (0..1)
   const boite = () => { const r = scene.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width || W.innerWidth || 390, h: r.height || W.innerHeight || 844 }; };
   const arreterMinuteurs = () => { for (const m of minuteurs) W.clearTimeout(m); minuteurs = []; };
   const dispo = () => DISPO[etat === 'slider' ? 'slider' : 'fractale'];
@@ -114,6 +114,13 @@ export function creerFractale({ W = globalThis.window, racine, scene, file, orig
       calque.appendChild(c);
       return { e, el, cree, c };
     });
+    // la SALLE du kion 4D (le croquis de RS-7) : le cadre de l'écran, des cadres qui reculent, et les arêtes qui descendent vers le cube
+    const sv = 'http://www.w3.org/2000/svg', vw = W.innerWidth || b.w, vh = W.innerHeight || b.h, c = CUBE, ix = b.l + b.w * (1 - c) / 2, iy = b.t + b.h * (1 - c) / 2, iw = b.w * c, ih = b.h * c;
+    const cadre = (k) => { const x = 10 + (ix - 10) * k, y = 10 + (iy - 10) * k, x2 = vw - 10 + (ix + iw - vw + 10) * k, y2 = vh - 10 + (iy + ih - vh + 10) * k; return '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + (x2 - x).toFixed(1) + '" height="' + (y2 - y).toFixed(1) + '" stroke-opacity="' + (0.5 - k * 0.3).toFixed(2) + '"/>'; };
+    salle = D.createElement('div'); salle.className = 'px-fx-salle';
+    salle.innerHTML = '<svg xmlns="' + sv + '" viewBox="0 0 ' + vw + ' ' + vh + '" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1.2">' + [0, 0.3, 0.55, 0.78].map(cadre).join('')
+      + [[10, 10, ix, iy], [vw - 10, 10, ix + iw, iy], [vw - 10, vh - 10, ix + iw, iy + ih], [10, vh - 10, ix, iy + ih]].map(([a, b2, x2, y2]) => '<line x1="' + a + '" y1="' + b2 + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke-opacity=".45"/>').join('') + '</svg>';
+    racine.appendChild(salle);
     // la face du dessus du cube : les bions du ploxion de devant (remplie quand le cube vient)
     dessus = D.createElement('div'); dessus.className = 'px-fx-dessus'; Object.assign(dessus.style, { top: ((b.h - b.w) / 2) + 'px', height: b.w + 'px' }); scene.appendChild(dessus);
     renumeroter();
@@ -129,8 +136,8 @@ export function creerFractale({ W = globalThis.window, racine, scene, file, orig
     W.cancelAnimationFrame(image); image = 0; arreterMinuteurs();
     for (const k of cartes) { if (k.cree) k.el.remove(); else { k.el.classList.remove('px-fx-carte'); k.el.style.transform = ''; k.el.style.opacity = ''; k.el.style.zIndex = ''; } }
     cartes = [];
-    for (const n of [fond, calque, indice, curseur, dessus]) if (n) n.remove();
-    fond = calque = indice = curseur = dessus = null;
+    for (const n of [fond, calque, indice, curseur, dessus, salle]) if (n) n.remove();
+    fond = calque = indice = curseur = dessus = salle = null;
     racine.classList.remove('px-fx', 'px-fx-suit', 'px-fx-ouverte', 'px-fx-apercu', 'px-fx-cube', 'px-fx-slider');
     etat = 'repos'; penche = 0; couperGyro();
   }
@@ -151,7 +158,8 @@ export function creerFractale({ W = globalThis.window, racine, scene, file, orig
     if (etat === 'cube') {
       // une face par carte, à 90° l'une de l'autre autour de l'axe vertical ; penché en avant, le dessus (les bions) vient
       const ang = d * 90, h = (w * CUBE) / 2, vu = a <= 1.5;
-      return { t: P0 + 'rotateX(' + (-38 * penche - inc.y * 8).toFixed(1) + 'deg) rotateY(' + (ang - inc.x * 14).toFixed(1) + 'deg) translateZ(' + h.toFixed(1) + 'px) scale(' + CUBE + ')', o: vu ? 1 : 0, z: 80 - Math.round(a * 10), v: Math.min(0.5, a * 0.35) };
+      // au repos, le cube est vu de trois quarts (RX0, RY0) : on voit que c'est un cube, et sa face du dessus affleure
+      return { t: P0 + 'rotateX(' + (RX0 - 38 * penche - inc.y * 8).toFixed(1) + 'deg) rotateY(' + (RY0 + ang - inc.x * 14).toFixed(1) + 'deg) translateZ(' + h.toFixed(1) + 'px) scale(' + CUBE + ')', o: vu ? 1 : 0, z: 80 - Math.round(a * 10), v: Math.min(0.5, a * 0.35) };
     }
     const P = dispo(), u = unite(w);
     // la fractale : chaque pas vers l'extérieur rapetisse (k) et se rapproche (la suite géométrique)
@@ -175,8 +183,8 @@ export function creerFractale({ W = globalThis.window, racine, scene, file, orig
       if (etat === 'cube') {
         const { w, h } = boite(), k = cartes[f];
         if (k && dessus.dataset.pour !== String(k.e.id)) { dessus.dataset.pour = String(k.e.id); dessus.innerHTML = faceDessus(k.e); }
-        dessus.style.transform = P0 + 'rotateX(' + (-38 * penche - inc.y * 8).toFixed(1) + 'deg) rotateY(' + (-inc.x * 14).toFixed(1) + 'deg) translateY(' + (-(h * CUBE) / 2).toFixed(1) + 'px) rotateX(90deg) scale(' + CUBE + ')';
-        dessus.style.opacity = String(Math.min(1, penche * 1.6)); void w;
+        dessus.style.transform = P0 + 'rotateX(' + (RX0 - 38 * penche - inc.y * 8).toFixed(1) + 'deg) rotateY(' + (RY0 - inc.x * 14).toFixed(1) + 'deg) translateY(' + (-(h * CUBE) / 2).toFixed(1) + 'px) rotateX(90deg) scale(' + CUBE + ')';
+        dessus.style.opacity = String(Math.min(1, 0.35 + penche * 1.3)); void w;
       } else { dessus.style.opacity = '0'; }
     }
     if (indice) indice.textContent = libre && etat === 'ouverte' ? 'freefall · penche pour défiler · reste droit pour ouvrir'
@@ -219,8 +227,15 @@ export function creerFractale({ W = globalThis.window, racine, scene, file, orig
     }
     placer();
   }
+  /** le PORTAIL (le croquis « portail ») : des carrés emboîtés jaillissent de la carte choisie, en s'ouvrant */
+  function portail() {
+    if (calme()) return; const p = D.createElement('div'); p.className = 'px-fx-portail'; p.innerHTML = '<i></i><i></i><i></i><i></i>'; racine.appendChild(p);
+    [...p.children].forEach((n, j) => animer(n, [{ transform: 'translate(-50%,-50%) scale(' + (0.2 + j * 0.12) + ') rotate(45deg)', opacity: 0.9 }, { transform: 'translate(-50%,-50%) scale(' + (2.6 + j * 0.5) + ') rotate(45deg)', opacity: 0 }], 520 + j * 70, 'cubic-bezier(.2,.7,.2,1)'));
+    W.setTimeout(() => p.remove(), 900);
+  }
   function ouvrirIndex(i) {
     const k = cartes[i]; if (!k) return demonter();
+    if (!(k.e.id === departId && i === depart)) portail();
     focus = i; etat = 'zoom'; penche = 0; racine.classList.remove('px-fx-suit'); vibrer('ouvrir'); placer();
     const id = k.e.id, meme = id === departId && i === depart;
     W.setTimeout(() => { demonter(); if (!meme) aller(id); }, calme() ? 0 : 300);
@@ -361,5 +376,8 @@ export function creerFractale({ W = globalThis.window, racine, scene, file, orig
     return libre;
   }
 
-  return { appui, deplace, relache, annule, etat: () => etat, focus: () => focus, entrer, revenir, ouvrirIndex, jeter, freefall, libre: () => libre };
+  /** la fractale ouverte d'un toucher (la page « aujourd'hui », un bouton) */
+  function ouverte() { if (etat !== 'repos' || !actif() || !monter()) return false; etat = 'ouverte'; racine.classList.add('px-fx-ouverte'); ecouterGyro(); vibrer('appui'); placer(); return true; }
+
+  return { appui, deplace, relache, annule, etat: () => etat, focus: () => focus, entrer, revenir, ouvrirIndex, jeter, freefall, libre: () => libre, ouverte };
 }

@@ -88,6 +88,12 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
   effacée, `px-tire-bord` coupe la sélection dans toute l'app tant qu'un doigt est sur un bord ; pareil sur la fractale (`px-fx`).
   CI : un commit « [build] » sur une branche glob/** lance le build TestFlight (« [widgets] » : avec) — la session ne peut ni pousser
   de tag ni lancer un workflow à la main (403).
+- **0.61 — des pages de côté, la salle du cube.** RS-7 : « des pages à gauche et à droite », « quand on tient longtemps n'importe quoi,
+  il bouge avec le gyroscope ; penché en avant, on voit les bions ». Routeur : `pageAujourdhui()` (DOM index 0, data-special) et la
+  bibliothèque (`aPlat('categories')`, dernier) ; `pageCourante` reste LOGIQUE (0 = la principale), le DOM est décalé de `sp`
+  (prefs.pagesCote) ; le glisser-déposer ignore `[data-special]`. `soulever()` : l'icône suit le gyroscope (relatif), penchée en avant
+  → `.px-fantome-bions`. Fractale : `.px-fx-salle` (le kion 4D, SVG), `portail()` à l'ouverture, cube de trois quarts (RX0, RY0),
+  `ouverte()` (la fractale d'un toucher). Faux iPhone : `parcours-pages.mjs` ; `parcours-tri.mjs` vise `[data-page="0"]`.
 
 ## 3. Ce qui reste, par ordre
 

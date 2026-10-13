@@ -246,6 +246,17 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     const groupes = new Map(); for (const p of tous) { const k = p.categorie || 'Autres'; if (!groupes.has(k)) groupes.set(k, { icone: p.cat_icone || '📦', l: [] }); groupes.get(k).l.push(p); }
     return [...groupes.entries()].sort((a, b) => b[1].l.length - a[1].l.length).map(([k, g]) => '<h2 class="px-titre-page">' + (prefs().glyphes === false ? '' : glyphe(glypheCategorie(g.l[0].cat || k)) + ' ') + texte(k) + ' · ' + g.l.length + '</h2><div class="px-grille px-cat">' + g.l.map(tuile).join('') + '</div>').join('');
   }
+  /** (0.61) la page de gauche : aujourd'hui — ce qui vit (vivants, endormis, la musique, les vidéos à reprendre), et la fractale, freefall */
+  function pageAujourdhui() {
+    const md = (W.jOSMiniDock && W.jOSMiniDock.liste) ? (() => { try { return W.jOSMiniDock.liste(); } catch (e) { return []; } })() : [];
+    let jour = ''; try { jour = new Date().toLocaleDateString('fr-CH', { weekday: 'long', day: 'numeric', month: 'long' }); } catch (e) { /* */ }
+    return '<h2 class="px-titre-page">' + G('recents') + ' aujourd\'hui</h2><p class="px-sous px-auj-date">' + texte(jour) + '</p>'
+      + '<div class="px-auj-actions"><button data-auj="fractale">' + G('basculer') + '<span>la fractale</span></button><button data-auj="freefall">' + G('iphone') + '<span>freefall</span></button>'
+      + '<button data-auj="tsoin">' + G('tsoin') + '<span>un tsoin</span></button><button data-auj="minidocks">' + G('minidocks') + '<span>mini docks</span></button></div>'
+      + '<h3 class="px-auj-t">ce qui vit</h3>'
+      + (md.length ? '<div class="px-auj-liste">' + md.slice(0, 12).map(m => '<button class="px-auj-l" ' + (m.ploxion ? 'data-reprendre="' + texte(m.ploxion) + '"' : 'data-md="' + texte(m.cle) + '"') + '><span class="px-ic">' + (m.ploxion ? icone(parId.get(m.ploxion) || { id: m.ploxion, nom: m.titre }) : G('musique')) + '</span><span class="px-auj-tx"><b>' + texte(m.titre || '') + '</b><small>' + texte(m.sous || '') + '</small></span></button>').join('') + '</div>'
+        : '<p class="px-sous">Rien d\'ouvert. Tes ploxions vivants, la musique, les vidéos à reprendre viendront ici.</p>');
+  }
   async function accueil() {
     fermer(); noterSession();
     vueAccueil();
@@ -265,7 +276,10 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
       ...accueilDoc.pages.map(pg => pg.ids.map(id => parId.get(id)).filter(Boolean).map(tuile).join('')),
     ];
     const noms = ['accueil', ...accueilDoc.pages.map(pg => pg.nom)];
-    pageCourante = Math.min(pageCourante, pages.length - 1);
+    // (0.61, RS-7 : « faut qu'il y ait des pages à gauche et à droite ») à gauche « aujourd'hui » (ce qui vit, la fractale, freefall), à
+    // droite « bibliothèque » (tout, par catégorie) ; pageCourante reste l'index LOGIQUE (0 = la page principale), le DOM est décalé de sp
+    const sp = prefs().pagesCote !== false ? 1 : 0;
+    pageCourante = Math.max(-sp, Math.min(pageCourante, pages.length - 1 + sp));
     const vues = '<div class="px-vues">' + VUES_ACCUEIL.map(([k, i, n]) => '<button data-vue-accueil="' + k + '"' + (k === vue ? ' class="on"' : '') + '>' + G(i) + ' ' + n + '</button>').join('') + '</div>';
     const plat = vue !== 'grille' && vue !== 'compacte';
     ecran.innerHTML = '<div class="px-accueil px-vue-' + vue + '"><header class="px-tete"><h1>' + LOGO + '<b>ploxi0n</b></h1><button class="px-modif" data-edition>' + (edition ? 'terminé' : G('editer')) + '</button></header>'
@@ -274,14 +288,16 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
       + '<p class="px-sous px-grave">' + (edition ? 'Touche un ploxion : le ranger dans un dossier, sur une page, ou l\'ajouter à l\'écran d\'accueil de l\'iPhone.' : ('◇ cycle ' + (new Date().getFullYear() + 5000) + ' · ' + tous.length + ' ploxions · hors ligne')) + '</p>'
       + vues
       + (plat ? '<div class="px-plat">' + await aPlat(vue, tous) + '</div></div>' + dock() : '')
-      + (plat ? '' : '<div class="px-pages">' + pages.map((h, i) => '<section class="px-page" data-page="' + i + '">' + (i ? '<h2 class="px-titre-page">' + texte(noms[i]) + '</h2>' : '') + '<div class="px-grille">' + (h || '<p class="px-sous">page vide</p>') + '</div></section>').join('') + '</div>'
-      + (pages.length > 1 ? '<div class="px-points">' + pages.map((_, i) => '<button class="px-point' + (i === pageCourante ? ' on' : '') + '" data-aller="' + i + '" aria-label="' + texte(noms[i]) + '"></button>').join('') + '</div>' : '') + '</div>' + dock());
+      + (plat ? '' : '<div class="px-pages">' + (sp ? '<section class="px-page px-page-sp" data-special="aujourdhui">' + pageAujourdhui() + '</section>' : '')
+        + pages.map((h, i) => '<section class="px-page" data-page="' + i + '">' + (i ? '<h2 class="px-titre-page">' + texte(noms[i]) + '</h2>' : '') + '<div class="px-grille">' + (h || '<p class="px-sous">page vide</p>') + '</div></section>').join('')
+        + (sp ? '<section class="px-page px-page-sp" data-special="bibliotheque"><h2 class="px-titre-page">' + G('categories') + ' bibliothèque · ' + tous.length + '</h2>' + await aPlat('categories', tous) + '</section>' : '') + '</div>'
+      + ((pages.length > 1 || sp) ? '<div class="px-points">' + (sp ? '<button class="px-point px-point-g' + (pageCourante === -1 ? ' on' : '') + '" data-aller="0" aria-label="aujourd\'hui">' + G('recents') + '</button>' : '') + pages.map((_, i) => '<button class="px-point' + (i === pageCourante ? ' on' : '') + '" data-aller="' + (i + sp) + '" aria-label="' + texte(noms[i]) + '"></button>').join('') + (sp ? '<button class="px-point px-point-g' + (pageCourante === pages.length ? ' on' : '') + '" data-aller="' + (pages.length + 1) + '" aria-label="bibliothèque">' + G('categories') + '</button>' : '') + '</div>' : '') + '</div>' + dock());
     const conteneur = racine.querySelector('.px-pages');
     if (!conteneur) return;
-    if (pageCourante && conteneur.children[pageCourante]) conteneur.scrollLeft = conteneur.children[pageCourante].offsetLeft;
+    if ((pageCourante + sp) && conteneur.children[pageCourante + sp]) conteneur.scrollLeft = conteneur.children[pageCourante + sp].offsetLeft;
     conteneur.addEventListener('scroll', () => {
-      const i = Math.round(conteneur.scrollLeft / Math.max(1, conteneur.clientWidth)); if (i === pageCourante) return;
-      pageCourante = i; vibrer('page'); racine.querySelectorAll('.px-point').forEach((b, k) => b.classList.toggle('on', k === i));
+      const i = Math.round(conteneur.scrollLeft / Math.max(1, conteneur.clientWidth)); if (i - sp === pageCourante) return;
+      pageCourante = i - sp; vibrer('page'); racine.querySelectorAll('.px-point').forEach((b, k) => b.classList.toggle('on', k === i));
     }, { passive: true });
   }
   /** une bulle de message, quelques secondes (Face ID qui échoue, etc.) */
@@ -357,23 +373,38 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     const t = e.target.closest('[data-id]'); if (!t || !racine.contains(t) || t.closest('.px-hote,.px-voile') || prefs().appuiLong === false) return;
     const x0 = e.clientX, y0 = e.clientY, id = t.getAttribute('data-id');
     appui = { x0, y0, t: W.setTimeout(() => { appui = null; avaler = Date.now(); vibrer('appui');
-      if (t.classList.contains('px-tuile') && t.closest('.px-pages') && !t.classList.contains('px-dossier')) soulever(t, id, x0, y0, e.pointerId); else actions(id); }, 450) };
+      if (t.classList.contains('px-tuile') && t.closest('.px-pages') && !t.closest('[data-special]') && !t.classList.contains('px-dossier')) soulever(t, id, x0, y0, e.pointerId); else actions(id); }, 450) };
   });
   function soulever(t, id, x, y, pointeur) {
     const r = t.getBoundingClientRect(), fantome = t.querySelector('.px-ic').cloneNode(true);
     fantome.className += ' px-fantome'; fantome.style.left = r.left + r.width / 2 + 'px'; fantome.style.top = r.top + 30 + 'px';
     D.body.appendChild(fantome); t.classList.add('px-souleve'); racine.classList.add('px-tri');
     tri = { t, id, x0: x, y0: y, bouge: false, fantome, pointeur, bord: null, dossier: null, survol: null };
+    // (0.61, RS-7 : « quand on tient longtemps n'importe quoi, il bouge avec le gyroscope ; penché en avant, on voit déjà les bions de koin
+    // du ploxion ») l'icône soulevée suit l'inclinaison (relative à la tenue du début) ; penchée en avant, une bulle montre ses bions
+    const M = W.jOSNatif && W.jOSNatif.mouvement && W.jOSNatif.mouvement.ecouter ? W.jOSNatif.mouvement : null;
+    if (M) { const z = tri; let base = null, montre = false; const bions = (parId.get(id) || {}).bions || [];
+      z.offGyro = M.ecouter((e) => {
+        if (tri !== z) return; if (!base) base = { x: +e.x || 0, y: +e.y || 0 };
+        const ix = (+e.x || 0) - base.x, iy = (+e.y || 0) - base.y;
+        z.fantome.style.setProperty('--rx', (-iy * 40).toFixed(1) + 'deg'); z.fantome.style.setProperty('--ry', (ix * 40).toFixed(1) + 'deg');
+        const veut = iy > 0.3;
+        if (veut !== montre) { montre = veut; vibrer(veut ? 'bord-seuil' : 'page');
+          if (veut) { z.bulle = D.createElement('div'); z.bulle.className = 'px-fantome-bions'; z.bulle.innerHTML = '<b>' + texte((parId.get(id) || {}).nom || id) + '</b>' + (bions.length ? bions.slice(0, 12).map(n => '<span>' + G('bion') + texte(n) + '</span>').join('') : '<small>aucun bion déclaré</small>'); D.body.appendChild(z.bulle); }
+          else if (z.bulle) { z.bulle.remove(); z.bulle = null; } }
+        if (z.bulle) { z.bulle.style.left = z.fantome.style.left; z.bulle.style.top = z.fantome.style.top; }
+      }); }
   }
   function lacherTri(annule) {
     const z = tri; tri = null; if (!z) return;
     W.clearTimeout(z.bord); z.fantome.remove(); racine.classList.remove('px-tri'); z.t.classList.remove('px-souleve');
+    if (z.offGyro) { try { z.offGyro(); } catch (e) { /* */ } } if (z.bulle) z.bulle.remove();
     racine.querySelectorAll('.px-cible').forEach(n => n.classList.remove('px-cible'));
     if (annule) return accueil();
     if (!z.bouge) return actions(z.id);   // un appui long sans bouger : le menu
     if (z.dossier != null && accueilDoc.dossiers[z.dossier]) { vibrer('succes'); return ranger(z.id, 'dossier', accueilDoc.dossiers[z.dossier].nom); }
     // l'ordre = celui des tuiles à l'écran, page par page (la page où elle a été lâchée la garde)
-    const pagesDom = [...racine.querySelectorAll('.px-pages > .px-page')];
+    const pagesDom = [...racine.querySelectorAll('.px-pages > .px-page:not([data-special])')];
     pagesDom.forEach((pg, i) => {
       const ids = [...pg.querySelectorAll('.px-tuile[data-id]')].map(b => b.getAttribute('data-id'));
       if (i === 0) { accueilDoc.ordre = ids; for (const l of ['dossiers', 'pages']) accueilDoc[l].forEach(d => { if (ids.includes(z.id)) d.ids = d.ids.filter(x => x !== z.id); }); }
@@ -398,7 +429,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     // tenue au bord : la page d'à côté
     const c = racine.querySelector('.px-pages'), bord = e.clientX < 26 ? -1 : e.clientX > W.innerWidth - 26 ? 1 : 0;
     if (!bord) { W.clearTimeout(z.bord); z.bord = null; } else if (!z.bord && c) z.bord = W.setTimeout(() => { if (!tri) return; tri.bord = null;
-      const i = Math.max(0, Math.min(c.children.length - 1, Math.round(c.scrollLeft / Math.max(1, c.clientWidth)) + bord));
+      const sp0 = c.querySelector('[data-special]') ? 1 : 0, i = Math.max(sp0, Math.min(c.children.length - 1 - sp0, Math.round(c.scrollLeft / Math.max(1, c.clientWidth)) + bord));
       if (c.children[i]) { c.scrollLeft = c.children[i].offsetLeft; const g = c.children[i].querySelector('.px-grille'); if (g && !g.contains(z.t)) g.appendChild(z.t); vibrer('page'); } }, 650);
   });
   racine.addEventListener('pointerup', (e) => { if (tri && e.pointerId === tri.pointeur) lacherTri(false); });
@@ -446,6 +477,8 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (b.hasAttribute('data-reprendre')) return ouvrir(b.getAttribute('data-reprendre'));
     if (b.hasAttribute('data-tuer')) { tuer(b.getAttribute('data-tuer')); return courant ? null : accueil(); }
     if (b.hasAttribute('data-basculer')) return basculer();
+    if (b.hasAttribute('data-auj')) { const a = b.getAttribute('data-auj'); if (a === 'fractale') return fractale.ouverte() || signaler('ouvre d\'abord un ploxion'); if (a === 'freefall') return fractale.freefall(); if (a === 'tsoin') return tsoin ? tsoin() : null; if (a === 'minidocks') return miniDocks ? miniDocks.page() : null; return; }
+    if (b.hasAttribute('data-md')) return miniDocks ? miniDocks.page() : null;
     if (b.hasAttribute('data-aller')) { const c = racine.querySelector('.px-pages'), i = +b.getAttribute('data-aller'); if (c && c.children[i]) c.scrollTo ? c.scrollTo({ left: c.children[i].offsetLeft, behavior: 'smooth' }) : (c.scrollLeft = c.children[i].offsetLeft); return; }
     const id = b.getAttribute('data-id'); if (!id) return;
     if (!edition) return ouvrir(id);

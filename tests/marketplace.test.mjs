@@ -102,7 +102,8 @@ test('routeur : un ploxion installé s\'ouvre depuis boxion_local (jamais depuis
     racine.querySelector('[data-ranger="page"]').click(); await attendre(30);
     const doc = await p.boxion.get('reglages', 'accueil');
     assert.deepEqual([doc.dossiers, doc.pages], [[], [{ nom: 'Travail', ids: ['pomo'] }]]);
-    assert.equal(racine.querySelectorAll('.px-page').length, 2); assert.equal(racine.querySelectorAll('.px-point').length, 2);
+    assert.equal(racine.querySelectorAll('.px-page:not([data-special])').length, 2); assert.equal(racine.querySelectorAll('.px-point:not(.px-point-g)').length, 2);
+    assert.deepEqual([...racine.querySelectorAll('.px-page[data-special]')].map(s => s.dataset.special), ['aujourdhui', 'bibliotheque'], '(0.61) les pages de côté');
     assert.ok(racine.querySelector('.px-page[data-page="1"] [data-id="pomo"]') && racine.querySelector('.px-page[data-page="0"] [data-id="autre"]'));
   } finally { p.w.close(); }
 });

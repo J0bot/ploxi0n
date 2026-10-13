@@ -104,7 +104,7 @@ test('✥ (0.54) glisser-déposer : une tuile soulevée se range ailleurs ; lâc
     const racine = D.createElement('div'); D.body.appendChild(racine);
     const r = creerRouteur({ fenetre: W, racine, boxion: p.boxion, catalogue: ['a', 'b', 'c', 'd'].map(id => ({ id, nom: id.toUpperCase() })) });
     await r.accueil();
-    const ordre = () => [...racine.querySelectorAll('.px-page .px-tuile[data-id]')].map(b => b.getAttribute('data-id'));
+    const ordre = () => [...racine.querySelectorAll('.px-page:not([data-special]) .px-tuile[data-id]')].map(b => b.getAttribute('data-id'));   // (0.61) la bibliothèque les montre toutes, à part
     assert.deepEqual(ordre(), ['a', 'b', 'c']);
     const ev = (n, t, type, x) => n.dispatchEvent(new W.MouseEvent(type, { bubbles: true, clientX: x, clientY: 10 }));
     // jsdom n'a pas de mise en page : elementFromPoint dit où est le doigt

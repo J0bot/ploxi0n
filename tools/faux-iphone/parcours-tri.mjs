@@ -2,7 +2,7 @@
 export default async function ({ page, ecrire }) {
   await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => /passer/i.test(x.textContent)); if (b) b.click(); });
   await page.waitForTimeout(500);
-  const ordre = () => page.evaluate(() => [...document.querySelectorAll('.px-pages > .px-page:first-child .px-tuile[data-id]')].map(b => b.getAttribute('data-id')));
+  const ordre = () => page.evaluate(() => [...document.querySelectorAll('.px-pages > .px-page[data-page="0"] .px-tuile[data-id]')].map(b => b.getAttribute('data-id')));
   const r = { avant: await ordre() };
   const centre = (id) => page.evaluate((i) => { const b = document.querySelector('.px-tuile[data-id="' + i + '"]').getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 3 }; }, id);
   const [a, , , d] = r.avant; const pa = await centre(a), pd = await centre(d);

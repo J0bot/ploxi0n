@@ -4,6 +4,11 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.61.0', titre: 'Des pages de côté, le cube dans sa salle', points: [
+    'L\'accueil a une page à gauche, « aujourd\'hui » (ce qui vit, la musique, les vidéos à reprendre ; la fractale, freefall, un tsoin, les mini docks d\'un toucher), et une à droite, « bibliothèque » (tout, par catégorie).',
+    'Le cube se voit de trois quarts, dans la salle du kion 4D (les cadres qui reculent, les arêtes vers le cube) ; entrer dans une app ouvre un portail de carrés emboîtés.',
+    'Tiens une icône de l\'accueil : elle flotte avec le gyroscope ; penche l\'iPhone en avant, une bulle montre ses bions.',
+  ] },
   { v: '0.60.1', titre: 'Les bords ne sélectionnent plus le texte', points: [
     'Tirer depuis un bord ne sélectionne plus le texte du ploxion (ni loupe, ni menu d\'iOS) : le geste reste à l\'app, il ne se coupe plus en route.',
   ] },

@@ -511,7 +511,7 @@ html.px-px-chill body{
 .px-md-c button .px-g{width:16px;height:16px}
 .px-barre .px-g{width:20px;height:20px}
 /* ✥ (0.54) le glisser-déposer de l'accueil : la tuile soulevée suit le doigt, les autres tremblent */
-.px-fantome{position:fixed;z-index:90;width:64px;height:64px;transform:translate(-50%,-50%) scale(1.14);pointer-events:none;box-shadow:0 14px 30px rgba(0,0,0,.6),inset 0 0 0 1px var(--filet);opacity:.95}
+.px-fantome{position:fixed;z-index:90;width:64px;height:64px;transform:translate(-50%,-50%) perspective(400px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) scale(1.14);transition:transform .12s linear;pointer-events:none;box-shadow:0 14px 30px rgba(0,0,0,.6),inset 0 0 0 1px var(--filet);opacity:.95}
 .px-souleve{opacity:.25}
 .px-tri .px-tuile:not(.px-souleve) .px-ic{animation:px-tremble .26s ease-in-out infinite alternate}
 .px-tri .px-tuile:nth-child(2n) .px-ic{animation-delay:-.13s}
@@ -575,9 +575,9 @@ html.px-px-chill body{
 .px-fx-apercu .px-fx-tete{opacity:0}
 /* ⧉ (0.60) le jeu de cartes, le curseur de réel, le filtrage de photons, le cube, le freefall (src/app/fractale.js) */
 .px-fx-tete{position:absolute;left:0;bottom:calc(100% + 26px);display:flex;align-items:center;gap:18px;max-width:100%;pointer-events:none;transition:opacity .25s}
-.px-fx-tete i{width:84px;height:84px;flex:none;border-radius:22px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--bio)}
+.px-fx-tete i{width:72px;height:72px;flex:none;border-radius:22px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--bio)}
 .px-fx-tete i .xki,.px-fx-tete i .px-g{width:100%;height:100%;border-radius:0}
-.px-fx-tete b{font:600 46px var(--police);color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-fx-tete b{min-width:0;font:600 38px var(--police);color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .px-fx-tete small{font:600 26px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-left:4px}
 .px-fx-cible::after{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(3,4,10,var(--voile,0));pointer-events:none;transition:background .3s}
 .px-fx-cible.on::before{content:"";position:absolute;left:0;bottom:-16px;height:7px;width:calc(var(--tenu,0) * 100%);border-radius:4px;background:var(--bio);box-shadow:0 0 12px var(--glow)}
@@ -602,3 +602,29 @@ html.px-px-chill body{
 /* (0.60.1) pendant la fractale : ni sélection, ni loupe, ni menu d'iOS, nulle part */
 .px-fx,.px-fx *,.px-tire-bord,.px-tire-bord *{-webkit-user-select:none !important;user-select:none !important;-webkit-touch-callout:none !important}
 .px-fx-calque,.px-fx-cible{-webkit-tap-highlight-color:transparent}
+.px-fantome-bions{position:fixed;z-index:91;transform:translate(-50%,calc(-100% - 52px));min-width:150px;max-width:240px;padding:10px 12px;border-radius:14px;background:var(--surface) var(--grain);box-shadow:0 12px 30px rgba(0,0,0,.6),inset 0 0 0 1px var(--bio);display:flex;flex-direction:column;gap:4px;pointer-events:none;animation:px-fx-in .2s ease-out}
+.px-fantome-bions b{font:600 13px var(--police);color:var(--txt)}.px-fantome-bions small{font:11px var(--mono);color:var(--muted)}
+.px-fantome-bions span{display:flex;align-items:center;gap:6px;font:600 11.5px var(--mono);color:var(--bio)}.px-fantome-bions .px-g{width:12px;height:12px}
+/* ⧉ (0.61) la salle du kion 4D autour du cube, le portail à l'ouverture (src/app/fractale.js) */
+.px-fx-salle{position:fixed;inset:0;z-index:40;pointer-events:none;color:var(--bio);opacity:0;transition:opacity .4s}
+.px-fx-salle svg{width:100%;height:100%;display:block}
+.px-fx-cube .px-fx-salle{opacity:.55}
+.px-fx-portail{position:fixed;inset:0;z-index:44;pointer-events:none}
+.px-fx-portail i{position:absolute;left:50%;top:50%;width:46vmin;height:46vmin;border:2px solid var(--bio);border-radius:6px;box-shadow:0 0 22px var(--glow),inset 0 0 22px var(--glow);opacity:0}
+.px-fx-cible:not(.on) .px-fx-tete{opacity:0}
+.px-fx-slider .px-fx-cible:not(.on) .px-fx-tete{opacity:0}
+.px-fx-slider .px-fx-cible.on .px-fx-tete b{font-size:56px}
+/* (0.61) les pages de côté de l'accueil : aujourd'hui (à gauche), bibliothèque (à droite) */
+.px-page-sp{padding-bottom:30px}
+.px-point-g{display:inline-flex;align-items:center;justify-content:center;width:auto;padding:0 2px;background:none !important;color:var(--muted)}
+.px-point-g .px-g{width:11px;height:11px}.px-point-g.on{color:var(--bio)}
+.px-auj-date{margin:-4px 2px 12px;text-transform:capitalize}
+.px-auj-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 16px}
+.px-auj-actions button{display:flex;flex-direction:column;align-items:center;gap:6px;min-height:74px;padding:10px 4px;border-radius:16px;border:var(--trait) solid var(--bord);background:var(--surface2) var(--grain);color:var(--txt);font:600 11.5px var(--police)}
+.px-auj-actions .px-g{width:24px;height:24px;color:var(--bio)}
+.px-auj-t{margin:6px 2px 8px;font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.px-auj-liste{display:flex;flex-direction:column;gap:8px}
+.px-auj-l{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;border-radius:14px;border:var(--trait) solid var(--bord);background:var(--surface) var(--grain);color:var(--txt);text-align:left}
+.px-auj-l .px-ic{width:42px;height:42px;border-radius:12px;flex:none}
+.px-auj-tx{display:flex;flex-direction:column;min-width:0}.px-auj-tx b{font:600 14px var(--police);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.px-auj-tx small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-page-sp .px-cat{margin-bottom:18px}.px-page-sp .px-titre-page{margin-top:10px}
