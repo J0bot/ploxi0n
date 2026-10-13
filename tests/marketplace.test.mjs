@@ -259,28 +259,49 @@ test('raccourcis 0.9 : « Envoyer à un ploxion » ouvre et émet sur le bus, «
   } finally { p.fin(); }
 });
 
-test('📲 tes ploxions en apps : la feuille coche, le labo reçoit des PNG et des ids, Safari s\'ouvre sur le profil', async () => {
+test('📲 tes ploxions en apps : la feuille coche, le labo reçoit des PNG et des ids, Safari s\'ouvre sur le profil ; l\'atelier (nom, icône), les verrous, proposer', async () => {
   const { creerEcranAccueil } = await import('../src/natif/ecran-accueil.js');
   const p = await page({ avion: true, ploxions: [] }), W = p.w;
   try {
-    const cat = [{ id: 'pomo', nom: 'Pomodoro', icone: '🍅' }, { id: 'marketplace', nom: 'Marketplace', icone: '🛍', interne: true }];
-    const envois = [], ouverts = []; W.open = (u) => ouverts.push(u);
-    // un faux canvas qui sait rendre un PNG
+    const cat = [{ id: 'pomo', nom: 'Pomodoro', icone: '🍅' }, { id: 'marketplace', nom: 'Marketplace', icone: '🛍', interne: true }, { id: 'carnet', nom: 'Carnet', icone: '📓' }];
+    const envois = [], ouverts = [], svgs = []; W.open = (u) => ouverts.push(u);
+    // un faux canvas qui sait rendre un PNG, une fausse Image qui « charge » le SVG de l'icône
     const vrai = W.document.createElement.bind(W.document);
-    W.document.createElement = (t) => { const e = vrai(t); if (t === 'canvas') { e.getContext = () => ({ createLinearGradient: () => ({ addColorStop() {} }), createRadialGradient: () => ({ addColorStop() {} }), fillRect() {}, strokeRect() {}, fillText() {} }); e.toDataURL = () => 'data:image/png;base64,iVBORw0KGgo='; } return e; };
-    const guider = creerEcranAccueil({ W, trouver: (id) => cat.find(x => x.id === id), liste: () => cat, boxion: p.boxion,
-      envoyer: async (q) => { envois.push(q); return { status: 200, texte: JSON.stringify({ url: 'https://xerboxion.org/app/accueil/' + 'a'.repeat(40) }) }; } });
+    W.document.createElement = (t) => { const e = vrai(t); if (t === 'canvas') { e.getContext = () => ({ drawImage() {} }); e.toDataURL = () => 'data:image/png;base64,iVBORw0KGgo='; } return e; };
+    W.Image = class { set src(v) { svgs.push(decodeURIComponent(v.split(',')[1])); setTimeout(() => this.onload && this.onload(), 0); } };
+    const guider = creerEcranAccueil({ W, trouver: (id) => cat.find(x => x.id === id), liste: () => cat, boxion: p.boxion, verrous: () => ['carnet'],
+      envoyer: async (q) => { envois.push(q); if (/icones$/.test(q.url)) return { status: 404, texte: '' }; return { status: 200, texte: JSON.stringify({ url: 'https://labo.j0bot.ch/app/accueil/' + 'a'.repeat(40) }) }; } });
     await guider('pomo');
     const f = W.document.querySelector('.px-voile');
     assert.ok(f.querySelector('[data-c="pomo"].on'), 'le ploxion d\'où l\'on vient est coché');
-    f.querySelector('[data-c="marketplace"]').click();
-    assert.match(f.querySelector('[data-g="installer"]').textContent, /2 apps/);
+    assert.ok(f.querySelector('[data-c="pomo"] svg.xki[data-type="ploxion"]'), 'l\'icône est son xerkion : un ploxion, un losange');
+    f.querySelector('[data-c="marketplace"]').click(); f.querySelector('[data-c="carnet"]').click();
+    assert.match(f.querySelector('[data-g="installer"]').textContent, /3 apps/);
+    assert.match(f.textContent, /verrouillés s'ouvrent toujours dans ploxi0n/);
+    // l'atelier : le nom et la palette de Pomodoro
+    f.querySelector('[data-at="pomo"]').click();
+    assert.ok(f.querySelector('.px-atelier'), 'l\'atelier s\'ouvre');
+    const n = f.querySelector('[data-at-nom]'); n.value = 'Focus'; n.dispatchEvent(new W.Event('input', { bubbles: true }));
+    f.querySelector('[data-pal="2"]').click();
+    assert.ok(f.querySelector('[data-pal="2"].on'), 'la palette choisie');
+    assert.ok(!f.querySelector('[data-cotes]'), 'la forme ne se retouche pas (un fait, pas un style)');
+    f.querySelector('[data-at-proposer]').click(); await attendre(30);
+    assert.match(f.querySelector('[data-msg]').textContent, /gardée/, 'le labo ne reçoit pas encore : elle attend');
+    const file = await p.boxion.get('reglages', 'icones-proposees');
+    assert.equal(file.length, 1); assert.equal(file[0].ploxion, 'pomo'); assert.equal(file[0].xerkion.pal, 2); assert.equal(file[0].type, 'ploxion');
+    f.querySelector('[data-at-ok]').click();
+    assert.ok(f.querySelector('[data-g="installer"]'), 'retour à la feuille');
     f.querySelector('[data-g="installer"]').click(); await attendre(30);
-    const corps = JSON.parse(envois[0].corps);
-    assert.equal(envois[0].url, 'https://xerboxion.org/api/app/accueil');
-    assert.deepEqual(corps.apps.map(a => a.id), ['pomo', 'marketplace']); assert.ok(corps.apps.every(a => a.icone === 'iVBORw0KGgo='));
-    assert.deepEqual(ouverts, ['https://xerboxion.org/app/accueil/' + 'a'.repeat(40)], 'Safari s\'ouvre sur le profil');
-    assert.deepEqual(await p.boxion.get('reglages', 'apps-accueil'), ['pomo', 'marketplace'], 'le choix est gardé');
+    const env = envois.find(q => /accueil$/.test(q.url)), corps = JSON.parse(env.corps);
+    assert.equal(env.url, 'https://labo.j0bot.ch/api/app/accueil');
+    assert.deepEqual(corps.apps.map(a => a.id), ['pomo', 'marketplace', 'carnet']); assert.ok(corps.apps.every(a => a.icone === 'iVBORw0KGgo='));
+    assert.equal(corps.apps[0].nom, 'Focus', 'le nom choisi'); assert.equal(corps.apps[0].mode, 'seul');
+    assert.ok(svgs.some(s => s.includes('#ffc857')), 'l\'icône dessinée a la palette choisie (ambre)');
+    // (0.55) Face ID : un ploxion verrouillé ne devient jamais une icône « seule » (en ligne, sans visage)
+    assert.deepEqual([corps.apps[2].mode, corps.apps[2].verrou, corps.apps[2].url], ['app', true, 'ploxi0n://px/carnet']);
+    assert.deepEqual(ouverts, ['https://labo.j0bot.ch/app/accueil/' + 'a'.repeat(40)], 'Safari s\'ouvre sur le profil');
+    assert.deepEqual(await p.boxion.get('reglages', 'apps-accueil'), ['pomo', 'marketplace', 'carnet'], 'le choix est gardé');
+    assert.equal((await p.boxion.get('reglages', 'apps-accueil-perso')).pomo.nom, 'Focus', 'la perso est gardée');
   } finally { p.fin(); }
 });
 

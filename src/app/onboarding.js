@@ -11,7 +11,7 @@ const CARTES = [
   { ic: '⧗', titre: 'Les tsoins', texte: '⧗ dans le dock (ou les deux bords, en bas) : note ce que tu fais, une idée, ton humeur — avec une photo, le lieu, un vocal. Le journal ⧗ les garde ; connecté, ils vont à ton boxion.', hap: 'succes' },
   { ic: '🛍', titre: 'Le marketplace', texte: 'Vitrine, grille, A–Z, découvrir en glissant. Les ploxions qui comptent sont ceux où le Nexus passe ses heures.', hap: 'leger' },
   { ic: '🎙', titre: 'La voix et le toucher', texte: '« Tell ploxi0n … » à Siri. Tes vocaux transcrits. Chaque ploxion a sa vibration d\'ouverture : à force, tu les reconnais sans regarder.', hap: 'motif:battement' },
-  { ic: '👤', titre: 'Connecte-toi', texte: 'Avec ton compte xerboxion.org (ou Apple : un compte bion). Tes ploxions retrouvent leurs données, tes fichiers et tes vidéos du boxion.', hap: 'succes', action: 'connecter' },
+  { ic: '👤', titre: 'Connecte-toi', texte: 'Avec ton compte labo.j0bot.ch (ou Apple : un compte bion). Tes ploxions retrouvent leurs données, tes fichiers et tes vidéos du boxion.', hap: 'succes', action: 'connecter' },
 ];
 
 export function creerOnboarding({ W = globalThis.window, boxion, vibrer = () => {}, connecter = null }) {

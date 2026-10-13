@@ -1,7 +1,7 @@
 // ⚡ jOSNatif — LE bion natif de ploxi0n (RS-7 12.10 : « un seul bion pour tout quand on peut, toujours la version la plus optimisée » ;
 // « c'est ça le but d'une app native : pouvoir tout utiliser les choses natives pour plus de vitesse »).
 // Un seul bion, toutes les capacités de l'iPhone, pour tous les ploxions : chaque fonction passe par le natif (plugins Capacitor) sur l'iPhone,
-// et par le web ailleurs (le xer de xerboxion.org n'a pas jOSNatif : un ploxion teste « if (window.jOSNatif) »).
+// et par le web ailleurs (le xer de labo.j0bot.ch n'a pas jOSNatif : un ploxion teste « if (window.jOSNatif) »).
 //   jOSNatif.natif                     vrai sur l'iPhone
 //   partager({ texte, url, titre })    la feuille de partage d'iOS
 //   vibrer('leger'|'moyen'|'fort'|'selection'|'succes'|'erreur')

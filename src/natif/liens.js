@@ -22,7 +22,7 @@ export function brancherLiens({ W = globalThis.window, routeur, compte = null, i
       if (actions[u.host]) { try { actions[u.host](u); } catch (er) { /* */ } return; }
       if (u.host === 'lire') { const p = u.searchParams; if (lire && p.get('url')) lire({ url: p.get('url'), titre: p.get('titre') || '', position: p.has('position') ? +p.get('position') : undefined, sousTitres: p.getAll('sous') }); return; }
       if (u.host === 'lecture') { if (lecture) lecture(u.pathname.replace(/^\/+/, '').split('/')[0]); return; }   // ♫ les boutons du widget « À l'écoute » (0.48)
-      // les liens universels (Associated Domains, 0.27) : https://xerboxion.org/px/<id>… et /app/ouvrir/<id>
+      // les liens universels (Associated Domains, 0.27) : https://labo.j0bot.ch/px/<id>… et /app/ouvrir/<id>
       if (/^https?:$/.test(u.protocol)) { const r = /^\/(?:px|app\/ouvrir)\/([^/?#]+)/.exec(u.pathname); if (r) aller(decodeURIComponent(r[1])); else routeur.accueil(); return; }
       const m = (u.host === 'px' ? u.pathname : u.pathname.replace(/^\/px/, '')).replace(/^\/+/, ''); aller(decodeURIComponent(m.split('/')[0]));
     } catch (er) { /* lien illisible */ }

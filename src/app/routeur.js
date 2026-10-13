@@ -11,6 +11,7 @@
 // Face ID : « reglages/verrous » = [ids] ; un ploxion verrouillé ne s'ouvre qu'avec jOSVerrou.ouvrir().
 
 import { glyphe, glyphePloxion } from './glyphes.js';
+import { svgXerkion, glypheCategorie } from './xerkion-icone.js';
 const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 // le logo (losanges concentriques), transparent : les espaces entre les losanges sont des trous
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
@@ -110,11 +111,24 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (courant) { cacher(courant); courant = null; }
     pile = [];
     if (cible == null) { accueil(); return true; }
-    if (!vivants.has(cible)) { reveiller(cible); return true; }
+    if (!vivants.has(cible) || bloque(cible)) { if (vivants.has(cible)) ouvrir(cible); else reveiller(cible); return true; }
     montrer(vivants.get(cible));
     return true;
   }
   let edition = false, dossierOuvert = null;
+  // (0.55, RS-7 : « un ploxion en Face ID… plus besoin de Face ID ») déverrouillé = pour CETTE séance seulement : l'app passe en arrière-plan,
+  // tout se reverrouille (reverrouiller), et un ploxion vivant mais verrouillé ne se remontre plus sans le visage (montrer, aCote, la pile).
+  const deverrouilles = new Set(); let verifEnCours = 0;
+  const bloque = (id) => verrous.has(id) && !deverrouilles.has(id);
+  async function demanderVisage(id, p) {
+    if (!verrou) return false;
+    verifEnCours++;
+    try { const ok = await verrou.ouvrir('Ouvrir ' + ((p && p.nom) || id)); if (ok) deverrouilles.add(id); return !!ok; } finally { verifEnCours--; }
+  }
+  function ecranVerrou(id, p) {
+    racine.classList.add('px-mode-ploxion'); racine.classList.remove('px-mode-accueil');
+    ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">' + G('retour') + '</button><span>' + G('verrou') + ' ' + texte((p && p.nom) || id) + '</span></div><p class="px-erreur">Ce ploxion ne s\'ouvre qu\'avec ton visage.' + (verrou && verrou.derniereErreur && verrou.derniereErreur() ? '<br><small>' + texte(raisonFaceId()) + '</small>' : '') + '</p><p class="px-pad"><button class="px-modif" data-reessayer="' + texte(id) + '">déverrouiller</button></p>';
+  }
   let verrous = new Set(), accueilDoc = { dossiers: [], pages: [] }, pageCourante = 0;
   const charges = new Map();
   const pret = boxion ? Promise.all([
@@ -149,7 +163,8 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
 
   const texte = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   // ◇ (0.54) un ploxion a son GLYPHE (src/app/glyphes.js : le trait du xerboxion) ; ⚙ › Apparence › « Les emoji du labo » pour les garder
-  const icone = (p) => (prefs().glyphes === false ? texte((p && p.icone) || '▣') : glyphePloxion(p));
+  // ⬡ (0.55) l'icône d'un ploxion = son xerkion (src/app/xerkion-icone.js) ; ⚙ › Apparence peut revenir au glyphe seul, ou aux emoji du labo
+  const icone = (p) => (prefs().glyphes === false ? texte((p && p.icone) || '▣') : prefs().xerkions === false ? glyphePloxion(p) : svgXerkion(p));
   const G = (n) => glyphe(n);
   // la teinte d'un ploxion (chill-tekk : chaque icône de verre a sa couleur, stable, tirée de son id)
   const teinte = (id) => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return 160 + (h % 160); };
@@ -196,7 +211,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     }
     if (vue === 'recents') return [...tous].sort((a, b) => ((u[b.id] || {}).lastAt || 0) - ((u[a.id] || {}).lastAt || 0)).map(p => ligne(p, ilYa((u[p.id] || {}).lastAt))).join('');
     const groupes = new Map(); for (const p of tous) { const k = p.categorie || 'Autres'; if (!groupes.has(k)) groupes.set(k, { icone: p.cat_icone || '📦', l: [] }); groupes.get(k).l.push(p); }
-    return [...groupes.entries()].sort((a, b) => b[1].l.length - a[1].l.length).map(([k, g]) => '<h2 class="px-titre-page">' + texte(k) + ' · ' + g.l.length + '</h2><div class="px-grille px-cat">' + g.l.map(tuile).join('') + '</div>').join('');
+    return [...groupes.entries()].sort((a, b) => b[1].l.length - a[1].l.length).map(([k, g]) => '<h2 class="px-titre-page">' + (prefs().glyphes === false ? '' : glyphe(glypheCategorie(g.l[0].cat || k)) + ' ') + texte(k) + ' · ' + g.l.length + '</h2><div class="px-grille px-cat">' + g.l.map(tuile).join('') + '</div>').join('');
   }
   async function accueil() {
     fermer(); noterSession();
@@ -269,6 +284,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
       + '<button data-m="ouvrir">▶ ouvrir</button>'
       + (hud ? '<button data-m="epingler">' + (ep.includes(id) ? 'retirer du dock' : 'épingler au dock') + '<small>et dans le widget « Ploxions épinglés »</small></button>' : '')
       + (ecranAccueil ? '<button data-m="iphone">sur l\'écran d\'accueil de l\'iPhone</button>' : '')
+      + (ecranAccueil && ecranAccueil.atelier && !p.interne ? '<button data-m="icone">son icône : la changer, la proposer au labo</button>' : '')
       + (p.interne ? '' : '<p class="px-grave">déplacer vers une page</p><div class="px-puces">' + puce('data-vers-page', '', 'accueil', iPage < 0 && iDossier < 0)
         + accueilDoc.pages.map((pg, k) => puce('data-vers-page', pg.nom, pg.nom, k === iPage)).join('') + '<button class="px-puce" data-ranger="page">＋ nouvelle</button></div>'
         + '<p class="px-grave">ranger dans un dossier</p><div class="px-puces">' + accueilDoc.dossiers.map((d, k) => puce('data-vers-dossier', d.nom, d.nom, k === iDossier)).join('')
@@ -289,6 +305,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
       if (b.hasAttribute('data-ranger')) return ranger(id, b.getAttribute('data-ranger'));
       if (m === 'ouvrir') return ouvrir(id);
       if (m === 'iphone') return ecranAccueil(id);
+      if (m === 'icone') return ecranAccueil.atelier(id);   // ⬡ (0.55) l'atelier de son xerkion
       if (m === 'epingler') { const c = hud.config(); c.epingles = c.epingles.includes(id) ? c.epingles.filter(x => x !== id) : [...c.epingles, id].slice(-4); const el = c.elements.find(x => x.k === 'epingles'); if (el) el.on = true; await hud.regler(c); return accueil(); }
       if (m === 'verrou') {
         if (verrous.has(id)) { if (!(await verrou.ouvrir('Retirer le verrou de ' + (p.nom || id)))) return signaler('Face ID : ' + raisonFaceId()); verrous.delete(id); }
@@ -424,7 +441,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   }
   function barre(p, id) {
     const autres = vivants.size - 1 + endormis.length;
-    ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">' + G('retour') + '</button><span>' + icone(p) + ' ' + texte(p.nom || id) + '</span>'
+    ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">' + G('retour') + '</button><span>' + (prefs().glyphes === false ? icone(p) : glyphePloxion(p)) + ' ' + texte(p.nom || id) + '</span>'
       + '<span class="px-hud"><span class="px-hud-c">' + (hud ? hud.html(true) : '') + '</span>'
       + (autres > 0 ? '<button class="px-mini" data-basculer aria-label="basculer entre les ploxions ouverts">' + G('basculer') + '<b>' + (autres + 1) + '</b></button>' : '')
       + '<button class="px-mini" data-minimiser aria-label="minimiser">' + G('minimiser') + '</button>'
@@ -438,6 +455,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     };
   }
   function montrer(v) {
+    if (bloque(v.id)) { for (const x of vivants.values()) if (!x.hote.hidden) cacher(x); courant = null; ecranVerrou(v.id, parId.get(v.id)); ouvrir(v.id); return; }
     for (const x of vivants.values()) if (x !== v) x.hote.hidden = true;
     v.hote.hidden = false; v.debut = Date.now(); v.vu = Date.now(); courant = v; majBords();
     if (surMontrer) { try { surMontrer(v.id); } catch (e) { /* */ } }   // ❄ (0.53) ses images reprennent (src/app/gel.js)
@@ -454,9 +472,9 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     const p = parId.get(id);
     if (courant && courant.id === id && !params) return true;
     endormis = endormis.filter(x => x.id !== id);
-    if (verrous.has(id) && !(vivants.has(id)) && !(verrou && await verrou.ouvrir('Ouvrir ' + (p.nom || id)))) {
-      if (!courant) { racine.classList.add('px-mode-ploxion'); racine.classList.remove('px-mode-accueil'); ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">' + G('retour') + '</button><span>' + G('verrou') + ' ' + texte(p.nom || id) + '</span></div><p class="px-erreur">Ce ploxion ne s\'ouvre qu\'avec ton visage.<br><small>' + texte(raisonFaceId()) + '</small></p><p class="px-pad"><button class="px-modif" data-reessayer="' + texte(id) + '">réessayer</button></p>'; }
-      return false;
+    if (bloque(id)) {
+      if (verifEnCours) return false;   // une demande est déjà à l'écran
+      if (!(await demanderVisage(id, p))) { if (!courant) ecranVerrou(id, p); return false; }
     }
     // ouvert DEPUIS un ploxion : celui-ci reste vivant, en dessous (la pile) ; « ‹ » y reviendra
     if (courant && courant.id !== id) { pile = pile.filter(x => x !== courant.id && x !== id); pile.push(courant.id); cacher(courant); courant = null; }
@@ -537,10 +555,21 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     },
     vivants: () => [...vivants.keys()], pile: () => pile.slice(),
     connait: (id) => parId.has(id), courant: () => (courant ? courant.id : null),
-    majCatalogue(liste) { parId = new Map(liste.map(p => [p.id, p])); },
+    /** redessiner : l'accueil à l'écran se redessine (une icône retouchée, 0.55) */
+    majCatalogue(liste, { redessiner = false } = {}) { parId = new Map(liste.map(p => [p.id, p])); if (redessiner && surAccueil && !courant) accueil(); },
     rafraichirHud() { ecran.querySelectorAll('.px-hud-c').forEach(c => { c.innerHTML = hud ? hud.html(!!courant) : ''; }); },
     catalogue: () => [...parId.values()],
     verrous: () => [...verrous],
+    /** l'app passe en arrière-plan : tout se reverrouille ; un ploxion verrouillé à l'écran est caché tout de suite (l'aperçu du sélecteur
+     *  d'apps ne le montre pas). Ignoré pendant une demande Face ID (la feuille du visage met l'app en pause chez certains iOS). */
+    reverrouiller() {
+      if (verifEnCours) return null;
+      deverrouilles.clear();
+      if (courant && verrous.has(courant.id)) { const v = courant; cacher(v); courant = null; ecranVerrou(v.id, parId.get(v.id)); return v.id; }
+      return null;
+    },
+    /** au retour : le ploxion verrouillé qui était à l'écran redemande le visage */
+    redemander(id) { if (id && vivants.has(id) && bloque(id)) return ouvrir(id); return Promise.resolve(false); },
     /** retirer un verrou Face ID (il faut le visage) */
     async deverrouiller(id) { if (!verrous.has(id)) return true; if (!(verrou && await verrou.ouvrir('Retirer le verrou de ' + ((parId.get(id) || {}).nom || id)))) return false; verrous.delete(id); garder(); return true; },
     /** l'accueil d'origine : plus de dossiers ni de pages */

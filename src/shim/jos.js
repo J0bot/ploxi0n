@@ -16,13 +16,13 @@
 // Toute autre route du serveur répond 503 {horsLigne:true} SANS toucher le réseau, et s'inscrit dans le journal 'manques' (ce qu'il faudra
 // réimplémenter) ; une URL externe part sur le réseau (les ploxions « online only »), comptée dans shim.sortants.
 // relais = { routes: [{ prefixe, vers(chemin) → url }], general() → bool, vers(chemin) → url, envoyer({methode, url, headers, corps}) →
-// {status, texte, entetes} } : les routes nommées (ex. /bother → https://xerboxion.org/api/app/bother) et, en MODE CONNECTÉ (general()),
+// {status, texte, entetes} } : les routes nommées (ex. /bother → https://labo.j0bot.ch/api/app/bother) et, en MODE CONNECTÉ (general()),
 // toute autre route du serveur partent sur le réseau ; un GET réussi est gardé (boxion_local « routes ») et resservi hors ligne.
 
 const NS_LS = 'localStorage';
 const NS_BOX = (ns) => 'box:' + ns;
 // (0.39, RS-7 : « ça reste bloqué » au lancement) /marketplace et /bions sont des fichiers DE L'APP : avant, en mode connecté, ils partaient
-// sur xerboxion.org — sans délai, sur un réseau faible, le démarrage attendait pour toujours
+// sur labo.j0bot.ch — sans délai, sur un réseau faible, le démarrage attendait pour toujours
 const ASSETS = /^\/(ploxions|assets|vendor|icons|fonts|img|data|marketplace|bions)\//;
 
 export async function installerShim({ boxion, fenetre = globalThis.window, routeur = null, journalSortant = null, relais = null, distant = null } = {}) {
@@ -256,7 +256,7 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
       if (p === '/px/boxion/list') return json({ items: await jb.list(q.get('ns')) });
       if (p === '/px/boxion/del') return json(await jb.del(b.ns, b.key));
     }
-    // le relais : les routes nommées (ex. /bother → l'API sans session), puis, en MODE CONNECTÉ, toute route du serveur → xerboxion.org
+    // le relais : les routes nommées (ex. /bother → l'API sans session), puis, en MODE CONNECTÉ, toute route du serveur → labo.j0bot.ch
     // (le jeton de la personne si elle est connectée) ; un GET réussi est gardé dans boxion_local « routes » : le mode avion le resservira
     const rel = relais && ((relais.routes || []).find(r => p === r.prefixe || p.startsWith(r.prefixe + '/')) || (relais.general && relais.general() ? { vers: relais.vers } : null));
     const cle = methode + ' ' + p + url.search;

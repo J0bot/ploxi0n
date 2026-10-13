@@ -5,7 +5,7 @@
 
 **Légende** : ✅ fait (version) · 🔨 en cours · ⏭ prochain · 💭 plus tard · ❓ attend une décision de RS-7 · ⚠ fait, mais jamais vu marcher sur l'iPhone
 
-*Dernière mise à jour : 0.54 (13.10). La 0.52 tourne sur l'iPhone (build Codemagic) : RS-7 « ça lag de malade », « le wiki ne marche toujours pas ». La 0.45 est le dernier build TestFlight ; la 0.46 à la 0.51 attendent les minutes Actions
+*Dernière mise à jour : 0.55 (13.10) : les icônes du xerboxion (la forme = le type, la couleur et le glyphe = la catégorie, l'atelier, proposer au labo), Face ID qui tient (arrière-plan, écran d'accueil), le labo = labo.j0bot.ch.* *Dernière mise à jour : 0.54 (13.10). La 0.52 tourne sur l'iPhone (build Codemagic) : RS-7 « ça lag de malade », « le wiki ne marche toujours pas ». La 0.45 est le dernier build TestFlight ; la 0.46 à la 0.51 attendent les minutes Actions
 (1.11) ou un build lancé à la main (`git tag v0.50 && git push origin v0.50`, ou Codemagic : docs/TESTFLIGHT.md, depuis main ; options « widgets » et « vlc » au lancement manuel).*
 
 ---

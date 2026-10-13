@@ -47,6 +47,18 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 - **0.51 — les mini docks.** `src/app/minidocks.js` (la pile au-dessus du dock, « ▤ +N », la page de tous, glisser = fermer, `jOSMiniDock`) ;
   le routeur (`miniDocks`, `etatVivants`, `fermerPloxion`, `reveiller`, `oublierEndormi` ; ⧉ = la page) ; musique, blouse, Santé, vidéo à
   reprendre, vocal, brouillon de tsoin. Stremio branché sur le vrai `jOSPlayer` ; Spotify installable et accroche robuste ; bions absents notés.
+- **0.55 — les icônes du xerboxion, Face ID qui tient, labo.j0bot.ch.** `src/app/xerkion-icone.js` : l'icône d'un ploxion reprend le
+  dessin des hubs xerkion du labo (jOSXerkionHub : GPAL, polygone, rayons, nœuds, cœur wormion/portion/kion, disque) ; la FORME = le type
+  (`typeDe` : registre `type`, sinon l'id ; ploxion = losange, xerkion = N côtés = ses koins lus dans `/px/xerkions.json`, xer, cubion,
+  kion, koin, wormion, spherion, portion, bion, boxion), la COULEUR et le glyphe de secours = la catégorie (`CATEGORIES`). Tuiles, dock,
+  mini docks, clips de l'écran d'accueil (PNG par canvas). L'atelier (`ecran-accueil.js` : nom, palette, cœur, glyphe, photo ; menu
+  « son icône ») et `proposer()` → `POST /api/app/icones` (file `reglages/icones-proposees` tant que le labo ne la reçoit pas). Face ID :
+  `deverrouilles` par séance dans le routeur, `reverrouiller()` sur App `pause`, `redemander()` sur `resume` ; un ploxion verrouillé mis
+  sur l'écran d'accueil part en mode `app` avec `verrou: true` et `url: ploxi0n://px/<id>`. `SOURCE` = https://labo.j0bot.ch partout
+  (Associated Domains ajoutés). Planches : `node tools/faux-iphone/planche-icones.mjs build/icones <registry.json> <xerkions.json>`.
+  **Côté labo (à faire par RS-7)** : `/api/app/icones` (recevoir, relire, poser `xerkion` dans le registre) ; `/api/app/accueil` doit
+  respecter `verrou`/`url` (le clip ouvre `ploxi0n://px/<id>`, jamais `/px/<id>` en ligne) ; `type` dans le registre pour ce que l'id ne
+  dit pas ; `frame-ancestors capacitor:` (le wiki dans l'app).
 
 ## 3. Ce qui reste, par ordre
 

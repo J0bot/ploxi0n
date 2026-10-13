@@ -93,13 +93,13 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
               + '<div class="l"><span class="ic">◇</span><span>ploxi0n<small>une valeur : tes tsoins du jour, la musique, ton compte ; aussi sur l\'écran verrouillé</small></span></div>'
               + '<div class="l"><span>État de la copie vers les widgets<small data-widgets-etat>…</small></span><button data-a="widgets">republier</button></div></div>'
               + '<p class="msg">Le gyroscope en direct n\'existe pas pour un widget : Apple ne leur donne ni capteurs ni animation continue. Le cube de l\'app, lui, suit le téléphone.</p>'); })() : '')
-        + section('compte', 'Compte', '<div class="bloc"><div class="l"><span>' + (e.connecte ? esc((e.glyphe || '·') + ' ' + e.nom) + '<small>rang ' + esc(e.palier) + ' · xerboxion.org</small>' : 'Pas connecté<small>tout reste sur ton téléphone</small>') + '</span>'
+        + section('compte', 'Compte', '<div class="bloc"><div class="l"><span>' + (e.connecte ? esc((e.glyphe || '·') + ' ' + e.nom) + '<small>rang ' + esc(e.palier) + ' · labo.j0bot.ch</small>' : 'Pas connecté<small>tout reste sur ton téléphone</small>') + '</span>'
           + (e.connecte ? '<button data-a="sortir">se déconnecter</button>' : '<button class="p" data-a="connecter">se connecter</button>') + '</div>'
           // (0.52) règle App Store 5.1.1(v) : supprimer son compte DEPUIS l'app → la page du labo où la suppression se termine
-          + (e.connecte ? '<div class="l"><span>Supprimer mon compte<small>sur xerboxion.org : ton compte, ton boxion en ligne, tes tsoins partagés. Ce téléphone garde ses données (› Données pour les effacer).</small></span><button class="danger" data-a="supprimer-compte">supprimer…</button></div>' : '')
+          + (e.connecte ? '<div class="l"><span>Supprimer mon compte<small>sur labo.j0bot.ch : ton compte, ton boxion en ligne, tes tsoins partagés. Ce téléphone garde ses données (› Données pour les effacer).</small></span><button class="danger" data-a="supprimer-compte">supprimer…</button></div>' : '')
           + '</div>')
-        + section('reseau', 'Réseau', '<div class="bloc">' + bascule('data-t="mode"', modeConnecte(), 'Mode connecté', 'les ploxions joignent xerboxion.org' + (e.connecte ? ' avec ton compte' : '') + ' ; hors ligne, leur dernière réponse')
-          + '<div class="l"><span>Source<small>xerboxion.org (le marketplace, les bions, le mode connecté)</small></span></div></div>')
+        + section('reseau', 'Réseau', '<div class="bloc">' + bascule('data-t="mode"', modeConnecte(), 'Mode connecté', 'les ploxions joignent labo.j0bot.ch' + (e.connecte ? ' avec ton compte' : '') + ' ; hors ligne, leur dernière réponse')
+          + '<div class="l"><span>Source<small>labo.j0bot.ch (le marketplace, les bions, le mode connecté)</small></span></div></div>')
         + (notifs ? section('notifs', 'Notifications', '<div class="bloc"><div class="l"><span>Une notification de test<small>elle arrive 5 s après : verrouille le téléphone</small></span><button data-a="notif">tester</button></div>'
           + bascule('data-t="coord"', notifs.reglage().coord, 'Messages de coord', e.connecte ? 'tant que l\'app est ouverte ; app fermée : bientôt (APNs)' : 'connecte-toi avec le compte admin') + '</div>') : '')
         + (P ? section('apparence', 'Apparence', '<div class="bloc">'
@@ -111,7 +111,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + '<div class="l"><span>Composer la barre du haut<small>quels éléments, à gauche ou à droite</small></span><button data-a="barre-haut">composer</button></div>'
           + bascule('data-pb="themeVivant"', P.themeVivant !== false, 'Thème vivant', 'le thème suit le téléphone (gyroscope, accéléromètre) : le fond glisse, les icônes flottent et attrapent la lumière, un choc les fait tressauter')
           + '<div class="l ls"><span>État du mouvement<small data-mouvement>…</small></span></div>'
-          + bascule('data-pb="glyphes"', P.glyphes !== false, 'Les glyphes du xerboxion', 'des glyphes au trait pour les icônes et l\'interface ; coupé : les emoji du labo') + bascule('data-pb="pxChill"', P.pxChill !== false, 'Chill-tekk pour tous les ploxions', 'leurs couleurs, polices, boutons et champs suivent ceux de l\'app (les variables du xer, --xr-*) ; coupé : chacun garde son style du labo')
+          + bascule('data-pb="glyphes"', P.glyphes !== false, 'Les glyphes du xerboxion', 'des glyphes au trait pour les icônes et l\'interface ; coupé : les emoji du labo') + bascule('data-pb="xerkions"', P.xerkions !== false, 'Les icônes xerkion', 'chaque ploxion a son xerkion (le polygone-xer, son cœur, son glyphe), comme les hubs du labo ; coupé : le glyphe seul') + bascule('data-pb="pxChill"', P.pxChill !== false, 'Chill-tekk pour tous les ploxions', 'leurs couleurs, polices, boutons et champs suivent ceux de l\'app (les variables du xer, --xr-*) ; coupé : chacun garde son style du labo')
           + bascule('data-pb="grain"', P.grain, 'Patine', 'le grain usé des plaques')
           + bascule('data-pb="contraste"', P.contraste === 'fort', 'Contraste fort', 'textes et bords plus clairs')
           + bascule('data-pb="calme"', P.calme, 'Calme', 'plus aucune animation, même aux gestes')
@@ -140,7 +140,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + '<div class="seg">' + [['auto', 'auto'], ['apple', 'Apple'], ['vlc', 'VLC']].map(([v, n]) => '<button data-lnat-moteur="' + v + '"' + (ln.moteur === v ? ' class="on"' : '') + '>' + n + '</button>').join('') + '</div></div>'
           + bascule('data-lnat-auto', ln.auto !== false, 'Passer au lecteur intégré tout seul', 'une vidéo que la page ne lit pas, le lecteur d\'un ploxion (jOSplayer, Stremio), un lien vlc:// ou infuse:// ; une vidéo sans son propose de basculer')
           + '</div><p class="msg">Dans la page :</p>'; })() : '') + '<div class="bloc">'
-          + bascule('data-lect="yt"', lecteur.reglage().yt, 'YouTube par xerboxion.org', 'une page https : YouTube refuse l\'intégration directe dans l\'app (erreurs 152/153)')
+          + bascule('data-lect="yt"', lecteur.reglage().yt, 'YouTube par labo.j0bot.ch', 'une page https : YouTube refuse l\'intégration directe dans l\'app (erreurs 152/153)')
           + bascule('data-lect="haptiqueSon"', lecteur.reglage().haptiqueSon, 'Haptique du son', 'les basses deviennent des vibrations — pour les sons lisibles par l\'app (pas YouTube ni la plupart des flux)')
           + '<div class="l"><span>Le son continue écran verrouillé et en silencieux<small>contrôles sur l\'écran verrouillé et le Centre de contrôle, AirPlay, Picture in Picture ; plein écran = le lecteur d\'iOS</small></span></div></div>') : '')
         + (P ? section('navigation', 'Navigation', '<div class="bloc">'
@@ -286,7 +286,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         else if (a === 'apps') { if (W.jOSEcranAccueil) await W.jOSEcranAccueil(); }
         else if (a === 'connecter') await compte.connecter();
         else if (a === 'sortir') { await compte.deconnecter(); }
-        else if (a === 'supprimer-compte') { await W.jOSNatif.navigateur(((depot && depot.source) || 'https://xerboxion.org') + '/profile'); msg('la page de ton compte s\'ouvre : « supprimer le compte » en bas ; ensuite, déconnecte-toi ici'); }
+        else if (a === 'supprimer-compte') { await W.jOSNatif.navigateur(((depot && depot.source) || 'https://labo.j0bot.ch') + '/profile'); msg('la page de ton compte s\'ouvre : « supprimer le compte » en bas ; ensuite, déconnecte-toi ici'); }
         else if (a === 'accueil') { R().reinitialiserAccueil(); msg('✓ accueil remis à zéro'); }
         else if (a === 'bions') { const r = await depot.completerBions(); msg(r.length ? '✓ ' + r.map(x => x.id + ' +' + (x.apres - x.avant)).join(' · ') : '✓ rien à compléter'); }
         else if (a === 'bions-maj') { let n = 0; for (const x of await depot.bions()) { try { if ((await depot.majBion(x.nom)) === 'mis-a-jour') n++; } catch (er) { /* un bion introuvable n'arrête pas les autres */ } } msg('✓ ' + n + ' bion' + (n > 1 ? 's' : '') + ' mis à jour'); }

@@ -4,6 +4,13 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.55.0', titre: 'Les icônes du xerboxion, et Face ID tient', points: [
+    'Chaque ploxion a son icône, dessinée comme les xerkions du labo : la FORME dit ce qu\'il est (ploxion = losange, xerkion = autant de côtés que de koins, xer = octogone, cubion = cube, kion, koin, wormion, spherion, portion, bion, boxion), la COULEUR et le glyphe disent sa catégorie.',
+    'L\'atelier : appui long sur un ploxion › « son icône » (ou la feuille de l\'écran d\'accueil) : sa palette, son glyphe, une photo, et le nom sous l\'icône de l\'iPhone.',
+    'Proposer son icône au labo : si elle est prise, tout le monde l\'aura.',
+    'Face ID : un ploxion verrouillé se referme quand l\'app passe en arrière-plan et redemande ton visage au retour ; mis sur l\'écran d\'accueil, il passe toujours par ploxi0n (plus d\'accès en ligne sans visage).',
+    'Le labo, c\'est labo.j0bot.ch.',
+  ] },
   { v: '0.54.0', titre: 'Des glyphes, et ranger au doigt', points: [
     'Plus d\'emoji : chaque ploxion a son glyphe, au trait du xerboxion (ion, koin, portion, cubion…), teinté à sa couleur ; le dock, les réglages, les mini docks aussi. ⚙ › Apparence pour revenir aux emoji du labo.',
     'Ranger l\'accueil au doigt : appui long sur une icône, elle se soulève — glisse-la où tu veux, sur un dossier pour l\'y mettre, au bord de l\'écran pour changer de page. Sans bouger : son menu, comme avant.',

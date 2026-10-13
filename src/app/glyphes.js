@@ -117,7 +117,7 @@ export function versGlyphe(x, cls = '') {
 
 // ---- le glyphe d'un ploxion : son nom, sinon généré ----
 const MOTS = [
-  [/spotify|music|musique|radio|\bdj\b|mixer|player|lecteur audio|son\b|beats|youtube-music|playlist/i, 'musique'],
+  [/spotify|music|musique|radio|\bdj\b|mixer|player|lecteur audio|\bson\b|beats|youtube-music|playlist/i, 'musique'],
   [/stremio|video|vidéo|cin[eé]|film|youtube|twitch|tv\b|stream/i, 'video'],
   [/wiki|dico|dictionnaire|lexique|livre|r[eé]cits|book|lecture|biblio|epub|histoire/i, 'livre'],
   [/horloge|minuteur|pomodoro|temps|calend|agenda|chrono|timer/i, 'horloge'],

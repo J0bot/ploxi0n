@@ -13,7 +13,7 @@ export function cadreAutorise(csp) {
   return /(^|\s)(capacitor:|capacitor:\/\/localhost|\*)(\s|$)/i.test(m[1]);
 }
 
-export function creerCadresLabo({ W = globalThis.window, source = 'https://xerboxion.org', tete = null, navigateur = (u) => W.open(u, '_blank') } = {}) {
+export function creerCadresLabo({ W = globalThis.window, source = 'https://labo.j0bot.ch', tete = null, navigateur = (u) => W.open(u, '_blank') } = {}) {
   const D = W.document, regles = new Map();
   const prefixe = (p) => '/' + (String(p).split(/[?#]/)[0].split('/')[1] || '');
   /** 'oui' | 'non' | 'injoignable' : le labo se laisse-t-il encadrer pour ce chemin ? */

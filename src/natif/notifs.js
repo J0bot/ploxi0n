@@ -6,7 +6,7 @@
 //   toucher une notification de coord ouvre le ploxion 📡 coord
 // Réglages : boxion_local « reglages/notifs » = { coord: bool, dernierCoord: id }. Rien au premier passage (on ne réveille pas l'historique).
 import { surPromesse } from './plugin-sur.js';
-export function creerNotifs({ W = globalThis.window, boxion, vibrer = () => {}, envoyer, source = 'https://xerboxion.org', ouvrir = () => {}, charger = () => import('@capacitor/local-notifications') }) {
+export function creerNotifs({ W = globalThis.window, boxion, vibrer = () => {}, envoyer, source = 'https://labo.j0bot.ch', ouvrir = () => {}, charger = () => import('@capacitor/local-notifications') }) {
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
   let reglage = { coord: false, dernierCoord: 0 }, minuterie = null, ecoute = false;
   const pret = boxion.get('reglages', 'notifs').then(v => { if (v && typeof v === 'object') reglage = { ...reglage, ...v }; }).catch(() => {});

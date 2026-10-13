@@ -1,13 +1,13 @@
 // Le MARKETPLACE de ploxi0n (brief v1, « Marketplace et offline ») : le réseau ne sert qu'à installer ; un ploxion installé tourne depuis
 // boxion_local, jamais depuis le réseau.
-//   catalogue()      le registre de xerboxion.org (/px/registry.json), filtré (écrans publics, activés), avec la compatibilité mesurée par le
+//   catalogue()      le registre de labo.j0bot.ch (/px/registry.json), filtré (écrans publics, activés), avec la compatibilité mesurée par le
 //                    banc (public/marketplace/compat.json) ; mis en cache dans boxion_local → consultable en mode avion
 //   installer(id)    GET /px/<id>/app.js → vérifié (s'enregistre dans jOSApps) → hash SHA-256 → boxion_local « ploxions/<id> »
 //   installerLocal(id) depuis le pack hors ligne embarqué (public/ploxions/<id>/app.js) : sans réseau
 //   aJour()          pour chaque ploxion installé depuis le réseau : If-None-Match (ETag) → 304 = à jour, 200 = une mise à jour
 //   retirer(id), installes(), bundle(id)
 // http = { get(url, { headers }) → { status, texte, entetes } } : CapacitorHttp sur l'iPhone (pas de CORS), fetch ailleurs, un faux en test.
-export const SOURCE = 'https://xerboxion.org';
+export const SOURCE = 'https://labo.j0bot.ch';
 // les bions que l'app fournit déjà (le shim, Face ID, le pack) : jamais téléchargés
 export const FOURNIS = new Set(['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou', 'jOSNatif', 'jOSRaccourcis', 'jOSEcranAccueil', 'jOSKeyboard', 'jOSUsage', 'jOSSante', 'jOSMiniDock']);
 /** les bions qu'un bundle du labo déclare attendre (window.__PLOXIONS_BIONS__[id] = [...]) */
@@ -97,7 +97,13 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
           if (r.status !== 200) throw new Error('registre : HTTP ' + r.status);
           const brut = JSON.parse(r.texte);
           const items = (Array.isArray(brut) ? brut : brut.ploxions || brut.items || []).filter(p => p && p.id && p.hasScreen && p.enabled !== false && (!p.admin || estAdmin()) && p.status === 'live')
-            .map(p => ({ id: p.id, nom: p.name || p.id, icone: p.icon || '▣', description: String(p.description || '').slice(0, 400), categorie: p.cat_label || 'Autres', cat: p.category || null, cat_icone: p.cat_icon || '📦', compat: compat[p.id] || null, admin: !!p.admin, mtime: +p.mtime || 0, fournit: Array.isArray(p.provides) ? p.provides.slice(0, 8).map(String) : [] }));
+            .map(p => ({ id: p.id, nom: p.name || p.id, icone: p.icon || '▣', description: String(p.description || '').slice(0, 400), categorie: p.cat_label || 'Autres', cat: p.category || null, cat_icone: p.cat_icon || '📦', compat: compat[p.id] || null, admin: !!p.admin, mtime: +p.mtime || 0, fournit: Array.isArray(p.provides) ? p.provides.slice(0, 8).map(String) : [], xerkion: (p.xerkion && typeof p.xerkion === 'object' && !Array.isArray(p.xerkion)) ? p.xerkion : null, type: typeof p.type === 'string' ? p.type : null }));
+          // ⬡ (0.55) un xerkion a autant de côtés que de koins (ses ploxions) : /px/xerkions.json les compte (src/app/xerkion-icone.js)
+          try {
+            const rx = await http.get(source + '/px/xerkions.json', { headers: { Accept: 'application/json' } });
+            const xk = rx.status === 200 ? new Map(((JSON.parse(rx.texte) || {}).items || []).map(x => [x.id, x])) : new Map();
+            for (const it of items) { const x = xk.get(it.id); if (x) { it.koins = Array.isArray(x.koins) ? x.koins.length : 0; if (typeof x.center === 'string') it.centre = x.center; } }
+          } catch (e) { /* sans les koins : l'octogone-xer */ }
           const c = { maj: new Date().toISOString(), source, items };
           await boxion.put(META, 'catalogue', c);
           return { ...c, horsLigne: false };

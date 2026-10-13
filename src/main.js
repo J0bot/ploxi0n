@@ -11,7 +11,7 @@ import { enregistrerXerEnLigne } from './app/xer-en-ligne.js';
 import { brancherLiens } from './natif/liens.js';
 import { creerRaccourcis } from './natif/raccourcis.js';
 import { creerCompte } from './natif/compte.js';
-import { creerEcranAccueil } from './natif/ecran-accueil.js';
+import { creerEcranAccueil, specPerso } from './natif/ecran-accueil.js';
 import { creerNotifs } from './natif/notifs.js';
 import { creerHud } from './app/hud.js';
 import { enregistrerReglages } from './app/reglages.js';
@@ -48,7 +48,7 @@ import { creerCadresLabo } from './natif/cadres-labo.js';
 import { installerGel } from './app/gel.js';
 import { installerSansEmoji } from './app/sans-emoji.js';
 
-const VERSION = '0.54.0';
+const VERSION = '0.55.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -175,7 +175,7 @@ async function demarrer() {
     connait: (id) => routeur.connait(id), fermer: () => routeur.fermer(),
   };
   // LE MODE CONNECTÉ (RS-7 : « les utiliser tous seuls, mais connectés ») : en ligne, toute route du serveur qu'un ploxion appelle part sur
-  // xerboxion.org, avec X-Ploxi0n et le jeton de la personne (labo : JetonAppWeb, docs/dev/57) ; hors ligne, la dernière réponse connue.
+  // labo.j0bot.ch, avec X-Ploxi0n et le jeton de la personne (labo : JetonAppWeb, docs/dev/57) ; hors ligne, la dernière réponse connue.
   // Les routes nommées d'abord : /bother → l'API sans session (bother me, le ploxion des testeurs). Kill-switch : reglages/mode-connecte = false.
   const enTetes = async () => { const c = await boxion.get('compte', 'courant').catch(() => null); return c && c.jeton ? { 'X-Ploxi0n': '1', Authorization: 'Bearer ' + c.jeton } : { 'X-Ploxi0n': '1' }; };
   let modeConnecte = (await boxion.get('reglages', 'mode-connecte')) !== false;
@@ -198,7 +198,7 @@ async function demarrer() {
   boot(40, 'shim jOS · ' + ((window.jOSTsoin && window.jOSTsoin.list) ? window.jOSTsoin.list().length : 0) + ' tsoins relus');
   boot(45, 'les ploxions de base');
   window.addEventListener('online', () => { if (window.jOSBoxion && window.jOSBoxion.pousser) window.jOSBoxion.pousser().catch(() => {}); });
-  // les images des ploxions en chemins du site → xerboxion.org ; celles qui exigent le compte → récupérées avec le jeton (data: URL)
+  // les images des ploxions en chemins du site → labo.j0bot.ch ; celles qui exigent le compte → récupérées avec le jeton (data: URL)
   installerImages({ W: window, source: SOURCE, signer: async (chemins) => {
     if (!(compteRef && compteRef.etat().connecte)) return {};
     const r = await httpRelais.requete({ methode: 'POST', url: SOURCE + '/api/app/media', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, corps: JSON.stringify({ chemins }) }, fetchOrigine);
@@ -242,13 +242,16 @@ async function demarrer() {
     enregistrerBanc({ boxion, version: VERSION }),
   ];
   let raccourcis = null;
-  async function majAccueil() {
+  async function majAccueil(o) {
     const installes = await depot.installes();
     // la catégorie vient du catalogue en cache (la vue « par catégorie » de l'accueil)
     const cat = new Map(((await depot.catalogue({ reseau: false }).catch(() => null)) || { items: [] }).items.map(x => [x.id, x]));
-    const liste = [...installes.map(p => ({ id: p.id, nom: p.nom, icone: p.icone, categorie: (cat.get(p.id) || {}).categorie || 'Autres', cat_icone: (cat.get(p.id) || {}).cat_icone || '📦' })),
+    // ⬡ (0.55) le xerkion d'un ploxion : celui du labo (registre), retouché par l'atelier de la personne (palette, cœur, koins, glyphe)
+    const perso = (await boxion.get('reglages', 'apps-accueil-perso').catch(() => null)) || {};
+    const xk = (id) => { const o = Object.assign({}, (cat.get(id) || {}).xerkion, specPerso(perso[id])); return Object.keys(o).length ? o : null; };
+    const liste = [...installes.map(p => ({ id: p.id, nom: p.nom, icone: p.icone, categorie: (cat.get(p.id) || {}).categorie || 'Autres', cat_icone: (cat.get(p.id) || {}).cat_icone || '📦', cat: (cat.get(p.id) || {}).cat || null, type: (cat.get(p.id) || {}).type || null, koins: (cat.get(p.id) || {}).koins, centre: (cat.get(p.id) || {}).centre || null, xerkion: xk(p.id) })),
       ...internes.map(p => ({ categorie: 'ploxi0n', cat_icone: '◇', ...p }))];
-    routeur.majCatalogue(liste);
+    routeur.majCatalogue(liste, o);
     if (raccourcis) raccourcis.publier(liste).catch(() => {});   // l'app Raccourcis et Siri proposent les ploxions installés
   }
   const compte = creerCompte({ boxion, http: creerHttp(window) });
@@ -280,7 +283,7 @@ async function demarrer() {
   window.jOSNatif.sante = sante.api;
   setTimeout(() => sante.synchroniser().catch(() => {}), 5000);   // ☁ hors du chemin critique : le résumé santé (si activé et connecté)
   window.jOSNatif.tsoin = (o) => tsoinNatif.ouvrir(o || {});
-  const hud = creerHud({ compte, boxion, vocalEnCours: () => vocal.enCours(), trouver: (id) => routeur && routeur.catalogue().find(p => p.id === id), modeConnecte: () => modeConnecte });
+  const hud = creerHud({ compte, boxion, vocalEnCours: () => vocal.enCours(), trouver: (id) => routeur && routeur.catalogue().find(p => p.id === id), modeConnecte: () => modeConnecte, prefs: () => prefs.lire() });
   await hud.pret;
   boot(70, 'HUD · dock');
   // ⚙ les réglages : un ploxion interne, au bout du ⚙ de l'accueil (jamais retirable)
@@ -306,7 +309,9 @@ async function demarrer() {
     registre: async () => Object.fromEntries((((await depot.catalogue({ reseau: false }).catch(() => null)) || {}).items || []).map(p => [p.id, { c: p.cat || p.categorie || 'autre', l: p.categorie || 'Autre', i: p.cat_icone || '📦', n: p.nom, ic: p.icone }])) });
   window.jOSUsage = usage;
   // un ploxion sur l'écran d'accueil de l'iPhone (via Raccourcis) : depuis l'édition de l'accueil et la fiche du marketplace
-  const ecranAccueil = creerEcranAccueil({ trouver: (id) => routeur.catalogue().find(p => p.id === id), liste: () => routeur.catalogue(), boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine) });
+  // (0.55) les verrous Face ID (un ploxion verrouillé passe par l'app), le jeton du compte (les propositions d'icônes), l'atelier → l'accueil
+  const ecranAccueil = creerEcranAccueil({ trouver: (id) => routeur.catalogue().find(p => p.id === id), liste: () => routeur.catalogue(), boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine), source: SOURCE,
+    verrous: () => (routeur ? routeur.verrous() : []), jeton: () => boxion.get('compte', 'courant').then(c => (c && c.jeton) || null), surPerso: () => { majAccueil({ redessiner: true }).catch(() => {}); } });
   window.jOSEcranAccueil = ecranAccueil;
   boot(78, 'l\'accueil');
   // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xerbot (le monde physique)
@@ -454,6 +459,8 @@ async function demarrer() {
   if (!modeSurJs) notifs.demarrer();
   else { const b = document.createElement('div'); b.className = 'px-bulle'; b.textContent = '🛟 mode sûr pour ce lancement (le prochain réessaie tout). S\'il s\'est ouvert : le coupable est le fond photo, le thème vivant ou la session — dis-le à bother me.'; racine.appendChild(b); setTimeout(() => b.remove(), 9000); }
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    // Face ID (0.55) : en arrière-plan, les ploxions verrouillés se referment ; au retour, celui qui était à l'écran redemande le visage
+    import('@capacitor/app').then(({ App }) => { let aReprendre = null; App.addListener('pause', () => { aReprendre = routeur.reverrouiller(); }); App.addListener('resume', () => { const id = aReprendre; aReprendre = null; if (id) routeur.redemander(id).catch(() => {}); }); }).catch(() => {});
     import('@capacitor/app').then(({ App }) => App.addListener('appStateChange', (e) => { if (e.isActive) { raccourcis.recevoir().catch(() => {}); notifs.demarrer(); sante.synchroniser().catch(() => {}); } else { notifs.arreter(); publierValeurs().catch(() => {}); dossier.synchroniser().catch(() => {}); couperVideosArrierePlan(); } })).catch(() => {});
   }
 }

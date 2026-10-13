@@ -107,7 +107,7 @@ const enVue = (v) => v instanceof DataView ? v : ArrayBuffer.isView(v) ? new Dat
  *   ouvrirPloxion(id), mouvementActif: () => bool (le thème vivant tourne déjà), charger: { module: () => import(...) } (tests) }
  * Rend { faits: [cle], etat() } ; ne fait rien hors de l'iPhone (sauf BarcodeDetector, utile partout).
  */
-export function installerWebNatif({ W = globalThis.window, prefs = () => ({}), courant = () => null, ouvrirPloxion = () => {}, mouvementActif = () => false, apple = PloxiApple, vocal = PloxiVocal, charger = {}, lienPublic = 'https://xerboxion.org' } = {}) {
+export function installerWebNatif({ W = globalThis.window, prefs = () => ({}), courant = () => null, ouvrirPloxion = () => {}, mouvementActif = () => false, apple = PloxiApple, vocal = PloxiVocal, charger = {}, lienPublic = 'https://labo.j0bot.ch' } = {}) {
   const natif = !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
   const nav = W.navigator, faits = [], erreurs = {};
   const imp = (nom, f) => (charger[nom] || f)();

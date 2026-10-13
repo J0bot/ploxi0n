@@ -519,3 +519,36 @@ html.px-px-chill body{
 @keyframes px-tremble{from{transform:rotate(-1.6deg)}to{transform:rotate(1.6deg)}}
 .px-calme .px-tri .px-tuile .px-ic{animation:none}
 @media (prefers-reduced-motion:reduce){.px-tri .px-tuile .px-ic{animation:none}}
+/* ⬡ (0.55) les icônes xerkion (src/app/xerkion-icone.js) : le SVG se suffit, la tuile ne fait que le cadrer */
+.xki{width:1.3em;height:1.3em;display:inline-block;vertical-align:-.3em;flex:none;border-radius:22%}
+.px-ic:has(>.xki){overflow:hidden;background:#05070c;border-color:transparent}
+.px-ic>.xki{position:absolute;inset:0;width:100%;height:100%;border-radius:0}
+.px-h-b:has(>.xki){padding:0;overflow:hidden;border-color:transparent;background:#05070c}
+.px-h-b>.xki{width:100%;height:100%;border-radius:0;display:block}
+.px-md-g:has(>.xki){width:100%;height:100%;display:block}.px-md-g .xki{width:100%;height:100%;border-radius:0;display:block}
+.px-dock .px-h-b:has(>.xki){width:48px;height:48px}
+/* ⬡ (0.55) l'atelier d'une icône (src/natif/ecran-accueil.js) */
+.px-atelier{max-height:88vh;overflow:auto}
+.px-at-tete{display:flex;gap:14px;align-items:center;margin:4px 0 10px}
+.px-at-apercu{flex:none;width:96px;height:96px;border-radius:24px;overflow:hidden;box-shadow:0 0 18px rgba(0,0,0,.6),inset 0 0 0 1px var(--filet)}
+.px-at-apercu .xki{width:100%;height:100%;border-radius:0;display:block}
+.px-at-nom{flex:1;display:flex;flex-direction:column;gap:6px;font:600 11.5px var(--mono);color:var(--muted);letter-spacing:.04em}
+.px-at-nom input{font:600 15px var(--police);color:var(--txt);background:var(--surface2);border:var(--trait) solid var(--bord);border-radius:11px;padding:10px 12px;min-width:0}
+.px-at-t{margin:12px 2px 6px;font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.px-at-pal{display:flex;gap:10px;flex-wrap:wrap}
+.px-tiroir .px-at-pal button{width:34px;min-height:34px;height:34px;padding:0;margin:0;border-radius:10px;background:var(--c);border:2px solid transparent;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+.px-tiroir .px-at-pal button.on{border-color:var(--txt);box-shadow:0 0 12px var(--c)}
+.px-at-puces{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+.px-tiroir .px-at-puces .px-puce.on{border-color:var(--bio);color:var(--txt)}
+.px-at-gl{display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:6px;max-height:30vh;overflow:auto;padding:2px}
+.px-tiroir .px-at-gl button{width:auto;min-height:42px;padding:0;margin:0;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.px-tiroir .px-at-gl button.on{color:var(--bio);border-color:var(--bio)}
+.px-at-gl .px-g{width:22px;height:22px}
+.px-at-liste{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px}
+.px-tiroir .px-at-liste button{flex:none;width:auto;min-height:0;margin:0;padding:6px 10px 6px 6px;display:flex;align-items:center;gap:8px;border-radius:12px;font:600 12px var(--police)}
+.px-at-liste .xki{width:34px;height:34px;border-radius:9px}
+.px-at-liste .px-g{width:14px;height:14px;opacity:.6}
+.px-tiroir .px-choix .px-tuile.on .px-ic:has(>.xki){box-shadow:0 0 0 2px var(--bio),0 0 12px var(--glow)}
+.px-tiroir .px-at-puces label.px-puce{display:inline-flex;align-items:center;gap:6px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);cursor:pointer}
+.px-at-puces label.px-puce .px-g{width:16px;height:16px}
+.px-at-type{margin:8px 2px 0 !important}
