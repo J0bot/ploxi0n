@@ -4,16 +4,25 @@
 //   - lecture dans la page (playsinline), AirPlay, Picture in Picture permis ; plein écran = le lecteur natif d'iOS (webkitEnterFullscreen)
 //   - l'écran verrouillé et le Centre de contrôle : titre, icône, ▶︎ ⏸ ±15 s, la barre de temps (Media Session) ; le son continue écran
 //     verrouillé et en mode silencieux (AppDelegate : AVAudioSession .playback + UIBackgroundModes audio)
-//   - YouTube : un <iframe> youtube(-nocookie).com/embed passe par https://xerboxion.org/app/yt/<id> (une page https : YouTube refuse les
+//   - YouTube : un <iframe> youtube(-nocookie).com/embed passe par https://labo.j0bot.ch/app/yt/<id> (une page https : YouTube refuse les
 //     intégrations sans référent https — erreur 152/153 depuis capacitor://)
 //   - l'HAPTIQUE DU SON : l'énergie des basses → des vibrations (un toc par attaque, plus fort quand ça cogne). Seulement pour un son
 //     lisible par WebAudio (même origine, blob, ou crossOrigin) : sinon WebAudio rendrait le son MUET — donc rien (YouTube, la plupart des flux).
 // Réglages : boxion_local « reglages/lecteur » = { yt: true, haptiqueSon: true }.
-export function installerLecteur({ W = globalThis.window, boxion, vibrer = () => {}, source = 'https://xerboxion.org', titre = () => 'ploxi0n' }) {
+export function installerLecteur({ W = globalThis.window, boxion, vibrer = () => {}, source = 'https://labo.j0bot.ch', titre = () => 'ploxi0n', surMedia = null }) {
   const D = W.document;
   let reglage = { yt: true, haptiqueSon: true };
   const pret = boxion.get('reglages', 'lecteur').then(v => { if (v && typeof v === 'object') reglage = { ...reglage, ...v }; }).catch(() => {});
   const vus = new WeakSet();
+  // (0.54, RS-7 : « une app avec un lecteur vidéo prend tout l'écran et ça crash ; il faudrait le PiP automatique ») une vidéo lancée AVANT
+  // que l'observateur ne pose playsinline partait dans le plein écran de WebKit : posé au moment même de play(), avec le PiP automatique
+  try {
+    const P = W.HTMLMediaElement && W.HTMLMediaElement.prototype, jouer = P && P.play;
+    if (jouer && !jouer.__ploxi0n) {
+      const nouveau = function (...a) { if (this.tagName === 'VIDEO') { this.setAttribute('playsinline', ''); this.setAttribute('webkit-playsinline', ''); this.setAttribute('autopictureinpicture', ''); } return jouer.apply(this, a); };
+      nouveau.__ploxi0n = true; P.play = nouveau;
+    }
+  } catch (e) { /* */ }
 
   // ---- YouTube : par une page https du labo ----
   const ytId = (src) => { const m = /(?:youtube(?:-nocookie)?\.com\/embed\/|youtu\.be\/)([A-Za-z0-9_-]{11})/.exec(src || ''); return m ? m[1] : null; };
@@ -31,6 +40,7 @@ export function installerLecteur({ W = globalThis.window, boxion, vibrer = () =>
     if (vus.has(m)) return; vus.add(m);
     if (m.tagName === 'VIDEO') { m.setAttribute('playsinline', ''); m.setAttribute('webkit-playsinline', ''); m.setAttribute('x-webkit-airplay', 'allow'); try { m.disablePictureInPicture = false; } catch (e) { /* */ } }
     m.addEventListener('play', () => { session(m); if (reglage.haptiqueSon) haptiqueSon(m); });
+    if (surMedia) { try { surMedia(m); } catch (e) { /* */ } }   // 🎞 (0.49) le lecteur intégré : illisible ou muette → natif
   }
   // l'écran verrouillé, le Centre de contrôle
   function session(m) {

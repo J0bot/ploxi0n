@@ -10,15 +10,22 @@ name: iOS TestFlight
 on:
   push:
     tags: ['v*']
+    # (13.10, 0.60) une session Claude ne peut pousser que sa branche (ni tag, ni lancement à la main) : sur une branche glob/**, un commit
+    # dont le message contient « [build] » lance aussi le build (« [widgets] » : avec les widgets). Les autres pushes ne lancent rien.
+    branches: ['glob/**']
   workflow_dispatch:
     inputs:
       regenerer_profil: { description: 'régénérer le profil de signature (après un changement de capabilities)', type: boolean, default: false }
+      vlc: { description: "construire avec le lecteur VLC (MKV, DTS, sous-titres ; le lecteur intégré, en repli d'Apple)", type: boolean, default: false }
       widgets: { description: "construire avec les widgets (extension PloxionWidgets ; ch.j0bot.ploxi0n.widgets doit avoir le groupe group.ch.j0bot.ploxi0n)", type: boolean, default: false }
 concurrency:
-  group: ios-testflight
+  # seul un VRAI build annule le précédent : un push sans « [build] » (jobs sautés) a son propre groupe et ne coupe rien (13.10 : un tel
+  # push avait annulé le build de la 0.61)
+  group: ${{ (github.event_name != 'push' || startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[build]')) && 'ios-testflight' || format('ios-sans-build-{0}', github.sha) }}
   cancel-in-progress: true
 jobs:
   tests:
+    if: ${{ github.event_name != 'push' || startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[build]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -67,7 +74,9 @@ jobs:
           TESTFLIGHT_EMAIL: ${{ secrets.TESTFLIGHT_EMAIL }}
           MATCH_FORCE: ${{ inputs.regenerer_profil }}
           # les widgets : l'entrée du lancement manuel, ou la variable du dépôt PLOXI0N_WIDGETS=1 (Settings › Variables) pour chaque push
-          PLOXI0N_WIDGETS: ${{ inputs.widgets && '1' || vars.PLOXI0N_WIDGETS }}
+          PLOXI0N_WIDGETS: ${{ (inputs.widgets || contains(github.event.head_commit.message, '[widgets]')) && '1' || vars.PLOXI0N_WIDGETS }}
+          # le lecteur VLC : l'entrée du lancement manuel, ou la variable du dépôt PLOXI0N_VLC=1
+          PLOXI0N_VLC: ${{ inputs.vlc && '1' || vars.PLOXI0N_VLC }}
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: build-logs, path: ~/Library/Logs/gym, if-no-files-found: ignore }

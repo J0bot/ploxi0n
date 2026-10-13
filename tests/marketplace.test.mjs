@@ -102,7 +102,8 @@ test('routeur : un ploxion installé s\'ouvre depuis boxion_local (jamais depuis
     racine.querySelector('[data-ranger="page"]').click(); await attendre(30);
     const doc = await p.boxion.get('reglages', 'accueil');
     assert.deepEqual([doc.dossiers, doc.pages], [[], [{ nom: 'Travail', ids: ['pomo'] }]]);
-    assert.equal(racine.querySelectorAll('.px-page').length, 2); assert.equal(racine.querySelectorAll('.px-point').length, 2);
+    assert.equal(racine.querySelectorAll('.px-page:not([data-special])').length, 2); assert.equal(racine.querySelectorAll('.px-point:not(.px-point-g)').length, 2);
+    assert.deepEqual([...racine.querySelectorAll('.px-page[data-special]')].map(s => s.dataset.special), ['aujourdhui', 'bibliotheque'], '(0.61) les pages de côté');
     assert.ok(racine.querySelector('.px-page[data-page="1"] [data-id="pomo"]') && racine.querySelector('.px-page[data-page="0"] [data-id="autre"]'));
   } finally { p.w.close(); }
 });
@@ -259,28 +260,49 @@ test('raccourcis 0.9 : « Envoyer à un ploxion » ouvre et émet sur le bus, «
   } finally { p.fin(); }
 });
 
-test('📲 tes ploxions en apps : la feuille coche, le labo reçoit des PNG et des ids, Safari s\'ouvre sur le profil', async () => {
+test('📲 tes ploxions en apps : la feuille coche, le labo reçoit des PNG et des ids, Safari s\'ouvre sur le profil ; l\'atelier (nom, icône), les verrous, proposer', async () => {
   const { creerEcranAccueil } = await import('../src/natif/ecran-accueil.js');
   const p = await page({ avion: true, ploxions: [] }), W = p.w;
   try {
-    const cat = [{ id: 'pomo', nom: 'Pomodoro', icone: '🍅' }, { id: 'marketplace', nom: 'Marketplace', icone: '🛍', interne: true }];
-    const envois = [], ouverts = []; W.open = (u) => ouverts.push(u);
-    // un faux canvas qui sait rendre un PNG
+    const cat = [{ id: 'pomo', nom: 'Pomodoro', icone: '🍅' }, { id: 'marketplace', nom: 'Marketplace', icone: '🛍', interne: true }, { id: 'carnet', nom: 'Carnet', icone: '📓' }];
+    const envois = [], ouverts = [], svgs = []; W.open = (u) => ouverts.push(u);
+    // un faux canvas qui sait rendre un PNG, une fausse Image qui « charge » le SVG de l'icône
     const vrai = W.document.createElement.bind(W.document);
-    W.document.createElement = (t) => { const e = vrai(t); if (t === 'canvas') { e.getContext = () => ({ createLinearGradient: () => ({ addColorStop() {} }), createRadialGradient: () => ({ addColorStop() {} }), fillRect() {}, strokeRect() {}, fillText() {} }); e.toDataURL = () => 'data:image/png;base64,iVBORw0KGgo='; } return e; };
-    const guider = creerEcranAccueil({ W, trouver: (id) => cat.find(x => x.id === id), liste: () => cat, boxion: p.boxion,
-      envoyer: async (q) => { envois.push(q); return { status: 200, texte: JSON.stringify({ url: 'https://xerboxion.org/app/accueil/' + 'a'.repeat(40) }) }; } });
+    W.document.createElement = (t) => { const e = vrai(t); if (t === 'canvas') { e.getContext = () => ({ drawImage() {} }); e.toDataURL = () => 'data:image/png;base64,iVBORw0KGgo='; } return e; };
+    W.Image = class { set src(v) { svgs.push(decodeURIComponent(v.split(',')[1])); setTimeout(() => this.onload && this.onload(), 0); } };
+    const guider = creerEcranAccueil({ W, trouver: (id) => cat.find(x => x.id === id), liste: () => cat, boxion: p.boxion, verrous: () => ['carnet'],
+      envoyer: async (q) => { envois.push(q); if (/icones$/.test(q.url)) return { status: 404, texte: '' }; return { status: 200, texte: JSON.stringify({ url: 'https://labo.j0bot.ch/app/accueil/' + 'a'.repeat(40) }) }; } });
     await guider('pomo');
     const f = W.document.querySelector('.px-voile');
     assert.ok(f.querySelector('[data-c="pomo"].on'), 'le ploxion d\'où l\'on vient est coché');
-    f.querySelector('[data-c="marketplace"]').click();
-    assert.match(f.querySelector('[data-g="installer"]').textContent, /2 apps/);
+    assert.ok(f.querySelector('[data-c="pomo"] svg.xki[data-type="ploxion"]'), 'l\'icône est son xerkion : un ploxion, un losange');
+    f.querySelector('[data-c="marketplace"]').click(); f.querySelector('[data-c="carnet"]').click();
+    assert.match(f.querySelector('[data-g="installer"]').textContent, /3 apps/);
+    assert.match(f.textContent, /verrouillés s'ouvrent toujours dans ploxi0n/);
+    // l'atelier : le nom et la palette de Pomodoro
+    f.querySelector('[data-at="pomo"]').click();
+    assert.ok(f.querySelector('.px-atelier'), 'l\'atelier s\'ouvre');
+    const n = f.querySelector('[data-at-nom]'); n.value = 'Focus'; n.dispatchEvent(new W.Event('input', { bubbles: true }));
+    f.querySelector('[data-pal="2"]').click();
+    assert.ok(f.querySelector('[data-pal="2"].on'), 'la palette choisie');
+    assert.ok(!f.querySelector('[data-cotes]'), 'la forme ne se retouche pas (un fait, pas un style)');
+    f.querySelector('[data-at-proposer]').click(); await attendre(30);
+    assert.match(f.querySelector('[data-msg]').textContent, /gardée/, 'le labo ne reçoit pas encore : elle attend');
+    const file = await p.boxion.get('reglages', 'icones-proposees');
+    assert.equal(file.length, 1); assert.equal(file[0].ploxion, 'pomo'); assert.equal(file[0].xerkion.pal, 2); assert.equal(file[0].type, 'ploxion');
+    f.querySelector('[data-at-ok]').click();
+    assert.ok(f.querySelector('[data-g="installer"]'), 'retour à la feuille');
     f.querySelector('[data-g="installer"]').click(); await attendre(30);
-    const corps = JSON.parse(envois[0].corps);
-    assert.equal(envois[0].url, 'https://xerboxion.org/api/app/accueil');
-    assert.deepEqual(corps.apps.map(a => a.id), ['pomo', 'marketplace']); assert.ok(corps.apps.every(a => a.icone === 'iVBORw0KGgo='));
-    assert.deepEqual(ouverts, ['https://xerboxion.org/app/accueil/' + 'a'.repeat(40)], 'Safari s\'ouvre sur le profil');
-    assert.deepEqual(await p.boxion.get('reglages', 'apps-accueil'), ['pomo', 'marketplace'], 'le choix est gardé');
+    const env = envois.find(q => /accueil$/.test(q.url)), corps = JSON.parse(env.corps);
+    assert.equal(env.url, 'https://labo.j0bot.ch/api/app/accueil');
+    assert.deepEqual(corps.apps.map(a => a.id), ['pomo', 'marketplace', 'carnet']); assert.ok(corps.apps.every(a => a.icone === 'iVBORw0KGgo='));
+    assert.equal(corps.apps[0].nom, 'Focus', 'le nom choisi'); assert.equal(corps.apps[0].mode, 'seul');
+    assert.ok(svgs.some(s => s.includes('#bfa97d')), 'l\'icône dessinée a la palette choisie (ambre)');
+    // (0.55) Face ID : un ploxion verrouillé ne devient jamais une icône « seule » (en ligne, sans visage)
+    assert.deepEqual([corps.apps[2].mode, corps.apps[2].verrou, corps.apps[2].url], ['app', true, 'ploxi0n://px/carnet']);
+    assert.deepEqual(ouverts, ['https://labo.j0bot.ch/app/accueil/' + 'a'.repeat(40)], 'Safari s\'ouvre sur le profil');
+    assert.deepEqual(await p.boxion.get('reglages', 'apps-accueil'), ['pomo', 'marketplace', 'carnet'], 'le choix est gardé');
+    assert.equal((await p.boxion.get('reglages', 'apps-accueil-perso')).pomo.nom, 'Focus', 'la perso est gardée');
   } finally { p.fin(); }
 });
 
@@ -377,7 +399,8 @@ test('appui long : le menu d\'un ploxion (épingler au dock, déplacer vers une 
     const racine = W.document.createElement('div'); W.document.body.appendChild(racine);
     r = creerRouteur({ fenetre: W, racine, boxion: p.boxion, hud, catalogue: [{ id: 'a', nom: 'A', icone: '◇' }, { id: 'b', nom: 'B', icone: '◆' }], retirer: async (id) => retires.push(id) });
     await r.accueil();
-    const appuyer = async (id) => { racine.querySelector('[data-id="' + id + '"]').dispatchEvent(new W.MouseEvent('pointerdown', { bubbles: true, clientX: 5, clientY: 5 })); await attendre(520); };
+    // (0.54) l'appui long soulève la tuile (le glisser-déposer) ; relâchée sans bouger : le menu
+    const appuyer = async (id) => { const t = racine.querySelector('[data-id="' + id + '"]'); t.dispatchEvent(new W.MouseEvent('pointerdown', { bubbles: true, clientX: 5, clientY: 5 })); await attendre(520); t.dispatchEvent(new W.MouseEvent('pointerup', { bubbles: true, clientX: 5, clientY: 5 })); await attendre(20); };
     await appuyer('a');
     assert.ok(racine.querySelector('.px-menu'), 'le menu s\'ouvre après 450 ms');
     racine.querySelector('[data-m="epingler"]').click(); await attendre(30);
@@ -609,4 +632,29 @@ test('le tuto d\'accueil : une fois, 9 cartes au pouce, glisser pour avancer, «
     assert.equal(W.document.querySelector('.px-tuto'), null);
     await t.auDemarrage(); assert.equal(W.document.querySelector('.px-tuto'), null, 'pas deux fois');
   } finally { p.fin(); }
+});
+
+test('(0.51) un ploxion servi dans sa page (Spotify : pas d\'app.js) s\'installe quand même ; un bion absent n\'est pas redemandé (404 de 3,5 Mo)', async () => {
+  const { bundleDeLaPage } = await import('../src/marketplace/depot.js');
+  const PAGE = '<html><head><style>.page{}</style><script>window.jOSSound=window.jOSSound||{};</script></head><body>'
+    + '<style>.sp{color:red}</style>\n<script>(function(){ function mount(h){ h.innerHTML="<b class=sp>sp</b>"; window.jOSSound && 1; window.jOSCineJournal && 1; return { unmount(){} }; }\n'
+    + 'window.jOSApps = window.jOSApps || {}; window.jOSApps[\'spotify\'] = { manifest: { id: \'spotify\' }, mount: mount }; })();</script>\n'
+    + '<div id="pxhost"></div><script>/* le lanceur de la page */ window.jOSApps["spotify"].mount(document.getElementById("pxhost"));</script></body></html>';
+  const js = bundleDeLaPage(PAGE, 'spotify');
+  assert.ok(js.includes('.sp{color:red}') && !js.includes('.page{}'), 'seulement le style collé au script du ploxion');
+  assert.ok(!js.includes('le lanceur'), 'pas le lanceur de la page');
+  assert.equal(bundleDeLaPage('<html>rien</html>', 'spotify'), null);
+  const appels = []; const HTML404 = '<!doctype html><html>' + 'x'.repeat(50) + '</html>';
+  const http = { async get(url) { appels.push(url);
+    if (url.endsWith('/px/spotify/app.js')) return { status: 404, texte: HTML404, entetes: {} };
+    if (url.endsWith('/px/spotify')) return { status: 200, texte: PAGE, entetes: {} };
+    if (url.endsWith('/jOSSound.js')) return { status: 200, texte: 'window.jOSSound = window.jOSSound || { list: function(){ return []; } };', entetes: {} };
+    return { status: 404, texte: HTML404, entetes: {} }; } };
+  const boxion = creerMemoire(), d = creerDepot({ boxion, http });
+  const r = await d.installer('spotify', { nom: 'Spotify', icone: '🎧' });
+  assert.deepEqual(r.bions, ['jOSSound']);
+  assert.ok((await d.bundle('spotify')).includes('jOSApps[\'spotify\']'));
+  const avant = appels.filter(u => /jOSCineJournal/.test(u)).length;
+  await d.completerBions();
+  assert.equal(appels.filter(u => /jOSCineJournal/.test(u)).length, avant, 'noté absent : pas redemandé');
 });

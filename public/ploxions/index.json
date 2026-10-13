@@ -22,7 +22,9 @@
    "nom": "Pomodoro",
    "icone": "🍅",
    "hash": "c77332a2c78938795d33f220dbe9ada04c5a657af650b4ecfde045cbac5d882b",
-   "deps": [],
+   "deps": [
+    "minuteur"
+   ],
    "bions": [],
    "octets": 1017
   },
@@ -70,6 +72,15 @@
    "deps": [],
    "bions": [],
    "octets": 12864
+  },
+  {
+   "id": "minuteur",
+   "nom": "Minuteur",
+   "icone": "⏱",
+   "hash": "d26ef652e58d18c1561ca93b3fdce39ebae24887a04717090553dec6f415159a",
+   "deps": [],
+   "bions": [],
+   "octets": 10814
   }
  ]
 }

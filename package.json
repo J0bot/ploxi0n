@@ -1,6 +1,6 @@
 {
   "name": "ploxi0n",
-  "version": "0.46.0",
+  "version": "0.62.0",
   "private": true,
   "type": "module",
   "description": "ploxi0n v1 : les ploxions du xerboxion sur iOS, 100 % hors ligne (Capacitor + boxion_local)",
@@ -13,6 +13,7 @@
     "extraire": "node tools/extraire-ploxions.mjs",
     "audit": "node tools/audit-ploxions.mjs",
     "test": "node --test tests/*.test.mjs",
+    "faux-iphone": "node tools/faux-iphone/faux-iphone.mjs http://localhost:4173/ build/faux-iphone --script tools/faux-iphone/parcours-app.mjs",
     "sync": "npx cap sync ios",
     "postinstall": "node tools/spm-capacitor8.mjs"
   },
@@ -45,6 +46,7 @@
     "@capgo/capacitor-native-biometric": "^8.8.1",
     "@capgo/capacitor-nfc": "^8.3.0",
     "@capgo/capacitor-wifi": "^8.5.6",
+    "fflate": "^0.8.2",
     "jsqr": "^1.4.0"
   },
   "devDependencies": {

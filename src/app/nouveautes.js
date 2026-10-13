@@ -4,6 +4,100 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.62.0', titre: 'Freefall fait défiler', points: [
+    'Freefall : pencher l\'iPhone en avant ou en arrière fait défiler ce qui est à l\'écran (le ploxion, ou l\'accueil) ; à gauche ou à droite, la fractale.',
+    'La fractale reste légère même avec beaucoup de ploxions ouverts : seuls ceux proches du centre sont dessinés en direct.',
+  ] },
+  { v: '0.61.0', titre: 'Des pages de côté, le cube dans sa salle', points: [
+    'L\'accueil a une page à gauche, « aujourd\'hui » (ce qui vit, la musique, les vidéos à reprendre ; la fractale, freefall, un tsoin, les mini docks d\'un toucher), et une à droite, « bibliothèque » (tout, par catégorie).',
+    'Le cube se voit de trois quarts, dans la salle du kion 4D (les cadres qui reculent, les arêtes vers le cube) ; entrer dans une app ouvre un portail de carrés emboîtés.',
+    'Tiens une icône de l\'accueil : elle flotte avec le gyroscope ; penche l\'iPhone en avant, une bulle montre ses bions.',
+  ] },
+  { v: '0.60.1', titre: 'Les bords ne sélectionnent plus le texte', points: [
+    'Tirer depuis un bord ne sélectionne plus le texte du ploxion (ni loupe, ni menu d\'iOS) : le geste reste à l\'app, il ne se coupe plus en route.',
+  ] },
+  { v: '0.60.0', titre: 'Le xer devient un cube', points: [
+    'La fractale en jeu de cartes : de grandes cartes, l\'icône et le nom au-dessus de chacune ; elles suivent le doigt et filent sur leur élan. Jette une carte vers le haut : le ploxion se ferme.',
+    'Le slider, c\'est le filtrage de photons : autour du curseur de réel (le trait au milieu), les apps sont pleines ; plus loin elles tournent sur la tranche et deviennent des lignes serrées.',
+    'Arrête-toi sur une app dans le slider et tiens encore : le xer devient un cube autour d\'elle. Tourne-le (un cran à chaque face) ; penche-le en avant, ou glisse vers le haut : sa face du dessus montre ses bions.',
+    'Le gyroscope : pendant la fractale tout s\'incline avec l\'iPhone ; dans le slider, pencher accélère ou freine. Le zéro, c\'est ta façon de tenir l\'iPhone au début du geste.',
+    'Freefall (un geste des bords à choisir) : toute l\'appli au gyroscope. Penche pour ouvrir la fractale et défiler, reste droit 1,4 s sur une app pour l\'ouvrir ; le badge en haut l\'arrête.',
+    'Trackpad haptique : le banc des essais (textures grille, bords, cibles ; clic, clic fort ; deux doigts pour défiler), pour sentir le Taptic Engine avant le vrai trackpad.',
+  ] },
+  { v: '0.59.0', titre: 'La fractale des ploxions', points: [
+    'Passer d\'une app à l\'autre par un bord : l\'app part en biais, l\'autre arrive en 3D, un trait de lumière balaie l\'écran.',
+    'Tenir un bord 0,3 s : l\'app d\'à côté passe la tête (à droite la suivante, à gauche la précédente) ; tire-la vers le centre pour y aller.',
+    'Tenir 0,9 s : la fractale. Ton app au milieu, en petit, les autres de chaque côté, de plus en plus petites ; glisse, lâche sur une app. Lâchée sans bouger, elle reste ouverte : touche une app, ou à côté pour revenir.',
+    'Tenir 1,9 s : le slider. Encore plus petit, ça défile tout seul vers le bord tenu ; ramène le doigt vers le centre pour ralentir ou repartir dans l\'autre sens ; lâche pour ouvrir.',
+    'Sur les iPhone à 3D Touch, presser fort fait pareil, plus vite.',
+  ] },
+  { v: '0.58.0', titre: 'Des couleurs douces', points: [
+    'Les icônes gardent les teintes des xerkions du labo, mais adoucies : moins saturées, moins lumineuses. Ça n\'explose plus les yeux.',
+  ] },
+  { v: '0.57.0', titre: 'Le glyphe seul garde sa forme', points: [
+    'Style « glyphe seul » : la forme du type reste (losange, xerkion à N côtés, cube, kion, koin, anneaux, sphère, portion, bion, boîte), pleine, d\'une couleur, et le glyphe est découpé dessus, en grand.',
+  ] },
+  { v: '0.56.0', titre: 'Plus de ploxions ouverts, des glyphes lisibles', points: [
+    'Ploxions vivants en arrière-plan : 12 par défaut, jusqu\'à 20, ou ∞ (⚙ › Navigation). Cachés, ils sont gelés et leurs vidéos coupées ; au-delà de la limite, le plus ancien s\'endort dans les mini docks.',
+    'Le glyphe au centre des icônes est bien plus grand.',
+    'Deux styles d\'icônes (⚙ › Apparence) : xerboxion (la forme dit le type, le glyphe au centre) ou glyphe seul, en grand. App par app aussi : appui long › son icône › le style.',
+  ] },
+  { v: '0.55.0', titre: 'Les icônes du xerboxion, et Face ID tient', points: [
+    'Chaque ploxion a son icône, dessinée comme les xerkions du labo : la FORME dit ce qu\'il est (ploxion = losange, xerkion = autant de côtés que de koins, xer = octogone, cubion = cube, kion, koin, wormion, spherion, portion, bion, boxion), la COULEUR et le glyphe disent sa catégorie.',
+    'L\'atelier : appui long sur un ploxion › « son icône » (ou la feuille de l\'écran d\'accueil) : sa palette, son glyphe, une photo, et le nom sous l\'icône de l\'iPhone.',
+    'Proposer son icône au labo : si elle est prise, tout le monde l\'aura.',
+    'Face ID : un ploxion verrouillé se referme quand l\'app passe en arrière-plan et redemande ton visage au retour ; mis sur l\'écran d\'accueil, il passe toujours par ploxi0n (plus d\'accès en ligne sans visage).',
+    'Le labo, c\'est labo.j0bot.ch.',
+  ] },
+  { v: '0.54.0', titre: 'Des glyphes, et ranger au doigt', points: [
+    'Plus d\'emoji : chaque ploxion a son glyphe, au trait du xerboxion (ion, koin, portion, cubion…), teinté à sa couleur ; le dock, les réglages, les mini docks aussi. ⚙ › Apparence pour revenir aux emoji du labo.',
+    'Ranger l\'accueil au doigt : appui long sur une icône, elle se soulève — glisse-la où tu veux, sur un dossier pour l\'y mettre, au bord de l\'écran pour changer de page. Sans bouger : son menu, comme avant.',
+    'Les widgets reviennent (le cube, À l\'écoute, épinglés, valeurs) avec les contrôles du Centre de contrôle.',
+    'L\'aperçu du cube (⚙ › Widgets) vit : il suit le gyroscope, se tourne au doigt, et tourne doucement tout seul.',
+    'Vidéo : plus de plein écran surprise ; le PiP automatique en quittant l\'app ; une vidéo en plein écran endort les autres ploxions (la mémoire : c\'était le plantage).',
+  ] },
+  { v: '0.53.0', titre: 'Snappy', points: [
+    '⚡ L\'app ne rame plus : le thème vivant ne recalcule plus toute la page 30 fois par seconde (il fait glisser le fond et la grille, c\'est tout), il dort dans les ploxions, et les 131 icônes ne sont plus 131 calques ni 131 ombres qui bougent.',
+    '❄ Un ploxion en arrière-plan (un jeu…) n\'anime plus pour rien : ses images reprennent quand tu le rouvres. La musique continue.',
+    '💾 Le bus n\'écrit plus chaque message dans la base (le gyroscope, la blouse) : au plus une fois par seconde.',
+    '📖 Le wiki (et les ploxions qui montrent une page du labo) : l\'adresse va au labo ; tant que le labo refuse d\'être affiché dans l\'app, une carte « ouvrir » au lieu d\'une page blanche. Pareil pour le mode xerboxion.',
+  ] },
+  { v: '0.52.0', titre: 'Tous les ploxions en chill-tekk', points: [
+    '◇ Un thème commun : les ploxions du labo prennent les couleurs, la police, les boutons et les champs de l\'app (ils se peignent avec les variables du xer : l\'app les redéfinit). Ce qu\'un ploxion ne style pas du tout devient chill-tekk aussi. ⚙ › Apparence pour le couper.',
+    '⬡ Le mode xerboxion n\'affiche plus un grand rectangle blanc : « le labo arrive », ou « le labo ne répond pas » hors réseau.',
+    '⏱ Minuteur rejoint le pack hors ligne : Pomodoro (qui l\'ouvre) marche sans réseau ; un ploxion du pack s\'installe depuis le téléphone, jamais par le réseau.',
+    '👤 ⚙ › Compte › « Supprimer mon compte » : la page de ton compte xerboxion.org s\'ouvre, la suppression s\'y termine.',
+  ] },
+  { v: '0.51.0', titre: 'Les mini docks', points: [
+    '▤ Tout se minimise en mini dock : un ploxion (▁), la musique (⏮ ⏯ ⏭), la blouse (température, consigne, ⏻), la Santé (les pas), la vidéo à reprendre, le vocal qui enregistre, le tsoin pas fini (touche à côté du composeur). Au-dessus du dock ; glisse-en un de côté pour le fermer.',
+    '▤ La page de tous les mini docks : « ▤ +N » au-dessus du dock, ou ⧉ dans un ploxion — chacun avec ses actions, ✕, les 💤 de la dernière session, « tout fermer ». ⚙ › HUD et dock : combien au-dessus du dock.',
+    '🎞 Stremio lit enfin dans le lecteur de l\'iPhone : branché sur le vrai bion du labo (jOSPlayer) — la reprise de Stremio, l\'épisode suivant à la fin, ses sous-titres, VLC d\'emblée pour un DTS/MKV.',
+    '🎧 Spotify : installable dans l\'app (son code est pris dans sa page du labo), et l\'écran verrouillé suit quel que soit l\'ordre de chargement ; fermer le ploxion efface « à l\'écoute ». Les autres lecteurs du labo (jOSSound : music, le Lecteur) aussi.',
+    '📶 Moins de données : un bion que le labo ne sert pas (une page d\'erreur de 3,5 Mo) n\'est plus redemandé à chaque installation.',
+  ] },
+  { v: '0.50.0', titre: 'La blouse, et trois modes', points: [
+    '🥼 labo-cape : pilote la blouse RS-7 (Bluetooth) — températures, consigne (42 °C max), zones, LEDs, autonomie, journal, la session en tsoin. Sans blouse : la simulation, avec le vrai moteur de cape-core.',
+    '◈ Trois modes en haut de l\'accueil : ◇ chill-tekk (tes ploxions), ⬡ xerboxion (l\'UI du labo, le dock par-dessus), 🤖 xerbot (le monde physique : la blouse, Bluetooth, la maison, la lampe, NFC, Wi-Fi, le bus des robots).',
+  ] },
+  { v: '0.49.0', titre: 'Le lecteur intégré', points: [
+    '🎞 Un vrai lecteur dans l\'app : celui d\'Apple (PiP, AirPlay, écran verrouillé) et VLC en repli pour les MKV, le son DTS et les sous-titres. Stremio s\'en sert tout seul ; il reprend où tu t\'étais arrêté.',
+    '🔇 Une vidéo sans son (AC3/DTS) ? Une bulle propose le lecteur natif. Les liens VLC, Infuse, Outplayer restent dans l\'app.',
+    '📁 Envoyer vers (avec les fichiers), le visualiseur d\'iOS (PDF, Office, images, 3D…), zip et unzip, la galerie native, Plans, Mail, la lampe de poche — pour tous les ploxions.',
+    '🎛 Les contrôles du Centre de contrôle (iOS 18) : noter un tsoin, un vocal, la lampe, ploxi0n.',
+  ] },
+  { v: '0.48.0', titre: 'À l\'écoute, et le cube', points: [
+    '♫ L\'écran verrouillé dit enfin ce qui joue : titre, artistes, pochette, et ⏮ ⏯ ⏭ (au lieu de « Spotify Embedded Player » et ±10 s). Ça marche pour Spotify et pour tout ploxion qui renseigne la Media Session.',
+    '♫ Un mini-lecteur au-dessus du dock, sur l\'accueil : ce qui joue en arrière-plan, ⏮ ⏯ ⏭ ; le toucher rouvre le ploxion.',
+    '◈ Le widget Cube : six infos de tes bions (tsoins, musique, pas, ploxions…) sur un cube penché comme ton téléphone ; ⟲ pour le tourner. Dans ⚙ › Widgets, il suit le gyroscope en direct, et tu choisis ses faces.',
+    '♫ Le widget À l\'écoute : la pochette, le titre, ⏮ ⏯ ⏭ ; aussi sur l\'écran verrouillé.',
+  ] },
+  { v: '0.47.0', titre: 'Le natif, partout', points: [
+    '⚡ Tous tes ploxions deviennent natifs : vibrer (Taptic Engine), la position, les notifications, la dictée, les QR, le gyroscope, Bluetooth, NFC, garder l\'écran allumé, le partage et le presse-papiers passent par l\'iPhone. ⚙ › Natif les montre.',
+    '🛠 Corrigé, enfin : Raccourcis et Siri (ouvrir un ploxion, noter un tsoin, « Dis à ploxi0n »), les widgets (épinglés, valeurs), Face ID, les notifications et Santé échouaient en silence sur l\'iPhone depuis le début.',
+    '❤ Santé lit vraiment Apple Santé ; « ☁ envoyer » met un résumé (jamais les mesures brutes) sur ton boxion, pour le hub 🌸 Santé et tes autres appareils. Éteint par défaut.',
+    '⚙ Les réglages, plus calmes : un accueil court, une page par catégorie, des sous-pages (gestes des bords, haptique).',
+    '📐 Corrigé : avec le thème vivant, l\'accueil débordait sur le côté (la 5e colonne coupée, une barre verte à gauche).',
+  ] },
   { v: '0.46.0', titre: 'Le natif, pour de vrai', points: [
     '🔌 Corrigé : les capacités natives de l\'app n\'étaient jamais branchées (gyroscope, météo, Shazam, Apple Music, HomeKit, Wi-Fi, Game Center, les vocaux). Le thème vivant bouge enfin.',
   ] },

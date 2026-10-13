@@ -1,0 +1,2 @@
+ploxi0n fonctionne sans compte : tout l'essentiel (les ploxions de base, Santé, les tsoins, les réglages) est utilisable hors connexion.
+Le compte de démo (un compte « bion » de xerboxion.org) permet d'essayer le mode connecté. HealthKit : lecture seule, sur demande (❤ Santé iPhone) ; l'envoi d'un résumé à son propre boxion est un interrupteur explicite, éteint par défaut.

@@ -13,6 +13,12 @@ import GameKit
 import WebKit
 import ObjectiveC
 import CoreMotion
+import MediaPlayer
+import AVKit
+import QuickLook
+#if canImport(MobileVLCKit)
+import MobileVLCKit
+#endif
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -105,7 +111,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         guard let g = UserDefaults(suiteName: "group.ch.j0bot.ploxi0n") else { ecrireEtat(["groupe": false]); return }
         let conteneur = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.ch.j0bot.ploxi0n") != nil
         var change = false, tailles: [String: Int] = [:]
-        for k in ["ploxi0n.epingles", "ploxi0n.valeurs"] {
+        for k in ["ploxi0n.epingles", "ploxi0n.valeurs", "ploxi0n.lecture", "ploxi0n.cube"] {
             let v = UserDefaults.standard.string(forKey: "CapacitorStorage." + k)
             tailles[k] = v?.count ?? -1
             if v != nil && g.string(forKey: k) != v { g.set(v, forKey: k); change = true }
@@ -213,7 +219,7 @@ public class PloxiVocal: CAPPlugin, CAPBridgedPlugin {
 //   shazam()                ShazamKit (iOS 17+) : écoute le micro, rend titre, artiste, pochette, lien Apple Music
 //   musiqueChercher({q})    MusicKit : le catalogue Apple Music · musiqueJouer({id}) · musiquePause()  (jouer : un abonnement Apple Music)
 @objc(PloxiApple)
-public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate {
+public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLPreviewControllerDataSource {
     public let identifier = "PloxiApple"
     public let jsName = "PloxiApple"
     public let pluginMethods: [CAPPluginMethod] = [
@@ -229,7 +235,149 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate {
         CAPPluginMethod(name: "gameCenterScore", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "mouvementDebut", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "mouvementFin", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "ecranEveille", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "lecture", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "lectureFin", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "lampe", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "apercu", returnType: CAPPluginReturnPromise),
     ]
+
+    // 🔦 LA LAMPE DE POCHE (0.49) : lampe({ allume?, niveau? 0…1 }) ; sans « allume », elle bascule
+    @objc func lampe(_ call: CAPPluginCall) {
+        guard let d = AVCaptureDevice.default(for: .video), d.hasTorch else { call.reject("pas de lampe sur cet appareil"); return }
+        let allume = call.getBool("allume") ?? (d.torchMode != .on)
+        let niveau = Float(max(0.05, min(1.0, call.getDouble("niveau") ?? 1.0)))
+        do {
+            try d.lockForConfiguration()
+            if allume { try d.setTorchModeOn(level: niveau) } else { d.torchMode = .off }
+            d.unlockForConfiguration()
+            call.resolve(["allume": allume])
+        } catch { call.reject("lampe : \(error.localizedDescription)") }
+    }
+
+    // 👁 LE VISUALISEUR DE FICHIERS (0.49) : QuickLook — PDF, images, vidéos, Office, Pages/Numbers/Keynote, texte, USDZ (3D/AR)…
+    // apercu({ base64, nom }) ou apercu({ chemin }) ; partager, imprimer, annoter : les boutons d'iOS.
+    private var apercuURL: URL?
+    @objc func apercu(_ call: CAPPluginCall) {
+        var url: URL? = nil
+        if let chemin = call.getString("chemin"), !chemin.isEmpty {
+            url = chemin.hasPrefix("file://") ? URL(string: chemin) : URL(fileURLWithPath: chemin)
+        } else if let b64 = call.getString("base64"), let data = Data(base64Encoded: b64, options: .ignoreUnknownCharacters) {
+            let nom = (call.getString("nom") ?? "fichier").replacingOccurrences(of: "/", with: "-")
+            let u = FileManager.default.temporaryDirectory.appendingPathComponent(nom.isEmpty ? "fichier" : nom)
+            do { try data.write(to: u, options: .atomic); url = u } catch { call.reject("aperçu : \(error.localizedDescription)"); return }
+        }
+        guard let fichier = url else { call.reject("aperçu : rien à montrer (chemin ou base64)"); return }
+        DispatchQueue.main.async {
+            self.apercuURL = fichier
+            let ql = QLPreviewController()
+            ql.dataSource = self
+            self.bridge?.viewController?.present(ql, animated: true)
+            call.resolve(["ok": true])
+        }
+    }
+    public func numberOfPreviewItems(in controller: QLPreviewController) -> Int { apercuURL == nil ? 0 : 1 }
+    public func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem { (apercuURL ?? URL(fileURLWithPath: "/")) as NSURL }
+
+    // ♫ À L'ÉCOUTE (0.48, RS-7 : l'écran verrouillé disait « Spotify Embedded Player », sans pochette, ±10 s au lieu de ⏮ ⏭). Le son des
+    // ploxions joue souvent dans un iframe d'un autre site (le SDK de Spotify) : la page (maintenant.js) sait ce qui joue et le publie ici —
+    // titre, artiste, album, pochette, durée, position — dans MPNowPlayingInfoCenter ; les commandes (écran verrouillé, Centre de contrôle,
+    // écouteurs) reviennent à la page par l'événement « lecture » { commande: play | pause | toggle | suivant | precedent | seekto, position }.
+    // La pochette est aussi copiée dans l'App Group (lecture.jpg) pour le widget « À l'écoute ».
+    private var commandesBranchees = false
+    private var pochetteURL = ""
+    private var pochette: MPMediaItemArtwork?
+    private var infoLecture: [String: Any] = [:]
+    @objc func lecture(_ call: CAPPluginCall) {
+        let image = call.getString("image") ?? ""
+        let suivant = call.getBool("suivant") ?? true, precedent = call.getBool("precedent") ?? true
+        var info: [String: Any] = [
+            MPMediaItemPropertyTitle: call.getString("titre") ?? "",
+            MPMediaItemPropertyArtist: call.getString("artiste") ?? "",
+            MPMediaItemPropertyAlbumTitle: call.getString("album") ?? "",
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: call.getDouble("position") ?? 0,
+            MPNowPlayingInfoPropertyPlaybackRate: (call.getBool("enLecture") ?? true) ? 1.0 : 0.0,
+            MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.audio.rawValue,
+        ]
+        let duree = call.getDouble("duree") ?? 0
+        if duree > 0 { info[MPMediaItemPropertyPlaybackDuration] = duree }
+        DispatchQueue.main.async {
+            self.brancherCommandes()
+            let c = MPRemoteCommandCenter.shared()
+            c.nextTrackCommand.isEnabled = suivant
+            c.previousTrackCommand.isEnabled = precedent
+            if let p = self.pochette, self.pochetteURL == image { info[MPMediaItemPropertyArtwork] = p }
+            self.infoLecture = info
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+            call.resolve()
+            if image != self.pochetteURL { self.chargerPochette(image) }
+        }
+    }
+    @objc func lectureFin(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            self.infoLecture = [:]
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+            call.resolve()
+        }
+    }
+    private func chargerPochette(_ adresse: String) {
+        pochetteURL = adresse; pochette = nil
+        guard let url = URL(string: adresse), url.scheme == "https" else { return }
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            guard let self = self, let data = data, let img = UIImage(data: data) else { return }
+            // pour le widget : une copie réduite dans l'App Group
+            if let dossier = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.ch.j0bot.ploxi0n") {
+                let petite = UIGraphicsImageRenderer(size: CGSize(width: 300, height: 300)).image { _ in img.draw(in: CGRect(x: 0, y: 0, width: 300, height: 300)) }
+                try? petite.jpegData(compressionQuality: 0.85)?.write(to: dossier.appendingPathComponent("lecture.jpg"), options: .atomic)
+                UserDefaults(suiteName: "group.ch.j0bot.ploxi0n")?.set(adresse, forKey: "ploxi0n.lecture-pochette")
+            }
+            DispatchQueue.main.async {
+                guard self.pochetteURL == adresse else { return }
+                let art = MPMediaItemArtwork(boundsSize: img.size) { _ in img }
+                self.pochette = art
+                if !self.infoLecture.isEmpty {
+                    self.infoLecture[MPMediaItemPropertyArtwork] = art
+                    MPNowPlayingInfoCenter.default().nowPlayingInfo = self.infoLecture
+                }
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+        }.resume()
+    }
+    private func brancherCommandes() {
+        if commandesBranchees { return }
+        commandesBranchees = true
+        UIApplication.shared.beginReceivingRemoteControlEvents()
+        let c = MPRemoteCommandCenter.shared()
+        let relayer: (String, Double?) -> MPRemoteCommandHandlerStatus = { [weak self] commande, position in
+            var d: [String: Any] = ["commande": commande]
+            if let p = position { d["position"] = p }
+            self?.notifyListeners("lecture", data: d)
+            return .success
+        }
+        c.playCommand.addTarget { _ in relayer("play", nil) }
+        c.pauseCommand.addTarget { _ in relayer("pause", nil) }
+        c.togglePlayPauseCommand.addTarget { _ in relayer("toggle", nil) }
+        c.nextTrackCommand.addTarget { _ in relayer("suivant", nil) }
+        c.previousTrackCommand.addTarget { _ in relayer("precedent", nil) }
+        c.changePlaybackPositionCommand.addTarget { e in
+            guard let e = e as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
+            return relayer("seekto", e.positionTime)
+        }
+        // ⏮ ⏭ plutôt que ±10 s
+        c.skipForwardCommand.isEnabled = false
+        c.skipBackwardCommand.isEnabled = false
+        let actives: [MPRemoteCommand] = [c.playCommand, c.pauseCommand, c.togglePlayPauseCommand, c.nextTrackCommand, c.previousTrackCommand, c.changePlaybackPositionCommand]
+        for x in actives { x.isEnabled = true }
+    }
+
+    // ☀ L'ÉCRAN RESTE ALLUMÉ (0.47, navigator.wakeLock des ploxions → web-natif.js) : tant qu'un ploxion le tient, iOS ne met pas l'écran en veille
+    @objc func ecranEveille(_ call: CAPPluginCall) {
+        let actif = call.getBool("actif") ?? true
+        DispatchQueue.main.async {
+            UIApplication.shared.isIdleTimerDisabled = actif
+            call.resolve(["actif": actif])
+        }
+    }
 
     // LE MOUVEMENT (RS-7 12.10 : « des effets avec le gyroscope et l'accéléromètre ») : CoreMotion, sans permission à demander.
     // mouvementDebut({ hz }) → l'événement « mouvement » : attitude (roll, pitch, yaw), gravité (gx, gy, gz), accélération propre
@@ -416,10 +564,339 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate {
     }
 }
 
+// 🎞 LE LECTEUR INTÉGRÉ (0.49, RS-7 : « pour le ploxion stremio, il faut lui donner un lecteur intégré » ; choix : Apple d'abord, VLC en repli).
+//   ouvrir({ url, titre?, position? (s), moteur? auto|apple|vlc, entetes? {User-Agent, Referer…}, sousTitres? [url] }) → { moteur }
+//   fermer() · moteurs() → { apple: true, vlc: bool }
+//   événement « lecteur » : { etat: lecture | position | fin | ferme | erreur | repli, moteur, position, duree, raison? }
+// APPLE (AVPlayerViewController) : MP4, MOV, HLS, HEVC, AC-3/E-AC-3 ; PiP, AirPlay, l'écran verrouillé, les sous-titres HLS — tout iOS.
+// VLC (MobileVLCKit, seulement si le paquet est dans le build : option PLOXI0N_VLC) : MKV, AVI, WebM, DTS, sous-titres intégrés ou
+// externes, choix des pistes. En « auto » : les conteneurs qu'iOS ne lit pas vont droit à VLC ; sinon Apple, et VLC si Apple échoue.
+@objc(PloxiLecteur)
+public class PloxiLecteur: CAPPlugin, CAPBridgedPlugin, AVPlayerViewControllerDelegate {
+    public let identifier = "PloxiLecteur"
+    public let jsName = "PloxiLecteur"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "ouvrir", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "fermer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "moteurs", returnType: CAPPluginReturnPromise),
+    ]
+    static var vlcDisponible: Bool {
+        #if canImport(MobileVLCKit)
+        return true
+        #else
+        return false
+        #endif
+    }
+    private var appleVC: AVPlayerViewController?
+    private var observations: [NSKeyValueObservation] = []
+    private var finObs: NSObjectProtocol?
+    private var periodique: Any?
+    private var enPiP = false
+    private var derniere: (position: Double, duree: Double) = (0, 0)
+    #if canImport(MobileVLCKit)
+    private var ecranVLC: EcranVLC?
+    #endif
+
+    @objc func moteurs(_ call: CAPPluginCall) { call.resolve(["apple": true, "vlc": PloxiLecteur.vlcDisponible]) }
+
+    // (0.54, RS-7 : « ça prend tout l'écran et ça crash ») présenter depuis le contrôleur du DESSUS (une feuille, Safari, l'aperçu peuvent
+    // déjà être là), et jamais un contrôleur déjà présenté (UIKit lève une exception : le plantage)
+    private func presenter(_ vc: UIViewController) {
+        guard var haut = bridge?.viewController else { return }
+        while let p = haut.presentedViewController, !p.isBeingDismissed { haut = p }
+        if vc.presentingViewController != nil || vc.isBeingPresented || haut === vc { return }
+        haut.present(vc, animated: true)
+    }
+
+    private func emettre(_ etat: String, _ moteur: String, _ extra: [String: Any] = [:]) {
+        var d: [String: Any] = ["etat": etat, "moteur": moteur, "position": derniere.position, "duree": derniere.duree]
+        for (k, v) in extra { d[k] = v }
+        notifyListeners("lecteur", data: d)
+    }
+
+    @objc func ouvrir(_ call: CAPPluginCall) {
+        guard let adresse = call.getString("url"), let url = URL(string: adresse) else { call.reject("url manquante ou illisible"); return }
+        let titre = call.getString("titre") ?? ""
+        let position = call.getDouble("position") ?? 0
+        let moteur = call.getString("moteur") ?? "auto"
+        var entetes: [String: String] = [:]
+        for (k, v) in call.getObject("entetes") ?? [:] { if let t = v as? String { entetes[k] = t } }
+        let sousTitres = (call.getArray("sousTitres", String.self) ?? []).compactMap { URL(string: $0) }
+        let illisibleParApple = ["mkv", "avi", "webm", "wmv", "flv", "m2ts", "vob", "ogv", "divx", "rmvb"].contains(url.pathExtension.lowercased())
+        DispatchQueue.main.async {
+            self.toutFermer()
+            self.derniere = (position, 0)
+            if moteur == "vlc" || (moteur == "auto" && illisibleParApple && PloxiLecteur.vlcDisponible) {
+                if self.ouvrirVLC(url, titre: titre, position: position, entetes: entetes, sousTitres: sousTitres) { call.resolve(["moteur": "vlc"]); return }
+            }
+            self.ouvrirApple(url, titre: titre, position: position, entetes: entetes, sousTitres: sousTitres, repli: moteur != "apple" && PloxiLecteur.vlcDisponible)
+            call.resolve(["moteur": "apple"])
+        }
+    }
+
+    @objc func fermer(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { self.toutFermer(); call.resolve() }
+    }
+
+    private func toutFermer() {
+        if let vc = appleVC {
+            vc.player?.pause()
+            if let p = periodique { vc.player?.removeTimeObserver(p) }
+            vc.dismiss(animated: false)
+        }
+        periodique = nil; observations = []; appleVC = nil; enPiP = false
+        if let o = finObs { NotificationCenter.default.removeObserver(o) }
+        finObs = nil
+        #if canImport(MobileVLCKit)
+        if let e = ecranVLC { e.arreter(); e.dismiss(animated: false) }
+        ecranVLC = nil
+        #endif
+    }
+
+    // ---- Apple ----
+    private func ouvrirApple(_ url: URL, titre: String, position: Double, entetes: [String: String], sousTitres: [URL], repli: Bool) {
+        let options: [String: Any] = entetes.isEmpty ? [:] : ["AVURLAssetHTTPHeaderFieldsKey": entetes]
+        let item = AVPlayerItem(asset: AVURLAsset(url: url, options: options))
+        let lecteur = AVPlayer(playerItem: item)
+        let vc = AVPlayerViewController()
+        vc.player = lecteur
+        vc.delegate = self
+        vc.allowsPictureInPicturePlayback = true
+        vc.canStartPictureInPictureAutomaticallyFromInline = true   // (0.54) le PiP automatique en quittant l'app
+        vc.updatesNowPlayingInfoCenter = true
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [.allowAirPlay])
+        try? AVAudioSession.sharedInstance().setActive(true)   // sans session active, ni PiP ni son en arrière-plan
+        vc.modalPresentationStyle = .fullScreen
+        appleVC = vc
+        var pret = false
+        observations.append(item.observe(\.status, options: [.new]) { [weak self] it, _ in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                if it.status == .readyToPlay && !pret {
+                    pret = true
+                    if position > 1 { lecteur.seek(to: CMTime(seconds: position, preferredTimescale: 600)) }
+                    lecteur.play()
+                    self.emettre("lecture", "apple")
+                } else if it.status == .failed {
+                    let raison = it.error?.localizedDescription ?? "format non lu par iOS"
+                    if repli {
+                        self.emettre("repli", "apple", ["raison": raison])
+                        vc.dismiss(animated: false) { _ = self.ouvrirVLC(url, titre: titre, position: position, entetes: entetes, sousTitres: sousTitres) }
+                        self.appleVC = nil
+                    } else {
+                        self.emettre("erreur", "apple", ["raison": raison])
+                        vc.dismiss(animated: true)
+                        self.appleVC = nil
+                    }
+                }
+            }
+        })
+        finObs = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { [weak self] _ in self?.emettre("fin", "apple") }
+        periodique = lecteur.addPeriodicTimeObserver(forInterval: CMTime(seconds: 5, preferredTimescale: 1), queue: .main) { [weak self] t in
+            guard let self = self else { return }
+            let d = item.duration.seconds
+            self.derniere = (t.seconds.isFinite ? t.seconds : 0, d.isFinite ? d : 0)
+            self.emettre("position", "apple")
+        }
+        presenter(vc)
+    }
+    // ✕ (ou glisser vers le bas) : la fin du plein écran = fermé, sauf si l'image passe en PiP
+    public func playerViewController(_ playerViewController: AVPlayerViewController, willEndFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator) {
+        coordinator.animate(alongsideTransition: nil) { [weak self] ctx in
+            guard let self = self, !ctx.isCancelled, !self.enPiP else { return }
+            playerViewController.player?.pause()
+            self.emettre("ferme", "apple")
+        }
+    }
+    public func playerViewControllerWillStartPictureInPicture(_ playerViewController: AVPlayerViewController) { enPiP = true }
+    public func playerViewControllerDidStopPictureInPicture(_ playerViewController: AVPlayerViewController) {
+        enPiP = false
+        if playerViewController.presentingViewController == nil { emettre("ferme", "apple") }
+    }
+    public func playerViewController(_ playerViewController: AVPlayerViewController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
+        if playerViewController.presentingViewController != nil || playerViewController.isBeingPresented { completionHandler(true); return }
+        guard var haut = bridge?.viewController else { completionHandler(false); return }
+        while let p = haut.presentedViewController, !p.isBeingDismissed { haut = p }
+        haut.present(playerViewController, animated: true) { completionHandler(true) }
+    }
+
+    // ---- VLC ----
+    private func ouvrirVLC(_ url: URL, titre: String, position: Double, entetes: [String: String], sousTitres: [URL]) -> Bool {
+        #if canImport(MobileVLCKit)
+        let e = EcranVLC(url: url, titre: titre, depart: position, entetes: entetes, sousTitres: sousTitres)
+        e.surEvenement = { [weak self] etat, pos, duree in
+            guard let self = self else { return }
+            self.derniere = (pos, duree)
+            self.emettre(etat, "vlc")
+            if etat == "ferme" { self.ecranVLC = nil }
+        }
+        ecranVLC = e
+        presenter(e)
+        return true
+        #else
+        emettre("erreur", "vlc", ["raison": "VLC n'est pas dans ce build (option PLOXI0N_VLC)"])
+        return false
+        #endif
+    }
+}
+
+#if canImport(MobileVLCKit)
+/** l'écran du lecteur VLC : l'image, et des commandes qui s'effacent (toucher pour les revoir) */
+final class EcranVLC: UIViewController, VLCMediaPlayerDelegate {
+    let lecteur = VLCMediaPlayer()
+    var surEvenement: ((String, Double, Double) -> Void)?
+    private let url: URL, titre: String, depart: Double, entetes: [String: String], sousTitres: [URL]
+    private let image = UIView()
+    private let commandes = UIView()
+    private let curseur = UISlider()
+    private let temps = UILabel()
+    private let bLecture = UIButton(type: .system)
+    private var positionne = false
+    private var dernierEnvoi = Date.distantPast
+
+    init(url: URL, titre: String, depart: Double, entetes: [String: String], sousTitres: [URL]) {
+        self.url = url; self.titre = titre; self.depart = depart; self.entetes = entetes; self.sousTitres = sousTitres
+        super.init(nibName: nil, bundle: nil)
+        modalPresentationStyle = .fullScreen
+    }
+    required init?(coder: NSCoder) { fatalError("init(coder:) non utilisé") }
+
+    private var secondes: Double { Double(lecteur.time.intValue) / 1000 }
+    private var duree: Double { Double(lecteur.media?.length.intValue ?? 0) / 1000 }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        image.frame = view.bounds
+        image.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.addSubview(image)
+        lecteur.drawable = image
+        lecteur.delegate = self
+        let media = VLCMedia(url: url)
+        if let ua = entetes["User-Agent"] { media.addOption(":http-user-agent=\(ua)") }
+        if let ref = entetes["Referer"] { media.addOption(":http-referrer=\(ref)") }
+        lecteur.media = media
+        for s in sousTitres { lecteur.addPlaybackSlave(s, type: .subtitle, enforce: false) }
+        construire()
+        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(basculer)))
+        lecteur.play()
+    }
+    override var prefersStatusBarHidden: Bool { true }
+    override var prefersHomeIndicatorAutoHidden: Bool { true }
+
+    private func bouton(_ symbole: String, _ action: Selector) -> UIButton {
+        let b = UIButton(type: .system)
+        b.setImage(UIImage(systemName: symbole), for: .normal)
+        b.tintColor = .white
+        b.addTarget(self, action: action, for: .touchUpInside)
+        b.widthAnchor.constraint(equalToConstant: 44).isActive = true
+        b.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        return b
+    }
+    private func construire() {
+        commandes.backgroundColor = UIColor.black.withAlphaComponent(0.35)
+        commandes.frame = view.bounds
+        commandes.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.addSubview(commandes)
+        let nom = UILabel()
+        nom.text = titre.isEmpty ? url.lastPathComponent : titre
+        nom.textColor = .white
+        nom.font = .boldSystemFont(ofSize: 15)
+        nom.lineBreakMode = .byTruncatingTail
+        let haut = UIStackView(arrangedSubviews: [bouton("xmark", #selector(fermer)), nom, bouton("speaker.wave.2", #selector(pistesAudio)), bouton("captions.bubble", #selector(pistesSousTitres))])
+        haut.spacing = 8
+        haut.alignment = .center
+        bLecture.setImage(UIImage(systemName: "pause.fill"), for: .normal)
+        bLecture.tintColor = .white
+        bLecture.addTarget(self, action: #selector(lectureOuPause), for: .touchUpInside)
+        bLecture.widthAnchor.constraint(equalToConstant: 64).isActive = true
+        bLecture.heightAnchor.constraint(equalToConstant: 64).isActive = true
+        let milieu = UIStackView(arrangedSubviews: [bouton("gobackward.10", #selector(reculer)), bLecture, bouton("goforward.10", #selector(avancer))])
+        milieu.spacing = 36
+        milieu.alignment = .center
+        curseur.isContinuous = false
+        curseur.minimumTrackTintColor = UIColor(red: 0.47, green: 0.85, blue: 0.64, alpha: 1)
+        curseur.addTarget(self, action: #selector(chercher), for: .valueChanged)
+        temps.textColor = .white
+        temps.font = .monospacedDigitSystemFont(ofSize: 12, weight: .medium)
+        temps.text = "0:00"
+        let bas = UIStackView(arrangedSubviews: [curseur, temps])
+        bas.spacing = 10
+        bas.alignment = .center
+        for v in [haut, milieu, bas] { v.translatesAutoresizingMaskIntoConstraints = false; commandes.addSubview(v) }
+        let g = commandes.safeAreaLayoutGuide
+        NSLayoutConstraint.activate([
+            haut.topAnchor.constraint(equalTo: g.topAnchor, constant: 8), haut.leadingAnchor.constraint(equalTo: g.leadingAnchor, constant: 12), haut.trailingAnchor.constraint(equalTo: g.trailingAnchor, constant: -12),
+            milieu.centerXAnchor.constraint(equalTo: commandes.centerXAnchor), milieu.centerYAnchor.constraint(equalTo: commandes.centerYAnchor),
+            bas.bottomAnchor.constraint(equalTo: g.bottomAnchor, constant: -12), bas.leadingAnchor.constraint(equalTo: g.leadingAnchor, constant: 16), bas.trailingAnchor.constraint(equalTo: g.trailingAnchor, constant: -16),
+        ])
+    }
+    private func horaire(_ s: Double) -> String {
+        let t = Int(max(0, s)), h = t / 3600, m = (t % 3600) / 60, sec = t % 60
+        return h > 0 ? String(format: "%d:%02d:%02d", h, m, sec) : String(format: "%d:%02d", m, sec)
+    }
+
+    @objc private func basculer() { UIView.animate(withDuration: 0.2) { self.commandes.alpha = self.commandes.alpha > 0.5 ? 0 : 1 } }
+    @objc private func lectureOuPause() {
+        if lecteur.isPlaying { lecteur.pause() } else { lecteur.play() }
+    }
+    @objc private func reculer() { lecteur.jumpBackward(10) }
+    @objc private func avancer() { lecteur.jumpForward(10) }
+    @objc private func chercher() { lecteur.position = curseur.value }
+    @objc private func fermer() {
+        let p = secondes, d = duree
+        arreter()
+        dismiss(animated: true)
+        surEvenement?("ferme", p, d)
+    }
+    func arreter() { lecteur.stop() }
+
+    private func choisir(_ titreFeuille: String, noms: [Any]?, index: [Any]?, actuel: Int32, appliquer: @escaping (Int32) -> Void) {
+        let n = (noms ?? []).compactMap { $0 as? String }, i = (index ?? []).compactMap { ($0 as? NSNumber)?.int32Value }
+        let feuille = UIAlertController(title: titreFeuille, message: nil, preferredStyle: .actionSheet)
+        for (nom, k) in zip(n, i) {
+            feuille.addAction(UIAlertAction(title: (k == actuel ? "✓ " : "") + nom, style: .default) { _ in appliquer(k) })
+        }
+        feuille.addAction(UIAlertAction(title: "Annuler", style: .cancel))
+        feuille.popoverPresentationController?.sourceView = view
+        present(feuille, animated: true)
+    }
+    @objc private func pistesAudio() {
+        choisir("Piste audio", noms: lecteur.audioTrackNames, index: lecteur.audioTrackIndexes, actuel: lecteur.currentAudioTrackIndex) { [weak self] k in self?.lecteur.currentAudioTrackIndex = k }
+    }
+    @objc private func pistesSousTitres() {
+        choisir("Sous-titres", noms: lecteur.videoSubTitlesNames, index: lecteur.videoSubTitlesIndexes, actuel: lecteur.currentVideoSubTitleIndex) { [weak self] k in self?.lecteur.currentVideoSubTitleIndex = k }
+    }
+
+    func mediaPlayerStateChanged(_ aNotification: Notification) {
+        switch lecteur.state {
+        case .playing:
+            bLecture.setImage(UIImage(systemName: "pause.fill"), for: .normal)
+            if !positionne { positionne = true; if depart > 1 { lecteur.time = VLCTime(int: Int32(depart * 1000)) }; surEvenement?("lecture", secondes, duree) }
+        case .paused:
+            bLecture.setImage(UIImage(systemName: "play.fill"), for: .normal)
+        case .ended:
+            surEvenement?("fin", secondes, duree)
+        case .error:
+            surEvenement?("erreur", secondes, duree)
+        default:
+            break
+        }
+    }
+    func mediaPlayerTimeChanged(_ aNotification: Notification) {
+        let s = secondes, d = duree
+        if !curseur.isTracking, d > 0 { curseur.value = Float(s / d) }
+        temps.text = horaire(s) + (d > 0 ? " / " + horaire(d) : "")
+        if Date().timeIntervalSince(dernierEnvoi) > 5 { dernierEnvoi = Date(); surEvenement?("position", s, d) }
+    }
+}
+#endif
+
 class PloxionVC: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(PloxiVocal())
         bridge?.registerPluginInstance(PloxiApple())
+        bridge?.registerPluginInstance(PloxiLecteur())
     }
     private var plein: Bool { UserDefaults.standard.string(forKey: "CapacitorStorage.ploxi0n.plein-ecran") == "1" }
     // l'indicateur d'accueil : le plugin SystemBars de Capacitor 8 le gère déjà (CAPBridgeViewController.prefersHomeIndicatorAutoHidden n'est

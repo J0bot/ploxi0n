@@ -49,7 +49,7 @@
 	<string>Main</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
-		<string>armv7</string>
+		<string>arm64</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
@@ -87,7 +87,7 @@
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>ploxi0n utilise le Bluetooth pour voir et piloter les appareils autour de toi (capteurs, lumières, robots) quand un ploxion te le propose.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>ploxi0n lit les données Santé que tu autorises (pas, sommeil, rythme) pour tes ploxions santé ; elles restent sur ton téléphone.</string>
+	<string>ploxi0n lit les données Santé que tu autorises (pas, sommeil, rythme) pour tes ploxions santé. Elles restent sur ton téléphone, sauf si tu choisis d'envoyer un résumé à ton propre boxion.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>ploxi0n n'écrit dans Santé que ce que tu lui demandes d'enregistrer.</string>
 	<key>NFCReaderUsageDescription</key>

@@ -3,9 +3,72 @@
 *RS-7, 12.10.2026 : « il y a tellement de choses à ajouter à l'app, c'est abusé, il faut que t'aies déjà fait une énorme liste de tout ce qu'on compte faire ».*
 *Tout ce qui a été demandé depuis le brief v1 (11.10), rangé par axe. Sources : le brief PDF, `docs/plan-suite.md` (points 1–15), les braindumps du labo (`docs/braindumps/2026-10-1*`), les messages de la session. Tenue à jour à chaque version.*
 
-**Légende** : ✅ fait (version) · 🔨 en cours · ⏭ prochain · 💭 plus tard · ❓ attend une décision de RS-7
+**La source** : `docs/VISION-ORIGINELLE.md` (RS-7, 13.10 : la map géante des apps, les swipes dans quatre directions par mémoire musculaire, le cube, les modes qu'on designe soi-même, les amis off the grid en mesh). Quand un choix hésite, la relire.
+*RS-7, 13.10 : « on va rendre l'application ploxi0n selon ma vision que j'avais déjà depuis des années » : c'est le cap. Prochains chantiers issus de la vision : la map géante des apps (swipes en quatre directions, mémoire musculaire, dézoomer = la carte), commencer avec rien que le cube du xerboxion, les modes qu'on designe soi-même, les amis off the grid (codes d'amis, mesh xion).*
+*Trackpad haptique (RS-7, 13.10) : plus tard, la reconnaissance de dessins / de patterns tracés sur la surface (un motif dessiné = une action).*
+
+**Légende** : ✅ fait (version) · 🔨 en cours · ⏭ prochain · 💭 plus tard · ❓ attend une décision de RS-7 · ⚠ fait, mais jamais vu marcher sur l'iPhone
+
+*Dernière mise à jour : 0.62 (13.10) : freefall fait défiler, fractale légère. 0.61 : pages de côté (aujourd'hui, bibliothèque), le cube dans la salle du kion 4D, le portail, l'icône tenue qui flotte au gyroscope et montre ses bions. 0.60.1 : les bords ne sélectionnent plus. 0.60 : le jeu de cartes, le curseur de réel, le filtrage de photons, le cube et ses bions, le gyroscope, freefall, le banc du trackpad haptique. 0.59 : la fractale des ploxions (le glissement, tenir un bord : aperçu, fractale, slider). 0.58 : couleurs des icônes adoucies. 0.57 : le glyphe seul garde la forme du type, pleine. 0.56 : vivants sans plafond (12 par défaut, ∞ possible), glyphes plus grands, style « glyphe seul ». 0.55 : les icônes du xerboxion (la forme = le type, la couleur et le glyphe = la catégorie, l'atelier, proposer au labo), Face ID qui tient (arrière-plan, écran d'accueil), le labo = labo.j0bot.ch.* *Dernière mise à jour : 0.54 (13.10). La 0.52 tourne sur l'iPhone (build Codemagic) : RS-7 « ça lag de malade », « le wiki ne marche toujours pas ». La 0.45 est le dernier build TestFlight ; la 0.46 à la 0.51 attendent les minutes Actions
+(1.11) ou un build lancé à la main (`git tag v0.50 && git push origin v0.50`, ou Codemagic : docs/TESTFLIGHT.md, depuis main ; options « widgets » et « vlc » au lancement manuel).*
 
 ---
+
+## 00. 0.34 → 0.47 (le 12.10, la nuit)
+
+**Ce que la 0.47 a appris** : un faux iPhone (`tools/faux-iphone/`, `npm run faux-iphone`) — le vrai pont natif de Capacitor et les
+plugins tels que le Swift les déclare — a montré que **des pans entiers du natif n'avaient JAMAIS marché sur l'iPhone**, sans que le
+navigateur ni les tests le voient : le piège du proxy (`"Preferences.then()" is not implemented on ios`) cassait Raccourcis/Siri, les
+widgets, Face ID, les notifications et Santé depuis la 0.5 ; PloxionVC (et donc PloxiApple, PloxiVocal) n'était jamais utilisé
+avant la 0.46. Toutes les lignes ⚠ ci-dessous sont à **revérifier sur l'iPhone** avec le build 0.47.
+
+| | | |
+|---|---|---|
+| ✅ 0.34 | 🖼 Le fond d'écran (photo ou motif gravé, assombrir, flouter, l'accueil ou partout) | |
+| ✅ 0.35 | 📁 Le dossier ploxi0n dans l'app Fichiers (tsoins, vocaux, fond, ploxions ; le Dépôt) | |
+| ✅ 0.36 | ⚡ Snappy et vivant (boutons, cascades, feuilles) · ⇄ fusionner le compte né d'Apple | |
+| ✅ 0.37 | 🌀 Le thème vivant (gyroscope + accéléromètre) | ⚠ jamais vu avant 0.46 |
+| ✅ 0.38–0.40 | ◇ L'écran de chargement qui se raconte ; le démarrage ne bloque plus ; le chien de garde (6 s → où, recharger, mode sûr) | |
+| ✅ 0.41 | 📶 Les vidéos cachées s'arrêtent (7,88 Go de données en un jour) | |
+| ✅ 0.42–0.44 | 🛟 La garde du boxion local ; l'espace libre (caches vidés sous 1,5 Go) ; LE gel du démarrage (la boucle du thème vivant) | |
+| ✅ 0.45 | 🌀 Le vivant partout (barre, feuilles, bulles ; jOSNatif.mouvement) ; la raison d'un échec du gyroscope | dernier build TestFlight |
+| ✅ 0.46 | 🔌 PloxionVC enfin utilisé : PloxiApple et PloxiVocal branchés (gyroscope, météo, Shazam, MusicKit, HomeKit, Wi-Fi, Game Center, vocaux) | pas encore construit |
+| ✅ 0.47 | 🛠 **Le piège du proxy** : Raccourcis/Siri/widgets (Preferences), Face ID, notifications, Santé marchent enfin sur l'iPhone | tests/natif-proxy |
+| ✅ 0.47 | ⚡ **Le web devient natif** : vibrate, share, clipboard, geolocation, Notification, getBattery, SpeechRecognition, BarcodeDetector, devicemotion, orientation.lock, wakeLock, Web Bluetooth, Web NFC, window.open → l'iPhone, pour TOUS les ploxions | src/natif/web-natif.js |
+| ✅ 0.47 | ❤ **Santé connecté** : bion jOSSante (le hub 🌸 Santé, sur accord) + « ☁ envoyer » un résumé sur ton boxion (opt-in) | docs/SANTE.md |
+| ✅ 0.47 | ⚙ **Les réglages en pages et sous-pages** (accueil en 5 groupes ; ⚡ Natif, ❤ Santé ; gestes, haptique en sous-pages) | |
+| ✅ 0.47 | 📐 Le thème vivant cassait la mise en page (`px-vivant` = aussi la carte d'un ploxion vivant → `<html>` en flex, 630 px pour 393) | |
+| ✅ 0.47 | 📱 La vraie app : PrivacyInfo.xcprivacy, arm64, `fastlane/metadata` + lane `metadonnees`, docs/CONFIDENTIALITE.md | docs/APP-STORE.md |
+| ✅ 0.48 | ♫ **À l'écoute** : le Spotify Web Playback SDK (et toute Media Session d'un iframe) → l'écran verrouillé (titre, artistes, pochette, ⏮ ⏯ ⏭ au lieu de « Spotify Embedded Player » ±10 s), le mini-lecteur de l'accueil, la valeur « musique », jOSNatif.lecture | ⚠ WebKit publie aussi le sien : à voir sur l'iPhone qui gagne |
+| ✅ 0.48 | ◈ **Le widget Cube** (six valeurs des bions, penché selon la dernière inclinaison, ⟲ interactif, il tourne toutes les 20 min) + ♫ **le widget À l'écoute** (pochette, ⏮ ⏯ ⏭) ; ⚙ › Widgets : le cube 3D qui suit le gyroscope en direct, le choix des faces | build avec l'option « widgets » |
+| ✅ 0.49 | 🎞 **Le lecteur intégré** : Apple (AVPlayerViewController : PiP, AirPlay, écran verrouillé) + VLC en repli (MKV, DTS, sous-titres, pistes ; option de build `vlc`) ; plugion jOSplayer (Stremio), vidéo illisible → natif, vidéo muette → bulle, liens vlc:// infuse:// outplayer://, reprise de position, `ploxi0n://lire` pour les ploxions seuls | docs/LECTEUR.md ; ⚠ |
+| ✅ 0.49 | 📁 **Les bions de la liste** : envoyer vers (fichiers), aperçu QuickLook, zip/dezipper (fflate), la galerie (plusieurs photos) + import dans Fichiers, le sélecteur de fichiers, Plans (geo:, Google Maps → Plans), Mail, la lampe ; 🎛 contrôles du Centre de contrôle (iOS 18) | ⚠ |
+| ⏭ ❓ | Le partage de connexion : **iOS ne laisse aucune app l'allumer** (seulement rejoindre un Wi-Fi, fait) | limite d'Apple |
+| ⏭ | Le bouton « ▶ ploxi0n » dans le ploxion Stremio (côté labo, docs/LECTEUR.md) ; l'import des photos DANS le boxion (attend l'envoi de fichiers relayé) | |
+| ✅ 0.50 | 🥼 **labo-cape** (lot L1 de J0bot/labo-cape) : la blouse RS-7 en BLE (contrat `docs/BLE.md`, branche `ploxi0n-l1` de labo-cape) ou sa simulation (copie de cape-engine vérifiée contre la trace du Rust) ; vue live, commandes (42 °C max), LEDs, journal, session en tsoin | à essayer avec la vraie blouse (firmware L0) |
+| ✅ 0.50 | ◈ **Les modes** : ◇ chill-tekk · ⬡ xerboxion (l'UI du labo, `xerboxion.org/home?app=ploxi0n`, le dock par-dessus ; `postMessage({ ploxi0n: 'ouvrir', id })` ouvre un ploxion en natif) · 🤖 xerbot (la blouse, Bluetooth, HomeKit, la lampe, NFC, Wi-Fi, le bus `xerbot.cmd`) | côté labo : le postMessage, la session dans l'iframe |
+| ✅ 0.51 | ▤ **Les mini docks** (RS-7 : « tout doit pouvoir être minimisé en mini dock, et une page de tous les mini docks ») : `src/app/minidocks.js`, `jOSMiniDock.publier/retirer/surAction/liste/page` ; ploxions minimisés, musique, blouse, Santé, vidéo à reprendre, vocal, brouillon de tsoin ; ⧉ = la page ; glisser = fermer | ✅ faux iPhone (parcours-minidocks) |
+| ✅ 0.51 | 🎞 **Stremio → natif pour de vrai** : le plugion enveloppe `jOSPlayer.play` (le bion du labo ; 0.49 visait une API inventée) ; reprise `xb:resume:<key>`, `onNext`, sous-titres, repli web par événement, `jOSPlayer.natif` ; `window.open` d'un flux passe devant Safari ; les partages `capacitor://` → le lien du labo | ⚠ iPhone |
+| ✅ 0.51 | 🎧 **Spotify** : installable (le code extrait de `/px/spotify`, pas d'app.js au labo — vaut pour wiki, notes, calendar…) ; l'accroche du SDK tient dans tous les ordres, `disconnect` → fin ; la source `jOSSound` (music, Lecteur) ; le mode xerboxion reçoit `postMessage({ ploxi0n: 'lecture' })` ; `/auth/…` du serveur → Safari ; jamais de jeton en cache | ⚠ iPhone (le SDK sur WKWebView : DRM ?) |
+| ✅ 0.51 | 📶 Les bions absents (404 HTML de 3,5 Mo) notés 7 jours : ~10 Mo de moins par installation de Stremio | |
+| ✅ 0.52 | ◇ **Chill-tekk pour tous les ploxions** : les `--xr-*` du labo (jOSTheme, ×900 usages) redéfinis sur `<body>` avec les jetons de l'app + une base `:where()` (spécificité nulle) pour ce qu'un ploxion ne style pas ; `prefs.pxChill` (⚙ › Apparence). Limite : les couleurs écrites EN DUR restent (Horloge en vert) → côté labo, passer par `--xr-*` | ✅ galerie du faux iPhone |
+| ✅ 0.52 | ⬡ Mode xerboxion : l'iframe sondée avant d'être montrée (plus de blanc) ; la barre d'installation en erreur 5 s au lieu de 9 | |
+| ✅ 0.53 | ⚡ **Snappy** : le thème vivant posait --mx/--my sur `<html>` à 30 Hz (style de TOUTE la page recalculé ; 131 icônes × ombre floue + fond plein écran repeints) et tournait aussi dans les ploxions → transforms composités sur le fond et la grille (1×/image), variables à 8 Hz, arrêté dans un ploxion sauf abonné ; `will-change` retiré des 131 tuiles ; cascade sur 16 tuiles ; `content-visibility` ; ❄ `src/app/gel.js` (requestAnimationFrame d'un ploxion caché mis de côté) ; le shim n'écrit plus `natif/*` dans le journal xion et au plus 1/s par sujet | ⚠ iPhone |
+| ✅ 0.53 | 📖 **Les cadres du labo** (`src/natif/cadres-labo.js`) : `<iframe src="/wiki">` → le labo ; CSP `frame-ancestors` sans `capacitor:` (lue par HEAD) → une carte « ouvrir » ; idem le mode xerboxion. **Côté labo, une ligne** : ajouter `capacitor:` à `frame-ancestors` (comme `/app/yt` le fait déjà) → le wiki et l'UI du labo s'affichent DANS l'app | côté labo |
+| ✅ 0.54 | ◇ **Les glyphes** (`src/app/glyphes.js`, le trait du sprite du labo `public/glyphs/xerboxion_glyphs.svg`) : chaque ploxion son glyphe (mots-clés, sinon généré : forme × marque) ; le dock, les modes, les mini docks, les réglages ; `src/app/sans-emoji.js` remplace les emoji restants de l'interface de l'app (pas le contenu des ploxions du labo) ; `prefs.glyphes` | ✅ faux iPhone |
+| ✅ 0.54 | ✥ **Glisser-déposer** de l'accueil (appui long = soulever ; réordonner, dossier, page voisine ; sans bouger = le menu) ; `accueilDoc.ordre` | ✅ faux iPhone |
+| ✅ 0.54 | ▦ Les widgets dans chaque build Codemagic (`PLOXI0N_WIDGETS=1` dans codemagic.yaml) ; l'aperçu du cube animé (gyroscope via `mouvement.ecouter`, doigt, rotation lente) | ⚠ Swift des widgets jamais compilé depuis 0.48 |
+| ✅ 0.54 | 🎞 Vidéo : `playsinline` posé au `play()` ; PiP en quittant l'app (web : `webkitSetPresentationMode` ; natif : `canStartPictureInPictureAutomaticallyFromInline`, session audio active) ; le lecteur natif présenté depuis le contrôleur du dessus, jamais deux fois ; plein écran vidéo → `routeur.endormirCaches()` | ⚠ le plantage : sans journal — partager le rapport depuis TestFlight (lane `crashs`) |
+| ⏭ | 🎨 **Les peaux** (docs/LOOK.md : Ryoku d'abord, 43PR, Aperture OS) : une grammaire de panneau HUD, des palettes et des fonds | |
+| ✅ 0.52 | ⏱ Minuteur dans le pack hors ligne (Pomodoro l'ouvre) ; `routeurProxy.ouvrir` installe un ploxion du pack depuis le téléphone avant de tenter le réseau | ✅ faux iPhone |
+| ✅ 0.52 | 👤 ⚙ › Compte › « Supprimer mon compte » → `labo/profile` (la page de compte du labo, Laravel ; protégée par la connexion) — règle 5.1.1(v) côté app. ⚠ vérifier que `/profile` a bien « supprimer le compte » pour un compte venu de l'OAuth j0bot (sans mot de passe ?) | côté labo |
+| ⏭ | 🪟 **La bande façon niri** (RS-7 13.10) : les ploxions vivants en colonnes sur une bande qu'on fait défiler, le nouveau s'ouvre à droite, une vue d'ensemble | |
+| ⏭ | 📚 **Le lot de ploxions** (RS-7 13.10) : Zotero, Foliate (EPUB : foliate-js), browser façon Helium (le `web` du labo + natif), Blanket (ambiances), vaults Obsidian, LocalSend (natif, LAN), AppFlowy, Manim (le `math` du labo), mpv (le lecteur intégré), btop (+ le xerminal du labo) | composer avant de créer |
+| 💭 | Le mode **xeroction** (voir ce qu'on a fait : la frise des tsoins, le Nexus) ; XERB0T : les gestes de la blouse = ordres au robot (labo-cape EXTRAPOLATION) | |
+| ⏭ | **Construire la 0.50 et tout revérifier sur l'iPhone** (les ⚠) : `tools/faux-iphone` dit que c'est branché, seul le téléphone dit que ça marche | |
+| ⏭ ❓ | **Supprimer son compte DANS l'app** (règle App Store 5.1.1(v), bloquante) : une route labo, puis un bouton ⚙ › Compte | côté labo |
+| ⏭ | Le faux iPhone sur les ploxions du réseau (quand xerboxion.org est joignable depuis l'environnement) : tous les ploxions publics, chemin iPhone | |
+| 💭 | Encore plus de natif : Contacts, Calendrier/Rappels (EventKit), Live Activities, contrôles du Centre de contrôle, Apple Pay ? | nouveaux plugins |
 
 ## 0. Le 12.10 au soir (0.29 → 0.33) et la direction
 
@@ -48,7 +111,7 @@ contrepartie native (FOURNIS + src/natif/<bion>.js). Un ploxion qui « charge à
 | ✅ 0.20 | **L'haptique du son** (les basses → des vibrations, pour les sons lisibles par l'app) | |
 | ✅ 0.20 | **🫧 Les haptiques qu'on invente** (le studio, des motifs nommés) et chaque événement → un style ou un motif, dont **notification** ; `jOSNatif.haptique()` pour les ploxions | RS-7 : « inventer ses propres haptics » |
 | 💭 | **Le clicker du xerboxion** : découvrir tout le xerboxion, googolplex, 10^24 fps, 10^5 années de Minecraft ; connecté à tous les clickers (leurs sauvegardes) ; la progression passive = le tsoin engine | braindump labo 2026-10-12 |
-| ⏭ | Plus de plugions : jOSGeo → position native, jOSCache → boxion_local, jOSScanQR → caméra native, le son → audio natif… (au cas par cas : seulement quand la version native fait EXACTEMENT la même chose) | |
+| ✅ 0.47 | Plus de plugions — au niveau des API WEB : position, QR (BarcodeDetector), notifications, dictée, gyroscope, Bluetooth, NFC… passent par le natif pour tous les bions (web-natif.js) ; reste jOSCache → boxion_local | ⚠ à voir sur l'iPhone |
 | ⏭ | « La version la plus optimisée du même bion » : quand plusieurs sources servent un même bion (labo, boxion de chacun, natif), choisir la plus rapide et la plus légère | |
 | ⏭ | Les bions qui manquent encore : jOSComptes, jOSToast, jOSXerkionsForge (404 sur /px/bion-app) | côté labo : les servir seuls |
 | ✅ 0.15 | **Gérer les bions** (⚙ › Bions) : taille, qui les utilise, couper, mettre à jour, retirer | |
@@ -94,10 +157,10 @@ contrepartie native (FOURNIS + src/natif/<bion>.js). Un ploxion qui « charge à
 | ✅ 0.9 | Envoyer à un ploxion (bus), Lire une valeur, Chercher un ploxion | |
 | ✅ 0.9 | **Widgets** : 📌 épinglés, ◇ valeurs (aussi écran verrouillé) | App Group |
 | ✅ 0.11 | 📲 **Tes ploxions en vraies apps** (profil de clips fabriqué par le labo) | |
-| ⏭ | Widgets **interactifs** (iOS 17 : boutons, interrupteurs sans ouvrir l'app) | |
+| 🔨 0.48 | Widgets **interactifs** (iOS 17) : ⟲ du cube ; reste : ⏯ du widget À l'écoute sans ouvrir l'app (AudioPlaybackIntent, l'intent dans les deux cibles) | |
 | ⏭ | Un widget **par ploxion** (chaque ploxion publie le sien : une valeur, un bouton, un graphe) | |
 | 💭 | **Contrôles du Centre de contrôle** (iOS 18) : un bion = un contrôle | |
-| 💭 | **Live Activities / Dynamic Island** : un tsoin en cours, un minuteur, la musique | |
+| 💭 | **Live Activities / Dynamic Island** : un tsoin en cours, un minuteur, la musique (maintenant.js a déjà tout ce qu'il faut) | |
 | 💭 | **Un xer = un mode de concentration** avec ses pages d'accueil ; Focus Filter → l'app change d'accueil et de thème | « le vrai mode xerboxion sur le phone » |
 | 💭 | Liens universels `https://xerboxion.org/px/<id>` qui ouvrent l'app | Associated Domains coché |
 | 💭 | Le **mode xerboxion** de tout l'iPhone : réglages, son, interface pilotés par des ploxions et des bions (Raccourcis + automatisations) | tableau de plan-suite |
@@ -137,17 +200,17 @@ contrepartie native (FOURNIS + src/natif/<bion>.js). Un ploxion qui « charge à
 | ✅ 0.28 | **jOSBoxion connecté** : connecté et en ligne, le boxion fait foi (pourriture-4 et les autres retrouvent leur historique) ; copie locale et file d'écritures hors ligne | « j'ai pas l'historique de pourriture-4 » |
 | ✅ 0.28 | **Les médias du boxion** (vidéos, images, sons) par adresse signée : en flux dans le lecteur natif | |
 | ✅ 0.28 | **L'icône d'écran d'accueil EST le ploxion** (seul, depuis xerboxion.org) ; ou « ouvre ploxi0n dessus », au choix | « utiliser les ploxions ajoutés en app sur eux-mêmes » |
-| ✅ 0.27 | **🏠 HomeKit** (jOSNatif.maison : liste, allumer/éteindre — les kions dans le réel), **📶 Wi-Fi** d'un geste, **🎮 Game Center** (connexion, scores) ; **liens universels** et trousseau de xerboxion.org (Associated Domains) ; mémoire augmentée, notifications urgentes/communication, push (préparés) | RS-7 : « j'ai tout activé » |
+| ✅⚠ 0.27 | **🏠 HomeKit** (jOSNatif.maison : liste, allumer/éteindre — les kions dans le réel), **📶 Wi-Fi** d'un geste, **🎮 Game Center** (connexion, scores) ; **liens universels** et trousseau de xerboxion.org (Associated Domains) ; mémoire augmentée, notifications urgentes/communication, push (préparés) | RS-7 : « j'ai tout activé » |
 | ⏭ | Paquet suivant : iCloud (sauvegarde du boxion_local), Matter, Wallet (cartes du Nexus), VPN vers son boxion, App Attest, polices chill-tekk | |
 | ✅ 0.26 | **Chaque ploxion a sa signature haptique d'ouverture** (tirée de son nom ; remplaçable dans ⚙ › Haptique ; ou déclarée dans son manifeste `haptique`) | RS-7 12.10 |
-| ✅ 0.26 | **🍎 WeatherKit, ShazamKit, MusicKit** : jOSNatif.meteo() (avec l'attribution Apple Weather), shazam(), musique.chercher/jouer/pause | RS-7 12.10 |
-| ✅ 0.25 | **🎙 Les vocaux** : le bouton du dock (enregistrer / arrêter), la transcription d'iOS sur le téléphone avec le vocabulaire du xerboxion, la feuille (tsoin, pourriture-4, copier, partager), jOSNatif.vocal pour les ploxions | RS-7 12.10 |
-| ⏭ | La dictée DANS l'app (jOSNatif.ecouter : la reconnaissance vocale d'iOS pour les ploxions) ; les commandes vocales sans Siri | |
+| ✅⚠ 0.26 | **🍎 WeatherKit, ShazamKit, MusicKit** : jOSNatif.meteo() (avec l'attribution Apple Weather), shazam(), musique.chercher/jouer/pause | RS-7 12.10 |
+| ✅⚠ 0.25 | **🎙 Les vocaux** : le bouton du dock (enregistrer / arrêter), la transcription d'iOS sur le téléphone avec le vocabulaire du xerboxion, la feuille (tsoin, pourriture-4, copier, partager), jOSNatif.vocal pour les ploxions | RS-7 12.10 |
+| ✅ 0.47 | La dictée DANS l'app : jOSNatif.dictee et SpeechRecognition des ploxions → la reconnaissance d'iOS (enregistrer puis transcrire) ; reste : les commandes vocales sans Siri, la dictée en direct | ⚠ |
 | ✅ 0.23 | **LE vrai coupable du clavier** : le bion jOSKeyboard (clavier maison du xer) posait inputmode="none" partout → fourni par l'app, le clavier d'iOS gagne toujours | le rapport du test clavier |
 | ✅ 0.16 | **Le clavier s'ouvre** : correctif natif (tout focus compte comme un toucher, comme Cordova/Ionic) + focus pendant le geste | RS-7 : « le clavier n'apparaît pas quand il faut » |
 | ✅ 0.15 | Écrire partout : les champs gagnent toujours contre un user-select:none d'un bion | RS-7 : « je peux jamais écrire nulle part » |
 | ✅ 0.11 | **Chill-tekk-7026** : presque noir, violets délavés, aucun dégradé, arrondi chill usé, patine, inscriptions gravées | |
-| ⏭ | Les **trois modes** : chill-tekk (tsoin engine seul, chill absolu) · xerboxion (tout tourne) · xeroction (voir ce qu'on a fait) | braindump 11.10 |
+| 🔨 0.50 | Les **modes** : chill-tekk · xerboxion (l'UI du labo) · xerbot (le monde physique) ; reste xeroction (voir ce qu'on a fait) | braindump 11.10, RS-7 13.10 |
 | ⏭ | Les ploxions eux-mêmes en chill-tekk-7026 (le thème du labo appliqué dans l'app) | |
 | 💭 | Les **xers** (thèmes, dispositions) choisis dans l'app | |
 | 💭 | L'UI **organique vivante** : mitose (uncraft), fusion (craft), membranes, tubes | APRÈS le système bions |
@@ -169,9 +232,9 @@ contrepartie native (FOURNIS + src/natif/<bion>.js). Un ploxion qui « charge à
 | ✅ 0.4 | **Face ID** : verrous par ploxion, coffre | |
 | ✅ 0.21 | Face ID : chaque échec dit sa raison (iOS), « réessayer » | RS-7 : « Face ID ne fonctionne pas » |
 | ⏭ | **Le journal du mode test** : tout logger ; des modes de consentement (xerboxion : demander de faire un tsoin ; chill-tekk : un tampon envoyé seulement si on veut ; par ploxion : partager son journal au Nexus ou au chaoxion) | RS-7 12.10 |
-| ⏭ | **ultimate-bluetooth** sur iPhone (bluetooth-le en bion) | |
-| ⏭ | Santé (pas, sommeil) en bions lisibles par les ploxions | lecture seule, sur accord |
-| 💭 | NFC → tags qui ouvrent des ploxions ou lancent des tsoins (les **kions** dans le réel) | |
+| 🔨 0.47 | **ultimate-bluetooth** sur iPhone : Web Bluetooth (requestDevice, GATT, notifications) → Bluetooth LE natif ; à essayer avec le ploxion | ⚠ |
+| ✅ 0.47 | Santé en bion lisible par les ploxions (jOSSante, sur accord) + le résumé sur le boxion (opt-in) | docs/SANTE.md |
+| 🔨 0.47 | NFC : Web NFC (NDEFReader : lire, écrire texte/lien) et jOSNatif.nfc → Core NFC ; reste : des tags qui ouvrent des ploxions ou lancent des tsoins (les **kions** dans le réel) | ⚠ |
 
 ## 9. Les ploxions à faire vraiment marcher sur l'iPhone
 
@@ -218,9 +281,10 @@ contrepartie native (FOURNIS + src/natif/<bion>.js). Un ploxion qui « charge à
 
 | | Quoi | Notes |
 |---|---|---|
-| ✅ | 47 tests (jsdom), banc labo 55/55, `tools/diagnostic-iphone.mjs` (le vrai chemin de l'app) | |
+| ✅ | 89 tests (jsdom), banc labo 55/55, `tools/diagnostic-iphone.mjs` (le vrai chemin de l'app) | |
+| ✅ 0.47 | **Le faux iPhone** (`tools/faux-iphone/`, `npm run faux-iphone`) : le vrai pont de Capacitor + les plugins tels que le Swift les déclare ; parcours de l'app, des API web natives, des réglages, de la largeur | |
 | ⏭ | Diagnostic sur **tous** les ploxions publics (un par processus), publié comme compat.json | |
-| ⏭ | Captures automatiques des écrans (Chromium, taille iPhone) à chaque version | |
+| 🔨 0.47 | Captures automatiques des écrans (Chromium, taille iPhone) à chaque version : le faux iPhone les prend ; reste à les publier à chaque version | |
 
 ---
 

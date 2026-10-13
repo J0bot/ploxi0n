@@ -16,13 +16,13 @@
 // Toute autre route du serveur répond 503 {horsLigne:true} SANS toucher le réseau, et s'inscrit dans le journal 'manques' (ce qu'il faudra
 // réimplémenter) ; une URL externe part sur le réseau (les ploxions « online only »), comptée dans shim.sortants.
 // relais = { routes: [{ prefixe, vers(chemin) → url }], general() → bool, vers(chemin) → url, envoyer({methode, url, headers, corps}) →
-// {status, texte, entetes} } : les routes nommées (ex. /bother → https://xerboxion.org/api/app/bother) et, en MODE CONNECTÉ (general()),
+// {status, texte, entetes} } : les routes nommées (ex. /bother → https://labo.j0bot.ch/api/app/bother) et, en MODE CONNECTÉ (general()),
 // toute autre route du serveur partent sur le réseau ; un GET réussi est gardé (boxion_local « routes ») et resservi hors ligne.
 
 const NS_LS = 'localStorage';
 const NS_BOX = (ns) => 'box:' + ns;
 // (0.39, RS-7 : « ça reste bloqué » au lancement) /marketplace et /bions sont des fichiers DE L'APP : avant, en mode connecté, ils partaient
-// sur xerboxion.org — sans délai, sur un réseau faible, le démarrage attendait pour toujours
+// sur labo.j0bot.ch — sans délai, sur un réseau faible, le démarrage attendait pour toujours
 const ASSETS = /^\/(ploxions|assets|vendor|icons|fonts|img|data|marketplace|bions)\//;
 
 export async function installerShim({ boxion, fenetre = globalThis.window, routeur = null, journalSortant = null, relais = null, distant = null } = {}) {
@@ -56,12 +56,23 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
   function diffuser(topic, payload) {
     for (const t of [topic, '*']) for (const cb of [...(etat.subs.get(t) || [])]) { try { cb(payload, topic); } catch (e) { /* un abonné ne casse pas le bus */ } }
   }
+  // (0.53, RS-7 : « l'app lag de malade ») chaque emit s'écrivait dans le journal xion (SQLite, par le pont natif) : le gyroscope à 10 Hz,
+  // la blouse à ~10 messages/s… Les capteurs de l'app (ploxion.natif.*) ne s'écrivent plus ; les autres, au plus une fois par seconde par
+  // sujet (la dernière valeur de la seconde gagne). Le bus local, lui, reste immédiat.
+  const journalT = new Map(), enAttente = new Map();
+  function journaliser(topic, data) {
+    if (/^ploxion\.natif\./.test(topic)) return;
+    const t = Date.now(), dernier = journalT.get(topic) || 0;
+    if (t - dernier >= 1000) { journalT.set(topic, t); boxion.append('xion', { topic, data }).catch(() => {}); return; }
+    if (!enAttente.has(topic)) W.setTimeout(() => { const d = enAttente.get(topic); enAttente.delete(topic); journalT.set(topic, Date.now()); boxion.append('xion', { topic, data: d }).catch(() => {}); }, 1000 - (t - dernier));
+    enAttente.set(topic, data);
+  }
   function emit(id, port, payload, versXion) {
     const topic = 'ploxion.' + id + (port ? '.' + port : '');
     diffuser(topic, payload);
     let data = versXion !== undefined ? versXion : payload;
     try { data = JSON.parse(JSON.stringify(data === undefined ? null : data)); } catch (e) { data = String(data); }
-    boxion.append('xion', { topic, data }).catch(() => {});
+    journaliser(topic, data);
     return topic;
   }
   function on(topic, cb) {
@@ -245,7 +256,7 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
       if (p === '/px/boxion/list') return json({ items: await jb.list(q.get('ns')) });
       if (p === '/px/boxion/del') return json(await jb.del(b.ns, b.key));
     }
-    // le relais : les routes nommées (ex. /bother → l'API sans session), puis, en MODE CONNECTÉ, toute route du serveur → xerboxion.org
+    // le relais : les routes nommées (ex. /bother → l'API sans session), puis, en MODE CONNECTÉ, toute route du serveur → labo.j0bot.ch
     // (le jeton de la personne si elle est connectée) ; un GET réussi est gardé dans boxion_local « routes » : le mode avion le resservira
     const rel = relais && ((relais.routes || []).find(r => p === r.prefixe || p.startsWith(r.prefixe + '/')) || (relais.general && relais.general() ? { vers: relais.vers } : null));
     const cle = methode + ' ' + p + url.search;
@@ -262,7 +273,7 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
         const type = (r.entetes && (r.entetes['content-type'] || r.entetes['Content-Type'])) || 'application/json';
         // (0.42) jamais une réponse horodatée (?since=, ?t=, ?_=, ?after= : une clé neuve à chaque sondage → le cache grossissait sans fin et
         // SQLite ralentissait jusqu'à figer le démarrage), jamais au-delà de 200 Ko
-        if (methode === 'GET' && r.status === 200 && r.texte && r.texte.length < 2e5 && !/[?&](since|t|_|after|ts|depuis)=/.test(url.search)) boxion.put('routes', cle, { texte: r.texte, type, le: Date.now() }).catch(() => {});
+        if (methode === 'GET' && r.status === 200 && r.texte && r.texte.length < 2e5 && !/[?&](since|t|_|after|ts|depuis)=/.test(url.search) && !/\/(token|auth|oauth|login|logout)\b/i.test(p)) boxion.put('routes', cle, { texte: r.texte, type, le: Date.now() }).catch(() => {});
         return new W.Response(r.status === 204 || r.status === 304 ? null : r.texte, { status: r.status, headers: { 'Content-Type': type } });
       } catch (e) {
         const c = methode === 'GET' ? await boxion.get('routes', cle).catch(() => null) : null;

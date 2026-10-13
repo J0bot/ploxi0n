@@ -1,7 +1,7 @@
 // ⚡ jOSNatif — LE bion natif de ploxi0n (RS-7 12.10 : « un seul bion pour tout quand on peut, toujours la version la plus optimisée » ;
 // « c'est ça le but d'une app native : pouvoir tout utiliser les choses natives pour plus de vitesse »).
 // Un seul bion, toutes les capacités de l'iPhone, pour tous les ploxions : chaque fonction passe par le natif (plugins Capacitor) sur l'iPhone,
-// et par le web ailleurs (le xer de xerboxion.org n'a pas jOSNatif : un ploxion teste « if (window.jOSNatif) »).
+// et par le web ailleurs (le xer de labo.j0bot.ch n'a pas jOSNatif : un ploxion teste « if (window.jOSNatif) »).
 //   jOSNatif.natif                     vrai sur l'iPhone
 //   partager({ texte, url, titre })    la feuille de partage d'iOS
 //   vibrer('leger'|'moyen'|'fort'|'selection'|'succes'|'erreur')
@@ -14,8 +14,8 @@
 //   parler(texte, { langue })          la synthèse vocale d'iOS
 //   meteo() WeatherKit · shazam() ShazamKit · musique.chercher/jouer/pause MusicKit (Apple Music)
 //   capacites() → la liste de ce qui est disponible ici
-import { registerPlugin } from '@capacitor/core';
-const PloxiApple = registerPlugin('PloxiApple');
+import { PloxiApple, PloxiVocal } from './plugins-app.js';
+import { MOTS } from './vocabulaire.js';
 
 export function installerJosNatif(W = globalThis.window) {
   const natif = !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
@@ -75,7 +75,20 @@ export function installerJosNatif(W = globalThis.window) {
     },
     wifi: (ssid, mdp) => PloxiApple.wifiRejoindre({ ssid: String(ssid), mdp: mdp ? String(mdp) : '' }),   // 📶 rejoindre un Wi-Fi
     jeu: { connecter: () => PloxiApple.gameCenter(), score: (classement, score) => PloxiApple.gameCenterScore({ classement: String(classement), score: Math.round(+score || 0) }) },   // 🎮 Game Center
-    capacites() { return natif ? ['partager', 'vibrer', 'copier', 'coller', 'photo', 'position', 'notifier', 'ouvrirLien', 'appareil', 'batterie', 'reseau', 'parler', 'meteo', 'shazam', 'musique', 'vocal', 'haptique', 'maison', 'wifi', 'jeu'] : ['partager', 'vibrer', 'copier', 'position', 'parler'].filter(k => k !== 'partager' || W.navigator.share); },
+    // (0.47) le reste du natif, en une ligne chacun
+    dictee: {   // 🎙 la dictée DANS l'app : commencer() puis arreter() → le texte (reconnaissance d'iOS, vocabulaire du xerboxion)
+      commencer: () => PloxiVocal.commencer(),
+      async arreter({ langue } = {}) { const r = await PloxiVocal.arreter(); return ((await PloxiVocal.transcrire({ chemin: r.chemin, langue: langue || W.navigator.language || 'fr-FR', vocabulaire: Object.keys(MOTS) })) || {}).texte || ''; },
+    },
+    nfc: {   // ◉ un tag NFC : lire() → [{ type, texte }] ; ecrire(texte | { url })
+      lire: () => new Promise((ok, ko) => { if (!W.NDEFReader) return ko(new Error('NFC : sur l\'iPhone')); const l = new W.NDEFReader(); l.onreading = (e) => ok((e.message.records || []).map(r => ({ type: r.recordType, texte: r.data ? new TextDecoder(r.encoding || 'utf-8').decode(r.data) : '' }))); l.scan().catch(ko); }),
+      ecrire: (x) => { if (!W.NDEFReader) throw new Error('NFC : sur l\'iPhone'); return new W.NDEFReader().write(x && x.url ? { records: [{ recordType: 'url', data: String(x.url) }] } : String(x)); },
+    },
+    async wifiInfo() { if (!natif) throw new Error('Wi-Fi : sur l\'iPhone'); const { CapacitorWifi } = await import('@capgo/capacitor-wifi'); const r = {}; try { r.ssid = (await CapacitorWifi.getSsid()).ssid; } catch (e) { r.ssid = null; } try { r.ip = (await CapacitorWifi.getIpAddress()).ipAddress; } catch (e) { r.ip = null; } return r; },
+    async navigateur(url) { if (natif) { const { Browser } = await import('@capacitor/browser'); return Browser.open({ url: String(url), presentationStyle: 'popover' }); } W.open(url, '_blank', 'noopener'); },   // 🧭 Safari dans l'app
+    ecranEveille: (actif = true) => natif ? PloxiApple.ecranEveille({ actif: !!actif }) : Promise.resolve(),   // ☀ l'écran ne s'éteint pas
+    async orientation(type) { if (!natif) return; const { ScreenOrientation } = await import('@capacitor/screen-orientation'); return type ? ScreenOrientation.lock({ orientation: type }) : ScreenOrientation.unlock(); },   // ⟲ 'portrait' | 'landscape' | rien = libre
+    capacites() { return natif ? ['partager', 'vibrer', 'copier', 'coller', 'photo', 'position', 'notifier', 'ouvrirLien', 'appareil', 'batterie', 'reseau', 'parler', 'meteo', 'shazam', 'musique', 'vocal', 'dictee', 'haptique', 'maison', 'wifi', 'wifiInfo', 'jeu', 'nfc', 'navigateur', 'ecranEveille', 'orientation', 'sante', 'mouvement', 'lecture', 'lecteur', 'envoyer', 'apercu', 'zip', 'dezipper', 'photos', 'choisirFichiers', 'carte', 'mail', 'lampe'] : ['partager', 'vibrer', 'copier', 'position', 'parler'].filter(k => k !== 'partager' || W.navigator.share); },
   };
   W.jOSNatif = api;
   return api;

@@ -123,7 +123,7 @@ button{font-family:inherit;-webkit-user-select:none;user-select:none}
 .px-tiroir button.on{border-color:var(--bio)}
 .px-tiroir button .px-ic{display:inline-flex;width:30px;height:30px;font-size:1rem;border-radius:9px;vertical-align:middle;margin-right:6px}
 /* les bords : invisibles au repos ; pendant le glissé, la veilleuse monte avec le geste */
-.px-bord{position:fixed;top:calc(env(safe-area-inset-top,0px) + 56px);bottom:calc(env(safe-area-inset-bottom,0px) + 20px);width:16px;z-index:40;touch-action:none;--p:0}
+.px-bord{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 56px);bottom:calc(env(safe-area-inset-bottom,0px) + 20px);width:16px;z-index:40;touch-action:none;--p:0}
 .px-bord-g{left:0}.px-bord-d{right:0}
 .px-bord::after{content:"";position:absolute;top:50%;width:4px;height:calc(40px + 80px * var(--p));transform:translateY(-50%);border-radius:2px;background:var(--bio);opacity:0;box-shadow:0 0 10px var(--glow)}
 .px-bord-g::after{left:2px}.px-bord-d::after{right:2px}
@@ -282,6 +282,9 @@ html.px-haut-on #ploxi0n{padding-top:max(env(safe-area-inset-top,0px),22px)}
 .px-sante-barres rect{fill:var(--acc)}.px-sante-barres rect:last-of-type{fill:var(--bio)}
 .px-sante-barres text{font:600 9px var(--mono);fill:var(--muted)}
 .px-journal-bas.px-puces{display:flex;gap:8px;justify-content:center}
+/* (0.47) les puces du bas (Santé, journal) : une rangée, pas cinq gros boutons empilés */
+.px-journal-bas.px-puces .px-puce{width:auto;flex:1 1 auto;min-height:40px;padding:0 12px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:600 13px var(--police)}
+.px-journal-bas.px-puces .px-puce.on{border-color:var(--acc);background:var(--acc);color:#0d0a16}
 
 /* ---- ⬇ la barre d'installation · 📦 le gestionnaire ---- */
 .px-installation{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 88px);z-index:70;background:var(--surface) var(--grain);border:var(--trait) solid var(--bord2);border-radius:16px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
@@ -323,11 +326,11 @@ html:not(.px-fond-partout):has(#ploxi0n.px-mode-ploxion) .px-fond{display:none}
    - le doigt : chaque bouton s'enfonce sous le doigt (90 ms) et s'éclaire, l'icône d'une tuile se tasse ;
    - l'accueil se pose en cascade (14 ms d'une tuile à l'autre) ; un ploxion s'ouvre en montant (200 ms) ;
    - les feuilles montent du bas, le voile fond ; les bulles glissent. */
-.px-tuile,.px-dock button,.px-h-b,.px-puce,.px-tiroir button,.px-feuille button,.px-mini,.px-retour,.px-compte,.px-ligne,.px-tuto-btn button,.px-journal-bas button,.px-gest-act button{transition:transform .09s cubic-bezier(.3,.7,.4,1),filter .09s,background-color .15s,border-color .15s;will-change:transform}
+.px-tuile,.px-dock button,.px-h-b,.px-puce,.px-tiroir button,.px-feuille button,.px-mini,.px-retour,.px-compte,.px-ligne,.px-tuto-btn button,.px-journal-bas button,.px-gest-act button{transition:transform .09s cubic-bezier(.3,.7,.4,1),filter .09s,background-color .15s,border-color .15s}
 .px-tuile:active,.px-dock button:active,.px-h-b:active,.px-puce:active,.px-tiroir button:active,.px-feuille button:active,.px-mini:active,.px-retour:active,.px-compte:active,.px-ligne:active,.px-tuto-btn button:active,.px-journal-bas button:active,.px-gest-act button:active{transform:scale(.93);filter:brightness(1.3)}
 .px-tuile .px-ic{transition:transform .12s cubic-bezier(.3,.7,.4,1),box-shadow .12s}
 .px-tuile:active .px-ic{transform:scale(.88);box-shadow:0 0 0 2px var(--acc),0 0 14px var(--glow)}
-.px-entree .px-accueil .px-tuile{animation:px-pose .28s cubic-bezier(.2,.9,.3,1.25) both}
+.px-entree .px-accueil .px-tuile:nth-child(-n+16){animation:px-pose .28s cubic-bezier(.2,.9,.3,1.25) both}   /* (0.53) pas 131 animations d'un coup */
 .px-entree .px-accueil .px-tuile:nth-child(1){animation-delay:14ms}.px-entree .px-accueil .px-tuile:nth-child(2){animation-delay:28ms}.px-entree .px-accueil .px-tuile:nth-child(3){animation-delay:42ms}.px-entree .px-accueil .px-tuile:nth-child(4){animation-delay:56ms}.px-entree .px-accueil .px-tuile:nth-child(5){animation-delay:70ms}.px-entree .px-accueil .px-tuile:nth-child(6){animation-delay:84ms}.px-entree .px-accueil .px-tuile:nth-child(7){animation-delay:98ms}.px-entree .px-accueil .px-tuile:nth-child(8){animation-delay:112ms}
 .px-entree .px-accueil .px-tuile:nth-child(9){animation-delay:126ms}.px-entree .px-accueil .px-tuile:nth-child(10){animation-delay:140ms}.px-entree .px-accueil .px-tuile:nth-child(11){animation-delay:154ms}.px-entree .px-accueil .px-tuile:nth-child(12){animation-delay:168ms}.px-entree .px-accueil .px-tuile:nth-child(13){animation-delay:182ms}.px-entree .px-accueil .px-tuile:nth-child(14){animation-delay:196ms}.px-entree .px-accueil .px-tuile:nth-child(15){animation-delay:210ms}.px-entree .px-accueil .px-tuile:nth-child(16){animation-delay:224ms}
 .px-entree .px-accueil .px-tuile:nth-child(17){animation-delay:238ms}.px-entree .px-accueil .px-tuile:nth-child(18){animation-delay:252ms}.px-entree .px-accueil .px-tuile:nth-child(19){animation-delay:266ms}.px-entree .px-accueil .px-tuile:nth-child(20){animation-delay:280ms}.px-entree .px-accueil .px-tuile:nth-child(21){animation-delay:294ms}.px-entree .px-accueil .px-tuile:nth-child(22){animation-delay:308ms}.px-entree .px-accueil .px-tuile:nth-child(23){animation-delay:322ms}.px-entree .px-accueil .px-tuile:nth-child(24){animation-delay:336ms}
@@ -347,26 +350,281 @@ html:not(.px-fond-partout):has(#ploxi0n.px-mode-ploxion) .px-fond{display:none}
 @media (prefers-reduced-motion:reduce){.px-entree .px-accueil .px-tuile,.px-scene>.px-hote,.px-voile,.px-voile>.px-tiroir,.px-feuille>div,.px-bulle,.px-barre{animation:none}}
 
 /* ---- 🌀 LE THÈME VIVANT : chill-tekk suit le téléphone (gyroscope + accéléromètre, src/app/mouvement.js → --mx, --my de −1 à 1) ----
-   Tout passe par html.px-vivant : éteint (Calme, réglage, hors iPhone) rien ne bouge. Aucun dégradé : des décalages, des ombres, une arête. */
-html.px-vivant .px-fond i{transform:translate3d(calc(var(--mx,0) * -16px),calc(var(--my,0) * -16px),0) scale(1.07)}
-html.px-vivant body{background-position:calc(var(--mx,0) * -5px) calc(var(--my,0) * -5px)}
-html.px-vivant .px-tuile .px-ic{translate:calc(var(--mx,0) * 3px) calc(var(--my,0) * 3px);
-  background-position:calc(var(--mx,0) * 4px) calc(var(--my,0) * 4px);
-  box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -5px) calc(var(--my,0) * -5px + 6px) 14px rgba(0,0,0,.5)}
-/* l'arête du haut attrape la lumière quand on incline le haut du téléphone vers soi */
-html.px-vivant .px-tuile .px-ic::after{content:'';position:absolute;inset:-1px;border-radius:inherit;border-top:1.5px solid var(--acc);pointer-events:none;
-  opacity:calc(max(0, var(--my,0) * -1) * .55 + max(0, var(--mx,0)) * .2)}
-html.px-vivant .px-tete h1,html.px-vivant .px-grave{text-shadow:calc(var(--mx,0) * -1.4px) calc(var(--my,0) * -1.4px) 0 rgba(0,0,0,.85)}
-html.px-vivant .px-logo{translate:calc(var(--mx,0) * 2px) calc(var(--my,0) * 2px)}
-html.px-vivant .px-dock{box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -4px) calc(var(--my,0) * -3px + 8px) 22px rgba(0,0,0,.55)}
+   Tout passe par html.px-anime (0.47 : px-vivant, le nom d'avant, était AUSSI la carte d'un ploxion vivant → <html> devenait une carte flex,
+   la page débordait de côté avec une barre verte à gauche) : éteint (Calme, réglage, hors iPhone) rien ne bouge. Aucun dégradé : des décalages, des ombres, une arête. */
+/* (0.53) le fond et la grille glissent par un transform posé par mouvement.js (composité, aucun recalcul de style) */
+html.px-anime .px-fond i,html.px-anime .px-accueil>.px-pages,html.px-anime .px-accueil>.px-plat{will-change:transform}
+/* (0.53) plus d'ombre ni d'arête par icône qui suit le téléphone : 131 ombres floues recalculées à 30 Hz, c'était le lag */
+html.px-anime .px-tuile .px-ic{box-shadow:inset 0 0 0 1px var(--filet),0 6px 14px rgba(0,0,0,.45)}
+html.px-anime .px-logo{translate:calc(var(--mx,0) * 2px) calc(var(--my,0) * 2px)}
+html.px-anime .px-dock{box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -4px) calc(var(--my,0) * -3px + 8px) 22px rgba(0,0,0,.55)}
 /* un choc : les icônes tressautent une fois */
 html.px-choc .px-tuile .px-ic{animation:px-choc .32s cubic-bezier(.3,1.6,.4,1)}
 @keyframes px-choc{30%{transform:translateY(-4px) rotate(-3deg)}60%{transform:translateY(2px) rotate(2deg)}}
-@media (prefers-reduced-motion:reduce){html.px-vivant .px-fond i{transform:none}html.px-choc .px-tuile .px-ic{animation:none}}
+@media (prefers-reduced-motion:reduce){html.px-anime .px-fond i{transform:none}html.px-choc .px-tuile .px-ic{animation:none}}
 
 /* (0.45) le thème vivant partout : la barre d'un ploxion, les feuilles, les bulles suivent aussi le téléphone ; les ploxions lisent
    var(--mx) / var(--my) sur <html> ou jOSNatif.mouvement.ecouter() */
-html.px-vivant .px-barre{box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -3px) calc(var(--my,0) * -3px + 5px) 16px rgba(0,0,0,.45)}
-html.px-vivant .px-tiroir{translate:calc(var(--mx,0) * 4px) calc(var(--my,0) * 3px);box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -6px) calc(var(--my,0) * -6px + 10px) 30px rgba(0,0,0,.55)}
-html.px-vivant .px-bulle{translate:calc(var(--mx,0) * 5px) calc(var(--my,0) * 4px)}
-html.px-vivant .px-barre .px-retour,html.px-vivant .px-mini{translate:calc(var(--mx,0) * 1.5px) calc(var(--my,0) * 1.5px)}
+html.px-anime .px-barre{box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -3px) calc(var(--my,0) * -3px + 5px) 16px rgba(0,0,0,.45)}
+html.px-anime .px-tiroir{translate:calc(var(--mx,0) * 4px) calc(var(--my,0) * 3px);box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -6px) calc(var(--my,0) * -6px + 10px) 30px rgba(0,0,0,.55)}
+html.px-anime .px-bulle{translate:calc(var(--mx,0) * 5px) calc(var(--my,0) * 4px)}
+html.px-anime .px-barre .px-retour,html.px-anime .px-mini{translate:calc(var(--mx,0) * 1.5px) calc(var(--my,0) * 1.5px)}
+/* ♫ (0.48) le mini-lecteur de l'accueil : ce qui joue (Spotify, un ploxion en arrière-plan), au-dessus du dock ; le toucher rouvre le ploxion */
+.px-maintenant{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 92px);z-index:29;display:flex;align-items:center;gap:10px;padding:7px 8px 7px 7px;
+  border-radius:18px;border:var(--trait) solid var(--bord);background:var(--surface) var(--grain);box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 0 var(--bio),0 10px 24px rgba(0,0,0,.45)}
+.px-maintenant[hidden],#ploxi0n:not(.px-mode-accueil) ~ .px-maintenant{display:none}
+.px-sans-dock .px-maintenant{bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}
+.px-maintenant img,.px-maintenant .px-mt-ic{width:42px;height:42px;border-radius:10px;object-fit:cover;flex:none;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.px-maintenant .px-mt-t{flex:1;min-width:0;display:flex;flex-direction:column}
+.px-maintenant .px-mt-t b,.px-maintenant .px-mt-t small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-maintenant .px-mt-t b{font:600 14px var(--police);color:var(--txt)}.px-maintenant .px-mt-t small{font-size:12px;color:var(--muted)}
+.px-maintenant button{flex:none;width:40px;height:40px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font-size:15px;padding:0}
+.px-maintenant .px-mt-p{border-color:var(--bio);color:var(--bio)}
+body:has(.px-maintenant:not([hidden])) .px-accueil{padding-bottom:calc(176px + env(safe-area-inset-bottom,0px))}
+html.px-anime .px-maintenant{box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 0 var(--bio),calc(var(--mx,0) * -4px) calc(var(--my,0) * -3px + 10px) 24px rgba(0,0,0,.5)}
+/* ◈ (0.48) le cube des bions : l'aperçu de ⚙ › Widgets suit le téléphone (le thème vivant pose --mx/--my) */
+.px-cube-scene{height:200px;display:flex;align-items:center;justify-content:center;perspective:700px}
+.px-cube{width:118px;height:118px;position:relative;transform-style:preserve-3d;transition:transform .12s linear;
+  transform:rotateX(calc(-24deg + var(--my,0) * 30deg)) rotateY(calc(-34deg + var(--mx,0) * 42deg))}
+.px-cube-f{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px;box-sizing:border-box;text-align:center;
+  border:var(--trait) solid var(--bord2);border-radius:14px;background:var(--surface) var(--grain);box-shadow:inset 0 0 0 1px var(--filet),inset 0 2px 0 rgba(190,175,230,.08);backface-visibility:hidden}
+.px-cube-f b{font-size:22px;line-height:1}.px-cube-f span{font:700 15px var(--police);color:var(--txt);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.px-cube-f small{font:600 8.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.px-cube-avant{transform:translateZ(59px)}.px-cube-arriere{transform:rotateY(180deg) translateZ(59px)}.px-cube-droite{transform:rotateY(90deg) translateZ(59px)}
+.px-cube-gauche{transform:rotateY(-90deg) translateZ(59px)}.px-cube-haut{transform:rotateX(90deg) translateZ(59px);border-color:var(--bio)}.px-cube-bas{transform:rotateX(-90deg) translateZ(59px)}
+/* 🎞 (0.49) la bulle « pas de son ? ▶ lecteur natif » */
+.px-bulle-lecteur{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:60;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 14px;border-radius:16px;
+  border:var(--trait) solid var(--bio);background:var(--surface) var(--grain);color:var(--txt);font:600 13px var(--police);box-shadow:0 10px 24px rgba(0,0,0,.5)}
+.px-bulle-lecteur span{flex:1;min-width:0}.px-bulle-lecteur button{flex:none;min-height:38px;padding:0 12px;border-radius:11px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:600 13px var(--police)}
+.px-bulle-lecteur button:first-of-type{border-color:var(--bio);color:var(--bio)}
+/* 🥼 (0.50) labo-cape : la blouse RS-7 */
+.px-cape-puiss{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
+.px-cape-puiss div{padding:10px 6px;border-radius:14px;border:var(--trait) solid var(--bord);background:var(--surface);text-align:center}
+.px-cape-puiss b{display:block;font:700 16px var(--police);color:var(--txt)}.px-cape-puiss small{font-size:10.5px;color:var(--muted)}
+.px-cape-zones{display:flex;flex-direction:column;gap:6px}
+.px-cape-z{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;border:var(--trait) solid var(--bord);background:var(--surface)}
+.px-cape-z.off{opacity:.55}.px-cape-z i{width:14px;height:14px;border-radius:5px;flex:none;box-shadow:0 0 10px currentColor}
+.px-cape-z span{flex:1;min-width:0;position:relative;padding-bottom:6px}.px-cape-z b{font:600 14px var(--police)}.px-cape-z small{display:block;color:var(--muted);font-size:12px}
+.px-cape-z em{position:absolute;left:0;bottom:0;height:3px;border-radius:2px;background:var(--bio);max-width:100%}
+.px-cape-z button{min-height:34px;padding:0 10px;border-radius:10px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:600 12px var(--police)}
+.px-cape-sp{display:flex;align-items:center;gap:8px;margin:10px 0}.px-cape-sp b{font:700 18px var(--police);min-width:64px;text-align:center}
+.px-cape-sp button{min-height:40px;min-width:44px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:700 16px var(--police)}
+.px-cape-sp button:last-child{margin-left:auto;font-size:12px;padding:0 10px}
+.px-cape-leds{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.px-cape-leds i{width:22px;height:22px;border-radius:50%;box-shadow:0 0 12px rgba(255,255,255,.15)}
+.px-cape-log{max-height:160px;overflow:auto;font:11px/1.5 var(--mono);color:var(--muted);background:var(--creux);border-radius:12px;padding:10px;white-space:pre-wrap}
+/* ◈ (0.50) les modes : chill-tekk · xerboxion (l'UI du labo) · xerbot (le monde physique) */
+.px-modes{display:flex;gap:6px;margin:0 0 12px;padding:4px;border-radius:14px;border:var(--trait) solid var(--bord);background:var(--surface)}
+.px-modes button{flex:1;min-height:34px;border:0;border-radius:10px;background:none;color:var(--muted);font:600 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.px-modes button.on{background:var(--surface2);color:var(--txt);box-shadow:inset 0 -2px 0 var(--bio)}
+html.px-m-xerboxion .px-accueil>.px-vues,html.px-m-xerboxion .px-accueil>.px-pages,html.px-m-xerboxion .px-accueil>.px-plat,html.px-m-xerboxion .px-accueil>.px-points,html.px-m-xerboxion .px-accueil>.px-sous,
+html.px-m-xerbot .px-accueil>.px-vues,html.px-m-xerbot .px-accueil>.px-pages,html.px-m-xerbot .px-accueil>.px-plat,html.px-m-xerbot .px-accueil>.px-points,html.px-m-xerbot .px-accueil>.px-sous{display:none}
+.px-labo{position:relative;height:calc(100vh - 230px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:360px;border-radius:18px;overflow:hidden;border:var(--trait) solid var(--bord);background:#07050c}
+.px-labo iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.px-xb-c{display:flex;align-items:center;gap:10px;padding:10px 12px;margin:6px 0;border-radius:14px;border:var(--trait) solid var(--bord);background:var(--surface)}
+.px-xb-c .ic{font-size:1.2rem;width:30px;text-align:center}.px-xb-c>span:nth-child(2){flex:1;min-width:0}.px-xb-c b{font:600 14px var(--police)}.px-xb-c small{display:block;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.px-xb-c .act{display:flex;gap:6px}.px-xb-c button,.px-xb-bus button{min-height:34px;padding:0 10px;border-radius:10px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:600 12px var(--police)}
+.px-xb-maison{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:4px 0 8px}
+.px-xb-maison button{min-height:48px;padding:6px 10px;text-align:left;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:600 12.5px var(--police)}
+.px-xb-maison button.on{border-color:var(--bio);color:var(--bio)}.px-xb-maison small{display:block;color:var(--muted);font-weight:400}
+.px-xb-bus{display:flex;gap:6px;margin:6px 0}.px-xb-bus input{flex:1;min-width:0;padding:9px 12px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--creux);color:inherit;font:16px var(--police)}
+/* ▤ (0.51) LES MINI DOCKS : tout ce qui vit en arrière-plan (ploxions minimisés, la musique, la blouse, la Santé, la vidéo à reprendre,
+   le vocal, le tsoin pas fini), empilé au-dessus du dock ; ▤ ouvre la page de tous. Seulement sur l'accueil ; --px-md = leur hauteur. */
+.px-md{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 92px);z-index:29;display:flex;flex-direction:column-reverse;gap:6px}
+.px-md[hidden],#ploxi0n:not(.px-mode-accueil) ~ .px-md{display:none}
+.px-sans-dock .px-md{bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}
+.px-md-c{display:flex;align-items:center;gap:9px;height:52px;box-sizing:border-box;padding:5px 6px 5px 5px;border-radius:17px;border:var(--trait) solid var(--bord);background:var(--surface) var(--grain);
+  box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 0 hsl(var(--t,270) 38% 62%),0 10px 24px rgba(0,0,0,.45);touch-action:pan-y;transition:transform .18s,opacity .18s;-webkit-user-select:none;user-select:none}
+.px-md-c.joue{box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 0 var(--bio),0 10px 24px rgba(0,0,0,.45)}
+.px-md-c.neuf{animation:px-pose .26s cubic-bezier(.2,.9,.3,1.1) both}
+.px-md-ic{flex:none;width:40px;height:40px;border-radius:11px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:hsl(var(--t,270) 22% 16%);font-size:1.15rem;box-shadow:inset 0 0 0 1px var(--filet)}
+.px-md-ic img{width:100%;height:100%;object-fit:cover}
+.px-md-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.px-md-t b,.px-md-t small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-md-t b{font:600 13.5px var(--police);color:var(--txt)}.px-md-t small{font-size:11.5px;color:var(--muted)}
+.px-md-pr{display:block;height:3px;border-radius:2px;background:var(--surface2);margin-top:3px;overflow:hidden}.px-md-pr>i{display:block;height:100%;background:var(--bio)}
+.px-md-c button,.px-tiroir .px-md-c button{flex:none;width:38px;height:38px;min-height:0;margin:0;padding:0;border-radius:11px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:600 15px var(--police);text-align:center;box-shadow:none}
+.px-md-c button.on,.px-tiroir .px-md-c button.on{border-color:var(--bio);color:var(--bio)}
+.px-md-c .px-md-x,.px-tiroir .px-md-c .px-md-x{width:30px;border-color:transparent;background:none;color:var(--muted);font-size:13px}
+.px-md-tous{position:absolute;right:4px;top:-30px;height:26px;padding:0 10px;border-radius:9px;border:var(--trait) solid var(--bord);background:var(--surface) var(--grain);color:var(--muted);font:600 11.5px var(--mono);letter-spacing:.06em;box-shadow:inset 0 0 0 1px var(--filet)}
+.px-md:not(:has(.px-md-c)) .px-md-tous{position:static;align-self:flex-end}
+.px-accueil{padding-bottom:calc(110px + var(--px-md,0px) + env(safe-area-inset-bottom,0px))}
+.px-sans-dock .px-accueil{padding-bottom:calc(30px + var(--px-md,0px) + env(safe-area-inset-bottom,0px))}
+.px-mode-accueil .px-bulle{bottom:calc(env(safe-area-inset-bottom,0px) + 96px + var(--px-md,0px))}
+.px-labo{height:calc(100vh - 230px - var(--px-md,0px) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+html.px-anime .px-md-c{box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 0 hsl(var(--t,270) 38% 62%),calc(var(--mx,0) * -4px) calc(var(--my,0) * -3px + 10px) 24px rgba(0,0,0,.5)}
+html.px-anime .px-md-c.joue{box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 0 var(--bio),calc(var(--mx,0) * -4px) calc(var(--my,0) * -3px + 10px) 24px rgba(0,0,0,.5)}
+/* la page de tous les mini docks : une feuille, chaque carte avec toutes ses actions et ✕ */
+.px-md-page{max-height:84vh;overflow-y:auto;overscroll-behavior:contain}
+.px-md-page .px-md-l{display:flex;flex-direction:column;gap:7px;margin:4px 0 10px}
+.px-md-page .px-md-c{height:auto;min-height:56px;box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 0 hsl(var(--t,270) 38% 62%)}
+.px-md-page .px-md-c.joue{box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 0 var(--bio)}
+.px-md-page .px-md-c.ici{border-color:var(--bio)}.px-md-page .px-md-c.dort{opacity:.7}
+.px-md-page .px-md-t small{white-space:normal}
+.px-md-bas{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.px-tiroir .px-md-bas .px-md-tout{text-align:center;color:#e8a0b8}
+.px-calme .px-md-c.neuf{animation:none}
+@media (prefers-reduced-motion:reduce){.px-md-c.neuf{animation:none}}
+/* ◇ (0.52) CHILL-TEKK POUR TOUS LES PLOXIONS (RS-7 : « il faut chill-tekk-iser tous les ploxions pour avoir un thème commun »). Les ploxions
+   du labo se peignent avec les variables du xer (--xr-accent ×334, --xr-border ×214, --xr-text, --xr-muted, --xr-bg, --xr-font-ui…, que
+   jOSTheme pose sur <html>) : l'app les redéfinit sur <body> avec les jetons chill-tekk → tous les ploxions (et ce qu'ils accrochent hors
+   de leur hôte) prennent le thème de l'app, sans réécrire une ligne. Puis une base À SPÉCIFICITÉ NULLE (:where) pour ce qu'un ploxion ne
+   style pas du tout (boutons, champs, liens, titres, tableaux, barres de défilement) : sa moindre règle à lui l'emporte. ⚙ › Apparence. */
+html.px-px-chill body{
+  --xr-bg:var(--bg); --xr-bg2:var(--creux); --xr-bg-soft:var(--surface); --xr-panel:var(--surface); --xr-surface:var(--surface); --xr-card:var(--surface2);
+  --xr-border:var(--bord); --xr-line:var(--bord); --xr-text:var(--txt); --xr-fg:var(--txt); --xr-muted:var(--muted); --xr-text-dim:var(--muted);
+  --xr-accent:var(--acc); --xr-accent2:var(--bio); --xr-accent-2:var(--bio); --xr-accent-soft:rgba(165,151,207,.16); --xr-accent-weak:rgba(165,151,207,.1);
+  --xr-glow:var(--glow); --xr-ok:var(--bio); --xr-radius:14px; --xr-font-ui:var(--police); --xr-font:var(--police); --xr-font-mono:var(--mono);
+  --neon-green:var(--bio);
+}
+:where(html.px-px-chill .px-hote){color:var(--txt);font-family:var(--police);color-scheme:dark;accent-color:var(--acc);scrollbar-color:var(--bord2) transparent}
+:where(html.px-px-chill .px-hote) :where(button,select,input:not([type=checkbox],[type=radio],[type=range],[type=color],[type=file]),textarea){
+  font:inherit;color:var(--txt);background:var(--surface2);border:var(--trait) solid var(--bord);border-radius:11px;padding:6px 12px;min-height:36px;box-sizing:border-box;box-shadow:inset 0 0 0 1px var(--filet)}
+:where(html.px-px-chill .px-hote) :where(input,textarea)::placeholder{color:var(--muted)}
+:where(html.px-px-chill .px-hote) :where(input,textarea,select):focus{outline:2px solid var(--acc2);outline-offset:1px}
+:where(html.px-px-chill .px-hote) :where(a){color:var(--acc)}
+:where(html.px-px-chill .px-hote) :where(h1,h2,h3,h4){color:var(--txt);font-family:var(--police);letter-spacing:.01em}
+:where(html.px-px-chill .px-hote) :where(hr){border:0;border-top:1px solid var(--bord)}
+:where(html.px-px-chill .px-hote) :where(th,td){border-bottom:1px solid var(--bord);padding:6px 8px}
+:where(html.px-px-chill .px-hote) :where(code,pre,kbd){font-family:var(--mono)}
+:where(html.px-px-chill .px-hote) ::selection{background:rgba(165,151,207,.35)}
+.px-labo{background:var(--bg) var(--grain)}.px-labo iframe{transition:opacity .3s}
+.px-labo-attente{position:absolute;inset:0;margin:0;display:flex;align-items:center;justify-content:center;font:600 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+/* ⬡ (0.53) une page du labo que le labo refuse d'encadrer dans l'app : une carte, pas un blanc */
+.px-cadre-labo{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin:16px;padding:16px;border-radius:18px;border:var(--trait) solid var(--bord);background:var(--surface) var(--grain);box-shadow:inset 0 0 0 1px var(--filet)}
+.px-cadre-labo .g{font-size:1.4rem;color:var(--acc)}.px-cadre-labo b{font:600 15px var(--police);color:var(--txt)}.px-cadre-labo small{color:var(--muted);font-size:12.5px}
+.px-cadre-labo button{margin-top:6px;min-height:40px;padding:0 16px;border-radius:12px;border:var(--trait) solid var(--acc2);background:var(--surface2);color:var(--acc);font:600 14px var(--police)}
+.px-labo .px-cadre-labo{position:absolute;inset:0;margin:0;justify-content:center;align-items:center;text-align:center}
+/* ⚡ (0.53) SNAPPY : les tuiles et les lignes hors de l'écran ne sont ni mises en page ni peintes (131 ploxions) */
+.px-tuile,.px-ligne{content-visibility:auto;contain-intrinsic-size:auto 104px}
+/* ◇ (0.54) LES GLYPHES (src/app/glyphes.js) : le trait du xerboxion, en couleur du texte ; .f = plein, .p = pointillé */
+.px-g{width:1.15em;height:1.15em;display:inline-block;vertical-align:-.2em;flex:none;fill:none;stroke:currentColor;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+.px-g .f{fill:currentColor;stroke:none}.px-g .p{stroke-dasharray:7 7;stroke-width:4.5}
+.px-g-pale{opacity:.55}
+.px-ic .px-g{width:48%;height:48%;color:hsl(var(--t,265) 42% 80%);stroke-width:5}
+.px-ligne .px-ic .px-g{width:58%;height:58%}
+.px-md-g .px-g{width:56%;height:56%;color:hsl(var(--t,265) 42% 80%);stroke-width:5}
+.px-h-b .px-g,.px-mini .px-g,.px-retour .px-g,.px-verrou .px-g{width:22px;height:22px}
+.px-compte .px-g{width:18px;height:18px;margin-right:2px}
+.px-modes .px-g{width:15px;height:15px;margin-right:4px;vertical-align:-3px}
+.px-vues .px-g{width:14px;height:14px;margin-right:4px;vertical-align:-2px}
+.px-xb-c .ic .px-g,.rg .ic .px-g{width:20px;height:20px;color:var(--acc)}
+.px-md-c button .px-g{width:16px;height:16px}
+.px-barre .px-g{width:20px;height:20px}
+/* ✥ (0.54) le glisser-déposer de l'accueil : la tuile soulevée suit le doigt, les autres tremblent */
+.px-fantome{position:fixed;z-index:90;width:64px;height:64px;transform:translate(-50%,-50%) perspective(400px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) scale(1.14);transition:transform .12s linear;pointer-events:none;box-shadow:0 14px 30px rgba(0,0,0,.6),inset 0 0 0 1px var(--filet);opacity:.95}
+.px-souleve{opacity:.25}
+.px-tri .px-tuile:not(.px-souleve) .px-ic{animation:px-tremble .26s ease-in-out infinite alternate}
+.px-tri .px-tuile:nth-child(2n) .px-ic{animation-delay:-.13s}
+.px-tuile.px-cible .px-ic{border-color:var(--bio);box-shadow:0 0 0 3px var(--glow),inset 0 0 0 1px var(--filet)}
+@keyframes px-tremble{from{transform:rotate(-1.6deg)}to{transform:rotate(1.6deg)}}
+.px-calme .px-tri .px-tuile .px-ic{animation:none}
+@media (prefers-reduced-motion:reduce){.px-tri .px-tuile .px-ic{animation:none}}
+/* ⬡ (0.55) les icônes xerkion (src/app/xerkion-icone.js) : le SVG se suffit, la tuile ne fait que le cadrer */
+.xki{width:1.3em;height:1.3em;display:inline-block;vertical-align:-.3em;flex:none;border-radius:22%}
+.px-ic:has(>.xki){overflow:hidden;background:#05070c;border-color:transparent}
+.px-ic>.xki{position:absolute;inset:0;width:100%;height:100%;border-radius:0}
+.px-h-b:has(>.xki){padding:0;overflow:hidden;border-color:transparent;background:#05070c}
+.px-h-b>.xki{width:100%;height:100%;border-radius:0;display:block}
+.px-md-g:has(>.xki){width:100%;height:100%;display:block}.px-md-g .xki{width:100%;height:100%;border-radius:0;display:block}
+.px-dock .px-h-b:has(>.xki){width:48px;height:48px}
+/* ⬡ (0.55) l'atelier d'une icône (src/natif/ecran-accueil.js) */
+.px-atelier{max-height:88vh;overflow:auto}
+.px-at-tete{display:flex;gap:14px;align-items:center;margin:4px 0 10px}
+.px-at-apercu{flex:none;width:96px;height:96px;border-radius:24px;overflow:hidden;box-shadow:0 0 18px rgba(0,0,0,.6),inset 0 0 0 1px var(--filet)}
+.px-at-apercu .xki{width:100%;height:100%;border-radius:0;display:block}
+.px-at-nom{flex:1;display:flex;flex-direction:column;gap:6px;font:600 11.5px var(--mono);color:var(--muted);letter-spacing:.04em}
+.px-at-nom input{font:600 15px var(--police);color:var(--txt);background:var(--surface2);border:var(--trait) solid var(--bord);border-radius:11px;padding:10px 12px;min-width:0}
+.px-at-t{margin:12px 2px 6px;font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.px-at-pal{display:flex;gap:10px;flex-wrap:wrap}
+.px-tiroir .px-at-pal button{width:34px;min-height:34px;height:34px;padding:0;margin:0;border-radius:10px;background:var(--c);border:2px solid transparent;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+.px-tiroir .px-at-pal button.on{border-color:var(--txt);box-shadow:0 0 12px var(--c)}
+.px-at-puces{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+.px-tiroir .px-at-puces .px-puce.on{border-color:var(--bio);color:var(--txt)}
+.px-at-gl{display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:6px;max-height:30vh;overflow:auto;padding:2px}
+.px-tiroir .px-at-gl button{width:auto;min-height:42px;padding:0;margin:0;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.px-tiroir .px-at-gl button.on{color:var(--bio);border-color:var(--bio)}
+.px-at-gl .px-g{width:22px;height:22px}
+.px-at-liste{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px}
+.px-tiroir .px-at-liste button{flex:none;width:auto;min-height:0;margin:0;padding:6px 10px 6px 6px;display:flex;align-items:center;gap:8px;border-radius:12px;font:600 12px var(--police)}
+.px-at-liste .xki{width:34px;height:34px;border-radius:9px}
+.px-at-liste .px-g{width:14px;height:14px;opacity:.6}
+.px-tiroir .px-choix .px-tuile.on .px-ic:has(>.xki){box-shadow:0 0 0 2px var(--bio),0 0 12px var(--glow)}
+.px-tiroir .px-at-puces label.px-puce{display:inline-flex;align-items:center;gap:6px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);cursor:pointer}
+.px-at-puces label.px-puce .px-g{width:16px;height:16px}
+.px-at-type{margin:8px 2px 0 !important}
+/* ⧉ (0.59) la fractale des ploxions, l'aperçu, le slider et le glissement (src/app/fractale.js) */
+@keyframes px-fx-in{from{opacity:0}}
+.px-fx-fond{position:fixed;inset:0;z-index:39;background:rgba(5,6,12,.62);-webkit-backdrop-filter:blur(10px) saturate(.85);backdrop-filter:blur(10px) saturate(.85);animation:px-fx-in .28s ease-out}
+.px-fx .px-scene{z-index:41}
+.px-mode-accueil.px-fx .px-scene,.px-mode-accueil .px-scene.px-transit{display:block;position:fixed;left:0;right:0;bottom:0;top:calc(env(safe-area-inset-top,0px) + 56px);z-index:41;pointer-events:none}
+.px-mode-accueil .px-scene.px-transit{z-index:30}
+.px-scene>.px-hote.px-fx-carte,.px-scene>.px-hote.px-fx-carte[hidden]{display:block;pointer-events:none;overflow:hidden;border-radius:28px;transform-origin:50% 50%;box-shadow:0 22px 70px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.07);transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s,border-radius .3s;will-change:transform}
+.px-fx-icone{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;border-radius:28px;background:var(--surface,#0d0d16) var(--grain);box-shadow:0 22px 70px rgba(0,0,0,.6),inset 0 0 0 1px var(--filet,rgba(255,255,255,.07));pointer-events:none;transform-origin:50% 50%;transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s;will-change:transform}
+.px-fx-ic{width:42%;max-width:260px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--bio)}
+.px-fx-ic .xki,.px-fx-ic .px-g{width:100%;height:100%;border-radius:22%}
+.px-fx-icone b{font:600 40px var(--police);color:var(--txt);letter-spacing:.02em}
+.px-fx-icone small{font:600 24px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.px-fx-calque{position:fixed;z-index:42;pointer-events:none}
+.px-fx-ouverte .px-fx-calque{pointer-events:auto;touch-action:none}
+.px-fx-cible{position:absolute;inset:0;width:auto;min-height:0;margin:0;padding:0;background:none;border:0;border-radius:28px;transform-origin:50% 50%;transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
+.px-fx-cible.on{box-shadow:0 0 0 4px var(--bio),0 0 60px var(--glow)}
+.px-fx-suit .px-fx-carte,.px-fx-suit .px-fx-icone,.px-fx-suit .px-fx-cible{transition:none !important}
+.px-fx-indice{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 30px);z-index:43;text-align:center;font:600 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);pointer-events:none;animation:px-fx-in .4s ease-out}
+.px-fx-trace{position:fixed;top:0;bottom:0;left:0;width:2px;z-index:44;pointer-events:none;background:linear-gradient(180deg,transparent,var(--bio) 30%,var(--bio) 70%,transparent);box-shadow:0 0 28px 8px var(--glow)}
+.px-scene>.px-hote.px-fx-sortant[hidden]{display:block;pointer-events:none;z-index:0;overflow:hidden;border-radius:28px}
+.px-fx-apercu .px-fx-tete{opacity:0}
+/* ⧉ (0.60) le jeu de cartes, le curseur de réel, le filtrage de photons, le cube, le freefall (src/app/fractale.js) */
+.px-fx-tete{position:absolute;left:0;bottom:calc(100% + 26px);display:flex;align-items:center;gap:18px;max-width:100%;pointer-events:none;transition:opacity .25s}
+.px-fx-tete i{width:72px;height:72px;flex:none;border-radius:22px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--bio)}
+.px-fx-tete i .xki,.px-fx-tete i .px-g{width:100%;height:100%;border-radius:0}
+.px-fx-tete b{min-width:0;font:600 38px var(--police);color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-fx-tete small{font:600 26px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-left:4px}
+.px-fx-cible::after{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(3,4,10,var(--voile,0));pointer-events:none;transition:background .3s}
+.px-fx-cible.on::before{content:"";position:absolute;left:0;bottom:-16px;height:7px;width:calc(var(--tenu,0) * 100%);border-radius:4px;background:var(--bio);box-shadow:0 0 12px var(--glow)}
+.px-fx-curseur{position:fixed;top:calc(env(safe-area-inset-top,0px) + 62px);bottom:calc(env(safe-area-inset-bottom,0px) + 66px);left:50%;width:0;z-index:43;pointer-events:none;opacity:0;transition:opacity .3s}
+.px-fx-slider .px-fx-curseur,.px-fx-cube .px-fx-curseur{opacity:1}
+.px-fx-curseur b{position:absolute;top:0;bottom:0;left:-1px;width:2px;background:linear-gradient(180deg,var(--bio),transparent 28%,transparent 72%,var(--bio));box-shadow:0 0 14px var(--glow)}
+.px-fx-curseur i{position:absolute;left:-16px;width:32px;height:3px;border-radius:2px;background:var(--bio);box-shadow:0 0 12px var(--glow)}
+.px-fx-curseur i:first-child{top:0}.px-fx-curseur i:last-child{bottom:0}
+.px-fx-cube .px-fx-carte,.px-fx-cube .px-fx-icone,.px-fx-cube .px-fx-cible{-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.px-fx-cube .px-fx-tete{opacity:0}.px-fx-cube .px-fx-cible.on .px-fx-tete{opacity:1}
+.px-fx-dessus{position:absolute;left:0;right:0;z-index:85;opacity:0;pointer-events:none;border-radius:28px;overflow:hidden;background:var(--surface,#0d0d16) var(--grain);box-shadow:inset 0 0 0 3px var(--bio),0 0 60px var(--glow);transform-origin:50% 50%;transition:opacity .25s,transform .38s cubic-bezier(.16,1,.3,1);-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.px-fx-suit .px-fx-dessus{transition:opacity .25s}
+.px-fx-dessus-in{padding:44px 48px;display:flex;flex-direction:column;gap:24px}
+.px-fx-dessus-in p{margin:0;display:flex;flex-direction:column;gap:6px}
+.px-fx-dessus-in p b{font:600 54px var(--police);color:var(--txt)}
+.px-fx-dessus-in p small{font:600 26px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.px-fx-dessus-in ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:14px 22px}
+.px-fx-dessus-in li{display:flex;align-items:center;gap:12px;font:600 28px var(--mono);color:var(--bio);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-fx-dessus-in li .px-g{width:30px;height:30px;flex:none}
+.px-freefall{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:50%;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:8px;width:auto;height:30px;min-height:0;margin:0;padding:0 12px;border-radius:15px;border:var(--trait) solid var(--bio);background:var(--surface) var(--grain);color:var(--bio);font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;box-shadow:0 0 18px var(--glow)}
+.px-freefall .px-g{width:14px;height:14px}.px-freefall b{color:var(--muted);font-size:14px;font-weight:600}
+/* (0.60.1) pendant la fractale : ni sélection, ni loupe, ni menu d'iOS, nulle part */
+.px-fx,.px-fx *,.px-tire-bord,.px-tire-bord *{-webkit-user-select:none !important;user-select:none !important;-webkit-touch-callout:none !important}
+.px-fx-calque,.px-fx-cible{-webkit-tap-highlight-color:transparent}
+.px-fantome-bions{position:fixed;z-index:91;transform:translate(-50%,calc(-100% - 52px));min-width:150px;max-width:240px;padding:10px 12px;border-radius:14px;background:var(--surface) var(--grain);box-shadow:0 12px 30px rgba(0,0,0,.6),inset 0 0 0 1px var(--bio);display:flex;flex-direction:column;gap:4px;pointer-events:none;animation:px-fx-in .2s ease-out}
+.px-fantome-bions b{font:600 13px var(--police);color:var(--txt)}.px-fantome-bions small{font:11px var(--mono);color:var(--muted)}
+.px-fantome-bions span{display:flex;align-items:center;gap:6px;font:600 11.5px var(--mono);color:var(--bio)}.px-fantome-bions .px-g{width:12px;height:12px}
+/* ⧉ (0.61) la salle du kion 4D autour du cube, le portail à l'ouverture (src/app/fractale.js) */
+.px-fx-salle{position:fixed;inset:0;z-index:40;pointer-events:none;color:var(--bio);opacity:0;transition:opacity .4s}
+.px-fx-salle svg{width:100%;height:100%;display:block}
+.px-fx-cube .px-fx-salle{opacity:.55}
+.px-fx-portail{position:fixed;inset:0;z-index:44;pointer-events:none}
+.px-fx-portail i{position:absolute;left:50%;top:50%;width:46vmin;height:46vmin;border:2px solid var(--bio);border-radius:6px;box-shadow:0 0 22px var(--glow),inset 0 0 22px var(--glow);opacity:0}
+.px-fx-cible:not(.on) .px-fx-tete{opacity:0}
+.px-fx-slider .px-fx-cible:not(.on) .px-fx-tete{opacity:0}
+.px-fx-slider .px-fx-cible.on .px-fx-tete b{font-size:56px}
+/* (0.61) les pages de côté de l'accueil : aujourd'hui (à gauche), bibliothèque (à droite) */
+.px-page-sp{padding-bottom:30px}
+.px-point-g{display:inline-flex;align-items:center;justify-content:center;width:auto;padding:0 2px;background:none !important;color:var(--muted)}
+.px-point-g .px-g{width:11px;height:11px}.px-point-g.on{color:var(--bio)}
+.px-auj-date{margin:-4px 2px 12px;text-transform:capitalize}
+.px-auj-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 16px}
+.px-auj-actions button{display:flex;flex-direction:column;align-items:center;gap:6px;min-height:74px;padding:10px 4px;border-radius:16px;border:var(--trait) solid var(--bord);background:var(--surface2) var(--grain);color:var(--txt);font:600 11.5px var(--police)}
+.px-auj-actions .px-g{width:24px;height:24px;color:var(--bio)}
+.px-auj-t{margin:6px 2px 8px;font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.px-auj-liste{display:flex;flex-direction:column;gap:8px}
+.px-auj-l{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;border-radius:14px;border:var(--trait) solid var(--bord);background:var(--surface) var(--grain);color:var(--txt);text-align:left}
+.px-auj-l .px-ic{width:42px;height:42px;border-radius:12px;flex:none}
+.px-auj-tx{display:flex;flex-direction:column;min-width:0}.px-auj-tx b{font:600 14px var(--police);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.px-auj-tx small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-page-sp .px-cat{margin-bottom:18px}.px-page-sp .px-titre-page{margin-top:10px}

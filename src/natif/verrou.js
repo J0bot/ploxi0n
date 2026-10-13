@@ -6,11 +6,12 @@
 //   lire(cle, raison)          → le secret (Face ID demandé) ou null
 //   oublier(cle)
 // Hors iPhone (navigateur de dev), tout répond « pas disponible » : jamais un faux succès.
+import { surPromesse } from './plugin-sur.js';
 const SERVEUR = (cle) => 'ploxi0n.' + cle;
 
 export function creerVerrou({ W = globalThis.window, charger = () => import('@capgo/capacitor-native-biometric') } = {}) {
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
-  async function plugin() { return (await charger()).NativeBiometric; }
+  async function plugin() { return surPromesse((await charger()).NativeBiometric); }
   const TYPES = { 1: 'touchid', 2: 'faceid', 7: 'code' };
   let derniere = null;   // la dernière erreur d'iOS, telle quelle (RS-7 12.10 : « Face ID ne fonctionne pas » — elle s'affiche désormais)
   const noter = (e) => { derniere = (e && (e.message || e.code || e.errorMessage)) ? String(e.message || e.errorMessage || e.code) + (e.code && e.message ? ' (' + e.code + ')' : '') : String(e); return derniere; };

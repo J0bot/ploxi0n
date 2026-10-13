@@ -20,7 +20,8 @@ def asc(methode, chemin, corps = nil)
 end
 
 WID_ID = "#{APP_ID}.widgets"
-WIDGETS = ENV["PLOXI0N_WIDGETS"] == "1"   # l'interrupteur des widgets : sans lui, le build est exactement celui d'avant
+WIDGETS = ENV["PLOXI0N_WIDGETS"] == "1"
+VLC = ENV["PLOXI0N_VLC"] == "1"   # le lecteur VLC (0.49) : sans lui, le lecteur intégré n'a que le moteur d'Apple   # l'interrupteur des widgets : sans lui, le build est exactement celui d'avant
 
 # Les WIDGETS (ios/App/PloxionWidgets) : la cible d'extension est ajoutée au projet ICI, sur le Mac de la CI (gem xcodeproj, livrée avec
 # fastlane), jamais à la main dans le .pbxproj ; idempotent. Elle est embarquée dans l'app (PlugIns), même version et même build.
@@ -54,6 +55,46 @@ def ajouter_widgets
   UI.success("cible PloxionWidgets ajoutée (#{WID_ID}, #{version} (#{build}))")
 end
 
+# Le MANIFESTE DE CONFIDENTIALITÉ (0.47, exigé par Apple : UserDefaults, espace disque) : ios/App/App/PrivacyInfo.xcprivacy, ajouté aux
+# ressources de l'app ICI (gem xcodeproj), idempotent — comme les widgets, jamais à la main dans le .pbxproj.
+def ajouter_confidentialite
+  require "xcodeproj"
+  projet = Xcodeproj::Project.open(File.expand_path("../#{PROJET}", __dir__))
+  app = projet.targets.find { |t| t.name == "App" }
+  return UI.message("PrivacyInfo.xcprivacy déjà dans l'app") if app.resources_build_phase.files_references.any? { |r| r && r.path.to_s.end_with?("PrivacyInfo.xcprivacy") }
+  groupe = projet.main_group.children.find { |g| g.respond_to?(:path) && g.path == "App" } || projet.main_group
+  ref = groupe.files.find { |r| r.path == "PrivacyInfo.xcprivacy" } || groupe.new_reference("PrivacyInfo.xcprivacy")
+  app.add_resources([ref])
+  projet.save
+  UI.success("PrivacyInfo.xcprivacy ajouté aux ressources de l'app")
+end
+
+# Le LECTEUR VLC (0.49, option PLOXI0N_VLC) : le paquet SPM vlckit-spm (MobileVLCKit, LGPL) ajouté à la cible App ICI (gem xcodeproj),
+# idempotent. Le Swift (PloxiLecteur, EcranVLC) est entre #if canImport(MobileVLCKit) : sans le paquet, il n'est pas compilé.
+VLC_PAQUET = "https://github.com/tylerjonesio/vlckit-spm"
+def ajouter_vlc
+  require "xcodeproj"
+  projet = Xcodeproj::Project.open(File.expand_path("../#{PROJET}", __dir__))
+  app = projet.targets.find { |t| t.name == "App" }
+  return UI.message("VLC déjà dans l'app") if app.package_product_dependencies.any? { |d| d.product_name == "VLCKitSPM" }
+  paquet = projet.root_object.package_references.find { |p| p.respond_to?(:repositoryURL) && p.repositoryURL == VLC_PAQUET }
+  unless paquet
+    paquet = projet.new(Xcodeproj::Project::Object::XCRemoteSwiftPackageReference)
+    paquet.repositoryURL = VLC_PAQUET
+    paquet.requirement = { "kind" => "upToNextMajorVersion", "minimumVersion" => "3.6.0" }
+    projet.root_object.package_references << paquet
+  end
+  dep = projet.new(Xcodeproj::Project::Object::XCSwiftPackageProductDependency)
+  dep.package = paquet
+  dep.product_name = "VLCKitSPM"
+  app.package_product_dependencies << dep
+  fichier = projet.new(Xcodeproj::Project::Object::PBXBuildFile)
+  fichier.product_ref = dep
+  app.frameworks_build_phase.files << fichier
+  projet.save
+  UI.success("VLC ajouté à l'app (#{VLC_PAQUET})")
+end
+
 # l'identifiant des widgets sur le compte développeur, avec App Groups (le GROUPE lui-même s'assigne dans le portail : l'API ne le permet pas)
 def identifiant_widgets
   bid = asc(:get, "bundleIds?filter[identifier]=#{WID_ID}")["data"].first
@@ -72,8 +113,22 @@ platform :ios do
     setup_ci if ENV["CI"]
     %w[ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 APPLE_TEAM_ID].each { |k| UI.user_error!("secret GitHub manquant : #{k}") if ENV[k].to_s.empty? }
     cle = app_store_connect_api_key(key_id: ENV["ASC_KEY_ID"], issuer_id: ENV["ASC_ISSUER_ID"], key_content: ENV["ASC_KEY_P8"], in_house: false)
-    # un numéro de build unique à chaque envoi (TestFlight refuse un doublon)
-    increment_build_number(xcodeproj: PROJET, build_number: ENV["GITHUB_RUN_NUMBER"] || Time.now.to_i.to_s)
+    # un numéro de build unique à chaque envoi (TestFlight refuse un doublon ou un numéro plus bas) : le dernier de TestFlight + 1 —
+    # GitHub Actions et Codemagic (0.49, docs/TESTFLIGHT.md) peuvent alterner sans se marcher dessus
+    dernier = begin
+      latest_testflight_build_number(api_key: cle, app_identifier: APP_ID, initial_build_number: 0).to_i
+    rescue => e
+      UI.important("dernier build TestFlight illisible (#{e.message}) : le numéro de la CI")
+      0
+    end
+    numero = [dernier + 1, (ENV["GITHUB_RUN_NUMBER"] || ENV["BUILD_NUMBER"] || 0).to_i].max
+    increment_build_number(xcodeproj: PROJET, build_number: numero.to_s)
+    begin
+      ajouter_confidentialite
+    rescue => e   # jamais bloquant : sans manifeste, TestFlight accepte le build (Apple prévient par e-mail, ITMS-91053)
+      UI.important("PrivacyInfo.xcprivacy pas ajouté : #{e.message}")
+    end
+    ajouter_vlc if VLC
     if WIDGETS
       ajouter_widgets
       identifiant_widgets
@@ -116,6 +171,13 @@ platform :ios do
   # donc pas de minutes macOS perdues) ; TESTFLIGHT_EMAIL (secret, l'Apple ID de RS-7) y est ajouté et invité (betaTesterInvitations).
   # Jamais bloquant : un échec ici n'annule pas le build envoyé.
   desc "Affiche les capabilities activées sur l'identifiant de l'app (sans build : tourne sur Linux)"
+  desc "Envoie les métadonnées de l'App Store (fastlane/metadata : textes, catégories, URLs, notes de revue) — sans binaire ni captures"
+  lane :metadonnees do
+    cle = app_store_connect_api_key(key_id: ENV["ASC_KEY_ID"], issuer_id: ENV["ASC_ISSUER_ID"], key_content: ENV["ASC_KEY_P8"], in_house: false)
+    deliver(api_key: cle, app_identifier: APP_ID, metadata_path: File.expand_path("metadata", __dir__), skip_binary_upload: true, skip_screenshots: true,
+            submit_for_review: false, force: true, run_precheck_before_submit: false, precheck_include_in_app_purchases: false)
+  end
+
   lane :capabilities do
     app_store_connect_api_key(key_id: ENV["ASC_KEY_ID"], issuer_id: ENV["ASC_ISSUER_ID"], key_content: ENV["ASC_KEY_P8"], in_house: false)
     bid = asc(:get, "bundleIds?filter[identifier]=#{APP_ID}")["data"].first || UI.user_error!("identifiant #{APP_ID} introuvable")

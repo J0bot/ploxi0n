@@ -5,9 +5,8 @@
 //     envoyer à pourriture-4 (le journal personnel) · partager
 //   - jOSNatif.vocal pour les ploxions : commencer() · arreter() → { texte, audio (data: URL), duree } · liste()
 //   - chaque vocal est gardé : boxion_local « vocaux/<id> » = { le, duree, texte, audio } (l'audio au plus 8 Mo)
-import { registerPlugin } from '@capacitor/core';
 import { MOTS } from './vocabulaire.js';
-const PloxiVocal = registerPlugin('PloxiVocal');
+import { PloxiVocal } from './plugins-app.js';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 export function creerVocal({ W = globalThis.window, boxion, catalogue = () => [], vibrer = () => {}, ouvrir = () => {}, surEtat = () => {} }) {

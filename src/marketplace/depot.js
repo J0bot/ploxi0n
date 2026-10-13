@@ -1,15 +1,15 @@
 // Le MARKETPLACE de ploxi0n (brief v1, « Marketplace et offline ») : le réseau ne sert qu'à installer ; un ploxion installé tourne depuis
 // boxion_local, jamais depuis le réseau.
-//   catalogue()      le registre de xerboxion.org (/px/registry.json), filtré (écrans publics, activés), avec la compatibilité mesurée par le
+//   catalogue()      le registre de labo.j0bot.ch (/px/registry.json), filtré (écrans publics, activés), avec la compatibilité mesurée par le
 //                    banc (public/marketplace/compat.json) ; mis en cache dans boxion_local → consultable en mode avion
 //   installer(id)    GET /px/<id>/app.js → vérifié (s'enregistre dans jOSApps) → hash SHA-256 → boxion_local « ploxions/<id> »
 //   installerLocal(id) depuis le pack hors ligne embarqué (public/ploxions/<id>/app.js) : sans réseau
 //   aJour()          pour chaque ploxion installé depuis le réseau : If-None-Match (ETag) → 304 = à jour, 200 = une mise à jour
 //   retirer(id), installes(), bundle(id)
 // http = { get(url, { headers }) → { status, texte, entetes } } : CapacitorHttp sur l'iPhone (pas de CORS), fetch ailleurs, un faux en test.
-export const SOURCE = 'https://xerboxion.org';
+export const SOURCE = 'https://labo.j0bot.ch';
 // les bions que l'app fournit déjà (le shim, Face ID, le pack) : jamais téléchargés
-export const FOURNIS = new Set(['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou', 'jOSNatif', 'jOSRaccourcis', 'jOSEcranAccueil', 'jOSKeyboard', 'jOSUsage']);
+export const FOURNIS = new Set(['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou', 'jOSNatif', 'jOSRaccourcis', 'jOSEcranAccueil', 'jOSKeyboard', 'jOSUsage', 'jOSSante', 'jOSMiniDock']);
 /** les bions qu'un bundle du labo déclare attendre (window.__PLOXIONS_BIONS__[id] = [...]) */
 export function bionsDuBundle(js) {
   const m = /__PLOXIONS_BIONS__[\s\S]{0,200}?\]\s*=\s*(\[[^\]]*\])/.exec(js || '');
@@ -19,6 +19,22 @@ export function bionsDuBundle(js) {
 /** les bions qu'un code TOUCHE (window.jOSX…, jOSX.f()) : beaucoup de bundles n'en déclarent aucun (RS-7 11.10 : xerkions, ultimate-social) */
 export function bionsTouches(js, sauf = '') {
   return [...new Set((String(js || '').match(/\bjOS[A-Z][A-Za-z0-9]{0,47}\b/g) || []))].filter(b => b !== sauf && !FOURNIS.has(b));
+}
+
+/** (0.51) le code d'un ploxion servi DANS sa page (/px/<id>, sans app.js : spotify, wiki, notes, calendar…) : le dernier
+ *  <style> + <script> qui enregistre jOSApps['<id>'], avant <div id="pxhost"> ; rendu comme un bundle (le style injecté par le script). */
+export function bundleDeLaPage(html, id) {
+  const h = String(html || ''); const fin = h.indexOf('<div id="pxhost"'); if (fin < 0) return null;
+  const avant = h.slice(0, fin), re = /<script\b[^>]*>([\s\S]*?)<\/script>/gi; let m, code = null, debut = -1;
+  const enregistre = new RegExp('jOSApps\\s*\\[\\s*[\'"]' + id.replace(/[^a-z0-9_-]/gi, '') + '[\'"]\\s*\\]\\s*=');
+  while ((m = re.exec(avant))) if (enregistre.test(m[1])) { code = m[1]; debut = m.index; }
+  if (!code) return null;
+  const tete = avant.slice(0, debut), i = tete.toLowerCase().lastIndexOf('<style');   // le <style> collé juste avant ce script (pas ceux de la page)
+  const st = i >= 0 ? /^<style\b[^>]*>([\s\S]*?)<\/style>\s*$/i.exec(tete.slice(i)) : null;
+  const css = st ? st[1] : '';
+  return '/* ' + id + ' : extrait de la page /px/' + id + ' par ploxi0n (le labo ne sert pas son app.js) */\n'
+    + (css ? '(function(){try{var s=document.createElement("style");s.dataset.ploxion=' + JSON.stringify(id) + ';s.textContent=' + JSON.stringify(css) + ';document.head.appendChild(s);}catch(e){}})();\n' : '')
+    + code;
 }
 
 async function sha256(texte) {
@@ -43,12 +59,16 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       if (vus.has(b) || FOURNIS.has(b) || vus.size >= 80) return;
       vus.add(b);
       let x = await boxion.get('bions', b);
-      if (!x) {
+      // (0.51) un bion que le labo ne sert pas répond par une page HTML de 3,5 Mo (Stremio : jOSCineJournal, jOSParesseux, jOSXxx → ~10 Mo
+      // par installation, en données mobiles) : noté absent, il n'est pas redemandé pendant 7 jours
+      const absent = x ? null : await boxion.get('bions-absents', b).catch(() => null);
+      if (!x && !(absent && Date.now() - (+absent.le || 0) < 7 * 864e5)) {
         signaler(b);
         try {
           const rb = await http.get(source + '/px/bion-app/' + b + '.js', { headers: { Accept: 'application/javascript' } });
-          if (rb.status === 200 && rb.texte.includes(b)) { x = { js: rb.texte, hash: await sha256(rb.texte), le: new Date().toISOString() }; await boxion.put('bions', b, x); }
-        } catch (e) { /* hors ligne : manquant */ }
+          if (rb.status === 200 && rb.texte.includes(b) && !/^\s*<(!doctype|html)/i.test(rb.texte)) { x = { js: rb.texte, hash: await sha256(rb.texte), le: new Date().toISOString() }; await boxion.put('bions', b, x); }
+          else await boxion.put('bions-absents', b, { le: Date.now(), status: rb.status }).catch(() => {});
+        } catch (e) { /* hors ligne : manquant (pas noté absent : on réessaiera) */ }
       }
       if (!x) { if (declares.has(b)) manquants.push(b); return; }
       for (const c of bionsTouches(x.js, b)) await visiter(c);
@@ -77,7 +97,13 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
           if (r.status !== 200) throw new Error('registre : HTTP ' + r.status);
           const brut = JSON.parse(r.texte);
           const items = (Array.isArray(brut) ? brut : brut.ploxions || brut.items || []).filter(p => p && p.id && p.hasScreen && p.enabled !== false && (!p.admin || estAdmin()) && p.status === 'live')
-            .map(p => ({ id: p.id, nom: p.name || p.id, icone: p.icon || '▣', description: String(p.description || '').slice(0, 400), categorie: p.cat_label || 'Autres', cat: p.category || null, cat_icone: p.cat_icon || '📦', compat: compat[p.id] || null, admin: !!p.admin, mtime: +p.mtime || 0, fournit: Array.isArray(p.provides) ? p.provides.slice(0, 8).map(String) : [] }));
+            .map(p => ({ id: p.id, nom: p.name || p.id, icone: p.icon || '▣', description: String(p.description || '').slice(0, 400), categorie: p.cat_label || 'Autres', cat: p.category || null, cat_icone: p.cat_icon || '📦', compat: compat[p.id] || null, admin: !!p.admin, mtime: +p.mtime || 0, fournit: Array.isArray(p.provides) ? p.provides.slice(0, 8).map(String) : [], xerkion: (p.xerkion && typeof p.xerkion === 'object' && !Array.isArray(p.xerkion)) ? p.xerkion : null, type: typeof p.type === 'string' ? p.type : null }));
+          // ⬡ (0.55) un xerkion a autant de côtés que de koins (ses ploxions) : /px/xerkions.json les compte (src/app/xerkion-icone.js)
+          try {
+            const rx = await http.get(source + '/px/xerkions.json', { headers: { Accept: 'application/json' } });
+            const xk = rx.status === 200 ? new Map(((JSON.parse(rx.texte) || {}).items || []).map(x => [x.id, x])) : new Map();
+            for (const it of items) { const x = xk.get(it.id); if (x) { it.koins = Array.isArray(x.koins) ? x.koins.length : 0; if (typeof x.center === 'string') it.centre = x.center; } }
+          } catch (e) { /* sans les koins : l'octogone-xer */ }
           const c = { maj: new Date().toISOString(), source, items };
           await boxion.put(META, 'catalogue', c);
           return { ...c, horsLigne: false };
@@ -95,16 +121,22 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
     // son icône, deux fois par lancement : un index léger (META « installes ») suffit ; reconstruit une fois s'il manque ou s'il diverge
     async installes() {
       const ids = await liste(), idx = (await boxion.get(META, 'installes-index').catch(() => null)) || {};
-      if (ids.every(id => idx[id])) return ids.map(id => ({ id, ...idx[id] }));
+      if (ids.every(id => idx[id] && idx[id].bions)) return ids.map(id => ({ id, ...idx[id] }));   // (0.60) l'index porte aussi les bions (la face du dessus du cube)
       const out = [], neuf = {};
-      for (const id of ids) { const p = await boxion.get(NS, id); if (!p) continue; neuf[id] = { nom: p.nom, icone: p.icone, origine: p.origine, hash: p.hash, installe: p.installe, maj: p.maj || null }; out.push({ id, ...neuf[id] }); }
+      for (const id of ids) { const p = await boxion.get(NS, id); if (!p) continue; neuf[id] = { nom: p.nom, icone: p.icone, origine: p.origine, hash: p.hash, installe: p.installe, maj: p.maj || null, bions: Array.isArray(p.bions) ? p.bions.slice(0, 40) : [] }; out.push({ id, ...neuf[id] }); }
       await boxion.put(META, 'installes-index', neuf).catch(() => {});
       return out;
     },
     async installer(id, meta = {}, progres = null) {
       if (progres) progres({ etape: 'ploxion', nom: id, fait: 0, connus: 1 });
-      const r = await http.get(source + '/px/' + encodeURIComponent(id) + '/app.js', { headers: { Accept: 'application/javascript' } });
-      if (r.status !== 200) throw new Error(`le serveur refuse ${id} (HTTP ${r.status})`);
+      let r = await http.get(source + '/px/' + encodeURIComponent(id) + '/app.js', { headers: { Accept: 'application/javascript' } });
+      // (0.51) pas d'app.js (le 404 du labo est une page HTML de 3,5 Mo) : le code est dans la page du ploxion → on l'en extrait
+      if (r.status !== 200 || /^\s*<(!doctype|html)/i.test(r.texte || '')) {
+        const pg = await http.get(source + '/px/' + encodeURIComponent(id), { headers: { Accept: 'text/html' } }).catch(() => null);
+        const js = pg && pg.status === 200 ? bundleDeLaPage(pg.texte, id) : null;
+        if (!js) throw new Error(r.status === 200 ? `${id} : ce n'est pas un ploxion installable (pas d'enregistrement jOSApps)` : `le serveur refuse ${id} (HTTP ${r.status})`);
+        r = { status: 200, texte: js, entetes: {} };
+      }
       if (!valide(r.texte, id)) throw new Error(`${id} : ce n'est pas un ploxion installable (pas d'enregistrement jOSApps)`);
       if (progres) progres({ etape: 'recu', nom: id, octets: r.texte.length, fait: 0, connus: 1 });
       const { bions, manquants } = await resoudreBions(r.texte, progres);
@@ -238,6 +270,17 @@ export function creerHttp(W = globalThis.window, enTetes = async () => ({})) {
       const r = await W.fetch(url, { headers: { ...(await enTetes()), ...headers } });
       const h = {}; r.headers.forEach((v, k) => { h[k.toLowerCase()] = v; });
       return { status: r.status, texte: r.status === 304 ? '' : await r.text(), entetes: h };
+    },
+    /** (0.53) les en-têtes seuls (HEAD) : la règle d'encadrement du labo, sans télécharger la page */
+    async tete(url) {
+      if (natif()) {
+        const { CapacitorHttp } = await import('@capacitor/core');
+        const r = await CapacitorHttp.request({ url, method: 'HEAD', headers: await enTetes() });
+        const h = {}; for (const k in (r.headers || {})) h[k.toLowerCase()] = r.headers[k];
+        return { status: r.status, entetes: h };
+      }
+      const r = await W.fetch(url, { method: 'HEAD' }); const h = {}; r.headers.forEach((v, k) => { h[k.toLowerCase()] = v; });
+      return { status: r.status, entetes: h };
     },
     /** une requête quelconque (le relais du shim) ; fetchReseau = le fetch d'origine (le shim remplace W.fetch) */
     async requete({ methode = 'GET', url, headers = {}, corps }, fetchReseau = W.fetch.bind(W)) {

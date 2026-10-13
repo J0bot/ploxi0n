@@ -32,6 +32,8 @@
 	<true/>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
+		<string>applinks:labo.j0bot.ch</string>
+		<string>webcredentials:labo.j0bot.ch</string>
 		<string>applinks:xerboxion.org</string>
 		<string>webcredentials:xerboxion.org</string>
 	</array>

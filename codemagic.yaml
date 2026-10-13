@@ -1,0 +1,47 @@
+# ploxi0n sur CODEMAGIC (0.49) : TestFlight sans minutes GitHub Actions ni Mac — l'offre gratuite donne 500 min/mois de macOS (≈ 40 builds).
+# Le même chemin que .github/workflows/ios.yml : npm → tests → build → cap sync → paquets Swift → fastlane beta (match + clé API App Store
+# Connect). Les secrets : un groupe « ploxi0n » dans Codemagic (Teams › Global variables and secrets) avec les MÊMES noms que les secrets
+# GitHub : ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8, APPLE_TEAM_ID, MATCH_PAT, MATCH_PASSWORD, TESTFLIGHT_EMAIL ; et, si voulu,
+# PLOXI0N_WIDGETS=1, PLOXI0N_VLC=1. Démarrer : un tag v* poussé, ou « Start new build » dans Codemagic. Guide : docs/TESTFLIGHT.md.
+workflows:
+  testflight:
+    name: ploxi0n → TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      groups:
+        - ploxi0n
+      vars:
+        PLOXI0N_WIDGETS: "1"   # (0.54, RS-7 : « les widgets n'existent plus ») : les widgets et les contrôles, à chaque build
+      node: 22
+      xcode: latest
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'v*'
+          include: true
+    scripts:
+      - name: Dépendances, tests, build web, cap sync
+        script: |
+          npm ci
+          npm test
+          npm run build
+          npx cap sync ios
+      - name: Accès au dépôt des certificats (match)
+        script: |
+          if [ -n "$MATCH_PAT" ]; then
+            echo "MATCH_GIT_BASIC_AUTHORIZATION=$(printf 'x-access-token:%s' "$MATCH_PAT" | base64 | tr -d '\n')" >> "$CM_ENV"
+            echo "MATCH_GIT_URL=https://github.com/J0bot/ploxi0n-certificats.git" >> "$CM_ENV"
+          fi
+      - name: Paquets Swift
+        script: xcodebuild -resolvePackageDependencies -project ios/App/App.xcodeproj -scheme App
+      - name: fastlane beta (build signé → TestFlight)
+        script: |
+          gem install bundler --no-document
+          bundle config set --local path vendor/bundle
+          bundle install
+          FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT=120 FASTLANE_XCODEBUILD_SETTINGS_RETRIES=6 bundle exec fastlane beta
+    artifacts:
+      - build/*.ipa
+      - ~/Library/Logs/gym/*.log

@@ -1,5 +1,5 @@
 // Le COMPTE de ploxi0n (RS-7 : « il faut un bouton se connecter facilement accessible dans le HUD et l'UI »). Côté labo : docs/dev/57.
-//   connecter()      un verifier aléatoire + son challenge (SHA-256, base64url) → le navigateur intégré ouvre xerboxion.org/app/connexion ;
+//   connecter()      un verifier aléatoire + son challenge (SHA-256, base64url) → le navigateur intégré ouvre labo.j0bot.ch/app/connexion ;
 //                    la personne autorise ; le labo renvoie ploxi0n://connexion?code=… (brancherLiens → recevoirCode)
 //   recevoirCode(c)  POST /api/app/jeton {code, verifier} → le jeton (jamais dans une URL) et le compte (nom, rang)
 //   etat()           { connecte, nom, palier, glyphe } ; surChangement(fn) ; deconnecter() (le jeton est révoqué côté labo)
@@ -74,10 +74,10 @@ export function creerCompte({ W = globalThis.window, boxion, http, source = SOUR
       etat = { connecte: true, ...rep.data.compte }; signaler();
       return etat;
     },
-    /** LIER son Apple ID au compte connecté (RS-7 12.10 : « connecté en xerboxion.org, il faut aussi pouvoir se connecter avec Apple ID —
+    /** LIER son Apple ID au compte connecté (RS-7 12.10 : « connecté en labo.j0bot.ch, il faut aussi pouvoir se connecter avec Apple ID —
      *  que l'un des deux ») : ensuite « Continuer avec Apple » ouvre CE compte. delierApple() : le compte revient à sa seule connexion xer. */
     async lierApple({ fusionner = false } = {}) {
-      const c = await boxion.get('compte', 'courant'); if (!c || !c.jeton) throw new Error('connecte-toi d\'abord avec ton compte xerboxion.org');
+      const c = await boxion.get('compte', 'courant'); if (!c || !c.jeton) throw new Error('connecte-toi d\'abord avec ton compte labo.j0bot.ch');
       const { x, brut } = await jetonApple();
       const rep = await poster('/api/app/apple/lier', { identity_token: x.identityToken, nonce: brut, fusionner }, c.jeton);
       if (rep.status !== 200) {
