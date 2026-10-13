@@ -41,6 +41,7 @@ import { creerMaintenant } from './natif/maintenant.js';
 import { creerCube } from './app/cube.js';
 import { creerLecteurNatif } from './natif/lecteur-natif.js';
 import { creerFichiersNatif } from './natif/fichiers-natif.js';
+import { creerCape } from './cape/cape.js';
 
 const VERSION = '0.49.0';
 
@@ -249,6 +250,8 @@ async function demarrer() {
   // ◈ le cube des widgets : six infos des bions (les valeurs), et la dernière inclinaison du téléphone
   const cube = creerCube({ boxion, valeurs: () => (raccourcis ? raccourcis.toutes() : {}) });
   internes.push(sante.ploxion);
+  // 🥼 labo-cape (0.50, lot L1) : la blouse RS-7 en BLE, ou sa simulation (le moteur de cape-core)
+  internes.push(creerCape({ boxion, vibrer: (x) => vibrer(x) }).ploxion);
   window.jOSNatif.sante = sante.api;
   setTimeout(() => sante.synchroniser().catch(() => {}), 5000);   // ☁ hors du chemin critique : le résumé santé (si activé et connecté)
   window.jOSNatif.tsoin = (o) => tsoinNatif.ouvrir(o || {});
