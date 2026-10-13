@@ -18,10 +18,11 @@ jobs:
       - name: Wipe & reinit match
         run: |
           bundle exec fastlane match appstore \
-            -r "https://x-access-token:${{ secrets.MATCH_PAT }}@github.com/j0bot/ploxi0n-certificats.git" \
+            -r "https://x-access-token:${{ secrets.MATCH_PAT }}@github.com/j0bot/ploxion-certifs.git" \
             --force
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.ASC_KEY_P8 }}
