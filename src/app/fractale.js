@@ -63,7 +63,7 @@ export function glisser({ W = globalThis.window, sortant = null, entrant = null,
 //              dessus : les BIONS du ploxion (ce qu'il compose). Toucher la face avant l'ouvre.
 //   GYROSCOPE: tenu (fractale, slider, cube), l'iPhone penché incline tout et, dans le slider, accélère ou freine le défilement.
 //   FREEFALL : l'appli entière au gyroscope (freefall()) : pencher à gauche ou à droite (un instant) ouvre la fractale et fait défiler ;
-//              rester droit 1,4 s sur une app l'ouvre ; un badge « freefall » en haut l'arrête.
+//              rester droit 1,4 s sur une app l'ouvre ; pencher en avant ou en arrière fait défiler l'écran ; le badge en haut l'arrête.
 const DISPO = {
   fractale: { s0: 0.66, k: 0.84, pas: 0.6, rot: 13, rotMax: 17, fond: 0.3 },
   slider: { s0: 0.44, k: 0.9, pas: 0.46, rot: 26, rotMax: 76, fond: 0.1 },
@@ -175,6 +175,9 @@ export function creerFractale({ W = globalThis.window, racine, scene, file, orig
     racine.classList.toggle('px-fx-slider', etat === 'slider');
     cartes.forEach((k, i) => {
       const q = pose(i);
+      // (0.62) la mémoire : avec beaucoup de vivants, seuls les proches du focus (≤ 3 crans) sont dessinés en direct ; les autres restent
+      // cachés (ni mise en page, ni peinture) jusqu'à ce que le défilement les rapproche
+      if (!k.cree) { const debut = etat === 'apercu' || etat === 'depart', ref = debut ? depart : focus, lim = debut ? 1 : etat === 'cube' ? 1.6 : 3.2; k.el.classList.toggle('px-fx-carte', Math.abs(i - ref) <= lim); }
       k.el.style.transform = q.t; k.el.style.opacity = String(q.o); k.el.style.zIndex = String(q.z);
       k.c.style.transform = q.t; k.c.style.opacity = String(q.o); k.c.style.zIndex = String(q.z); k.c.style.setProperty('--voile', q.v.toFixed(2));
       k.c.classList.toggle('on', i === f && etat !== 'apercu');
@@ -346,6 +349,9 @@ export function creerFractale({ W = globalThis.window, racine, scene, file, orig
     const t = Date.now(), dt = dernier ? Math.min(0.2, (t - dernier) / 1000) : 0; dernier = t;
     const x = Math.abs(inc.x) < MORTE ? 0 : inc.x;
     if (etat === 'repos') {
+      // (0.62) pencher en avant ou en arrière : ce qui est à l'écran (le ploxion, sinon l'accueil) défile — l'appli entière au gyroscope
+      const y = Math.abs(inc.y) < MORTE ? 0 : inc.y - Math.sign(inc.y) * MORTE;
+      if (y && dt) { const h = scene.querySelector('.px-hote:not([hidden])') || racine.querySelector('.px-ecran'); if (h) h.scrollTop = Math.max(0, (h.scrollTop || 0) + y * 1600 * dt); }
       // penché franchement (≥ 0,45) un demi-instant : la fractale s'ouvre, en freefall
       penchee = Math.abs(inc.x) > 0.45 ? penchee + dt : 0;
       if (penchee > 0.45 && actif() && monter()) { etat = 'ouverte'; racine.classList.add('px-fx-ouverte', 'px-fx-suit'); vibrer('appui'); immobile = 0; placer(); }

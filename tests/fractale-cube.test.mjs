@@ -81,6 +81,10 @@ test('freefall : penché un instant, la fractale s\'ouvre ; droit 1,4 s sur une 
     assert.equal(r.freefall(true), true);
     pencher(0);   // la tenue de départ (le zéro du gyroscope)
     assert.ok(racine.querySelector('.px-freefall'), 'le badge');
+    const h = racine.querySelector('.px-hote[data-ploxion="a"]'); h.scrollTop = 0;
+    for (let i = 0; i < 5; i++) { pencher(0, 0.6); await attendre(60); }
+    assert.ok(h.scrollTop > 0, '(0.62) penché en avant : le ploxion défile');
+    for (let i = 0; i < 3; i++) { pencher(0, 0); await attendre(60); }
     for (let i = 0; i < 8; i++) { pencher(0.8); await attendre(100); }
     assert.ok(racine.classList.contains('px-fx-ouverte'), 'penché : la fractale, en freefall');
     for (let i = 0; i < 20; i++) { pencher(0); await attendre(100); }

@@ -94,6 +94,9 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
   (prefs.pagesCote) ; le glisser-déposer ignore `[data-special]`. `soulever()` : l'icône suit le gyroscope (relatif), penchée en avant
   → `.px-fantome-bions`. Fractale : `.px-fx-salle` (le kion 4D, SVG), `portail()` à l'ouverture, cube de trois quarts (RX0, RY0),
   `ouverte()` (la fractale d'un toucher). Faux iPhone : `parcours-pages.mjs` ; `parcours-tri.mjs` vise `[data-page="0"]`.
+- **0.62 — freefall fait défiler ; la fractale légère.** `surLibre()` : penché en avant / en arrière (hors zone morte), l'hôte visible
+  (sinon `.px-ecran`) défile ; `placer()` ne garde `px-fx-carte` (donc mise en page + peinture) que pour les vivants à ≤ 3 crans du
+  focus (≤ 1,6 dans le cube, ≤ 1 autour du départ pendant l'aperçu) : avec « vivants ∞ », la fractale ne peint pas 20 ploxions.
 
 ## 3. Ce qui reste, par ordre
 

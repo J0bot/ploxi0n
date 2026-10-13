@@ -4,6 +4,10 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.62.0', titre: 'Freefall fait défiler', points: [
+    'Freefall : pencher l\'iPhone en avant ou en arrière fait défiler ce qui est à l\'écran (le ploxion, ou l\'accueil) ; à gauche ou à droite, la fractale.',
+    'La fractale reste légère même avec beaucoup de ploxions ouverts : seuls ceux proches du centre sont dessinés en direct.',
+  ] },
   { v: '0.61.0', titre: 'Des pages de côté, le cube dans sa salle', points: [
     'L\'accueil a une page à gauche, « aujourd\'hui » (ce qui vit, la musique, les vidéos à reprendre ; la fractale, freefall, un tsoin, les mini docks d\'un toucher), et une à droite, « bibliothèque » (tout, par catégorie).',
     'Le cube se voit de trois quarts, dans la salle du kion 4D (les cadres qui reculent, les arêtes vers le cube) ; entrer dans une app ouvre un portail de carrés emboîtés.',
