@@ -13,6 +13,7 @@ import GameKit
 import WebKit
 import ObjectiveC
 import CoreMotion
+import MediaPlayer
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -105,7 +106,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         guard let g = UserDefaults(suiteName: "group.ch.j0bot.ploxi0n") else { ecrireEtat(["groupe": false]); return }
         let conteneur = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.ch.j0bot.ploxi0n") != nil
         var change = false, tailles: [String: Int] = [:]
-        for k in ["ploxi0n.epingles", "ploxi0n.valeurs"] {
+        for k in ["ploxi0n.epingles", "ploxi0n.valeurs", "ploxi0n.lecture", "ploxi0n.cube"] {
             let v = UserDefaults.standard.string(forKey: "CapacitorStorage." + k)
             tailles[k] = v?.count ?? -1
             if v != nil && g.string(forKey: k) != v { g.set(v, forKey: k); change = true }
@@ -230,7 +231,100 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate {
         CAPPluginMethod(name: "mouvementDebut", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "mouvementFin", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "ecranEveille", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "lecture", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "lectureFin", returnType: CAPPluginReturnPromise),
     ]
+
+    // ♫ À L'ÉCOUTE (0.48, RS-7 : l'écran verrouillé disait « Spotify Embedded Player », sans pochette, ±10 s au lieu de ⏮ ⏭). Le son des
+    // ploxions joue souvent dans un iframe d'un autre site (le SDK de Spotify) : la page (maintenant.js) sait ce qui joue et le publie ici —
+    // titre, artiste, album, pochette, durée, position — dans MPNowPlayingInfoCenter ; les commandes (écran verrouillé, Centre de contrôle,
+    // écouteurs) reviennent à la page par l'événement « lecture » { commande: play | pause | toggle | suivant | precedent | seekto, position }.
+    // La pochette est aussi copiée dans l'App Group (lecture.jpg) pour le widget « À l'écoute ».
+    private var commandesBranchees = false
+    private var pochetteURL = ""
+    private var pochette: MPMediaItemArtwork?
+    private var infoLecture: [String: Any] = [:]
+    @objc func lecture(_ call: CAPPluginCall) {
+        let image = call.getString("image") ?? ""
+        let suivant = call.getBool("suivant") ?? true, precedent = call.getBool("precedent") ?? true
+        var info: [String: Any] = [
+            MPMediaItemPropertyTitle: call.getString("titre") ?? "",
+            MPMediaItemPropertyArtist: call.getString("artiste") ?? "",
+            MPMediaItemPropertyAlbumTitle: call.getString("album") ?? "",
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: call.getDouble("position") ?? 0,
+            MPNowPlayingInfoPropertyPlaybackRate: (call.getBool("enLecture") ?? true) ? 1.0 : 0.0,
+            MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.audio.rawValue,
+        ]
+        let duree = call.getDouble("duree") ?? 0
+        if duree > 0 { info[MPMediaItemPropertyPlaybackDuration] = duree }
+        DispatchQueue.main.async {
+            self.brancherCommandes()
+            let c = MPRemoteCommandCenter.shared()
+            c.nextTrackCommand.isEnabled = suivant
+            c.previousTrackCommand.isEnabled = precedent
+            if let p = self.pochette, self.pochetteURL == image { info[MPMediaItemPropertyArtwork] = p }
+            self.infoLecture = info
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+            call.resolve()
+            if image != self.pochetteURL { self.chargerPochette(image) }
+        }
+    }
+    @objc func lectureFin(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            self.infoLecture = [:]
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+            call.resolve()
+        }
+    }
+    private func chargerPochette(_ adresse: String) {
+        pochetteURL = adresse; pochette = nil
+        guard let url = URL(string: adresse), url.scheme == "https" else { return }
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            guard let self = self, let data = data, let img = UIImage(data: data) else { return }
+            // pour le widget : une copie réduite dans l'App Group
+            if let dossier = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.ch.j0bot.ploxi0n") {
+                let petite = UIGraphicsImageRenderer(size: CGSize(width: 300, height: 300)).image { _ in img.draw(in: CGRect(x: 0, y: 0, width: 300, height: 300)) }
+                try? petite.jpegData(compressionQuality: 0.85)?.write(to: dossier.appendingPathComponent("lecture.jpg"), options: .atomic)
+                UserDefaults(suiteName: "group.ch.j0bot.ploxi0n")?.set(adresse, forKey: "ploxi0n.lecture-pochette")
+            }
+            DispatchQueue.main.async {
+                guard self.pochetteURL == adresse else { return }
+                let art = MPMediaItemArtwork(boundsSize: img.size) { _ in img }
+                self.pochette = art
+                if !self.infoLecture.isEmpty {
+                    self.infoLecture[MPMediaItemPropertyArtwork] = art
+                    MPNowPlayingInfoCenter.default().nowPlayingInfo = self.infoLecture
+                }
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+        }.resume()
+    }
+    private func brancherCommandes() {
+        if commandesBranchees { return }
+        commandesBranchees = true
+        UIApplication.shared.beginReceivingRemoteControlEvents()
+        let c = MPRemoteCommandCenter.shared()
+        let relayer: (String, Double?) -> MPRemoteCommandHandlerStatus = { [weak self] commande, position in
+            var d: [String: Any] = ["commande": commande]
+            if let p = position { d["position"] = p }
+            self?.notifyListeners("lecture", data: d)
+            return .success
+        }
+        c.playCommand.addTarget { _ in relayer("play", nil) }
+        c.pauseCommand.addTarget { _ in relayer("pause", nil) }
+        c.togglePlayPauseCommand.addTarget { _ in relayer("toggle", nil) }
+        c.nextTrackCommand.addTarget { _ in relayer("suivant", nil) }
+        c.previousTrackCommand.addTarget { _ in relayer("precedent", nil) }
+        c.changePlaybackPositionCommand.addTarget { e in
+            guard let e = e as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
+            return relayer("seekto", e.positionTime)
+        }
+        // ⏮ ⏭ plutôt que ±10 s
+        c.skipForwardCommand.isEnabled = false
+        c.skipBackwardCommand.isEnabled = false
+        let actives: [MPRemoteCommand] = [c.playCommand, c.pauseCommand, c.togglePlayPauseCommand, c.nextTrackCommand, c.previousTrackCommand, c.changePlaybackPositionCommand]
+        for x in actives { x.isEnabled = true }
+    }
 
     // ☀ L'ÉCRAN RESTE ALLUMÉ (0.47, navigator.wakeLock des ploxions → web-natif.js) : tant qu'un ploxion le tient, iOS ne met pas l'écran en veille
     @objc func ecranEveille(_ call: CAPPluginCall) {

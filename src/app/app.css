@@ -374,3 +374,26 @@ html.px-anime .px-barre{box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0)
 html.px-anime .px-tiroir{translate:calc(var(--mx,0) * 4px) calc(var(--my,0) * 3px);box-shadow:inset 0 0 0 1px var(--filet),calc(var(--mx,0) * -6px) calc(var(--my,0) * -6px + 10px) 30px rgba(0,0,0,.55)}
 html.px-anime .px-bulle{translate:calc(var(--mx,0) * 5px) calc(var(--my,0) * 4px)}
 html.px-anime .px-barre .px-retour,html.px-anime .px-mini{translate:calc(var(--mx,0) * 1.5px) calc(var(--my,0) * 1.5px)}
+/* ♫ (0.48) le mini-lecteur de l'accueil : ce qui joue (Spotify, un ploxion en arrière-plan), au-dessus du dock ; le toucher rouvre le ploxion */
+.px-maintenant{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 92px);z-index:29;display:flex;align-items:center;gap:10px;padding:7px 8px 7px 7px;
+  border-radius:18px;border:var(--trait) solid var(--bord);background:var(--surface) var(--grain);box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 0 var(--bio),0 10px 24px rgba(0,0,0,.45)}
+.px-maintenant[hidden],#ploxi0n:not(.px-mode-accueil) ~ .px-maintenant{display:none}
+.px-sans-dock .px-maintenant{bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}
+.px-maintenant img,.px-maintenant .px-mt-ic{width:42px;height:42px;border-radius:10px;object-fit:cover;flex:none;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.px-maintenant .px-mt-t{flex:1;min-width:0;display:flex;flex-direction:column}
+.px-maintenant .px-mt-t b,.px-maintenant .px-mt-t small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-maintenant .px-mt-t b{font:600 14px var(--police);color:var(--txt)}.px-maintenant .px-mt-t small{font-size:12px;color:var(--muted)}
+.px-maintenant button{flex:none;width:40px;height:40px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font-size:15px;padding:0}
+.px-maintenant .px-mt-p{border-color:var(--bio);color:var(--bio)}
+body:has(.px-maintenant:not([hidden])) .px-accueil{padding-bottom:calc(176px + env(safe-area-inset-bottom,0px))}
+html.px-anime .px-maintenant{box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0 0 var(--bio),calc(var(--mx,0) * -4px) calc(var(--my,0) * -3px + 10px) 24px rgba(0,0,0,.5)}
+/* ◈ (0.48) le cube des bions : l'aperçu de ⚙ › Widgets suit le téléphone (le thème vivant pose --mx/--my) */
+.px-cube-scene{height:200px;display:flex;align-items:center;justify-content:center;perspective:700px}
+.px-cube{width:118px;height:118px;position:relative;transform-style:preserve-3d;transition:transform .12s linear;
+  transform:rotateX(calc(-24deg + var(--my,0) * 30deg)) rotateY(calc(-34deg + var(--mx,0) * 42deg))}
+.px-cube-f{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px;box-sizing:border-box;text-align:center;
+  border:var(--trait) solid var(--bord2);border-radius:14px;background:var(--surface) var(--grain);box-shadow:inset 0 0 0 1px var(--filet),inset 0 2px 0 rgba(190,175,230,.08);backface-visibility:hidden}
+.px-cube-f b{font-size:22px;line-height:1}.px-cube-f span{font:700 15px var(--police);color:var(--txt);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.px-cube-f small{font:600 8.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.px-cube-avant{transform:translateZ(59px)}.px-cube-arriere{transform:rotateY(180deg) translateZ(59px)}.px-cube-droite{transform:rotateY(90deg) translateZ(59px)}
+.px-cube-gauche{transform:rotateY(-90deg) translateZ(59px)}.px-cube-haut{transform:rotateX(90deg) translateZ(59px);border-color:var(--bio)}.px-cube-bas{transform:rotateX(-90deg) translateZ(59px)}

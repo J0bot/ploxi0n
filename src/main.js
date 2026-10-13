@@ -37,8 +37,10 @@ import { creerDossier } from './natif/dossier.js';
 import { creerMouvement } from './app/mouvement.js';
 import { garderBoxion } from './boxion-local/garde.js';
 import { installerWebNatif } from './natif/web-natif.js';
+import { creerMaintenant } from './natif/maintenant.js';
+import { creerCube } from './app/cube.js';
 
-const VERSION = '0.47.0';
+const VERSION = '0.48.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -128,6 +130,10 @@ async function demarrer() {
       mouvementActif: () => document.documentElement.classList.contains('px-anime') });
   } catch (e) { bootLog('⚠ web natif : ' + (e && e.message)); }
   boot(24, 'le web devient natif');
+  // ♫ à l'écoute : ce que jouent les ploxions (Spotify, Media Session) → l'écran verrouillé, le widget, le mini-lecteur (avant tout ploxion)
+  const maintenant = creerMaintenant({ courant: () => routeur && routeur.courant(), ouvrir: (id) => { if (routeur && routeur.connait(id)) routeur.ouvrir(id); },
+    valeur: (k, t, v) => { try { return raccourcis ? raccourcis.valeur(k, t, v) : Promise.resolve(); } catch (e) { return Promise.resolve(); } } });   // raccourcis : déclaré plus bas
+  window.jOSNatif.lecture = maintenant.api;
   // un ploxion en ouvre un autre (jOSXerPrefs.ouvrir, jOS.openPloxion) : s'il n'est pas installé et qu'il y a du réseau, on l'installe à la volée
   const routeurProxy = {
     async ouvrir(id, params) {
@@ -230,7 +236,10 @@ async function demarrer() {
   internes.push(enregistrerGestion({ depot, vibrer: (x) => vibrer(x), ouvrir: (id) => routeurProxy.ouvrir(id), retirer: async (id) => { await routeur.retirerPloxion(id); await majAccueil(); } }));
   // ❤ la santé : Apple Santé lue sur le téléphone (le ploxion « Santé ») ; jOSNatif.sante pour les ploxions, sur accord
   const sante = creerSante({ boxion, vibrer: (x) => vibrer(x), courant: () => (routeur ? routeur.courant() : null),
-    distant: () => (compte.etat().connecte && modeConnecte && navigator.onLine !== false ? window.jOSBoxion : null) });   // ☁ le résumé sur ton boxion (si activé)
+    distant: () => (compte.etat().connecte && modeConnecte && navigator.onLine !== false ? window.jOSBoxion : null),   // ☁ le résumé sur ton boxion (si activé)
+    valeur: (k, t, v) => (raccourcis ? raccourcis.valeur(k, t, v) : Promise.resolve()) });
+  // ◈ le cube des widgets : six infos des bions (les valeurs), et la dernière inclinaison du téléphone
+  const cube = creerCube({ boxion, valeurs: () => (raccourcis ? raccourcis.toutes() : {}) });
   internes.push(sante.ploxion);
   window.jOSNatif.sante = sante.api;
   setTimeout(() => sante.synchroniser().catch(() => {}), 5000);   // ☁ hors du chemin critique : le résumé santé (si activé et connecté)
@@ -243,7 +252,7 @@ async function demarrer() {
   const notifs = creerNotifs({ boxion, vibrer, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id) => routeurProxy.ouvrir(id) });
   await notifs.pret;
   boot(73, 'notifications');
-  internes.push(enregistrerReglages({ compte, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, prefs, vibrer, haptique, lecteur, sante, version: VERSION }));
+  internes.push(enregistrerReglages({ compte, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, prefs, vibrer, haptique, lecteur, sante, cube, valeurs: () => (raccourcis ? raccourcis.toutes() : {}), version: VERSION }));
   // le vecteur xerion de ce téléphone : le temps passé par ploxion (même forme que jOSUsage du labo : { px: { id: { opens, seconds, lastAt } } })
   async function surUsage(id, sec) {
     const u = (await boxion.get('usage', 'stats')) || { px: {} };
@@ -290,7 +299,7 @@ async function demarrer() {
     return { ready: pret, unmount() { mort = true; if (inst && inst.unmount) { try { inst.unmount(); } catch (e) { /* */ } } inst = null; } };
   };
   window.ploxi0n = { boxion, shim, routeur, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte };
-  brancherLiens({ routeur, compte, installer: (id) => routeurProxy.ouvrir(id) });   // une icône de l'écran d'accueil vers un ploxion absent : installé à la volée
+  brancherLiens({ routeur, compte, installer: (id) => routeurProxy.ouvrir(id), lecture: (c) => maintenant.commander(c) });   // une icône de l'écran d'accueil vers un ploxion absent : installé à la volée
   // « Dis à ploxi0n … » (Siri, la dictée) : une phrase → une action
   async function commande(texte) {
     const c = comprendre(texte);
@@ -320,6 +329,7 @@ async function demarrer() {
     await raccourcis.valeur('compte', 'Compte', e.connecte ? (e.nom + ' · ' + e.palier) : 'pas connecté');
     await raccourcis.valeur('mode', 'Mode connecté', modeConnecte ? 'oui' : 'non');
     await raccourcis.epingles(hud.config().epingles.map(id => routeur.catalogue().find(p => p.id === id)).filter(Boolean));
+    await cube.publier();
   }
   hud.surChangement(() => publierValeurs().catch(() => {}));
   raccourcis.publier(routeur.catalogue()).catch(() => {});   // le catalogue est déjà là : seulement le publier vers Raccourcis

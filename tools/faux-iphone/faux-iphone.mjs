@@ -93,7 +93,7 @@ const natif = {
 };
 
 function repondre({ pluginId, methodName, options, callbackId }) {
-  appels.push({ t: Date.now(), p: pluginId, m: methodName });
+  appels.push({ t: Date.now(), p: pluginId, m: methodName, o: options });
   if (methodName === 'addListener') { auditeurs.push({ plugin: pluginId, evenement: options.eventName, callbackId }); return { garder: true }; }
   if (methodName === 'removeListener' || methodName === 'removeAllListeners') return { success: true, data: {} };
   if (!plugins[pluginId]) return { success: false, error: { message: `"${pluginId}" plugin is not implemented on ios`, code: 'UNIMPLEMENTED' } };

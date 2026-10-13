@@ -5,8 +5,8 @@
 
 **Légende** : ✅ fait (version) · 🔨 en cours · ⏭ prochain · 💭 plus tard · ❓ attend une décision de RS-7 · ⚠ fait, mais jamais vu marcher sur l'iPhone
 
-*Dernière mise à jour : 0.47 (12.10 au soir). La 0.45 est le dernier build TestFlight ; la 0.46 et la 0.47 attendent les minutes Actions
-(1.11) ou un build lancé à la main (`git tag v0.47 && git push origin v0.47`).*
+*Dernière mise à jour : 0.48 (13.10). La 0.45 est le dernier build TestFlight ; la 0.46, la 0.47 et la 0.48 attendent les minutes Actions
+(1.11) ou un build lancé à la main (`git tag v0.48 && git push origin v0.48`, depuis main).*
 
 ---
 
@@ -35,7 +35,9 @@ avant la 0.46. Toutes les lignes ⚠ ci-dessous sont à **revérifier sur l'iPho
 | ✅ 0.47 | ⚙ **Les réglages en pages et sous-pages** (accueil en 5 groupes ; ⚡ Natif, ❤ Santé ; gestes, haptique en sous-pages) | |
 | ✅ 0.47 | 📐 Le thème vivant cassait la mise en page (`px-vivant` = aussi la carte d'un ploxion vivant → `<html>` en flex, 630 px pour 393) | |
 | ✅ 0.47 | 📱 La vraie app : PrivacyInfo.xcprivacy, arm64, `fastlane/metadata` + lane `metadonnees`, docs/CONFIDENTIALITE.md | docs/APP-STORE.md |
-| ⏭ | **Construire la 0.47 et tout revérifier sur l'iPhone** (les ⚠) : `tools/faux-iphone` dit que c'est branché, seul le téléphone dit que ça marche | |
+| ✅ 0.48 | ♫ **À l'écoute** : le Spotify Web Playback SDK (et toute Media Session d'un iframe) → l'écran verrouillé (titre, artistes, pochette, ⏮ ⏯ ⏭ au lieu de « Spotify Embedded Player » ±10 s), le mini-lecteur de l'accueil, la valeur « musique », jOSNatif.lecture | ⚠ WebKit publie aussi le sien : à voir sur l'iPhone qui gagne |
+| ✅ 0.48 | ◈ **Le widget Cube** (six valeurs des bions, penché selon la dernière inclinaison, ⟲ interactif, il tourne toutes les 20 min) + ♫ **le widget À l'écoute** (pochette, ⏮ ⏯ ⏭) ; ⚙ › Widgets : le cube 3D qui suit le gyroscope en direct, le choix des faces | build avec l'option « widgets » |
+| ⏭ | **Construire la 0.48 et tout revérifier sur l'iPhone** (les ⚠) : `tools/faux-iphone` dit que c'est branché, seul le téléphone dit que ça marche | |
 | ⏭ ❓ | **Supprimer son compte DANS l'app** (règle App Store 5.1.1(v), bloquante) : une route labo, puis un bouton ⚙ › Compte | côté labo |
 | ⏭ | Le faux iPhone sur les ploxions du réseau (quand xerboxion.org est joignable depuis l'environnement) : tous les ploxions publics, chemin iPhone | |
 | 💭 | Encore plus de natif : Contacts, Calendrier/Rappels (EventKit), Live Activities, contrôles du Centre de contrôle, Apple Pay ? | nouveaux plugins |
@@ -127,10 +129,10 @@ contrepartie native (FOURNIS + src/natif/<bion>.js). Un ploxion qui « charge à
 | ✅ 0.9 | Envoyer à un ploxion (bus), Lire une valeur, Chercher un ploxion | |
 | ✅ 0.9 | **Widgets** : 📌 épinglés, ◇ valeurs (aussi écran verrouillé) | App Group |
 | ✅ 0.11 | 📲 **Tes ploxions en vraies apps** (profil de clips fabriqué par le labo) | |
-| ⏭ | Widgets **interactifs** (iOS 17 : boutons, interrupteurs sans ouvrir l'app) | |
+| 🔨 0.48 | Widgets **interactifs** (iOS 17) : ⟲ du cube ; reste : ⏯ du widget À l'écoute sans ouvrir l'app (AudioPlaybackIntent, l'intent dans les deux cibles) | |
 | ⏭ | Un widget **par ploxion** (chaque ploxion publie le sien : une valeur, un bouton, un graphe) | |
 | 💭 | **Contrôles du Centre de contrôle** (iOS 18) : un bion = un contrôle | |
-| 💭 | **Live Activities / Dynamic Island** : un tsoin en cours, un minuteur, la musique | |
+| 💭 | **Live Activities / Dynamic Island** : un tsoin en cours, un minuteur, la musique (maintenant.js a déjà tout ce qu'il faut) | |
 | 💭 | **Un xer = un mode de concentration** avec ses pages d'accueil ; Focus Filter → l'app change d'accueil et de thème | « le vrai mode xerboxion sur le phone » |
 | 💭 | Liens universels `https://xerboxion.org/px/<id>` qui ouvrent l'app | Associated Domains coché |
 | 💭 | Le **mode xerboxion** de tout l'iPhone : réglages, son, interface pilotés par des ploxions et des bions (Raccourcis + automatisations) | tableau de plan-suite |

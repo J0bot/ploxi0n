@@ -4,6 +4,12 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.48.0', titre: 'À l\'écoute, et le cube', points: [
+    '♫ L\'écran verrouillé dit enfin ce qui joue : titre, artistes, pochette, et ⏮ ⏯ ⏭ (au lieu de « Spotify Embedded Player » et ±10 s). Ça marche pour Spotify et pour tout ploxion qui renseigne la Media Session.',
+    '♫ Un mini-lecteur au-dessus du dock, sur l\'accueil : ce qui joue en arrière-plan, ⏮ ⏯ ⏭ ; le toucher rouvre le ploxion.',
+    '◈ Le widget Cube : six infos de tes bions (tsoins, musique, pas, ploxions…) sur un cube penché comme ton téléphone ; ⟲ pour le tourner. Dans ⚙ › Widgets, il suit le gyroscope en direct, et tu choisis ses faces.',
+    '♫ Le widget À l\'écoute : la pochette, le titre, ⏮ ⏯ ⏭ ; aussi sur l\'écran verrouillé.',
+  ] },
   { v: '0.47.0', titre: 'Le natif, partout', points: [
     '⚡ Tous tes ploxions deviennent natifs : vibrer (Taptic Engine), la position, les notifications, la dictée, les QR, le gyroscope, Bluetooth, NFC, garder l\'écran allumé, le partage et le presse-papiers passent par l\'iPhone. ⚙ › Natif les montre.',
     '🛠 Corrigé, enfin : Raccourcis et Siri (ouvrir un ploxion, noter un tsoin, « Dis à ploxi0n »), les widgets (épinglés, valeurs), Face ID, les notifications et Santé échouaient en silence sur l\'iPhone depuis le début.',

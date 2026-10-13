@@ -16,7 +16,7 @@ export const FOURNIS_APP = ['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS
 // l'accueil des réglages : [groupe, [[page, icône, nom]]] ; SOUS : une sous-page → sa page parente (‹ y revient)
 export const GROUPES = [
   ['toi', [['compte', '👤', 'Compte'], ['reseau', '🌐', 'Réseau et mode connecté']]],
-  ['l\'iPhone', [['natif', '⚡', 'Natif'], ['sante', '❤', 'Santé'], ['notifs', '🔔', 'Notifications'], ['faceid', '🔒', 'Face ID'], ['iphone', '📲', 'Écran d\'accueil de l\'iPhone']]],
+  ['l\'iPhone', [['natif', '⚡', 'Natif'], ['sante', '❤', 'Santé'], ['widgets', '▦', 'Widgets'], ['notifs', '🔔', 'Notifications'], ['faceid', '🔒', 'Face ID'], ['iphone', '📲', 'Écran d\'accueil de l\'iPhone']]],
   ['le look', [['apparence', '🎨', 'Apparence'], ['haptique', '🫧', 'Haptique'], ['lecteur', '🎞', 'Lecteur']]],
   ['les gestes', [['navigation', '🧭', 'Navigation'], ['hud', '🧩', 'HUD et dock'], ['accueil', '🏠', 'Accueil']]],
   ['tes ploxions', [['ploxions', '▣', 'Ploxions'], ['bions', '⬡', 'Bions'], ['donnees', '💾', 'Données']]],
@@ -24,7 +24,7 @@ export const GROUPES = [
 ];
 export const SOUS = { gestes: 'navigation', 'haptique-motifs': 'haptique', 'haptique-evenements': 'haptique', 'haptique-ploxions': 'haptique' };
 
-export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, vibrer = () => {}, haptique = null, lecteur = null, sante = null, version = '?' }) {
+export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, vibrer = () => {}, haptique = null, lecteur = null, sante = null, cube = null, valeurs = () => ({}), version = '?' }) {
   const ELS = { tsoin: '⧗ noter un tsoin', vocal: '🎙 vocal', compte: '👤 compte', reseau: '📶 réseau et mode connecté', heure: '🕐 heure', chercher: '🔎 chercher un ploxion', epingles: '📌 ploxions épinglés' };
   function mount(hote) {
     let vivant = true, q = '', composition = [], page = null;   // page : null = l'accueil des réglages
@@ -64,13 +64,14 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       const etats = {
         compte: e.connecte ? (e.glyphe || '·') + ' ' + e.nom + ' · ' + e.palier : 'pas connecté', reseau: modeConnecte() ? 'mode connecté' : 'hors ligne seulement',
         natif: wn.natif ? (P && P.webNatif === false ? 'coupé' : wn.faits.length + ' API du web → le natif de l\'iPhone') : 'sur l\'iPhone', sante: sp ? (sp.actif ? '☁ résumé envoyé à ton boxion' : 'lu sur le téléphone, rien n\'est envoyé') : '',
+        widgets: cube ? 'le cube : ' + cube.faces().slice(0, 3).map(f => f.g).join(' ') + ' … ; à l\'écoute, épinglés, valeurs' : '',
         notifs: notifs && notifs.reglage().coord ? 'coord surveillé' : 'test, coord', faceid: verrous.length ? verrous.length + ' ploxion(s) verrouillé(s)' : 'aucun verrou', iphone: 'tes ploxions en vraies apps',
         apparence: P ? [P.themeVivant !== false ? 'thème vivant' : null, P.pleinEcran ? 'plein écran' : null, P.calme ? 'calme' : null, 'icônes ' + P.icones].filter(Boolean).join(' · ') : '',
         haptique: P && P.haptique === false ? 'coupée' : 'motifs, événements, signatures', lecteur: 'écran verrouillé, AirPlay, YouTube',
         navigation: P ? [P.bords ? 'les bords' : null, P.telecommande !== false ? 'télécommande' : null, 'gestes'].filter(Boolean).join(' · ') : '', hud: c.epingles.length + ' épinglé(s)' + (P && P.dock === false ? ' · sans dock' : ''),
         accueil: 'dossiers et pages', ploxions: installes.length + ' installé(s)', bions: bions.length + ' bion(s)', donnees: nRoutes + ' réponse(s) gardée(s)', apropos: 'ploxi0n ' + version,
       };
-      zone.innerHTML = '<div data-accueil>' + GROUPES.map(([g, l]) => (g ? '<h3>' + esc(g) + '</h3>' : '<h3>&nbsp;</h3>') + '<div class="bloc">' + l.filter(([k]) => k !== 'sante' || sante).filter(([k]) => k !== 'notifs' || notifs).map(([k, i, n]) => lien(k, i, n, etats[k])).join('') + '</div>').join('') + '</div>'
+      zone.innerHTML = '<div data-accueil>' + GROUPES.map(([g, l]) => (g ? '<h3>' + esc(g) + '</h3>' : '<h3>&nbsp;</h3>') + '<div class="bloc">' + l.filter(([k]) => (k !== 'sante' || sante) && (k !== 'widgets' || cube)).filter(([k]) => k !== 'notifs' || notifs).map(([k, i, n]) => lien(k, i, n, etats[k])).join('') + '</div>').join('') + '</div>'
         + section('natif', '⚡ Natif', '<div class="bloc">' + bascule('data-pb="webNatif"', !P || P.webNatif !== false, 'Le web devient natif', 'les API web de TOUS les ploxions passent par l\'iPhone (au prochain lancement si tu changes)')
           + BRANCHEMENTS.map(([k, ic, api, quoi]) => '<div class="l"><span class="ic">' + ic + '</span><span>' + esc(api) + '<small>→ ' + esc(quoi) + (wn.erreurs[k] ? ' · ⚠ ' + esc(wn.erreurs[k]) : '') + '</small></span><span class="act">' + (wn.faits.includes(k) ? '✓' : '—') + '</span></div>').join('') + '</div>'
           + '<p class="msg">Pour les ploxions qui veulent plus : jOSNatif, le bion natif</p><div class="bloc"><div class="l"><span class="ic">⚡</span><span>jOSNatif<small>' + esc((W.jOSNatif ? W.jOSNatif.capacites() : []).join(' · ') || 'non chargé') + '</small></span></div>'
@@ -79,6 +80,18 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         + (sante ? section('sante', '❤ Santé', '<div class="bloc"><div class="l"><span>❤ Santé iPhone<small>pas, sommeil, cœur, entraînements, tes appareils</small></span><button class="p" data-ouvrir="sante">ouvrir</button></div>'
           + bascule('data-t="sante-partage"', !!(sp && sp.actif), '☁ Envoyer un résumé à mon boxion', 'agrégats du jour et de la semaine, jamais les mesures brutes ; le hub 🌸 Santé du xerkion et tes autres appareils le lisent' + (sp && sp.dernier ? ' · dernier envoi ' + new Date(sp.dernier).toLocaleString('fr-CH', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : ''))
           + '<div class="l"><span>Les ploxions qui lisent ta santé<small>chacun demande une fois (jOSSante) ; Réglages iOS › Santé › Accès aux données › ploxi0n pour ce qu\'iOS partage</small></span></div></div>') : '')
+        + (cube ? (() => { const V = valeurs() || {}, cles = [...new Set([...Object.keys(V), ...cube.choix()])], ch = cube.choix(), NOMS = ['devant', 'droite', 'derrière', 'gauche', 'dessus', 'dessous'];
+            return section('widgets', '▦ Widgets', '<div class="bloc"><div class="l ls"><span>◈ Le cube des bions<small>six infos des bions sur un cube : penche le téléphone, il suit (ici, en direct) ; le widget « Cube » garde ta dernière inclinaison et tourne d\'un toucher (⟲)</small></span></div>'
+              + cube.apercu() + '</div><p class="msg">Ses six faces : une valeur de l\'app ou d\'un bion chacune</p><div class="bloc">'
+              + ch.map((k, i) => '<div class="l"><span>' + esc(NOMS[i]) + '</span><select data-cube-face="' + i + '" style="max-width:62%;background:var(--surface2,#151021);color:inherit;border:2px solid var(--bord,#272036);border-radius:10px;padding:6px;font:13px inherit">'
+                + cles.map(c => '<option value="' + esc(c) + '"' + (c === k ? ' selected' : '') + '>' + esc((V[c] && V[c].titre) || c) + (V[c] ? ' · ' + esc(String(V[c].valeur).slice(0, 18)) : ' · (pas encore publiée)') + '</option>').join('') + '</select></div>').join('')
+              + '</div><p class="msg">Les widgets de ploxi0n : appui long sur l\'écran d\'accueil de l\'iPhone › ＋ › ploxi0n</p><div class="bloc">'
+              + '<div class="l"><span class="ic">◈</span><span>Cube<small>les six infos ci-dessus ; ⟲ pour le tourner</small></span></div>'
+              + '<div class="l"><span class="ic">♫</span><span>À l\'écoute<small>ce que jouent tes ploxions (Spotify…), la pochette, ⏮ ⏯ ⏭ ; aussi sur l\'écran verrouillé</small></span></div>'
+              + '<div class="l"><span class="ic">📌</span><span>Ploxions épinglés<small>ceux de ton dock (⚙ › HUD et dock)</small></span></div>'
+              + '<div class="l"><span class="ic">◇</span><span>ploxi0n<small>une valeur : tes tsoins du jour, la musique, ton compte ; aussi sur l\'écran verrouillé</small></span></div>'
+              + '<div class="l"><span>État de la copie vers les widgets<small data-widgets-etat>…</small></span><button data-a="widgets">republier</button></div></div>'
+              + '<p class="msg">Le gyroscope en direct n\'existe pas pour un widget : Apple ne leur donne ni capteurs ni animation continue. Le cube de l\'app, lui, suit le téléphone.</p>'); })() : '')
         + section('compte', 'Compte', '<div class="bloc"><div class="l"><span>' + (e.connecte ? esc((e.glyphe || '·') + ' ' + e.nom) + '<small>rang ' + esc(e.palier) + ' · xerboxion.org</small>' : 'Pas connecté<small>tout reste sur ton téléphone</small>') + '</span>'
           + (e.connecte ? '<button data-a="sortir">se déconnecter</button>' : '<button class="p" data-a="connecter">se connecter</button>') + '</div></div>')
         + section('reseau', 'Réseau', '<div class="bloc">' + bascule('data-t="mode"', modeConnecte(), 'Mode connecté', 'les ploxions joignent xerboxion.org' + (e.connecte ? ' avec ton compte' : '') + ' ; hors ligne, leur dernière réponse')
@@ -162,7 +175,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + '<div class="l"><span>📦 Ploxions installés<small>la place qu\'ils prennent, leurs bions, retirer</small></span><button data-a="gestion">ouvrir</button></div>'
           + '<div class="l"><span>✦ Nouveautés<small>ce qui a changé, version par version</small></span><button data-a="nouveautes">voir</button></div>'
           + '<div class="l"><span>🧭 Le tuto d\'accueil<small>les gestes et les features, en 9 cartes</small></span><button data-a="tuto">revoir</button></div>'
-          + '<div class="l"><span>▦ Widgets<small data-widgets-etat>…</small></span><button data-a="widgets">rafraîchir</button></div>'
+          + '<div class="l"><span>▦ Widgets<small>le cube des bions, à l\'écoute, épinglés</small></span><button data-aller="widgets">voir</button></div>'
           + '<div class="l"><span>⌨ Tester le clavier<small>si le clavier ne s\'ouvre pas : le rapport dit où ça casse</small></span><button class="p" data-a="clavier">tester</button></div>'
           + '<div class="l"><span>🧪 Banc iPhone</span><button data-ouvrir="banc">ouvrir</button></div><div class="l"><span>🐛 Bother me (un souci, une idée)</span><button data-ouvrir="bother">ouvrir</button></div></div>')
         + '<p class="msg" data-msg></p>';
@@ -201,6 +214,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
     hote.addEventListener('change', async (ev) => {
       const t = ev.target;
       if (t.type === 'checkbox') vibrer('interrupteur');
+      if (t.matches('[data-cube-face]') && cube) { await cube.choisir(+t.getAttribute('data-cube-face'), t.value); vibrer('selection'); return peindre(); }
       if (t.matches('[data-t="sante-partage"]') && sante) { const p = await sante.partager(t.checked); msg(t.checked ? (p.dernier ? '✓ envoyé à ton boxion' : '✓ activé : il partira dès que tu es connecté') : '✓ plus rien n\'est envoyé'); return; }
       if (t.matches('[data-t="mode"]')) { modeConnecte(t.checked); hud.regler(hud.config()); return; }
       if (t.matches('[data-t="coord"]')) { try { await notifs.coord(t.checked); const n = t.checked ? await notifs.verifierCoord() : []; msg(t.checked ? '✓ coord surveillé' + (n.length ? ' : ' + n.length + ' nouveau(x)' : '') : 'coord : plus de notifications'); } catch (er) { t.checked = false; await notifs.coord(false); msg('⚠ ' + (er.message || er)); } return; }

@@ -55,7 +55,7 @@ export function appareils(listes) {
   return [...m.values()].sort((a, b) => b.n - a.n);
 }
 
-export function creerSante({ W = globalThis.window, boxion, vibrer = () => {}, plugin = null, courant = () => null, distant = () => null }) {
+export function creerSante({ W = globalThis.window, boxion, vibrer = () => {}, plugin = null, courant = () => null, distant = () => null, valeur = async () => {} }) {
   const D = W.document;
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
   const H = async () => { if (plugin) return surPromesse(plugin); if (!natif()) throw new Error('Santé : sur l\'iPhone'); return surPromesse((await import('@capgo/capacitor-health')).Health); };
@@ -82,6 +82,8 @@ export function creerSante({ W = globalThis.window, boxion, vibrer = () => {}, p
     }));
     tuiles.sort((a, b) => TUILES.findIndex(x => x[0] === a.t) - TUILES.findIndex(x => x[0] === b.t));
     const dodo = await lire('sleep', { depuis: nuit, limite: 400 });
+    // (0.48) les valeurs du jour pour les widgets (le cube) et Siri — sur le téléphone seulement
+    { const p = tuiles.find(x => x.t === 'steps'), z = sommeil(dodo).total; try { if (p) await valeur('pas', 'Pas aujourd\'hui', p.valeur); if (z) await valeur('sommeil', 'Sommeil cette nuit', hm(z)); } catch (e) { /* */ } }
     const dodos = await lire('sleep', { depuis: new Date(debut.getTime() - 6 * 3600e3), limite: 3000 });
     const parNuit = []; for (let i = 0; i < jours; i++) { const fin = new Date(debut.getTime() + i * 864e5 + 18 * 3600e3), dep = new Date(fin.getTime() - 864e5); parNuit.push({ date: new Date(debut.getTime() + i * 864e5), valeur: sommeil(dodos.filter(s => Date.parse(s.endDate) > dep && Date.parse(s.endDate) <= fin)).total / 60 }); }
     const pas = (await agreger('steps', { depuis: debut })).map(s => ({ date: new Date(s.startDate), valeur: s.value }));
