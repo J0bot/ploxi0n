@@ -29,3 +29,33 @@ t'inspirer de ryoku ») — référence encore à recevoir (lien ou capture).*
 - **btop** (le lot de ploxions) = le widget SYSTEM : ce que l'iPhone donne vraiment (batterie, mémoire de l'app, état thermique « nominal /
   chaud », disque, réseau) + le boxion (xion : /healthz, /ecosystem) ; le **xerminal** du labo dans le même esprit (fastfetch du xerboxion).
 - La **bande façon niri** : chaque ploxion = une colonne-panneau avec son nom gravé dans le cadre.
+
+## 3. LE TRAIT : la direction de RS-7 pour le trackpad et l'UI à venir (13.10)
+
+*RS-7, 13.10 : « c'est à ça que devra ressembler le trackpad et l'UI en général dans le futur ».* Six planches de référence :
+`docs/look/references/trait-01.jpg` … `trait-06.jpg`. Ce n'est plus une inspiration d'ailleurs : c'est le langage du xerboxion lui-même.
+
+**Les couleurs** (mesurées sur les planches) : le fond `#1f1f1d` (un noir chaud, pas bleu), le trait `#ecebe9` (un blanc cassé). Rien
+d'autre : monochrome. Pas de remplissage, pas de dégradé, pas d'ombre, pas de flou.
+
+**Le trait** : une seule épaisseur par planche (≈ 1,2 à 2 % du côté), joints arrondis, une légère main (les lignes ne sont pas
+parfaitement droites, les angles pas parfaitement fermés) ; les cadres extérieurs ont des **angles vifs** (« pas besoin de coins, que des
+carrés »).
+
+**La grammaire** (chaque forme est un mot du lexique) :
+- **portion** : des rectangles ou des carrés **emboîtés** (concentriques, ou décalés vers un coin), 4 à 10 niveaux ;
+- **koin** : des **triangles emboîtés**, dans les coins d'un cadre, ou en **spirale** (chaque triangle tourne un peu dans le précédent) ;
+  un carré coupé en X donne quatre koins en spirale (trait-06) ;
+- **wormion** : des **cercles ou des ovales concentriques** (un œil, une cible) ;
+- **kion** : un cadre **découpé en panneaux** qui pavent tout l'espace, chacun habité par une forme emboîtée (trait-01, trait-05) ;
+- **la bande** : un trapèze (une étagère vue en perspective) portant une rangée de petites formes (trait-02, trait-03) ;
+- tout est un **cadre dans un cadre** : la page est un cadre, chaque zone en est un, chaque contrôle aussi (la fractale, à toutes les
+  échelles).
+
+**Pour le trackpad** (le prochain banc) : la surface sera une de ces compositions (des panneaux, des portions, des koins) ; la **texture
+haptique suivra le dessin** : le doigt qui traverse un trait = un cran, un cadre plus épais ou plus extérieur = un cran plus fort, entrer
+dans un panneau = une bosse ; et plus tard la reconnaissance de dessins (un motif tracé = une action).
+
+**Pour l'UI** (à faire petit à petit, sans tout casser) : un thème « trait » à côté de chill-tekk : fond `#1f1f1d`, trait `#ecebe9`, les
+cartes, boutons et tuiles en cadres emboîtés (pas de verre, pas de flou), les icônes du xerboxion en monochrome au trait (le style
+xerboxion des icônes, sans les palettes), les transitions qui zooment de cadre en cadre (le portail).
