@@ -119,6 +119,8 @@ export function creerFractale({ W = globalThis.window, racine, scene, file, orig
     renumeroter();
     depart = borne(origine(), 0, cartes.length - 1); departId = cartes[depart].e.id; focus = depart; cran = depart;
     racine.classList.add('px-fx-suit'); etat = 'depart'; placer(); void racine.offsetWidth; racine.classList.remove('px-fx-suit');
+    // pas de sélection, de loupe ni de menu d'iOS sur la fractale ouverte (le toucher reste à elle)
+    calque.addEventListener('touchstart', (e) => { if (e.cancelable) e.preventDefault(); }, { passive: false });
     calque.addEventListener('pointerdown', surCalqueBas); calque.addEventListener('pointermove', surCalqueBouge); calque.addEventListener('pointerup', surCalqueHaut); calque.addEventListener('pointercancel', surCalqueHaut);
     return true;
   }

@@ -4,6 +4,9 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.60.1', titre: 'Les bords ne sélectionnent plus le texte', points: [
+    'Tirer depuis un bord ne sélectionne plus le texte du ploxion (ni loupe, ni menu d\'iOS) : le geste reste à l\'app, il ne se coupe plus en route.',
+  ] },
   { v: '0.60.0', titre: 'Le xer devient un cube', points: [
     'La fractale en jeu de cartes : de grandes cartes, l\'icône et le nom au-dessus de chacune ; elles suivent le doigt et filent sur leur élan. Jette une carte vers le haut : le ploxion se ferme.',
     'Le slider, c\'est le filtrage de photons : autour du curseur de réel (le trait au milieu), les apps sont pleines ; plus loin elles tournent sur la tranche et deviennent des lignes serrées.',

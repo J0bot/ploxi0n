@@ -83,6 +83,11 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
   plafond 60/s, aller-retour natif mesuré). Faux iPhone : `parcours-fractale.mjs` calme le gyroscope simulé (il oscille ±0,2).
   **Côté labo, plus tard** : RS-7 veut que chaque ploxion mis sur l'écran d'accueil « seul » (web) ait aussi ces bords et la fractale :
   il faudra un bion du labo (jOSFractale) qui compose `fractale.js` avec le gestionnaire de fenêtres du labo.
+- **0.60.1 — les bords ne sélectionnent plus.** RS-7 sur l'iPhone (0.59) : « quand on tire sur les bords, ça sélectionne le texte et ça
+  bug de malade ». Le touchstart ET le touchmove des bords sont refusés à iOS (preventDefault, passive: false), la sélection en cours
+  effacée, `px-tire-bord` coupe la sélection dans toute l'app tant qu'un doigt est sur un bord ; pareil sur la fractale (`px-fx`).
+  CI : un commit « [build] » sur une branche glob/** lance le build TestFlight (« [widgets] » : avec) — la session ne peut ni pousser
+  de tag ni lancer un workflow à la main (403).
 
 ## 3. Ce qui reste, par ordre
 

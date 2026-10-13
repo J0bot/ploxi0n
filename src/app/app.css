@@ -123,7 +123,7 @@ button{font-family:inherit;-webkit-user-select:none;user-select:none}
 .px-tiroir button.on{border-color:var(--bio)}
 .px-tiroir button .px-ic{display:inline-flex;width:30px;height:30px;font-size:1rem;border-radius:9px;vertical-align:middle;margin-right:6px}
 /* les bords : invisibles au repos ; pendant le glissé, la veilleuse monte avec le geste */
-.px-bord{position:fixed;top:calc(env(safe-area-inset-top,0px) + 56px);bottom:calc(env(safe-area-inset-bottom,0px) + 20px);width:16px;z-index:40;touch-action:none;--p:0}
+.px-bord{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 56px);bottom:calc(env(safe-area-inset-bottom,0px) + 20px);width:16px;z-index:40;touch-action:none;--p:0}
 .px-bord-g{left:0}.px-bord-d{right:0}
 .px-bord::after{content:"";position:absolute;top:50%;width:4px;height:calc(40px + 80px * var(--p));transform:translateY(-50%);border-radius:2px;background:var(--bio);opacity:0;box-shadow:0 0 10px var(--glow)}
 .px-bord-g::after{left:2px}.px-bord-d::after{right:2px}
@@ -599,3 +599,6 @@ html.px-px-chill body{
 .px-fx-dessus-in li .px-g{width:30px;height:30px;flex:none}
 .px-freefall{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:50%;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:8px;width:auto;height:30px;min-height:0;margin:0;padding:0 12px;border-radius:15px;border:var(--trait) solid var(--bio);background:var(--surface) var(--grain);color:var(--bio);font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;box-shadow:0 0 18px var(--glow)}
 .px-freefall .px-g{width:14px;height:14px}.px-freefall b{color:var(--muted);font-size:14px;font-weight:600}
+/* (0.60.1) pendant la fractale : ni sélection, ni loupe, ni menu d'iOS, nulle part */
+.px-fx,.px-fx *,.px-tire-bord,.px-tire-bord *{-webkit-user-select:none !important;user-select:none !important;-webkit-touch-callout:none !important}
+.px-fx-calque,.px-fx-cible{-webkit-tap-highlight-color:transparent}

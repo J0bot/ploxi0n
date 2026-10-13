@@ -90,3 +90,20 @@ test('tenir 1,9 s : le slider défile tout seul vers le bord tenu ; lâcher ouvr
     assert.ok(['b', 'c', 'd', 'e'].includes(r.courant()));
   } finally { p.fin(); }
 });
+
+test('(0.60.1) tenir un bord ne sélectionne plus de texte : le touchstart des bords est refusé à iOS', async () => {
+  const p = await page({ avion: true, ploxions: [] });
+  try {
+    const { racine, W } = await monter(p, ['a', 'b']);
+    const bd = racine.querySelector('.px-bord-d');
+    const t = new W.Event('touchstart', { bubbles: true, cancelable: true });
+    bd.dispatchEvent(t);
+    assert.equal(t.defaultPrevented, true, 'pas d\'appui long d\'iOS (sélection, loupe, menu)');
+    const m = new W.Event('touchmove', { bubbles: true, cancelable: true }); bd.dispatchEvent(m);
+    assert.equal(m.defaultPrevented, true, 'tirer non plus (RS-7 : « c\'est quand on tire »)');
+    ev(W, bd, 'pointerdown', W.innerWidth - 4);
+    assert.ok(racine.classList.contains('px-tire-bord'), 'le doigt sur un bord : plus de sélection nulle part');
+    ev(W, bd, 'pointermove', W.innerWidth - 120); ev(W, bd, 'pointerup', W.innerWidth - 120);
+    assert.ok(!racine.classList.contains('px-tire-bord'), 'relâché : la sélection revient');
+  } finally { p.fin(); }
+});

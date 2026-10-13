@@ -74,9 +74,17 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   const tenus = { g: false, d: false }, zones = { g: 'milieu', d: 'milieu' }; let lesDeux = false;
   for (const cote of ['g', 'd']) {
     const b = D.createElement('div'); b.className = 'px-bord px-bord-' + cote; b.setAttribute('aria-hidden', 'true'); racine.appendChild(b);
+    // (0.60.1, RS-7 sur l'iPhone : « ça sélectionne le texte et ça bug de malade ») tenir un bord, c'était pour iOS un appui long : la
+    // sélection de texte, la loupe, le menu — et iOS volait le toucher (pointercancel), le geste cassait. Le touchstart des bords est
+    // refusé à iOS (les pointer events, eux, arrivent toujours) ; et toute sélection en cours est effacée.
+    // RS-7 : « c'est quand on TIRE sur les bords » : le doigt traverse le texte du ploxion → le touchmove aussi, et tant que le doigt est
+    // sur un bord, plus aucune sélection dans toute l'app (px-tire-bord)
+    for (const t of ['touchstart', 'touchmove']) b.addEventListener(t, (e) => { if (prefs().bords !== false && e.cancelable) e.preventDefault(); }, { passive: false });
     let x0 = null, id0 = null;
     b.addEventListener('pointerdown', (e) => {
       if (prefs().bords === false) return; tenus[cote] = true; if (tenus.g && tenus.d) lesDeux = true;
+      try { const sel = W.getSelection && W.getSelection(); if (sel && sel.rangeCount) sel.removeAllRanges(); } catch (er) { /* */ }
+      racine.classList.add('px-tire-bord');
       const r = b.getBoundingClientRect(), f = r.height ? (e.clientY - r.top) / r.height : 0.5; zones[cote] = f < 0.33 ? 'haut' : f > 0.66 ? 'bas' : 'milieu';
       b.dataset.zone = zones[cote]; x0 = e.clientX; id0 = e.pointerId; try { b.setPointerCapture(e.pointerId); } catch (er) { /* */ } b.classList.add('px-tire'); e.preventDefault();
       if (lesDeux) fractale.annule(); else fractale.appui(cote, e); });   // ⧉ tenir : aperçu, fractale, slider
@@ -91,7 +99,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     const lacher = (e) => {
       if (x0 == null) return;
       const dx = ((e.clientX == null ? x0 : e.clientX) - x0) * (cote === 'g' ? 1 : -1);
-      x0 = null; tenus[cote] = false; b.classList.remove('px-tire'); b.style.removeProperty('--p');
+      x0 = null; tenus[cote] = false; b.classList.remove('px-tire'); b.style.removeProperty('--p'); if (!tenus.g && !tenus.d) racine.classList.remove('px-tire-bord');
       if (e.type === 'pointercancel') fractale.annule(); else if (!lesDeux && fractale.relache()) return;   // la fractale a pris le geste
       if (lesDeux) { if (!tenus.g && !tenus.d) { lesDeux = false; if (e.type === 'pointerup') faire(geste('deux-' + zones.g)); } return; }
       if (e.type === 'pointerup' && dx > SEUIL) faire(geste(cote + '-' + zones[cote]));
