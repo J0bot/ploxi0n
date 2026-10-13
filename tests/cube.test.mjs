@@ -7,7 +7,7 @@ import { creerCube, faces, FACES_DEFAUT } from '../src/app/cube.js';
 
 test('les faces : la valeur publiée, un glyphe, « — » si rien encore ; ⬡ pour la valeur d\'un bion', () => {
   const f = faces(['tsoins-jour', 'px.clicker', 'pas'], { 'tsoins-jour': { titre: 'Tsoins aujourd\'hui', valeur: 3 }, 'px.clicker': { titre: 'Clicker', valeur: '1e24' } });
-  assert.deepEqual(f.map(x => [x.g, x.v]), [['⧗', '3'], ['⬡', '1e24'], ['👣', '—']]);
+  assert.deepEqual(f.map(x => [x.g, x.v]), [['⧗', '3'], ['⬡', '1e24'], ['∷', '—']]);
 });
 
 test('publier : ploxi0n.cube avec l\'inclinaison du téléphone ; choisir une face la remplace et republie ; rien si inchangé', async () => {

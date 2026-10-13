@@ -46,8 +46,9 @@ import { creerModes } from './app/modes.js';
 import { creerMiniDocks } from './app/minidocks.js';
 import { creerCadresLabo } from './natif/cadres-labo.js';
 import { installerGel } from './app/gel.js';
+import { installerSansEmoji } from './app/sans-emoji.js';
 
-const VERSION = '0.53.0';
+const VERSION = '0.54.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -317,6 +318,11 @@ async function demarrer() {
     tsoin: () => tsoinNatif.ouvrir(), surSession: (x) => { boxion.put('reglages', 'session', x).catch(() => {}); barreHaut.peindre(); usage.track(x.courant); } });
   // ❄ (0.53) le gel : un ploxion vivant mais caché n'anime plus (requestAnimationFrame mis de côté jusqu'à ce qu'on le revoie)
   gel = installerGel({ courant: () => routeur.courant(), vivants: () => routeur.vivants() });
+  // ◇ (0.54) plus d'emoji dans l'interface de l'app : des glyphes du xerboxion (les ploxions du labo gardent leur contenu)
+  // (0.54) une vidéo passe en plein écran : les ploxions cachés s'endorment (la mémoire ; iOS tuait la page : « ça crash »)
+  document.addEventListener('webkitbeginfullscreen', () => { try { routeur.endormirCaches(); } catch (e) { /* */ } }, true);
+  installerSansEmoji({ interne: (id) => !!(routeur.catalogue().find(p => p.id === id) || {}).interne, actif: () => prefs.lire().glyphes !== false });
+  { let g = prefs.lire().glyphes; prefs.surChangement((p) => { if (p.glyphes === g) return; g = p.glyphes; if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); }); }
   // ▔ notre barre du haut, en plein écran (la place de la barre d'état d'iOS) : composable, appui long dessus
   const barreHaut = creerBarreHaut({ boxion, compte, vibrer: (x) => vibrer(x), actif: () => { const q = prefs.lire(); return !!q.pleinEcran && q.barreHaut !== false; },
     courant: () => { const c = routeur.courant(); return c ? ((routeur.catalogue().find(p => p.id === c) || {}).nom || c) : null; },
@@ -441,7 +447,10 @@ async function demarrer() {
   window.jOSNatif.fichiers = dossier.api;
   if (!modeSurJs && window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) setTimeout(() => dossier.synchroniser().catch(() => {}), 4000);
   // l'app passe en arrière-plan : toutes les vidéos s'arrêtent (sauf l'image dans l'image) ; le son continue (le mode audio, voulu)
-  function couperVideosArrierePlan() { try { for (const m of document.querySelectorAll('video')) { if (!m.paused && document.pictureInPictureElement !== m && !m.webkitPresentationMode?.startsWith?.('picture')) m.pause(); } } catch (e) { /* */ } }
+  // (0.54, RS-7 : « il faudrait avoir le PiP automatique ») la vidéo qu'on regarde passe en PiP en quittant l'app ; les autres (cachées) s'arrêtent
+  function pipAuto() { try { const c = routeur && routeur.courant(), h = c && document.querySelector('.px-hote[data-ploxion="' + CSS.escape(c) + '"]'); const m = h && [...h.querySelectorAll('video')].find(v => !v.paused && !v.ended);
+    if (m && m.webkitSupportsPresentationMode && m.webkitSupportsPresentationMode('picture-in-picture') && m.webkitPresentationMode !== 'picture-in-picture') m.webkitSetPresentationMode('picture-in-picture'); } catch (e) { /* refusé : elle s'arrête */ } }
+  function couperVideosArrierePlan() { pipAuto(); try { for (const m of document.querySelectorAll('video')) { if (!m.paused && document.pictureInPictureElement !== m && !m.webkitPresentationMode?.startsWith?.('picture')) m.pause(); } } catch (e) { /* */ } }
   if (!modeSurJs) notifs.demarrer();
   else { const b = document.createElement('div'); b.className = 'px-bulle'; b.textContent = '🛟 mode sûr pour ce lancement (le prochain réessaie tout). S\'il s\'est ouvert : le coupable est le fond photo, le thème vivant ou la session — dis-le à bother me.'; racine.appendChild(b); setTimeout(() => b.remove(), 9000); }
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {

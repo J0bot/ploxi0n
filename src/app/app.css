@@ -496,3 +496,26 @@ html.px-px-chill body{
 .px-labo .px-cadre-labo{position:absolute;inset:0;margin:0;justify-content:center;align-items:center;text-align:center}
 /* ⚡ (0.53) SNAPPY : les tuiles et les lignes hors de l'écran ne sont ni mises en page ni peintes (131 ploxions) */
 .px-tuile,.px-ligne{content-visibility:auto;contain-intrinsic-size:auto 104px}
+/* ◇ (0.54) LES GLYPHES (src/app/glyphes.js) : le trait du xerboxion, en couleur du texte ; .f = plein, .p = pointillé */
+.px-g{width:1.15em;height:1.15em;display:inline-block;vertical-align:-.2em;flex:none;fill:none;stroke:currentColor;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+.px-g .f{fill:currentColor;stroke:none}.px-g .p{stroke-dasharray:7 7;stroke-width:4.5}
+.px-g-pale{opacity:.55}
+.px-ic .px-g{width:48%;height:48%;color:hsl(var(--t,265) 42% 80%);stroke-width:5}
+.px-ligne .px-ic .px-g{width:58%;height:58%}
+.px-md-g .px-g{width:56%;height:56%;color:hsl(var(--t,265) 42% 80%);stroke-width:5}
+.px-h-b .px-g,.px-mini .px-g,.px-retour .px-g,.px-verrou .px-g{width:22px;height:22px}
+.px-compte .px-g{width:18px;height:18px;margin-right:2px}
+.px-modes .px-g{width:15px;height:15px;margin-right:4px;vertical-align:-3px}
+.px-vues .px-g{width:14px;height:14px;margin-right:4px;vertical-align:-2px}
+.px-xb-c .ic .px-g,.rg .ic .px-g{width:20px;height:20px;color:var(--acc)}
+.px-md-c button .px-g{width:16px;height:16px}
+.px-barre .px-g{width:20px;height:20px}
+/* ✥ (0.54) le glisser-déposer de l'accueil : la tuile soulevée suit le doigt, les autres tremblent */
+.px-fantome{position:fixed;z-index:90;width:64px;height:64px;transform:translate(-50%,-50%) scale(1.14);pointer-events:none;box-shadow:0 14px 30px rgba(0,0,0,.6),inset 0 0 0 1px var(--filet);opacity:.95}
+.px-souleve{opacity:.25}
+.px-tri .px-tuile:not(.px-souleve) .px-ic{animation:px-tremble .26s ease-in-out infinite alternate}
+.px-tri .px-tuile:nth-child(2n) .px-ic{animation-delay:-.13s}
+.px-tuile.px-cible .px-ic{border-color:var(--bio);box-shadow:0 0 0 3px var(--glow),inset 0 0 0 1px var(--filet)}
+@keyframes px-tremble{from{transform:rotate(-1.6deg)}to{transform:rotate(1.6deg)}}
+.px-calme .px-tri .px-tuile .px-ic{animation:none}
+@media (prefers-reduced-motion:reduce){.px-tri .px-tuile .px-ic{animation:none}}

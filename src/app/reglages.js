@@ -8,24 +8,25 @@ import { testerClavier } from './clavier.js';
 import { PLUGIONS } from '../natif/plugions.js';
 import { STYLES, EVENEMENTS } from '../natif/haptique.js';
 import { BRANCHEMENTS } from '../natif/web-natif.js';
+import { versGlyphe, glyphePloxion } from './glyphes.js';   // ◇ (0.54) des glyphes, plus d'emoji
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const ko = (n) => n < 1024 ? n + ' o' : n < 1048576 ? Math.round(n / 1024) + ' Ko' : (Math.round(n / 104857.6) / 10) + ' Mo';
 const heures = (s) => !s ? '0 h' : s < 3600 ? Math.max(1, Math.round(s / 60)) + ' min' : (Math.round(s / 360) / 10).toLocaleString('fr-CH') + ' h';
 export const FOURNIS_APP = ['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou', 'jOSRaccourcis', 'jOSEcranAccueil', 'jOSKeyboard (le clavier d\'iOS)', 'jOSSante (Apple Santé)', 'jOSMiniDock (les mini docks)'];
 // l'accueil des réglages : [groupe, [[page, icône, nom]]] ; SOUS : une sous-page → sa page parente (‹ y revient)
-export const GROUPES = [
-  ['toi', [['compte', '👤', 'Compte'], ['reseau', '🌐', 'Réseau et mode connecté']]],
-  ['l\'iPhone', [['natif', '⚡', 'Natif'], ['sante', '❤', 'Santé'], ['widgets', '▦', 'Widgets'], ['notifs', '🔔', 'Notifications'], ['faceid', '🔒', 'Face ID'], ['iphone', '📲', 'Écran d\'accueil de l\'iPhone']]],
-  ['le look', [['apparence', '🎨', 'Apparence'], ['haptique', '🫧', 'Haptique'], ['lecteur', '🎞', 'Lecteur']]],
-  ['les gestes', [['navigation', '🧭', 'Navigation'], ['hud', '🧩', 'HUD et dock'], ['accueil', '🏠', 'Accueil']]],
-  ['tes ploxions', [['ploxions', '▣', 'Ploxions'], ['bions', '⬡', 'Bions'], ['donnees', '💾', 'Données']]],
-  ['', [['apropos', '◇', 'À propos']]],
+export const GROUPES = [   // [page, glyphe (src/app/glyphes.js), nom]
+  ['toi', [['compte', 'compte', 'Compte'], ['reseau', 'globe', 'Réseau et mode connecté']]],
+  ['l\'iPhone', [['natif', 'bion', 'Natif'], ['sante', 'coeur', 'Santé'], ['widgets', 'widgets', 'Widgets'], ['notifs', 'notifs', 'Notifications'], ['faceid', 'verrou', 'Face ID'], ['iphone', 'iphone', 'Écran d\'accueil de l\'iPhone']]],
+  ['le look', [['apparence', 'palette', 'Apparence'], ['haptique', 'haptique', 'Haptique'], ['lecteur', 'video', 'Lecteur']]],
+  ['les gestes', [['navigation', 'navigation', 'Navigation'], ['hud', 'dock', 'HUD et dock'], ['accueil', 'maison', 'Accueil']]],
+  ['tes ploxions', [['ploxions', 'portion', 'Ploxions'], ['bions', 'bion', 'Bions'], ['donnees', 'donnees', 'Données']]],
+  ['', [['apropos', 'chilltekk', 'À propos']]],
 ];
 export const SOUS = { gestes: 'navigation', 'haptique-motifs': 'haptique', 'haptique-evenements': 'haptique', 'haptique-ploxions': 'haptique' };
 
 export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, vibrer = () => {}, haptique = null, lecteur = null, lecteurNatif = null, sante = null, cube = null, valeurs = () => ({}), version = '?' }) {
-  const ELS = { tsoin: '⧗ noter un tsoin', vocal: '🎙 vocal', compte: '👤 compte', reseau: '📶 réseau et mode connecté', heure: '🕐 heure', chercher: '🔎 chercher un ploxion', epingles: '📌 ploxions épinglés' };
+  const ELS = { tsoin: '⧗ noter un tsoin', vocal: 'vocal', compte: 'compte', reseau: 'réseau et mode connecté', heure: 'heure', chercher: 'chercher un ploxion', epingles: 'ploxions épinglés' };
   function mount(hote) {
     let vivant = true, q = '', composition = [], page = null;   // page : null = l'accueil des réglages
     const R = () => routeur();
@@ -45,11 +46,11 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       + '.rg .l.ls{flex-wrap:wrap}.rg .l.ls>span{flex:1 1 100%}.rg .seg{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-start}.rg .seg button{min-height:32px;padding:0 10px;font-size:12.5px;color:var(--muted,#8aa0c0)}.rg .seg button.on{color:var(--txt,#eee);border-color:var(--bio,#79d9a2)}'
       + '.rg .pins{display:flex;gap:10px;flex-wrap:wrap;padding:12px 16px}.rg .pin{font-size:1.4rem;width:50px;height:50px;border-radius:var(--blob1,14px);padding:0;opacity:.5}.rg .pin.on{opacity:1;border-color:var(--bio,#79d9a2);box-shadow:0 0 10px var(--glow,rgba(121,217,162,.28))}'
       + '.rg .l>span.ic{font-size:1.25rem;width:30px;text-align:center;flex:0 0 30px}.rg .eteint{opacity:.5}.rg .l .act{display:flex;gap:6px;align-items:center;flex:none}'
-      + '</style><div class="rg-tete"><div class="rg-fil"><button class="rg-retour" data-rg-retour hidden aria-label="retour">‹</button><b data-titre>⚙ réglages</b></div><input class="rg-q" data-q type="search" autocomplete="off" placeholder="chercher un réglage"></div><div data-c></div></div>';
+      + '</style><div class="rg-tete"><div class="rg-fil"><button class="rg-retour" data-rg-retour hidden aria-label="retour">‹</button><b data-titre>réglages</b></div><input class="rg-q" data-q type="search" autocomplete="off" placeholder="chercher un réglage"></div><div data-c></div></div>';
     const zone = hote.querySelector('[data-c]');
     const section = (k, titre, corps) => '<section data-s="' + k + '"><h3>' + titre + '</h3>' + corps + '</section>';
-    const lien = (k, ic, titre, sous) => '<button class="lien" data-rg-aller="' + k + '"><span class="ic">' + ic + '</span><span>' + esc(titre) + (sous ? '<small>' + esc(sous) + '</small>' : '') + '</span><span class="chev">›</span></button>';
-    const TITRES = Object.fromEntries([...GROUPES.flatMap(([, l]) => l.map(([k, i, n]) => [k, i + ' ' + n])), ['gestes', '🧭 Gestes des bords'], ['haptique-motifs', '🫧 Tes motifs'], ['haptique-evenements', '🫧 Les événements'], ['haptique-ploxions', '🫧 La signature des ploxions']]);
+    const lien = (k, ic, titre, sous) => '<button class="lien" data-rg-aller="' + k + '"><span class="ic">' + versGlyphe(ic) + '</span><span>' + esc(titre) + (sous ? '<small>' + esc(sous) + '</small>' : '') + '</span><span class="chev">›</span></button>';
+    const TITRES = Object.fromEntries([...GROUPES.flatMap(([, l]) => l.map(([k, i, n]) => [k, n])), ['gestes', 'Gestes des bords'], ['haptique-motifs', 'Tes motifs'], ['haptique-evenements', 'Les événements'], ['haptique-ploxions', 'La signature des ploxions']]);
     const bascule = (attr, on, texte, sous) => '<label class="l"><span>' + texte + (sous ? '<small>' + sous + '</small>' : '') + '</span><input type="checkbox" ' + attr + (on ? ' checked' : '') + '></label>';
     const seg = (cle, valeurs, actuel, texte, sous) => '<div class="l ls"><span>' + texte + (sous ? '<small>' + sous + '</small>' : '') + '</span><div class="seg">' + valeurs.map(([v, n]) => '<button data-pv="' + cle + '" data-v="' + esc(v) + '"' + (String(v) === String(actuel) ? ' class="on"' : '') + '>' + esc(n) + '</button>').join('') + '</div></div>';
 
@@ -63,7 +64,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       // l'état de chaque catégorie, en quelques mots (la ligne de l'accueil des réglages)
       const etats = {
         compte: e.connecte ? (e.glyphe || '·') + ' ' + e.nom + ' · ' + e.palier : 'pas connecté', reseau: modeConnecte() ? 'mode connecté' : 'hors ligne seulement',
-        natif: wn.natif ? (P && P.webNatif === false ? 'coupé' : wn.faits.length + ' API du web → le natif de l\'iPhone') : 'sur l\'iPhone', sante: sp ? (sp.actif ? '☁ résumé envoyé à ton boxion' : 'lu sur le téléphone, rien n\'est envoyé') : '',
+        natif: wn.natif ? (P && P.webNatif === false ? 'coupé' : wn.faits.length + ' API du web → le natif de l\'iPhone') : 'sur l\'iPhone', sante: sp ? (sp.actif ? 'résumé envoyé à ton boxion' : 'lu sur le téléphone, rien n\'est envoyé') : '',
         widgets: cube ? 'le cube : ' + cube.faces().slice(0, 3).map(f => f.g).join(' ') + ' … ; à l\'écoute, épinglés, valeurs' : '',
         notifs: notifs && notifs.reglage().coord ? 'coord surveillé' : 'test, coord', faceid: verrous.length ? verrous.length + ' ploxion(s) verrouillé(s)' : 'aucun verrou', iphone: 'tes ploxions en vraies apps',
         apparence: P ? [P.themeVivant !== false ? 'thème vivant' : null, P.pleinEcran ? 'plein écran' : null, P.calme ? 'calme' : null, 'icônes ' + P.icones].filter(Boolean).join(' · ') : '',
@@ -72,13 +73,13 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         accueil: 'dossiers et pages', ploxions: installes.length + ' installé(s)', bions: bions.length + ' bion(s)', donnees: nRoutes + ' réponse(s) gardée(s)', apropos: 'ploxi0n ' + version,
       };
       zone.innerHTML = '<div data-accueil>' + GROUPES.map(([g, l]) => (g ? '<h3>' + esc(g) + '</h3>' : '<h3>&nbsp;</h3>') + '<div class="bloc">' + l.filter(([k]) => (k !== 'sante' || sante) && (k !== 'widgets' || cube)).filter(([k]) => k !== 'notifs' || notifs).map(([k, i, n]) => lien(k, i, n, etats[k])).join('') + '</div>').join('') + '</div>'
-        + section('natif', '⚡ Natif', '<div class="bloc">' + bascule('data-pb="webNatif"', !P || P.webNatif !== false, 'Le web devient natif', 'les API web de TOUS les ploxions passent par l\'iPhone (au prochain lancement si tu changes)')
-          + BRANCHEMENTS.map(([k, ic, api, quoi]) => '<div class="l"><span class="ic">' + ic + '</span><span>' + esc(api) + '<small>→ ' + esc(quoi) + (wn.erreurs[k] ? ' · ⚠ ' + esc(wn.erreurs[k]) : '') + '</small></span><span class="act">' + (wn.faits.includes(k) ? '✓' : '—') + '</span></div>').join('') + '</div>'
-          + '<p class="msg">Pour les ploxions qui veulent plus : jOSNatif, le bion natif</p><div class="bloc"><div class="l"><span class="ic">⚡</span><span>jOSNatif<small>' + esc((W.jOSNatif ? W.jOSNatif.capacites() : []).join(' · ') || 'non chargé') + '</small></span></div>'
-          + PLUGIONS.map(pg => '<div class="l"><span class="ic">🔌</span><span>plugion · ' + esc(pg.bion) + '<small>' + esc(pg.quoi) + (W[pg.bion] ? (W[pg.bion].__plugion ? ' · branché' : ' · en attente') : ' · bion pas encore chargé') + '</small></span></div>').join('')
-          + '<div class="l"><span>🧪 Le banc iPhone<small>essayer chaque capacité sur cet appareil</small></span><button data-ouvrir="banc">ouvrir</button></div></div>')
-        + (sante ? section('sante', '❤ Santé', '<div class="bloc"><div class="l"><span>❤ Santé iPhone<small>pas, sommeil, cœur, entraînements, tes appareils</small></span><button class="p" data-ouvrir="sante">ouvrir</button></div>'
-          + bascule('data-t="sante-partage"', !!(sp && sp.actif), '☁ Envoyer un résumé à mon boxion', 'agrégats du jour et de la semaine, jamais les mesures brutes ; le hub 🌸 Santé du xerkion et tes autres appareils le lisent' + (sp && sp.dernier ? ' · dernier envoi ' + new Date(sp.dernier).toLocaleString('fr-CH', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : ''))
+        + section('natif', 'Natif', '<div class="bloc">' + bascule('data-pb="webNatif"', !P || P.webNatif !== false, 'Le web devient natif', 'les API web de TOUS les ploxions passent par l\'iPhone (au prochain lancement si tu changes)')
+          + BRANCHEMENTS.map(([k, ic, api, quoi]) => '<div class="l"><span class="ic">' + versGlyphe(ic) + '</span><span>' + esc(api) + '<small>→ ' + esc(quoi) + (wn.erreurs[k] ? ' · ⚠ ' + esc(wn.erreurs[k]) : '') + '</small></span><span class="act">' + (wn.faits.includes(k) ? '✓' : '—') + '</span></div>').join('') + '</div>'
+          + '<p class="msg">Pour les ploxions qui veulent plus : jOSNatif, le bion natif</p><div class="bloc"><div class="l"><span class="ic"></span><span>jOSNatif<small>' + esc((W.jOSNatif ? W.jOSNatif.capacites() : []).join(' · ') || 'non chargé') + '</small></span></div>'
+          + PLUGIONS.map(pg => '<div class="l"><span class="ic"></span><span>plugion · ' + esc(pg.bion) + '<small>' + esc(pg.quoi) + (W[pg.bion] ? (W[pg.bion].__plugion ? ' · branché' : ' · en attente') : ' · bion pas encore chargé') + '</small></span></div>').join('')
+          + '<div class="l"><span>Le banc iPhone<small>essayer chaque capacité sur cet appareil</small></span><button data-ouvrir="banc">ouvrir</button></div></div>')
+        + (sante ? section('sante', 'Santé', '<div class="bloc"><div class="l"><span>Santé iPhone<small>pas, sommeil, cœur, entraînements, tes appareils</small></span><button class="p" data-ouvrir="sante">ouvrir</button></div>'
+          + bascule('data-t="sante-partage"', !!(sp && sp.actif), 'Envoyer un résumé à mon boxion', 'agrégats du jour et de la semaine, jamais les mesures brutes ; le hub Santé du xerkion et tes autres appareils le lisent' + (sp && sp.dernier ? ' · dernier envoi ' + new Date(sp.dernier).toLocaleString('fr-CH', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : ''))
           + '<div class="l"><span>Les ploxions qui lisent ta santé<small>chacun demande une fois (jOSSante) ; Réglages iOS › Santé › Accès aux données › ploxi0n pour ce qu\'iOS partage</small></span></div></div>') : '')
         + (cube ? (() => { const V = valeurs() || {}, cles = [...new Set([...Object.keys(V), ...cube.choix()])], ch = cube.choix(), NOMS = ['devant', 'droite', 'derrière', 'gauche', 'dessus', 'dessous'];
             return section('widgets', '▦ Widgets', '<div class="bloc"><div class="l ls"><span>◈ Le cube des bions<small>six infos des bions sur un cube : penche le téléphone, il suit (ici, en direct) ; le widget « Cube » garde ta dernière inclinaison et tourne d\'un toucher (⟲)</small></span></div>'
@@ -87,15 +88,15 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
                 + cles.map(c => '<option value="' + esc(c) + '"' + (c === k ? ' selected' : '') + '>' + esc((V[c] && V[c].titre) || c) + (V[c] ? ' · ' + esc(String(V[c].valeur).slice(0, 18)) : ' · (pas encore publiée)') + '</option>').join('') + '</select></div>').join('')
               + '</div><p class="msg">Les widgets de ploxi0n : appui long sur l\'écran d\'accueil de l\'iPhone › ＋ › ploxi0n</p><div class="bloc">'
               + '<div class="l"><span class="ic">◈</span><span>Cube<small>les six infos ci-dessus ; ⟲ pour le tourner</small></span></div>'
-              + '<div class="l"><span class="ic">♫</span><span>À l\'écoute<small>ce que jouent tes ploxions (Spotify…), la pochette, ⏮ ⏯ ⏭ ; aussi sur l\'écran verrouillé</small></span></div>'
-              + '<div class="l"><span class="ic">📌</span><span>Ploxions épinglés<small>ceux de ton dock (⚙ › HUD et dock)</small></span></div>'
+              + '<div class="l"><span class="ic"></span><span>À l\'écoute<small>ce que jouent tes ploxions (Spotify…), la pochette, ⏮ ⏯ ⏭ ; aussi sur l\'écran verrouillé</small></span></div>'
+              + '<div class="l"><span class="ic"></span><span>Ploxions épinglés<small>ceux de ton dock (› HUD et dock)</small></span></div>'
               + '<div class="l"><span class="ic">◇</span><span>ploxi0n<small>une valeur : tes tsoins du jour, la musique, ton compte ; aussi sur l\'écran verrouillé</small></span></div>'
               + '<div class="l"><span>État de la copie vers les widgets<small data-widgets-etat>…</small></span><button data-a="widgets">republier</button></div></div>'
               + '<p class="msg">Le gyroscope en direct n\'existe pas pour un widget : Apple ne leur donne ni capteurs ni animation continue. Le cube de l\'app, lui, suit le téléphone.</p>'); })() : '')
         + section('compte', 'Compte', '<div class="bloc"><div class="l"><span>' + (e.connecte ? esc((e.glyphe || '·') + ' ' + e.nom) + '<small>rang ' + esc(e.palier) + ' · xerboxion.org</small>' : 'Pas connecté<small>tout reste sur ton téléphone</small>') + '</span>'
           + (e.connecte ? '<button data-a="sortir">se déconnecter</button>' : '<button class="p" data-a="connecter">se connecter</button>') + '</div>'
           // (0.52) règle App Store 5.1.1(v) : supprimer son compte DEPUIS l'app → la page du labo où la suppression se termine
-          + (e.connecte ? '<div class="l"><span>Supprimer mon compte<small>sur xerboxion.org : ton compte, ton boxion en ligne, tes tsoins partagés. Ce téléphone garde ses données (⚙ › Données pour les effacer).</small></span><button class="danger" data-a="supprimer-compte">supprimer…</button></div>' : '')
+          + (e.connecte ? '<div class="l"><span>Supprimer mon compte<small>sur xerboxion.org : ton compte, ton boxion en ligne, tes tsoins partagés. Ce téléphone garde ses données (› Données pour les effacer).</small></span><button class="danger" data-a="supprimer-compte">supprimer…</button></div>' : '')
           + '</div>')
         + section('reseau', 'Réseau', '<div class="bloc">' + bascule('data-t="mode"', modeConnecte(), 'Mode connecté', 'les ploxions joignent xerboxion.org' + (e.connecte ? ' avec ton compte' : '') + ' ; hors ligne, leur dernière réponse')
           + '<div class="l"><span>Source<small>xerboxion.org (le marketplace, les bions, le mode connecté)</small></span></div></div>')
@@ -105,37 +106,37 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + seg('vue', [['grille', 'grille'], ['compacte', 'compacte'], ['liste', 'liste'], ['usage', 'usage'], ['recents', 'récents'], ['categories', 'catégories']], R().vueAccueil ? R().vueAccueil() : 'grille', 'Vue de l\'accueil')
           + seg('icones', [['petites', 'petites'], ['normales', 'normales'], ['grandes', 'grandes']], P.icones, 'Taille des icônes')
           + bascule('data-pb="pleinEcran"', !!P.pleinEcran, 'Plein écran complet', 'sans barre d\'état ; la barre du bas s\'efface ; les bords haut et bas vont d\'abord à l\'app (un 2e glissé pour iOS)')
-          + '<div class="l"><span>🖼 Fond d\'écran<small>une photo, un motif gravé ; assombrir, flouter ; l\'accueil ou partout</small></span><button data-a="fond">changer</button></div>'
+          + '<div class="l"><span>Fond d\'écran<small>une photo, un motif gravé ; assombrir, flouter ; l\'accueil ou partout</small></span><button data-a="fond">changer</button></div>'
           + bascule('data-pb="barreHaut"', P.barreHaut !== false, 'Notre barre du haut', 'en plein écran : l\'heure, la batterie, tes tsoins… à gauche et à droite de l\'île ; appui long dessus pour la composer')
           + '<div class="l"><span>Composer la barre du haut<small>quels éléments, à gauche ou à droite</small></span><button data-a="barre-haut">composer</button></div>'
           + bascule('data-pb="themeVivant"', P.themeVivant !== false, 'Thème vivant', 'le thème suit le téléphone (gyroscope, accéléromètre) : le fond glisse, les icônes flottent et attrapent la lumière, un choc les fait tressauter')
           + '<div class="l ls"><span>État du mouvement<small data-mouvement>…</small></span></div>'
-          + bascule('data-pb="pxChill"', P.pxChill !== false, 'Chill-tekk pour tous les ploxions', 'leurs couleurs, polices, boutons et champs suivent ceux de l\'app (les variables du xer, --xr-*) ; coupé : chacun garde son style du labo')
+          + bascule('data-pb="glyphes"', P.glyphes !== false, 'Les glyphes du xerboxion', 'des glyphes au trait pour les icônes et l\'interface ; coupé : les emoji du labo') + bascule('data-pb="pxChill"', P.pxChill !== false, 'Chill-tekk pour tous les ploxions', 'leurs couleurs, polices, boutons et champs suivent ceux de l\'app (les variables du xer, --xr-*) ; coupé : chacun garde son style du labo')
           + bascule('data-pb="grain"', P.grain, 'Patine', 'le grain usé des plaques')
           + bascule('data-pb="contraste"', P.contraste === 'fort', 'Contraste fort', 'textes et bords plus clairs')
           + bascule('data-pb="calme"', P.calme, 'Calme', 'plus aucune animation, même aux gestes')
           + bascule('data-pb="plaque"', P.plaque, 'Plaque gravée', '« cycle 7026 · … » sur l\'accueil') + '</div>') : '')
         + (haptique ? (() => { const hc = haptique.config(), noms = Object.keys(hc.motifs);
             const options = (actuel) => '<option value="aucun"' + (actuel === 'aucun' ? ' selected' : '') + '>— rien</option>' + STYLES.map(([k, n]) => '<option value="' + k + '"' + (actuel === k ? ' selected' : '') + '>' + esc(n) + '</option>').join('')
-              + noms.map(m => '<option value="motif:' + esc(m) + '"' + (actuel === 'motif:' + m ? ' selected' : '') + '>🫧 ' + esc(m) + '</option>').join('');
+              + noms.map(m => '<option value="motif:' + esc(m) + '"' + (actuel === 'motif:' + m ? ' selected' : '') + '>' + esc(m) + '</option>').join('');
             return section('haptique', 'Haptique', '<div class="bloc">' + (P ? bascule('data-pb="haptique"', P.haptique !== false, 'Haptique', 'de petites vibrations : ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs — et navigator.vibrate des ploxions') : '')
-              + lien('haptique-motifs', '🫧', 'Tes motifs', noms.length ? noms.length + ' motif(s) inventé(s)' : 'en inventer un') + lien('haptique-evenements', '⚡', 'Les événements', 'ouvrir, revenir, notification… un style ou un motif chacun')
+              + lien('haptique-motifs', '', 'Tes motifs', noms.length ? noms.length + ' motif(s) inventé(s)' : 'en inventer un') + lien('haptique-evenements', '', 'Les événements', 'ouvrir, revenir, notification… un style ou un motif chacun')
               + lien('haptique-ploxions', '▣', 'La signature des ploxions', 'chaque ploxion se sent à l\'ouverture') + '</div>')
               + section('haptique-motifs', 'Tes motifs', '<div class="bloc">'
               + '<div class="l ls"><span>Inventer un motif<small>touche les pas dans l\'ordre (· = une pause), donne un nom, ▶ pour l\'essayer</small></span><div class="seg" data-studio>'
               + STYLES.map(([k, n]) => '<button data-pas="' + k + '">' + esc(n) + '</button>').join('') + '<button data-pas="pause">· pause</button><button data-pas="effacer">⌫</button></div>'
               + '<input class="rg-q" data-motif-nom placeholder="nom du motif" style="margin-top:8px"><div class="seg" style="margin-top:8px"><span data-motif-pas style="flex:1;color:var(--muted,#8aa0c0);font:12px var(--mono,monospace);align-self:center">(vide)</span><button data-motif="essayer">▶ essayer</button><button class="p" data-motif="sauver">sauver</button></div></div>'
-              + noms.map(m => '<div class="l"><span class="ic">🫧</span><span>' + esc(m) + '<small>' + esc(hc.motifs[m].map(([st, ms]) => st + (ms ? ' ' + ms + 'ms' : '')).join(' · ')) + '</small></span><span class="act"><button class="bas" data-jouer="motif:' + esc(m) + '">▶</button><button class="bas danger" data-motif-suppr="' + esc(m) + '">🗑</button></span></div>').join('')
+              + noms.map(m => '<div class="l"><span class="ic"></span><span>' + esc(m) + '<small>' + esc(hc.motifs[m].map(([st, ms]) => st + (ms ? ' ' + ms + 'ms' : '')).join(' · ')) + '</small></span><span class="act"><button class="bas" data-jouer="motif:' + esc(m) + '">▶</button><button class="bas danger" data-motif-suppr="' + esc(m) + '"></button></span></div>').join('')
               + '</div>') + section('haptique-evenements', 'Les événements', '<p class="msg">Chaque événement joue un style ou un de tes motifs :</p><div class="bloc">'
               + EVENEMENTS.map(([ev, n]) => '<div class="l"><span>' + esc(n) + '</span><select data-ev="' + ev + '" style="max-width:48%;background:var(--surface2,#151021);color:inherit;border:2px solid var(--bord,#272036);border-radius:10px;padding:6px;font:13px inherit">' + options(hc.evenements[ev] || 'aucun') + '</select></div>').join('')
               + '</div>') + section('haptique-ploxions', 'La signature des ploxions', '<p class="msg">Chaque ploxion a sa signature d\'ouverture (▶ pour la sentir), ou celle que tu choisis :</p><div class="bloc">'
               + R().catalogue().filter(p => !p.interne).slice(0, 80).map(p => { const v = (hc.ploxions || {})[p.id] || 'signature';
-                  return '<div class="l"><span class="ic">' + esc(p.icone || '▣') + '</span><span>' + esc(p.nom || p.id) + '<small>' + esc(v === 'signature' ? haptique.signature(p.id).map(([st]) => st).join(' · ') : v.replace('motif:', '🫧 ')) + '</small></span>'
+                  return '<div class="l"><span class="ic" style="color:hsl(' + 0 + ' 0% 80%)">' + glyphePloxion(p) + '</span><span>' + esc(p.nom || p.id) + '<small>' + esc(v === 'signature' ? haptique.signature(p.id).map(([st]) => st).join(' · ') : v.replace('motif:', '')) + '</small></span>'
                     + '<span class="act"><button class="bas" data-sentir="' + esc(p.id) + '">▶</button><select data-hpx="' + esc(p.id) + '" style="max-width:34vw;background:var(--surface2,#151021);color:inherit;border:2px solid var(--bord,#272036);border-radius:10px;padding:5px;font:12px inherit">'
                     + '<option value="signature"' + (v === 'signature' ? ' selected' : '') + '>signature</option>' + options(v).replace('<option value="aucun"', '<option value="aucun"') + '</select></span></div>'; }).join('')
               + '</div>'); })() : '')
         + (lecteur ? section('lecteur', 'Lecteur', (lecteurNatif ? (() => { const ln = lecteurNatif.reglage(); return '<div class="bloc">'
-          + '<div class="l ls"><span>🎞 Le lecteur intégré<small data-moteurs>Apple (PiP, AirPlay, écran verrouillé) ; VLC en repli pour MKV, DTS, sous-titres — si ce build l\'a</small></span>'
+          + '<div class="l ls"><span>Le lecteur intégré<small data-moteurs>Apple (PiP, AirPlay, écran verrouillé) ; VLC en repli pour MKV, DTS, sous-titres — si ce build l\'a</small></span>'
           + '<div class="seg">' + [['auto', 'auto'], ['apple', 'Apple'], ['vlc', 'VLC']].map(([v, n]) => '<button data-lnat-moteur="' + v + '"' + (ln.moteur === v ? ' class="on"' : '') + '>' + n + '</button>').join('') + '</div></div>'
           + bascule('data-lnat-auto', ln.auto !== false, 'Passer au lecteur intégré tout seul', 'une vidéo que la page ne lit pas, le lecteur d\'un ploxion (jOSplayer, Stremio), un lien vlc:// ou infuse:// ; une vidéo sans son propose de basculer')
           + '</div><p class="msg">Dans la page :</p>'; })() : '') + '<div class="bloc">'
@@ -145,51 +146,52 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         + (P ? section('navigation', 'Navigation', '<div class="bloc">'
           + bascule('data-pb="barreClavier"', P.barreClavier !== false, 'La barre au-dessus du clavier', 'QuickType, les mots de passe du trousseau, « OK » ; la dictée marche dans tous les champs')
           + bascule('data-pb="telecommande"', P.telecommande !== false, 'Télécommande', 'les barres en bas de l\'écran : tout au pouce (chill-tekk : on est tous des flemmards)')
-          + bascule('data-pb="reprendre"', P.reprendre !== false, 'Reprendre là où j\'en étais', 'après une fermeture ou un plantage : le ploxion de devant rouvert, les autres endormis 💤 dans ⧉')
+          + bascule('data-pb="reprendre"', P.reprendre !== false, 'Reprendre là où j\'en étais', 'après une fermeture ou un plantage : le ploxion de devant rouvert, les autres endormis dans ⧉')
           + bascule('data-pb="bords"', P.bords, 'Les bords', 'glisser depuis le bord gauche ou droit pour passer d\'une app à l\'autre')
           + bascule('data-pb="appuiLong"', P.appuiLong, 'Appui long sur l\'accueil', 'le menu d\'un ploxion (épingler, déplacer, retirer…)')
           + bascule('data-pb="clicDroit"', P.clicDroit !== false, 'Appui long = clic droit', 'dans les ploxions : leurs menus du clic droit s\'ouvrent')
           + seg('maxVivants', [[3, '3'], [5, '5'], [8, '8']], P.maxVivants, 'Ploxions vivants en arrière-plan', 'au-delà, le plus ancien se ferme')
           + lien('gestes', '↔', 'Gestes des bords', '9 zones, une action chacune') + '</div>') + section('gestes', 'Gestes des bords', '<p class="msg">Glisser depuis une zone d\'un bord (ou les deux bords ensemble) :</p><div class="bloc">'
           + (() => { const D0 = (R().GESTES_DEFAUT || {}), G = P.gestes || {}, cat2 = R().catalogue();
-              const ACTIONS = [['precedente', '← app précédente'], ['suivante', 'app suivante →'], ['accueil', '⌂ accueil'], ['minimiser', '▁ minimiser'], ['basculer', '⧉ basculer'], ['chercher', '🔎 chercher'], ['reglages', '⚙ réglages'], ['portion', '◈ portion'], ['tsoin', '⧗ noter un tsoin'], ['rien', '— rien']]
+              const ACTIONS = [['precedente', '← app précédente'], ['suivante', 'app suivante →'], ['accueil', '⌂ accueil'], ['minimiser', '▁ minimiser'], ['basculer', '⧉ basculer'], ['chercher', 'chercher'], ['reglages', 'réglages'], ['portion', '◈ portion'], ['tsoin', '⧗ noter un tsoin'], ['rien', '— rien']]
                 .concat(cat2.filter(p => !p.interne).slice(0, 60).map(p => ['ouvrir:' + p.id, '▶ ' + (p.nom || p.id)]));
               const ZONES = [['g-haut', 'gauche · haut'], ['g-milieu', 'gauche · milieu'], ['g-bas', 'gauche · bas'], ['d-haut', 'droit · haut'], ['d-milieu', 'droit · milieu'], ['d-bas', 'droit · bas'], ['deux-haut', 'les deux · haut'], ['deux-milieu', 'les deux · milieu'], ['deux-bas', 'les deux · bas']];
               return ZONES.map(([z, n]) => { const v = G[z] || D0[z] || 'rien'; return '<div class="l"><span>' + esc(n) + '</span><select data-geste="' + z + '" style="max-width:52%;background:var(--surface2,#151021);color:inherit;border:2px solid var(--bord,#272036);border-radius:10px;padding:6px;font:13px inherit">'
                 + ACTIONS.map(([k, t]) => '<option value="' + esc(k) + '"' + (k === v ? ' selected' : '') + '>' + esc(t) + '</option>').join('') + '</select></div>'; }).join(''); })()
           + '</div>') : '')
-        + section('hud', 'HUD et dock', '<div class="bloc">' + (P ? bascule('data-pb="dock"', P.dock, 'Le dock en bas', 'compte, épinglés, ⚙')
+        + section('hud', 'HUD et dock', '<div class="bloc">' + (P ? bascule('data-pb="dock"', P.dock, 'Le dock en bas', 'compte, épinglés, ')
           + seg('miniDocks', [[0, 'aucun'], [1, '1'], [2, '2'], [3, '3']], P.miniDocks == null ? 2 : P.miniDocks, '▤ Mini docks au-dessus du dock', 'ce qui vit en arrière-plan (ploxions minimisés, musique, blouse…) ; ▤ les montre tous ; glisser de côté = fermer') : '')
           + c.elements.map((x, i) => '<label class="l"><span>' + esc(ELS[x.k] || x.k) + '</span><button class="bas" data-monter="' + i + '"' + (i ? '' : ' disabled') + ' aria-label="monter">↑</button><input type="checkbox" data-el="' + i + '"' + (x.on ? ' checked' : '') + '></label>').join('')
-          + '<div class="l"><span>⚙ réglages<small>toujours là</small></span></div></div>'
-          + '<p class="msg">📌 épinglés au dock et au widget (4 au plus)</p><div class="bloc"><div class="pins">' + (cat.length ? cat.map(p => '<button class="pin' + (c.epingles.includes(p.id) ? ' on' : '') + '" data-pin="' + esc(p.id) + '" title="' + esc(p.nom) + '">' + esc(p.icone || '▣') + '</button>').join('') : '<span class="msg">installe des ploxions d\'abord</span>') + '</div></div>')
-        + section('iphone', 'Écran d\'accueil de l\'iPhone', '<div class="bloc"><div class="l"><span>📲 Tes ploxions en apps<small>une icône par ploxion, qui ouvre ploxi0n directement dessus</small></span><button class="p" data-a="apps">choisir</button></div></div>')
+          + '<div class="l"><span>réglages<small>toujours là</small></span></div></div>'
+          + '<p class="msg">épinglés au dock et au widget (4 au plus)</p><div class="bloc"><div class="pins">' + (cat.length ? cat.map(p => '<button class="pin' + (c.epingles.includes(p.id) ? ' on' : '') + '" data-pin="' + esc(p.id) + '" title="' + esc(p.nom) + '">' + esc(p.icone || '▣') + '</button>').join('') : '<span class="msg">installe des ploxions d\'abord</span>') + '</div></div>')
+        + section('iphone', 'Écran d\'accueil de l\'iPhone', '<div class="bloc"><div class="l"><span>Tes ploxions en apps<small>une icône par ploxion, qui ouvre ploxi0n directement dessus</small></span><button class="p" data-a="apps">choisir</button></div></div>')
         + section('accueil', 'Accueil', '<div class="bloc"><div class="l"><span>Dossiers et pages<small>appui long sur un ploxion pour le ranger</small></span><button data-a="accueil">tout remettre</button></div></div>')
         + section('ploxions', 'Ploxions · ' + installes.length, '<div class="bloc"><div class="l"><span>Mises à jour<small>les ploxions installés depuis le réseau</small></span><button data-a="ajour">vérifier</button></div>'
-          + installes.map(p => '<div class="l"><span class="ic">' + esc(p.icone || '▣') + '</span><span>' + esc(p.nom || p.id) + '<small>' + ko(tailles[p.id] || 0) + ' · ' + heures((usage[p.id] || {}).seconds) + ' · ' + (p.origine === 'pack' ? 'pack' : 'réseau') + (verrous.includes(p.id) ? ' · 🔒' : '') + '</small></span>'
-            + '<span class="act"><button class="danger" data-retirer="' + esc(p.id) + '" aria-label="retirer">🗑</button></span></div>').join('') + '</div>')
+          + installes.map(p => '<div class="l"><span class="ic" style="color:hsl(' + 0 + ' 0% 80%)">' + glyphePloxion(p) + '</span><span>' + esc(p.nom || p.id) + '<small>' + ko(tailles[p.id] || 0) + ' · ' + heures((usage[p.id] || {}).seconds) + ' · ' + (p.origine === 'pack' ? 'pack' : 'réseau') + (verrous.includes(p.id) ? ' · ' : '') + '</small></span>'
+            + '<span class="act"><button class="danger" data-retirer="' + esc(p.id) + '" aria-label="retirer"></button></span></div>').join('') + '</div>')
         + section('bions', 'Bions · ' + bions.length, '<div class="bloc"><div class="l"><span>Compléter<small>ce que chaque ploxion touche, servi par le labo</small></span><button data-a="bions">compléter</button></div>'
           + '<div class="l"><span>Tout mettre à jour<small>retélécharge chaque bion, garde ceux qui n\'ont pas changé</small></span><button data-a="bions-maj">mettre à jour</button></div>'
-          + bions.map(b => '<div class="l' + (b.coupe ? ' eteint' : '') + '"><span class="ic">⬡</span><span>' + esc(b.nom) + '<small>' + ko(b.octets) + ' · ' + (b.utilisePar.length ? 'sert à ' + esc(b.utilisePar.slice(0, 4).join(', ')) + (b.utilisePar.length > 4 ? ' +' + (b.utilisePar.length - 4) : '') : 'ne sert plus') + (b.coupe ? ' · coupé' : '') + '</small></span>'
-            + '<span class="act"><button class="bas" data-bion-maj="' + esc(b.nom) + '" aria-label="mettre à jour">⟳</button>' + (b.utilisePar.length ? '' : '<button class="bas danger" data-bion-retirer="' + esc(b.nom) + '" aria-label="retirer">🗑</button>')
+          + bions.map(b => '<div class="l' + (b.coupe ? ' eteint' : '') + '"><span class="ic"></span><span>' + esc(b.nom) + '<small>' + ko(b.octets) + ' · ' + (b.utilisePar.length ? 'sert à ' + esc(b.utilisePar.slice(0, 4).join(', ')) + (b.utilisePar.length > 4 ? ' +' + (b.utilisePar.length - 4) : '') : 'ne sert plus') + (b.coupe ? ' · coupé' : '') + '</small></span>'
+            + '<span class="act"><button class="bas" data-bion-maj="' + esc(b.nom) + '" aria-label="mettre à jour">⟳</button>' + (b.utilisePar.length ? '' : '<button class="bas danger" data-bion-retirer="' + esc(b.nom) + '" aria-label="retirer"></button>')
             + '<input type="checkbox" data-bion-on="' + esc(b.nom) + '"' + (b.coupe ? '' : ' checked') + ' aria-label="allumé"></span></div>').join('')
-          + '<div class="l"><span>⚡ jOSNatif, les plugions<small>dans ⚙ › Natif</small></span><button data-rg-aller="natif">voir</button></div>'
+          + '<div class="l"><span>jOSNatif, les plugions<small>dans › Natif</small></span><button data-rg-aller="natif">voir</button></div>'
           + '<div class="l"><span>Fournis par l\'app<small>' + FOURNIS_APP.join(' · ') + ' · jOSNatif</small></span></div></div>')
-        + section('faceid', 'Face ID', '<div class="bloc">' + (verrous.length ? verrous.map(id => { const p = cat.find(x => x.id === id) || { nom: id, icone: '🔒' }; return '<div class="l"><span>' + esc(p.icone + ' ' + p.nom) + '</span><button data-deverrou="' + esc(id) + '">retirer le verrou</button></div>'; }).join('') : '<div class="l"><span>Aucun ploxion verrouillé<small>appui long sur un ploxion › verrouiller</small></span></div>') + '</div>')
+        + section('faceid', 'Face ID', '<div class="bloc">' + (verrous.length ? verrous.map(id => { const p = cat.find(x => x.id === id) || { nom: id, icone: '' }; return '<div class="l"><span>' + esc(p.icone + ' ' + p.nom) + '</span><button data-deverrou="' + esc(id) + '">retirer le verrou</button></div>'; }).join('') : '<div class="l"><span>Aucun ploxion verrouillé<small>appui long sur un ploxion › verrouiller</small></span></div>') + '</div>')
         + section('donnees', 'Données', '<div class="bloc"><div class="l"><span>Réponses gardées pour le mode avion<small>' + nRoutes + ' route' + (nRoutes > 1 ? 's' : '') + '</small></span><button data-a="routes">vider</button></div>'
           + '<div class="l"><span>Réinitialiser les réglages<small>accueil, HUD, apparence, verrous… (tes ploxions, tes tsoins et ton compte restent)</small></span><button class="danger" data-a="reset">réinitialiser</button></div></div>')
         + section('apropos', 'À propos', '<div class="bloc"><div class="l"><span>ploxi0n ' + esc(version) + '<small>' + esc(W.navigator.onLine !== false ? 'en ligne' : 'hors ligne') + ' · cycle ' + (new Date().getFullYear() + 5000) + '</small></span></div>'
           + '<div class="l ls"><span>◇ Dernier démarrage<small data-demarrage>…</small></span></div>'
-          + '<div class="l"><span>📁 Dossier dans Fichiers<small data-dossier>Sur mon iPhone › ploxi0n : tsoins, vocaux, fond, Dépôt</small></span><button data-a="dossier">mettre à jour</button></div>'
-          + '<div class="l"><span>📦 Ploxions installés<small>la place qu\'ils prennent, leurs bions, retirer</small></span><button data-a="gestion">ouvrir</button></div>'
-          + '<div class="l"><span>✦ Nouveautés<small>ce qui a changé, version par version</small></span><button data-a="nouveautes">voir</button></div>'
-          + '<div class="l"><span>🧭 Le tuto d\'accueil<small>les gestes et les features, en 9 cartes</small></span><button data-a="tuto">revoir</button></div>'
+          + '<div class="l"><span>Dossier dans Fichiers<small data-dossier>Sur mon iPhone › ploxi0n : tsoins, vocaux, fond, Dépôt</small></span><button data-a="dossier">mettre à jour</button></div>'
+          + '<div class="l"><span>Ploxions installés<small>la place qu\'ils prennent, leurs bions, retirer</small></span><button data-a="gestion">ouvrir</button></div>'
+          + '<div class="l"><span>Nouveautés<small>ce qui a changé, version par version</small></span><button data-a="nouveautes">voir</button></div>'
+          + '<div class="l"><span>Le tuto d\'accueil<small>les gestes et les features, en 9 cartes</small></span><button data-a="tuto">revoir</button></div>'
           + '<div class="l"><span>▦ Widgets<small>le cube des bions, à l\'écoute, épinglés</small></span><button data-rg-aller="widgets">voir</button></div>'
           + '<div class="l"><span>⌨ Tester le clavier<small>si le clavier ne s\'ouvre pas : le rapport dit où ça casse</small></span><button class="p" data-a="clavier">tester</button></div>'
-          + '<div class="l"><span>🧪 Banc iPhone</span><button data-ouvrir="banc">ouvrir</button></div><div class="l"><span>🐛 Bother me (un souci, une idée)</span><button data-ouvrir="bother">ouvrir</button></div></div>')
+          + '<div class="l"><span>Banc iPhone</span><button data-ouvrir="banc">ouvrir</button></div><div class="l"><span>Bother me (un souci, une idée)</span><button data-ouvrir="bother">ouvrir</button></div></div>')
         + '<p class="msg" data-msg></p>';
       filtrer();
       if (lecteurNatif) lecteurNatif.moteurs().then(m => { const el = zone.querySelector('[data-moteurs]'); if (el && m) el.textContent = 'ce build : Apple ' + (m.apple ? '✓' : '—') + ' · VLC ' + (m.vlc ? '✓ (MKV, DTS, sous-titres)' : '— (build avec l\'option « vlc » pour l\'avoir)'); }).catch(() => {});
+      if (cube && cube.animer) cube.animer(zone.querySelector('.px-cube-scene'));   // (0.54) l'aperçu du cube vit tout seul
       { const el = zone.querySelector('[data-mouvement]'); if (el && W.ploxi0nMouvement) { const e = W.ploxi0nMouvement.etat(); el.textContent = e.actif ? '✓ ' + e.source + ' · penche le téléphone' : e.erreur ? '⚠ ' + e.erreur + (e.erreur.includes('web') ? '' : ' — touche l\'écran une fois pour essayer le capteur du navigateur') : 'en attente (hors Calme, app visible)'; } }
       // le journal du dernier démarrage (l'écran de chargement) : le total, et les étapes les plus lentes
       boxion.get('reglages', 'demarrage').then(d => { const el = zone.querySelector('[data-demarrage]'); if (!el || !d) return;
@@ -211,7 +213,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         s.hidden = !n;
       }
       const ti = hote.querySelector('[data-titre]'), re = hote.querySelector("[data-rg-retour]");
-      if (ti) ti.textContent = t ? '🔎 « ' + q.trim() + ' »' : page ? (TITRES[page] || page) : '⚙ réglages';
+      if (ti) ti.textContent = t ? '« ' + q.trim() + ' »' : page ? (TITRES[page] || page) : 'réglages';
       if (re) re.hidden = !page || !!t;
     }
     function aller(p) {
@@ -300,6 +302,6 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
     return { unmount() { vivant = false; off(); hote.innerHTML = ''; } };
   }
   W.jOSApps = W.jOSApps || {};
-  W.jOSApps['reglages-app'] = { manifest: { id: 'reglages-app', name: 'Réglages', icon: '⚙' }, mount };
-  return { id: 'reglages-app', nom: 'Réglages', icone: '⚙', interne: true };
+  W.jOSApps['reglages-app'] = { manifest: { id: 'reglages-app', name: 'Réglages', icon: '' }, mount };
+  return { id: 'reglages-app', nom: 'Réglages', icone: '', interne: true };
 }

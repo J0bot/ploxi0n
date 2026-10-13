@@ -11,6 +11,7 @@
 //     ouvre LA PAGE DE TOUS LES MINI DOCKS (une feuille : chacun avec toutes ses actions et ✕, les endormis 💤, « tout fermer »). ⧉ (la
 //     barre d'un ploxion, le geste « basculer ») ouvre cette page ; elle remplace la rangée « en arrière-plan » de l'accueil.
 // Le DOM : .px-md (dans <body>, après #ploxi0n : caché hors de l'accueil) ; <html> porte --px-md (la hauteur de la pile, pour l'accueil).
+import { glyphe, glyphePloxion, versGlyphe } from './glyphes.js';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const teinte = (id) => { let h = 0; for (const c of String(id || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0; return 160 + (h % 160); };   // comme les tuiles
 export const HAUTEUR = 58;   // une rangée de la pile (52 + l'écart), en px
@@ -45,12 +46,12 @@ export function creerMiniDocks({ W = globalThis.window, routeur = () => null, pr
     for (const m of publies.values()) { out.push({ ...m, vivant: !!m.ploxion && viv.some(v => v.id === m.ploxion), ici: !!m.ploxion && m.ploxion === ici }); if (m.ploxion) pris.add(m.ploxion); }
     for (const v of viv) {
       if (pris.has(v.id)) continue; const p = infoPx(v.id);
-      out.push({ cle: 'px:' + v.id, ploxion: v.id, auto: true, titre: p.nom || v.id, icone: p.icone || '▣', image: '', sous: v.id === ici ? 'ici' : (v.son ? '♪ joue en arrière-plan' : 'en arrière-plan'),
+      out.push({ cle: 'px:' + v.id, ploxion: v.id, auto: true, titre: p.nom || v.id, icone: p.icone || '▣', image: '', sous: v.id === ici ? 'ici' : (v.son ? 'joue en arrière-plan' : 'en arrière-plan'),
         actions: [], enCours: !!v.son, maj: v.vu || 0, vivant: true, ici: v.id === ici, fermable: true, progression: null });
     }
     for (const id of (r && r.endormis ? r.endormis() : [])) {
       if (pris.has(id) || viv.some(v => v.id === id)) continue; const p = infoPx(id);
-      out.push({ cle: 'zz:' + id, ploxion: id, auto: true, endormi: true, titre: p.nom || id, icone: p.icone || '▣', image: '', sous: '💤 endormi · touche pour le réveiller', actions: [], maj: 0, fermable: true, progression: null });
+      out.push({ cle: 'zz:' + id, ploxion: id, auto: true, endormi: true, titre: p.nom || id, icone: p.icone || '▣', image: '', sous: 'endormi · touche pour le réveiller', actions: [], maj: 0, fermable: true, progression: null });
     }
     // ce qui joue d'abord, puis le plus récent ; les endormis au bout
     return out.sort((a, b) => (!!a.endormi - !!b.endormi) || (!!b.enCours - !!a.enCours) || ((b.maj || 0) - (a.maj || 0)));
@@ -58,14 +59,14 @@ export function creerMiniDocks({ W = globalThis.window, routeur = () => null, pr
   const trouver = (cle) => liste().find(m => m.cle === cle) || null;
 
   // ---- dessiner ------------------------------------------------------------------------------------------------------------------------
-  const icone = (m) => (m.image ? '<img alt="" src="' + esc(m.image) + '">' : '<span class="px-md-g">' + esc(m.icone || '▣') + '</span>');
+  const icone = (m) => (m.image ? '<img alt="" src="' + esc(m.image) + '">' : '<span class="px-md-g">' + (m.auto && m.ploxion ? glyphePloxion({ id: m.ploxion, nom: m.titre }) : versGlyphe(m.icone || 'ion')) + '</span>');   // ◇ (0.54) des glyphes
   function carte(m, complet) {
     const acts = complet ? m.actions : m.actions.slice(0, MAX_ACTIONS_PILE);
     return '<div class="px-md-c' + (m.enCours ? ' joue' : '') + (m.endormi ? ' dort' : '') + (m.ici ? ' ici' : '') + (!complet && !connus.has(m.cle) ? ' neuf' : '') + '" data-md="' + esc(m.cle) + '" style="--t:' + teinte(m.ploxion || m.cle) + '" role="group" aria-label="' + esc(m.titre) + '">'
       + '<span class="px-md-ic">' + icone(m) + '</span>'
       + '<span class="px-md-t"><b>' + esc(m.titre) + '</b><small>' + esc(m.sous || '') + '</small>' + (m.progression != null ? '<i class="px-md-pr"><i style="width:' + Math.round(m.progression * 100) + '%"></i></i>' : '') + '</span>'
-      + acts.map(a => '<button type="button" data-md-a="' + esc(a.id) + '"' + (a.on ? ' class="on"' : '') + ' aria-label="' + esc(a.nom) + '">' + esc(a.icone) + '</button>').join('')
-      + ((complet || !acts.length) && m.fermable !== false ? '<button type="button" class="px-md-x" data-md-x aria-label="' + (m.endormi ? 'oublier' : 'fermer') + '">✕</button>' : '')
+      + acts.map(a => '<button type="button" data-md-a="' + esc(a.id) + '"' + (a.on ? ' class="on"' : '') + ' aria-label="' + esc(a.nom) + '">' + versGlyphe(a.icone) + '</button>').join('')
+      + ((complet || !acts.length) && m.fermable !== false ? '<button type="button" class="px-md-x" data-md-x aria-label="' + (m.endormi ? 'oublier' : 'fermer') + '">' + glyphe('fermer') + '</button>' : '')
       + '</div>';
   }
   function max() { const n = +((prefs() || {}).miniDocks); return Number.isFinite(n) ? Math.max(0, Math.min(4, n)) : 2; }
@@ -79,8 +80,8 @@ export function creerMiniDocks({ W = globalThis.window, routeur = () => null, pr
       brancher(pile, false); D.body.appendChild(pile);
     }
     pile.hidden = !l.length;
-    pile.innerHTML = vus.map(m => carte(m, false)).join('') + (l.length ? '<button type="button" class="px-md-tous" data-md-page aria-label="tous les mini docks">▤' + (caches > 0 ? ' +' + caches : '') + '</button>' : '');
-    for (const img of pile.querySelectorAll('img')) img.onerror = () => { const s = D.createElement('span'); s.className = 'px-md-g'; s.textContent = '♫'; img.replaceWith(s); };
+    pile.innerHTML = vus.map(m => carte(m, false)).join('') + (l.length ? '<button type="button" class="px-md-tous" data-md-page aria-label="tous les mini docks">' + glyphe('minidocks') + (caches > 0 ? ' +' + caches : '') + '</button>' : '');
+    for (const img of pile.querySelectorAll('img')) img.onerror = () => { const s = D.createElement('span'); s.className = 'px-md-g'; s.innerHTML = glyphe('musique'); img.replaceWith(s); };
     connus = new Set(vus.map(m => m.cle));
     try { D.documentElement.style.setProperty('--px-md', (l.length ? vus.length * HAUTEUR + 34 : 0) + 'px'); } catch (e) { /* */ }
     if (page) peindrePage();
@@ -154,9 +155,9 @@ export function creerMiniDocks({ W = globalThis.window, routeur = () => null, pr
   function peindrePage() {
     if (!page) return;
     const l = liste(), actifs = l.filter(m => !m.endormi), dorment = l.filter(m => m.endormi);
-    page.querySelector('.px-md-page').innerHTML = '<p class="px-ft">▤ mini docks · ' + actifs.length + '</p>'
+    page.querySelector('.px-md-page').innerHTML = '<p class="px-ft">' + glyphe('minidocks') + ' mini docks · ' + actifs.length + '</p>'
       + (actifs.length ? '<div class="px-md-l">' + actifs.map(m => carte(m, true)).join('') + '</div>' : '<p class="px-sous">Rien en arrière-plan. ▁ dans la barre d\'un ploxion le range ici, vivant.</p>')
-      + (dorment.length ? '<p class="px-grave">💤 endormis · la dernière session</p><div class="px-md-l">' + dorment.map(m => carte(m, true)).join('') + '</div>' : '')
+      + (dorment.length ? '<p class="px-grave">endormis · la dernière session</p><div class="px-md-l">' + dorment.map(m => carte(m, true)).join('') + '</div>' : '')
       + '<div class="px-md-bas">' + (l.some(m => !m.ici && m.fermable !== false) ? '<button type="button" class="px-md-tout" data-md-tout>tout fermer</button>' : '') + '<button type="button" class="px-md-ok" data-md-ok>fermer</button></div>';
   }
   function ouvrirPage() {

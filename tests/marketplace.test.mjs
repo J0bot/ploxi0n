@@ -377,7 +377,8 @@ test('appui long : le menu d\'un ploxion (épingler au dock, déplacer vers une 
     const racine = W.document.createElement('div'); W.document.body.appendChild(racine);
     r = creerRouteur({ fenetre: W, racine, boxion: p.boxion, hud, catalogue: [{ id: 'a', nom: 'A', icone: '◇' }, { id: 'b', nom: 'B', icone: '◆' }], retirer: async (id) => retires.push(id) });
     await r.accueil();
-    const appuyer = async (id) => { racine.querySelector('[data-id="' + id + '"]').dispatchEvent(new W.MouseEvent('pointerdown', { bubbles: true, clientX: 5, clientY: 5 })); await attendre(520); };
+    // (0.54) l'appui long soulève la tuile (le glisser-déposer) ; relâchée sans bouger : le menu
+    const appuyer = async (id) => { const t = racine.querySelector('[data-id="' + id + '"]'); t.dispatchEvent(new W.MouseEvent('pointerdown', { bubbles: true, clientX: 5, clientY: 5 })); await attendre(520); t.dispatchEvent(new W.MouseEvent('pointerup', { bubbles: true, clientX: 5, clientY: 5 })); await attendre(20); };
     await appuyer('a');
     assert.ok(racine.querySelector('.px-menu'), 'le menu s\'ouvre après 450 ms');
     racine.querySelector('[data-m="epingler"]').click(); await attendre(30);

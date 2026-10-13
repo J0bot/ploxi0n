@@ -10,6 +10,7 @@
 // actions : le ranger dans un dossier, le mettre sur une page, l'ajouter à l'écran d'accueil de l'iPhone (ecranAccueil(id), main.js).
 // Face ID : « reglages/verrous » = [ids] ; un ploxion verrouillé ne s'ouvre qu'avec jOSVerrou.ouvrir().
 
+import { glyphe, glyphePloxion } from './glyphes.js';
 const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 // le logo (losanges concentriques), transparent : les espaces entre les losanges sont des trous
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
@@ -147,9 +148,14 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   }
 
   const texte = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // ◇ (0.54) un ploxion a son GLYPHE (src/app/glyphes.js : le trait du xerboxion) ; ⚙ › Apparence › « Les emoji du labo » pour les garder
+  const icone = (p) => (prefs().glyphes === false ? texte((p && p.icone) || '▣') : glyphePloxion(p));
+  const G = (n) => glyphe(n);
   // la teinte d'un ploxion (chill-tekk : chaque icône de verre a sa couleur, stable, tirée de son id)
   const teinte = (id) => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return 160 + (h % 160); };
-  const tuile = (p) => '<button class="px-tuile' + (edition && !p.interne ? ' px-edite' : '') + '" data-id="' + texte(p.id) + '"><span class="px-ic" style="--t:' + teinte(p.id) + '">' + texte(p.icone || '▣') + '</span><span>' + (verrous.has(p.id) ? '🔒 ' : '') + texte(p.nom || p.id) + '</span></button>';
+  const tuile = (p) => '<button class="px-tuile' + (edition && !p.interne ? ' px-edite' : '') + '" data-id="' + texte(p.id) + '"><span class="px-ic" style="--t:' + teinte(p.id) + '">' + icone(p) + '</span><span>' + (verrous.has(p.id) ? G('verrou') + ' ' : '') + texte(p.nom || p.id) + '</span></button>';
+  // ✥ (0.54) l'ordre choisi au glisser-déposer : accueilDoc.ordre (la première page) ; les autres pages : l'ordre de leurs ids
+  const rangerSelonOrdre = (l) => { const o = new Map((accueilDoc.ordre || []).map((id, i) => [id, i])); return l.map((p, i) => [p, o.has(p.id) ? o.get(p.id) : 1e6 + i]).sort((a, b) => a[1] - b[1]).map(x => x[0]); };
   const dansDossier = () => new Set([...accueilDoc.dossiers.flatMap(d => d.ids), ...accueilDoc.pages.flatMap(pg => pg.ids)]);
 
   // la cascade des tuiles (app.css « snappy et vivant ») : seulement quand on ARRIVE sur l'accueil (lancement, retour d'un ploxion), pas à
@@ -168,14 +174,14 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     const l = [...vivants.values()].filter(v => v !== courant);
     if (!l.length) return '';
     return '<div class="px-arriere"><span class="px-grave">en arrière-plan</span><div class="px-arriere-l">' + l.map(v => { const p = parId.get(v.id) || { nom: v.id };
-      return '<span class="px-vivant"><button data-reprendre="' + texte(v.id) + '"><span class="px-ic" style="--t:' + teinte(v.id) + '">' + texte(p.icone || '▣') + '</span>' + texte(p.nom || v.id) + '</button><button class="px-x" data-tuer="' + texte(v.id) + '" aria-label="fermer">✕</button></span>'; }).join('') + '</div></div>';
+      return '<span class="px-vivant"><button data-reprendre="' + texte(v.id) + '"><span class="px-ic" style="--t:' + teinte(v.id) + '">' + icone(p) + '</span>' + texte(p.nom || v.id) + '</button><button class="px-x" data-tuer="' + texte(v.id) + '" aria-label="fermer">✕</button></span>'; }).join('') + '</div></div>';
   }
   // PLUSIEURS FAÇONS DE VOIR SES PLOXIONS (RS-7 12.10) : grille (dossiers et pages) · compacte · liste · usage (ses heures) · récents ·
   // catégories. Gardée dans « reglages/accueil ».vue. Hors grille et compacte, tout est à plat (dossiers et pages ignorés, pas perdus).
-  const VUES_ACCUEIL = [['grille', '▦', 'grille'], ['compacte', '▪', 'compacte'], ['liste', '☰', 'liste'], ['usage', '⏱', 'usage'], ['recents', '↺', 'récents'], ['categories', '◫', 'catégories']];
+  const VUES_ACCUEIL = [['grille', 'grille', 'grille'], ['compacte', 'compacte', 'compacte'], ['liste', 'liste', 'liste'], ['usage', 'usage', 'usage'], ['recents', 'recents', 'récents'], ['categories', 'categories', 'catégories']];
   const duree = (s) => !s ? '' : s < 3600 ? Math.max(1, Math.round(s / 60)) + ' min' : (Math.round(s / 360) / 10).toLocaleString('fr-CH') + ' h';
   const ilYa = (t) => { if (!t) return 'jamais ouvert'; const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'à l\'instant' : m < 60 ? 'il y a ' + m + ' min' : m < 1440 ? 'il y a ' + Math.round(m / 60) + ' h' : 'il y a ' + Math.round(m / 1440) + ' j'; };
-  const ligne = (p, meta, part) => '<button class="px-ligne" data-id="' + texte(p.id) + '"><span class="px-ic" style="--t:' + teinte(p.id) + '">' + texte(p.icone || '▣') + '</span><span class="px-ligne-t"><b>' + (verrous.has(p.id) ? '🔒 ' : '') + texte(p.nom || p.id) + '</b><small>' + texte(meta || '') + '</small>'
+  const ligne = (p, meta, part) => '<button class="px-ligne" data-id="' + texte(p.id) + '"><span class="px-ic" style="--t:' + teinte(p.id) + '">' + icone(p) + '</span><span class="px-ligne-t"><b>' + (verrous.has(p.id) ? G('verrou') + ' ' : '') + texte(p.nom || p.id) + '</b><small>' + texte(meta || '') + '</small>'
     + (part != null ? '<i class="px-jauge"><i style="width:' + Math.round(part * 100) + '%"></i></i>' : '') + '</span></button>';
   function dock() {
     return '<nav class="px-dock px-hud px-visiere"><span class="px-hud-c">' + (hud ? hud.html() : '') + '</span></nav>';
@@ -186,11 +192,11 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (vue === 'usage') {
       const l = [...tous].sort((a, b) => ((u[b.id] || {}).seconds || 0) - ((u[a.id] || {}).seconds || 0) || String(a.nom).localeCompare(String(b.nom)));
       const max = Math.max(1, ...l.map(p => (u[p.id] || {}).seconds || 0));
-      return l.map(p => { const x = u[p.id] || {}; return ligne(p, x.seconds ? duree(x.seconds) + ' · ' + (x.opens || 0) + ' ouverture' + ((x.opens || 0) > 1 ? 's' : '') : '😴 zéro heure', (x.seconds || 0) / max); }).join('');
+      return l.map(p => { const x = u[p.id] || {}; return ligne(p, x.seconds ? duree(x.seconds) + ' · ' + (x.opens || 0) + ' ouverture' + ((x.opens || 0) > 1 ? 's' : '') : 'zéro heure', (x.seconds || 0) / max); }).join('');
     }
     if (vue === 'recents') return [...tous].sort((a, b) => ((u[b.id] || {}).lastAt || 0) - ((u[a.id] || {}).lastAt || 0)).map(p => ligne(p, ilYa((u[p.id] || {}).lastAt))).join('');
     const groupes = new Map(); for (const p of tous) { const k = p.categorie || 'Autres'; if (!groupes.has(k)) groupes.set(k, { icone: p.cat_icone || '📦', l: [] }); groupes.get(k).l.push(p); }
-    return [...groupes.entries()].sort((a, b) => b[1].l.length - a[1].l.length).map(([k, g]) => '<h2 class="px-titre-page">' + texte(g.icone + ' ' + k) + ' · ' + g.l.length + '</h2><div class="px-grille px-cat">' + g.l.map(tuile).join('') + '</div>').join('');
+    return [...groupes.entries()].sort((a, b) => b[1].l.length - a[1].l.length).map(([k, g]) => '<h2 class="px-titre-page">' + texte(k) + ' · ' + g.l.length + '</h2><div class="px-grille px-cat">' + g.l.map(tuile).join('') + '</div>').join('');
   }
   async function accueil() {
     fermer(); noterSession();
@@ -200,21 +206,21 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     const vue = VUES_ACCUEIL.some(v => v[0] === accueilDoc.vue) ? accueilDoc.vue : 'grille';
     if (dossierOuvert !== null && accueilDoc.dossiers[dossierOuvert]) {
       const d = accueilDoc.dossiers[dossierOuvert];
-      ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-sortir aria-label="retour">‹</button><span>📁 ' + texte(d.nom) + '</span></div><div class="px-grille px-pad">'
+      ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-sortir aria-label="retour">' + G('retour') + '</button><span>' + G('dossier') + ' ' + texte(d.nom) + '</span></div><div class="px-grille px-pad">'
         + d.ids.map(id => parId.get(id)).filter(Boolean).map(tuile).join('') + '</div>';
       return;
     }
     const ranges = dansDossier();
     const pages = [
-      accueilDoc.dossiers.map((d, i) => '<button class="px-tuile px-dossier" data-dossier="' + i + '"><span class="px-ic">📁</span><span>' + texte(d.nom) + ' (' + d.ids.filter(id => parId.has(id)).length + ')</span></button>').join('')
-        + tous.filter(p => !ranges.has(p.id)).map(tuile).join(''),
+      accueilDoc.dossiers.map((d, i) => '<button class="px-tuile px-dossier" data-dossier="' + i + '"><span class="px-ic">' + G('dossier') + '</span><span>' + texte(d.nom) + ' (' + d.ids.filter(id => parId.has(id)).length + ')</span></button>').join('')
+        + rangerSelonOrdre(tous.filter(p => !ranges.has(p.id))).map(tuile).join(''),
       ...accueilDoc.pages.map(pg => pg.ids.map(id => parId.get(id)).filter(Boolean).map(tuile).join('')),
     ];
     const noms = ['accueil', ...accueilDoc.pages.map(pg => pg.nom)];
     pageCourante = Math.min(pageCourante, pages.length - 1);
-    const vues = '<div class="px-vues">' + VUES_ACCUEIL.map(([k, i, n]) => '<button data-vue-accueil="' + k + '"' + (k === vue ? ' class="on"' : '') + '>' + i + ' ' + n + '</button>').join('') + '</div>';
+    const vues = '<div class="px-vues">' + VUES_ACCUEIL.map(([k, i, n]) => '<button data-vue-accueil="' + k + '"' + (k === vue ? ' class="on"' : '') + '>' + G(i) + ' ' + n + '</button>').join('') + '</div>';
     const plat = vue !== 'grille' && vue !== 'compacte';
-    ecran.innerHTML = '<div class="px-accueil px-vue-' + vue + '"><header class="px-tete"><h1>' + LOGO + '<b>ploxi0n</b></h1><button class="px-modif" data-edition>' + (edition ? 'terminé' : '✎') + '</button></header>'
+    ecran.innerHTML = '<div class="px-accueil px-vue-' + vue + '"><header class="px-tete"><h1>' + LOGO + '<b>ploxi0n</b></h1><button class="px-modif" data-edition>' + (edition ? 'terminé' : G('editer')) + '</button></header>'
       + (panneau ? panneau() : '')   // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xerbot
       + arriere()
       + '<p class="px-sous px-grave">' + (edition ? 'Touche un ploxion : le ranger dans un dossier, sur une page, ou l\'ajouter à l\'écran d\'accueil de l\'iPhone.' : ('◇ cycle ' + (new Date().getFullYear() + 5000) + ' · ' + tous.length + ' ploxions · hors ligne')) + '</p>'
@@ -259,22 +265,22 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     const iPage = dans('pages'), iDossier = dans('dossiers');
     const puce = (attr, val, nom, on) => '<button class="px-puce' + (on ? ' on' : '') + '" ' + attr + '="' + texte(val) + '">' + texte(nom) + '</button>';
     const f = D.createElement('div'); f.className = 'px-voile';
-    f.innerHTML = '<div class="px-tiroir px-menu"><p class="px-ft"><span class="px-ic" style="--t:' + teinte(id) + '">' + texte(p.icone || '▣') + '</span> ' + texte(p.nom || id) + '</p>'
+    f.innerHTML = '<div class="px-tiroir px-menu"><p class="px-ft"><span class="px-ic" style="--t:' + teinte(id) + '">' + icone(p) + '</span> ' + texte(p.nom || id) + '</p>'
       + '<button data-m="ouvrir">▶ ouvrir</button>'
-      + (hud ? '<button data-m="epingler">' + (ep.includes(id) ? '📌 retirer du dock' : '📌 épingler au dock') + '<small>et dans le widget « Ploxions épinglés »</small></button>' : '')
-      + (ecranAccueil ? '<button data-m="iphone">📲 sur l\'écran d\'accueil de l\'iPhone</button>' : '')
+      + (hud ? '<button data-m="epingler">' + (ep.includes(id) ? 'retirer du dock' : 'épingler au dock') + '<small>et dans le widget « Ploxions épinglés »</small></button>' : '')
+      + (ecranAccueil ? '<button data-m="iphone">sur l\'écran d\'accueil de l\'iPhone</button>' : '')
       + (p.interne ? '' : '<p class="px-grave">déplacer vers une page</p><div class="px-puces">' + puce('data-vers-page', '', 'accueil', iPage < 0 && iDossier < 0)
         + accueilDoc.pages.map((pg, k) => puce('data-vers-page', pg.nom, pg.nom, k === iPage)).join('') + '<button class="px-puce" data-ranger="page">＋ nouvelle</button></div>'
-        + '<p class="px-grave">ranger dans un dossier</p><div class="px-puces">' + accueilDoc.dossiers.map((d, k) => puce('data-vers-dossier', d.nom, '📁 ' + d.nom, k === iDossier)).join('')
+        + '<p class="px-grave">ranger dans un dossier</p><div class="px-puces">' + accueilDoc.dossiers.map((d, k) => puce('data-vers-dossier', d.nom, d.nom, k === iDossier)).join('')
         + (iDossier >= 0 ? puce('data-vers-dossier', '', 'sortir du dossier', false) : '') + '<button class="px-puce" data-ranger="dossier">＋ nouveau</button></div>')
-      + (verrou && !p.interne ? '<button data-m="verrou">' + (verrous.has(id) ? '🔓 retirer le verrou Face ID' : '🔒 verrouiller avec Face ID') + '</button>' : '')
-      + (retirer && !p.interne ? '<button data-m="retirer" class="px-danger">🗑 retirer de ploxi0n</button>' : '')
+      + (verrou && !p.interne ? '<button data-m="verrou">' + (verrous.has(id) ? 'retirer le verrou Face ID' : 'verrouiller avec Face ID') + '</button>' : '')
+      + (retirer && !p.interne ? '<button data-m="retirer" class="px-danger">retirer de ploxi0n</button>' : '')
       + '<button data-m="">annuler</button></div>';
     racine.appendChild(f);
     f.addEventListener('click', async (e) => {
       const b = e.target.closest('button'); if (!b && e.target !== f) return;
       e.stopPropagation();
-      if (b && b.getAttribute('data-m') === 'retirer' && !b.classList.contains('sur')) { b.classList.add('sur'); b.textContent = '🗑 sûr ? touche encore pour retirer'; return; }
+      if (b && b.getAttribute('data-m') === 'retirer' && !b.classList.contains('sur')) { b.classList.add('sur'); b.textContent = 'sûr ? touche encore pour retirer'; return; }
       f.remove();
       if (!b) return;
       const m = b.getAttribute('data-m');
@@ -285,20 +291,70 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
       if (m === 'iphone') return ecranAccueil(id);
       if (m === 'epingler') { const c = hud.config(); c.epingles = c.epingles.includes(id) ? c.epingles.filter(x => x !== id) : [...c.epingles, id].slice(-4); const el = c.elements.find(x => x.k === 'epingles'); if (el) el.on = true; await hud.regler(c); return accueil(); }
       if (m === 'verrou') {
-        if (verrous.has(id)) { if (!(await verrou.ouvrir('Retirer le verrou de ' + (p.nom || id)))) return signaler('🔒 Face ID : ' + raisonFaceId()); verrous.delete(id); }
-        else { const dsp = await verrou.dispo(); if (!dsp.ok) return signaler('🔒 Face ID indisponible : ' + (dsp.erreur || raisonFaceId())); if (!(await verrou.ouvrir('Verrouiller ' + (p.nom || id)))) return signaler('🔒 Face ID : ' + raisonFaceId()); verrous.add(id); signaler('🔒 ' + (p.nom || id) + ' ne s\'ouvre plus qu\'avec ton visage'); }
+        if (verrous.has(id)) { if (!(await verrou.ouvrir('Retirer le verrou de ' + (p.nom || id)))) return signaler('Face ID : ' + raisonFaceId()); verrous.delete(id); }
+        else { const dsp = await verrou.dispo(); if (!dsp.ok) return signaler('Face ID indisponible : ' + (dsp.erreur || raisonFaceId())); if (!(await verrou.ouvrir('Verrouiller ' + (p.nom || id)))) return signaler('Face ID : ' + raisonFaceId()); verrous.add(id); signaler('' + (p.nom || id) + ' ne s\'ouvre plus qu\'avec ton visage'); }
         garder(); return accueil();
       }
       if (m === 'retirer') { tuer(id); await retirer(id); return accueil(); }
     });
   }
   // l'APPUI LONG (450 ms sans bouger) sur une tuile ou une ligne : le menu ; le clic qui suit est avalé
-  let appui = null, avaler = 0;
+  // ✥ (0.54, RS-7 : « que les apps on puisse les drag and drop et les organiser plus facilement ») : comme l'écran d'accueil de l'iPhone —
+  // l'appui long SOULÈVE la tuile (les autres tremblent) ; glissée entre les autres elle se range là, lâchée sur un dossier elle y entre, tenue
+  // au bord de l'écran elle passe à la page d'à côté ; lâchée sans avoir bougé : le menu d'avant. Grille et compacte seulement.
+  let appui = null, avaler = 0, tri = null;
   racine.addEventListener('pointerdown', (e) => {
     const t = e.target.closest('[data-id]'); if (!t || !racine.contains(t) || t.closest('.px-hote,.px-voile') || prefs().appuiLong === false) return;
     const x0 = e.clientX, y0 = e.clientY, id = t.getAttribute('data-id');
-    appui = { x0, y0, t: W.setTimeout(() => { appui = null; avaler = Date.now(); vibrer('appui'); actions(id); }, 450) };
+    appui = { x0, y0, t: W.setTimeout(() => { appui = null; avaler = Date.now(); vibrer('appui');
+      if (t.classList.contains('px-tuile') && t.closest('.px-pages') && !t.classList.contains('px-dossier')) soulever(t, id, x0, y0, e.pointerId); else actions(id); }, 450) };
   });
+  function soulever(t, id, x, y, pointeur) {
+    const r = t.getBoundingClientRect(), fantome = t.querySelector('.px-ic').cloneNode(true);
+    fantome.className += ' px-fantome'; fantome.style.left = r.left + r.width / 2 + 'px'; fantome.style.top = r.top + 30 + 'px';
+    D.body.appendChild(fantome); t.classList.add('px-souleve'); racine.classList.add('px-tri');
+    tri = { t, id, x0: x, y0: y, bouge: false, fantome, pointeur, bord: null, dossier: null, survol: null };
+  }
+  function lacherTri(annule) {
+    const z = tri; tri = null; if (!z) return;
+    W.clearTimeout(z.bord); z.fantome.remove(); racine.classList.remove('px-tri'); z.t.classList.remove('px-souleve');
+    racine.querySelectorAll('.px-cible').forEach(n => n.classList.remove('px-cible'));
+    if (annule) return accueil();
+    if (!z.bouge) return actions(z.id);   // un appui long sans bouger : le menu
+    if (z.dossier != null && accueilDoc.dossiers[z.dossier]) { vibrer('succes'); return ranger(z.id, 'dossier', accueilDoc.dossiers[z.dossier].nom); }
+    // l'ordre = celui des tuiles à l'écran, page par page (la page où elle a été lâchée la garde)
+    const pagesDom = [...racine.querySelectorAll('.px-pages > .px-page')];
+    pagesDom.forEach((pg, i) => {
+      const ids = [...pg.querySelectorAll('.px-tuile[data-id]')].map(b => b.getAttribute('data-id'));
+      if (i === 0) { accueilDoc.ordre = ids; for (const l of ['dossiers', 'pages']) accueilDoc[l].forEach(d => { if (ids.includes(z.id)) d.ids = d.ids.filter(x => x !== z.id); }); }
+      else if (accueilDoc.pages[i - 1]) accueilDoc.pages[i - 1].ids = ids;
+    });
+    accueilDoc.pages = accueilDoc.pages.filter(d => d.ids.length); accueilDoc.dossiers = accueilDoc.dossiers.filter(d => d.ids.length);
+    vibrer('page'); garder(); accueil();
+  }
+  racine.addEventListener('pointermove', (e) => {
+    if (!tri || e.pointerId !== tri.pointeur) return;
+    const z = tri; if (!z.bouge && Math.hypot(e.clientX - z.x0, e.clientY - z.y0) > 8) z.bouge = true;
+    z.fantome.style.left = e.clientX + 'px'; z.fantome.style.top = e.clientY + 'px';
+    const sous = D.elementFromPoint(e.clientX, e.clientY), cible = sous && sous.closest('.px-tuile');
+    racine.querySelectorAll('.px-cible').forEach(n => n.classList.remove('px-cible')); z.dossier = null;
+    if (cible && cible !== z.t) {
+      if (cible.classList.contains('px-dossier')) { cible.classList.add('px-cible'); z.dossier = +cible.getAttribute('data-dossier'); }
+      else if (cible.parentNode && z.survol !== cible) {   // la tuile se glisse à sa place, les autres s'écartent
+        const rc = cible.getBoundingClientRect(); z.survol = cible;
+        cible.parentNode.insertBefore(z.t, e.clientX < rc.left + rc.width / 2 ? cible : cible.nextSibling); vibrer('selection');
+      }
+    } else if (!cible) z.survol = null;
+    // tenue au bord : la page d'à côté
+    const c = racine.querySelector('.px-pages'), bord = e.clientX < 26 ? -1 : e.clientX > W.innerWidth - 26 ? 1 : 0;
+    if (!bord) { W.clearTimeout(z.bord); z.bord = null; } else if (!z.bord && c) z.bord = W.setTimeout(() => { if (!tri) return; tri.bord = null;
+      const i = Math.max(0, Math.min(c.children.length - 1, Math.round(c.scrollLeft / Math.max(1, c.clientWidth)) + bord));
+      if (c.children[i]) { c.scrollLeft = c.children[i].offsetLeft; const g = c.children[i].querySelector('.px-grille'); if (g && !g.contains(z.t)) g.appendChild(z.t); vibrer('page'); } }, 650);
+  });
+  racine.addEventListener('pointerup', (e) => { if (tri && e.pointerId === tri.pointeur) lacherTri(false); });
+  racine.addEventListener('pointercancel', (e) => { if (tri && e.pointerId === tri.pointeur) lacherTri(!tri.bouge); });
+  // pendant le tri, le doigt ne fait pas défiler la page (le premier touchmove annulé : WebKit ne démarre pas le défilement)
+  racine.addEventListener('touchmove', (e) => { if (tri) e.preventDefault(); }, { passive: false });
   const annulerAppui = () => { if (appui) { W.clearTimeout(appui.t); appui = null; } };
   // L'APPUI LONG = LE CLIC DROIT dans les ploxions (RS-7 12.10 : « quand on presse longtemps quelque part, ça fait comme un clic droit ») :
   // 500 ms sans bouger → un vrai « contextmenu » à l'élément sous le doigt (les menus du labo s'ouvrent) ; jamais sur un champ (l'appui
@@ -368,17 +424,17 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   }
   function barre(p, id) {
     const autres = vivants.size - 1 + endormis.length;
-    ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">‹</button><span>' + texte((p.icone || '') + ' ' + (p.nom || id)) + '</span>'
+    ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">' + G('retour') + '</button><span>' + icone(p) + ' ' + texte(p.nom || id) + '</span>'
       + '<span class="px-hud"><span class="px-hud-c">' + (hud ? hud.html(true) : '') + '</span>'
-      + (autres > 0 ? '<button class="px-mini" data-basculer aria-label="basculer entre les ploxions ouverts">⧉<b>' + (autres + 1) + '</b></button>' : '')
-      + '<button class="px-mini" data-minimiser aria-label="minimiser">▁</button>'
-      + (verrou && !p.interne ? '<button class="px-verrou" data-verrou aria-label="verrou Face ID">' + (verrous.has(id) ? '🔒' : '🔓') + '</button>' : '') + '</span></div>';
+      + (autres > 0 ? '<button class="px-mini" data-basculer aria-label="basculer entre les ploxions ouverts">' + G('basculer') + '<b>' + (autres + 1) + '</b></button>' : '')
+      + '<button class="px-mini" data-minimiser aria-label="minimiser">' + G('minimiser') + '</button>'
+      + (verrou && !p.interne ? '<button class="px-verrou" data-verrou aria-label="verrou Face ID">' + (verrous.has(id) ? G('verrou') : G('deverrou')) + '</button>' : '') + '</span></div>';
     const bv = ecran.querySelector('[data-verrou]');
     if (bv) bv.onclick = async (e) => {
       e.stopPropagation();
-      if (verrous.has(id)) { if (!(await verrou.ouvrir('Retirer le verrou de ' + (p.nom || id)))) return signaler('🔒 Face ID : ' + raisonFaceId()); verrous.delete(id); }
-      else { const dsp = await verrou.dispo(); if (!dsp.ok) { bv.textContent = '⚠'; return signaler('🔒 Face ID indisponible : ' + (dsp.erreur || raisonFaceId())); } verrous.add(id); }
-      garder(); bv.textContent = verrous.has(id) ? '🔒' : '🔓';
+      if (verrous.has(id)) { if (!(await verrou.ouvrir('Retirer le verrou de ' + (p.nom || id)))) return signaler('Face ID : ' + raisonFaceId()); verrous.delete(id); }
+      else { const dsp = await verrou.dispo(); if (!dsp.ok) { bv.textContent = '⚠'; return signaler('Face ID indisponible : ' + (dsp.erreur || raisonFaceId())); } verrous.add(id); }
+      garder(); bv.innerHTML = verrous.has(id) ? G('verrou') : G('deverrou');
     };
   }
   function montrer(v) {
@@ -399,7 +455,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (courant && courant.id === id && !params) return true;
     endormis = endormis.filter(x => x.id !== id);
     if (verrous.has(id) && !(vivants.has(id)) && !(verrou && await verrou.ouvrir('Ouvrir ' + (p.nom || id)))) {
-      if (!courant) { racine.classList.add('px-mode-ploxion'); racine.classList.remove('px-mode-accueil'); ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">‹</button><span>🔒 ' + texte(p.nom || id) + '</span></div><p class="px-erreur">Ce ploxion ne s\'ouvre qu\'avec ton visage.<br><small>' + texte(raisonFaceId()) + '</small></p><p class="px-pad"><button class="px-modif" data-reessayer="' + texte(id) + '">réessayer</button></p>'; }
+      if (!courant) { racine.classList.add('px-mode-ploxion'); racine.classList.remove('px-mode-accueil'); ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">' + G('retour') + '</button><span>' + G('verrou') + ' ' + texte(p.nom || id) + '</span></div><p class="px-erreur">Ce ploxion ne s\'ouvre qu\'avec ton visage.<br><small>' + texte(raisonFaceId()) + '</small></p><p class="px-pad"><button class="px-modif" data-reessayer="' + texte(id) + '">réessayer</button></p>'; }
       return false;
     }
     // ouvert DEPUIS un ploxion : celui-ci reste vivant, en dessous (la pile) ; « ‹ » y reviendra
@@ -440,10 +496,10 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   function basculer() {
     if (miniDocks) return miniDocks.page();
     const f = D.createElement('div'); f.className = 'px-voile';
-    f.innerHTML = '<div class="px-tiroir"><p class="px-ft">⧉ ouverts</p>' + [...vivants.values()].sort((a, b) => b.vu - a.vu).map(v => { const p = parId.get(v.id) || { nom: v.id };
-      return '<button data-b="' + texte(v.id) + '"' + (v === courant ? ' class="on"' : '') + '><span class="px-ic" style="--t:' + teinte(v.id) + '">' + texte(p.icone || '▣') + '</span> ' + texte(p.nom || v.id) + (v === courant ? ' · ici' : '') + '</button>'; }).join('')
-      + endormis.map(e => { const p = parId.get(e.id) || { nom: e.id }; return '<button data-b="' + texte(e.id) + '" class="px-endormi"><span class="px-ic" style="--t:' + teinte(e.id) + '">' + texte(p.icone || '▣') + '</span> ' + texte(p.nom || e.id) + ' · 💤</button>'; }).join('')
-      + (endormis.length ? '<button data-oublier>oublier les 💤</button>' : '')
+    f.innerHTML = '<div class="px-tiroir"><p class="px-ft">' + G('basculer') + ' ouverts</p>' + [...vivants.values()].sort((a, b) => b.vu - a.vu).map(v => { const p = parId.get(v.id) || { nom: v.id };
+      return '<button data-b="' + texte(v.id) + '"' + (v === courant ? ' class="on"' : '') + '><span class="px-ic" style="--t:' + teinte(v.id) + '">' + icone(p) + '</span> ' + texte(p.nom || v.id) + (v === courant ? ' · ici' : '') + '</button>'; }).join('')
+      + endormis.map(e => { const p = parId.get(e.id) || { nom: e.id }; return '<button data-b="' + texte(e.id) + '" class="px-endormi"><span class="px-ic" style="--t:' + teinte(e.id) + '">' + icone(p) + '</span> ' + texte(p.nom || e.id) + ' · endormi</button>'; }).join('')
+      + (endormis.length ? '<button data-oublier>oublier les endormis</button>' : '')
       + '<button data-b="">fermer</button></div>';
     racine.appendChild(f);
     f.addEventListener('click', (e) => {
@@ -462,6 +518,14 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     /** fermer un ploxion précis (✕ d'un mini dock) : celui qu'on regarde → comme « ‹ » ; un autre → démonté, la barre suit */
     fermerPloxion(id) { if (courant && courant.id === id) return retour(); tuer(id); if (courant) barre(parId.get(courant.id) || { nom: courant.id }, courant.id); return true; },
     reveiller: (id) => (endormis.some(e => e.id === id) ? reveiller(id) : ouvrir(id)),
+    /** (0.54) la mémoire : les ploxions vivants mais cachés s'ENDORMENT (démontés, gardés comme 💤 : un toucher les réveille) — avant
+     *  une vidéo plein écran, iOS tuait sinon la page entière (« ça crash ») */
+    endormirCaches() {
+      const l = [...vivants.values()].filter(v => v !== courant); if (!l.length) return 0;
+      for (const v of l) { endormis = [{ id: v.id, params: v.params || null }, ...endormis.filter(e => e.id !== v.id)].slice(0, 12); tuer(v.id); }
+      majBords(); if (courant) barre(parId.get(courant.id) || { nom: courant.id }, courant.id);
+      return l.length;
+    },
     oublierEndormi(id) { endormis = endormis.filter(e => e.id !== id); majBords(); if (courant) barre(parId.get(courant.id) || { nom: courant.id }, courant.id); },
     /** la dernière session : le ploxion de devant rouvert, les autres endormis (montés quand on y va) */
     async restaurer(sess, { devant = true } = {}) {

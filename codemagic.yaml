@@ -11,6 +11,8 @@ workflows:
     environment:
       groups:
         - ploxi0n
+      vars:
+        PLOXI0N_WIDGETS: "1"   # (0.54, RS-7 : « les widgets n'existent plus ») : les widgets et les contrôles, à chaque build
       node: 22
       xcode: latest
     triggering:

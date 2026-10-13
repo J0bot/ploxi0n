@@ -14,6 +14,15 @@ export function installerLecteur({ W = globalThis.window, boxion, vibrer = () =>
   let reglage = { yt: true, haptiqueSon: true };
   const pret = boxion.get('reglages', 'lecteur').then(v => { if (v && typeof v === 'object') reglage = { ...reglage, ...v }; }).catch(() => {});
   const vus = new WeakSet();
+  // (0.54, RS-7 : « une app avec un lecteur vidéo prend tout l'écran et ça crash ; il faudrait le PiP automatique ») une vidéo lancée AVANT
+  // que l'observateur ne pose playsinline partait dans le plein écran de WebKit : posé au moment même de play(), avec le PiP automatique
+  try {
+    const P = W.HTMLMediaElement && W.HTMLMediaElement.prototype, jouer = P && P.play;
+    if (jouer && !jouer.__ploxi0n) {
+      const nouveau = function (...a) { if (this.tagName === 'VIDEO') { this.setAttribute('playsinline', ''); this.setAttribute('webkit-playsinline', ''); this.setAttribute('autopictureinpicture', ''); } return jouer.apply(this, a); };
+      nouveau.__ploxi0n = true; P.play = nouveau;
+    }
+  } catch (e) { /* */ }
 
   // ---- YouTube : par une page https du labo ----
   const ytId = (src) => { const m = /(?:youtube(?:-nocookie)?\.com\/embed\/|youtu\.be\/)([A-Za-z0-9_-]{11})/.exec(src || ''); return m ? m[1] : null; };

@@ -4,6 +4,13 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.54.0', titre: 'Des glyphes, et ranger au doigt', points: [
+    'Plus d\'emoji : chaque ploxion a son glyphe, au trait du xerboxion (ion, koin, portion, cubion…), teinté à sa couleur ; le dock, les réglages, les mini docks aussi. ⚙ › Apparence pour revenir aux emoji du labo.',
+    'Ranger l\'accueil au doigt : appui long sur une icône, elle se soulève — glisse-la où tu veux, sur un dossier pour l\'y mettre, au bord de l\'écran pour changer de page. Sans bouger : son menu, comme avant.',
+    'Les widgets reviennent (le cube, À l\'écoute, épinglés, valeurs) avec les contrôles du Centre de contrôle.',
+    'L\'aperçu du cube (⚙ › Widgets) vit : il suit le gyroscope, se tourne au doigt, et tourne doucement tout seul.',
+    'Vidéo : plus de plein écran surprise ; le PiP automatique en quittant l\'app ; une vidéo en plein écran endort les autres ploxions (la mémoire : c\'était le plantage).',
+  ] },
   { v: '0.53.0', titre: 'Snappy', points: [
     '⚡ L\'app ne rame plus : le thème vivant ne recalcule plus toute la page 30 fois par seconde (il fait glisser le fond et la grille, c\'est tout), il dort dans les ploxions, et les 131 icônes ne sont plus 131 calques ni 131 ombres qui bougent.',
     '❄ Un ploxion en arrière-plan (un jeu…) n\'anime plus pour rien : ses images reprennent quand tu le rouvres. La musique continue.',

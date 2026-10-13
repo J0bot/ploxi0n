@@ -599,6 +599,15 @@ public class PloxiLecteur: CAPPlugin, CAPBridgedPlugin, AVPlayerViewControllerDe
 
     @objc func moteurs(_ call: CAPPluginCall) { call.resolve(["apple": true, "vlc": PloxiLecteur.vlcDisponible]) }
 
+    // (0.54, RS-7 : « ça prend tout l'écran et ça crash ») présenter depuis le contrôleur du DESSUS (une feuille, Safari, l'aperçu peuvent
+    // déjà être là), et jamais un contrôleur déjà présenté (UIKit lève une exception : le plantage)
+    private func presenter(_ vc: UIViewController) {
+        guard var haut = bridge?.viewController else { return }
+        while let p = haut.presentedViewController, !p.isBeingDismissed { haut = p }
+        if vc.presentingViewController != nil || vc.isBeingPresented || haut === vc { return }
+        haut.present(vc, animated: true)
+    }
+
     private func emettre(_ etat: String, _ moteur: String, _ extra: [String: Any] = [:]) {
         var d: [String: Any] = ["etat": etat, "moteur": moteur, "position": derniere.position, "duree": derniere.duree]
         for (k, v) in extra { d[k] = v }
@@ -653,7 +662,10 @@ public class PloxiLecteur: CAPPlugin, CAPBridgedPlugin, AVPlayerViewControllerDe
         vc.player = lecteur
         vc.delegate = self
         vc.allowsPictureInPicturePlayback = true
+        vc.canStartPictureInPictureAutomaticallyFromInline = true   // (0.54) le PiP automatique en quittant l'app
         vc.updatesNowPlayingInfoCenter = true
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [.allowAirPlay])
+        try? AVAudioSession.sharedInstance().setActive(true)   // sans session active, ni PiP ni son en arrière-plan
         vc.modalPresentationStyle = .fullScreen
         appleVC = vc
         var pret = false
@@ -686,7 +698,7 @@ public class PloxiLecteur: CAPPlugin, CAPBridgedPlugin, AVPlayerViewControllerDe
             self.derniere = (t.seconds.isFinite ? t.seconds : 0, d.isFinite ? d : 0)
             self.emettre("position", "apple")
         }
-        bridge?.viewController?.present(vc, animated: true)
+        presenter(vc)
     }
     // ✕ (ou glisser vers le bas) : la fin du plein écran = fermé, sauf si l'image passe en PiP
     public func playerViewController(_ playerViewController: AVPlayerViewController, willEndFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator) {
@@ -702,8 +714,10 @@ public class PloxiLecteur: CAPPlugin, CAPBridgedPlugin, AVPlayerViewControllerDe
         if playerViewController.presentingViewController == nil { emettre("ferme", "apple") }
     }
     public func playerViewController(_ playerViewController: AVPlayerViewController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
-        if playerViewController.presentingViewController != nil { completionHandler(true); return }
-        bridge?.viewController?.present(playerViewController, animated: true) { completionHandler(true) }
+        if playerViewController.presentingViewController != nil || playerViewController.isBeingPresented { completionHandler(true); return }
+        guard var haut = bridge?.viewController else { completionHandler(false); return }
+        while let p = haut.presentedViewController, !p.isBeingDismissed { haut = p }
+        haut.present(playerViewController, animated: true) { completionHandler(true) }
     }
 
     // ---- VLC ----
@@ -717,7 +731,7 @@ public class PloxiLecteur: CAPPlugin, CAPBridgedPlugin, AVPlayerViewControllerDe
             if etat == "ferme" { self.ecranVLC = nil }
         }
         ecranVLC = e
-        bridge?.viewController?.present(e, animated: true)
+        presenter(e)
         return true
         #else
         emettre("erreur", "vlc", ["raison": "VLC n'est pas dans ce build (option PLOXI0N_VLC)"])

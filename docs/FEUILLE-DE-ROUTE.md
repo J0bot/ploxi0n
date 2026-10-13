@@ -5,7 +5,7 @@
 
 **Légende** : ✅ fait (version) · 🔨 en cours · ⏭ prochain · 💭 plus tard · ❓ attend une décision de RS-7 · ⚠ fait, mais jamais vu marcher sur l'iPhone
 
-*Dernière mise à jour : 0.53 (13.10). La 0.52 tourne sur l'iPhone (build Codemagic) : RS-7 « ça lag de malade », « le wiki ne marche toujours pas ». La 0.45 est le dernier build TestFlight ; la 0.46 à la 0.51 attendent les minutes Actions
+*Dernière mise à jour : 0.54 (13.10). La 0.52 tourne sur l'iPhone (build Codemagic) : RS-7 « ça lag de malade », « le wiki ne marche toujours pas ». La 0.45 est le dernier build TestFlight ; la 0.46 à la 0.51 attendent les minutes Actions
 (1.11) ou un build lancé à la main (`git tag v0.50 && git push origin v0.50`, ou Codemagic : docs/TESTFLIGHT.md, depuis main ; options « widgets » et « vlc » au lancement manuel).*
 
 ---
@@ -51,6 +51,10 @@ avant la 0.46. Toutes les lignes ⚠ ci-dessous sont à **revérifier sur l'iPho
 | ✅ 0.52 | ⬡ Mode xerboxion : l'iframe sondée avant d'être montrée (plus de blanc) ; la barre d'installation en erreur 5 s au lieu de 9 | |
 | ✅ 0.53 | ⚡ **Snappy** : le thème vivant posait --mx/--my sur `<html>` à 30 Hz (style de TOUTE la page recalculé ; 131 icônes × ombre floue + fond plein écran repeints) et tournait aussi dans les ploxions → transforms composités sur le fond et la grille (1×/image), variables à 8 Hz, arrêté dans un ploxion sauf abonné ; `will-change` retiré des 131 tuiles ; cascade sur 16 tuiles ; `content-visibility` ; ❄ `src/app/gel.js` (requestAnimationFrame d'un ploxion caché mis de côté) ; le shim n'écrit plus `natif/*` dans le journal xion et au plus 1/s par sujet | ⚠ iPhone |
 | ✅ 0.53 | 📖 **Les cadres du labo** (`src/natif/cadres-labo.js`) : `<iframe src="/wiki">` → le labo ; CSP `frame-ancestors` sans `capacitor:` (lue par HEAD) → une carte « ouvrir » ; idem le mode xerboxion. **Côté labo, une ligne** : ajouter `capacitor:` à `frame-ancestors` (comme `/app/yt` le fait déjà) → le wiki et l'UI du labo s'affichent DANS l'app | côté labo |
+| ✅ 0.54 | ◇ **Les glyphes** (`src/app/glyphes.js`, le trait du sprite du labo `public/glyphs/xerboxion_glyphs.svg`) : chaque ploxion son glyphe (mots-clés, sinon généré : forme × marque) ; le dock, les modes, les mini docks, les réglages ; `src/app/sans-emoji.js` remplace les emoji restants de l'interface de l'app (pas le contenu des ploxions du labo) ; `prefs.glyphes` | ✅ faux iPhone |
+| ✅ 0.54 | ✥ **Glisser-déposer** de l'accueil (appui long = soulever ; réordonner, dossier, page voisine ; sans bouger = le menu) ; `accueilDoc.ordre` | ✅ faux iPhone |
+| ✅ 0.54 | ▦ Les widgets dans chaque build Codemagic (`PLOXI0N_WIDGETS=1` dans codemagic.yaml) ; l'aperçu du cube animé (gyroscope via `mouvement.ecouter`, doigt, rotation lente) | ⚠ Swift des widgets jamais compilé depuis 0.48 |
+| ✅ 0.54 | 🎞 Vidéo : `playsinline` posé au `play()` ; PiP en quittant l'app (web : `webkitSetPresentationMode` ; natif : `canStartPictureInPictureAutomaticallyFromInline`, session audio active) ; le lecteur natif présenté depuis le contrôleur du dessus, jamais deux fois ; plein écran vidéo → `routeur.endormirCaches()` | ⚠ le plantage : sans journal — partager le rapport depuis TestFlight (lane `crashs`) |
 | ⏭ | 🎨 **Les peaux** (docs/LOOK.md : Ryoku d'abord, 43PR, Aperture OS) : une grammaire de panneau HUD, des palettes et des fonds | |
 | ✅ 0.52 | ⏱ Minuteur dans le pack hors ligne (Pomodoro l'ouvre) ; `routeurProxy.ouvrir` installe un ploxion du pack depuis le téléphone avant de tenter le réseau | ✅ faux iPhone |
 | ✅ 0.52 | 👤 ⚙ › Compte › « Supprimer mon compte » → `labo/profile` (la page de compte du labo, Laravel ; protégée par la connexion) — règle 5.1.1(v) côté app. ⚠ vérifier que `/profile` a bien « supprimer le compte » pour un compte venu de l'OAuth j0bot (sans mot de passe ?) | côté labo |

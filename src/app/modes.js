@@ -7,7 +7,8 @@
 //                 Bluetooth, la maison (HomeKit), la lampe, les tags NFC (les kions dans le réel), le Wi-Fi, et le bus xerbot.cmd
 // Réglage : prefs.mode ; <html> porte px-m-<mode> (le CSS cache la grille quand un panneau la remplace).
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-export const MODES = [['chill-tekk', '◇', 'chill-tekk'], ['xerboxion', '⬡', 'xerboxion'], ['xerbot', '🤖', 'xerbot']];
+import { glyphe as G, versGlyphe } from './glyphes.js';   // ◇ (0.54) des glyphes, plus d'emoji
+export const MODES = [['chill-tekk', 'chilltekk', 'chill-tekk'], ['xerboxion', 'xerboxion', 'xerboxion'], ['xerbot', 'xerbot', 'xerbot']];
 
 export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, connait = () => false, source = 'https://xerboxion.org', chemin = '/home', vibrer = () => {}, cadres = null }) {
   const D = W.document, N = () => W.jOSNatif || {};
@@ -31,13 +32,13 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
   // XERB0T : le bus (les ploxions et la blouse y parlent) ; les derniers messages s'affichent
   try { if (W.jOSPorts && W.jOSPorts.on) W.jOSPorts.on('*', (p, topic) => { if (!/^ploxion\.xerbot\./.test(topic || '')) return; xb.messages.unshift({ le: Date.now(), port: topic.slice(15), p }); xb.messages.length = Math.min(xb.messages.length, 12); if (mode() === 'xerbot') rafraichir(); }); } catch (e) { /* */ }
 
-  const puces = () => '<div class="px-modes" role="tablist">' + MODES.map(([k, i, n]) => '<button data-mode="' + k + '" class="' + (k === mode() ? 'on' : '') + '">' + i + ' ' + n + '</button>').join('') + '</div>';
+  const puces = () => '<div class="px-modes" role="tablist">' + MODES.map(([k, i, n]) => '<button data-mode="' + k + '" class="' + (k === mode() ? 'on' : '') + '">' + G(i) + ' ' + n + '</button>').join('') + '</div>';
   function panneauXerboxion() {
     if (W.navigator.onLine === false) return '<div class="px-mode-p"><p class="px-grave">⬡ xerboxion</p><p>L\'UI du labo demande le réseau. Hors ligne : ◇ chill-tekk.</p></div>';
     // (0.52) l'iframe reste invisible tant que l'UI du labo n'est pas là (plus de grand rectangle blanc) ; dessous, « ça arrive »
     return '<div class="px-mode-p px-labo"><p class="px-labo-attente">⬡ l\'UI du labo arrive…</p><iframe onload="this.dataset.charge=1;if(this.dataset.ok)this.style.opacity=1" style="opacity:0" title="xerboxion" src="' + esc(source + chemin) + '?app=ploxi0n" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; geolocation" referrerpolicy="origin"></iframe></div>';
   }
-  const carte = (ic, titre, sous, actions) => '<div class="px-xb-c"><span class="ic">' + ic + '</span><span><b>' + esc(titre) + '</b><small>' + sous + '</small></span><span class="act">' + actions + '</span></div>';
+  const carte = (ic, titre, sous, actions) => '<div class="px-xb-c"><span class="ic">' + versGlyphe(ic) + '</span><span><b>' + esc(titre) + '</b><small>' + sous + '</small></span><span class="act">' + actions + '</span></div>';
   function panneauXerbot() {
     const m = xb.maison;
     return '<div class="px-mode-p px-xerbot"><p class="px-grave">🤖 XERB0T · le monde physique</p>'

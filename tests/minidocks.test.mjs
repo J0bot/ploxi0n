@@ -82,7 +82,7 @@ test('au plus N au-dessus du dock, puis « ▤ +N » ; ⧉ ouvre la page ; les e
     await r.ouvrir('a'); r.minimiser(); await attendre(10);
     await r.ouvrir('b'); r.minimiser(); await attendre(80);
     assert.equal(cartes(D).length, 1);
-    assert.match(D.querySelector('.px-md-tous').textContent, /▤ \+1/);
+    assert.match(D.querySelector('.px-md-tous').textContent, /\+1/); assert.ok(D.querySelector('.px-md-tous svg.px-g'), '(0.54) le glyphe, plus le ▤');
     await r.ouvrir('c'); await attendre(10);
     await r.restaurer({ vivants: [{ id: 'a' }, { id: 'b' }, { id: 'c' }], courant: null }, { devant: false });
     // (restaurer ne touche pas aux vivants : il ajoute les endormis absents)
@@ -92,5 +92,33 @@ test('au plus N au-dessus du dock, puis « ▤ +N » ; ⧉ ouvre la page ; les e
     D.querySelector('[data-md-tout]').click(); await attendre(60);
     assert.equal(D.querySelector('.px-md-page'), null);
     assert.deepEqual(r.vivants(), [], 'tout fermé');
+  } finally { p.fin(); }
+});
+
+test('✥ (0.54) glisser-déposer : une tuile soulevée se range ailleurs ; lâchée sur un dossier, elle y entre', async () => {
+  const { creerRouteur } = await import('../src/app/routeur.js');
+  const p = await page({ avion: true, ploxions: [] }), W = p.w, D = W.document;
+  try {
+    W.jOSApps = W.jOSApps || {}; for (const id of ['a', 'b', 'c']) W.jOSApps[id] = { mount() { return {}; } };
+    await p.boxion.put('reglages', 'accueil', { dossiers: [{ nom: 'Outils', ids: ['d'] }], pages: [] });
+    const racine = D.createElement('div'); D.body.appendChild(racine);
+    const r = creerRouteur({ fenetre: W, racine, boxion: p.boxion, catalogue: ['a', 'b', 'c', 'd'].map(id => ({ id, nom: id.toUpperCase() })) });
+    await r.accueil();
+    const ordre = () => [...racine.querySelectorAll('.px-page .px-tuile[data-id]')].map(b => b.getAttribute('data-id'));
+    assert.deepEqual(ordre(), ['a', 'b', 'c']);
+    const ev = (n, t, type, x) => n.dispatchEvent(new W.MouseEvent(type, { bubbles: true, clientX: x, clientY: 10 }));
+    // jsdom n'a pas de mise en page : elementFromPoint dit où est le doigt
+    let sous = null; D.elementFromPoint = () => sous;
+    const a = racine.querySelector('[data-id="a"]'), c = racine.querySelector('[data-id="c"]');
+    ev(a, a, 'pointerdown', 5); await attendre(480);
+    assert.ok(racine.classList.contains('px-tri'), 'soulevée : les autres tremblent');
+    sous = c; ev(racine, null, 'pointermove', 60); ev(racine, null, 'pointermove', 70);   // c.getBoundingClientRect() = 0 → après c
+    ev(racine, null, 'pointerup', 70); await attendre(40);
+    assert.deepEqual(ordre(), ['b', 'c', 'a'], 'rangée après c, et gardée');
+    assert.deepEqual((await p.boxion.get('reglages', 'accueil')).ordre, ['b', 'c', 'a']);
+    // sur le dossier
+    const b = racine.querySelector('[data-id="b"]'); ev(b, b, 'pointerdown', 5); await attendre(480);
+    sous = racine.querySelector('.px-dossier'); ev(racine, null, 'pointermove', 60); ev(racine, null, 'pointerup', 60); await attendre(40);
+    assert.deepEqual((await p.boxion.get('reglages', 'accueil')).dossiers[0].ids.sort(), ['b', 'd']);
   } finally { p.fin(); }
 });

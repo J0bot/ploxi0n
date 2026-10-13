@@ -7,7 +7,7 @@
 // Réglages : boxion_local « reglages/cube » = [6 clés de valeurs].
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 export const FACES_DEFAUT = ['tsoins-jour', 'musique', 'pas', 'ploxions', 'compte', 'dernier-tsoin'];
-export const GLYPHES = { 'tsoins-jour': '⧗', 'dernier-tsoin': '✎', musique: '♫', pas: '👣', sommeil: '☾', ploxions: '▣', compte: '◇', mode: '🌐' };
+export const GLYPHES = { 'tsoins-jour': '⧗', 'dernier-tsoin': '✎', musique: '♫', pas: '∷', sommeil: '☾', ploxions: '▣', compte: '◇', mode: '◈' };   // (0.54) aucun emoji : le widget les écrit tels quels
 
 /** les six faces : [{ k, g (glyphe), t (titre), v (valeur) }] */
 export function faces(choix, valeurs) {
@@ -32,5 +32,27 @@ export function creerCube({ W = globalThis.window, boxion, valeurs = () => ({}),
     const f = lesFaces(), pos = ['avant', 'droite', 'arriere', 'gauche', 'haut', 'bas'];
     return '<div class="px-cube-scene"><div class="px-cube">' + f.map((x, i) => '<div class="px-cube-f px-cube-' + pos[i] + '"><b>' + esc(x.g) + '</b><span>' + esc(x.v) + '</span><small>' + esc(x.t) + '</small></div>').join('') + '</div></div>';
   }
-  return { pret, publier, choisir, apercu, choix: () => [...choix], faces: lesFaces };
+  /** (0.54, RS-7 : « pas de prévisualisation ») l'aperçu VIT tout seul : le gyroscope en direct (jOSNatif.mouvement.ecouter : il ne
+   *  tourne qu'à la demande depuis la 0.53), le doigt qui le fait tourner, et sinon une rotation lente ; s'arrête quand l'aperçu disparaît */
+  function animer(scene) {
+    const cube = scene && scene.querySelector('.px-cube'); if (!cube || scene.__anime) return null; scene.__anime = true;
+    let rx = -24, ry = -34, cibleX = -24, cibleY = -34, gyro = 0, doigt = null, t0 = Date.now(), image = 0;
+    const M = W.jOSNatif && W.jOSNatif.mouvement;
+    const off = M && M.ecouter ? M.ecouter((e) => { gyro = Date.now(); cibleX = -24 + (+e.y || 0) * 30; cibleY = -34 + (+e.x || 0) * 42; }) : null;
+    scene.addEventListener('pointerdown', (e) => { doigt = { x: e.clientX, y: e.clientY, rx: cibleX, ry: cibleY }; try { scene.setPointerCapture(e.pointerId); } catch (er) { /* */ } });
+    scene.addEventListener('pointermove', (e) => { if (!doigt) return; cibleY = doigt.ry + (e.clientX - doigt.x) * 0.6; cibleX = doigt.rx - (e.clientY - doigt.y) * 0.6; });
+    const lacher = () => { doigt = null; t0 = Date.now(); };
+    scene.addEventListener('pointerup', lacher); scene.addEventListener('pointercancel', lacher);
+    scene.style.touchAction = 'none'; cube.style.transition = 'none';
+    const pas = () => {
+      if (!scene.isConnected) { if (off) off(); scene.__anime = false; return; }
+      if (!doigt && Date.now() - gyro > 1500 && Date.now() - t0 > 1200) cibleY += 0.25;   // pas de capteur : il tourne doucement
+      rx += (cibleX - rx) * 0.12; ry += (cibleY - ry) * 0.12;
+      cube.style.transform = 'rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg)';
+      image = (W.requestAnimationFrame || ((f) => W.setTimeout(f, 16)))(pas);
+    };
+    pas();
+    return { arreter: () => { if (off) off(); scene.__anime = false; } };
+  }
+  return { pret, publier, choisir, apercu, animer, choix: () => [...choix], faces: lesFaces };
 }
