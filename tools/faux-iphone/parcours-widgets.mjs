@@ -3,7 +3,7 @@ export default async function ({ page, ecrire, prefs }) {
   await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => /passer/i.test(x.textContent)); if (b) b.click(); });
   await page.evaluate(() => window.ploxi0nWidgets.publier()); await page.waitForTimeout(400);
   await page.evaluate(() => window.ploxi0n.routeur.ouvrir('reglages-app')); await page.waitForTimeout(900);
-  await page.evaluate(() => document.querySelector('[data-accueil] [data-aller="widgets"]').click()); await page.waitForTimeout(500);
+  await page.evaluate(() => document.querySelector('[data-accueil] [data-rg-aller="widgets"]').click()); await page.waitForTimeout(500);
   const r = {};
   r.page = await page.evaluate(() => ({ titre: document.querySelector('[data-titre]').textContent, faces: [...document.querySelectorAll('.px-cube-f')].map(f => f.innerText.replace(/\s+/g, ' ')), selects: document.querySelectorAll('[data-cube-face]').length }));
   const avant = await page.evaluate(() => getComputedStyle(document.querySelector('.px-cube')).transform);

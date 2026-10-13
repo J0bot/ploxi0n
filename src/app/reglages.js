@@ -48,7 +48,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       + '</style><div class="rg-tete"><div class="rg-fil"><button class="rg-retour" data-rg-retour hidden aria-label="retour">‹</button><b data-titre>⚙ réglages</b></div><input class="rg-q" data-q type="search" autocomplete="off" placeholder="chercher un réglage"></div><div data-c></div></div>';
     const zone = hote.querySelector('[data-c]');
     const section = (k, titre, corps) => '<section data-s="' + k + '"><h3>' + titre + '</h3>' + corps + '</section>';
-    const lien = (k, ic, titre, sous) => '<button class="lien" data-aller="' + k + '"><span class="ic">' + ic + '</span><span>' + esc(titre) + (sous ? '<small>' + esc(sous) + '</small>' : '') + '</span><span class="chev">›</span></button>';
+    const lien = (k, ic, titre, sous) => '<button class="lien" data-rg-aller="' + k + '"><span class="ic">' + ic + '</span><span>' + esc(titre) + (sous ? '<small>' + esc(sous) + '</small>' : '') + '</span><span class="chev">›</span></button>';
     const TITRES = Object.fromEntries([...GROUPES.flatMap(([, l]) => l.map(([k, i, n]) => [k, i + ' ' + n])), ['gestes', '🧭 Gestes des bords'], ['haptique-motifs', '🫧 Tes motifs'], ['haptique-evenements', '🫧 Les événements'], ['haptique-ploxions', '🫧 La signature des ploxions']]);
     const bascule = (attr, on, texte, sous) => '<label class="l"><span>' + texte + (sous ? '<small>' + sous + '</small>' : '') + '</span><input type="checkbox" ' + attr + (on ? ' checked' : '') + '></label>';
     const seg = (cle, valeurs, actuel, texte, sous) => '<div class="l ls"><span>' + texte + (sous ? '<small>' + sous + '</small>' : '') + '</span><div class="seg">' + valeurs.map(([v, n]) => '<button data-pv="' + cle + '" data-v="' + esc(v) + '"' + (String(v) === String(actuel) ? ' class="on"' : '') + '>' + esc(n) + '</button>').join('') + '</div></div>';
@@ -168,7 +168,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + bions.map(b => '<div class="l' + (b.coupe ? ' eteint' : '') + '"><span class="ic">⬡</span><span>' + esc(b.nom) + '<small>' + ko(b.octets) + ' · ' + (b.utilisePar.length ? 'sert à ' + esc(b.utilisePar.slice(0, 4).join(', ')) + (b.utilisePar.length > 4 ? ' +' + (b.utilisePar.length - 4) : '') : 'ne sert plus') + (b.coupe ? ' · coupé' : '') + '</small></span>'
             + '<span class="act"><button class="bas" data-bion-maj="' + esc(b.nom) + '" aria-label="mettre à jour">⟳</button>' + (b.utilisePar.length ? '' : '<button class="bas danger" data-bion-retirer="' + esc(b.nom) + '" aria-label="retirer">🗑</button>')
             + '<input type="checkbox" data-bion-on="' + esc(b.nom) + '"' + (b.coupe ? '' : ' checked') + ' aria-label="allumé"></span></div>').join('')
-          + '<div class="l"><span>⚡ jOSNatif, les plugions<small>dans ⚙ › Natif</small></span><button data-aller="natif">voir</button></div>'
+          + '<div class="l"><span>⚡ jOSNatif, les plugions<small>dans ⚙ › Natif</small></span><button data-rg-aller="natif">voir</button></div>'
           + '<div class="l"><span>Fournis par l\'app<small>' + FOURNIS_APP.join(' · ') + ' · jOSNatif</small></span></div></div>')
         + section('faceid', 'Face ID', '<div class="bloc">' + (verrous.length ? verrous.map(id => { const p = cat.find(x => x.id === id) || { nom: id, icone: '🔒' }; return '<div class="l"><span>' + esc(p.icone + ' ' + p.nom) + '</span><button data-deverrou="' + esc(id) + '">retirer le verrou</button></div>'; }).join('') : '<div class="l"><span>Aucun ploxion verrouillé<small>appui long sur un ploxion › verrouiller</small></span></div>') + '</div>')
         + section('donnees', 'Données', '<div class="bloc"><div class="l"><span>Réponses gardées pour le mode avion<small>' + nRoutes + ' route' + (nRoutes > 1 ? 's' : '') + '</small></span><button data-a="routes">vider</button></div>'
@@ -179,7 +179,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + '<div class="l"><span>📦 Ploxions installés<small>la place qu\'ils prennent, leurs bions, retirer</small></span><button data-a="gestion">ouvrir</button></div>'
           + '<div class="l"><span>✦ Nouveautés<small>ce qui a changé, version par version</small></span><button data-a="nouveautes">voir</button></div>'
           + '<div class="l"><span>🧭 Le tuto d\'accueil<small>les gestes et les features, en 9 cartes</small></span><button data-a="tuto">revoir</button></div>'
-          + '<div class="l"><span>▦ Widgets<small>le cube des bions, à l\'écoute, épinglés</small></span><button data-aller="widgets">voir</button></div>'
+          + '<div class="l"><span>▦ Widgets<small>le cube des bions, à l\'écoute, épinglés</small></span><button data-rg-aller="widgets">voir</button></div>'
           + '<div class="l"><span>⌨ Tester le clavier<small>si le clavier ne s\'ouvre pas : le rapport dit où ça casse</small></span><button class="p" data-a="clavier">tester</button></div>'
           + '<div class="l"><span>🧪 Banc iPhone</span><button data-ouvrir="banc">ouvrir</button></div><div class="l"><span>🐛 Bother me (un souci, une idée)</span><button data-ouvrir="bother">ouvrir</button></div></div>')
         + '<p class="msg" data-msg></p>';
@@ -249,7 +249,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       if (b.hasAttribute('data-jouer')) { haptique.jouer(b.getAttribute('data-jouer'), { force: true }); return; }
       if (b.hasAttribute('data-motif-suppr')) { await haptique.supprimer(b.getAttribute('data-motif-suppr')); return peindre(); }
       if (b.hasAttribute('data-lnat-moteur') && lecteurNatif) { await lecteurNatif.regler({ moteur: b.getAttribute('data-lnat-moteur') }); vibrer('selection'); return peindre(); }
-      if (b.hasAttribute('data-aller')) return aller(b.getAttribute('data-aller'));
+      if (b.hasAttribute("data-rg-aller")) return aller(b.getAttribute("data-rg-aller"));
       if (b.hasAttribute("data-rg-retour")) return aller(SOUS[page] || null);
       if (b.hasAttribute('data-monter')) { ev.preventDefault(); const i = +b.getAttribute('data-monter'); return majHud(c => { const [x] = c.elements.splice(i, 1); c.elements.splice(i - 1, 0, x); }); }
       if (b.hasAttribute('data-pin')) { const id = b.getAttribute('data-pin'); return majHud(c => { c.epingles = c.epingles.includes(id) ? c.epingles.filter(x => x !== id) : [...c.epingles, id].slice(-4); if (!c.elements.find(x => x.k === 'epingles').on) c.elements.find(x => x.k === 'epingles').on = true; }); }

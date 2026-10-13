@@ -4,6 +4,10 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.50.0', titre: 'La blouse, et trois modes', points: [
+    '🥼 labo-cape : pilote la blouse RS-7 (Bluetooth) — températures, consigne (42 °C max), zones, LEDs, autonomie, journal, la session en tsoin. Sans blouse : la simulation, avec le vrai moteur de cape-core.',
+    '◈ Trois modes en haut de l\'accueil : ◇ chill-tekk (tes ploxions), ⬡ xerboxion (l\'UI du labo, le dock par-dessus), 🤖 xerbot (le monde physique : la blouse, Bluetooth, la maison, la lampe, NFC, Wi-Fi, le bus des robots).',
+  ] },
   { v: '0.49.0', titre: 'Le lecteur intégré', points: [
     '🎞 Un vrai lecteur dans l\'app : celui d\'Apple (PiP, AirPlay, écran verrouillé) et VLC en repli pour les MKV, le son DTS et les sous-titres. Stremio s\'en sert tout seul ; il reprend où tu t\'étais arrêté.',
     '🔇 Une vidéo sans son (AC3/DTS) ? Une bulle propose le lecteur natif. Les liens VLC, Infuse, Outplayer restent dans l\'app.',

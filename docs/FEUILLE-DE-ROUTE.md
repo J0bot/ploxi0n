@@ -5,8 +5,8 @@
 
 **Légende** : ✅ fait (version) · 🔨 en cours · ⏭ prochain · 💭 plus tard · ❓ attend une décision de RS-7 · ⚠ fait, mais jamais vu marcher sur l'iPhone
 
-*Dernière mise à jour : 0.49 (13.10). La 0.45 est le dernier build TestFlight ; la 0.46 à la 0.49 attendent les minutes Actions
-(1.11) ou un build lancé à la main (`git tag v0.49 && git push origin v0.49`, depuis main ; options « widgets » et « vlc » au lancement manuel).*
+*Dernière mise à jour : 0.50 (13.10). La 0.45 est le dernier build TestFlight ; la 0.46 à la 0.50 attendent les minutes Actions
+(1.11) ou un build lancé à la main (`git tag v0.50 && git push origin v0.50`, ou Codemagic : docs/TESTFLIGHT.md, depuis main ; options « widgets » et « vlc » au lancement manuel).*
 
 ---
 
@@ -41,7 +41,10 @@ avant la 0.46. Toutes les lignes ⚠ ci-dessous sont à **revérifier sur l'iPho
 | ✅ 0.49 | 📁 **Les bions de la liste** : envoyer vers (fichiers), aperçu QuickLook, zip/dezipper (fflate), la galerie (plusieurs photos) + import dans Fichiers, le sélecteur de fichiers, Plans (geo:, Google Maps → Plans), Mail, la lampe ; 🎛 contrôles du Centre de contrôle (iOS 18) | ⚠ |
 | ⏭ ❓ | Le partage de connexion : **iOS ne laisse aucune app l'allumer** (seulement rejoindre un Wi-Fi, fait) | limite d'Apple |
 | ⏭ | Le bouton « ▶ ploxi0n » dans le ploxion Stremio (côté labo, docs/LECTEUR.md) ; l'import des photos DANS le boxion (attend l'envoi de fichiers relayé) | |
-| ⏭ | **Construire la 0.49 et tout revérifier sur l'iPhone** (les ⚠) : `tools/faux-iphone` dit que c'est branché, seul le téléphone dit que ça marche | |
+| ✅ 0.50 | 🥼 **labo-cape** (lot L1 de J0bot/labo-cape) : la blouse RS-7 en BLE (contrat `docs/BLE.md`, branche `ploxi0n-l1` de labo-cape) ou sa simulation (copie de cape-engine vérifiée contre la trace du Rust) ; vue live, commandes (42 °C max), LEDs, journal, session en tsoin | à essayer avec la vraie blouse (firmware L0) |
+| ✅ 0.50 | ◈ **Les modes** : ◇ chill-tekk · ⬡ xerboxion (l'UI du labo, `xerboxion.org/home?app=ploxi0n`, le dock par-dessus ; `postMessage({ ploxi0n: 'ouvrir', id })` ouvre un ploxion en natif) · 🤖 xerbot (la blouse, Bluetooth, HomeKit, la lampe, NFC, Wi-Fi, le bus `xerbot.cmd`) | côté labo : le postMessage, la session dans l'iframe |
+| 💭 | Le mode **xeroction** (voir ce qu'on a fait : la frise des tsoins, le Nexus) ; XERB0T : les gestes de la blouse = ordres au robot (labo-cape EXTRAPOLATION) | |
+| ⏭ | **Construire la 0.50 et tout revérifier sur l'iPhone** (les ⚠) : `tools/faux-iphone` dit que c'est branché, seul le téléphone dit que ça marche | |
 | ⏭ ❓ | **Supprimer son compte DANS l'app** (règle App Store 5.1.1(v), bloquante) : une route labo, puis un bouton ⚙ › Compte | côté labo |
 | ⏭ | Le faux iPhone sur les ploxions du réseau (quand xerboxion.org est joignable depuis l'environnement) : tous les ploxions publics, chemin iPhone | |
 | 💭 | Encore plus de natif : Contacts, Calendrier/Rappels (EventKit), Live Activities, contrôles du Centre de contrôle, Apple Pay ? | nouveaux plugins |
@@ -186,7 +189,7 @@ contrepartie native (FOURNIS + src/natif/<bion>.js). Un ploxion qui « charge à
 | ✅ 0.16 | **Le clavier s'ouvre** : correctif natif (tout focus compte comme un toucher, comme Cordova/Ionic) + focus pendant le geste | RS-7 : « le clavier n'apparaît pas quand il faut » |
 | ✅ 0.15 | Écrire partout : les champs gagnent toujours contre un user-select:none d'un bion | RS-7 : « je peux jamais écrire nulle part » |
 | ✅ 0.11 | **Chill-tekk-7026** : presque noir, violets délavés, aucun dégradé, arrondi chill usé, patine, inscriptions gravées | |
-| ⏭ | Les **trois modes** : chill-tekk (tsoin engine seul, chill absolu) · xerboxion (tout tourne) · xeroction (voir ce qu'on a fait) | braindump 11.10 |
+| 🔨 0.50 | Les **modes** : chill-tekk · xerboxion (l'UI du labo) · xerbot (le monde physique) ; reste xeroction (voir ce qu'on a fait) | braindump 11.10, RS-7 13.10 |
 | ⏭ | Les ploxions eux-mêmes en chill-tekk-7026 (le thème du labo appliqué dans l'app) | |
 | 💭 | Les **xers** (thèmes, dispositions) choisis dans l'app | |
 | 💭 | L'UI **organique vivante** : mitose (uncraft), fusion (craft), membranes, tubes | APRÈS le système bions |

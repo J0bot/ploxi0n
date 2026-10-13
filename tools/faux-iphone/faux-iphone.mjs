@@ -82,7 +82,7 @@ const natif = {
     },
     mouvementFin: () => { clearInterval(mouvementMinuteur); return {}; },
     meteo: () => ({ temperature: 12.4, ressentie: 11, condition: 'Nuageux', symbole: 'cloud.sun.fill', humidite: 0.7, vent: 9, uv: 2, jours: [], attribution: ' Weather', attributionLien: 'https://weatherkit.apple.com/legal-attribution.html' }),
-    maisonListe: () => ({ accessoires: [] }), gameCenter: () => ({ connecte: true, nom: 'testeur' }), ecranEveille: (o) => { eveil.push(o.actif); return { actif: o.actif }; }, lampe: (o) => ({ allume: o.allume ?? true }), apercu: () => ({ ok: true }), lecture: () => ({}), lectureFin: () => ({}),
+    maisonListe: () => ({ accessoires: [{ id: 'a1', nom: 'Lampe salon', piece: 'Salon', maison: 'Chez moi', allume: false, basculable: true, joignable: true }, { id: 'a2', nom: 'Prise imprimante 3D', piece: 'Atelier', maison: 'Chez moi', allume: true, basculable: true, joignable: true }] }), maisonBasculer: (o) => ({ allume: o.allume ?? true }), gameCenter: () => ({ connecte: true, nom: 'testeur' }), ecranEveille: (o) => { eveil.push(o.actif); return { actif: o.actif }; }, lampe: (o) => ({ allume: o.allume ?? true }), apercu: () => ({ ok: true }), lecture: () => ({}), lectureFin: () => ({}),
   },
   PloxiLecteur: { moteurs: () => ({ apple: true, vlc: false }), ouvrir: (o) => ({ moteur: /\.mkv/.test(o.url) ? 'vlc' : 'apple' }), fermer: () => ({}) },
   PloxiVocal: { commencer: () => ({ chemin: '/tmp/vocal.m4a' }), arreter: () => ({ chemin: '/tmp/vocal.m4a', duree: 2, base64: '', type: 'audio/mp4' }), transcrire: (o) => ({ texte: 'ouvre le ploxion horloge', langue: o.langue, surLeTelephone: true }) },
