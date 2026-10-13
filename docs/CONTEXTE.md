@@ -66,6 +66,13 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
   reconnaître : face claire du cube, koins du kion, couvercle du boxion), le glyphe découpé en sombre (RS-7 : « pas juste des ronds »).
 - **0.58 — couleurs douces.** `GPAL` adoucie (mêmes teintes que le labo, saturation ≈ 0.34, lumière ≈ 0.62 ; `f` = l'aplat des formes
   pleines, plus sombre) : RS-7 « moins flashy, là ça explose les yeux ».
+- **0.59 — la fractale des ploxions.** `src/app/fractale.js` : `glisser()` (le passage d'app en app : sortant en biais, entrant en 3D,
+  la trace) et `creerFractale()` branché sur les deux bords du routeur (`appui`/`deplace`/`relache`/`annule`) : tenir 0,3 s = APERÇU
+  (tirer > 30 % = y aller), 0,9 s = FRACTALE (symétrique, échelle 0,56 × 0,62^|d| ; lâchée sans bouger = ouverte, `px-fx-ouverte`),
+  1,9 s = SLIDER (0,34 × 0,8^|d|, défile à 7 cartes/s selon le doigt). Les vivants sont leurs hôtes transformés sur place (jamais
+  déplacés : pas de rechargement d'iframe) ; accueil, endormis, verrouillés = cartes à icône (Face ID : jamais leur contenu). Pression :
+  `PointerEvent.pressure` (3D Touch seulement). `allerA()` dans le routeur. ⚙ › Navigation : « Tenir un bord ». Faux iPhone :
+  `parcours-fractale.mjs` (les captures prennent ~0,7 s : photographier des états qui tiennent).
 
 ## 3. Ce qui reste, par ordre
 

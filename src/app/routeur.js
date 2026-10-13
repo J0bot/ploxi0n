@@ -12,6 +12,7 @@
 
 import { glyphe, glyphePloxion } from './glyphes.js';
 import { svgXerkion, glypheCategorie } from './xerkion-icone.js';
+import { creerFractale, glisser } from './fractale.js';
 const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 // le logo (losanges concentriques), transparent : les espaces entre les losanges sont des trous
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
@@ -76,9 +77,12 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     b.addEventListener('pointerdown', (e) => {
       if (prefs().bords === false) return; tenus[cote] = true; if (tenus.g && tenus.d) lesDeux = true;
       const r = b.getBoundingClientRect(), f = r.height ? (e.clientY - r.top) / r.height : 0.5; zones[cote] = f < 0.33 ? 'haut' : f > 0.66 ? 'bas' : 'milieu';
-      b.dataset.zone = zones[cote]; x0 = e.clientX; id0 = e.pointerId; try { b.setPointerCapture(e.pointerId); } catch (er) { /* */ } b.classList.add('px-tire'); e.preventDefault(); });
+      b.dataset.zone = zones[cote]; x0 = e.clientX; id0 = e.pointerId; try { b.setPointerCapture(e.pointerId); } catch (er) { /* */ } b.classList.add('px-tire'); e.preventDefault();
+      if (lesDeux) fractale.annule(); else fractale.appui(cote, e); });   // ⧉ tenir : aperçu, fractale, slider
     b.addEventListener('pointermove', (e) => {
       if (x0 == null || e.pointerId !== id0) return;
+      if (!lesDeux) fractale.deplace(e);
+      if (fractale.etat() !== 'repos') { b.style.removeProperty('--p'); return; }
       const dx = (e.clientX - x0) * (cote === 'g' ? 1 : -1);
       const p = Math.max(0, Math.min(1, dx / SEUIL)); if (p >= 1 && b.style.getPropertyValue('--p') !== '1') vibrer('bord-seuil');
       b.style.setProperty('--p', String(p));
@@ -87,6 +91,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
       if (x0 == null) return;
       const dx = ((e.clientX == null ? x0 : e.clientX) - x0) * (cote === 'g' ? 1 : -1);
       x0 = null; tenus[cote] = false; b.classList.remove('px-tire'); b.style.removeProperty('--p');
+      if (e.type === 'pointercancel') fractale.annule(); else if (!lesDeux && fractale.relache()) return;   // la fractale a pris le geste
       if (lesDeux) { if (!tenus.g && !tenus.d) { lesDeux = false; if (e.type === 'pointerup') faire(geste('deux-' + zones.g)); } return; }
       if (e.type === 'pointerup' && dx > SEUIL) faire(geste(cote + '-' + zones[cote]));
     };
@@ -102,19 +107,36 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   }).observe(D.body, { childList: true });
   function accrochesDe(id, f) { for (const [n, x] of accroches) if (x === id) f(n); }
   /** passer à l'app d'à côté : sens +1 (suivante), -1 (précédente) ; l'accueil est au bout de la file */
+  const fileBords = () => [null, ...vivants.keys(), ...endormis.map(e => e.id)];
   function aCote(sens) {
-    const file = [null, ...vivants.keys(), ...endormis.map(e => e.id)];
+    const file = fileBords();
     const i = file.indexOf(courant ? courant.id : null);
     const cible = file[(i + sens + file.length) % file.length];
     if (cible === (courant ? courant.id : null)) return false;
     vibrer('bord');
-    if (courant) { cacher(courant); courant = null; }
-    pile = [];
-    if (cible == null) { accueil(); return true; }
-    if (!vivants.has(cible) || bloque(cible)) { if (vivants.has(cible)) ouvrir(cible); else reveiller(cible); return true; }
-    montrer(vivants.get(cible));
+    allerA(cible, { sens });
     return true;
   }
+  /** aller à un ploxion de la file (null = l'accueil) ; sens : le GLISSEMENT (0.59, src/app/fractale.js), 0 = sans */
+  function allerA(cible, { sens = 0 } = {}) {
+    const sortant = courant && courant.id !== cible ? courant : null;
+    if (sortant) { cacher(sortant); courant = null; }
+    pile = [];
+    let entrant = null;
+    if (cible == null) accueil();
+    else if (!vivants.has(cible) || bloque(cible)) { if (vivants.has(cible)) ouvrir(cible); else reveiller(cible); }
+    else { montrer(vivants.get(cible)); entrant = courant ? courant.hote : null; }
+    if (sens && !prefs().calme) glisser({ W, sortant: sortant ? sortant.hote : null, entrant, ecran: cible == null ? ecran : null, scene, sens });
+  }
+  // ⧉ (0.59) tenir un bord : l'aperçu, la fractale, le slider (src/app/fractale.js)
+  const fractale = creerFractale({ W, racine, scene, vibrer, calme: () => !!prefs().calme, actif: () => prefs().fractale !== false && prefs().bords !== false,
+    file: () => fileBords().map(id => {
+      if (id == null) return { id: null, nom: 'accueil', hote: null, icone: G('maison'), sous: '' };
+      const p = parId.get(id) || { id, nom: id }, v = vivants.get(id), ferme = verrous.has(id) && !deverrouilles.has(id);
+      return { id, nom: p.nom || id, hote: v && !ferme ? v.hote : null, icone: ferme ? G('verrou') : icone(p), sous: ferme ? 'verrouillé' : v ? '' : 'endormi' };
+    }),
+    origine: () => fileBords().indexOf(courant ? courant.id : null),
+    aller: (id) => allerA(id) });
   let edition = false, dossierOuvert = null;
   // (0.55, RS-7 : « un ploxion en Face ID… plus besoin de Face ID ») déverrouillé = pour CETTE séance seulement : l'app passe en arrière-plan,
   // tout se reverrouille (reverrouiller), et un ploxion vivant mais verrouillé ne se remontre plus sans le visage (montrer, aCote, la pile).

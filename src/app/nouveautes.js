@@ -4,6 +4,13 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.59.0', titre: 'La fractale des ploxions', points: [
+    'Passer d\'une app à l\'autre par un bord : l\'app part en biais, l\'autre arrive en 3D, un trait de lumière balaie l\'écran.',
+    'Tenir un bord 0,3 s : l\'app d\'à côté passe la tête (à droite la suivante, à gauche la précédente) ; tire-la vers le centre pour y aller.',
+    'Tenir 0,9 s : la fractale. Ton app au milieu, en petit, les autres de chaque côté, de plus en plus petites ; glisse, lâche sur une app. Lâchée sans bouger, elle reste ouverte : touche une app, ou à côté pour revenir.',
+    'Tenir 1,9 s : le slider. Encore plus petit, ça défile tout seul vers le bord tenu ; ramène le doigt vers le centre pour ralentir ou repartir dans l\'autre sens ; lâche pour ouvrir.',
+    'Sur les iPhone à 3D Touch, presser fort fait pareil, plus vite.',
+  ] },
   { v: '0.58.0', titre: 'Des couleurs douces', points: [
     'Les icônes gardent les teintes des xerkions du labo, mais adoucies : moins saturées, moins lumineuses. Ça n\'explose plus les yeux.',
   ] },

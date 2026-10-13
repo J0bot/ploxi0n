@@ -552,3 +552,25 @@ html.px-px-chill body{
 .px-tiroir .px-at-puces label.px-puce{display:inline-flex;align-items:center;gap:6px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);cursor:pointer}
 .px-at-puces label.px-puce .px-g{width:16px;height:16px}
 .px-at-type{margin:8px 2px 0 !important}
+/* ⧉ (0.59) la fractale des ploxions, l'aperçu, le slider et le glissement (src/app/fractale.js) */
+@keyframes px-fx-in{from{opacity:0}}
+.px-fx-fond{position:fixed;inset:0;z-index:39;background:rgba(5,6,12,.62);-webkit-backdrop-filter:blur(10px) saturate(.85);backdrop-filter:blur(10px) saturate(.85);animation:px-fx-in .28s ease-out}
+.px-fx .px-scene{z-index:41}
+.px-mode-accueil.px-fx .px-scene,.px-mode-accueil .px-scene.px-transit{display:block;position:fixed;left:0;right:0;bottom:0;top:calc(env(safe-area-inset-top,0px) + 56px);z-index:41;pointer-events:none}
+.px-mode-accueil .px-scene.px-transit{z-index:30}
+.px-scene>.px-hote.px-fx-carte,.px-scene>.px-hote.px-fx-carte[hidden]{display:block;pointer-events:none;overflow:hidden;border-radius:28px;transform-origin:50% 50%;box-shadow:0 22px 70px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.07);transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s,border-radius .3s;will-change:transform}
+.px-fx-icone{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;border-radius:28px;background:var(--surface,#0d0d16) var(--grain);box-shadow:0 22px 70px rgba(0,0,0,.6),inset 0 0 0 1px var(--filet,rgba(255,255,255,.07));pointer-events:none;transform-origin:50% 50%;transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s;will-change:transform}
+.px-fx-ic{width:42%;max-width:260px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--bio)}
+.px-fx-ic .xki,.px-fx-ic .px-g{width:100%;height:100%;border-radius:22%}
+.px-fx-icone b{font:600 40px var(--police);color:var(--txt);letter-spacing:.02em}
+.px-fx-icone small{font:600 24px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.px-fx-calque{position:fixed;z-index:42;pointer-events:none}
+.px-fx-ouverte .px-fx-calque{pointer-events:auto;touch-action:none}
+.px-fx-cible{position:absolute;inset:0;width:auto;min-height:0;margin:0;padding:0;background:none;border:0;border-radius:28px;transform-origin:50% 50%;transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
+.px-fx-cible.on{box-shadow:0 0 0 4px var(--bio),0 0 60px var(--glow)}
+.px-fx-cible span{position:absolute;left:0;right:0;top:calc(100% + 22px);text-align:center;font:600 42px var(--police);color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
+.px-fx-suit .px-fx-carte,.px-fx-suit .px-fx-icone,.px-fx-suit .px-fx-cible{transition:none !important}
+.px-fx-indice{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 30px);z-index:43;text-align:center;font:600 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);pointer-events:none;animation:px-fx-in .4s ease-out}
+.px-fx-trace{position:fixed;top:0;bottom:0;left:0;width:2px;z-index:44;pointer-events:none;background:linear-gradient(180deg,transparent,var(--bio) 30%,var(--bio) 70%,transparent);box-shadow:0 0 28px 8px var(--glow)}
+.px-scene>.px-hote.px-fx-sortant[hidden]{display:block;pointer-events:none;z-index:0;overflow:hidden;border-radius:28px}
+.px-fx-apercu .px-fx-cible span{opacity:0}
