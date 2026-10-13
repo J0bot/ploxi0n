@@ -28,10 +28,12 @@ const cellule = (p) => '<div class="c">' + svgXerkion(p) + '<span>' + esc(p.nom 
 const planches = [];
 planches.push({ nom: '01-app', html: '<h1>ploxi0n · les icônes xerkion</h1><p>le polygone-xer (5 à 8 côtés), ses koins, le cœur (wormion · portion · kion), le disque et le glyphe du ploxion — palettes des hubs du labo</p>'
   + '<div class="g">' + [...internesCat, ...pack].map(cellule).join('') + '</div>' });
-planches.push({ nom: '01-app-glyphe-seul', html: '<h1>ploxi0n · style « glyphe seul »</h1><p>⚙ › Apparence › Style des icônes, ou app par app (appui long › son icône)</p><div class="g">' + [...internesCat, ...pack].map(p => '<div class="c">' + svgXerkion(p, { seul: true }) + '<span>' + esc(p.nom || p.id) + '</span></div>').join('') + '</div>' });
 const exemple = { ploxion: { id: 'exemple' }, xerkion: { id: 'xerkion-ex', koins: 6, centre: 'wormion' }, xer: { id: 'xer' }, cubion: { id: 'cubion' }, kion: { id: 'kion' }, koin: { id: 'koin' },
   wormion: { id: 'wormion' }, spherion: { id: 'spherion' }, portion: { id: 'portion' }, bion: { id: 'bion' }, boxion: { id: 'boxion' } };
 const xks = [3, 4, 5, 6, 7, 8, 9, 10, 12].map(n => ({ id: 'xerkion-n' + n, nom: n + ' koins', koins: n, centre: ['wormion', 'portion', 'kion'][n % 3] }));
+planches.splice(1, 0, { nom: '01-app-glyphe-seul', html: '<h1>style « glyphe seul » : la forme pleine, le glyphe découpé</h1><p>⚙ › Apparence › Style des icônes, ou app par app (appui long › son icône)</p><div class="g">'
+  + TYPES.map(t => '<div class="c">' + svgXerkion(exemple[t], { seul: true }) + '<span>' + t + '</span></div>').join('') + xks.slice(0, 6).map(p => '<div class="c">' + svgXerkion(p, { seul: true }) + '<span>' + esc(p.nom) + '</span></div>').join('')
+  + [...internesCat, ...pack].map(p => '<div class="c">' + svgXerkion(p, { seul: true }) + '<span>' + esc(p.nom || p.id) + '</span></div>').join('') + '</div>' });
 planches.unshift({ nom: '00-legende', html: '<h1>la forme = le type</h1><p>' + TYPES.map(t => t + ' : ' + FORMES[t]).join(' · ') + '</p><div class="g">' + TYPES.map(t => '<div class="c">' + svgXerkion(exemple[t]) + '<span>' + t + '</span></div>').join('') + '</div>'
   + '<h1 style="margin-top:22px">un xerkion a autant de côtés que de koins</h1><p>ses ploxions (labo.j0bot.ch/px/xerkions.json), de 3 à 12 ; sans koins : l\'octogone-xer</p><div class="g">' + xks.map(cellule).join('') + '</div>'
   + '<h1 style="margin-top:22px">la couleur et le glyphe = la catégorie</h1><p>quand le ploxion n\'a pas de glyphe à lui (ses mots), il prend celui de sa catégorie</p><div class="g">' + Object.keys(CATEGORIES).map((c, i) => '<div class="c">' + svgXerkion({ id: 'z' + i, cat: c }) + '<span>' + c + '</span></div>').join('') + '</div>' });

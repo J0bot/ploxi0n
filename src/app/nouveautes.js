@@ -4,6 +4,9 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.57.0', titre: 'Le glyphe seul garde sa forme', points: [
+    'Style « glyphe seul » : la forme du type reste (losange, xerkion à N côtés, cube, kion, koin, anneaux, sphère, portion, bion, boîte), pleine, d\'une couleur, et le glyphe est découpé dessus, en grand.',
+  ] },
   { v: '0.56.0', titre: 'Plus de ploxions ouverts, des glyphes lisibles', points: [
     'Ploxions vivants en arrière-plan : 12 par défaut, jusqu\'à 20, ou ∞ (⚙ › Navigation). Cachés, ils sont gelés et leurs vidéos coupées ; au-delà de la limite, le plus ancien s\'endort dans les mini docks.',
     'Le glyphe au centre des icônes est bien plus grand.',

@@ -126,6 +126,25 @@ function forme(s, P) {
     }
   }
 }
+/** (0.57, RS-7 : « pour le glyphe seul, pas juste des ronds : la forme quand même, mais comme objet géométrique plein ») la forme du type,
+ *  PLEINE, d'une seule couleur (quelques traits creusés pour la reconnaître : la face du cube, les koins du kion, le couvercle du boxion) ;
+ *  le glyphe est découpé dessus, en sombre. Rend [svg, cx, cy, taille du glyphe]. */
+function formePleine(s, P) {
+  const A = P.a, B = P.b, C = P.bg, creux = (op = '.55', w = '1.8') => ' fill="none" stroke="' + C + '" stroke-width="' + w + '" stroke-opacity="' + op + '"';
+  switch (s.type) {
+    case 'xerkion': { const v = sommets(s.cotes, 46), ri = 46 * Math.cos(Math.PI / s.cotes); return ['<polygon points="' + pts(v) + '" fill="' + A + '" stroke="' + A + '" stroke-width="3" stroke-linejoin="round"/>', 50, s.cotes === 3 ? 60 : 50, s.cotes === 3 ? 42 : Math.min(56, ri * 1.5)]; }
+    case 'xer': return ['<polygon points="' + pts(sommets(8, 46, -67.5)) + '" fill="' + A + '"/><polygon points="' + pts(sommets(8, 39, -67.5)) + '"' + creux() + '/>', 50, 50, 50];
+    case 'cubion': { const v = sommets(6, 46); return ['<polygon points="' + pts(v) + '" fill="' + A + '"/><polygon points="' + pts([v[5], v[0], v[1], [50, 50]]) + '" fill="' + B + '"/><polygon points="' + pts([[50, 50], v[1], v[2], v[3]]) + '" fill="#000" fill-opacity=".18"/>', 50, 52, 44]; }
+    case 'kion': return ['<rect x="7" y="7" width="86" height="86" fill="' + A + '"/><g fill="' + C + '" fill-opacity=".7"><polygon points="7,7 23,7 7,23"/><polygon points="93,7 77,7 93,23"/><polygon points="93,93 77,93 93,77"/><polygon points="7,93 23,93 7,77"/></g>', 50, 50, 54];
+    case 'koin': return ['<polygon points="50,6 95,90 5,90" fill="' + A + '" stroke="' + A + '" stroke-width="3" stroke-linejoin="round"/>', 50, 64, 40];
+    case 'wormion': return ['<circle cx="50" cy="50" r="46" fill="' + A + '"/><circle cx="50" cy="50" r="39"' + creux() + '/><circle cx="50" cy="50" r="33"' + creux('.4', '1.4') + ' stroke-dasharray="3 3"/>', 50, 50, 46];
+    case 'spherion': return ['<circle cx="50" cy="50" r="46" fill="' + A + '"/><ellipse cx="50" cy="50" rx="46" ry="16"' + creux('.35', '1.4') + '/><ellipse cx="50" cy="50" rx="16" ry="46"' + creux('.35', '1.4') + '/>', 50, 50, 48];
+    case 'portion': return ['<rect x="6" y="6" width="88" height="88" fill="' + A + '"/><rect x="13" y="13" width="74" height="74"' + creux() + '/>', 50, 50, 52];
+    case 'bion': return ['<circle cx="50" cy="50" r="47" fill="none" stroke="' + A + '" stroke-width="2" stroke-dasharray="5 3.5"/><circle cx="50" cy="50" r="42" fill="' + A + '"/>', 50, 50, 48];
+    case 'boxion': return ['<rect x="8" y="9" width="84" height="84" rx="10" fill="' + A + '"/><line x1="8" y1="27" x2="92" y2="27"' + creux('.6', '2') + '/><g fill="' + C + '" fill-opacity=".6"><circle cx="19" cy="18" r="2.6"/><circle cx="27" cy="18" r="2.6"/></g>', 50, 61, 44];
+    default: return ['<polygon points="50,4 96,50 50,96 4,50" fill="' + A + '" stroke="' + A + '" stroke-width="3" stroke-linejoin="round"/>', 50, 50, 48];   // ploxion : le losange
+  }
+}
 /** l'intérieur du glyphe (sans son <svg>) */
 function interieur(p, nom) {
   const s = nom ? '<svg>' + GLYPHES[nom] + '</svg>' : glyphePloxion(p);
@@ -143,11 +162,12 @@ export function svgXerkion(p, { perso = null, fond = true, photo = null, cls = '
   const k = !photo && JSON.stringify([p && p.id, p && p.nom, p && p.categorie, p && p.cat, p && p.type, p && p.koins, p && p.centre, p && p.xerkion, perso, fond, cls, seul]);
   if (k && memo.has(k)) return memo.get(k);
   const s = specXerkion(p, perso), P = GPAL[s.pal], glypheSeul = s.style ? s.style === 'glyphe' : !!seul;
-  // glyphe seul : pas de forme, le glyphe occupe la tuile (62 %) ; sinon la forme du type et le glyphe dans son disque
-  const [corps, cx, cy, r] = glypheSeul ? ['', 50, 50, 36] : forme(s, P), e = glypheSeul ? 64 : r * 1.62, z = e / 100;
+  // glyphe seul : la forme du type, pleine, et le glyphe découpé dessus ; sinon la forme au trait et le glyphe dans son disque
+  const [corps, cx, cy, t] = glypheSeul ? formePleine(s, P) : forme(s, P), e = glypheSeul ? t : t * 1.62, r = glypheSeul ? t / 2 : t, z = e / 100;
+  const encre = glypheSeul ? P.bg : P.a;   // la couleur du glyphe : sombre sur la forme pleine, néon dans le disque
   const centre = photo
     ? '<clipPath id="xkc"><circle cx="' + cx + '" cy="' + cy + '" r="' + r + '"/></clipPath><image href="' + photo + '" x="' + f1(cx - r) + '" y="' + f1(cy - r) + '" width="' + r * 2 + '" height="' + r * 2 + '" preserveAspectRatio="xMidYMid slice" clip-path="url(#xkc)"/>'
-    : '<g transform="translate(' + f1(cx - e / 2) + ' ' + f1(cy - e / 2) + ') scale(' + z.toFixed(3) + ')" fill="none" stroke="' + P.a + '" stroke-width="' + (glypheSeul ? 6.5 : 7.5) + '" stroke-linecap="round" stroke-linejoin="round">' + interieur(p, s.glyphe) + '</g>';
+    : '<g transform="translate(' + f1(cx - e / 2) + ' ' + f1(cy - e / 2) + ') scale(' + z.toFixed(3) + ')" fill="none" stroke="' + encre + '" stroke-width="' + (glypheSeul ? 9 : 7.5) + '" stroke-linecap="round" stroke-linejoin="round">' + interieur(p, s.glyphe) + '</g>';
   const svg = '<svg class="' + cls + '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" aria-hidden="true" focusable="false" data-type="' + s.type + '" data-style="' + (glypheSeul ? 'glyphe' : 'xerboxion') + '">'
     // le fond sans dégradé ni id (une tuile cachée qui porterait le dégradé le casserait pour les autres sous WebKit)
     + (fond ? '<rect width="100" height="100" fill="' + P.bg + '"/><circle cx="50" cy="42" r="48" fill="' + P.a + '" fill-opacity=".07"/>' : '')
@@ -155,7 +175,7 @@ export function svgXerkion(p, { perso = null, fond = true, photo = null, cls = '
     + (glypheSeul ? '' : '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="rgba(0,0,0,.72)" stroke="' + P.a + '" stroke-width="1.4"/>')
     + centre + '</svg>';
   // les classes des glyphes (.f = plein, .p = pointillé) en attributs : le SVG se suffit (DOM comme canvas)
-  const sortie = svg.replace(/ class="f"/g, ' fill="' + P.a + '" stroke="none"').replace(/ class="p"/g, ' stroke-dasharray="7 7" stroke-width="4.5"');
+  const sortie = svg.replace(/ class="f"/g, ' fill="' + encre + '" stroke="none"').replace(/ class="p"/g, ' stroke-dasharray="7 7" stroke-width="4.5"');
   if (k) { if (memo.size > 800) memo.clear(); memo.set(k, sortie); }
   return sortie;
 }

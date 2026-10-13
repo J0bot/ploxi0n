@@ -62,6 +62,8 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 - **0.56 — vivants et lisibilité.** `maxVivants` : 12 par défaut, 0 = ∞ (RS-7 : « le max 8 ploxions ça devient chiant ») ; le disque
   et le glyphe des icônes agrandis (RS-7 : « ultra petit, illisible ») ; `styleIcones` = `xerboxion` | `glyphe` (le glyphe seul, 64 %),
   global (⚙ › Apparence) et par app (perso `style`, l'atelier).
+- **0.57 — le glyphe seul garde la forme.** `formePleine()` (src/app/xerkion-icone.js) : la forme du type, pleine (quelques creux pour la
+  reconnaître : face claire du cube, koins du kion, couvercle du boxion), le glyphe découpé en sombre (RS-7 : « pas juste des ronds »).
 
 ## 3. Ce qui reste, par ordre
 
