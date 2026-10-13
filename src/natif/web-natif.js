@@ -35,7 +35,7 @@ export const BRANCHEMENTS = [
   ['wakelock', '☀', 'navigator.wakeLock', 'l\'écran reste allumé'],
   ['bluetooth', 'ᛒ', 'navigator.bluetooth', 'Bluetooth LE'],
   ['nfc', '◉', 'NDEFReader', 'Core NFC'],
-  ['liens', '🧭', 'window.open · liens externes', 'Safari dans l\'app'],
+  ['liens', '🧭', 'window.open · liens externes', 'Safari dans l\'app ; geo: et Google Maps → Plans'],
 ];
 
 const definir = (o, k, v) => { try { Object.defineProperty(o, k, { value: v, configurable: true, writable: true }); return true; } catch (e) { try { o[k] = v; return o[k] === v; } catch (e2) { return false; } } };
@@ -138,10 +138,10 @@ export function installerWebNatif({ W = globalThis.window, prefs = () => ({}), c
     brancher('share', () => {
       const avant = nav.share && nav.share.bind(nav);
       definir(nav, 'share', async (d = {}) => {
-        if (d.files && d.files.length && avant) return avant(d);
+        if (d.files && d.files.length) { if (W.jOSNatif && W.jOSNatif.envoyer) return W.jOSNatif.envoyer([...d.files], { titre: d.title, texte: d.text }); if (avant) return avant(d); }   // (0.49) les fichiers aussi
         await m.share().then(s => s.Share.share({ title: d.title, text: d.text, url: d.url, dialogTitle: d.title }));
       });
-      definir(nav, 'canShare', (d = {}) => !(d.files && d.files.length) || !!avant);
+      definir(nav, 'canShare', () => true);
     });
     // 📋 clipboard : le texte par iOS (sans geste requis), le reste au web
     brancher('clipboard', () => {
@@ -370,12 +370,17 @@ export function installerWebNatif({ W = globalThis.window, prefs = () => ({}), c
     });
     // 🧭 window.open et les liens _blank vers un autre site : Safari DANS l'app (on reste dans ploxi0n)
     brancher('liens', () => {
+      // (0.49) les cartes : geo:, Google Maps → Plans d'Apple
+      const plans = (u) => { const s = String(u || ''); let m = /^geo:([-\d.]+),([-\d.]+)/i.exec(s); if (m) return 'maps://?ll=' + m[1] + ',' + m[2];
+        if (/^https?:\/\/(www\.)?(maps\.google\.[a-z.]+|google\.[a-z.]+\/maps)/i.test(s)) { try { const x = new URL(s); const qq = x.searchParams.get('q') || x.searchParams.get('query') || x.searchParams.get('daddr'); m = /@([-\d.]+),([-\d.]+)/.exec(x.pathname); return 'maps://?' + (m ? 'll=' + m[1] + ',' + m[2] : '') + (qq ? (m ? '&' : '') + 'q=' + encodeURIComponent(qq) : ''); } catch (e) { return null; } } return null; };
+      const versPlans = (u) => { const p = plans(u); if (!p) return false; import('@capacitor/app-launcher').then(m => m.AppLauncher.openUrl({ url: p })).catch(() => {}); return true; };
       const externe = (u) => { try { const x = new URL(u, W.location.href); return /^https?:$/.test(x.protocol) && x.origin !== W.location.origin ? x.href : null; } catch (e) { return null; } };
       const ouvrir = (href) => m.browser().then(b => b.Browser.open({ url: href, presentationStyle: 'popover' })).catch(() => {});
       const avant = W.open && W.open.bind(W);
-      definir(W, 'open', (u, cible, f) => { const href = u && externe(String(u)); if (href && cible !== '_self') { ouvrir(href); return null; } return avant ? avant(u, cible, f) : null; });
+      definir(W, 'open', (u, cible, f) => { if (u && versPlans(u)) return null; const href = u && externe(String(u)); if (href && cible !== '_self') { ouvrir(href); return null; } return avant ? avant(u, cible, f) : null; });
       W.document.addEventListener('click', (e) => {
         const a = e.target && e.target.closest && e.target.closest('a[href]'); if (!a || e.defaultPrevented) return;
+        if (versPlans(a.getAttribute('href'))) { e.preventDefault(); return; }
         const href = externe(a.getAttribute('href')); if (!href || (a.target !== '_blank' && !a.hasAttribute('download') && a.target !== '_new')) return;
         e.preventDefault(); ouvrir(href);
       });

@@ -11,6 +11,9 @@ export const PLUGIONS = [
       const i = await W.jOSNatif.appareil(); const type = /ipad/i.test(i.modele) ? 'tablette' : 'telephone';
       if (b.get && b.get() !== type && b.set) b.set(type, 'natif');
     } },
+  // 🎞 (0.49) le bion lecteur du labo (Stremio…) : une vidéo s'ouvre dans le lecteur intégré de l'iPhone (Apple, VLC en repli)
+  { bion: 'jOSplayer', quoi: 'ses vidéos → le lecteur intégré de l\'iPhone', async brancher(W, b) { if (W.ploxi0nLecteurNatif) W.ploxi0nLecteurNatif.brancherJosPlayer(b); } },
+  { bion: 'jOSPlayer', quoi: 'ses vidéos → le lecteur intégré de l\'iPhone', async brancher(W, b) { if (W.ploxi0nLecteurNatif) W.ploxi0nLecteurNatif.brancherJosPlayer(b); } },
   { bion: 'jOSShare', quoi: 'jOSShare.natif : la feuille de partage d\'iOS',
     async brancher(W, b) { if (W.jOSNatif && !b.natif) b.natif = (p) => W.jOSNatif.partager({ texte: p && (p.text || p.texte), url: p && p.url, titre: p && (p.title || p.titre) }); } },
 ];

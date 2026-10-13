@@ -9,7 +9,7 @@
 //   - l'HAPTIQUE DU SON : l'énergie des basses → des vibrations (un toc par attaque, plus fort quand ça cogne). Seulement pour un son
 //     lisible par WebAudio (même origine, blob, ou crossOrigin) : sinon WebAudio rendrait le son MUET — donc rien (YouTube, la plupart des flux).
 // Réglages : boxion_local « reglages/lecteur » = { yt: true, haptiqueSon: true }.
-export function installerLecteur({ W = globalThis.window, boxion, vibrer = () => {}, source = 'https://xerboxion.org', titre = () => 'ploxi0n' }) {
+export function installerLecteur({ W = globalThis.window, boxion, vibrer = () => {}, source = 'https://xerboxion.org', titre = () => 'ploxi0n', surMedia = null }) {
   const D = W.document;
   let reglage = { yt: true, haptiqueSon: true };
   const pret = boxion.get('reglages', 'lecteur').then(v => { if (v && typeof v === 'object') reglage = { ...reglage, ...v }; }).catch(() => {});
@@ -31,6 +31,7 @@ export function installerLecteur({ W = globalThis.window, boxion, vibrer = () =>
     if (vus.has(m)) return; vus.add(m);
     if (m.tagName === 'VIDEO') { m.setAttribute('playsinline', ''); m.setAttribute('webkit-playsinline', ''); m.setAttribute('x-webkit-airplay', 'allow'); try { m.disablePictureInPicture = false; } catch (e) { /* */ } }
     m.addEventListener('play', () => { session(m); if (reglage.haptiqueSon) haptiqueSon(m); });
+    if (surMedia) { try { surMedia(m); } catch (e) { /* */ } }   // 🎞 (0.49) le lecteur intégré : illisible ou muette → natif
   }
   // l'écran verrouillé, le Centre de contrôle
   function session(m) {

@@ -4,6 +4,12 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.49.0', titre: 'Le lecteur intégré', points: [
+    '🎞 Un vrai lecteur dans l\'app : celui d\'Apple (PiP, AirPlay, écran verrouillé) et VLC en repli pour les MKV, le son DTS et les sous-titres. Stremio s\'en sert tout seul ; il reprend où tu t\'étais arrêté.',
+    '🔇 Une vidéo sans son (AC3/DTS) ? Une bulle propose le lecteur natif. Les liens VLC, Infuse, Outplayer restent dans l\'app.',
+    '📁 Envoyer vers (avec les fichiers), le visualiseur d\'iOS (PDF, Office, images, 3D…), zip et unzip, la galerie native, Plans, Mail, la lampe de poche — pour tous les ploxions.',
+    '🎛 Les contrôles du Centre de contrôle (iOS 18) : noter un tsoin, un vocal, la lampe, ploxi0n.',
+  ] },
   { v: '0.48.0', titre: 'À l\'écoute, et le cube', points: [
     '♫ L\'écran verrouillé dit enfin ce qui joue : titre, artistes, pochette, et ⏮ ⏯ ⏭ (au lieu de « Spotify Embedded Player » et ±10 s). Ça marche pour Spotify et pour tout ploxion qui renseigne la Media Session.',
     '♫ Un mini-lecteur au-dessus du dock, sur l\'accueil : ce qui joue en arrière-plan, ⏮ ⏯ ⏭ ; le toucher rouvre le ploxion.',

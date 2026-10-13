@@ -5,8 +5,8 @@
 
 **Légende** : ✅ fait (version) · 🔨 en cours · ⏭ prochain · 💭 plus tard · ❓ attend une décision de RS-7 · ⚠ fait, mais jamais vu marcher sur l'iPhone
 
-*Dernière mise à jour : 0.48 (13.10). La 0.45 est le dernier build TestFlight ; la 0.46, la 0.47 et la 0.48 attendent les minutes Actions
-(1.11) ou un build lancé à la main (`git tag v0.48 && git push origin v0.48`, depuis main).*
+*Dernière mise à jour : 0.49 (13.10). La 0.45 est le dernier build TestFlight ; la 0.46 à la 0.49 attendent les minutes Actions
+(1.11) ou un build lancé à la main (`git tag v0.49 && git push origin v0.49`, depuis main ; options « widgets » et « vlc » au lancement manuel).*
 
 ---
 
@@ -37,7 +37,11 @@ avant la 0.46. Toutes les lignes ⚠ ci-dessous sont à **revérifier sur l'iPho
 | ✅ 0.47 | 📱 La vraie app : PrivacyInfo.xcprivacy, arm64, `fastlane/metadata` + lane `metadonnees`, docs/CONFIDENTIALITE.md | docs/APP-STORE.md |
 | ✅ 0.48 | ♫ **À l'écoute** : le Spotify Web Playback SDK (et toute Media Session d'un iframe) → l'écran verrouillé (titre, artistes, pochette, ⏮ ⏯ ⏭ au lieu de « Spotify Embedded Player » ±10 s), le mini-lecteur de l'accueil, la valeur « musique », jOSNatif.lecture | ⚠ WebKit publie aussi le sien : à voir sur l'iPhone qui gagne |
 | ✅ 0.48 | ◈ **Le widget Cube** (six valeurs des bions, penché selon la dernière inclinaison, ⟲ interactif, il tourne toutes les 20 min) + ♫ **le widget À l'écoute** (pochette, ⏮ ⏯ ⏭) ; ⚙ › Widgets : le cube 3D qui suit le gyroscope en direct, le choix des faces | build avec l'option « widgets » |
-| ⏭ | **Construire la 0.48 et tout revérifier sur l'iPhone** (les ⚠) : `tools/faux-iphone` dit que c'est branché, seul le téléphone dit que ça marche | |
+| ✅ 0.49 | 🎞 **Le lecteur intégré** : Apple (AVPlayerViewController : PiP, AirPlay, écran verrouillé) + VLC en repli (MKV, DTS, sous-titres, pistes ; option de build `vlc`) ; plugion jOSplayer (Stremio), vidéo illisible → natif, vidéo muette → bulle, liens vlc:// infuse:// outplayer://, reprise de position, `ploxi0n://lire` pour les ploxions seuls | docs/LECTEUR.md ; ⚠ |
+| ✅ 0.49 | 📁 **Les bions de la liste** : envoyer vers (fichiers), aperçu QuickLook, zip/dezipper (fflate), la galerie (plusieurs photos) + import dans Fichiers, le sélecteur de fichiers, Plans (geo:, Google Maps → Plans), Mail, la lampe ; 🎛 contrôles du Centre de contrôle (iOS 18) | ⚠ |
+| ⏭ ❓ | Le partage de connexion : **iOS ne laisse aucune app l'allumer** (seulement rejoindre un Wi-Fi, fait) | limite d'Apple |
+| ⏭ | Le bouton « ▶ ploxi0n » dans le ploxion Stremio (côté labo, docs/LECTEUR.md) ; l'import des photos DANS le boxion (attend l'envoi de fichiers relayé) | |
+| ⏭ | **Construire la 0.49 et tout revérifier sur l'iPhone** (les ⚠) : `tools/faux-iphone` dit que c'est branché, seul le téléphone dit que ça marche | |
 | ⏭ ❓ | **Supprimer son compte DANS l'app** (règle App Store 5.1.1(v), bloquante) : une route labo, puis un bouton ⚙ › Compte | côté labo |
 | ⏭ | Le faux iPhone sur les ploxions du réseau (quand xerboxion.org est joignable depuis l'environnement) : tous les ploxions publics, chemin iPhone | |
 | 💭 | Encore plus de natif : Contacts, Calendrier/Rappels (EventKit), Live Activities, contrôles du Centre de contrôle, Apple Pay ? | nouveaux plugins |

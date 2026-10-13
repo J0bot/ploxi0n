@@ -88,7 +88,7 @@ export function installerJosNatif(W = globalThis.window) {
     async navigateur(url) { if (natif) { const { Browser } = await import('@capacitor/browser'); return Browser.open({ url: String(url), presentationStyle: 'popover' }); } W.open(url, '_blank', 'noopener'); },   // 🧭 Safari dans l'app
     ecranEveille: (actif = true) => natif ? PloxiApple.ecranEveille({ actif: !!actif }) : Promise.resolve(),   // ☀ l'écran ne s'éteint pas
     async orientation(type) { if (!natif) return; const { ScreenOrientation } = await import('@capacitor/screen-orientation'); return type ? ScreenOrientation.lock({ orientation: type }) : ScreenOrientation.unlock(); },   // ⟲ 'portrait' | 'landscape' | rien = libre
-    capacites() { return natif ? ['partager', 'vibrer', 'copier', 'coller', 'photo', 'position', 'notifier', 'ouvrirLien', 'appareil', 'batterie', 'reseau', 'parler', 'meteo', 'shazam', 'musique', 'vocal', 'dictee', 'haptique', 'maison', 'wifi', 'wifiInfo', 'jeu', 'nfc', 'navigateur', 'ecranEveille', 'orientation', 'sante', 'mouvement', 'lecture'] : ['partager', 'vibrer', 'copier', 'position', 'parler'].filter(k => k !== 'partager' || W.navigator.share); },
+    capacites() { return natif ? ['partager', 'vibrer', 'copier', 'coller', 'photo', 'position', 'notifier', 'ouvrirLien', 'appareil', 'batterie', 'reseau', 'parler', 'meteo', 'shazam', 'musique', 'vocal', 'dictee', 'haptique', 'maison', 'wifi', 'wifiInfo', 'jeu', 'nfc', 'navigateur', 'ecranEveille', 'orientation', 'sante', 'mouvement', 'lecture', 'lecteur', 'envoyer', 'apercu', 'zip', 'dezipper', 'photos', 'choisirFichiers', 'carte', 'mail', 'lampe'] : ['partager', 'vibrer', 'copier', 'position', 'parler'].filter(k => k !== 'partager' || W.navigator.share); },
   };
   W.jOSNatif = api;
   return api;

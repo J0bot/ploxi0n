@@ -342,6 +342,49 @@ struct WidgetLecture: Widget {
     }
 }
 
+// ---- 🎛 LES CONTRÔLES (0.49, iOS 18 : Centre de contrôle, écran verrouillé, bouton Action) ---------------------------------------------------
+// Chacun ouvre ploxi0n sur un geste (OpenURLIntent → ploxi0n://…, que l'app reçoit) : noter un tsoin, un vocal, la lampe, ploxi0n.
+@available(iOS 18.0, *)
+struct ControleTsoin: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "ch.j0bot.ploxi0n.controle.tsoin") {
+            ControlWidgetButton(action: OpenURLIntent(URL(string: "ploxi0n://tsoin")!)) { Label("Noter un tsoin", systemImage: "hourglass") }
+        }
+        .displayName("Noter un tsoin")
+        .description("ploxi0n s'ouvre sur le composeur de tsoins.")
+    }
+}
+@available(iOS 18.0, *)
+struct ControleVocal: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "ch.j0bot.ploxi0n.controle.vocal") {
+            ControlWidgetButton(action: OpenURLIntent(URL(string: "ploxi0n://vocal")!)) { Label("Vocal ploxi0n", systemImage: "mic") }
+        }
+        .displayName("Vocal")
+        .description("Un vocal, transcrit sur le téléphone.")
+    }
+}
+@available(iOS 18.0, *)
+struct ControleLampe: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "ch.j0bot.ploxi0n.controle.lampe") {
+            ControlWidgetButton(action: OpenURLIntent(URL(string: "ploxi0n://lampe")!)) { Label("Lampe ploxi0n", systemImage: "flashlight.on.fill") }
+        }
+        .displayName("Lampe")
+        .description("La lampe de poche, par ploxi0n.")
+    }
+}
+@available(iOS 18.0, *)
+struct ControlePloxi0n: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "ch.j0bot.ploxi0n.controle.ouvrir") {
+            ControlWidgetButton(action: OpenURLIntent(URL(string: "ploxi0n://px/accueil")!)) { Label("ploxi0n", systemImage: "square.grid.2x2") }
+        }
+        .displayName("ploxi0n")
+        .description("Tes ploxions.")
+    }
+}
+
 @main
 struct PloxionWidgets: WidgetBundle {
     var body: some Widget {
@@ -349,5 +392,11 @@ struct PloxionWidgets: WidgetBundle {
         WidgetValeurs()
         WidgetCube()
         WidgetLecture()
+        if #available(iOS 18.0, *) {
+            ControleTsoin()
+            ControleVocal()
+            ControleLampe()
+            ControlePloxi0n()
+        }
     }
 }

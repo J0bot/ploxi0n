@@ -24,7 +24,7 @@ export const GROUPES = [
 ];
 export const SOUS = { gestes: 'navigation', 'haptique-motifs': 'haptique', 'haptique-evenements': 'haptique', 'haptique-ploxions': 'haptique' };
 
-export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, vibrer = () => {}, haptique = null, lecteur = null, sante = null, cube = null, valeurs = () => ({}), version = '?' }) {
+export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, vibrer = () => {}, haptique = null, lecteur = null, lecteurNatif = null, sante = null, cube = null, valeurs = () => ({}), version = '?' }) {
   const ELS = { tsoin: '⧗ noter un tsoin', vocal: '🎙 vocal', compte: '👤 compte', reseau: '📶 réseau et mode connecté', heure: '🕐 heure', chercher: '🔎 chercher un ploxion', epingles: '📌 ploxions épinglés' };
   function mount(hote) {
     let vivant = true, q = '', composition = [], page = null;   // page : null = l'accueil des réglages
@@ -67,7 +67,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         widgets: cube ? 'le cube : ' + cube.faces().slice(0, 3).map(f => f.g).join(' ') + ' … ; à l\'écoute, épinglés, valeurs' : '',
         notifs: notifs && notifs.reglage().coord ? 'coord surveillé' : 'test, coord', faceid: verrous.length ? verrous.length + ' ploxion(s) verrouillé(s)' : 'aucun verrou', iphone: 'tes ploxions en vraies apps',
         apparence: P ? [P.themeVivant !== false ? 'thème vivant' : null, P.pleinEcran ? 'plein écran' : null, P.calme ? 'calme' : null, 'icônes ' + P.icones].filter(Boolean).join(' · ') : '',
-        haptique: P && P.haptique === false ? 'coupée' : 'motifs, événements, signatures', lecteur: 'écran verrouillé, AirPlay, YouTube',
+        haptique: P && P.haptique === false ? 'coupée' : 'motifs, événements, signatures', lecteur: 'le lecteur intégré (Apple, VLC), écran verrouillé, AirPlay',
         navigation: P ? [P.bords ? 'les bords' : null, P.telecommande !== false ? 'télécommande' : null, 'gestes'].filter(Boolean).join(' · ') : '', hud: c.epingles.length + ' épinglé(s)' + (P && P.dock === false ? ' · sans dock' : ''),
         accueil: 'dossiers et pages', ploxions: installes.length + ' installé(s)', bions: bions.length + ' bion(s)', donnees: nRoutes + ' réponse(s) gardée(s)', apropos: 'ploxi0n ' + version,
       };
@@ -130,7 +130,11 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
                     + '<span class="act"><button class="bas" data-sentir="' + esc(p.id) + '">▶</button><select data-hpx="' + esc(p.id) + '" style="max-width:34vw;background:var(--surface2,#151021);color:inherit;border:2px solid var(--bord,#272036);border-radius:10px;padding:5px;font:12px inherit">'
                     + '<option value="signature"' + (v === 'signature' ? ' selected' : '') + '>signature</option>' + options(v).replace('<option value="aucun"', '<option value="aucun"') + '</select></span></div>'; }).join('')
               + '</div>'); })() : '')
-        + (lecteur ? section('lecteur', 'Lecteur', '<div class="bloc">'
+        + (lecteur ? section('lecteur', 'Lecteur', (lecteurNatif ? (() => { const ln = lecteurNatif.reglage(); return '<div class="bloc">'
+          + '<div class="l ls"><span>🎞 Le lecteur intégré<small data-moteurs>Apple (PiP, AirPlay, écran verrouillé) ; VLC en repli pour MKV, DTS, sous-titres — si ce build l\'a</small></span>'
+          + '<div class="seg">' + [['auto', 'auto'], ['apple', 'Apple'], ['vlc', 'VLC']].map(([v, n]) => '<button data-lnat-moteur="' + v + '"' + (ln.moteur === v ? ' class="on"' : '') + '>' + n + '</button>').join('') + '</div></div>'
+          + bascule('data-lnat-auto', ln.auto !== false, 'Passer au lecteur intégré tout seul', 'une vidéo que la page ne lit pas, le lecteur d\'un ploxion (jOSplayer, Stremio), un lien vlc:// ou infuse:// ; une vidéo sans son propose de basculer')
+          + '</div><p class="msg">Dans la page :</p>'; })() : '') + '<div class="bloc">'
           + bascule('data-lect="yt"', lecteur.reglage().yt, 'YouTube par xerboxion.org', 'une page https : YouTube refuse l\'intégration directe dans l\'app (erreurs 152/153)')
           + bascule('data-lect="haptiqueSon"', lecteur.reglage().haptiqueSon, 'Haptique du son', 'les basses deviennent des vibrations — pour les sons lisibles par l\'app (pas YouTube ni la plupart des flux)')
           + '<div class="l"><span>Le son continue écran verrouillé et en silencieux<small>contrôles sur l\'écran verrouillé et le Centre de contrôle, AirPlay, Picture in Picture ; plein écran = le lecteur d\'iOS</small></span></div></div>') : '')
@@ -180,6 +184,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + '<div class="l"><span>🧪 Banc iPhone</span><button data-ouvrir="banc">ouvrir</button></div><div class="l"><span>🐛 Bother me (un souci, une idée)</span><button data-ouvrir="bother">ouvrir</button></div></div>')
         + '<p class="msg" data-msg></p>';
       filtrer();
+      if (lecteurNatif) lecteurNatif.moteurs().then(m => { const el = zone.querySelector('[data-moteurs]'); if (el && m) el.textContent = 'ce build : Apple ' + (m.apple ? '✓' : '—') + ' · VLC ' + (m.vlc ? '✓ (MKV, DTS, sous-titres)' : '— (build avec l\'option « vlc » pour l\'avoir)'); }).catch(() => {});
       { const el = zone.querySelector('[data-mouvement]'); if (el && W.ploxi0nMouvement) { const e = W.ploxi0nMouvement.etat(); el.textContent = e.actif ? '✓ ' + e.source + ' · penche le téléphone' : e.erreur ? '⚠ ' + e.erreur + (e.erreur.includes('web') ? '' : ' — touche l\'écran une fois pour essayer le capteur du navigateur') : 'en attente (hors Calme, app visible)'; } }
       // le journal du dernier démarrage (l'écran de chargement) : le total, et les étapes les plus lentes
       boxion.get('reglages', 'demarrage').then(d => { const el = zone.querySelector('[data-demarrage]'); if (!el || !d) return;
@@ -214,6 +219,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
     hote.addEventListener('change', async (ev) => {
       const t = ev.target;
       if (t.type === 'checkbox') vibrer('interrupteur');
+      if (t.matches('[data-lnat-auto]') && lecteurNatif) { await lecteurNatif.regler({ auto: t.checked }); return; }
       if (t.matches('[data-cube-face]') && cube) { await cube.choisir(+t.getAttribute('data-cube-face'), t.value); vibrer('selection'); return peindre(); }
       if (t.matches('[data-t="sante-partage"]') && sante) { const p = await sante.partager(t.checked); msg(t.checked ? (p.dernier ? '✓ envoyé à ton boxion' : '✓ activé : il partira dès que tu es connecté') : '✓ plus rien n\'est envoyé'); return; }
       if (t.matches('[data-t="mode"]')) { modeConnecte(t.checked); hud.regler(hud.config()); return; }
@@ -242,6 +248,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       if (b.hasAttribute('data-sentir')) { haptique.jouerPloxion(b.getAttribute('data-sentir'), 'ouvrir', null, { force: true }); return; }
       if (b.hasAttribute('data-jouer')) { haptique.jouer(b.getAttribute('data-jouer'), { force: true }); return; }
       if (b.hasAttribute('data-motif-suppr')) { await haptique.supprimer(b.getAttribute('data-motif-suppr')); return peindre(); }
+      if (b.hasAttribute('data-lnat-moteur') && lecteurNatif) { await lecteurNatif.regler({ moteur: b.getAttribute('data-lnat-moteur') }); vibrer('selection'); return peindre(); }
       if (b.hasAttribute('data-aller')) return aller(b.getAttribute('data-aller'));
       if (b.hasAttribute("data-rg-retour")) return aller(SOUS[page] || null);
       if (b.hasAttribute('data-monter')) { ev.preventDefault(); const i = +b.getAttribute('data-monter'); return majHud(c => { const [x] = c.elements.splice(i, 1); c.elements.splice(i - 1, 0, x); }); }

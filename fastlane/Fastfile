@@ -20,7 +20,8 @@ def asc(methode, chemin, corps = nil)
 end
 
 WID_ID = "#{APP_ID}.widgets"
-WIDGETS = ENV["PLOXI0N_WIDGETS"] == "1"   # l'interrupteur des widgets : sans lui, le build est exactement celui d'avant
+WIDGETS = ENV["PLOXI0N_WIDGETS"] == "1"
+VLC = ENV["PLOXI0N_VLC"] == "1"   # le lecteur VLC (0.49) : sans lui, le lecteur intégré n'a que le moteur d'Apple   # l'interrupteur des widgets : sans lui, le build est exactement celui d'avant
 
 # Les WIDGETS (ios/App/PloxionWidgets) : la cible d'extension est ajoutée au projet ICI, sur le Mac de la CI (gem xcodeproj, livrée avec
 # fastlane), jamais à la main dans le .pbxproj ; idempotent. Elle est embarquée dans l'app (PlugIns), même version et même build.
@@ -68,6 +69,32 @@ def ajouter_confidentialite
   UI.success("PrivacyInfo.xcprivacy ajouté aux ressources de l'app")
 end
 
+# Le LECTEUR VLC (0.49, option PLOXI0N_VLC) : le paquet SPM vlckit-spm (MobileVLCKit, LGPL) ajouté à la cible App ICI (gem xcodeproj),
+# idempotent. Le Swift (PloxiLecteur, EcranVLC) est entre #if canImport(MobileVLCKit) : sans le paquet, il n'est pas compilé.
+VLC_PAQUET = "https://github.com/tylerjonesio/vlckit-spm"
+def ajouter_vlc
+  require "xcodeproj"
+  projet = Xcodeproj::Project.open(File.expand_path("../#{PROJET}", __dir__))
+  app = projet.targets.find { |t| t.name == "App" }
+  return UI.message("VLC déjà dans l'app") if app.package_product_dependencies.any? { |d| d.product_name == "VLCKitSPM" }
+  paquet = projet.root_object.package_references.find { |p| p.respond_to?(:repositoryURL) && p.repositoryURL == VLC_PAQUET }
+  unless paquet
+    paquet = projet.new(Xcodeproj::Project::Object::XCRemoteSwiftPackageReference)
+    paquet.repositoryURL = VLC_PAQUET
+    paquet.requirement = { "kind" => "upToNextMajorVersion", "minimumVersion" => "3.6.0" }
+    projet.root_object.package_references << paquet
+  end
+  dep = projet.new(Xcodeproj::Project::Object::XCSwiftPackageProductDependency)
+  dep.package = paquet
+  dep.product_name = "VLCKitSPM"
+  app.package_product_dependencies << dep
+  fichier = projet.new(Xcodeproj::Project::Object::PBXBuildFile)
+  fichier.product_ref = dep
+  app.frameworks_build_phase.files << fichier
+  projet.save
+  UI.success("VLC ajouté à l'app (#{VLC_PAQUET})")
+end
+
 # l'identifiant des widgets sur le compte développeur, avec App Groups (le GROUPE lui-même s'assigne dans le portail : l'API ne le permet pas)
 def identifiant_widgets
   bid = asc(:get, "bundleIds?filter[identifier]=#{WID_ID}")["data"].first
@@ -93,6 +120,7 @@ platform :ios do
     rescue => e   # jamais bloquant : sans manifeste, TestFlight accepte le build (Apple prévient par e-mail, ITMS-91053)
       UI.important("PrivacyInfo.xcprivacy pas ajouté : #{e.message}")
     end
+    ajouter_vlc if VLC
     if WIDGETS
       ajouter_widgets
       identifiant_widgets

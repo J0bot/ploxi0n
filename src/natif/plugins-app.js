@@ -3,3 +3,4 @@
 import { registerPlugin } from '@capacitor/core';
 export const PloxiApple = registerPlugin('PloxiApple');
 export const PloxiVocal = registerPlugin('PloxiVocal');
+export const PloxiLecteur = registerPlugin('PloxiLecteur');   // 🎞 le lecteur intégré (0.49)

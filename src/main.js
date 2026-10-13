@@ -39,8 +39,10 @@ import { garderBoxion } from './boxion-local/garde.js';
 import { installerWebNatif } from './natif/web-natif.js';
 import { creerMaintenant } from './natif/maintenant.js';
 import { creerCube } from './app/cube.js';
+import { creerLecteurNatif } from './natif/lecteur-natif.js';
+import { creerFichiersNatif } from './natif/fichiers-natif.js';
 
-const VERSION = '0.48.0';
+const VERSION = '0.49.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -114,8 +116,12 @@ async function demarrer() {
   installerJosNatif(window); boot(23, 'jOSNatif · ' + (window.jOSNatif.natif ? 'iPhone' : 'navigateur'));   // ⚡ le bion natif : toutes les capacités de l'iPhone, pour tous les ploxions
   // l'haptique de l'app (ouvrir, revenir, minimiser, les bords, les pages…) : par jOSNatif, coupée dans ⚙ › Apparence
   // 🎞 le lecteur natif : chaque <video>/<audio>/<iframe YouTube> des ploxions (écran verrouillé, AirPlay, PiP, YouTube par https, haptique du son)
-  const lecteur = installerLecteur({ boxion, vibrer: (s) => vibrer(s), titre: () => (routeur && routeur.courant() && (routeur.catalogue().find(p => p.id === routeur.courant()) || {}).nom) || 'ploxi0n' });
-  window.jOSNatif.lecteur = { pip: (m) => lecteur.pip(m), pleinEcran: (m) => lecteur.pleinEcran(m), airplay: (m) => lecteur.airplay(m) };
+  const titrePx = () => (routeur && routeur.courant() && (routeur.catalogue().find(p => p.id === routeur.courant()) || {}).nom) || 'ploxi0n';
+  // 🎞 (0.49) le lecteur intégré natif : Apple, VLC en repli ; jOSplayer, les vidéos illisibles ou muettes, vlc://, ploxi0n://lire
+  const lecteurNatif = creerLecteurNatif({ boxion, vibrer: (x) => vibrer(x), titre: titrePx });
+  window.ploxi0nLecteurNatif = lecteurNatif;
+  const lecteur = installerLecteur({ boxion, vibrer: (s) => vibrer(s), titre: titrePx, surMedia: (m) => lecteurNatif.surMedia(m) });
+  window.jOSNatif.lecteur = { pip: (m) => lecteur.pip(m), pleinEcran: (m) => lecteur.pleinEcran(m), airplay: (m) => lecteur.airplay(m), ...lecteurNatif.api };
   const haptique = creerHaptique({ boxion, actif: () => prefs.lire().haptique !== false && !!(window.jOSNatif && window.jOSNatif.natif) }); await haptique.pret;
   // un événement de l'app, un style, ou un motif inventé ; ouvrir/reprendre un ploxion = SA signature (ou son choix, ou son manifeste)
   const vibrer = (ev, id) => ((ev === 'ouvrir' || ev === 'reprendre') && id
@@ -130,6 +136,8 @@ async function demarrer() {
       mouvementActif: () => document.documentElement.classList.contains('px-anime') });
   } catch (e) { bootLog('⚠ web natif : ' + (e && e.message)); }
   boot(24, 'le web devient natif');
+  // 📁 (0.49) envoyer vers, aperçu (QuickLook), zip, la galerie, le sélecteur de fichiers, Plans, Mail, la lampe
+  { const fx = creerFichiersNatif(); Object.assign(window.jOSNatif, { envoyer: fx.envoyer, apercu: fx.apercu, zip: fx.zip, dezipper: fx.dezipper, photos: fx.photos, choisirFichiers: fx.ouvrir, carte: fx.carte, mail: fx.mail, lampe: fx.lampe }); }
   // ♫ à l'écoute : ce que jouent les ploxions (Spotify, Media Session) → l'écran verrouillé, le widget, le mini-lecteur (avant tout ploxion)
   const maintenant = creerMaintenant({ courant: () => routeur && routeur.courant(), ouvrir: (id) => { if (routeur && routeur.connait(id)) routeur.ouvrir(id); },
     valeur: (k, t, v) => { try { return raccourcis ? raccourcis.valeur(k, t, v) : Promise.resolve(); } catch (e) { return Promise.resolve(); } } });   // raccourcis : déclaré plus bas
@@ -252,7 +260,7 @@ async function demarrer() {
   const notifs = creerNotifs({ boxion, vibrer, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id) => routeurProxy.ouvrir(id) });
   await notifs.pret;
   boot(73, 'notifications');
-  internes.push(enregistrerReglages({ compte, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, prefs, vibrer, haptique, lecteur, sante, cube, valeurs: () => (raccourcis ? raccourcis.toutes() : {}), version: VERSION }));
+  internes.push(enregistrerReglages({ compte, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, prefs, vibrer, haptique, lecteur, lecteurNatif, sante, cube, valeurs: () => (raccourcis ? raccourcis.toutes() : {}), version: VERSION }));
   // le vecteur xerion de ce téléphone : le temps passé par ploxion (même forme que jOSUsage du labo : { px: { id: { opens, seconds, lastAt } } })
   async function surUsage(id, sec) {
     const u = (await boxion.get('usage', 'stats')) || { px: {} };
@@ -299,7 +307,8 @@ async function demarrer() {
     return { ready: pret, unmount() { mort = true; if (inst && inst.unmount) { try { inst.unmount(); } catch (e) { /* */ } } inst = null; } };
   };
   window.ploxi0n = { boxion, shim, routeur, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte };
-  brancherLiens({ routeur, compte, installer: (id) => routeurProxy.ouvrir(id), lecture: (c) => maintenant.commander(c) });   // une icône de l'écran d'accueil vers un ploxion absent : installé à la volée
+  brancherLiens({ routeur, compte, installer: (id) => routeurProxy.ouvrir(id), lecture: (c) => maintenant.commander(c), lire: (o) => lecteurNatif.ouvrir(o.url, o).catch(() => {}),
+    actions: { tsoin: () => tsoinNatif.ouvrir({}), vocal: () => vocal.basculer().catch(() => {}), lampe: () => window.jOSNatif.lampe().catch(() => {}) } });   // une icône de l'écran d'accueil vers un ploxion absent : installé à la volée
   // « Dis à ploxi0n … » (Siri, la dictée) : une phrase → une action
   async function commande(texte) {
     const c = comprendre(texte);
