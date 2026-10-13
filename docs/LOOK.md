@@ -59,3 +59,13 @@ dans un panneau = une bosse ; et plus tard la reconnaissance de dessins (un moti
 **Pour l'UI** (à faire petit à petit, sans tout casser) : un thème « trait » à côté de chill-tekk : fond `#1f1f1d`, trait `#ecebe9`, les
 cartes, boutons et tuiles en cadres emboîtés (pas de verre, pas de flou), les icônes du xerboxion en monochrome au trait (le style
 xerboxion des icônes, sans les palettes), les transitions qui zooment de cadre en cadre (le portail).
+
+**Ajouts du 13.10 (RS-7 : « ouais tu vois le délire »)** : `trait-07-enceintes.jpg`, `trait-08-papillon.jpg`, `trait-09-planche.jpg`.
+- **les enceintes** : deux **wormions en perspective** (des ovales concentriques qui deviennent des cônes) ;
+- **le boxion** : une petite composition **dense** au centre (un cadre rempli de panneaux minuscules), le cœur d'où tout part ;
+- **les fils** : du boxion vers les wormions, des faisceaux de fils **rouges, bleus, jaunes** (légèrement ondulés) : la **seule couleur**
+  du langage, et elle a un sens : une **connexion, un flux** (le bus, le xion, un ploxion relié à un autre) ;
+- **l'emblème** : un disque dense (cercles, glyphes en couronne) posé au milieu d'une bande, comme un sceau ;
+- **le papillon** : deux spirales de koins face à face, pointe contre pointe.
+Dans l'app : les fils colorés pour montrer ce qui est connecté (un ploxion à ses bions, un vivant à la musique, le mesh plus tard), le
+boxion dense pour le cœur (l'accueil, le xerboxion), l'emblème pour un ploxion « posé » (son sceau).
