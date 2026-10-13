@@ -65,6 +65,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (action === 'basculer') return vivants.size + endormis.length ? basculer() : null;
     vibrer(action === 'portion' ? 'portion' : 'bord');
     if (action === 'tsoin') return tsoin ? tsoin() : null;
+    if (action === 'freefall') return fractale.freefall();   // (0.60) l'appli au gyroscope
     if (action === 'chercher') return ouvrir('marketplace', { chercher: '1' });
     if (action === 'reglages') return ouvrir('reglages-app');
     if (action === 'portion') return doubleBord ? doubleBord() : (ouvrirExterne && ouvrirExterne('portion'));
@@ -129,11 +130,13 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (sens && !prefs().calme) glisser({ W, sortant: sortant ? sortant.hote : null, entrant, ecran: cible == null ? ecran : null, scene, sens });
   }
   // ⧉ (0.59) tenir un bord : l'aperçu, la fractale, le slider (src/app/fractale.js)
-  const fractale = creerFractale({ W, racine, scene, vibrer, calme: () => !!prefs().calme, actif: () => prefs().fractale !== false && prefs().bords !== false,
+  const fractale = creerFractale({ W, racine, scene, vibrer, glyphe: (n) => G(n), calme: () => !!prefs().calme, actif: () => prefs().fractale !== false && prefs().bords !== false,
+    // jeter une carte vers le haut (0.60) : un vivant se ferme, un endormi est oublié
+    fermer: (id) => { if (vivants.has(id)) tuer(id); else { endormis = endormis.filter(e => e.id !== id); } majBords(); },
     file: () => fileBords().map(id => {
-      if (id == null) return { id: null, nom: 'accueil', hote: null, icone: G('maison'), sous: '' };
+      if (id == null) return { id: null, nom: 'accueil', hote: null, icone: G('maison'), sous: '', bions: [] };
       const p = parId.get(id) || { id, nom: id }, v = vivants.get(id), ferme = verrous.has(id) && !deverrouilles.has(id);
-      return { id, nom: p.nom || id, hote: v && !ferme ? v.hote : null, icone: ferme ? G('verrou') : icone(p), sous: ferme ? 'verrouillé' : v ? '' : 'endormi' };
+      return { id, nom: p.nom || id, hote: v && !ferme ? v.hote : null, icone: ferme ? G('verrou') : icone(p), sous: ferme ? 'verrouillé' : v ? '' : 'endormi', bions: ferme ? [] : (p.bions || []) };
     }),
     origine: () => fileBords().indexOf(courant ? courant.id : null),
     aller: (id) => allerA(id) });
@@ -552,6 +555,8 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
 
   return {
     accueil, ouvrir, fermer, charger, retour, minimiser, aCote, faire, GESTES_DEFAUT,
+    /** (0.60) freefall : l'appli au gyroscope (sans argument : bascule) */
+    freefall: (on) => fractale.freefall(on),
     endormis: () => endormis.map(e => e.id),
     /** ▤ les ploxions vivants, pour les mini docks : { id, vu, ici, son } (son : un <audio>/<video> qui joue encore) */
     etatVivants: () => [...vivants.values()].map(v => ({ id: v.id, vu: v.vu || 0, ici: v === courant, son: (() => { try { return [...v.hote.querySelectorAll('audio,video')].some(m => !m.paused && !m.ended); } catch (e) { return false; } })() })),

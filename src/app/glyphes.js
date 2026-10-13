@@ -140,7 +140,7 @@ const MOTS = [
   [/x?kion|xerkion/i, 'kion'], [/xerbot|robot|bras|blouse|cape/i, 'xerbot'], [/sph[eè]re|spherion|univers|espace/i, 'spherion'],
   [/maison|home|accueil|domotique/i, 'maison'], [/notif|alerte|cloche/i, 'notifs'], [/math|actuariat|calcul|excel|tableur/i, 'grille'],
 ];
-const INTERNES = { cape: 'cape', sante: 'coeur', marketplace: 'marche', banc: 'flacon', 'xer-en-ligne': 'globe', 'journal-tsoins': 'tsoin', gestion: 'boite',
+const INTERNES = { trackpad: 'haptique', cape: 'cape', sante: 'coeur', marketplace: 'marche', banc: 'flacon', 'xer-en-ligne': 'globe', 'journal-tsoins': 'tsoin', gestion: 'boite',
   'reglages-app': 'reglages', bother: 'bulle', portion: 'portion' };
 const FORMES = [C(50, 50, 36), POLY('50,12 88,80 12,80'), R(16, 16, 68, 68, 4), POLY('50,10 90,50 50,90 10,50'), POLY('50,12 83,31 83,69 50,88 17,69 17,31')];
 const MARQUES = [C(50, 52, 7, 1), '<circle cx="50" cy="52" r="18" class="p"/>', L(38, 40, 62, 64) + L(62, 40, 38, 64), L(30, 52, 70, 52), C(36, 54, 4, 1) + C(50, 54, 4, 1) + C(64, 54, 4, 1), R(42, 44, 16, 16, 0, 1)];

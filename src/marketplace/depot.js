@@ -121,9 +121,9 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
     // son icône, deux fois par lancement : un index léger (META « installes ») suffit ; reconstruit une fois s'il manque ou s'il diverge
     async installes() {
       const ids = await liste(), idx = (await boxion.get(META, 'installes-index').catch(() => null)) || {};
-      if (ids.every(id => idx[id])) return ids.map(id => ({ id, ...idx[id] }));
+      if (ids.every(id => idx[id] && idx[id].bions)) return ids.map(id => ({ id, ...idx[id] }));   // (0.60) l'index porte aussi les bions (la face du dessus du cube)
       const out = [], neuf = {};
-      for (const id of ids) { const p = await boxion.get(NS, id); if (!p) continue; neuf[id] = { nom: p.nom, icone: p.icone, origine: p.origine, hash: p.hash, installe: p.installe, maj: p.maj || null }; out.push({ id, ...neuf[id] }); }
+      for (const id of ids) { const p = await boxion.get(NS, id); if (!p) continue; neuf[id] = { nom: p.nom, icone: p.icone, origine: p.origine, hash: p.hash, installe: p.installe, maj: p.maj || null, bions: Array.isArray(p.bions) ? p.bions.slice(0, 40) : [] }; out.push({ id, ...neuf[id] }); }
       await boxion.put(META, 'installes-index', neuf).catch(() => {});
       return out;
     },

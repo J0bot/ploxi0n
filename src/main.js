@@ -4,6 +4,7 @@ import { ouvrirBoxionLocal } from './boxion-local/index.js';
 import { installerShim } from './shim/jos.js';
 import { creerRouteur } from './app/routeur.js';
 import { enregistrerBanc } from './banc/banc.js';
+import { enregistrerTrackpad } from './banc/trackpad.js';
 import { creerVerrou } from './natif/verrou.js';
 import { creerDepot, creerHttp, SOURCE } from './marketplace/depot.js';
 import { enregistrerMarketplace } from './marketplace/marketplace.js';
@@ -48,7 +49,7 @@ import { creerCadresLabo } from './natif/cadres-labo.js';
 import { installerGel } from './app/gel.js';
 import { installerSansEmoji } from './app/sans-emoji.js';
 
-const VERSION = '0.59.0';
+const VERSION = '0.60.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -240,6 +241,7 @@ async function demarrer() {
     enregistrerMarketplace({ depot, vibrer, surChangement: () => majAccueil(), usage: () => boxion.get('usage', 'stats'), prefs: { lire: () => boxion.get('reglages', 'marketplace'), ecrire: (v) => boxion.put('reglages', 'marketplace', v) } }),
     enregistrerXerEnLigne({}),
     enregistrerBanc({ boxion, version: VERSION }),
+    enregistrerTrackpad({}),   // ◇ (0.60) les essais du trackpad haptique
   ];
   let raccourcis = null;
   async function majAccueil(o) {
@@ -249,7 +251,7 @@ async function demarrer() {
     // ⬡ (0.55) le xerkion d'un ploxion : celui du labo (registre), retouché par l'atelier de la personne (palette, cœur, koins, glyphe)
     const perso = (await boxion.get('reglages', 'apps-accueil-perso').catch(() => null)) || {};
     const xk = (id) => { const o = Object.assign({}, (cat.get(id) || {}).xerkion, specPerso(perso[id])); return Object.keys(o).length ? o : null; };
-    const liste = [...installes.map(p => ({ id: p.id, nom: p.nom, icone: p.icone, categorie: (cat.get(p.id) || {}).categorie || 'Autres', cat_icone: (cat.get(p.id) || {}).cat_icone || '📦', cat: (cat.get(p.id) || {}).cat || null, type: (cat.get(p.id) || {}).type || null, koins: (cat.get(p.id) || {}).koins, centre: (cat.get(p.id) || {}).centre || null, xerkion: xk(p.id) })),
+    const liste = [...installes.map(p => ({ id: p.id, nom: p.nom, icone: p.icone, categorie: (cat.get(p.id) || {}).categorie || 'Autres', cat_icone: (cat.get(p.id) || {}).cat_icone || '📦', bions: p.bions || [], cat: (cat.get(p.id) || {}).cat || null, type: (cat.get(p.id) || {}).type || null, koins: (cat.get(p.id) || {}).koins, centre: (cat.get(p.id) || {}).centre || null, xerkion: xk(p.id) })),
       ...internes.map(p => ({ categorie: 'ploxi0n', cat_icone: '◇', ...p }))];
     routeur.majCatalogue(liste, o);
     if (raccourcis) raccourcis.publier(liste).catch(() => {});   // l'app Raccourcis et Siri proposent les ploxions installés

@@ -4,6 +4,14 @@
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
 // Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
 export const NOUVEAUTES = [
+  { v: '0.60.0', titre: 'Le xer devient un cube', points: [
+    'La fractale en jeu de cartes : de grandes cartes, l\'icône et le nom au-dessus de chacune ; elles suivent le doigt et filent sur leur élan. Jette une carte vers le haut : le ploxion se ferme.',
+    'Le slider, c\'est le filtrage de photons : autour du curseur de réel (le trait au milieu), les apps sont pleines ; plus loin elles tournent sur la tranche et deviennent des lignes serrées.',
+    'Arrête-toi sur une app dans le slider et tiens encore : le xer devient un cube autour d\'elle. Tourne-le (un cran à chaque face) ; penche-le en avant, ou glisse vers le haut : sa face du dessus montre ses bions.',
+    'Le gyroscope : pendant la fractale tout s\'incline avec l\'iPhone ; dans le slider, pencher accélère ou freine. Le zéro, c\'est ta façon de tenir l\'iPhone au début du geste.',
+    'Freefall (un geste des bords à choisir) : toute l\'appli au gyroscope. Penche pour ouvrir la fractale et défiler, reste droit 1,4 s sur une app pour l\'ouvrir ; le badge en haut l\'arrête.',
+    'Trackpad haptique : le banc des essais (textures grille, bords, cibles ; clic, clic fort ; deux doigts pour défiler), pour sentir le Taptic Engine avant le vrai trackpad.',
+  ] },
   { v: '0.59.0', titre: 'La fractale des ploxions', points: [
     'Passer d\'une app à l\'autre par un bord : l\'app part en biais, l\'autre arrive en 3D, un trait de lumière balaie l\'écran.',
     'Tenir un bord 0,3 s : l\'app d\'à côté passe la tête (à droite la suivante, à gauche la précédente) ; tire-la vers le centre pour y aller.',

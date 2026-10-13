@@ -73,6 +73,16 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
   déplacés : pas de rechargement d'iframe) ; accueil, endormis, verrouillés = cartes à icône (Face ID : jamais leur contenu). Pression :
   `PointerEvent.pressure` (3D Touch seulement). `allerA()` dans le routeur. ⚙ › Navigation : « Tenir un bord ». Faux iPhone :
   `parcours-fractale.mjs` (les captures prennent ~0,7 s : photographier des états qui tiennent).
+- **0.60 — le xer devient un cube.** RS-7 (une capture du sélecteur d'iOS : « ça, mais en mille fois mieux » ; ses croquis : le curseur de
+  réel, le filtrage de photons, kion 3D / 4D, « le xer devient un cube », le gyroscope, freefall, « les tests du trackpad haptique »).
+  `src/app/fractale.js` : DISPO (fractale = jeu de cartes s0 0,66 ; slider = tranches, rotY jusqu'à 76°) ; `.px-fx-tete` (icône + nom
+  au-dessus) ; défilement continu + élan, `jeter()` (vers le haut = `fermer(id)` du routeur) ; `.px-fx-curseur` (le curseur de réel) ;
+  le CUBE (arrêté 1,2 s dans le slider : faces à 90°, `penche` = la face du dessus `.px-fx-dessus` = les bions, depuis l'index des
+  installés qui porte maintenant `bions`) ; le gyroscope RELATIF à la tenue du début, zone morte 0,15 ; `freefall()` (geste des bords
+  « freefall », badge `.px-freefall`). `src/banc/trackpad.js` : le ploxion interne « Trackpad haptique » (creerTexture testable,
+  plafond 60/s, aller-retour natif mesuré). Faux iPhone : `parcours-fractale.mjs` calme le gyroscope simulé (il oscille ±0,2).
+  **Côté labo, plus tard** : RS-7 veut que chaque ploxion mis sur l'écran d'accueil « seul » (web) ait aussi ces bords et la fractale :
+  il faudra un bion du labo (jOSFractale) qui compose `fractale.js` avec le gestionnaire de fenêtres du labo.
 
 ## 3. Ce qui reste, par ordre
 

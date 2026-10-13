@@ -24,16 +24,33 @@ export default async function ({ page, ecrire }) {
   r.cartes = await page.evaluate(() => document.querySelectorAll('.px-fx-cible').length);
   r.ouverte = await page.evaluate(() => document.querySelector('#ploxi0n').classList.contains('px-fx-ouverte'));
   await page.mouse.move(200, 120); await page.mouse.down(); await page.mouse.up(); await page.waitForTimeout(500);   // à côté : on revient
-  // 3. le slider
-  await page.mouse.move(bord.x, bord.y); await page.mouse.down(); await page.waitForTimeout(2100); await ecrire('04-slider');
-  r.slider = await page.evaluate(() => document.querySelector('#ploxi0n').classList.contains('px-fx-suit'));
-  await page.mouse.up(); await page.waitForTimeout(500);
+  // 3. le slider (le filtrage de photons, le curseur de réel), puis arrêté au centre : le cube ; glissé vers le haut : ses bions
+  // (le gyroscope simulé du faux iPhone oscille de ±0,2 sans fin : on le calme, l'iPhone est posé)
+  await page.evaluate(() => { if (window.jOSNatif && window.jOSNatif.mouvement) window.jOSNatif.mouvement.ecouter = (cb) => { cb({ x: 0, y: 0 }); return () => {}; }; });
+  await page.mouse.move(bord.x, bord.y); await page.mouse.down(); await page.waitForTimeout(1950);
+  await page.mouse.move(200, bord.y, { steps: 3 }); await ecrire('04-slider');
+  r.slider = await page.evaluate(() => document.querySelector('#ploxi0n').classList.contains('px-fx-slider') || document.querySelector('#ploxi0n').classList.contains('px-fx-cube'));
+  await page.waitForTimeout(1400); await ecrire('05-cube');
+  r.cube = await page.evaluate(() => document.querySelector('#ploxi0n').classList.contains('px-fx-cube'));
+  await page.mouse.move(200, bord.y - 170, { steps: 6 }); await page.waitForTimeout(300); await ecrire('06-cube-bions');
+  r.bions = await page.evaluate(() => (document.querySelector('.px-fx-dessus') || {}).textContent || '');
+  await page.mouse.up(); await page.waitForTimeout(300);
+  await page.mouse.move(200, 120); await page.mouse.down(); await page.mouse.up(); await page.waitForTimeout(600);   // à côté : on revient
   r.apresSlider = await page.evaluate(() => (document.querySelector('.px-hote:not([hidden])') || {}).dataset ? document.querySelector('.px-hote:not([hidden])').dataset.ploxion : 'accueil');
   // le glissement : vite depuis le bord gauche
   const bg = await page.evaluate(() => { const b = document.querySelector('.px-bord-g').getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2 }; });
   await page.mouse.move(bg.x, bg.y); await page.mouse.down(); await page.mouse.move(bg.x + 110, bg.y, { steps: 3 }); await page.mouse.up();
-  await page.waitForTimeout(140); await ecrire('05-glissement');
+  await page.waitForTimeout(140); await ecrire('07-glissement');
   await page.waitForTimeout(600);
   r.apresGlissement = await page.evaluate(() => (document.querySelector('.px-hote:not([hidden])') || {}).dataset ? document.querySelector('.px-hote:not([hidden])').dataset.ploxion : 'accueil');
+  // ◇ le banc du trackpad haptique
+  await page.evaluate(() => { const b = document.querySelector('[data-minimiser]'); if (b) b.click(); }); await page.waitForTimeout(400);
+  const tp = await page.evaluate(() => { const t = document.querySelector('.px-tuile[data-id="trackpad"]'); if (t) t.click(); return !!t; }); await page.waitForTimeout(800);
+  if (tp) {
+    const pad = await page.evaluate(() => { const b = document.querySelector('[data-pad]').getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2 }; });
+    await page.mouse.move(pad.x, pad.y); await page.mouse.down(); await page.mouse.move(pad.x + 90, pad.y - 40, { steps: 12 }); await page.mouse.up(); await page.waitForTimeout(300);
+    await ecrire('08-trackpad');
+    r.trackpad = await page.evaluate(() => (document.querySelector('[data-st]') || {}).textContent || '');
+  }
   return r;
 }
