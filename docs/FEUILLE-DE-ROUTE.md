@@ -4,6 +4,8 @@
 *Tout ce qui a été demandé depuis le brief v1 (11.10), rangé par axe. Sources : le brief PDF, `docs/plan-suite.md` (points 1–15), les braindumps du labo (`docs/braindumps/2026-10-1*`), les messages de la session. Tenue à jour à chaque version.*
 
 **La source** : `docs/VISION-ORIGINELLE.md` (RS-7, 13.10 : la map géante des apps, les swipes dans quatre directions par mémoire musculaire, le cube, les modes qu'on designe soi-même, les amis off the grid en mesh). Quand un choix hésite, la relire.
+*RS-7, 13.10 : « on va rendre l'application ploxi0n selon ma vision que j'avais déjà depuis des années » : c'est le cap. Prochains chantiers issus de la vision : la map géante des apps (swipes en quatre directions, mémoire musculaire, dézoomer = la carte), commencer avec rien que le cube du xerboxion, les modes qu'on designe soi-même, les amis off the grid (codes d'amis, mesh xion).*
+*Trackpad haptique (RS-7, 13.10) : plus tard, la reconnaissance de dessins / de patterns tracés sur la surface (un motif dessiné = une action).*
 
 **Légende** : ✅ fait (version) · 🔨 en cours · ⏭ prochain · 💭 plus tard · ❓ attend une décision de RS-7 · ⚠ fait, mais jamais vu marcher sur l'iPhone
 
