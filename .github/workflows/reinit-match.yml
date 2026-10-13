@@ -19,7 +19,9 @@ jobs:
         run: |
           bundle exec fastlane match appstore \
             -r "https://x-access-token:${{ secrets.MATCH_PAT }}@github.com/J0bot/ploxi0n-certificats.git" \
-            --force
+            --force \
+            --api_key_path "" \
+            --app_identifier "ch.j0bot.ploxi0n"
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
