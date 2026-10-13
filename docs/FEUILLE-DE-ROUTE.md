@@ -50,7 +50,8 @@ avant la 0.46. Toutes les lignes ⚠ ci-dessous sont à **revérifier sur l'iPho
 | ✅ 0.52 | ◇ **Chill-tekk pour tous les ploxions** : les `--xr-*` du labo (jOSTheme, ×900 usages) redéfinis sur `<body>` avec les jetons de l'app + une base `:where()` (spécificité nulle) pour ce qu'un ploxion ne style pas ; `prefs.pxChill` (⚙ › Apparence). Limite : les couleurs écrites EN DUR restent (Horloge en vert) → côté labo, passer par `--xr-*` | ✅ galerie du faux iPhone |
 | ✅ 0.52 | ⬡ Mode xerboxion : l'iframe sondée avant d'être montrée (plus de blanc) ; la barre d'installation en erreur 5 s au lieu de 9 | |
 | ⏭ | 🎨 **Les peaux** (docs/LOOK.md : Ryoku d'abord, 43PR, Aperture OS) : une grammaire de panneau HUD, des palettes et des fonds | |
-| ⏭ | Pomodoro ouvre Minuteur, absent du pack hors ligne : l'ajouter au pack | |
+| ✅ 0.52 | ⏱ Minuteur dans le pack hors ligne (Pomodoro l'ouvre) ; `routeurProxy.ouvrir` installe un ploxion du pack depuis le téléphone avant de tenter le réseau | ✅ faux iPhone |
+| ✅ 0.52 | 👤 ⚙ › Compte › « Supprimer mon compte » → `labo/profile` (la page de compte du labo, Laravel ; protégée par la connexion) — règle 5.1.1(v) côté app. ⚠ vérifier que `/profile` a bien « supprimer le compte » pour un compte venu de l'OAuth j0bot (sans mot de passe ?) | côté labo |
 | ⏭ | 🪟 **La bande façon niri** (RS-7 13.10) : les ploxions vivants en colonnes sur une bande qu'on fait défiler, le nouveau s'ouvre à droite, une vue d'ensemble | |
 | ⏭ | 📚 **Le lot de ploxions** (RS-7 13.10) : Zotero, Foliate (EPUB : foliate-js), browser façon Helium (le `web` du labo + natif), Blanket (ambiances), vaults Obsidian, LocalSend (natif, LAN), AppFlowy, Manim (le `math` du labo), mpv (le lecteur intégré), btop (+ le xerminal du labo) | composer avant de créer |
 | 💭 | Le mode **xeroction** (voir ce qu'on a fait : la frise des tsoins, le Nexus) ; XERB0T : les gestes de la blouse = ordres au robot (labo-cape EXTRAPOLATION) | |

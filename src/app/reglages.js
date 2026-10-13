@@ -93,7 +93,10 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
               + '<div class="l"><span>État de la copie vers les widgets<small data-widgets-etat>…</small></span><button data-a="widgets">republier</button></div></div>'
               + '<p class="msg">Le gyroscope en direct n\'existe pas pour un widget : Apple ne leur donne ni capteurs ni animation continue. Le cube de l\'app, lui, suit le téléphone.</p>'); })() : '')
         + section('compte', 'Compte', '<div class="bloc"><div class="l"><span>' + (e.connecte ? esc((e.glyphe || '·') + ' ' + e.nom) + '<small>rang ' + esc(e.palier) + ' · xerboxion.org</small>' : 'Pas connecté<small>tout reste sur ton téléphone</small>') + '</span>'
-          + (e.connecte ? '<button data-a="sortir">se déconnecter</button>' : '<button class="p" data-a="connecter">se connecter</button>') + '</div></div>')
+          + (e.connecte ? '<button data-a="sortir">se déconnecter</button>' : '<button class="p" data-a="connecter">se connecter</button>') + '</div>'
+          // (0.52) règle App Store 5.1.1(v) : supprimer son compte DEPUIS l'app → la page du labo où la suppression se termine
+          + (e.connecte ? '<div class="l"><span>Supprimer mon compte<small>sur xerboxion.org : ton compte, ton boxion en ligne, tes tsoins partagés. Ce téléphone garde ses données (⚙ › Données pour les effacer).</small></span><button class="danger" data-a="supprimer-compte">supprimer…</button></div>' : '')
+          + '</div>')
         + section('reseau', 'Réseau', '<div class="bloc">' + bascule('data-t="mode"', modeConnecte(), 'Mode connecté', 'les ploxions joignent xerboxion.org' + (e.connecte ? ' avec ton compte' : '') + ' ; hors ligne, leur dernière réponse')
           + '<div class="l"><span>Source<small>xerboxion.org (le marketplace, les bions, le mode connecté)</small></span></div></div>')
         + (notifs ? section('notifs', 'Notifications', '<div class="bloc"><div class="l"><span>Une notification de test<small>elle arrive 5 s après : verrouille le téléphone</small></span><button data-a="notif">tester</button></div>'
@@ -259,7 +262,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       if (b.hasAttribute('data-ouvrir')) return R().ouvrir(b.getAttribute('data-ouvrir'));
       if (b.hasAttribute('data-deverrou')) { if (await R().deverrouiller(b.getAttribute('data-deverrou'))) peindre(); return; }
       // les gestes qui détruisent : un premier toucher demande « sûr ? »
-      const destructif = b.hasAttribute('data-retirer') || b.hasAttribute('data-bion-retirer') || b.getAttribute('data-a') === 'reset';
+      const destructif = b.hasAttribute('data-retirer') || b.hasAttribute('data-bion-retirer') || b.getAttribute('data-a') === 'reset' || b.getAttribute('data-a') === 'supprimer-compte';
       if (destructif && !b.classList.contains('sur')) { b.classList.add('sur'); b.dataset.avant = b.textContent; b.textContent = 'sûr ?'; return; }
       try {
         if (b.hasAttribute('data-retirer')) { const id = b.getAttribute('data-retirer'); await (R().retirerPloxion ? R().retirerPloxion(id) : depot.retirer(id)); msg('✓ ' + id + ' retiré'); return peindre(); }
@@ -281,6 +284,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         else if (a === 'apps') { if (W.jOSEcranAccueil) await W.jOSEcranAccueil(); }
         else if (a === 'connecter') await compte.connecter();
         else if (a === 'sortir') { await compte.deconnecter(); }
+        else if (a === 'supprimer-compte') { await W.jOSNatif.navigateur(((depot && depot.source) || 'https://xerboxion.org') + '/profile'); msg('la page de ton compte s\'ouvre : « supprimer le compte » en bas ; ensuite, déconnecte-toi ici'); }
         else if (a === 'accueil') { R().reinitialiserAccueil(); msg('✓ accueil remis à zéro'); }
         else if (a === 'bions') { const r = await depot.completerBions(); msg(r.length ? '✓ ' + r.map(x => x.id + ' +' + (x.apres - x.avant)).join(' · ') : '✓ rien à compléter'); }
         else if (a === 'bions-maj') { let n = 0; for (const x of await depot.bions()) { try { if ((await depot.majBion(x.nom)) === 'mis-a-jour') n++; } catch (er) { /* un bion introuvable n'arrête pas les autres */ } } msg('✓ ' + n + ' bion' + (n > 1 ? 's' : '') + ' mis à jour'); }

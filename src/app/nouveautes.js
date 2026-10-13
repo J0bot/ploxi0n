@@ -7,6 +7,8 @@ export const NOUVEAUTES = [
   { v: '0.52.0', titre: 'Tous les ploxions en chill-tekk', points: [
     '◇ Un thème commun : les ploxions du labo prennent les couleurs, la police, les boutons et les champs de l\'app (ils se peignent avec les variables du xer : l\'app les redéfinit). Ce qu\'un ploxion ne style pas du tout devient chill-tekk aussi. ⚙ › Apparence pour le couper.',
     '⬡ Le mode xerboxion n\'affiche plus un grand rectangle blanc : « le labo arrive », ou « le labo ne répond pas » hors réseau.',
+    '⏱ Minuteur rejoint le pack hors ligne : Pomodoro (qui l\'ouvre) marche sans réseau ; un ploxion du pack s\'installe depuis le téléphone, jamais par le réseau.',
+    '👤 ⚙ › Compte › « Supprimer mon compte » : la page de ton compte xerboxion.org s\'ouvre, la suppression s\'y termine.',
   ] },
   { v: '0.51.0', titre: 'Les mini docks', points: [
     '▤ Tout se minimise en mini dock : un ploxion (▁), la musique (⏮ ⏯ ⏭), la blouse (température, consigne, ⏻), la Santé (les pas), la vidéo à reprendre, le vocal qui enregistre, le tsoin pas fini (touche à côté du composeur). Au-dessus du dock ; glisse-en un de côté pour le fermer.',

@@ -162,8 +162,10 @@ async function demarrer() {
   const routeurProxy = {
     async ouvrir(id, params) {
       if (!routeur.connait(id)) {
-        try { const c = await depot.catalogue({ reseau: false }); const m = (c.items || []).find(x => x.id === id) || {}; await installerAvecBarre({ depot, id, meta: { nom: m.nom, icone: m.icone }, vibrer: (x) => vibrer(x) }); await majAccueil(); }   // ⬇ la barre (un xerkion, un lien…)
-        catch (e) { return false; }
+        try {
+          if (depot.packLocal().some(p => p.id === id)) { await depot.installerLocal(id); await majAccueil(); }   // (0.52) le pack hors ligne d'abord (Pomodoro → Minuteur, sans réseau)
+          else { const c = await depot.catalogue({ reseau: false }); const m = (c.items || []).find(x => x.id === id) || {}; await installerAvecBarre({ depot, id, meta: { nom: m.nom, icone: m.icone }, vibrer: (x) => vibrer(x) }); await majAccueil(); }   // ⬇ la barre (un xerkion, un lien…)
+        } catch (e) { return false; }
       }
       return routeur.ouvrir(id, params);
     },
