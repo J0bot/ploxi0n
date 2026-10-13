@@ -1,0 +1,29 @@
+name: Reinit Match
+
+on:
+  workflow_dispatch:
+
+jobs:
+  reinit:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: Configure git credential
+        run: |
+          git config --global credential.helper store
+          echo "https://x-access-token:${{ secrets.CERTS_TOKEN }}@github.com" > ~/.git-credentials
+
+      - name: Wipe & reinit match
+        run: |
+          bundle exec fastlane match appstore \
+            -r "https://github.com/ton-user/ploxion-certifs.git" \
+            --force
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}   
