@@ -15,16 +15,14 @@ jobs:
           ruby-version: "3.3"
           bundler-cache: true
 
-      - name: Wipe & reinit match
+      - name: Run fastlane beta to reinit match
         run: |
-          bundle exec fastlane match appstore \
-            -r "https://x-access-token:${{ secrets.MATCH_PAT }}@github.com/J0bot/ploxi0n-certificats.git" \
-            --force \
-            --api_key_path "" \
-            --app_identifier "ch.j0bot.ploxi0n"
+          bundle exec fastlane beta
         env:
+          MATCH_GIT_URL: "https://x-access-token:${{ secrets.MATCH_PAT }}@github.com/J0bot/ploxi0n-certificats.git"
+          MATCH_FORCE: "true"
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.ASC_KEY_P8 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
