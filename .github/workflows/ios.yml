@@ -19,7 +19,9 @@ on:
       vlc: { description: "construire avec le lecteur VLC (MKV, DTS, sous-titres ; le lecteur intégré, en repli d'Apple)", type: boolean, default: false }
       widgets: { description: "construire avec les widgets (extension PloxionWidgets ; ch.j0bot.ploxi0n.widgets doit avoir le groupe group.ch.j0bot.ploxi0n)", type: boolean, default: false }
 concurrency:
-  group: ios-testflight
+  # seul un VRAI build annule le précédent : un push sans « [build] » (jobs sautés) a son propre groupe et ne coupe rien (13.10 : un tel
+  # push avait annulé le build de la 0.61)
+  group: ${{ (github.event_name != 'push' || startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[build]')) && 'ios-testflight' || format('ios-sans-build-{0}', github.sha) }}
   cancel-in-progress: true
 jobs:
   tests:
