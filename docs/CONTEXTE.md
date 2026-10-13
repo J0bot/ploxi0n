@@ -2,6 +2,8 @@
 
 *La sauvegarde du contexte demandée par RS-7 avant de fermer la conversation. À lire en premier dans la session suivante.*
 
+*(13.10) Lire aussi `docs/VISION-ORIGINELLE.md` : la vision d'origine de RS-7 (la map des apps, le cube, les modes, le mesh).*
+
 ## 1. Où en est tout
 
 | Dépôt | Branche | État |
