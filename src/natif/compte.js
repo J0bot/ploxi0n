@@ -4,6 +4,22 @@
 //   recevoirCode(c)  POST /api/app/jeton {code, verifier} → le jeton (jamais dans une URL) et le compte (nom, rang)
 //   etat()           { connecte, nom, palier, glyphe } ; surChangement(fn) ; deconnecter() (le jeton est révoqué côté labo)
 // Le jeton vit dans boxion_local (« compte/jeton »), chiffré par iOS (Data Protection). Hors iPhone : le navigateur ordinaire.
+// 💭 EXTRAPOLATIONS XERBOXION (RS-7, 13–14.10 — en attendant de les créer ; le braindump vit ici, au plus près du compte) :
+//   - LES SESSIONS dans Compte : « ma session de test » qui repart de zéro à chaque fois, la session « xeroction » ; une session = un xer
+//     (ses ploxions, son thème, son fond, ses gestes) qu'on prépare, qu'on rejoue et qu'on partage (le marketplace de xers iOS) ;
+//   - LE XER DE LA REVUE D'APPLE : un bion pour Apple (jamais celui de RS-7) et SON xer préparé — « ce compte-là, ça va être une pépite »
+//     (docs/APP-STORE.md) ; c'est la même mécanique que la session de test ;
+//   - LE PORTION des deux bords : l'axe x = les xers, l'axe y = les sessions ; on y choisit sa session, on revient à l'accueil ;
+//   - SON XERBION et SON XERPLOXION (« il faut qu'on voie aussi son xerbion, et son xerploxion ») : à préciser avec RS-7 — le bion de ton xer
+//     (ce qu'il compose) et ton xer vu comme un ploxion, à montrer dans la carte du xerboxion et dans Compte ;
+//   - LE PARTAGE DE TSOINS entre bions par le compte Apple (Game Center, CloudKit : un stockage commun aux iPhone), la messagerie entre
+//     bions, le Bluetooth (sans réseau : les amis off the grid de la vision originelle), l'accès au nexus (labo.j0bot.ch) ;
+//   - LA MILKY WAY FOUNDATION (milkywayhub.org, à but non lucratif) dans l'app : payer l'électricité de quelqu'un, financer des missions,
+//     des bières par drone, récupérer des colis, des missions de minage d'astéroïdes, un mandat pour un poste ; un abonnement pour soutenir
+//     le projet ou louer du compute (la moitié du boxion pour le xerboxion, l'autre pour le nexus : l'abonné a du compute de qualité h24,
+//     le reste est le compute gratuit du nexus) — les règles d'Apple (numérique = achat intégré ; monde réel = Apple Pay ; dons = une
+//     association approuvée) sont dans docs/APP-STORE.md ;
+//   - demander à Apple (la mise en vedette) de soutenir l'open source sur iPhone : une bibliothèque commune entre les apps du nexus.
 import { SOURCE } from '../marketplace/depot.js';
 
 const b64url = (octets) => btoa(String.fromCharCode(...octets)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
