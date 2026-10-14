@@ -101,11 +101,15 @@ export function monterSalle(hote, { W = globalThis.window, lire, garder = () => 
     if (!pages || anim || !vivant) return false;
     const k = place[f]; if (f === 'fond' || k == null) { vibrer('fx-butee'); return false; }
     anim = true; vibrer('fx-face'); salle.classList.add('ci-tourne');
-    const { d } = dims();
-    boite.style.transformOrigin = '0 0 ' + (-d / 2) + 'px';
-    boite.style.transition = 'transform .38s cubic-bezier(.3,.7,.2,1)';
-    void boite.offsetWidth; boite.style.transform = ROTATION[f];
-    W.setTimeout(async () => { pages.i = k; if (pages.tourne) pages.tourne(k); try { await peindre(); } finally { anim = false; salle.classList.remove('ci-tourne'); } }, 400);
+    const { d } = dims(), vertical = f === 'plafond' || f === 'sol';
+    // droite / gauche : le cube tourne pour de vrai (la face d'à côté arrive pile au fond : la salle est un cube, d = w) ; plafond / sol
+    // (w × d, pas w × h en portrait) : un fondu, sinon la face arrivait carrée et trop loin, puis sautait
+    if (vertical) { boite.style.transition = 'opacity .18s'; void boite.offsetWidth; boite.style.opacity = '0'; }
+    else { boite.style.transformOrigin = '0 0 ' + (-d / 2) + 'px'; boite.style.transition = 'transform .38s cubic-bezier(.3,.7,.2,1)'; void boite.offsetWidth; boite.style.transform = ROTATION[f]; }
+    W.setTimeout(async () => {
+      pages.i = k; if (pages.tourne) pages.tourne(k);
+      try { await peindre(); } finally { anim = false; salle.classList.remove('ci-tourne'); if (vertical) { void boite.offsetWidth; boite.style.transition = 'opacity .18s'; boite.style.opacity = ''; } }
+    }, vertical ? 190 : 400);
     return true;
   }
   /** on entre dans la page du fond : les murs s'effacent, le fond vient à l'écran (il y est déjà dessiné tel quel) */
@@ -139,7 +143,7 @@ export function monterSalle(hote, { W = globalThis.window, lire, garder = () => 
     if (!g) return; const dx = e.clientX - g.x, dy = e.clientY - g.y; if (!g.bouge && Math.hypot(dx, dy) > 8) { g.bouge = true; W.clearTimeout(g.long); }
     if (g.bouge) g.o.style.translate = dx + 'px ' + dy + 'px';
   });
-  hote.addEventListener('pointercancel', () => { s = null; });
+  hote.addEventListener('pointercancel', () => { s = null; if (g) { W.clearTimeout(g.long); g.o.style.translate = ''; g = null; } });
   hote.addEventListener('pointerup', (e) => {
     if (s) { const ss = s; s = null; const dx = e.clientX - ss.x, dy = e.clientY - ss.y;
       // glisser vers la gauche : la face de droite vient au fond (la page suivante) ; vers le bas : le plafond (+2)

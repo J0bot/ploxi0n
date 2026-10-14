@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.68.1', titre: 'Le cube ne fait que regarder', points: [
+    '▣ Les pages d\'onglets se photographient sans toucher au ploxion : il ne bouge plus derrière le cube (bother ne recharge plus sa boîte, rien de tapé ne se perd).',
+    '▣ Deux touchers rapides sur ▣ n\'ouvrent plus deux cubes ; changer d\'app pendant qu\'il s\'ouvre l\'annule ; le geste des bords « cube » le referme bien ; le plafond et le sol arrivent en fondu ; un appui long n\'ouvre plus le menu image d\'iOS.',
+    'Le minuteur : ses boutons chrono, minuteur et pomo marchent enfin (ils changeaient le mode de l\'app).',
+  ] },
   { v: '0.68.0', titre: 'Le cube, la vue des pages d\'un ploxion', points: [
     '▣ dans la barre d\'un ploxion : il devient l\'intérieur d\'un cube. La page où tu es au fond ; la suivante sur le mur de droite, la précédente à gauche, les autres au plafond et au sol. Penche l\'iPhone : tu vois les murs.',
     'Glisse : le cube tourne, la page d\'à côté vient au fond. Touche une face : elle vient au fond. Touche le fond : tu entres dans cette page, le vrai ploxion, vivant. ⤢ (ou ▣) : tu reviens comme tu étais.',

@@ -64,14 +64,14 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   const GESTES_DEFAUT = { 'g-haut': 'tuto', 'g-milieu': 'precedente', 'g-bas': 'etat', 'd-haut': 'chercher', 'd-milieu': 'suivante', 'd-bas': 'minimiser',
     'deux-haut': 'portion', 'deux-milieu': 'portion', 'deux-bas': 'portion' };
   const geste = (k) => { const g = prefs().gestes || {}; return g[k] || GESTES_DEFAUT[k]; };
-  function faire(action, { vitesse = 0 } = {}) {
+  function faire(action, { vitesse = 0, cubeFerme = false } = {}) {
     if (!action || action === 'rien') return;
     if (action === 'precedente' || action === 'suivante') { if (vivants.size) aCote(action === 'suivante' ? 1 : -1, { vitesse }); return; }
     if (action === 'accueil') { if (courant) { cacher(courant); courant = null; } pile = []; vibrer('bord'); return accueil(); }
     if (action === 'minimiser') return courant ? minimiser() : (flottant ? null : vibrer('fx-refus'));   // à l'accueil : déjà là
     if (action === 'etat') return cyclerEtat();
     if (action === 'holo') return basculerHolo();
-    if (action === 'cube') return basculerCube();
+    if (action === 'cube') return cubeFerme ? false : basculerCube();   // le bord l'a déjà refermé (à son pointerdown) : ne pas le rouvrir
     if (action === 'tuto') return surTuto ? surTuto(courant ? courant.id : null) : null;
     if (action === 'basculer') return vivants.size + endormis.length ? basculer() : null;
     if (action === 'freefall') return fractale.freefall();   // (0.60) l'appli au gyroscope (il a sa montée, pas de 'bord' en plus)
@@ -98,11 +98,11 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     // RS-7 : « c'est quand on TIRE sur les bords » : le doigt traverse le texte du ploxion → le touchmove aussi, et tant que le doigt est
     // sur un bord, plus aucune sélection dans toute l'app (px-tire-bord)
     for (const t of ['touchstart', 'touchmove']) b.addEventListener(t, (e) => { if (prefs().bords !== false && e.cancelable) e.preventDefault(); }, { passive: false });
-    let x0 = null, id0 = null, arme = false, armeT = 0, pEcrit = 0, hist = [];
+    let x0 = null, id0 = null, arme = false, armeT = 0, pEcrit = 0, hist = [], cubeAuDebut = false;
     b.addEventListener('pointerdown', (e) => {
       if (prefs().bords === false) return; tenus[cote] = true; if (tenus.g && tenus.d) lesDeux = true;
       annulerAppui(); annulerDroit();   // une tuile tenue ou un clic droit sous l'autre doigt ne partent pas pendant la fractale
-      quitterHolo(); fermerCube();   // ◈ ▣ toucher un bord : l'hologramme redevient plat, le cube se referme (la fractale prend l'hôte tel quel)
+      quitterHolo(); cubeAuDebut = !!(cubeP && cubeP.ouvert()); fermerCube();   // ◈ ▣ toucher un bord : l'hologramme redevient plat, le cube se referme (la fractale prend l'hôte tel quel)
       arme = false; pEcrit = 0; hist = [[e.timeStamp || Date.now(), e.clientX]];
       try { const sel = W.getSelection && W.getSelection(); if (sel && sel.rangeCount) sel.removeAllRanges(); } catch (er) { /* */ }
       racine.classList.add('px-tire-bord');
@@ -126,8 +126,8 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
       x0 = null; tenus[cote] = false; b.classList.remove('px-tire'); if (pEcrit) { pEcrit = 0; b.style.removeProperty('--p'); } if (!tenus.g && !tenus.d) racine.classList.remove('px-tire-bord');
       if (e.type !== 'pointerup') { fractale.annule(); if (!tenus.g && !tenus.d) lesDeux = false; return; }   // annulé, perdu : rien ne part
       if (!lesDeux && fractale.relache(e)) return;   // la fractale a pris le geste
-      if (lesDeux) { if (!tenus.g && !tenus.d) { lesDeux = false; faire(geste('deux-' + zones.g)); } return; }
-      if (dx > SEUIL) faire(geste(cote + '-' + zones[cote]), { vitesse: v });
+      if (lesDeux) { if (!tenus.g && !tenus.d) { lesDeux = false; faire(geste('deux-' + zones.g), { cubeFerme: cubeAuDebut }); } return; }
+      if (dx > SEUIL) faire(geste(cote + '-' + zones[cote]), { vitesse: v, cubeFerme: cubeAuDebut });
     };
     lachers.push(lacher);
     b.addEventListener('pointerup', lacher); b.addEventListener('pointercancel', lacher);
@@ -695,16 +695,15 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   // vidéos EN LECTURE, invisibles — et le mode audio d'arrière-plan gardait l'app éveillée : un flux continu toute la journée.
   // Caché → ses vidéos s'arrêtent et ne préchargent plus ; le son (la musique) continue, c'est voulu.
   function couperVideos(hote) { try { for (const m of hote.querySelectorAll('video')) { if (!m.paused) m.pause(); m.preload = 'none'; } } catch (e) { /* */ } }
-  function cacher(v) { if (!v) return; if (holoV === v) quitterHolo(); fermerCube(v.id); compter(v); couperVideos(v.hote); v.hote.hidden = true; v.hote.classList.remove('px-sans-entree'); v.vu = Date.now(); accrochesDe(v.id, n => { if (!n.hasAttribute('data-px-cache')) { n.setAttribute('data-px-cache', n.style.display || ''); n.style.display = 'none'; } }); }
+  function cacher(v) { if (!v) return; if (holoV === v) quitterHolo(); compter(v); couperVideos(v.hote); v.hote.hidden = true; fermerCube(v.id); v.hote.classList.remove('px-sans-entree'); v.vu = Date.now(); accrochesDe(v.id, n => { if (!n.hasAttribute('data-px-cache')) { n.setAttribute('data-px-cache', n.style.display || ''); n.style.display = 'none'; } }); }
   function tuer(id) {
     const v = vivants.get(id); if (!v) return;
     if (v === courant) { compter(v); courant = null; }
     if (flottant && flottant.v === v) poserFlottant(null);
     if (holoV === v) quitterHolo();
-    fermerCube(id);
     vivants.delete(id); pile = pile.filter(x => x !== id); fractale.oublier(id); pleins.delete(id);   // (0.63) sa carte part (sinon la toucher le faisait revivre)
     try { if (v.inst && typeof v.inst.unmount === 'function') v.inst.unmount(); } catch (e) { console.warn('[ploxi0n] unmount', id, e); }
-    v.hote.innerHTML = ''; v.hote.remove(); majBords();
+    v.hote.innerHTML = ''; v.hote.remove(); fermerCube(id); majBords();   // ▣ après : hôte parti, sa salle part tout de suite
     accrochesDe(id, n => { accroches.delete(n); try { n.remove(); } catch (e) { /* */ } });
     if (miniDocks) { try { miniDocks.surFermeture(id); } catch (e) { /* */ } }
   }
@@ -730,6 +729,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (bloque(v.id)) { for (const x of vivants.values()) if (!x.hote.hidden) cacher(x); courant = null; ecranVerrou(v.id, parId.get(v.id)); ouvrir(v.id); return; }
     if (flottant && flottant.v === v) poserFlottant(null);   // le flottant revient en grand
     for (const x of vivants.values()) if (x !== v && !(flottant && flottant.v === x)) x.hote.hidden = true;
+    if (cubeP && cubeP.ouvert() && cubeP.ouvert() !== v.id) fermerCube();   // ▣ le cube d'un autre ploxion (caché à l'instant) se referme
     v.hote.hidden = false; v.debut = Date.now(); v.vu = Date.now(); courant = v; majBords();
     racine.classList.toggle('px-plein-ploxion', pleins.has(v.id));
     if (surMontrer) { try { surMontrer(v.id); } catch (e) { /* */ } }   // ❄ (0.53) ses images reprennent (src/app/gel.js)

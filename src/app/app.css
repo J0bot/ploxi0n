@@ -796,7 +796,7 @@ html.px-telecommande .px-holo-socle{bottom:calc(env(safe-area-inset-bottom,0px) 
 .ci-feuille p{margin:0 2px 6px;font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(236,235,233,.7)}
 .ci-feuille button{margin:0;min-height:40px;text-align:left;padding:0 12px;border-radius:10px;border:1px solid rgba(236,235,233,.3);background:none;color:#ecebe9;font:600 13px var(--police)}
 /* ▣ (0.68) le cube des pages : par-dessus l'hôte du ploxion (dans la scène) ; les faces de pages montrent leur photo, inerte */
-.px-cube-pages{position:absolute;inset:0;z-index:6;background:#1f1f1d;touch-action:none;-webkit-user-select:none;user-select:none}
+.px-cube-pages{position:absolute;inset:0;z-index:6;background:#1f1f1d;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .ci-des-pages{touch-action:none}.ci-des-pages .ci-face,.ci-des-pages .ci-objet{transition:opacity .16s}
 .ci-tourne .ci-face{-webkit-backface-visibility:hidden;backface-visibility:hidden}
 .ci-page{padding:0;background:#141412}.ci-fond.ci-page{border-color:#ecebe9;border-width:2px}

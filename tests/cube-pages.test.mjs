@@ -11,8 +11,9 @@ import { page, attendre } from './aide.mjs';
 // un ploxion à onglets, comme bother (data-tab ↔ data-pane, .on)
 const ONGLETS = '<div class="t"><button class="on" data-tab="send">Envoyer</button><button data-tab="mine">Les miens</button><button data-tab="x" data-retirer>Retirer</button></div>'
   + '<div class="p on" data-pane="send">page envoyer</div><div class="p" data-pane="mine">page miens</div><button data-go>Envoyer le message</button>';
+let clics = 0;
 function brancherOnglets(h) {
-  h.querySelectorAll('[data-tab]').forEach(t => { t.onclick = () => { const k = t.getAttribute('data-tab'); h.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('on', x === t)); h.querySelectorAll('[data-pane]').forEach(p => p.classList.toggle('on', p.getAttribute('data-pane') === k)); }; });
+  h.querySelectorAll('[data-tab]').forEach(t => { t.onclick = () => { clics++; const k = t.getAttribute('data-tab'); h.querySelectorAll('[data-tab]').forEach(x => x.classList.toggle('on', x === t)); h.querySelectorAll('[data-pane]').forEach(p => p.classList.toggle('on', p.getAttribute('data-pane') === k)); }; });
 }
 const actif = (h) => h.querySelector('[data-pane].on').getAttribute('data-pane');
 
@@ -68,7 +69,11 @@ test('▣ le cube : la page au fond, l\'autre à droite (photographiée derrièr
     const h = D.createElement('div'); h.className = 'px-hote'; scene.appendChild(h); h.innerHTML = ONGLETS; brancherOnglets(h);
     const sons = [], c = creerCubePages({ W, boxion: p.boxion, vibrer: (e) => sons.push(e) });
     assert.equal(await c.ouvrir({ id: 'bo', hote: h, inst: {}, dans: scene }), 'bo');
+    clics = 0;
     assert.equal(c.ouvert(), 'bo'); await c.salle().pret; await attendre(20); await c.photos();
+    assert.equal(clics, 0, 'le cube ne fait que regarder : aucun onglet touché pour les photos');
+    assert.equal(actif(h), 'send', 'le vrai ploxion n\'a pas bougé');
+    assert.equal(h.getAttribute('aria-hidden'), 'true', 'VoiceOver ne le lit pas sous le cube');
     const cube = scene.querySelector('.px-cube-pages');
     assert.match(cube.querySelector('.ci-fond').textContent, /Envoyer · 1\/2/);
     assert.match(cube.querySelector('.ci-droite .ci-photo').textContent, /page miens/, 'la page d\'à côté, photographiée');
@@ -78,6 +83,7 @@ test('▣ le cube : la page au fond, l\'autre à droite (photographiée derrièr
     // ressortir sans entrer : le ploxion revient sur sa page
     c.fermer(); await attendre(20);
     assert.ok(!scene.querySelector('.px-cube-pages')); assert.equal(actif(h), 'send', 'revenu comme il était');
+    assert.ok(!h.hasAttribute('aria-hidden'));
     // rouvrir : tourner vers la droite, puis entrer
     await c.ouvrir({ id: 'bo', hote: h, inst: {}, dans: scene }); await c.salle().pret; await c.photos();
     assert.ok(c.salle().tourner('droite')); await attendre(460);
@@ -85,7 +91,7 @@ test('▣ le cube : la page au fond, l\'autre à droite (photographiée derrièr
     assert.match(scene.querySelector('.ci-fond .ci-photo').textContent, /page miens/);
     assert.ok(c.salle().entrer()); await attendre(420);
     assert.equal(c.ouvert(), null); assert.ok(!scene.querySelector('.px-cube-pages'));
-    assert.equal(actif(h), 'mine', 'entré : le vrai ploxion est sur cette page');
+    assert.equal(actif(h), 'mine', 'entré : le vrai ploxion est sur cette page'); assert.equal(clics, 1, 'un seul toucher : pour y entrer');
     assert.ok(sons.includes('fx-face') && sons.includes('fx-arrivee'));
     // peupler le cube d'un ploxion : gardé pour lui
     await c.ouvrir({ id: 'bo', hote: h, inst: {}, dans: scene }); await c.salle().pret;
@@ -109,7 +115,13 @@ test('▣ le marketplace tient le contrat : ses vues sont ses pages ; sa recherc
     const c = creerCubePages({ W, boxion });
     await c.ouvrir({ id: 'marketplace', hote: h, inst, dans: scene }); await c.salle().pret; await c.photos();
     assert.ok(scene.querySelector('.ci-droite .ci-photo .mk'), 'la vue d\'à côté, photographiée');
-    c.fermer(); await attendre(30);
+    c.fermer();
+    assert.ok(scene.querySelector('.px-cube-pages'), 'la salle reste tant que le ploxion n\'est pas revenu');
+    await c.ouvrir({ id: 'marketplace', hote: h, inst, dans: scene });   // rouvert aussitôt : il attend la remise en place
+    assert.equal(c.pages().pages[c.pages().i].cle, 'grille', 'la page de retour reste la sienne');
+    assert.equal(scene.querySelectorAll('.px-cube-pages').length, 1);
+    await c.salle().pret; await c.photos(); c.fermer(); await c.retour();
+    assert.ok(!scene.querySelector('.px-cube-pages'));
     assert.equal(h.querySelector('[data-q]').value, 'pom', 'sa recherche revient');
     assert.equal(inst.pages().find(x => x.actif).cle, 'grille', 'et sa vue');
     inst.unmount();
@@ -134,5 +146,60 @@ test('▣ dans la barre d\'un ploxion : ouvre son cube ; changer d\'app ou un bo
     await r.cube(); await attendre(20); assert.equal(r.cubeActif(), 'a');
     await r.ouvrir('b'); assert.equal(r.cubeActif(), null, 'un autre ploxion : le cube se referme');
     assert.ok(!racine.querySelector('.px-cube-pages'));
+  } finally { p.fin(); }
+});
+
+test('▣ deux ▣ pendant que le ploxion se prépare : un seul cube ; changer d\'app pendant l\'attente l\'annule', async () => {
+  const p = await page({ avion: true, ploxions: [] });
+  try {
+    const W = p.w, D = W.document, scene = D.createElement('div'); D.body.appendChild(scene);
+    const h = D.createElement('div'); h.className = 'px-hote'; scene.appendChild(h); h.innerHTML = ONGLETS; brancherOnglets(h);
+    let pret; const inst = { ready: new Promise(r => { pret = r; }) };
+    const c = creerCubePages({ W, boxion: p.boxion });
+    const a = c.ouvrir({ id: 'bo', hote: h, inst, dans: scene });
+    assert.equal(c.ouvert(), 'bo', 'en attente, déjà su : un second ▣ le referme au lieu d\'en ouvrir un autre');
+    c.fermer(); const b = c.ouvrir({ id: 'bo', hote: h, inst, dans: scene });
+    pret(); assert.equal(await a, false); assert.equal(await b, 'bo');
+    assert.equal(scene.querySelectorAll('.px-cube-pages').length, 1, 'pas de salle orpheline');
+    c.fermer(); await c.retour();
+    let pret2; const inst2 = { ready: new Promise(r => { pret2 = r; }) };
+    const x = c.ouvrir({ id: 'bo', hote: h, inst: inst2, dans: scene });
+    h.hidden = true; pret2();   // l'app a changé de ploxion pendant l'attente
+    assert.equal(await x, false); assert.equal(scene.querySelectorAll('.px-cube-pages').length, 0);
+  } finally { p.fin(); }
+});
+
+test('▣ le geste des bords « cube » le referme (le pointerdown le ferme, le lâcher ne le rouvre pas)', async () => {
+  const p = await page({ avion: true, ploxions: [] });
+  try {
+    const { creerRouteur } = await import('../src/app/routeur.js');
+    const W = p.w; W.jOSApps = W.jOSApps || {};
+    W.jOSApps.a = { manifest: { id: 'a' }, mount(h) { h.innerHTML = ONGLETS; brancherOnglets(h); return { unmount() {} }; } };
+    const racine = W.document.createElement('div'); W.document.body.appendChild(racine);
+    const r = creerRouteur({ fenetre: W, racine, catalogue: [{ id: 'a', nom: 'A', icone: '◇' }], prefs: () => ({ gestes: { 'g-milieu': 'cube' } }) });
+    r.brancherCube(creerCubePages({ W, boxion: p.boxion }));
+    await r.accueil(); await r.ouvrir('a'); await attendre(20);
+    await r.cube(); assert.equal(r.cubeActif(), 'a');
+    const bg = racine.querySelector('.px-bord-g'), ev = (t, x) => bg.dispatchEvent(new W.MouseEvent(t, { clientX: x, clientY: 400, bubbles: true, cancelable: true }));
+    ev('pointerdown', 2); ev('pointermove', 60); ev('pointermove', 140); ev('pointerup', 140); await attendre(60);
+    assert.equal(r.cubeActif(), null, 'refermé, pas rouvert');
+    ev('pointerdown', 2); ev('pointermove', 60); ev('pointermove', 140); ev('pointerup', 140); await attendre(60);
+    assert.equal(r.cubeActif(), 'a', 'cube fermé : le même geste l\'ouvre');
+  } finally { p.fin(); }
+});
+
+test('▣ les data-mode d\'un ploxion (le minuteur) ne changent plus le mode de l\'app', async () => {
+  const p = await page({ avion: true, ploxions: [] });
+  try {
+    const { creerModes } = await import('../src/app/modes.js');
+    const W = p.w, D = W.document, reglages = [];
+    const m = creerModes({ W, prefs: { lire: () => ({ mode: 'chill-tekk' }), regler: async (x) => { reglages.push(x); }, surChangement: () => () => {} } });
+    const racine = D.createElement('div'); D.body.appendChild(racine); m.attacher(racine);
+    racine.innerHTML = '<div class="px-scene"><div class="px-hote"><button data-mode="cd">minuteur</button></div></div><div class="px-modes"><button data-mode="xerbot">xerbot</button></div>';
+    let vu = 0; racine.querySelector('.px-hote button').addEventListener('click', () => { vu++; });
+    racine.querySelector('.px-hote button').click();
+    assert.equal(vu, 1, 'le minuteur reçoit son clic'); assert.deepEqual(reglages, []);
+    racine.querySelector('.px-modes button').click(); await attendre(10);
+    assert.deepEqual(reglages, [{ mode: 'xerbot' }], 'les puces des modes marchent toujours');
   } finally { p.fin(); }
 });

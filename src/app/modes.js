@@ -92,8 +92,10 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
   /** les gestes du panneau (délégués : l'accueil est redessiné souvent) */
   function attacher(racine) {
     racine.addEventListener('click', (e) => {
-      const b = e.target.closest('button'); if (!b) return;
-      if (b.hasAttribute('data-mode')) { e.stopPropagation(); vibrer('selection'); prefs.regler({ mode: b.getAttribute('data-mode') }).then(() => W.ploxi0n && W.ploxi0n.routeur && W.ploxi0n.routeur.accueil()); return; }
+      // (0.68) seulement les puces des modes et les panneaux de l'accueil : un ploxion a ses propres data-mode (le minuteur : chrono,
+      // minuteur, pomo) — capturés ici, ils changeaient le mode de l'app au lieu du sien (revue du cube des pages)
+      const b = e.target.closest('button'); if (!b || b.closest('.px-hote')) return;
+      if (b.hasAttribute('data-mode') && b.closest('.px-modes')) { e.stopPropagation(); vibrer('selection'); prefs.regler({ mode: b.getAttribute('data-mode') }).then(() => W.ploxi0n && W.ploxi0n.routeur && W.ploxi0n.routeur.accueil()); return; }
       if (b.hasAttribute('data-xb')) { e.stopPropagation(); action(b); return; }
       if (b.hasAttribute('data-xb-acc')) { e.stopPropagation(); const id = b.getAttribute('data-xb-acc'); N().maison.basculer(id).then(r => { const a = (xb.maison || []).find(x => x.id === id); if (a) a.allume = r.allume; rafraichir(); }).catch(() => {}); }
     }, true);

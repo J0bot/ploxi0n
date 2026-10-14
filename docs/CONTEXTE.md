@@ -106,8 +106,11 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 la SALLE partagée (`monterSalle`, `facesDesPages` : fond = page i, droite i+1, gauche i−1, plafond i+2, sol i−2) ; `src/app/cube-pages.js` en
 fait le cube DES PAGES d'un ploxion (▣ `data-cube` dans la barre, action des bords « cube », `routeur.cube()`/`cubeActif()`). Les pages :
 1. le contrat de l'instance montée `pages()`/`allerPage(cle,{muet})`/`garderEtat()` (marketplace, réglages) ; 2. une liste blanche d'onglets
-du DOM (`ONGLETS`) ; jamais `DANGER`, jamais les `EXCLUS` (cape, pomodoro). Les photos = clones inertes pris DERRIÈRE la salle en feuilletant
-le vrai ploxion, qui revient à sa page/son défilement/son état à la sortie. Piège : l'enveloppe des photos porte `px-hote` (le thème chill
+du DOM (`ONGLETS`, chacun avec son panneau) ; jamais `DANGER`, jamais les `EXCLUS` (cape, pomodoro). Photos = clones inertes : les onglets
+se photographient DANS le clone (`photoDuPanneau`, aucun clic : le ploxion ne bouge pas) ; seul le contrat feuillette derrière la salle,
+et le ploxion revient à sa page/son défilement/son état (la salle vide reste tant que ce n'est pas fait ; `ouvrir` attend ce `retour`).
+0.68.1 (revue adverse, 6 agents) : ouverture annulable (`seq`, `ouvert()` dit aussi l'attente), le geste « cube » (`cubeFerme`), les
+canvas (la face reçoit LE nœud gardé), plafond/sol en fondu ; `src/app/modes.js` ne capture plus les `data-mode` d'un ploxion (le minuteur). Piège : l'enveloppe des photos porte `px-hote` (le thème chill
 habille sous .px-hote) mais n'est pas enfant direct de la scène — ne pas chercher les hôtes autrement que `.px-scene>.px-hote` ou par
 `data-ploxion`. Faux iPhone : `tools/faux-iphone/parcours-cube-pages.mjs` (bother, réglages, marketplace).
 
