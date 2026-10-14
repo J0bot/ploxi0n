@@ -730,3 +730,9 @@ html.px-px-chill body{
 .px-tsoin-vite small{flex:1;font:600 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .px-tiroir .px-tsoin-vite button{width:auto;min-height:38px;margin:0;padding:0 14px;border-radius:19px;border:var(--trait) solid var(--bio);background:none;color:var(--txt);font:600 13px var(--police)}
 .px-sante-dodo{margin:4px 2px 10px;font:13px/1.5 var(--police);color:var(--muted)}.px-sante-dodo b{color:var(--txt);font-weight:600}
+/* ≋ (0.64) chill-synth, phase 1 (src/chill/chill-synth.js) */
+.px-chill-src{display:flex;gap:8px;align-items:center;margin:10px 0}.px-chill-src input[type=url]{flex:1;min-width:0}
+.px-chill-modes{display:flex;gap:8px;margin:8px 0}.px-chill-modes button{flex:1;margin:0;min-height:40px;font:600 12px var(--police)}.px-chill-modes button.on{border-color:var(--bio);color:var(--bio)}
+.px-chill-piste{margin:6px 2px;font:12.5px var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.px-chill-vu{display:block;width:100%;height:120px;margin:12px 0;border-radius:12px;background:#1f1f1d}
+.px-chill-journal{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font:12.5px var(--mono);color:var(--txt)}

@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.64.0', titre: 'Dodo, et le son qui tient', points: [
+    '☾ Dodo : dans le tsoin, la rangée « santé · sommeil » : ☾ dodo ou ☀ réveil d\'un toucher, sans rien écrire. Ou ploxi0n://dodo depuis un raccourci, le Toucher au dos, ou l\'automatisation « quand Sommeil s\'active ». La page Santé met ta nuit dite à côté de la nuit de ta montre (Garmin → Apple Santé) : combien de temps pour t\'endormir, l\'écart au réveil.',
+    '≋ chill-synth, la phase 1 : une piste (un fichier à toi, ou une adresse CC0), lance, verrouille l\'iPhone 10 minutes ; au retour, le ploxion te dit si le son a tenu. Deux essais (le son seul, avec l\'analyse), et les bandes du son partent sur le bus « audio:bands » pour la suite (le visuel, l\'haptique).',
+    'Si « Réduire les animations » est activé dans iOS, ploxi0n passe tout seul en mode Calme.',
+  ] },
   { v: '0.63.1', titre: 'L\'accueil n\'est plus lent', points: [
     'La lenteur venait du thème vivant : 8 fois par seconde, il faisait recalculer TOUTE la page (avec 202 ploxions, l\'iPhone n\'arrivait plus à dessiner : 2 images par seconde au banc). Il ne touche plus que ce qui bouge vraiment (le logo, le dock, la barre, les feuilles) : 50 images par seconde au même banc, et l\'accueil se dessine deux fois plus vite.',
   ] },

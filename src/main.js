@@ -49,10 +49,11 @@ import { creerCadresLabo } from './natif/cadres-labo.js';
 import { installerGel } from './app/gel.js';
 import { installerSansEmoji } from './app/sans-emoji.js';
 import { creerDemo } from './app/demo.js';
+import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.63.1';
+const VERSION = '0.64.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -286,6 +287,7 @@ async function demarrer() {
   // ◈ le cube des widgets : six infos des bions (les valeurs), et la dernière inclinaison du téléphone
   const cube = creerCube({ boxion, valeurs: () => (raccourcis ? raccourcis.toutes() : {}) });
   internes.push(sante.ploxion);
+  internes.push(creerChillSynth({ boxion, vibrer: (x) => vibrer(x) }).ploxion);   // ≋ (0.64) chill-synth, phase 1 : le son en arrière-plan
   // 🥼 labo-cape (0.50, lot L1) : la blouse RS-7 en BLE, ou sa simulation (le moteur de cape-core)
   internes.push(creerCape({ boxion, vibrer: (x) => vibrer(x) }).ploxion);
   window.jOSNatif.sante = sante.api;
