@@ -378,7 +378,9 @@ async function demarrer() {
   };
   window.ploxi0n = { boxion, shim, routeur, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte };
   brancherLiens({ routeur, compte, installer: (id) => routeurProxy.ouvrir(id), lecture: (c) => maintenant.commander(c), lire: (o) => lecteurNatif.ouvrir(o.url, o).catch(() => {}),
-    actions: { tsoin: () => tsoinNatif.ouvrir({}), vocal: () => vocal.basculer().catch(() => {}), lampe: () => window.jOSNatif.lampe().catch(() => {}) } });   // une icône de l'écran d'accueil vers un ploxion absent : installé à la volée
+    // ☾ (0.64) ploxi0n://dodo et ploxi0n://reveil : un raccourci, le Toucher au dos, ou l'automatisation « quand Sommeil s'active » d'iOS le notent seuls
+    actions: { dodo: () => tsoinNatif.dodo().then(() => routeur.signaler('☾ dodo noté')).catch(() => {}), reveil: () => tsoinNatif.reveil().catch(() => {}),
+      tsoin: () => tsoinNatif.ouvrir({}), vocal: () => vocal.basculer().catch(() => {}), lampe: () => window.jOSNatif.lampe().catch(() => {}) } });   // une icône de l'écran d'accueil vers un ploxion absent : installé à la volée
   // « Dis à ploxi0n … » (Siri, la dictée) : une phrase → une action
   async function commande(texte) {
     const c = comprendre(texte);

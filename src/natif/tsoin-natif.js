@@ -7,7 +7,11 @@
 //   - les portes : ⧗ dans le dock (HUD), un geste de bord (« les deux · bas » par défaut), Siri (« Tell ploxi0n note … »),
 //     et jOSNatif.tsoin({ texte, genre }) pour les ploxions.
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-export const GENRES = [['fait', '⧗ fait'], ['idee', '💡 idée'], ['note', '📝 note'], ['humeur', '🌡 humeur'], ['but', '🎯 but']];
+export const GENRES = [['fait', '⧗ fait'], ['idee', '💡 idée'], ['note', '📝 note'], ['humeur', '🌡 humeur'], ['but', '🎯 but'], ['dodo', '☾ dodo'], ['reveil', '☀ réveil']];
+// ☾ (0.64, RS-7 : « un moyen facile de dire quand je vais me coucher : dans le bouton tsoin, la santé, le sommeil, et là : dodo ; et on pourra
+// comparer avec les données de la Garmin ») DODO et RÉVEIL : un toucher dans le composeur (la rangée « santé ») note l'heure, sans rien
+// écrire ; la page Santé met la nuit dite à côté de la nuit mesurée (la montre → Garmin Connect → Apple Santé → ploxi0n) : comparerNuit().
+export const VITE = [['dodo', '☾ dodo', 'je vais me coucher'], ['reveil', '☀ réveil', 'je me lève']];
 const MAX_PHOTO = 1.5e6;
 
 export function creerTsoinNatif({ W = globalThis.window, boxion, vibrer = () => {}, contexte = () => null, vocal = null, distant = () => null }) {
@@ -40,7 +44,8 @@ export function creerTsoinNatif({ W = globalThis.window, boxion, vibrer = () => 
         const garde = f.querySelector('[data-texte]'), val = garde ? garde.value : (pre.texte || '');
         f.innerHTML = '<div class="px-tiroir"><p class="px-ft">⧗ un tsoin · ' + new Date().toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' }) + '</p>'
           + '<textarea data-texte rows="4" placeholder="ce qui se passe, ce que tu fais, une idée…" enterkeyhint="done">' + esc(val) + '</textarea>'
-          + '<div class="px-puces">' + GENRES.map(([k, t]) => '<button data-genre="' + k + '" class="px-puce' + (k === st.genre ? ' on' : '') + '">' + t + '</button>').join('') + '</div>'
+          + '<div class="px-tsoin-vite"><small>santé · sommeil</small>' + VITE.map(([k, t, q]) => '<button data-vite="' + k + '" aria-label="' + q + '">' + t + '</button>').join('') + '</div>'
+          + '<div class="px-puces">' + GENRES.filter(([k]) => !VITE.some(v => v[0] === k)).map(([k, t]) => '<button data-genre="' + k + '" class="px-puce' + (k === st.genre ? ' on' : '') + '">' + t + '</button>').join('') + '</div>'
           + (st.photo ? '<img class="px-tsoin-photo" src="' + esc(st.photo) + '" alt="">' : '')
           + '<div class="px-puces">'
           + '<button data-j="photo" class="px-puce' + (st.photo ? ' on' : '') + '">📷 ' + (st.photo ? 'photo ✓' : 'photo') + '</button>'
@@ -64,6 +69,9 @@ export function creerTsoinNatif({ W = globalThis.window, boxion, vibrer = () => 
       f.addEventListener('click', async (e) => {
         if (e.target === f) return minimiser();
         const g = e.target.closest('[data-genre]'); if (g) { st.genre = g.getAttribute('data-genre'); vibrer('selection'); return peindre(); }
+        // ☾ dodo / ☀ réveil : noté tout de suite (le texte éventuel l'accompagne), la feuille se ferme
+        const v = e.target.closest('[data-vite]');
+        if (v) { const genre = v.getAttribute('data-vite'), t = ((f.querySelector('[data-texte]') || {}).value || '').trim(); try { fermer(await enregistrer({ texte: t || (genre === 'dodo' ? 'dodo' : 'réveil'), genre, ploxion: null })); } catch (er) { msg(er.message); } return; }
         const b = e.target.closest('[data-j]'); if (!b) return;
         const j = b.getAttribute('data-j');
         try {
@@ -111,5 +119,7 @@ export function creerTsoinNatif({ W = globalThis.window, boxion, vibrer = () => 
   }
   W.jOSApps = W.jOSApps || {};
   W.jOSApps['journal-tsoins'] = { manifest: { id: 'journal-tsoins', name: 'Tsoins', icon: '⧗' }, mount };
-  return { ouvrir, enregistrer, liste, ploxion: { id: 'journal-tsoins', nom: 'Tsoins', icone: '⧗', interne: true } };
+  /** ☾ (0.64) d'un geste (Siri, un bord, un raccourci) : dodo / réveil */
+  const dodo = () => enregistrer({ texte: 'dodo', genre: 'dodo' }), reveil = () => enregistrer({ texte: 'réveil', genre: 'reveil' });
+  return { ouvrir, enregistrer, liste, dodo, reveil, ploxion: { id: 'journal-tsoins', nom: 'Tsoins', icone: '⧗', interne: true } };
 }

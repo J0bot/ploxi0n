@@ -36,6 +36,28 @@ const DORT = new Set(['asleep', 'rem', 'deep', 'light']);
 const PHASES = [['deep', 'profond'], ['rem', 'paradoxal'], ['light', 'léger'], ['asleep', 'endormi'], ['awake', 'éveillé']];
 const SPORTS = { running: '🏃 course', walking: '🚶 marche', cycling: '🚴 vélo', swimming: '🏊 natation', hiking: '🥾 rando', yoga: '🧘 yoga', functionalStrengthTraining: '🏋 force', traditionalStrengthTraining: '🏋 force', highIntensityIntervalTraining: '⚡ HIIT', climbing: '🧗 escalade', dance: '💃 danse', soccer: '⚽ foot', tennis: '🎾 tennis', rowing: '🚣 aviron', elliptical: '◯ elliptique', crossTraining: '✚ cross', boxing: '🥊 boxe', other: '◇ autre' };
 const jour0 = (d = new Date()) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+/** ☾ (0.64) LA NUIT DITE ET LA NUIT MESURÉE : le dernier « dodo » noté (un tsoin, dans les 20 h) et le « réveil » qui suit, à côté des
+ *  échantillons « sleep » d'Apple Santé (une Garmin y arrive par Garmin Connect : sourceName). → { dit, endormi, latence (min), reveilDit,
+ *  finSommeil, ecartReveil (min, + = levé après la fin du sommeil), source } ; null sans « dodo ». */
+export function comparerNuit(tsoins, samples, maintenant = Date.now()) {
+  const t = (x) => new Date(x).getTime(), l = (tsoins || []).filter(x => x && (x.genre === 'dodo' || x.genre === 'reveil') && x.le).sort((a, b) => t(a.le) - t(b.le));
+  const dodo = [...l].reverse().find(x => x.genre === 'dodo' && maintenant - t(x.le) < 20 * 3600e3); if (!dodo) return null;
+  const dit = t(dodo.le), rev = l.find(x => x.genre === 'reveil' && t(x.le) > dit);
+  const dort = (samples || []).filter(x => DORT.has(x.sleepState || 'asleep') && t(x.endDate) > dit - 2 * 3600e3).sort((a, b) => t(a.startDate) - t(b.startDate));
+  const endormi = dort.length ? t(dort[0].startDate) : null, fin = dort.length ? Math.max(...dort.map(x => t(x.endDate))) : null;
+  return { dit, endormi, latence: endormi == null ? null : Math.round((endormi - dit) / 60000), reveilDit: rev ? t(rev.le) : null, finSommeil: fin,
+    ecartReveil: rev && fin != null ? Math.round((t(rev.le) - fin) / 60000) : null, source: dort.length ? (dort[0].sourceName || '') : '' };
+}
+const heure = (ms) => new Date(ms).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' });
+/** la ligne de la page Santé */
+export function ligneNuit(c) {
+  if (!c) return '';
+  const p = ['☾ dodo dit à <b>' + heure(c.dit) + '</b>'];
+  if (c.endormi != null) p.push((c.latence >= 0 ? 'endormi·e à <b>' + heure(c.endormi) + '</b> : ' + c.latence + ' min pour t\'endormir' : 'endormi·e dès <b>' + heure(c.endormi) + '</b>, avant de le dire') + (c.source ? ' (' + c.source + ')' : ''));
+  else p.push('pas encore de nuit mesurée (la montre synchronise au matin)');
+  if (c.reveilDit != null) p.push('☀ réveil dit à <b>' + heure(c.reveilDit) + '</b>' + (c.ecartReveil != null ? ' · fin du sommeil ' + heure(c.finSommeil) + ' (' + (c.ecartReveil >= 0 ? '+' : '') + c.ecartReveil + ' min)' : ''));
+  return '<p class="px-sante-dodo">' + p.join(' · ') + '</p>';
+}
 const hm = (min) => Math.floor(min / 60) + ' h ' + String(Math.round(min % 60)).padStart(2, '0');
 const minutes = (s) => (Date.parse(s.endDate) - Date.parse(s.startDate)) / 60000;
 
@@ -89,7 +111,7 @@ export function creerSante({ W = globalThis.window, boxion, vibrer = () => {}, p
     const pas = (await agreger('steps', { depuis: debut })).map(s => ({ date: new Date(s.startDate), valeur: s.value }));
     const repos = (await agreger('restingHeartRate', { depuis: debut, aggregation: 'average' })).map(s => ({ date: new Date(s.startDate), valeur: (s.values && s.values.average) || s.value }));
     const sports = await entrainements({ depuis: new Date(Date.now() - 30 * 864e5) });
-    return { tuiles, sommeil: sommeil(dodo), series: { pas, sommeil: parNuit, repos }, entrainements: sports, appareils: appareils([...Object.values(lus), dodo, sports]) };
+    return { tuiles, sommeil: sommeil(dodo), echantillonsNuit: dodo, series: { pas, sommeil: parNuit, repos }, entrainements: sports, appareils: appareils([...Object.values(lus), dodo, sports]) };
   }
 
   // ---- ☁ connecté : le résumé sur TON boxion (opt-in, éteint par défaut) ---------------------------------------------------------------------
@@ -154,6 +176,9 @@ export function creerSante({ W = globalThis.window, boxion, vibrer = () => {}, p
       const pt = await lirePartage(), co = !!distant();
       if (!vivant) return;
       const s = r.sommeil;
+      // ☾ (0.64) la nuit dite (tes tsoins « dodo », « réveil ») à côté de la nuit mesurée
+      const dits = (await boxion.lire('tsoins', { limite: 5000 }).catch(() => [])).map(x => x && x.entry).filter(x => x && (x.genre === 'dodo' || x.genre === 'reveil'));
+      const nuitDite = comparerNuit(dits, r.echantillonsNuit);
       // ▤ (0.51) minimisée, la Santé reste un mini dock : les pas, la nuit, le cœur ; ↻ relit
       { const md = W.jOSMiniDock, v = (k) => (r.tuiles.find(x => x.t === k) || {}).valeur;
         if (md) md.publier({ cle: 'sante', ploxion: 'sante', titre: 'Santé', icone: '❤', sous: [v('steps') ? v('steps') + ' pas' : null, s.total ? '☾ ' + hm(s.total) : null, v('heartRate') ? '♥ ' + v('heartRate') : null].filter(Boolean).join(' · ') || 'rien de lisible aujourd\'hui',
@@ -161,7 +186,7 @@ export function creerSante({ W = globalThis.window, boxion, vibrer = () => {}, p
       hote.innerHTML = '<div class="px-page px-sante"><p class="px-grave">❤ santé · aujourd\'hui</p>'
         + (r.tuiles.length ? '<div class="px-sante-tuiles">' + r.tuiles.map(t => '<div class="px-sante-t"><small>' + esc(t.nom) + '</small><b>' + esc(t.valeur) + '</b></div>').join('') + '</div>'
           : '<p class="px-sous">Rien de lisible. Si tu as refusé un type : Réglages › Santé › Accès aux données › ploxi0n (iOS ne dit pas aux apps ce qui est refusé).</p>')
-        + '<h3>☾ la nuit</h3>' + (s.total ? '<p class="px-sante-gros">' + hm(s.total) + '</p><div class="px-sante-phases">' + PHASES.filter(([k]) => s.phases[k]).map(([k, n]) => '<span class="ph-' + k + '" style="flex:' + s.phases[k].toFixed(0) + '">' + esc(n) + ' ' + hm(s.phases[k]) + '</span>').join('') + '</div>' : '<p class="px-sous">pas de sommeil enregistré cette nuit</p>')
+        + '<h3>☾ la nuit</h3>' + ligneNuit(nuitDite) + (s.total ? '<p class="px-sante-gros">' + hm(s.total) + '</p><div class="px-sante-phases">' + PHASES.filter(([k]) => s.phases[k]).map(([k, n]) => '<span class="ph-' + k + '" style="flex:' + s.phases[k].toFixed(0) + '">' + esc(n) + ' ' + hm(s.phases[k]) + '</span>').join('') + '</div>' : '<p class="px-sous">pas de sommeil enregistré cette nuit</p>')
         + '<h3>👣 pas · ' + jours + ' jours</h3>' + barres(r.series.pas)
         + '<h3>☾ sommeil · ' + jours + ' nuits</h3>' + barres(r.series.sommeil, { unite: ' h', fmt: (v) => v.toFixed(1) })
         + '<h3>♥ cœur au repos · ' + jours + ' jours</h3>' + barres(r.series.repos, { unite: ' bpm' })
