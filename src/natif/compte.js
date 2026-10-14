@@ -10,8 +10,9 @@
 //   - LE XER DE LA REVUE D'APPLE : un bion pour Apple (jamais celui de RS-7) et SON xer préparé — « ce compte-là, ça va être une pépite »
 //     (docs/APP-STORE.md) ; c'est la même mécanique que la session de test ;
 //   - LE PORTION des deux bords : l'axe x = les xers, l'axe y = les sessions ; on y choisit sa session, on revient à l'accueil ;
-//   - SON XERBION et SON XERPLOXION (« il faut qu'on voie aussi son xerbion, et son xerploxion ») : à préciser avec RS-7 — le bion de ton xer
-//     (ce qu'il compose) et ton xer vu comme un ploxion, à montrer dans la carte du xerboxion et dans Compte ;
+//   - SON XERBION et SON XERPLOXION (RS-7, 14.10 : « le xerbion, c'est les données des bions du ploxion, et le xerploxion, c'est la version
+//     holographique d'un ploxion ») — posés en 0.66 : le xerbion sur le dessus du cube (src/app/xerbion.js), le xerploxion par ◈
+//     (routeur.js, basculerHolo). 💭 la suite : le xerbion dans la carte (de près), le xerploxion projeté hors de l'écran (AR, Vision Pro) ;
 //   - LE PARTAGE DE TSOINS entre bions par le compte Apple (Game Center, CloudKit : un stockage commun aux iPhone), la messagerie entre
 //     bions, le Bluetooth (sans réseau : les amis off the grid de la vision originelle), l'accès au nexus (labo.j0bot.ch) ;
 //   - LA MILKY WAY FOUNDATION (milkywayhub.org, à but non lucratif) dans l'app : payer l'électricité de quelqu'un, financer des missions,

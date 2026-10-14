@@ -760,3 +760,14 @@ html.px-px-chill body{
 .px-carte-x,.px-carte-moi{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:2;width:auto;height:36px;min-height:0;margin:0;padding:0 14px;border-radius:18px;border:1.5px solid #ecebe9;background:#1f1f1d;color:#ecebe9;font:600 12px var(--mono,monospace)}
 .px-carte-x{right:16px}.px-carte-moi{left:16px}
 .px-carte-aide{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);margin:0;text-align:center;font:600 10px var(--mono,monospace);letter-spacing:.12em;text-transform:uppercase;color:rgba(236,235,233,.6);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ◈ (0.66) le xerploxion : la version holographique d'un ploxion (src/app/routeur.js, basculerHolo) ; ⧈ le xerbion sur le dessus du cube */
+.px-scene>.px-hote.px-holo{transform-origin:50% 88%;border-radius:22px;overflow:hidden;opacity:.9;background:rgba(6,18,28,.55);box-shadow:0 0 0 1px rgba(120,235,255,.55),0 0 46px rgba(90,220,255,.35);will-change:transform;animation:none}
+.px-holo-on .px-scene{background:radial-gradient(70% 45% at 50% 92%,rgba(70,200,255,.18),transparent 70%),#04060b}
+.px-holo-socle{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);width:78vw;height:44px;transform:translateX(-50%);z-index:36;pointer-events:none}
+.px-holo-socle i{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(140,240,255,.75);box-shadow:0 0 26px rgba(90,220,255,.6),inset 0 0 18px rgba(90,220,255,.4)}
+.px-holo-socle b{position:absolute;left:8%;right:8%;bottom:22px;height:62vh;background:linear-gradient(0deg,rgba(90,220,255,.16),transparent);clip-path:polygon(0 100%,100% 100%,88% 0,12% 0)}
+.px-holo-on .px-scene::after{content:"";position:absolute;inset:0;z-index:37;pointer-events:none;mix-blend-mode:screen;background:repeating-linear-gradient(0deg,rgba(120,235,255,.09) 0 1px,transparent 1px 4px)}
+.px-fx-xb .px-xb-titre{margin:18px 0 8px;font:600 22px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.px-fx-xb .px-xb{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font:24px var(--mono);color:var(--txt)}
+.px-fx-xb .px-xb b{color:var(--bio)}.px-fx-xb .px-xb i{color:var(--muted)}
+html.px-telecommande .px-holo-socle{bottom:calc(env(safe-area-inset-bottom,0px) + 78px)}

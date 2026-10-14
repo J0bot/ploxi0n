@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.66.0', titre: 'Le xerbion et le xerploxion', points: [
+    { t: '⧈ Le xerbion d\'un ploxion (les données de ses bions) : sur la face du dessus du cube, ce que chacun de ses bions garde chez toi (ses clés, leur poids, quand), ce qu\'il garde lui-même, et ses tsoins.', essayer: 'cube' },
+    '◈ Le xerploxion, la version holographique d\'un ploxion : ◈ dans sa barre. Il flotte au-dessus d\'un socle de projection, penché par ta main (le gyroscope), toujours vivant : tu t\'en sers comme avant. Un bord le remet à plat.',
+  ] },
   { v: '0.65.0', titre: 'Tout ton xerboxion, sur une carte', points: [
     { t: 'La carte du xerboxion : pince la fractale (ou ⊞, ou « tout » sur la page aujourd\'hui). Au centre le cube du xerboxion ; autour, chaque famille est un koin, et chaque ploxion a SA place, toujours la même. Promène-la du doigt (elle file sur son élan), zoome à deux doigts : de loin les koins, de près les noms et le chemin des swipes pour y aller depuis là où tu es. Touche une app : tu plonges dedans. Appui long : déplace-la, elle garde sa nouvelle place.', essayer: 'carte' },
     'Les fils, la seule couleur : vus de près, ils relient les ploxions qui partagent un bion rare.',

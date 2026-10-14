@@ -93,7 +93,7 @@ const JAUGE = [0.35, 0.7, 0.95, 1.13, 1.27, 1.36];   // (0.63) freefall : la jau
 const P0 = 'perspective(1500px) ';
 export function creerFractale({ W = globalThis.window, racine, scene, file, origine, aller, fermer = null, vibrer = () => {}, calme = () => false, actif = () => true,
   gyro = () => (W.jOSNatif && W.jOSNatif.mouvement && W.jOSNatif.mouvement.ecouter ? W.jOSNatif.mouvement : null), glyphe = () => '',
-  crans = () => (W.jOSNatif && W.jOSNatif.crans) || null, surVide = null, carte = null }) {
+  crans = () => (W.jOSNatif && W.jOSNatif.crans) || null, surVide = null, carte = null, xerbion = null }) {
   const D = W.document;
   const maintenant = () => (W.performance && W.performance.now ? W.performance.now() : Date.now());
   const raf = (f) => (W.requestAnimationFrame ? W.requestAnimationFrame(f) : W.setTimeout(() => f(maintenant()), 16));
@@ -320,7 +320,11 @@ export function creerFractale({ W = globalThis.window, racine, scene, file, orig
   function placerDessus(w, f) {
     if (etat === 'cube') {
       const { h } = boite(), k = cartes[f], ix = incCube();
-      if (k && dessus.dataset.pour !== String(k.e.id)) { dessus.dataset.pour = String(k.e.id); dessus.innerHTML = faceDessus(k.e); }
+      if (k && dessus.dataset.pour !== String(k.e.id)) {
+        const pour = String(k.e.id); dessus.dataset.pour = pour; dessus.innerHTML = faceDessus(k.e);
+        // ⧈ (0.66) le XERBION : les données de ses bions, lues dans boxion_local (asynchrone : posé quand c'est lu, si la face n'a pas changé)
+        if (xerbion && k.e.id != null) Promise.resolve(xerbion(k.e)).then((h) => { const z = dessus && dessus.dataset.pour === pour && dessus.querySelector('.px-fx-xb'); if (z && h) z.innerHTML = h; }).catch(() => {});
+      }
       const t = P0 + 'rotateX(' + (RX0 - 38 * penche - ix.y * 8).toFixed(2) + 'deg) rotateY(' + (RY0 + (f - focus) * 90 - ix.x * 14).toFixed(2) + 'deg) translateY(' + (-(h * CUBE) / 2).toFixed(1) + 'px) rotateX(90deg) scale(' + CUBE + ')';
       const o = String(Math.round(Math.min(1, 0.35 + penche * 1.3) * 100) / 100);
       if (t !== dessusEcrit.t) { dessusEcrit.t = t; dessus.style.transform = t; }
@@ -334,7 +338,7 @@ export function creerFractale({ W = globalThis.window, racine, scene, file, orig
   function faceDessus(e) {
     const l = Array.isArray(e.bions) ? e.bions : [];
     return '<div class="px-fx-dessus-in"><p><b>' + esc(e.nom) + '</b><small>' + (l.length ? l.length + ' bion' + (l.length > 1 ? 's' : '') : (e.id == null ? 'l\'accueil' : 'aucun bion déclaré')) + '</small></p>'
-      + '<ul>' + l.slice(0, 18).map(n => '<li>' + glyphe('bion') + esc(n) + '</li>').join('') + '</ul></div>';
+      + '<ul>' + l.slice(0, 18).map(n => '<li>' + glyphe('bion') + esc(n) + '</li>').join('') + '</ul><div class="px-fx-xb"></div></div>';
   }
   /** (0.63) les crans haptiques, selon l'usage : un par carte qui passe le centre (hystérésis ±0,12 : un doigt posé sur la frontière ne
    *  mitraille plus) ; lent = un cran net (+1), rapide = un sur deux, très rapide = un sur trois — les repères (l'accueil, l'app de

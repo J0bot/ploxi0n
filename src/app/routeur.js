@@ -13,6 +13,7 @@
 import { glyphe, glyphePloxion } from './glyphes.js';
 import { svgXerkion, glypheCategorie } from './xerkion-icone.js';
 import { creerFractale, glisser } from './fractale.js';
+import { lireXerbion, htmlXerbion } from './xerbion.js';
 const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 // le logo (losanges concentriques), transparent : les espaces entre les losanges sont des trous
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
@@ -21,7 +22,7 @@ const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><p
 /** (0.63) ce qu'un geste des bords peut faire (⚙ › Gestes des bords, le HUD de tuto) */
 export const ACTIONS_BORDS = [['precedente', '← app précédente'], ['suivante', 'app suivante →'], ['accueil', '⌂ accueil'], ['minimiser', '▁ minimiser'], ['basculer', '⧉ basculer'],
   ['chercher', 'chercher'], ['reglages', 'réglages'], ['portion', '◈ portion'], ['tsoin', '⧗ noter un tsoin'], ['freefall', '◇ freefall (gyroscope)'],
-  ['etat', '▣ l\'état : plein écran, pip, cadre'], ['tuto', '◎ le tuto ici'], ['carte', '⊞ tout le xerboxion'], ['rien', '— rien']];
+  ['etat', '▣ l\'état : plein écran, pip, cadre'], ['tuto', '◎ le tuto ici'], ['carte', '⊞ tout le xerboxion'], ['holo', '◈ le xerploxion (l\'hologramme)'], ['rien', '— rien']];
 export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null, surMontrer = null, surTuto = null } = {}) {
   // ▤ (0.51) les mini docks : miniDocks = { surVivants(), surFermeture(id), page() } — ⧉ ouvre leur page, ils remplacent « en arrière-plan »
   const W = fenetre, D = W.document;
@@ -69,6 +70,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (action === 'accueil') { if (courant) { cacher(courant); courant = null; } pile = []; vibrer('bord'); return accueil(); }
     if (action === 'minimiser') return courant ? minimiser() : (flottant ? null : vibrer('fx-refus'));   // à l'accueil : déjà là
     if (action === 'etat') return cyclerEtat();
+    if (action === 'holo') return basculerHolo();
     if (action === 'tuto') return surTuto ? surTuto(courant ? courant.id : null) : null;
     if (action === 'basculer') return vivants.size + endormis.length ? basculer() : null;
     if (action === 'freefall') return fractale.freefall();   // (0.60) l'appli au gyroscope (il a sa montée, pas de 'bord' en plus)
@@ -99,6 +101,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     b.addEventListener('pointerdown', (e) => {
       if (prefs().bords === false) return; tenus[cote] = true; if (tenus.g && tenus.d) lesDeux = true;
       annulerAppui(); annulerDroit();   // une tuile tenue ou un clic droit sous l'autre doigt ne partent pas pendant la fractale
+      quitterHolo();   // ◈ toucher un bord : l'hologramme redevient plat (la fractale prend l'hôte tel quel)
       arme = false; pEcrit = 0; hist = [[e.timeStamp || Date.now(), e.clientX]];
       try { const sel = W.getSelection && W.getSelection(); if (sel && sel.rangeCount) sel.removeAllRanges(); } catch (er) { /* */ }
       racine.classList.add('px-tire-bord');
@@ -230,6 +233,40 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     }
     vibrer('fx-refus'); signaler('ouvre un ploxion : bord bas gauche = plein écran, pip, cadre'); return null;
   }
+  // ◈ (0.66) LE XERPLOXION — RS-7 (14.10) : « le xerploxion, c'est la version holographique d'un ploxion ». Le ploxion à l'écran, VIVANT
+  // (on s'en sert toujours), devient un hologramme : il flotte au-dessus d'un socle de projection, penché par le gyroscope (relatif à la
+  // tenue du début), des lignes de balayage passent. Un transform posé à la main par image (pas de variable héritée : tout l'hôte serait
+  // recalculé), seulement quand il change. ◈ dans sa barre, ou un geste des bords (« holo ») ; toucher un bord, changer d'app : il redevient plat.
+  let holoV = null, holoOff = null, holoImage = 0, holoSocle = null;
+  const holo = { x: 0, y: 0, cx: 0, cy: 0, base: null, ecrit: '' };
+  function poserHolo() {
+    holoImage = 0; if (!holoV) return;
+    holo.x += (holo.cx - holo.x) * 0.18; holo.y += (holo.cy - holo.y) * 0.18;
+    const t = 'perspective(1100px) translate3d(0,-2%,0) rotateX(' + (14 + holo.y * 10).toFixed(2) + 'deg) rotateY(' + (holo.x * 16).toFixed(2) + 'deg) scale(.82)';
+    if (t !== holo.ecrit) { holo.ecrit = t; holoV.hote.style.transform = t; }
+    if (Math.abs(holo.cx - holo.x) + Math.abs(holo.cy - holo.y) > 0.002) holoImage = W.requestAnimationFrame(poserHolo);
+  }
+  function basculerHolo(on) {
+    const v = on === false ? null : courant; if (!v && !holoV) { vibrer('fx-refus'); signaler('ouvre un ploxion : ◈ en fait un hologramme'); return false; }
+    if (holoV && (on === false || holoV === v || on == null)) { quitterHolo(); return false; }
+    holoV = v; v.hote.classList.add('px-holo'); racine.classList.add('px-holo-on');
+    holoSocle = D.createElement('div'); holoSocle.className = 'px-holo-socle'; holoSocle.innerHTML = '<i></i><b></b>'; racine.appendChild(holoSocle);
+    holo.x = holo.y = holo.cx = holo.cy = 0; holo.base = null; holo.ecrit = '';
+    const M = W.jOSNatif && W.jOSNatif.mouvement;
+    if (M && M.ecouter) holoOff = M.ecouter((e) => {
+      const b = { x: +e.x || 0, y: +e.y || 0 }; if (!holo.base) holo.base = b;
+      holo.cx = Math.max(-1, Math.min(1, b.x - holo.base.x)); holo.cy = Math.max(-1, Math.min(1, b.y - holo.base.y));
+      if (!holoImage) holoImage = W.requestAnimationFrame(poserHolo);
+    }, { theme: false });
+    poserHolo(); vibrer('motif:fx-carte-xer');
+    return true;
+  }
+  function quitterHolo() {
+    if (!holoV) return; const v = holoV; holoV = null;
+    if (holoOff) { try { holoOff(); } catch (e) { /* */ } holoOff = null; } if (holoImage) { W.cancelAnimationFrame(holoImage); holoImage = 0; }
+    v.hote.classList.remove('px-holo'); v.hote.style.transform = ''; racine.classList.remove('px-holo-on');
+    if (holoSocle) { holoSocle.remove(); holoSocle = null; }
+  }
   // LE DROIT AU SILENCE, appliqué : ce qu'un ploxion (ou ses bions) accroche directement à la page (une bulle flottante, un panneau…)
   // lui appartient ; caché quand il passe en arrière-plan, rendu quand on le reprend, retiré quand on le ferme. (RS-7 12.10 : un carré
   // flottait sur l'accueil, laissé par un ploxion fermé.) Ce que l'app accroche elle-même (px-*, mk-*) et les scripts ne comptent pas.
@@ -273,6 +310,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   const fractale = creerFractale({ W, racine, scene, vibrer, glyphe: (n) => G(n), calme: () => !!prefs().calme,
     actif: () => prefs().fractale !== false && prefs().bords !== false && !tri && !verifEnCours && !D.querySelector('.px-voile,.px-feuille,.px-tuto'),
     surVide: () => signaler('ouvre d\'abord un ploxion'), carte: (o) => ouvrirCarte(o),
+    xerbion: (e) => lireXerbion({ boxion, id: e.id, bions: e.bions }).then(htmlXerbion),   // ⧈ (0.66) les données de ses bions, sur le dessus du cube
     // jeter une carte vers le haut (0.60) : un vivant se ferme, un endormi est oublié
     fermer: (id) => { if (vivants.has(id)) tuer(id); else { endormis = endormis.filter(e => e.id !== id); } majBords(); },
     file: () => fileBords().map(id => {
@@ -613,6 +651,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (b.hasAttribute('data-retour')) return retour();
     if (b.hasAttribute('data-reessayer')) return ouvrir(b.getAttribute('data-reessayer'));
     if (b.hasAttribute('data-minimiser')) return minimiser();
+    if (b.hasAttribute('data-holo')) return basculerHolo();
     if (b.hasAttribute('data-reprendre')) return ouvrir(b.getAttribute('data-reprendre'));
     if (b.hasAttribute('data-tuer')) { tuer(b.getAttribute('data-tuer')); return courant ? null : accueil(); }
     if (b.hasAttribute('data-basculer')) return basculer();
@@ -634,11 +673,12 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   // vidéos EN LECTURE, invisibles — et le mode audio d'arrière-plan gardait l'app éveillée : un flux continu toute la journée.
   // Caché → ses vidéos s'arrêtent et ne préchargent plus ; le son (la musique) continue, c'est voulu.
   function couperVideos(hote) { try { for (const m of hote.querySelectorAll('video')) { if (!m.paused) m.pause(); m.preload = 'none'; } } catch (e) { /* */ } }
-  function cacher(v) { if (!v) return; compter(v); couperVideos(v.hote); v.hote.hidden = true; v.hote.classList.remove('px-sans-entree'); v.vu = Date.now(); accrochesDe(v.id, n => { if (!n.hasAttribute('data-px-cache')) { n.setAttribute('data-px-cache', n.style.display || ''); n.style.display = 'none'; } }); }
+  function cacher(v) { if (!v) return; if (holoV === v) quitterHolo(); compter(v); couperVideos(v.hote); v.hote.hidden = true; v.hote.classList.remove('px-sans-entree'); v.vu = Date.now(); accrochesDe(v.id, n => { if (!n.hasAttribute('data-px-cache')) { n.setAttribute('data-px-cache', n.style.display || ''); n.style.display = 'none'; } }); }
   function tuer(id) {
     const v = vivants.get(id); if (!v) return;
     if (v === courant) { compter(v); courant = null; }
     if (flottant && flottant.v === v) poserFlottant(null);
+    if (holoV === v) quitterHolo();
     vivants.delete(id); pile = pile.filter(x => x !== id); fractale.oublier(id); pleins.delete(id);   // (0.63) sa carte part (sinon la toucher le faisait revivre)
     try { if (v.inst && typeof v.inst.unmount === 'function') v.inst.unmount(); } catch (e) { console.warn('[ploxi0n] unmount', id, e); }
     v.hote.innerHTML = ''; v.hote.remove(); majBords();
@@ -650,6 +690,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">' + G('retour') + '</button><span>' + (prefs().glyphes === false ? icone(p) : glyphePloxion(p)) + ' ' + texte(p.nom || id) + '</span>'
       + '<span class="px-hud"><span class="px-hud-c">' + (hud ? hud.html(true) : '') + '</span>'
       + (autres > 0 ? '<button class="px-mini" data-basculer aria-label="basculer entre les ploxions ouverts">' + G('basculer') + '<b>' + (autres + 1) + '</b></button>' : '')
+      + '<button class="px-mini" data-holo aria-label="xerploxion, l\'hologramme">◈</button>'
       + '<button class="px-mini" data-minimiser aria-label="minimiser">' + G('minimiser') + '</button>'
       + (verrou && !p.interne ? '<button class="px-verrou" data-verrou aria-label="verrou Face ID">' + (verrous.has(id) ? G('verrou') : G('deverrou')) + '</button>' : '') + '</span></div>';
     const bv = ecran.querySelector('[data-verrou]');
@@ -749,6 +790,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
       etat: verrous.has(p.id) && !deverrouilles.has(p.id) ? 'verrou' : vivants.has(p.id) ? 'vivant' : endormis.some(e => e.id === p.id) ? 'endormi' : 'installe' })),
     aller: (id) => allerA(id, { muet: true }),
     /** (0.63) l'état du ploxion à l'écran (normal → plein → pip → cadre) ; ce qui flotte */
+    holo: (on) => basculerHolo(on), holoActif: () => !!holoV,
     etat: () => cyclerEtat(), flottant: () => (flottant ? { id: flottant.v.id, mode: flottant.mode } : null), plein: () => !!(courant && pleins.has(courant.id)),
     /** (0.63) pour la carte : tout ce qui vit, dort ou est installé, et l'état de chacun */
     etatsCarte: () => ({ courant: courant ? courant.id : null, vivants: [...vivants.keys()], endormis: endormis.map(e => e.id), verrous: [...verrous].filter(id => !deverrouilles.has(id)) }),
