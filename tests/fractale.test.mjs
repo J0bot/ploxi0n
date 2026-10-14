@@ -83,8 +83,10 @@ test('tenir 1,9 s : le slider défile tout seul vers le bord tenu ; lâcher ouvr
     await r.ouvrir('a');
     const bd = racine.querySelector('.px-bord-d'), w = W.innerWidth;
     ev(W, bd, 'pointerdown', w - 4); await attendre(2000);
-    assert.ok(racine.classList.contains('px-fx-suit'), 'le slider (il suit, sans transition)');
-    await attendre(500);
+    assert.ok(racine.classList.contains('px-fx-slider'), 'le slider');
+    await attendre(260);
+    assert.ok(racine.classList.contains('px-fx-suit'), '(0.63) l\'entrée jouée (0,2 s), la boucle mène : sans transition');
+    await attendre(240);
     ev(W, bd, 'pointerup', w - 4); await attendre(360);
     assert.notEqual(r.courant(), 'a', 'ça a défilé vers la droite : une app plus loin s\'ouvre');
     assert.ok(['b', 'c', 'd', 'e'].includes(r.courant()));

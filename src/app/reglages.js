@@ -6,7 +6,7 @@
 // Les bions : chacun avec sa taille et les ploxions qui l'utilisent ; le couper (plus chargé), le mettre à jour, le retirer s'il ne sert plus.
 import { testerClavier } from './clavier.js';
 import { PLUGIONS } from '../natif/plugions.js';
-import { STYLES, EVENEMENTS } from '../natif/haptique.js';
+import { STYLES, EVENEMENTS, MOTIFS_APP, DENSITES } from '../natif/haptique.js';
 import { BRANCHEMENTS } from '../natif/web-natif.js';
 import { versGlyphe, glyphePloxion } from './glyphes.js';   // ◇ (0.54) des glyphes, plus d'emoji
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -23,7 +23,7 @@ export const GROUPES = [   // [page, glyphe (src/app/glyphes.js), nom]
   ['tes ploxions', [['ploxions', 'portion', 'Ploxions'], ['bions', 'bion', 'Bions'], ['donnees', 'donnees', 'Données']]],
   ['', [['apropos', 'chilltekk', 'À propos']]],
 ];
-export const SOUS = { gestes: 'navigation', 'haptique-motifs': 'haptique', 'haptique-evenements': 'haptique', 'haptique-ploxions': 'haptique' };
+export const SOUS = { gestes: 'navigation', 'haptique-motifs': 'haptique', 'haptique-evenements': 'haptique', 'haptique-fractale': 'haptique', 'haptique-ploxions': 'haptique' };
 
 export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, vibrer = () => {}, haptique = null, lecteur = null, lecteurNatif = null, sante = null, cube = null, valeurs = () => ({}), version = '?' }) {
   const ELS = { tsoin: '⧗ noter un tsoin', vocal: 'vocal', compte: 'compte', reseau: 'réseau et mode connecté', heure: 'heure', chercher: 'chercher un ploxion', epingles: 'ploxions épinglés' };
@@ -50,7 +50,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
     const zone = hote.querySelector('[data-c]');
     const section = (k, titre, corps) => '<section data-s="' + k + '"><h3>' + titre + '</h3>' + corps + '</section>';
     const lien = (k, ic, titre, sous) => '<button class="lien" data-rg-aller="' + k + '"><span class="ic">' + versGlyphe(ic) + '</span><span>' + esc(titre) + (sous ? '<small>' + esc(sous) + '</small>' : '') + '</span><span class="chev">›</span></button>';
-    const TITRES = Object.fromEntries([...GROUPES.flatMap(([, l]) => l.map(([k, i, n]) => [k, n])), ['gestes', 'Gestes des bords'], ['haptique-motifs', 'Tes motifs'], ['haptique-evenements', 'Les événements'], ['haptique-ploxions', 'La signature des ploxions']]);
+    const TITRES = Object.fromEntries([...GROUPES.flatMap(([, l]) => l.map(([k, i, n]) => [k, n])), ['gestes', 'Gestes des bords'], ['haptique-motifs', 'Tes motifs'], ['haptique-evenements', 'Les événements'], ['haptique-fractale', 'La fractale et les bords'], ['haptique-ploxions', 'La signature des ploxions']]);
     const bascule = (attr, on, texte, sous) => '<label class="l"><span>' + texte + (sous ? '<small>' + sous + '</small>' : '') + '</span><input type="checkbox" ' + attr + (on ? ' checked' : '') + '></label>';
     const seg = (cle, valeurs, actuel, texte, sous) => '<div class="l ls"><span>' + texte + (sous ? '<small>' + sous + '</small>' : '') + '</span><div class="seg">' + valeurs.map(([v, n]) => '<button data-pv="' + cle + '" data-v="' + esc(v) + '"' + (String(v) === String(actuel) ? ' class="on"' : '') + '>' + esc(n) + '</button>').join('') + '</div></div>';
 
@@ -118,9 +118,14 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + bascule('data-pb="plaque"', P.plaque, 'Plaque gravée', '« cycle 7026 · … » sur l\'accueil') + '</div>') : '')
         + (haptique ? (() => { const hc = haptique.config(), noms = Object.keys(hc.motifs);
             const options = (actuel) => '<option value="aucun"' + (actuel === 'aucun' ? ' selected' : '') + '>— rien</option>' + STYLES.map(([k, n]) => '<option value="' + k + '"' + (actuel === k ? ' selected' : '') + '>' + esc(n) + '</option>').join('')
-              + noms.map(m => '<option value="motif:' + esc(m) + '"' + (actuel === 'motif:' + m ? ' selected' : '') + '>' + esc(m) + '</option>').join('');
+              + [...noms, ...Object.keys(MOTIFS_APP).filter(m => !noms.includes(m))].map(m => '<option value="motif:' + esc(m) + '"' + (actuel === 'motif:' + m ? ' selected' : '') + '>' + esc(m) + '</option>').join('');   // (0.63) + les motifs de l'app
+            const selEv = (ev, large) => '<select data-ev="' + ev + '" style="max-width:' + large + ';background:var(--surface2,#151021);color:inherit;border:2px solid var(--bord,#272036);border-radius:10px;padding:6px;font:13px inherit">' + options(hc.evenements[ev] || 'aucun') + '</select>';
+            // (0.63) la fractale et les bords : les événements du groupe « fractale », rangés par famille, et la densité
+            const familles = []; for (const [ev, n, g, f] of EVENEMENTS) { if (g !== 'fractale') continue; let x = familles.find(y => y[0] === f); if (!x) familles.push(x = [f, []]); x[1].push([ev, n]); }
+            const dens = haptique.densite ? haptique.densite() : 'pleine';
             return section('haptique', 'Haptique', '<div class="bloc">' + (P ? bascule('data-pb="haptique"', P.haptique !== false, 'Haptique', 'de petites vibrations : ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs — et navigator.vibrate des ploxions') : '')
               + lien('haptique-motifs', '', 'Tes motifs', noms.length ? noms.length + ' motif(s) inventé(s)' : 'en inventer un') + lien('haptique-evenements', '', 'Les événements', 'ouvrir, revenir, notification… un style ou un motif chacun')
+              + lien('haptique-fractale', 'navigation', 'La fractale et les bords', 'aperçu, slider, cube, freefall, la carte… · ' + dens)
               + lien('haptique-ploxions', '▣', 'La signature des ploxions', 'chaque ploxion se sent à l\'ouverture') + '</div>')
               + section('haptique-motifs', 'Tes motifs', '<div class="bloc">'
               + '<div class="l ls"><span>Inventer un motif<small>touche les pas dans l\'ordre (· = une pause), donne un nom, ▶ pour l\'essayer</small></span><div class="seg" data-studio>'
@@ -128,7 +133,12 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
               + '<input class="rg-q" data-motif-nom placeholder="nom du motif" style="margin-top:8px"><div class="seg" style="margin-top:8px"><span data-motif-pas style="flex:1;color:var(--muted,#8aa0c0);font:12px var(--mono,monospace);align-self:center">(vide)</span><button data-motif="essayer">▶ essayer</button><button class="p" data-motif="sauver">sauver</button></div></div>'
               + noms.map(m => '<div class="l"><span class="ic"></span><span>' + esc(m) + '<small>' + esc(hc.motifs[m].map(([st, ms]) => st + (ms ? ' ' + ms + 'ms' : '')).join(' · ')) + '</small></span><span class="act"><button class="bas" data-jouer="motif:' + esc(m) + '">▶</button><button class="bas danger" data-motif-suppr="' + esc(m) + '"></button></span></div>').join('')
               + '</div>') + section('haptique-evenements', 'Les événements', '<p class="msg">Chaque événement joue un style ou un de tes motifs :</p><div class="bloc">'
-              + EVENEMENTS.map(([ev, n]) => '<div class="l"><span>' + esc(n) + '</span><select data-ev="' + ev + '" style="max-width:48%;background:var(--surface2,#151021);color:inherit;border:2px solid var(--bord,#272036);border-radius:10px;padding:6px;font:13px inherit">' + options(hc.evenements[ev] || 'aucun') + '</select></div>').join('')
+              + EVENEMENTS.filter(e => e[2] !== 'fractale').map(([ev, n]) => '<div class="l"><span>' + esc(n) + '</span>' + selEv(ev, '48%') + '</div>').join('')
+              + '</div>') + section('haptique-fractale', 'La fractale et les bords', '<p class="msg">Tenir un bord, la fractale, le slider, le cube, la carte : chaque geste se sent (▶ pour le sentir). La densité choisit combien :</p><div class="bloc">'
+              + '<div class="l ls"><span>Densité<small>sobre : les gestes qui arrivent · normale : + les seuils · pleine : + chaque cran</small></span><div class="seg">'
+              + DENSITES.map(([v, n]) => '<button data-hdens="' + v + '"' + (v === dens ? ' class="on"' : '') + '>' + esc(n) + '</button>').join('') + '</div></div>'
+              + familles.map(([f, l]) => '<div class="l" style="min-height:0;padding:14px 16px 4px;font:600 10px var(--mono,monospace);letter-spacing:.18em;text-transform:uppercase;color:var(--muted,#8aa0c0)"><span>' + esc(f) + '</span></div>'
+                + l.map(([ev, n]) => '<div class="l"><span>' + esc(n) + '</span><span class="act"><button class="bas" data-jouer="' + ev + '">▶</button>' + selEv(ev, '40vw') + '</span></div>').join('')).join('')
               + '</div>') + section('haptique-ploxions', 'La signature des ploxions', '<p class="msg">Chaque ploxion a sa signature d\'ouverture (▶ pour la sentir), ou celle que tu choisis :</p><div class="bloc">'
               + R().catalogue().filter(p => !p.interne).slice(0, 80).map(p => { const v = (hc.ploxions || {})[p.id] || 'signature';
                   return '<div class="l"><span class="ic" style="color:hsl(' + 0 + ' 0% 80%)">' + glyphePloxion(p) + '</span><span>' + esc(p.nom || p.id) + '<small>' + esc(v === 'signature' ? haptique.signature(p.id).map(([st]) => st).join(' · ') : v.replace('motif:', '')) + '</small></span>'
@@ -256,6 +266,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       if (b.hasAttribute('data-sentir')) { haptique.jouerPloxion(b.getAttribute('data-sentir'), 'ouvrir', null, { force: true }); return; }
       if (b.hasAttribute('data-jouer')) { haptique.jouer(b.getAttribute('data-jouer'), { force: true }); return; }
       if (b.hasAttribute('data-motif-suppr')) { await haptique.supprimer(b.getAttribute('data-motif-suppr')); return peindre(); }
+      if (b.hasAttribute('data-hdens') && haptique && haptique.assignerDensite) { await haptique.assignerDensite(b.getAttribute('data-hdens')); vibrer('selection'); return peindre(); }
       if (b.hasAttribute('data-lnat-moteur') && lecteurNatif) { await lecteurNatif.regler({ moteur: b.getAttribute('data-lnat-moteur') }); vibrer('selection'); return peindre(); }
       if (b.hasAttribute("data-rg-aller")) return aller(b.getAttribute("data-rg-aller"));
       if (b.hasAttribute("data-rg-retour")) return aller(SOUS[page] || null);

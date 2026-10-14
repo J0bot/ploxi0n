@@ -18,7 +18,11 @@ const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
   + R.map(r => `M512 ${512 - r}L${512 + r} 512L512 ${512 + r}L${512 - r} 512Z`).join('') + '"/></svg>';
 
-export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null, surMontrer = null } = {}) {
+/** (0.63) ce qu'un geste des bords peut faire (⚙ › Gestes des bords, le HUD de tuto) */
+export const ACTIONS_BORDS = [['precedente', '← app précédente'], ['suivante', 'app suivante →'], ['accueil', '⌂ accueil'], ['minimiser', '▁ minimiser'], ['basculer', '⧉ basculer'],
+  ['chercher', 'chercher'], ['reglages', 'réglages'], ['portion', '◈ portion'], ['tsoin', '⧗ noter un tsoin'], ['freefall', '◇ freefall (gyroscope)'],
+  ['etat', '▣ l\'état : plein écran, pip, cadre'], ['tuto', '◎ le tuto ici'], ['carte', '⊞ tout le xerboxion'], ['rien', '— rien']];
+export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null, surMontrer = null, surTuto = null } = {}) {
   // ▤ (0.51) les mini docks : miniDocks = { surVivants(), surFermeture(id), page() } — ⧉ ouvre leur page, ils remplacent « en arrière-plan »
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
@@ -54,24 +58,35 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   // LES DEUX BORDS EN MÊME TEMPS (RS-7 12.10 : « quand on swipe bord droit et gauche en même temps, ça ouvre le portion ») : doubleBord()
   // LES GESTES DES BORDS (RS-7 12.10 : « pas seulement sur le milieu, mais sur les bords aussi, pour des actions différentes ») : chaque bord a
   // trois zones (haut, milieu, bas) ; les deux bords ensemble aussi — chaque geste fait l'action choisie (⚙ › Navigation, prefs().gestes)
-  const GESTES_DEFAUT = { 'g-haut': 'accueil', 'g-milieu': 'precedente', 'g-bas': 'basculer', 'd-haut': 'chercher', 'd-milieu': 'suivante', 'd-bas': 'minimiser',
-    'deux-haut': 'reglages', 'deux-milieu': 'portion', 'deux-bas': 'tsoin' };
+  // (0.63, RS-7 : « haut gauche, le HUD de tuto ; en bas à gauche, cycler l'état du ploxion (plein écran, normal, pip, frame) ; à droite en
+  // bas, accueil ou minimiser ; les deux côtés en même temps, c'est le portion »)
+  const GESTES_DEFAUT = { 'g-haut': 'tuto', 'g-milieu': 'precedente', 'g-bas': 'etat', 'd-haut': 'chercher', 'd-milieu': 'suivante', 'd-bas': 'minimiser',
+    'deux-haut': 'portion', 'deux-milieu': 'portion', 'deux-bas': 'portion' };
   const geste = (k) => { const g = prefs().gestes || {}; return g[k] || GESTES_DEFAUT[k]; };
-  function faire(action) {
+  function faire(action, { vitesse = 0 } = {}) {
     if (!action || action === 'rien') return;
-    if (action === 'precedente' || action === 'suivante') { if (vivants.size) aCote(action === 'suivante' ? 1 : -1); return; }
+    if (action === 'precedente' || action === 'suivante') { if (vivants.size) aCote(action === 'suivante' ? 1 : -1, { vitesse }); return; }
     if (action === 'accueil') { if (courant) { cacher(courant); courant = null; } pile = []; vibrer('bord'); return accueil(); }
-    if (action === 'minimiser') return courant ? minimiser() : null;
+    if (action === 'minimiser') return courant ? minimiser() : (flottant ? null : vibrer('fx-refus'));   // à l'accueil : déjà là
+    if (action === 'etat') return cyclerEtat();
+    if (action === 'tuto') return surTuto ? surTuto(courant ? courant.id : null) : null;
     if (action === 'basculer') return vivants.size + endormis.length ? basculer() : null;
+    if (action === 'freefall') return fractale.freefall();   // (0.60) l'appli au gyroscope (il a sa montée, pas de 'bord' en plus)
+    if (action === 'carte') return ouvrirCarte();   // (0.63) tout le xerboxion
     vibrer(action === 'portion' ? 'portion' : 'bord');
     if (action === 'tsoin') return tsoin ? tsoin() : null;
-    if (action === 'freefall') return fractale.freefall();   // (0.60) l'appli au gyroscope
     if (action === 'chercher') return ouvrir('marketplace', { chercher: '1' });
     if (action === 'reglages') return ouvrir('reglages-app');
     if (action === 'portion') return doubleBord ? doubleBord() : (ouvrirExterne && ouvrirExterne('portion'));
     if (action.startsWith('ouvrir:')) { const id = action.slice(7); return parId.has(id) ? ouvrir(id) : (ouvrirExterne && ouvrirExterne(id)); }
   }
   const tenus = { g: false, d: false }, zones = { g: 'milieu', d: 'milieu' }; let lesDeux = false;
+  /** la vitesse du doigt sur un bord (px/ms, vers l'intérieur ou pas : sa valeur absolue) sur les 80 dernières ms */
+  const vitesseBord = (h, t, x) => { let s = h[0]; for (const q of h) if (t - q[0] <= 80 && t - q[0] >= 8) { s = q; break; } return s ? Math.abs(x - s[1]) / Math.max(8, t - s[0]) : 0; };
+  const lachers = [];   // (0.63) un pointerup perdu (arrière-plan, une vue native, la capture perdue) ne colle plus l'état des bords
+  // (0.63) plus de règle « .px-tire-bord * » (tout le DOM recalculé à chaque toucher de bord) : une sélection qui fuit est effacée
+  D.addEventListener('selectionchange', () => { if (!tenus.g && !tenus.d) return; try { const sel = W.getSelection && W.getSelection(); if (sel && sel.rangeCount) sel.removeAllRanges(); } catch (er) { /* */ } });
+  D.addEventListener('visibilitychange', () => { if (D.hidden) for (const l of lachers) l({ type: 'pointercancel', clientX: null }); });
   for (const cote of ['g', 'd']) {
     const b = D.createElement('div'); b.className = 'px-bord px-bord-' + cote; b.setAttribute('aria-hidden', 'true'); racine.appendChild(b);
     // (0.60.1, RS-7 sur l'iPhone : « ça sélectionne le texte et ça bug de malade ») tenir un bord, c'était pour iOS un appui long : la
@@ -80,9 +95,11 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     // RS-7 : « c'est quand on TIRE sur les bords » : le doigt traverse le texte du ploxion → le touchmove aussi, et tant que le doigt est
     // sur un bord, plus aucune sélection dans toute l'app (px-tire-bord)
     for (const t of ['touchstart', 'touchmove']) b.addEventListener(t, (e) => { if (prefs().bords !== false && e.cancelable) e.preventDefault(); }, { passive: false });
-    let x0 = null, id0 = null;
+    let x0 = null, id0 = null, arme = false, armeT = 0, pEcrit = 0, hist = [];
     b.addEventListener('pointerdown', (e) => {
       if (prefs().bords === false) return; tenus[cote] = true; if (tenus.g && tenus.d) lesDeux = true;
+      annulerAppui(); annulerDroit();   // une tuile tenue ou un clic droit sous l'autre doigt ne partent pas pendant la fractale
+      arme = false; pEcrit = 0; hist = [[e.timeStamp || Date.now(), e.clientX]];
       try { const sel = W.getSelection && W.getSelection(); if (sel && sel.rangeCount) sel.removeAllRanges(); } catch (er) { /* */ }
       racine.classList.add('px-tire-bord');
       const r = b.getBoundingClientRect(), f = r.height ? (e.clientY - r.top) / r.height : 0.5; zones[cote] = f < 0.33 ? 'haut' : f > 0.66 ? 'bas' : 'milieu';
@@ -90,21 +107,128 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
       if (lesDeux) fractale.annule(); else fractale.appui(cote, e); });   // ⧉ tenir : aperçu, fractale, slider
     b.addEventListener('pointermove', (e) => {
       if (x0 == null || e.pointerId !== id0) return;
+      const t = e.timeStamp || Date.now(); hist.push([t, e.clientX]); while (hist.length > 2 && t - hist[0][0] > 100) hist.shift();
       if (!lesDeux) fractale.deplace(e);
-      if (fractale.etat() !== 'repos') { b.style.removeProperty('--p'); return; }
-      const dx = (e.clientX - x0) * (cote === 'g' ? 1 : -1);
-      const p = Math.max(0, Math.min(1, dx / SEUIL)); if (p >= 1 && b.style.getPropertyValue('--p') !== '1') vibrer('bord-seuil');
-      b.style.setProperty('--p', String(p));
+      if (fractale.etat() !== 'repos' && fractale.etat() !== 'depart') { if (pEcrit) { pEcrit = 0; b.style.removeProperty('--p'); } return; }
+      const dx = (e.clientX - x0) * (cote === 'g' ? 1 : -1), v = vitesseBord(hist, t, e.clientX);
+      // (0.63) le seuil avec une hystérésis (armé à 64 px, désarmé sous 52) ; franchi en flick : plus léger, le lâcher suit tout de suite
+      if (!arme && dx >= SEUIL) { arme = true; armeT = t; vibrer('bord-seuil', null, { niveau: v > 1.5 ? -1 : 0 }); }
+      else if (arme && dx < SEUIL - 12 && t - armeT > 120) { arme = false; armeT = t; vibrer('fx-degage'); }
+      const p = Math.max(0, Math.min(1, dx / SEUIL)); if (Math.abs(p - pEcrit) >= 0.02 || (p === 1) !== (pEcrit === 1)) { pEcrit = p; b.style.setProperty('--p', String(p)); }
     });
     const lacher = (e) => {
       if (x0 == null) return;
-      const dx = ((e.clientX == null ? x0 : e.clientX) - x0) * (cote === 'g' ? 1 : -1);
-      x0 = null; tenus[cote] = false; b.classList.remove('px-tire'); b.style.removeProperty('--p'); if (!tenus.g && !tenus.d) racine.classList.remove('px-tire-bord');
-      if (e.type === 'pointercancel') fractale.annule(); else if (!lesDeux && fractale.relache()) return;   // la fractale a pris le geste
-      if (lesDeux) { if (!tenus.g && !tenus.d) { lesDeux = false; if (e.type === 'pointerup') faire(geste('deux-' + zones.g)); } return; }
-      if (e.type === 'pointerup' && dx > SEUIL) faire(geste(cote + '-' + zones[cote]));
+      const dx = ((e.clientX == null ? x0 : e.clientX) - x0) * (cote === 'g' ? 1 : -1), v = e.clientX == null ? 0 : vitesseBord(hist, e.timeStamp || Date.now(), e.clientX);
+      x0 = null; tenus[cote] = false; b.classList.remove('px-tire'); if (pEcrit) { pEcrit = 0; b.style.removeProperty('--p'); } if (!tenus.g && !tenus.d) racine.classList.remove('px-tire-bord');
+      if (e.type !== 'pointerup') { fractale.annule(); if (!tenus.g && !tenus.d) lesDeux = false; return; }   // annulé, perdu : rien ne part
+      if (!lesDeux && fractale.relache(e)) return;   // la fractale a pris le geste
+      if (lesDeux) { if (!tenus.g && !tenus.d) { lesDeux = false; faire(geste('deux-' + zones.g)); } return; }
+      if (dx > SEUIL) faire(geste(cote + '-' + zones[cote]), { vitesse: v });
     };
+    lachers.push(lacher);
     b.addEventListener('pointerup', lacher); b.addEventListener('pointercancel', lacher);
+    b.addEventListener('lostpointercapture', lacher);   // la capture perdue sans pointerup (après un pointerup, x0 == null : sans effet)
+  }
+  // ▣ (0.63, RS-7 : « il faut pouvoir ouvrir les ploxions en plein écran ; en bas à gauche on peut cycler entre les différents états : plein
+  // écran, normal, pip, frame comme sur wayland ») LES ÉTATS D'UN PLOXION — normal → plein → pip → cadre → normal :
+  //   plein  : sa barre s'efface, il prend tout l'écran, jusque sous l'île (gardé pour lui : on le retrouve plein en y revenant)
+  //   pip    : il flotte en petit dans un coin, VIVANT (une vraie miniature : son hôte, réduit, rien n'est recréé), par-dessus l'accueil ou
+  //            un autre ploxion ; le glisser le déplace (il s'aimante au coin le plus proche), le toucher le ramène, deux touchers : un cadre
+  //   cadre  : une fenêtre, comme sur Wayland : sa barre (la déplacer ; ⤢ en grand, ▁ en pip, ✕ fermer), son coin (la redimensionner) ;
+  //            on s'en sert pendant que le reste vit dessous
+  // Un seul flottant à la fois ; le style vit dans des variables (--fx, --fy, --fs, --fw, --fh) : la fractale peut le prendre en carte et
+  // le rendre tel quel.
+  let flottant = null; const pleins = new Set();
+  let poigne = null, barreCadre = null;
+  function appliquerFlottant() {
+    if (!flottant) return; const f = flottant, h = f.v.hote.style;
+    h.setProperty('--fx', f.x.toFixed(1) + 'px'); h.setProperty('--fy', f.y.toFixed(1) + 'px'); h.setProperty('--fs', String(f.s)); h.setProperty('--fw', f.w + 'px'); h.setProperty('--fh', f.h + 'px');
+    const l = f.w * f.s, t = f.h * f.s;
+    if (poigne) Object.assign(poigne.style, { transform: 'translate3d(' + f.x.toFixed(1) + 'px,' + f.y.toFixed(1) + 'px,0)', width: l + 'px', height: t + 'px' });
+    if (barreCadre) { Object.assign(barreCadre.style, { transform: 'translate3d(' + f.x.toFixed(1) + 'px,' + (f.y - 38).toFixed(1) + 'px,0)', width: l + 'px' }); barreCadre.style.setProperty('--ch', t + 'px'); }
+  }
+  /** poser (ou retirer : null) le flottant */
+  function poserFlottant(v, mode = 'pip') {
+    if (flottant && (!v || flottant.v !== v)) {
+      const a = flottant.v; flottant = null;
+      a.hote.classList.remove('px-flottant', 'px-pip', 'px-cadre'); for (const k of ['--fx', '--fy', '--fs', '--fw', '--fh']) a.hote.style.removeProperty(k);
+      if (a !== courant) a.hote.hidden = true;
+    }
+    if (poigne) { poigne.remove(); poigne = null; } if (barreCadre) { barreCadre.remove(); barreCadre = null; }
+    racine.classList.toggle('px-a-flottant', !!v);
+    if (!v) return;
+    const Wd = W.innerWidth || 390, Hd = W.innerHeight || 844, ancien = flottant;
+    if (mode === 'pip') { const s = 0.34; flottant = { v, mode, s, w: Wd, h: Hd, x: ancien && ancien.mode === 'pip' ? ancien.x : Wd - Wd * s - 14, y: ancien && ancien.mode === 'pip' ? ancien.y : Hd - Hd * s - 118 }; }
+    else flottant = { v, mode, s: 1, w: Math.round(Wd * 0.9), h: Math.round(Hd * 0.56), x: Math.round(Wd * 0.05), y: Math.round(Hd * 0.2) };
+    v.hote.hidden = false; v.hote.classList.add('px-flottant'); v.hote.classList.toggle('px-pip', mode === 'pip'); v.hote.classList.toggle('px-cadre', mode === 'cadre');
+    if (mode === 'pip') { poigne = D.createElement('div'); poigne.className = 'px-pip-poigne'; poigne.setAttribute('aria-label', (parId.get(v.id) || {}).nom || v.id); racine.appendChild(poigne); brancherPoigne(poigne); }
+    else {
+      const p = parId.get(v.id) || { nom: v.id };
+      barreCadre = D.createElement('div'); barreCadre.className = 'px-cadre-barre';
+      barreCadre.innerHTML = '<span>' + icone(p) + '<b>' + texte(p.nom || v.id) + '</b></span><button type="button" data-cadre="grand" aria-label="en grand">⤢</button><button type="button" data-cadre="pip" aria-label="en pip">▁</button><button type="button" data-cadre="fermer" aria-label="fermer">✕</button><i class="px-cadre-coin"></i>';
+      racine.appendChild(barreCadre); brancherCadre(barreCadre);
+    }
+    appliquerFlottant();
+  }
+  /** le pip : glisser = le déplacer (aimanté au coin le plus proche), toucher = le ramener en grand, deux touchers = un cadre */
+  function brancherPoigne(el) {
+    let d = null, dernierTap = 0;
+    el.addEventListener('touchstart', (e) => { if (e.cancelable) e.preventDefault(); }, { passive: false });
+    el.addEventListener('pointerdown', (e) => { if (!flottant) return; d = { x: e.clientX, y: e.clientY, fx: flottant.x, fy: flottant.y, bouge: false }; try { el.setPointerCapture(e.pointerId); } catch (er) { /* */ } racine.classList.add('px-pip-tenu'); });
+    el.addEventListener('pointermove', (e) => { if (!d || !flottant) return; const dx = e.clientX - d.x, dy = e.clientY - d.y; if (!d.bouge && Math.hypot(dx, dy) > 8) d.bouge = true; if (!d.bouge) return; flottant.x = d.fx + dx; flottant.y = d.fy + dy; appliquerFlottant(); });
+    const fin = (e) => {
+      if (!d || !flottant) return; const dd = d; d = null; racine.classList.remove('px-pip-tenu');
+      if (e.type === 'pointercancel') return aimanter();
+      if (dd.bouge) return aimanter();
+      const t = Date.now(); if (t - dernierTap < 320) { dernierTap = 0; W.clearTimeout(el._tap); vibrer('vue', null, { niveau: 1 }); return poserFlottant(flottant.v, 'cadre'); }
+      dernierTap = t; el._tap = W.setTimeout(() => { if (flottant && flottant.mode === 'pip') { const id = flottant.v.id; vibrer('fx-ouvrir', id); allerA(id, { muet: true }); } }, 330);
+    };
+    el.addEventListener('pointerup', fin); el.addEventListener('pointercancel', fin);
+  }
+  function aimanter() {
+    if (!flottant) return; const f = flottant, Wd = W.innerWidth || 390, Hd = W.innerHeight || 844, l = f.w * f.s, t = f.h * f.s, m = 14;
+    f.x = f.x + l / 2 < Wd / 2 ? m : Wd - l - m; f.y = f.y + t / 2 < Hd / 2 ? 104 : Hd - t - 118;   // sous l'île ; au-dessus du dock
+    racine.classList.add('px-pip-aimante'); appliquerFlottant(); vibrer('fx-pose');
+    W.setTimeout(() => racine.classList.remove('px-pip-aimante'), 320);
+  }
+  /** le cadre : sa barre le déplace ; ⤢ ▁ ✕ ; le coin le redimensionne */
+  function brancherCadre(el) {
+    let d = null;
+    el.addEventListener('click', (e) => {
+      const b = e.target.closest && e.target.closest('[data-cadre]'); if (!b || !flottant) return; e.stopPropagation();
+      const a = b.getAttribute('data-cadre'), id = flottant.v.id;
+      if (a === 'grand') { vibrer('fx-ouvrir', id); allerA(id, { muet: true }); }
+      else if (a === 'pip') { vibrer('vue'); poserFlottant(flottant.v, 'pip'); }
+      else if (a === 'fermer') { vibrer('fx-ferme'); poserFlottant(null); tuer(id); }
+    });
+    el.addEventListener('touchstart', (e) => { if (e.cancelable && !(e.target.closest && e.target.closest('button'))) e.preventDefault(); }, { passive: false });
+    el.addEventListener('pointerdown', (e) => {
+      if (!flottant || (e.target.closest && e.target.closest('button'))) return;
+      const coin = !!(e.target.closest && e.target.closest('.px-cadre-coin'));
+      d = { x: e.clientX, y: e.clientY, f: { ...flottant }, coin }; try { el.setPointerCapture(e.pointerId); } catch (er) { /* */ }
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (!d || !flottant) return; const dx = e.clientX - d.x, dy = e.clientY - d.y;
+      if (d.coin) { flottant.w = Math.max(200, d.f.w + dx); flottant.h = Math.max(160, d.f.h + dy); }
+      else { flottant.x = d.f.x + dx; flottant.y = Math.max(40, d.f.y + dy); }
+      appliquerFlottant();
+    });
+    const fin = () => { if (d) { d = null; vibrer('fx-pose'); } };
+    el.addEventListener('pointerup', fin); el.addEventListener('pointercancel', fin);
+  }
+  /** ▣ le bord bas gauche : l'état suivant (le ploxion à l'écran, sinon le flottant) */
+  function cyclerEtat() {
+    if (courant) {
+      const v = courant;
+      if (!pleins.has(v.id)) { pleins.add(v.id); racine.classList.add('px-plein-ploxion'); vibrer('vue', null, { niveau: 1 }); signaler('plein écran · bord bas gauche : l\'état suivant'); return 'plein'; }
+      pleins.delete(v.id); racine.classList.remove('px-plein-ploxion');
+      courant = null; poserFlottant(v, 'pip'); vibrer('fx-ferme'); accueil(); return 'pip';
+    }
+    if (flottant) {
+      if (flottant.mode === 'pip') { vibrer('vue', null, { niveau: 1 }); poserFlottant(flottant.v, 'cadre'); return 'cadre'; }
+      const id = flottant.v.id; vibrer('fx-ouvrir', id); allerA(id, { muet: true }); return 'normal';
+    }
+    vibrer('fx-refus'); signaler('ouvre un ploxion : bord bas gauche = plein écran, pip, cadre'); return null;
   }
   // LE DROIT AU SILENCE, appliqué : ce qu'un ploxion (ou ses bions) accroche directement à la page (une bulle flottante, un panneau…)
   // lui appartient ; caché quand il passe en arrière-plan, rendu quand on le reprend, retiré quand on le ferme. (RS-7 12.10 : un carré
@@ -117,28 +241,38 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   function accrochesDe(id, f) { for (const [n, x] of accroches) if (x === id) f(n); }
   /** passer à l'app d'à côté : sens +1 (suivante), -1 (précédente) ; l'accueil est au bout de la file */
   const fileBords = () => [null, ...vivants.keys(), ...endormis.map(e => e.id)];
-  function aCote(sens) {
+  let rafale = 0, arrivee = 0;
+  function aCote(sens, { vitesse = 0 } = {}) {
     const file = fileBords();
     const i = file.indexOf(courant ? courant.id : null);
     const cible = file[(i + sens + file.length) % file.length];
     if (cible === (courant ? courant.id : null)) return false;
-    vibrer('bord');
-    allerA(cible, { sens });
+    // (0.63) l'énergie du geste : lent = léger, lancé = fort ; une rafale (deux en moins de 0,6 s) : plus léger
+    const t = Date.now(), niveau = t - rafale < 600 ? -1 : vitesse > 1.5 ? 1 : vitesse && vitesse < 0.5 ? -1 : 0; rafale = t;
+    if (cible == null || (vivants.has(cible) && !bloque(cible))) vibrer('bord', null, { niveau });   // un endormi, un verrouillé : ouvrir() joue déjà sa signature
+    allerA(cible, { sens, vitesse, arrivee: true });
     return true;
   }
   /** aller à un ploxion de la file (null = l'accueil) ; sens : le GLISSEMENT (0.59, src/app/fractale.js), 0 = sans */
-  function allerA(cible, { sens = 0 } = {}) {
+  function allerA(cible, { sens = 0, vitesse = 0, arrivee: signer = false, muet = false } = {}) {
     const sortant = courant && courant.id !== cible ? courant : null;
     if (sortant) { cacher(sortant); courant = null; }
     pile = [];
     let entrant = null;
+    if (muet && cible != null && (!vivants.has(cible) || bloque(cible))) muets.add(cible);   // la signature est déjà jouée : ouvrir() reste muet
     if (cible == null) accueil();
     else if (!vivants.has(cible) || bloque(cible)) { if (vivants.has(cible)) ouvrir(cible); else reveiller(cible); }
     else { montrer(vivants.get(cible)); entrant = courant ? courant.hote : null; }
-    if (sens && !prefs().calme) glisser({ W, sortant: sortant ? sortant.hote : null, entrant, ecran: cible == null ? ecran : null, scene, sens });
+    if (sens && !prefs().calme) glisser({ W, sortant: sortant ? sortant.hote : null, entrant, ecran: cible == null ? ecran : null, scene, sens, vitesse });
+    // (0.63) l'app d'à côté ARRIVE : sa signature, à la fin du glissement — chaque app se reconnaît sans regarder ; seule la dernière d'une rafale
+    if (arrivee) { W.clearTimeout(arrivee); arrivee = 0; }
+    if (signer && (cible == null || entrant)) arrivee = W.setTimeout(() => { arrivee = 0; vibrer('fx-arrivee', cible); }, prefs().calme ? 0 : 185);
   }
   // ⧉ (0.59) tenir un bord : l'aperçu, la fractale, le slider (src/app/fractale.js)
-  const fractale = creerFractale({ W, racine, scene, vibrer, glyphe: (n) => G(n), calme: () => !!prefs().calme, actif: () => prefs().fractale !== false && prefs().bords !== false,
+  // (0.63) jamais sous une feuille, pendant un tri de tuiles ou pendant une demande Face ID (tri et verifEnCours : lus à l'exécution)
+  const fractale = creerFractale({ W, racine, scene, vibrer, glyphe: (n) => G(n), calme: () => !!prefs().calme,
+    actif: () => prefs().fractale !== false && prefs().bords !== false && !tri && !verifEnCours && !D.querySelector('.px-voile,.px-feuille,.px-tuto'),
+    surVide: () => signaler('ouvre d\'abord un ploxion'), carte: (o) => ouvrirCarte(o),
     // jeter une carte vers le haut (0.60) : un vivant se ferme, un endormi est oublié
     fermer: (id) => { if (vivants.has(id)) tuer(id); else { endormis = endormis.filter(e => e.id !== id); } majBords(); },
     file: () => fileBords().map(id => {
@@ -147,7 +281,11 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
       return { id, nom: p.nom || id, hote: v && !ferme ? v.hote : null, icone: ferme ? G('verrou') : icone(p), sous: ferme ? 'verrouillé' : v ? '' : 'endormi', bions: ferme ? [] : (p.bions || []) };
     }),
     origine: () => fileBords().indexOf(courant ? courant.id : null),
-    aller: (id) => allerA(id) });
+    aller: (id) => allerA(id, { muet: true }) });
+  // (0.63) « voir tout son xerboxion » : la carte (src/app/carte-xer.js), branchée par main.js (carte : { ouvrir })
+  let carteXer = null;
+  function ouvrirCarte(o = {}) { if (!carteXer) return signaler('la carte arrive'); return carteXer.ouvrir(o); }
+  const muets = new Set();   // (0.63) les ploxions dont la fractale vient de jouer la signature
   let edition = false, dossierOuvert = null;
   // (0.55, RS-7 : « un ploxion en Face ID… plus besoin de Face ID ») déverrouillé = pour CETTE séance seulement : l'app passe en arrière-plan,
   // tout se reverrouille (reverrouiller), et un ploxion vivant mais verrouillé ne se remontre plus sans le visage (montrer, aCote, la pile).
@@ -159,6 +297,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     try { const ok = await verrou.ouvrir('Ouvrir ' + ((p && p.nom) || id)); if (ok) deverrouilles.add(id); return !!ok; } finally { verifEnCours--; }
   }
   function ecranVerrou(id, p) {
+    if (fractale.etat() !== 'repos') fractale.effacer();
     racine.classList.add('px-mode-ploxion'); racine.classList.remove('px-mode-accueil');
     ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">' + G('retour') + '</button><span>' + G('verrou') + ' ' + texte((p && p.nom) || id) + '</span></div><p class="px-erreur">Ce ploxion ne s\'ouvre qu\'avec ton visage.' + (verrou && verrou.derniereErreur && verrou.derniereErreur() ? '<br><small>' + texte(raisonFaceId()) + '</small>' : '') + '</p><p class="px-pad"><button class="px-modif" data-reessayer="' + texte(id) + '">déverrouiller</button></p>';
   }
@@ -212,7 +351,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   function vueAccueil() {
     if (!surAccueil) { racine.classList.add('px-entree'); if (minuteEntree) W.clearTimeout(minuteEntree); minuteEntree = W.setTimeout(() => racine.classList.remove('px-entree'), 800); }
     surAccueil = true;
-    racine.classList.add('px-mode-accueil'); racine.classList.remove('px-mode-ploxion'); majBords();
+    racine.classList.add('px-mode-accueil'); racine.classList.remove('px-mode-ploxion', 'px-plein-ploxion'); majBords();
   }
   function majBords() { racine.classList.toggle('px-a-vivants', vivants.size + endormis.length > 0); noterSession(); if (miniDocks) { try { miniDocks.surVivants(); } catch (e) { /* */ } } }
   /** un endormi (restauré de la dernière session) : monté maintenant, avec ses paramètres */
@@ -495,11 +634,12 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   // vidéos EN LECTURE, invisibles — et le mode audio d'arrière-plan gardait l'app éveillée : un flux continu toute la journée.
   // Caché → ses vidéos s'arrêtent et ne préchargent plus ; le son (la musique) continue, c'est voulu.
   function couperVideos(hote) { try { for (const m of hote.querySelectorAll('video')) { if (!m.paused) m.pause(); m.preload = 'none'; } } catch (e) { /* */ } }
-  function cacher(v) { if (!v) return; compter(v); couperVideos(v.hote); v.hote.hidden = true; v.vu = Date.now(); accrochesDe(v.id, n => { if (!n.hasAttribute('data-px-cache')) { n.setAttribute('data-px-cache', n.style.display || ''); n.style.display = 'none'; } }); }
+  function cacher(v) { if (!v) return; compter(v); couperVideos(v.hote); v.hote.hidden = true; v.hote.classList.remove('px-sans-entree'); v.vu = Date.now(); accrochesDe(v.id, n => { if (!n.hasAttribute('data-px-cache')) { n.setAttribute('data-px-cache', n.style.display || ''); n.style.display = 'none'; } }); }
   function tuer(id) {
     const v = vivants.get(id); if (!v) return;
     if (v === courant) { compter(v); courant = null; }
-    vivants.delete(id); pile = pile.filter(x => x !== id);
+    if (flottant && flottant.v === v) poserFlottant(null);
+    vivants.delete(id); pile = pile.filter(x => x !== id); fractale.oublier(id); pleins.delete(id);   // (0.63) sa carte part (sinon la toucher le faisait revivre)
     try { if (v.inst && typeof v.inst.unmount === 'function') v.inst.unmount(); } catch (e) { console.warn('[ploxi0n] unmount', id, e); }
     v.hote.innerHTML = ''; v.hote.remove(); majBords();
     accrochesDe(id, n => { accroches.delete(n); try { n.remove(); } catch (e) { /* */ } });
@@ -521,9 +661,12 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     };
   }
   function montrer(v) {
+    if (fractale.etat() !== 'repos') fractale.effacer();   // (0.63) une navigation venue d'ailleurs (mini dock, Siri, un lien) : la fractale se range
     if (bloque(v.id)) { for (const x of vivants.values()) if (!x.hote.hidden) cacher(x); courant = null; ecranVerrou(v.id, parId.get(v.id)); ouvrir(v.id); return; }
-    for (const x of vivants.values()) if (x !== v) x.hote.hidden = true;
+    if (flottant && flottant.v === v) poserFlottant(null);   // le flottant revient en grand
+    for (const x of vivants.values()) if (x !== v && !(flottant && flottant.v === x)) x.hote.hidden = true;
     v.hote.hidden = false; v.debut = Date.now(); v.vu = Date.now(); courant = v; majBords();
+    racine.classList.toggle('px-plein-ploxion', pleins.has(v.id));
     if (surMontrer) { try { surMontrer(v.id); } catch (e) { /* */ } }   // ❄ (0.53) ses images reprennent (src/app/gel.js)
     accrochesDe(v.id, n => { if (n.hasAttribute('data-px-cache')) { n.style.display = n.getAttribute('data-px-cache'); n.removeAttribute('data-px-cache'); } });
     surAccueil = false;
@@ -545,10 +688,11 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     // ouvert DEPUIS un ploxion : celui-ci reste vivant, en dessous (la pile) ; « ‹ » y reviendra
     if (courant && courant.id !== id) { pile = pile.filter(x => x !== courant.id && x !== id); pile.push(courant.id); cacher(courant); courant = null; }
     // déjà vivant (minimisé, ou dans la pile) : on le reprend tel quel ; avec une demande (params), on le remonte frais
-    if (vivants.has(id)) { if (!params) { pile = pile.filter(x => x !== id); vibrer('reprendre', id); montrer(vivants.get(id)); return true; } tuer(id); }
+    const muet = muets.delete(id);
+    if (vivants.has(id)) { if (!params) { pile = pile.filter(x => x !== id); if (!muet) vibrer('reprendre', id); montrer(vivants.get(id)); return true; } tuer(id); }
     // la place : au-delà de MAX_VIVANTS, le plus anciennement vu s'endort pour de bon
     while (vivants.size >= maxVivants()) { const vieux = [...vivants.values()].sort((a, b) => a.vu - b.vu)[0]; tuer(vieux.id); }
-    vibrer('ouvrir', id);
+    if (!muet) vibrer('ouvrir', id);
     const hote = D.createElement('div'); hote.className = 'px-hote'; hote.dataset.ploxion = id; scene.appendChild(hote);
     const v = { id, inst: {}, hote, debut: 0, vu: Date.now(), params: params || null };
     vivants.set(id, v); montrer(v);
@@ -598,6 +742,12 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     accueil, ouvrir, fermer, charger, retour, minimiser, aCote, faire, GESTES_DEFAUT,
     /** (0.60) freefall : l'appli au gyroscope (sans argument : bascule) */
     freefall: (on) => fractale.freefall(on),
+    /** (0.63) la carte du xerboxion : brancher (main.js), ouvrir */
+    brancherCarte(c) { carteXer = c || null; }, carte: (o) => ouvrirCarte(o), signaler: (t) => signaler(t),
+    /** (0.63) l'état du ploxion à l'écran (normal → plein → pip → cadre) ; ce qui flotte */
+    etat: () => cyclerEtat(), flottant: () => (flottant ? { id: flottant.v.id, mode: flottant.mode } : null), plein: () => !!(courant && pleins.has(courant.id)),
+    /** (0.63) pour la carte : tout ce qui vit, dort ou est installé, et l'état de chacun */
+    etatsCarte: () => ({ courant: courant ? courant.id : null, vivants: [...vivants.keys()], endormis: endormis.map(e => e.id), verrous: [...verrous].filter(id => !deverrouilles.has(id)) }),
     endormis: () => endormis.map(e => e.id),
     /** ▤ les ploxions vivants, pour les mini docks : { id, vu, ici, son } (son : un <audio>/<video> qui joue encore) */
     etatVivants: () => [...vivants.values()].map(v => ({ id: v.id, vu: v.vu || 0, ici: v === courant, son: (() => { try { return [...v.hote.querySelectorAll('audio,video')].some(m => !m.paused && !m.ended); } catch (e) { return false; } })() })),
@@ -612,7 +762,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
       majBords(); if (courant) barre(parId.get(courant.id) || { nom: courant.id }, courant.id);
       return l.length;
     },
-    oublierEndormi(id) { endormis = endormis.filter(e => e.id !== id); majBords(); if (courant) barre(parId.get(courant.id) || { nom: courant.id }, courant.id); },
+    oublierEndormi(id) { endormis = endormis.filter(e => e.id !== id); fractale.oublier(id); majBords(); if (courant) barre(parId.get(courant.id) || { nom: courant.id }, courant.id); },
     /** la dernière session : le ploxion de devant rouvert, les autres endormis (montés quand on y va) */
     async restaurer(sess, { devant = true } = {}) {
       const l = (sess && Array.isArray(sess.vivants) ? sess.vivants : []).filter(x => x && parId.has(x.id));
@@ -632,6 +782,8 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
      *  d'apps ne le montre pas). Ignoré pendant une demande Face ID (la feuille du visage met l'app en pause chez certains iOS). */
     reverrouiller() {
       if (verifEnCours) return null;
+      fractale.effacer(); fractale.freefall(false);   // (0.63) jamais une carte vivante dans l'aperçu du sélecteur d'iOS ; le gyroscope se tait
+      if (flottant && verrous.has(flottant.v.id)) { const v = flottant.v; poserFlottant(null); cacher(v); }   // ni en PiP
       deverrouilles.clear();
       if (courant && verrous.has(courant.id)) { const v = courant; cacher(v); courant = null; ecranVerrou(v.id, parId.get(v.id)); return v.id; }
       return null;

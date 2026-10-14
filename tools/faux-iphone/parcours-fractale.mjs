@@ -4,6 +4,9 @@ export default async function ({ page, ecrire }) {
   await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => /passer/i.test(x.textContent)); if (b) b.click(); });
   await page.waitForTimeout(500);
   const r = {};
+  // (le gyroscope simulé du faux iPhone oscille de ±0,2 sans fin : on le calme, l'iPhone est posé ; dès le début : (0.63) la fractale garde
+  // son abonnement 1,5 s après s'être rangée)
+  await page.evaluate(() => { if (window.jOSNatif && window.jOSNatif.mouvement) window.jOSNatif.mouvement.ecouter = (cb) => { cb({ x: 0, y: 0 }); return () => {}; }; });
   const ids = await page.evaluate(() => [...document.querySelectorAll('.px-tuile[data-id]')].map(b => b.getAttribute('data-id')).filter(id => /^(bother|marketplace|banc|sante|journal-tsoins|gestion)$/.test(id)).slice(0, 4));
   for (const id of ids) {
     await page.evaluate((i) => document.querySelector('.px-tuile[data-id="' + i + '"]').click(), id); await page.waitForTimeout(900);
@@ -25,8 +28,6 @@ export default async function ({ page, ecrire }) {
   r.ouverte = await page.evaluate(() => document.querySelector('#ploxi0n').classList.contains('px-fx-ouverte'));
   await page.mouse.move(200, 120); await page.mouse.down(); await page.mouse.up(); await page.waitForTimeout(500);   // à côté : on revient
   // 3. le slider (le filtrage de photons, le curseur de réel), puis arrêté au centre : le cube ; glissé vers le haut : ses bions
-  // (le gyroscope simulé du faux iPhone oscille de ±0,2 sans fin : on le calme, l'iPhone est posé)
-  await page.evaluate(() => { if (window.jOSNatif && window.jOSNatif.mouvement) window.jOSNatif.mouvement.ecouter = (cb) => { cb({ x: 0, y: 0 }); return () => {}; }; });
   await page.mouse.move(bord.x, bord.y); await page.mouse.down(); await page.waitForTimeout(1950);
   await page.mouse.move(200, bord.y, { steps: 3 }); await ecrire('04-slider');
   r.slider = await page.evaluate(() => document.querySelector('#ploxi0n').classList.contains('px-fx-slider') || document.querySelector('#ploxi0n').classList.contains('px-fx-cube'));

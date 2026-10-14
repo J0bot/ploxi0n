@@ -80,9 +80,9 @@ test('▔ la barre du haut : visible seulement en plein écran, composée gauche
     const b = creerBarreHaut({ W, boxion: p.boxion, actif: () => plein, courant: () => 'Pomodoro', ouverts: () => 2 });
     b.installer(W.document.body); await b.pret; await b.mesurer();
     const el = W.document.querySelector('.px-haut');
-    assert.equal(el.hidden, true, 'caché hors plein écran');
+    assert.ok(el.classList.contains('px-haut-vide') && !el.hidden, '(0.63) hors plein écran : la bande reste, vide (le voile seul), plus jamais un aplat noir');
     plein = true; await b.mesurer();
-    assert.equal(el.hidden, false);
+    assert.ok(!el.hidden && !el.classList.contains('px-haut-vide'));
     assert.ok(W.document.documentElement.classList.contains('px-haut-on'));
     assert.match(el.querySelector('.g').textContent, /Pomodoro/);
     assert.match(el.querySelector('.d').textContent, /⧗1/, 'les tsoins du jour');

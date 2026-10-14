@@ -2,10 +2,26 @@
 // Au premier lancement d'une nouvelle version : une feuille avec ce qui a changé DEPUIS la dernière version vue (plusieurs versions
 // sautées → toutes, la plus récente en haut). boxion_local « reglages/version-vue » = la dernière version montrée. Un tout premier
 // lancement n'affiche rien (le tuto d'accueil s'en charge) : la version est seulement notée. ⚙ › À propos › « Nouveautés » : tout l'historique.
-// Une version = { v, titre, points: [texte] } ; à compléter à chaque version publiée (la plus récente en tête).
+// Une version = { v, titre, points: [texte | { t, essayer }] } ; à compléter à chaque version publiée (la plus récente en tête).
+// (0.63, RS-7 : « au lieu de texte, un aperçu de la feature et son utilisation, directement montrée sur l'UI ; les changelogs c'est des
+// tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
+// (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.63.0', titre: 'Fluide, et ça se sent', points: [
+    { t: 'La fractale refaite pour être fluide : une seule boucle d\'images, l\'inclinaison du gyroscope posée sur tout le paquet (plus de tremblement), les cartes lointaines allégées. Elle se prépare pendant que ton doigt tient : l\'aperçu arrive sans à-coup.', essayer: 'apercu' },
+    { t: 'Lance le paquet : il file sur son élan, ralentit et se pose. Un cran par carte qui passe : net quand c\'est lent, en rafale quand c\'est vite. Un doigt le rattrape au vol.', essayer: 'lancer' },
+    'L\'haptique selon l\'usage : la profondeur se sent (l\'aperçu léger, la fractale, le moteur du slider, le verrou du cube), chaque seuil a son retour (les 30 % de l\'aperçu, la carte qu\'on jette), chaque app arrive avec sa signature. ⚙ › Haptique › La fractale et les bords : tout se règle, avec la densité (sobre, normale, pleine).',
+    { t: 'Le cube : plus de nom qui chevauche la face du dessus, plus de trait qui traverse la face, l\'indice sur une ligne. Le curseur de réel se charge avant que le xer devienne cube ; le gyroscope le fait pivoter dans ta main ; la face du dessus tourne avec lui.', essayer: 'cube' },
+    { t: 'Tout le xerboxion : pince la fractale (ou ⊞) — la carte de tous tes ploxions, chacun à sa place.', essayer: 'carte' },
+    'Les nouveautés se jouent : ▶ essayer, et un doigt fantôme fait le geste pour de vrai, sur ton xer. Touche l\'écran pour l\'arrêter.',
+    'Plus rien ne passe par-dessus la fractale (mini docks, bulles des ploxions) ; plus rien ne reste coincé (un appel, Face ID, un ploxion fermé ailleurs, la rotation).',
+    'Les bords, comme tu les voulais : en haut à gauche le tuto de ce que tu vois (ses gestes, ▶ chacun ; dans un ploxion, son tuto, ou ＋ pour l\'écrire et ↗ le partager) ; en bas à gauche l\'état du ploxion ; en bas à droite minimiser ; les deux bords ensemble, le portion.',
+    'L\'état d\'un ploxion (bord bas gauche) : plein écran (sa barre s\'efface), PiP (il flotte en petit, vivant, au-dessus du reste : glisse-le, il s\'aimante aux coins ; touche-le, il revient ; deux touchers, un cadre), cadre (une fenêtre comme sur Wayland : sa barre, ⤢ ▁ ✕, son coin pour la redimensionner).',
+    'La bande noire du haut est partie : le fond d\'écran et les ploxions vont jusque sous l\'île ; un voile doux garde l\'heure lisible ; un ploxion clair fonce l\'encre de la barre.',
+    'Le lecteur vidéo ne surgit plus tout seul : seulement sous ton doigt, pour le ploxion à l\'écran ; une seule scène à la fois ; s\'il échoue, une bulle te propose le lecteur de l\'iPhone ou le web au lieu de rouvrir en boucle.',
+  ] },
   { v: '0.62.0', titre: 'Freefall fait défiler', points: [
-    'Freefall : pencher l\'iPhone en avant ou en arrière fait défiler ce qui est à l\'écran (le ploxion, ou l\'accueil) ; à gauche ou à droite, la fractale.',
+    { t: 'Freefall : pencher l\'iPhone en avant ou en arrière fait défiler ce qui est à l\'écran (le ploxion, ou l\'accueil) ; à gauche ou à droite, la fractale.', essayer: 'freefall' },
     'La fractale reste légère même avec beaucoup de ploxions ouverts : seuls ceux proches du centre sont dessinés en direct.',
   ] },
   { v: '0.61.0', titre: 'Des pages de côté, le cube dans sa salle', points: [
@@ -17,16 +33,16 @@ export const NOUVEAUTES = [
     'Tirer depuis un bord ne sélectionne plus le texte du ploxion (ni loupe, ni menu d\'iOS) : le geste reste à l\'app, il ne se coupe plus en route.',
   ] },
   { v: '0.60.0', titre: 'Le xer devient un cube', points: [
-    'La fractale en jeu de cartes : de grandes cartes, l\'icône et le nom au-dessus de chacune ; elles suivent le doigt et filent sur leur élan. Jette une carte vers le haut : le ploxion se ferme.',
-    'Le slider, c\'est le filtrage de photons : autour du curseur de réel (le trait au milieu), les apps sont pleines ; plus loin elles tournent sur la tranche et deviennent des lignes serrées.',
-    'Arrête-toi sur une app dans le slider et tiens encore : le xer devient un cube autour d\'elle. Tourne-le (un cran à chaque face) ; penche-le en avant, ou glisse vers le haut : sa face du dessus montre ses bions.',
+    { t: 'La fractale en jeu de cartes : de grandes cartes, l\'icône et le nom au-dessus de chacune ; elles suivent le doigt et filent sur leur élan. Jette une carte vers le haut : le ploxion se ferme.', essayer: 'fractale' },
+    { t: 'Le slider, c\'est le filtrage de photons : autour du curseur de réel (le trait au milieu), les apps sont pleines ; plus loin elles tournent sur la tranche et deviennent des lignes serrées.', essayer: 'slider' },
+    { t: 'Arrête-toi sur une app dans le slider et tiens encore : le xer devient un cube autour d\'elle. Tourne-le (un cran à chaque face) ; penche-le en avant, ou glisse vers le haut : sa face du dessus montre ses bions.', essayer: 'cube' },
     'Le gyroscope : pendant la fractale tout s\'incline avec l\'iPhone ; dans le slider, pencher accélère ou freine. Le zéro, c\'est ta façon de tenir l\'iPhone au début du geste.',
     'Freefall (un geste des bords à choisir) : toute l\'appli au gyroscope. Penche pour ouvrir la fractale et défiler, reste droit 1,4 s sur une app pour l\'ouvrir ; le badge en haut l\'arrête.',
     'Trackpad haptique : le banc des essais (textures grille, bords, cibles ; clic, clic fort ; deux doigts pour défiler), pour sentir le Taptic Engine avant le vrai trackpad.',
   ] },
   { v: '0.59.0', titre: 'La fractale des ploxions', points: [
-    'Passer d\'une app à l\'autre par un bord : l\'app part en biais, l\'autre arrive en 3D, un trait de lumière balaie l\'écran.',
-    'Tenir un bord 0,3 s : l\'app d\'à côté passe la tête (à droite la suivante, à gauche la précédente) ; tire-la vers le centre pour y aller.',
+    { t: 'Passer d\'une app à l\'autre par un bord : l\'app part en biais, l\'autre arrive en 3D, un trait de lumière balaie l\'écran.', essayer: 'glisser' },
+    { t: 'Tenir un bord 0,3 s : l\'app d\'à côté passe la tête (à droite la suivante, à gauche la précédente) ; tire-la vers le centre pour y aller.', essayer: 'apercu' },
     'Tenir 0,9 s : la fractale. Ton app au milieu, en petit, les autres de chaque côté, de plus en plus petites ; glisse, lâche sur une app. Lâchée sans bouger, elle reste ouverte : touche une app, ou à côté pour revenir.',
     'Tenir 1,9 s : le slider. Encore plus petit, ça défile tout seul vers le bord tenu ; ramène le doigt vers le centre pour ralentir ou repartir dans l\'autre sens ; lâche pour ouvrir.',
     'Sur les iPhone à 3D Touch, presser fort fait pareil, plus vite.',
@@ -202,7 +218,8 @@ export const NOUVEAUTES = [
 const cmp = (a, b) => { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < 3; i++) { const d = (x[i] || 0) - (y[i] || 0); if (d) return d; } return 0; };
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-export function creerNouveautes({ W = globalThis.window, boxion, version, vibrer = () => {}, liste = NOUVEAUTES }) {
+const point = (p) => (typeof p === 'string' ? { t: p } : p || { t: '' });
+export function creerNouveautes({ W = globalThis.window, boxion, version, vibrer = () => {}, liste = NOUVEAUTES, essayer = null }) {
   const D = W.document;
   /** les versions plus récentes que « depuis » (exclu), jusqu'à la version de l'app (incluse) */
   const depuis = (vue) => liste.filter(n => (!vue || cmp(n.v, vue) > 0) && cmp(n.v, version) <= 0);
@@ -211,9 +228,13 @@ export function creerNouveautes({ W = globalThis.window, boxion, version, vibrer
     const f = D.createElement('div'); f.className = 'px-voile px-nouveautes';
     f.innerHTML = '<div class="px-tiroir"><p class="px-ft">✦ ' + (tout ? 'toutes les nouveautés' : 'quoi de neuf · ploxi0n ' + esc(version.replace(/\.0$/, ''))) + '</p>'
       + '<div class="px-nv-liste">' + entrees.map(n => '<section><h3>' + esc(n.v.replace(/\.0$/, '')) + ' · ' + esc(n.titre) + '</h3><ul>'
-        + n.points.map(p => '<li>' + esc(p) + '</li>').join('') + '</ul></section>').join('') + '</div>'
+        + n.points.map(point).map(p => '<li>' + esc(p.t) + (p.essayer && essayer ? ' <button type="button" class="px-nv-essai" data-essayer="' + esc(p.essayer) + '">▶ essayer</button>' : '') + '</li>').join('') + '</ul></section>').join('') + '</div>'
       + '<button class="p" data-nv>ok</button></div>';
-    f.addEventListener('click', (e) => { if (e.target === f || e.target.closest('[data-nv]')) { f.remove(); vibrer('leger'); } });
+    f.addEventListener('click', (e) => {
+      const b = e.target.closest && e.target.closest('[data-essayer]');
+      if (b) { e.stopPropagation(); const nom = b.getAttribute('data-essayer'); f.remove(); vibrer('leger'); W.setTimeout(() => { try { essayer(nom); } catch (er) { /* */ } }, 280); return; }
+      if (e.target === f || e.target.closest('[data-nv]')) { f.remove(); vibrer('leger'); }
+    });
     (D.getElementById('ploxi0n') || D.body).appendChild(f);
     vibrer('motif:vague');
     return f;

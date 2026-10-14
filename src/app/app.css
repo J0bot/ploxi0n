@@ -22,7 +22,7 @@
 }
 html,body{margin:0;height:100%;color:var(--txt);font:15px/1.4 var(--police);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;background:var(--bg) var(--grain)}
 button{font-family:inherit;-webkit-user-select:none;user-select:none}
-#ploxi0n{height:100%;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
+#ploxi0n{height:100%;display:flex;flex-direction:column;padding-top:var(--px-haut,env(safe-area-inset-top));padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
 /* le métal usiné : un trait sombre, un filet clair à l'intérieur */
 .px-plaque,.px-visiere,.px-modif,.px-barre,.px-feuille>div,.px-tiroir{box-shadow:inset 0 0 0 1px var(--filet)}
 
@@ -236,14 +236,41 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]
 .px-calme .px-tuto-bords i,.px-calme .px-tuto-bords b,.px-calme .px-tuto-appui i{animation:none;opacity:.6}
 
 /* ---- ▔ notre barre du haut (plein écran) : à gauche et à droite de l'île, gravée en mono ---- */
-.px-haut{position:fixed;top:0;left:0;right:0;z-index:60;height:max(env(safe-area-inset-top,0px),22px);display:flex;align-items:flex-end;justify-content:space-between;padding:0 max(18px,env(safe-area-inset-left,0px)) 6px;box-sizing:border-box;background:var(--bg);font:600 12px/1 var(--mono);letter-spacing:.06em;color:var(--muted);text-transform:lowercase;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+/* ▔ (0.63) L'IMMERSION (RS-7 13.10 : « y a toujours une bordure noire en haut qui remplit pas l'écran pour une vraie immersion, il faut
+   remplir ça »). La bande noire, c'était .px-haut : un aplat var(--bg) en z60, et peint MÊME CACHÉ (son display:flex battait [hidden]) :
+   avec ou sans plein écran, sur le fond, sur les ploxions, sur ⚙. Maintenant :
+   - .px-haut est transparente ; un voile doux (rgba(0,0,0,.35) → rien, le seul dégradé de chill-tekk : il ne décore pas, il garde l'heure
+     lisible sur une photo) ; sans notre barre (barre d'iOS, ou barre coupée) : .px-haut-vide, le voile seul, aucun toucher ;
+   - --px-haut = la hauteur de la bande. #ploxi0n ne la réserve plus (un vide où se voyait le noir du body) : le premier élément de chaque
+     mode la prend EN DEDANS et peint jusqu'au bord. L'accueil (padding : les tuiles passent sous la bande en défilant, sur le fond d'écran) ;
+     la barre d'un ploxion quand elle est en haut ; en télécommande, l'hôte du ploxion (une bordure haute transparente : son contenu, ses
+     position:absolute et son défilement restent sous la bande, exactement comme avant ; son fond, lu sur la racine du ploxion par
+     barre-haut.js, la remplit : --px-hote-fond, --px-hote-image) ;
+   - un ploxion clair (html.px-haut-clair, posé par barre-haut.js) : le voile blanchit, l'encre fonce (la nôtre ; celle d'iOS par SystemBars). */
+:root{--px-haut:env(safe-area-inset-top,0px)}
+html.px-haut-on{--px-haut:max(env(safe-area-inset-top,0px),22px)}
+.px-haut{position:fixed;top:0;left:0;right:0;z-index:60;height:var(--px-haut);display:flex;align-items:flex-end;justify-content:space-between;padding:0 max(18px,env(safe-area-inset-left,0px)) 6px;box-sizing:border-box;background:none;font:600 12px/1 var(--mono);letter-spacing:.06em;color:rgba(228,222,240,.88);text-shadow:0 1px 2px rgba(0,0,0,.6);text-transform:lowercase;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.px-haut::before{content:"";position:absolute;left:0;right:0;top:0;bottom:-16px;z-index:-1;pointer-events:none;background:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,0))}
+.px-haut[hidden]{display:none}
+.px-haut-vide{pointer-events:none}
 .px-haut .g,.px-haut .d{display:flex;gap:10px;align-items:center;min-width:0;white-space:nowrap;overflow:hidden}
 .px-haut .g{flex:1}.px-haut .d{flex:1;justify-content:flex-end}
 .px-haut .ile{flex:0 0 130px}
-.px-haut [data-k="heure"]{color:var(--txt);font-size:14px;letter-spacing:.04em}
+.px-haut [data-k="heure"]{color:#f1ecfa;font-size:14px;letter-spacing:.04em}
 .px-haut [data-k="tsoins"]{color:var(--bio)}
-.px-haut .bas{color:#e08a7a}
-html.px-haut-on #ploxi0n{padding-top:max(env(safe-area-inset-top,0px),22px)}
+.px-haut .bas{color:#f0a090}
+html.px-haut-clair .px-haut{color:rgba(16,12,26,.82);text-shadow:0 1px 1px rgba(255,255,255,.4)}
+html.px-haut-clair .px-haut::before{background:linear-gradient(rgba(255,255,255,.35),rgba(255,255,255,0))}
+html.px-haut-clair .px-haut [data-k="heure"]{color:#0d0a16}
+html.px-haut-clair .px-haut [data-k="tsoins"]{color:#1d6b45}
+html.px-haut-clair .px-haut .bas{color:#a3322a}
+/* la bande, prise en dedans par le premier élément de chaque mode (sans mode : l'erreur de démarrage, la ligne 25 la garde) */
+#ploxi0n.px-mode-accueil,#ploxi0n.px-mode-ploxion{padding-top:0}
+#ploxi0n .px-accueil{padding-top:calc(var(--px-haut) + 10px)}
+#ploxi0n .px-ecran>.px-barre:first-child{padding-top:calc(var(--px-haut) + 8px)}
+html.px-telecommande #ploxi0n.px-mode-ploxion .px-ecran>.px-barre:first-child{padding-top:8px}
+html.px-telecommande .px-scene>.px-hote:not(.px-flottant):not(.px-pip):not(.px-cadre){border-top:var(--px-haut) solid transparent}
+.px-scene>.px-hote{background-color:var(--px-hote-fond,transparent);background-image:var(--px-hote-image,none);background-origin:border-box;background-repeat:no-repeat}
 /* ---- ⧗ le composeur de tsoin et le journal ---- */
 .px-tsoin textarea{width:100%;box-sizing:border-box;padding:12px;border-radius:13px;border:2px solid var(--bord2);background:var(--creux);color:var(--txt);font:16px var(--police);margin:2px 0 8px;resize:none}
 .px-tsoin .px-puces{margin:4px 0}
@@ -337,7 +364,8 @@ html:not(.px-fond-partout):has(#ploxi0n.px-mode-ploxion) .px-fond{display:none}
 .px-entree .px-accueil .px-tuile:nth-child(25){animation-delay:350ms}.px-entree .px-accueil .px-tuile:nth-child(26){animation-delay:364ms}.px-entree .px-accueil .px-tuile:nth-child(27){animation-delay:378ms}.px-entree .px-accueil .px-tuile:nth-child(28){animation-delay:392ms}.px-entree .px-accueil .px-tuile:nth-child(29){animation-delay:406ms}.px-entree .px-accueil .px-tuile:nth-child(30){animation-delay:420ms}.px-entree .px-accueil .px-tuile:nth-child(31){animation-delay:434ms}.px-entree .px-accueil .px-tuile:nth-child(32){animation-delay:448ms}
 
 @keyframes px-pose{from{opacity:0;transform:translateY(10px) scale(.94)}}
-.px-scene>.px-hote:not([hidden]){animation:px-entre .2s cubic-bezier(.2,.9,.3,1) both}
+.px-scene>.px-hote:not([hidden]){animation:px-entre .2s cubic-bezier(.2,.9,.3,1) backwards}
+.px-scene>.px-hote.px-sans-entree{animation:none}   /* (0.63) l'app amenée par la fractale : pas de clignement à la fin du zoom */
 @keyframes px-entre{from{opacity:0;transform:translateY(14px) scale(.985)}}
 .px-voile{animation:px-fondu .16s ease-out both}
 .px-voile>.px-tiroir,.px-feuille>div{animation:px-monte .24s cubic-bezier(.2,.9,.3,1.1) both}
@@ -554,22 +582,32 @@ html.px-px-chill body{
 .px-at-type{margin:8px 2px 0 !important}
 /* ⧉ (0.59) la fractale des ploxions, l'aperçu, le slider et le glissement (src/app/fractale.js) */
 @keyframes px-fx-in{from{opacity:0}}
-.px-fx-fond{position:fixed;inset:0;z-index:39;background:rgba(5,6,12,.62);-webkit-backdrop-filter:blur(10px) saturate(.85);backdrop-filter:blur(10px) saturate(.85);animation:px-fx-in .28s ease-out}
+/* (0.63) plus de flou d'arrière-plan (recalculé par le GPU à chaque image, sous des dizaines de couches 3D) : un aplat profond */
+.px-fx:not(.px-fx-prep) .px-fx-fond{animation:px-fx-in .24s ease-out}
+.px-fx-fond{position:fixed;inset:0;z-index:39;background:radial-gradient(120% 80% at 50% 45%,rgba(14,16,28,.9),rgba(3,4,9,.96));opacity:1;transition:opacity .24s ease-out;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .px-fx .px-scene{z-index:41}
 .px-mode-accueil.px-fx .px-scene,.px-mode-accueil .px-scene.px-transit{display:block;position:fixed;left:0;right:0;bottom:0;top:calc(env(safe-area-inset-top,0px) + 56px);z-index:41;pointer-events:none}
 .px-mode-accueil .px-scene.px-transit{z-index:30}
-.px-scene>.px-hote.px-fx-carte,.px-scene>.px-hote.px-fx-carte[hidden]{display:block;pointer-events:none;overflow:hidden;border-radius:28px;transform-origin:50% 50%;box-shadow:0 22px 70px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.07);transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s,border-radius .3s;will-change:transform}
-.px-fx-icone{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;border-radius:28px;background:var(--surface,#0d0d16) var(--grain);box-shadow:0 22px 70px rgba(0,0,0,.6),inset 0 0 0 1px var(--filet,rgba(255,255,255,.07));pointer-events:none;transform-origin:50% 50%;transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s;will-change:transform}
+.px-scene>.px-hote.px-fx-carte,.px-scene>.px-hote.px-fx-carte[hidden]{display:block;pointer-events:none;overflow:hidden;border-radius:28px;transform-origin:50% 50%;box-shadow:0 14px 34px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.07);transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s;will-change:transform}
+.px-fx-icone{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;border-radius:28px;background:var(--surface,#0d0d16);box-shadow:0 14px 34px rgba(0,0,0,.55),inset 0 0 0 1px var(--filet,rgba(255,255,255,.07));pointer-events:none;transform-origin:50% 50%;transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s;will-change:transform}
+/* (0.63) loin du focus (sur la tranche) : ni coins clippés ni ombre (une passe hors écran par carte et par image) ; le zoom efface les coins en route */
+.px-scene>.px-hote.px-fx-carte.px-fx-loin,.px-fx-icone.px-fx-loin{border-radius:0;box-shadow:none}
+/* (0.63) une carte est opaque : un ploxion au fond transparent laissait voir sa voisine à travers lui */
+.px-scene>.px-hote.px-fx-carte{background:var(--bg,#07070d)}
+.px-scene>.px-hote.px-fx-carte.px-fx-zoom,.px-fx-icone.px-fx-zoom{border-radius:0;box-shadow:none;transition:transform .32s cubic-bezier(.16,1,.3,1),opacity .26s,border-radius .3s}
 .px-fx-ic{width:42%;max-width:260px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--bio)}
 .px-fx-ic .xki,.px-fx-ic .px-g{width:100%;height:100%;border-radius:22%}
 .px-fx-icone b{font:600 40px var(--police);color:var(--txt);letter-spacing:.02em}
 .px-fx-icone small{font:600 24px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-.px-fx-calque{position:fixed;z-index:42;pointer-events:none}
+.px-fx-calque{position:fixed;z-index:42;pointer-events:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .px-fx-ouverte .px-fx-calque{pointer-events:auto;touch-action:none}
-.px-fx-cible{position:absolute;inset:0;width:auto;min-height:0;margin:0;padding:0;background:none;border:0;border-radius:28px;transform-origin:50% 50%;transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
+.px-fx-cible{position:absolute;inset:0;width:auto;min-height:0;margin:0;padding:0;background:none;border:0;border-radius:28px;transform-origin:50% 50%;transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s,box-shadow .2s;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* (0.63) le voile : une couche unie dont seule l'opacité change (composée, jamais repeinte) — remplace le ::after à --voile */
+.px-fx-voile{position:absolute;inset:0;border-radius:inherit;background:#03040a;opacity:0;pointer-events:none;will-change:opacity}
 .px-fx-cible.on{box-shadow:0 0 0 4px var(--bio),0 0 60px var(--glow)}
-.px-fx-suit .px-fx-carte,.px-fx-suit .px-fx-icone,.px-fx-suit .px-fx-cible{transition:none !important}
-.px-fx-indice{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 30px);z-index:43;text-align:center;font:600 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);pointer-events:none;animation:px-fx-in .4s ease-out}
+.px-fx-suit .px-fx-carte,.px-fx-suit .px-fx-icone,.px-fx-suit .px-fx-cible,.px-fx-suit .px-fx-dessus{transition:none !important}
+/* (0.63) l'indice : TOUJOURS sur une ligne (RS-7 : « le texte passe sur deux lignes ») */
+.px-fx-indice{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 30px);z-index:43;text-align:center;font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .2s}
 .px-fx-trace{position:fixed;top:0;bottom:0;left:0;width:2px;z-index:44;pointer-events:none;background:linear-gradient(180deg,transparent,var(--bio) 30%,var(--bio) 70%,transparent);box-shadow:0 0 28px 8px var(--glow)}
 .px-scene>.px-hote.px-fx-sortant[hidden]{display:block;pointer-events:none;z-index:0;overflow:hidden;border-radius:28px}
 .px-fx-apercu .px-fx-tete{opacity:0}
@@ -579,15 +617,17 @@ html.px-px-chill body{
 .px-fx-tete i .xki,.px-fx-tete i .px-g{width:100%;height:100%;border-radius:0}
 .px-fx-tete b{min-width:0;font:600 38px var(--police);color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .px-fx-tete small{font:600 26px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-left:4px}
-.px-fx-cible::after{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(3,4,10,var(--voile,0));pointer-events:none;transition:background .3s}
-.px-fx-cible.on::before{content:"";position:absolute;left:0;bottom:-16px;height:7px;width:calc(var(--tenu,0) * 100%);border-radius:4px;background:var(--bio);box-shadow:0 0 12px var(--glow)}
-.px-fx-curseur{position:fixed;top:calc(env(safe-area-inset-top,0px) + 62px);bottom:calc(env(safe-area-inset-bottom,0px) + 66px);left:50%;width:0;z-index:43;pointer-events:none;opacity:0;transition:opacity .3s}
-.px-fx-slider .px-fx-curseur,.px-fx-cube .px-fx-curseur{opacity:1}
+.px-fx-cible.on::before{content:"";position:absolute;left:0;bottom:-16px;height:7px;width:100%;border-radius:4px;background:var(--bio);box-shadow:0 0 12px var(--glow);transform-origin:left center;transform:scaleX(var(--tenu,0))}
+.px-fx-curseur{position:fixed;top:calc(env(safe-area-inset-top,0px) + 62px);bottom:calc(env(safe-area-inset-bottom,0px) + 66px);left:50%;width:0;z-index:43;pointer-events:none;opacity:0;transition:opacity .3s;--charge:0}
+/* (0.63) le curseur de réel : seulement dans le slider (dans le cube, il traversait la face) ; il se charge vers le cube */
+.px-fx-slider .px-fx-curseur{opacity:1}
+.px-fx-curseur i{transform:scaleX(calc(1 + var(--charge) * 1.6));transition:transform .12s}
 .px-fx-curseur b{position:absolute;top:0;bottom:0;left:-1px;width:2px;background:linear-gradient(180deg,var(--bio),transparent 28%,transparent 72%,var(--bio));box-shadow:0 0 14px var(--glow)}
 .px-fx-curseur i{position:absolute;left:-16px;width:32px;height:3px;border-radius:2px;background:var(--bio);box-shadow:0 0 12px var(--glow)}
 .px-fx-curseur i:first-child{top:0}.px-fx-curseur i:last-child{bottom:0}
 .px-fx-cube .px-fx-carte,.px-fx-cube .px-fx-icone,.px-fx-cube .px-fx-cible{-webkit-backface-visibility:hidden;backface-visibility:hidden}
-.px-fx-cube .px-fx-tete{opacity:0}.px-fx-cube .px-fx-cible.on .px-fx-tete{opacity:1}
+/* (0.63) dans le cube, aucune tête (elle chevauchait la face du dessus) : le nom passe dans l'indice */
+.px-fx-cube .px-fx-tete,.px-fx-cube .px-fx-cible.on .px-fx-tete{opacity:0}
 .px-fx-dessus{position:absolute;left:0;right:0;z-index:85;opacity:0;pointer-events:none;border-radius:28px;overflow:hidden;background:var(--surface,#0d0d16) var(--grain);box-shadow:inset 0 0 0 3px var(--bio),0 0 60px var(--glow);transform-origin:50% 50%;transition:opacity .25s,transform .38s cubic-bezier(.16,1,.3,1);-webkit-backface-visibility:hidden;backface-visibility:hidden}
 .px-fx-suit .px-fx-dessus{transition:opacity .25s}
 .px-fx-dessus-in{padding:44px 48px;display:flex;flex-direction:column;gap:24px}
@@ -599,8 +639,23 @@ html.px-px-chill body{
 .px-fx-dessus-in li .px-g{width:30px;height:30px;flex:none}
 .px-freefall{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:50%;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:8px;width:auto;height:30px;min-height:0;margin:0;padding:0 12px;border-radius:15px;border:var(--trait) solid var(--bio);background:var(--surface) var(--grain);color:var(--bio);font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;box-shadow:0 0 18px var(--glow)}
 .px-freefall .px-g{width:14px;height:14px}.px-freefall b{color:var(--muted);font-size:14px;font-weight:600}
-/* (0.60.1) pendant la fractale : ni sélection, ni loupe, ni menu d'iOS, nulle part */
-.px-fx,.px-fx *,.px-tire-bord,.px-tire-bord *{-webkit-user-select:none !important;user-select:none !important;-webkit-touch-callout:none !important}
+/* (0.60.1) pendant la fractale : ni sélection, ni loupe, ni menu d'iOS — (0.63) posé une fois sur ce qui se touche (plus de « .px-fx * » :
+   tout le DOM recalculé à chaque toucher de bord) ; une sélection qui fuit est effacée (routeur.js, selectionchange) */
+.px-fx-icone,.px-fx-dessus,.px-fx-indice,.px-fx-tout{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* (0.63) la fractale devant TOUT : ce qui est accroché à <body> après <main id=ploxi0n> (mini docks, à l'écoute, barre du haut, toasts,
+   bulles et poignées des ploxions) passait par-dessus le jeu de cartes. Opacité seulement : ni mise en page, ni iframe rechargée. */
+#ploxi0n.px-fx:not(.px-fx-prep){z-index:2147483000}
+#ploxi0n.px-fx:not(.px-fx-prep)~*:not(.px-demo-doigt):not(.px-demo-badge):not(.px-carte){opacity:0 !important;pointer-events:none !important;transition:opacity .16s ease-out}
+#ploxi0n.px-fx:not(.px-fx-prep)>.px-bulle,#ploxi0n.px-fx:not(.px-fx-prep)>.px-installation{opacity:0;pointer-events:none}
+/* les bords restent atteignables pendant l'aperçu, la fractale et le slider (le deuxième doigt : les deux bords) */
+#ploxi0n.px-fx:not(.px-fx-ouverte) .px-bord{z-index:45}
+/* (0.63) la préparation (invisible) : le doigt tient depuis 0,14 s, le gros du travail se fait avant l'aperçu */
+.px-fx-prep .px-fx-fond,.px-fx-prep .px-fx-indice,.px-fx-prep .px-fx-calque,.px-fx-prep .px-fx-curseur{opacity:0;transition:none}
+/* le zoom vers l'app choisie : le décor fond pendant le zoom, pas d'un coup à la fin */
+.px-fx-zooming .px-fx-fond,.px-fx-zooming .px-fx-indice,.px-fx-zooming .px-fx-curseur,.px-fx-zooming .px-fx-salle,.px-fx-zooming .px-fx-tout{opacity:0;transition:opacity .22s ease-out}
+/* ⊞ tout le xerboxion (la carte) */
+.px-fx-tout{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 46px);transform:translateX(-50%);z-index:44;display:flex;align-items:center;gap:8px;width:auto;height:34px;min-height:0;margin:0;padding:0 14px;border-radius:17px;border:var(--trait) solid var(--bord2);background:var(--surface);color:var(--txt);font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;animation:px-fx-in .3s ease-out}
+.px-fx-tout .px-g{width:16px;height:16px;color:var(--bio)}.px-fx-tout[hidden]{display:none}
 .px-fx-calque,.px-fx-cible{-webkit-tap-highlight-color:transparent}
 .px-fantome-bions{position:fixed;z-index:91;transform:translate(-50%,calc(-100% - 52px));min-width:150px;max-width:240px;padding:10px 12px;border-radius:14px;background:var(--surface) var(--grain);box-shadow:0 12px 30px rgba(0,0,0,.6),inset 0 0 0 1px var(--bio);display:flex;flex-direction:column;gap:4px;pointer-events:none;animation:px-fx-in .2s ease-out}
 .px-fantome-bions b{font:600 13px var(--police);color:var(--txt)}.px-fantome-bions small{font:11px var(--mono);color:var(--muted)}
@@ -628,3 +683,45 @@ html.px-px-chill body{
 .px-auj-l .px-ic{width:42px;height:42px;border-radius:12px;flex:none}
 .px-auj-tx{display:flex;flex-direction:column;min-width:0}.px-auj-tx b{font:600 14px var(--police);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.px-auj-tx small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .px-page-sp .px-cat{margin-bottom:18px}.px-page-sp .px-titre-page{margin-top:10px}
+/* ▶ (0.63) les démos : le doigt fantôme fait le geste pour de vrai (src/app/demo.js) ; les nouveautés se jouent */
+.px-demo-doigt{position:fixed;left:0;top:0;z-index:2147483600;width:46px;height:46px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.55),rgba(255,255,255,.12) 62%,transparent 70%);box-shadow:0 0 0 2px rgba(255,255,255,.55),0 0 26px 6px var(--glow,rgba(120,255,200,.35));opacity:.55;transition:opacity .15s,box-shadow .15s;will-change:transform}
+.px-demo-doigt.on{opacity:1;box-shadow:0 0 0 3px var(--bio,#7fe0b0),0 0 34px 10px var(--glow,rgba(120,255,200,.45))}
+.px-demo-doigt[hidden]{display:none}
+.px-demo-badge{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);transform:translateX(-50%);z-index:2147483601;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:16px;background:var(--surface,#0d0d16);border:var(--trait,1px) solid var(--bio,#7fe0b0);color:var(--txt,#eee);font:600 11px var(--mono,monospace);letter-spacing:.08em;white-space:nowrap;pointer-events:none;box-shadow:0 0 18px var(--glow,rgba(120,255,200,.3))}
+.px-demo-badge b{color:var(--bio,#7fe0b0)}.px-demo-badge small{color:var(--muted,#999);font-size:10px}
+.px-nv-essai{display:inline-flex;align-items:center;width:auto;min-height:0;margin:4px 0 0;padding:3px 9px;border-radius:11px;border:var(--trait) solid var(--bio);background:none;color:var(--bio);font:600 11px var(--mono);letter-spacing:.06em;vertical-align:middle}
+/* ▣ (0.63) les états d'un ploxion : plein écran, pip, cadre (src/app/routeur.js, cyclerEtat) */
+#ploxi0n.px-plein-ploxion{padding-top:0}
+.px-plein-ploxion.px-mode-ploxion>.px-ecran{display:none}
+.px-a-flottant.px-mode-accueil .px-scene{display:block;position:fixed;inset:0;z-index:35;pointer-events:none}
+.px-scene>.px-hote.px-flottant{position:fixed;left:0;top:0;right:auto;bottom:auto;width:var(--fw,100vw);height:var(--fh,100vh);z-index:35;transform:translate3d(var(--fx,0),var(--fy,0),0) scale(var(--fs,1));transform-origin:0 0;overflow:hidden;background:var(--bg);animation:none;
+  border-radius:calc(22px / var(--fs,1));box-shadow:0 0 0 calc(1px / var(--fs,1)) rgba(255,255,255,.14),0 calc(18px / var(--fs,1)) calc(44px / var(--fs,1)) rgba(0,0,0,.6);transition:transform .32s cubic-bezier(.16,1,.3,1),width .25s,height .25s,border-radius .25s}
+.px-scene>.px-hote.px-pip{pointer-events:none}
+.px-pip-tenu .px-scene>.px-hote.px-flottant{transition:none}
+.px-scene>.px-hote.px-cadre{pointer-events:auto;border-radius:0 0 16px 16px}
+.px-pip-poigne{position:fixed;left:0;top:0;z-index:36;border-radius:22px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .32s cubic-bezier(.16,1,.3,1)}
+.px-pip-tenu .px-pip-poigne{transition:none}
+.px-cadre-barre{position:fixed;left:0;top:0;z-index:36;height:38px;box-sizing:border-box;display:flex;align-items:center;gap:6px;padding:0 6px 0 10px;border-radius:16px 16px 0 0;background:var(--surface2,#14141c);border:var(--trait) solid var(--bord2);border-bottom:0;touch-action:none;-webkit-user-select:none;user-select:none;--ch:300px}
+.px-cadre-barre>span{flex:1;min-width:0;display:flex;align-items:center;gap:8px;font:600 12.5px var(--police);color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-cadre-barre>span .xki,.px-cadre-barre>span .px-g{width:18px;height:18px;flex:none;border-radius:5px}
+.px-cadre-barre button{width:30px;height:28px;min-height:0;margin:0;padding:0;border-radius:9px;border:0;background:none;color:var(--muted);font:600 15px var(--police)}
+.px-cadre-coin{position:absolute;right:-8px;top:calc(38px + var(--ch) - 26px);width:34px;height:34px;border-radius:0 0 16px 0;border-right:3px solid var(--bio);border-bottom:3px solid var(--bio);box-sizing:border-box;touch-action:none}
+/* ◎ (0.63) le HUD de tuto (src/app/tuto-hud.js) : l'iPhone au trait et ses neuf zones, tenir, le tuto du ploxion */
+.px-tuto-hud .px-tiroir section{margin:0 0 14px}
+.px-tuto-hud h3{margin:4px 2px 8px;display:flex;align-items:center;gap:8px;font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.px-tuto-hud h3 .px-g{width:14px;height:14px;color:var(--bio)}
+.px-th-tel{display:grid;grid-template-columns:1fr 92px 1fr;grid-template-rows:repeat(3,auto);gap:8px 10px;align-items:center}
+.px-th-ecran{grid-column:2;grid-row:1/4;align-self:stretch;min-height:150px;border:1.5px solid var(--txt);border-radius:18px;position:relative;opacity:.8}
+.px-th-ecran i{position:absolute;top:6px;left:50%;width:30px;height:8px;transform:translateX(-50%);border-radius:5px;background:var(--txt);opacity:.7}
+.px-th-zone{display:flex;align-items:center;gap:6px;min-height:40px;font:600 11.5px var(--police);color:var(--txt)}
+.px-th-zone b{font-weight:600;line-height:1.25}
+.px-th-g{grid-column:1;justify-content:flex-end;text-align:right;border-right:2px solid var(--bio);padding-right:8px}
+.px-th-d{grid-column:3;border-left:2px solid var(--bio);padding-left:8px}
+.px-th-zone button,.px-th-tenir button{flex:none;width:28px;height:24px;min-height:0;margin:0;padding:0;border-radius:12px;border:var(--trait) solid var(--bio);background:none;color:var(--bio);font:600 10px var(--mono)}
+.px-th-deux{margin:10px 2px 0;font:12px var(--police);color:var(--muted)}.px-th-deux b{color:var(--txt);font-weight:600}
+.px-th-tenir{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.px-th-tenir li{display:flex;align-items:center;gap:10px;padding:7px 8px 7px 10px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2)}
+.px-th-tenir li b{flex:none;width:92px;font:600 11px var(--mono);color:var(--bio)}.px-th-tenir li span{flex:1;font:12.5px var(--police);color:var(--txt)}
+.px-th-ici ol{margin:0 0 8px;padding-left:22px;font:13.5px/1.45 var(--police);color:var(--txt)}
+.px-th-ici textarea{width:100%;box-sizing:border-box}
+.px-th-actions{display:flex;gap:8px;flex-wrap:wrap}.px-th-actions button{width:auto;flex:1;min-height:36px;margin:0}

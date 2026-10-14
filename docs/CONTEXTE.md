@@ -102,6 +102,19 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.63 (14.10)** — voir `src/app/nouveautes.js` 0.63 et les commentaires d'en-tête de `src/app/fractale.js` (le moteur), `src/natif/haptique.js`
+(fx-*, creerDebit, densité), `src/natif/jos-natif.js` (module Haptics gardé, crans), `src/app/demo.js`, `src/app/tuto-hud.js`, `src/app/routeur.js`
+(« LES ÉTATS D'UN PLOXION », ACTIONS_BORDS, GESTES_DEFAUT remappés), `src/app/barre-haut.js` (l'immersion), `src/natif/lecteur-natif.js` (la garde).
+Pièges : `tools/faux-iphone/parcours-lecteur.mjs` est cassé par la garde du lecteur (Playwright compte comme un geste ; neutraliser
+`navigator.userActivation` et présenter par `page.tap`) ; le Swift du lecteur (presenter → Bool, renvoyer après l'entrée) n'est pas compilé.
+RS-7 (14.10) : « on optimise tout au max, on n'a pas beaucoup d'usage » ; « la limite : il faudra commit » ; **il lance le build lui-même** (pas de
+`[build]` dans les messages). Ensuite, dans l'ordre : la LENTEUR (« ultra important, là c'est ultra lent ») ; le « dodo » (tsoin santé/sommeil,
+comparé au sommeil de la Garmin via Santé) ; l'accessibilité (VoiceOver, police plus grande, contraste, sans couleur seule, animations réduites)
+et la fiche App Store (URL de confidentialité, classement Game Center « Xeroctions », achats intégrés / abonnements pour la Milky Way Foundation
+— milkywayhub.org —, le compte de vérification d'Apple = « leur xer à eux ») ; le mode CHILL-SYNTH (brief du 14.10 : phase 1 = le lecteur en
+arrière-plan, valider sur l'iPhone avant la suite ; les extrapolations en commentaires seulement) ; la carte du xerboxion ; voir son xerbion et
+son xerploxion.
+
 0. **RS-7 (13.10, fin de session)** : « je veux que l'app soit un peu comme niri » (la bande de colonnes défilantes ; nouveau à droite ;
    vue d'ensemble) ; et un LOT de ploxions : Zotero, Foliate, un browser à la Helium, Blanket (ambiances), vaults Obsidian, LocalSend,
    AppFlowy, Manim (maths), un mpv, un btop, « et intégrer le xerminal dessus ». Au labo existent déjà `web` (Browser), `xerminal`, `ssh`,

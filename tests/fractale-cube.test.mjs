@@ -31,6 +31,7 @@ test('le cube : arrêté dans le slider et tenu 1,2 s, le xer devient un cube ; 
     assert.ok(racine.classList.contains('px-fx-cube'), 'le cube');
     ev(W, bd, 'pointermove', w / 2, 400);
     ev(W, bd, 'pointermove', w / 2, 220);   // glisser vers le haut : pencher le cube
+    await attendre(50);   // (0.63) tout passe par la boucle d'images
     const dessus = racine.querySelector('.px-fx-dessus');
     assert.match(dessus.textContent, /jOSGpg/); assert.match(dessus.textContent, /2 bions/);
     assert.ok(+dessus.style.opacity > 0.5, 'la face du dessus se voit');
@@ -49,7 +50,7 @@ test('la fractale ouverte : jeter une carte vers le haut ferme le ploxion, les a
     const calque = racine.querySelector('.px-fx-calque'), carteC = racine.querySelector('.px-fx-cible[aria-label="C"]');
     carteC.dispatchEvent(new W.MouseEvent('pointerdown', { clientX: 300, clientY: 500, bubbles: true }));
     ev(W, calque, 'pointermove', 300, 420); ev(W, calque, 'pointermove', 300, 100); ev(W, calque, 'pointerup', 300, 100);
-    await attendre(320);
+    await attendre(420);   // (0.63) les voisines se resserrent d'abord, le démontage suit
     assert.ok(!r.vivants().includes('c'), 'c est fermé');
     assert.equal(racine.querySelectorAll('.px-fx-cible').length, 3, 'l\'accueil, a, b');
     assert.ok(racine.classList.contains('px-fx-ouverte'), 'la fractale reste ouverte');

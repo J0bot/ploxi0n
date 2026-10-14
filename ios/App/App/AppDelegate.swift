@@ -601,11 +601,14 @@ public class PloxiLecteur: CAPPlugin, CAPBridgedPlugin, AVPlayerViewControllerDe
 
     // (0.54, RS-7 : « ça prend tout l'écran et ça crash ») présenter depuis le contrôleur du DESSUS (une feuille, Safari, l'aperçu peuvent
     // déjà être là), et jamais un contrôleur déjà présenté (UIKit lève une exception : le plantage)
-    private func presenter(_ vc: UIViewController) {
-        guard var haut = bridge?.viewController else { return }
+    // (0.63) false : le dessus est encore en train d'entrer — UIKit ignorerait la présentation, et le lecteur jouerait sans écran (le son fantôme)
+    @discardableResult private func presenter(_ vc: UIViewController) -> Bool {
+        guard var haut = bridge?.viewController else { return false }
         while let p = haut.presentedViewController, !p.isBeingDismissed { haut = p }
-        if vc.presentingViewController != nil || vc.isBeingPresented || haut === vc { return }
+        if vc.presentingViewController != nil || vc.isBeingPresented || haut === vc { return true }
+        if haut.isBeingPresented { return false }
         haut.present(vc, animated: true)
+        return true
     }
 
     private func emettre(_ etat: String, _ moteur: String, _ extra: [String: Any] = [:]) {
@@ -624,6 +627,8 @@ public class PloxiLecteur: CAPPlugin, CAPBridgedPlugin, AVPlayerViewControllerDe
         let sousTitres = (call.getArray("sousTitres", String.self) ?? []).compactMap { URL(string: $0) }
         let illisibleParApple = ["mkv", "avi", "webm", "wmv", "flv", "m2ts", "vob", "ogv", "divx", "rmvb"].contains(url.pathExtension.lowercased())
         DispatchQueue.main.async {
+            // (0.63) jamais quand l'app n'est pas au premier plan (une alerte, Face ID, le Centre de contrôle, l'arrière-plan)
+            guard UIApplication.shared.applicationState == .active else { call.reject("l'app n'est pas au premier plan"); return }
             self.toutFermer()
             self.derniere = (position, 0)
             if moteur == "vlc" || (moteur == "auto" && illisibleParApple && PloxiLecteur.vlcDisponible) {
@@ -671,7 +676,7 @@ public class PloxiLecteur: CAPPlugin, CAPBridgedPlugin, AVPlayerViewControllerDe
         var pret = false
         observations.append(item.observe(\.status, options: [.new]) { [weak self] it, _ in
             DispatchQueue.main.async {
-                guard let self = self else { return }
+                guard let self = self, self.appleVC === vc else { return }   // (0.63) remplacé entre-temps : ni son fantôme, ni l'appleVC du suivant effacé
                 if it.status == .readyToPlay && !pret {
                     pret = true
                     if position > 1 { lecteur.seek(to: CMTime(seconds: position, preferredTimescale: 600)) }
@@ -679,13 +684,17 @@ public class PloxiLecteur: CAPPlugin, CAPBridgedPlugin, AVPlayerViewControllerDe
                     self.emettre("lecture", "apple")
                 } else if it.status == .failed {
                     let raison = it.error?.localizedDescription ?? "format non lu par iOS"
+                    // (0.63) un échec PENDANT l'entrée (un MKV refusé d'emblée) : UIKit ignore le dismiss, le lecteur noir reste (« ça reste bloqué ») → après l'entrée
+                    let renvoyer: (Bool, (() -> Void)?) -> Void = { anime, puis in
+                        if vc.isBeingPresented, let tc = vc.transitionCoordinator { tc.animate(alongsideTransition: nil) { _ in vc.dismiss(animated: anime, completion: puis) } } else { vc.dismiss(animated: anime, completion: puis) }
+                    }
                     if repli {
                         self.emettre("repli", "apple", ["raison": raison])
-                        vc.dismiss(animated: false) { _ = self.ouvrirVLC(url, titre: titre, position: position, entetes: entetes, sousTitres: sousTitres) }
+                        renvoyer(false, { _ = self.ouvrirVLC(url, titre: titre, position: position, entetes: entetes, sousTitres: sousTitres) })
                         self.appleVC = nil
                     } else {
                         self.emettre("erreur", "apple", ["raison": raison])
-                        vc.dismiss(animated: true)
+                        renvoyer(true, nil)
                         self.appleVC = nil
                     }
                 }
@@ -698,25 +707,29 @@ public class PloxiLecteur: CAPPlugin, CAPBridgedPlugin, AVPlayerViewControllerDe
             self.derniere = (t.seconds.isFinite ? t.seconds : 0, d.isFinite ? d : 0)
             self.emettre("position", "apple")
         }
-        presenter(vc)
+        if !presenter(vc) { toutFermer(); emettre("erreur", "apple", ["raison": "un autre écran s'ouvre encore : réessaie"]) }   // (0.63) pas de lecteur sans écran
     }
     // ✕ (ou glisser vers le bas) : la fin du plein écran = fermé, sauf si l'image passe en PiP
     public func playerViewController(_ playerViewController: AVPlayerViewController, willEndFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator) {
         coordinator.animate(alongsideTransition: nil) { [weak self] ctx in
-            guard let self = self, !ctx.isCancelled, !self.enPiP else { return }
+            // (0.63) seulement le lecteur d'aujourd'hui : celui que toutFermer() remplace émettait « ferme » au milieu de l'ouverture du suivant
+            guard let self = self, playerViewController === self.appleVC, !ctx.isCancelled, !self.enPiP else { return }
             playerViewController.player?.pause()
             self.emettre("ferme", "apple")
         }
     }
     public func playerViewControllerWillStartPictureInPicture(_ playerViewController: AVPlayerViewController) { enPiP = true }
     public func playerViewControllerDidStopPictureInPicture(_ playerViewController: AVPlayerViewController) {
+        guard playerViewController === appleVC else { return }   // (0.63) le PiP d'un lecteur remplacé : rien pour celui d'aujourd'hui
         enPiP = false
         if playerViewController.presentingViewController == nil { emettre("ferme", "apple") }
     }
     public func playerViewController(_ playerViewController: AVPlayerViewController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
         if playerViewController.presentingViewController != nil || playerViewController.isBeingPresented { completionHandler(true); return }
-        guard var haut = bridge?.viewController else { completionHandler(false); return }
+        // (0.63) un PiP d'un lecteur remplacé, ou personne pour le présenter : il se ferme (et completionHandler est TOUJOURS appelé)
+        guard playerViewController === appleVC, var haut = bridge?.viewController else { completionHandler(false); return }
         while let p = haut.presentedViewController, !p.isBeingDismissed { haut = p }
+        if haut.presentedViewController != nil || haut.isBeingPresented { completionHandler(false); return }
         haut.present(playerViewController, animated: true) { completionHandler(true) }
     }
 

@@ -48,8 +48,11 @@ import { creerMiniDocks } from './app/minidocks.js';
 import { creerCadresLabo } from './natif/cadres-labo.js';
 import { installerGel } from './app/gel.js';
 import { installerSansEmoji } from './app/sans-emoji.js';
+import { creerDemo } from './app/demo.js';
+import { creerTutoHud } from './app/tuto-hud.js';
+import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.62.0';
+const VERSION = '0.63.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -125,18 +128,21 @@ async function demarrer() {
   // 🎞 le lecteur natif : chaque <video>/<audio>/<iframe YouTube> des ploxions (écran verrouillé, AirPlay, PiP, YouTube par https, haptique du son)
   const titrePx = () => (routeur && routeur.courant() && (routeur.catalogue().find(p => p.id === routeur.courant()) || {}).nom) || 'ploxi0n';
   // 🎞 (0.49) le lecteur intégré natif : Apple, VLC en repli ; jOSplayer, les vidéos illisibles ou muettes, vlc://, ploxi0n://lire
-  const lecteurNatif = creerLecteurNatif({ boxion, vibrer: (x) => vibrer(x), titre: titrePx });
+  // 🛡 (0.63, RS-7 : « un lecteur vidéo random qui pop et ça crash », « ça s'ouvre en boucle ») la garde : sur un toucher, le ploxion à l'écran, un à la fois, un disjoncteur
+  const lecteurNatif = creerLecteurNatif({ boxion, vibrer: (x) => vibrer(x), titre: titrePx, garde: true });
   window.ploxi0nLecteurNatif = lecteurNatif;
   const lecteur = installerLecteur({ boxion, vibrer: (s) => vibrer(s), titre: titrePx, surMedia: (m) => lecteurNatif.surMedia(m) });
   window.jOSNatif.lecteur = { pip: (m) => lecteur.pip(m), pleinEcran: (m) => lecteur.pleinEcran(m), airplay: (m) => lecteur.airplay(m), ...lecteurNatif.api };
   const haptique = creerHaptique({ boxion, actif: () => prefs.lire().haptique !== false && !!(window.jOSNatif && window.jOSNatif.natif) }); await haptique.pret;
   // un événement de l'app, un style, ou un motif inventé ; ouvrir/reprendre un ploxion = SA signature (ou son choix, ou son manifeste)
-  const vibrer = (ev, id) => ((ev === 'ouvrir' || ev === 'reprendre') && id
-    ? haptique.jouerPloxion(id, ev, window.jOSApps && window.jOSApps[id] && window.jOSApps[id].manifest && window.jOSApps[id].manifest.haptique)
-    : haptique.jouer(ev));
+  // (0.63) vibrer(ev, id, { niveau, classe, force }) ; fx-ouvrir / fx-arrivee avec un id = la signature aussi ; vibrer.crans = la session de crans
+  const OUVRE_PX = new Set(['ouvrir', 'reprendre', 'fx-ouvrir', 'fx-arrivee']);
+  const vibrer = Object.assign((ev, id, o) => (id && OUVRE_PX.has(ev)
+    ? haptique.jouerPloxion(id, ev, window.jOSApps && window.jOSApps[id] && window.jOSApps[id].manifest && window.jOSApps[id].manifest.haptique, o)
+    : haptique.jouer(ev, o)), { crans: haptique.crans });
   window.jOSNatif.haptique = (x) => haptique.jouer(x);   // les ploxions (le clicker…) jouent un style, un motif ou un événement
   const bionsCharges = new Set();   // un seul chargement par bion, pour toute l'app
-  let routeur = null, gel = null;
+  let routeur = null, gel = null, tutoHud = null;
   // ▤ (0.51) les mini docks : tout ce qui vit en arrière-plan (ploxions minimisés, musique, blouse, Santé, vidéo, vocal, brouillon), au-dessus du dock
   const miniDocks = creerMiniDocks({ routeur: () => routeur, prefs: () => prefs.lire(), vibrer: (x) => vibrer(x) });
   window.jOSMiniDock = miniDocks.api; prefs.surChangement(() => miniDocks.planifier());
@@ -322,12 +328,29 @@ async function demarrer() {
   routeur = creerRouteur({ panneau: () => modes.panneau(), racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id) => routeurProxy.ouvrir(id), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
     miniDocks: { surVivants: () => miniDocks.planifier(), surFermeture: (id) => { miniDocks.surFermeture(id); if (gel) gel.liberer(id); }, page: () => miniDocks.ouvrirPage() },
     surMontrer: (id) => { if (gel) gel.degeler(id); },
+    surTuto: (id) => (tutoHud ? tutoHud.ouvrir(id) : null),   // ◎ (0.63) haut gauche : le HUD de tuto
     tsoin: () => tsoinNatif.ouvrir(), surSession: (x) => { boxion.put('reglages', 'session', x).catch(() => {}); barreHaut.peindre(); usage.track(x.courant); } });
+  window.ploxi0nRouteur = routeur;
+  // ▶ (0.63) les démos (un doigt fantôme fait le geste pour de vrai) et le HUD de tuto (haut gauche) : « le jeu, c'est le tuto »
+  const demo = creerDemo({ routeur: () => routeur, signaler: (t) => routeur.signaler(t) });
+  tutoHud = creerTutoHud({ boxion, routeur: () => routeur, demo, prefs: () => prefs.lire(), vibrer, glyphe: (n) => G(n), tsoin: (x) => tsoinNatif.enregistrer(x) });
+  window.ploxi0nDemo = demo;
   // ❄ (0.53) le gel : un ploxion vivant mais caché n'anime plus (requestAnimationFrame mis de côté jusqu'à ce qu'on le revoie)
   gel = installerGel({ courant: () => routeur.courant(), vivants: () => routeur.vivants() });
   // ◇ (0.54) plus d'emoji dans l'interface de l'app : des glyphes du xerboxion (les ploxions du labo gardent leur contenu)
   // (0.54) une vidéo passe en plein écran : les ploxions cachés s'endorment (la mémoire ; iOS tuait la page : « ça crash »)
-  document.addEventListener('webkitbeginfullscreen', () => { try { routeur.endormirCaches(); } catch (e) { /* */ } }, true);
+  // 🛡 (0.63) un plein écran SANS toucher, d'un ploxion caché, pendant la fractale ou par-dessus le lecteur natif (« un lecteur random qui pop ») :
+  // refermé aussitôt (playsinline, et en pause s'il n'est pas à l'écran) — et on n'endort rien pour lui (endormir son propre hôte = le plantage)
+  document.addEventListener('webkitbeginfullscreen', (e) => {
+    const v = e.target;
+    if (v && v.tagName === 'VIDEO' && !lecteurNatif.garde.permis(v)) {
+      try { v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', ''); if (!lecteurNatif.garde.aLEcran(v)) v.pause(); } catch (er) { /* */ }
+      const sortir = () => { try { if (v.webkitDisplayingFullscreen && v.webkitExitFullscreen) v.webkitExitFullscreen(); } catch (er) { /* */ } };
+      setTimeout(sortir, 0); setTimeout(sortir, 700);   // pendant l'entrée, WebKit ignore parfois la sortie : une seconde fois après l'animation
+      return;
+    }
+    try { routeur.endormirCaches(); } catch (er) { /* */ }
+  }, true);
   installerSansEmoji({ interne: (id) => !!(routeur.catalogue().find(p => p.id === id) || {}).interne, actif: () => prefs.lire().glyphes !== false });
   { const cle = (p) => p.glyphes + '|' + p.styleIcones; let g = cle(prefs.lire()); prefs.surChangement((p) => { if (cle(p) === g) return; g = cle(p); if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); }); }
   // ▔ notre barre du haut, en plein écran (la place de la barre d'état d'iOS) : composable, appui long dessus
@@ -393,7 +416,7 @@ async function demarrer() {
   const tuto = creerOnboarding({ boxion, vibrer: (x) => vibrer(x), connecter: () => compte.connecter() });
   window.ploxi0nTuto = tuto;
   // ✦ après une mise à jour : ce qui a changé (pas au tout premier lancement : le tuto)
-  const nouveautes = creerNouveautes({ boxion, version: VERSION, vibrer: (x) => vibrer(x) });
+  const nouveautes = creerNouveautes({ boxion, version: VERSION, vibrer: (x) => vibrer(x), essayer: (nom) => demo.jouer(nom) });
   window.ploxi0nNouveautes = nouveautes;
   tuto.auDemarrage().then((premier) => nouveautes.auDemarrage({ premierLancement: premier })).catch(() => {});
   // « ok » pour la boîte noire seulement APRÈS la reprise de la session : un ploxion qui plante en se rouvrant compte comme un plantage
@@ -455,9 +478,12 @@ async function demarrer() {
   if (!modeSurJs && window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) setTimeout(() => dossier.synchroniser().catch(() => {}), 4000);
   // l'app passe en arrière-plan : toutes les vidéos s'arrêtent (sauf l'image dans l'image) ; le son continue (le mode audio, voulu)
   // (0.54, RS-7 : « il faudrait avoir le PiP automatique ») la vidéo qu'on regarde passe en PiP en quittant l'app ; les autres (cachées) s'arrêtent
-  function pipAuto() { try { const c = routeur && routeur.courant(), h = c && document.querySelector('.px-hote[data-ploxion="' + CSS.escape(c) + '"]'); const m = h && [...h.querySelectorAll('video')].find(v => !v.paused && !v.ended);
+  // 🛡 (0.63) inactive n'est pas partie : pas de PiP par-dessus le lecteur natif, ni pendant la fractale, ni juste après un toucher (l'inactivité vient
+  // alors de ce qu'il a ouvert — Face ID, une alerte d'autorisation — : le PiP y sautait au visage, « un lecteur vidéo random qui pop ») ; un hôte visible
+  function pipAuto() { try { const g = lecteurNatif.garde; if (g.occupe() || g.toucheRecent() || document.querySelector('#ploxi0n.px-fx')) return;
+    const c = routeur && routeur.courant(), h = c && document.querySelector('.px-hote[data-ploxion="' + CSS.escape(c) + '"]'); const m = h && !h.hidden && [...h.querySelectorAll('video')].find(v => !v.paused && !v.ended);
     if (m && m.webkitSupportsPresentationMode && m.webkitSupportsPresentationMode('picture-in-picture') && m.webkitPresentationMode !== 'picture-in-picture') m.webkitSetPresentationMode('picture-in-picture'); } catch (e) { /* refusé : elle s'arrête */ } }
-  function couperVideosArrierePlan() { pipAuto(); try { for (const m of document.querySelectorAll('video')) { if (!m.paused && document.pictureInPictureElement !== m && !m.webkitPresentationMode?.startsWith?.('picture')) m.pause(); } } catch (e) { /* */ } }
+  function couperVideosArrierePlan() { lecteurNatif.garde.arrierePlan(); pipAuto(); try { for (const m of document.querySelectorAll('video')) { if (!m.paused && document.pictureInPictureElement !== m && !m.webkitPresentationMode?.startsWith?.('picture')) m.pause(); } } catch (e) { /* */ } }
   if (!modeSurJs) notifs.demarrer();
   else { const b = document.createElement('div'); b.className = 'px-bulle'; b.textContent = '🛟 mode sûr pour ce lancement (le prochain réessaie tout). S\'il s\'est ouvert : le coupable est le fond photo, le thème vivant ou la session — dis-le à bother me.'; racine.appendChild(b); setTimeout(() => b.remove(), 9000); }
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {

@@ -123,13 +123,18 @@ export function installerWebNatif({ W = globalThis.window, prefs = () => ({}), c
   const coupe = () => prefs().webNatif === false;
 
   if (natif && !coupe()) {
-    // 📳 vibrate : chaque pulsation du motif → un choc du Taptic Engine (court = léger, long = fort)
+    // 📳 vibrate : chaque pulsation du motif → un choc du Taptic Engine (court = léger, long = fort). (0.63) Par jOSNatif.vibrer : le module
+    // déjà chargé, les appels en vol comptés, 60/s au plus (un ploxion qui mitraille vibrate ne noie plus les crans de l'app)
     brancher('vibrate', () => definir(nav, 'vibrate', (motif) => {
       if (prefs().haptique === false) return true;
       const l = Array.isArray(motif) ? motif : [motif]; let t = 0;
       l.forEach((d, i) => {
         d = Math.max(0, +d || 0);
-        if (i % 2 === 0 && d > 0) W.setTimeout(() => m.haptics().then(h => h.Haptics.impact({ style: d >= 60 ? 'HEAVY' : d >= 25 ? 'MEDIUM' : 'LIGHT' })).catch(() => {}), t);
+        if (i % 2 === 0 && d > 0) W.setTimeout(() => {
+          const j = W.jOSNatif;
+          if (j && typeof j.vibrer === 'function') { Promise.resolve(j.vibrer(d >= 60 ? 'fort' : d >= 25 ? 'moyen' : 'leger')).catch(() => {}); return; }
+          m.haptics().then(h => h.Haptics.impact({ style: d >= 60 ? 'HEAVY' : d >= 25 ? 'MEDIUM' : 'LIGHT' })).catch(() => {});   // sans jOSNatif (les tests, un démarrage partiel)
+        }, t);
         t += d;
       });
       return true;
