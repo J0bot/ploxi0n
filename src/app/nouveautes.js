@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.65.0', titre: 'Tout ton xerboxion, sur une carte', points: [
+    { t: 'La carte du xerboxion : pince la fractale (ou ⊞, ou « tout » sur la page aujourd\'hui). Au centre le cube du xerboxion ; autour, chaque famille est un koin, et chaque ploxion a SA place, toujours la même. Promène-la du doigt (elle file sur son élan), zoome à deux doigts : de loin les koins, de près les noms et le chemin des swipes pour y aller depuis là où tu es. Touche une app : tu plonges dedans. Appui long : déplace-la, elle garde sa nouvelle place.', essayer: 'carte' },
+    'Les fils, la seule couleur : vus de près, ils relient les ploxions qui partagent un bion rare.',
+    'Les gestes des bords proposent aussi l\'état d\'un ploxion, le tuto et « tout le xerboxion ».',
+  ] },
   { v: '0.64.0', titre: 'Dodo, et le son qui tient', points: [
     '☾ Dodo : dans le tsoin, la rangée « santé · sommeil » : ☾ dodo ou ☀ réveil d\'un toucher, sans rien écrire. Ou ploxi0n://dodo depuis un raccourci, le Toucher au dos, ou l\'automatisation « quand Sommeil s\'active ». La page Santé met ta nuit dite à côté de la nuit de ta montre (Garmin → Apple Santé) : combien de temps pour t\'endormir, l\'écart au réveil.',
     '≋ chill-synth, la phase 1 : une piste (un fichier à toi, ou une adresse CC0), lance, verrouille l\'iPhone 10 minutes ; au retour, le ploxion te dit si le son a tenu. Deux essais (le son seul, avec l\'analyse), et les bandes du son partent sur le bus « audio:bands » pour la suite (le visuel, l\'haptique).',

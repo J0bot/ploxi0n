@@ -102,6 +102,12 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.63.1 → 0.65 (14.10)** — 0.63.1 : la lenteur, c'était le thème vivant (--mx sur <html>, tout le document recalculé 8×/s : 2 i/s à
+l'accueil de RS-7 au faux iPhone ×4 → 50 i/s ; `tools/faux-iphone/parcours-perf.mjs`). 0.64 : ☾ dodo/réveil (tsoin, ploxi0n://dodo,
+`comparerNuit` dans Santé), « Réduire les animations » = Calme, ≋ chill-synth phase 1 (`src/chill/chill-synth.js` : à valider sur
+l'iPhone, 10 min verrouillé, essais A et B), `docs/APP-STORE.md` (chaque écran d'App Store Connect), les extrapolations en commentaires
+(`src/natif/compte.js`). 0.65 : ⊞ la carte du xerboxion (`src/app/carte-xer.js`, `tools/faux-iphone/parcours-carte.mjs`).
+
 **0.63 (14.10)** — voir `src/app/nouveautes.js` 0.63 et les commentaires d'en-tête de `src/app/fractale.js` (le moteur), `src/natif/haptique.js`
 (fx-*, creerDebit, densité), `src/natif/jos-natif.js` (module Haptics gardé, crans), `src/app/demo.js`, `src/app/tuto-hud.js`, `src/app/routeur.js`
 (« LES ÉTATS D'UN PLOXION », ACTIONS_BORDS, GESTES_DEFAUT remappés), `src/app/barre-haut.js` (l'immersion), `src/natif/lecteur-natif.js` (la garde).

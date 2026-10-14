@@ -4,6 +4,7 @@
 // un accueil court (cinq groupes, une ligne par catégorie avec son état en un mot et ›), chaque catégorie sur sa page (‹ pour revenir),
 // et des sous-pages pour ce qui est long (les gestes des bords ; l'haptique : motifs, événements, signatures). La recherche fouille tout.
 // Les bions : chacun avec sa taille et les ploxions qui l'utilisent ; le couper (plus chargé), le mettre à jour, le retirer s'il ne sert plus.
+import { ACTIONS_BORDS } from './routeur.js';
 import { testerClavier } from './clavier.js';
 import { PLUGIONS } from '../natif/plugions.js';
 import { STYLES, EVENEMENTS, MOTIFS_APP, DENSITES } from '../natif/haptique.js';
@@ -164,7 +165,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + seg('maxVivants', [[5, '5'], [8, '8'], [12, '12'], [20, '20'], [0, '∞']], P.maxVivants, 'Ploxions vivants en arrière-plan', 'au-delà, le plus ancien s\'endort (il reste dans les mini docks) ; cachés, ils sont gelés et leurs vidéos coupées ; ∞ : aucune limite, iOS fermera l\'app s\'il manque de mémoire')
           + lien('gestes', '↔', 'Gestes des bords', '9 zones, une action chacune') + '</div>') + section('gestes', 'Gestes des bords', '<p class="msg">Glisser vite depuis une zone d\'un bord (ou les deux bords ensemble) fait son action. Tenir un bord (gauche ou droit) : 0,3 s l\'aperçu de l\'app d\'à côté, 0,9 s la fractale de tes apps, 1,9 s le slider (⚙ › Navigation).</p><div class="bloc">'
           + (() => { const D0 = (R().GESTES_DEFAUT || {}), G = P.gestes || {}, cat2 = R().catalogue();
-              const ACTIONS = [['precedente', '← app précédente'], ['suivante', 'app suivante →'], ['accueil', '⌂ accueil'], ['minimiser', '▁ minimiser'], ['basculer', '⧉ basculer'], ['chercher', 'chercher'], ['reglages', 'réglages'], ['portion', '◈ portion'], ['tsoin', '⧗ noter un tsoin'], ['freefall', '◇ freefall (gyroscope)'], ['rien', '— rien']]
+              const ACTIONS = ACTIONS_BORDS   // (0.64) la même liste que le routeur et le HUD de tuto (l'état, le tuto, tout le xerboxion)
                 .concat(cat2.filter(p => !p.interne).slice(0, 60).map(p => ['ouvrir:' + p.id, '▶ ' + (p.nom || p.id)]));
               const ZONES = [['g-haut', 'gauche · haut'], ['g-milieu', 'gauche · milieu'], ['g-bas', 'gauche · bas'], ['d-haut', 'droit · haut'], ['d-milieu', 'droit · milieu'], ['d-bas', 'droit · bas'], ['deux-haut', 'les deux · haut'], ['deux-milieu', 'les deux · milieu'], ['deux-bas', 'les deux · bas']];
               return ZONES.map(([z, n]) => { const v = G[z] || D0[z] || 'rien'; return '<div class="l"><span>' + esc(n) + '</span><select data-geste="' + z + '" style="max-width:52%;background:var(--surface2,#151021);color:inherit;border:2px solid var(--bord,#272036);border-radius:10px;padding:6px;font:13px inherit">'

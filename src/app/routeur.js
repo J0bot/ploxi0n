@@ -391,7 +391,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     let jour = ''; try { jour = new Date().toLocaleDateString('fr-CH', { weekday: 'long', day: 'numeric', month: 'long' }); } catch (e) { /* */ }
     return '<h2 class="px-titre-page">' + G('recents') + ' aujourd\'hui</h2><p class="px-sous px-auj-date">' + texte(jour) + '</p>'
       + '<div class="px-auj-actions"><button data-auj="fractale">' + G('basculer') + '<span>la fractale</span></button><button data-auj="freefall">' + G('iphone') + '<span>freefall</span></button>'
-      + '<button data-auj="tsoin">' + G('tsoin') + '<span>un tsoin</span></button><button data-auj="minidocks">' + G('minidocks') + '<span>mini docks</span></button></div>'
+      + '<button data-auj="tsoin">' + G('tsoin') + '<span>un tsoin</span></button><button data-auj="carte">' + G('xerboxion') + '<span>tout</span></button></div>'
       + '<h3 class="px-auj-t">ce qui vit</h3>'
       + (md.length ? '<div class="px-auj-liste">' + md.slice(0, 12).map(m => '<button class="px-auj-l" ' + (m.ploxion ? 'data-reprendre="' + texte(m.ploxion) + '"' : 'data-md="' + texte(m.cle) + '"') + '><span class="px-ic">' + (m.ploxion ? icone(parId.get(m.ploxion) || { id: m.ploxion, nom: m.titre }) : G('musique')) + '</span><span class="px-auj-tx"><b>' + texte(m.titre || '') + '</b><small>' + texte(m.sous || '') + '</small></span></button>').join('') + '</div>'
         : '<p class="px-sous">Rien d\'ouvert. Tes ploxions vivants, la musique, les vidéos à reprendre viendront ici.</p>');
@@ -616,7 +616,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (b.hasAttribute('data-reprendre')) return ouvrir(b.getAttribute('data-reprendre'));
     if (b.hasAttribute('data-tuer')) { tuer(b.getAttribute('data-tuer')); return courant ? null : accueil(); }
     if (b.hasAttribute('data-basculer')) return basculer();
-    if (b.hasAttribute('data-auj')) { const a = b.getAttribute('data-auj'); if (a === 'fractale') return fractale.ouverte() || signaler('ouvre d\'abord un ploxion'); if (a === 'freefall') return fractale.freefall(); if (a === 'tsoin') return tsoin ? tsoin() : null; if (a === 'minidocks') return miniDocks ? miniDocks.page() : null; return; }
+    if (b.hasAttribute('data-auj')) { const a = b.getAttribute('data-auj'); if (a === 'fractale') return fractale.ouverte() || signaler('ouvre d\'abord un ploxion'); if (a === 'freefall') return fractale.freefall(); if (a === 'tsoin') return tsoin ? tsoin() : null; if (a === 'carte') return ouvrirCarte(); if (a === 'minidocks') return miniDocks ? miniDocks.page() : null; return; }
     if (b.hasAttribute('data-md')) return miniDocks ? miniDocks.page() : null;
     if (b.hasAttribute('data-aller')) { const c = racine.querySelector('.px-pages'), i = +b.getAttribute('data-aller'); if (c && c.children[i]) c.scrollTo ? c.scrollTo({ left: c.children[i].offsetLeft, behavior: 'smooth' }) : (c.scrollLeft = c.children[i].offsetLeft); return; }
     const id = b.getAttribute('data-id'); if (!id) return;
@@ -744,6 +744,10 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     freefall: (on) => fractale.freefall(on),
     /** (0.63) la carte du xerboxion : brancher (main.js), ouvrir */
     brancherCarte(c) { carteXer = c || null; }, carte: (o) => ouvrirCarte(o), signaler: (t) => signaler(t),
+    /** (0.64) pour la carte du xerboxion : chaque ploxion, son icône, son état ; y aller sans rejouer la signature (la carte l'a jouée) */
+    listeCarte: () => [...parId.values()].map(p => ({ id: p.id, nom: p.nom || p.id, icone: icone(p), cat: p.cat, type: p.type, bions: p.bions || [],
+      etat: verrous.has(p.id) && !deverrouilles.has(p.id) ? 'verrou' : vivants.has(p.id) ? 'vivant' : endormis.some(e => e.id === p.id) ? 'endormi' : 'installe' })),
+    aller: (id) => allerA(id, { muet: true }),
     /** (0.63) l'état du ploxion à l'écran (normal → plein → pip → cadre) ; ce qui flotte */
     etat: () => cyclerEtat(), flottant: () => (flottant ? { id: flottant.v.id, mode: flottant.mode } : null), plein: () => !!(courant && pleins.has(courant.id)),
     /** (0.63) pour la carte : tout ce qui vit, dort ou est installé, et l'état de chacun */

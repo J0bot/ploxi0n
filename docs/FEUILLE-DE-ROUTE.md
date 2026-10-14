@@ -9,7 +9,10 @@
 
 **Légende** : ✅ fait (version) · 🔨 en cours · ⏭ prochain · 💭 plus tard · ❓ attend une décision de RS-7 · ⚠ fait, mais jamais vu marcher sur l'iPhone
 
-*Dernière mise à jour : 0.63 (14.10) : la fractale fluide (une boucle d'images, le ressort à élan, l'inclinaison sur les conteneurs,
+*Dernière mise à jour : 0.65 (14.10) : ⊞ la carte du xerboxion. 0.64 : ☾ dodo, ≋ chill-synth phase 1 (⚠ à valider sur l'iPhone),
+Animations réduites, la fiche App Store. 0.63.1 : la lenteur (le thème vivant). ⏭ : VoiceOver et police plus grande (l'accessibilité),
+les sessions (test, xeroction, le xer de la revue), le portion (x = xers, y = sessions), chill-synth phases 2–4 après validation.
+Avant : 0.63 (14.10) : la fractale fluide (une boucle d'images, le ressort à élan, l'inclinaison sur les conteneurs,
 la préparation invisible, plus rien de coincé), l'haptique selon l'usage (28 événements fx-*, le débit, la session de crans, la densité),
 le cube réparé, les démos (doigt fantôme) et les nouveautés jouables, le HUD de tuto (haut gauche), les états d'un ploxion (plein écran,
 PiP vivant, cadre ; bas gauche), la bande du haut remplie, le lecteur vidéo gardé (toucher, une scène, disjoncteur). ⏭ : la carte du

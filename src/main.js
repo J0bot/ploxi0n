@@ -49,11 +49,12 @@ import { creerCadresLabo } from './natif/cadres-labo.js';
 import { installerGel } from './app/gel.js';
 import { installerSansEmoji } from './app/sans-emoji.js';
 import { creerDemo } from './app/demo.js';
+import { creerCarteXer } from './app/carte-xer.js';
 import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.64.0';
+const VERSION = '0.65.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -337,6 +338,8 @@ async function demarrer() {
   const demo = creerDemo({ routeur: () => routeur, signaler: (t) => routeur.signaler(t) });
   tutoHud = creerTutoHud({ boxion, routeur: () => routeur, demo, prefs: () => prefs.lire(), vibrer, glyphe: (n) => G(n), tsoin: (x) => tsoinNatif.enregistrer(x) });
   window.ploxi0nDemo = demo;
+  // ⊞ (0.64) la carte du xerboxion : pincer la fractale, ⊞, le bord « tout le xerboxion »
+  routeur.brancherCarte(creerCarteXer({ racine: document.body, liste: () => routeur.listeCarte(), courant: () => routeur.courant(), aller: (id) => routeur.aller(id), vibrer, boxion, calme: () => !!prefs.lire().calme, glyphe: (n) => G(n) }));
   // ❄ (0.53) le gel : un ploxion vivant mais caché n'anime plus (requestAnimationFrame mis de côté jusqu'à ce qu'on le revoie)
   gel = installerGel({ courant: () => routeur.courant(), vivants: () => routeur.vivants() });
   // ◇ (0.54) plus d'emoji dans l'interface de l'app : des glyphes du xerboxion (les ploxions du labo gardent leur contenu)

@@ -736,3 +736,27 @@ html.px-px-chill body{
 .px-chill-piste{margin:6px 2px;font:12.5px var(--mono);color:var(--muted);overflow-wrap:anywhere}
 .px-chill-vu{display:block;width:100%;height:120px;margin:12px 0;border-radius:12px;background:#1f1f1d}
 .px-chill-journal{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font:12.5px var(--mono);color:var(--txt)}
+/* ⊞ (0.64) la carte du xerboxion (src/app/carte-xer.js) — « le trait » : fond #1f1f1d, traits #ecebe9, la seule couleur = les fils */
+.px-carte{position:fixed;inset:0;z-index:2147483200;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  background:#1f1f1d;background-image:linear-gradient(rgba(236,235,233,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(236,235,233,.05) 1px,transparent 1px);background-size:48px 48px;color:#ecebe9;animation:px-fx-in .2s ease-out}
+.px-carte-plan{position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0;will-change:transform}
+.px-carte-fils{position:absolute;overflow:visible;pointer-events:none;stroke-width:2;opacity:.7;display:none}.px-carte[data-niveau="pres"] .px-carte-fils{display:block}
+.px-carte-case,.px-carte-cube{position:absolute;width:84px;height:84px;margin:0;padding:0;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0;background:none;color:#ecebe9;-webkit-tap-highlight-color:transparent}
+.px-carte-ic{width:52px;height:52px;display:flex;align-items:center;justify-content:center}.px-carte-ic .xki,.px-carte-ic .px-g{width:100%;height:100%}
+.px-carte-case b{max-width:92px;font:600 10px var(--police,system-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-carte-case small{display:none;font:600 9px var(--mono,monospace);color:#d8b04a;white-space:nowrap}
+.px-carte-case.ici .px-carte-ic{outline:2px solid #ecebe9;outline-offset:4px;border-radius:14px}
+.px-carte-endormi{opacity:.55}.px-carte-verrou .px-carte-ic{filter:grayscale(1)}
+.px-carte-vivant .px-carte-ic::after{content:"";position:absolute;width:8px;height:8px;margin:-40px 0 0 46px;border-radius:50%;background:#ecebe9}
+.px-carte-case.porte{z-index:5;opacity:.85}
+.px-carte-cube i{position:absolute;left:50%;top:44%;border:1.5px solid #ecebe9;transform:translate(-50%,-50%)}
+.px-carte-cube i:nth-child(1){width:60px;height:60px}.px-carte-cube i:nth-child(2){width:40px;height:40px}.px-carte-cube i:nth-child(3){width:20px;height:20px}
+.px-carte-cube b{margin-top:72px;font:600 9px var(--mono,monospace);letter-spacing:.14em;text-transform:uppercase}
+.px-carte-koin{position:absolute;transform:translate(-50%,-50%);display:none;flex-direction:column;align-items:center;gap:6px;pointer-events:none;color:#ecebe9;opacity:.8}
+.px-carte-koin .px-g{width:90px;height:90px}.px-carte-koin b{font:600 22px var(--mono,monospace);letter-spacing:.2em;text-transform:uppercase}
+.px-carte[data-niveau="loin"] .px-carte-koin{display:flex}
+.px-carte[data-niveau="loin"] .px-carte-case b{display:none}
+.px-carte[data-niveau="pres"] .px-carte-case small{display:block}
+.px-carte-x,.px-carte-moi{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:2;width:auto;height:36px;min-height:0;margin:0;padding:0 14px;border-radius:18px;border:1.5px solid #ecebe9;background:#1f1f1d;color:#ecebe9;font:600 12px var(--mono,monospace)}
+.px-carte-x{right:16px}.px-carte-moi{left:16px}
+.px-carte-aide{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);margin:0;text-align:center;font:600 10px var(--mono,monospace);letter-spacing:.12em;text-transform:uppercase;color:rgba(236,235,233,.6);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
