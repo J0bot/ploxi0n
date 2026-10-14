@@ -11,11 +11,15 @@ export const PREFS_DEFAUT = { barreClavier: true, telecommande: true, pleinEcran
 export function creerPrefs({ W = globalThis.window, boxion }) {
   let p = { ...PREFS_DEFAUT };
   const abonnes = new Set();
+  // ♿ (0.64, l'accessibilité de l'App Store : « Animations réduites ») « Réduire les animations » d'iOS = le mode Calme, sans rien régler
+  let mq = null; try { mq = W.matchMedia ? W.matchMedia('(prefers-reduced-motion: reduce)') : null; } catch (e) { mq = null; }
+  const ios = () => !!(mq && mq.matches);
+  if (mq && mq.addEventListener) mq.addEventListener('change', () => { appliquer(); for (const f of abonnes) { try { f({ ...p, calme: !!p.calme || ios() }); } catch (e) { /* */ } } });
   const pret = boxion.get('reglages', 'app').then(v => { if (v && typeof v === 'object') p = { ...PREFS_DEFAUT, ...v }; }).catch(() => {});
   function appliquer() {
     const h = W.document.documentElement;
     h.classList.toggle('px-sans-grain', !p.grain);
-    h.classList.toggle('px-calme', !!p.calme);
+    h.classList.toggle('px-calme', !!p.calme || ios());
     h.classList.toggle('px-px-chill', p.pxChill !== false);   // ◇ (0.52) tous les ploxions en chill-tekk
     h.classList.toggle('px-contraste', p.contraste === 'fort');
     for (const t of ['petites', 'normales', 'grandes']) h.classList.toggle('px-icones-' + t, p.icones === t);
@@ -26,7 +30,7 @@ export function creerPrefs({ W = globalThis.window, boxion }) {
   }
   return {
     pret, appliquer,
-    lire: () => ({ ...p }),
+    lire: () => ({ ...p, calme: !!p.calme || ios(), calmeIos: ios() }),
     async regler(patch) {
       p = { ...p, ...patch };
       // (0.56, RS-7 : « le max 8 ploxions ça devient chiant ») 0 = sans limite ; les cachés sont gelés (src/app/gel.js), leurs vidéos coupées
