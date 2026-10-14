@@ -72,11 +72,16 @@ button{font-family:inherit;-webkit-user-select:none;user-select:none}
 .px-barre>span:not(.px-hud){font:600 11.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;color:var(--muted)}
 .px-retour{font-size:1.4rem;line-height:1;background:var(--surface2);border:var(--trait) solid var(--bord);border-radius:12px;color:var(--acc);width:42px;height:42px;padding:0 0 3px;flex:none}
 .px-retour:active{transform:scale(.92)}
-.px-barre .px-hud{margin-left:auto;flex:none}
+.px-barre .px-hud{margin-left:auto;flex:0 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.px-barre .px-hud::-webkit-scrollbar{display:none}
+.px-barre .px-hud>*{flex:none}
+/* (0.69, RS-7 : « le dock dépasse, ensuite tous les ploxions on peut les décaler à gauche ») rien ne fait défiler la page de côté : la barre
+   défile dans elle-même, et la racine coupe ce qui dépasse */
+html,body,#ploxi0n{overflow-x:clip;max-width:100vw}
 .px-barre .px-compte{padding:0 11px}
 .px-verrou{font-size:1rem;background:var(--surface2);border:var(--trait) solid transparent;border-radius:12px;min-width:38px;min-height:38px}
 .px-hote{flex:1;min-height:0;position:relative;overflow:auto}
 .px-erreur{color:#d993ad;padding:16px}
+.px-erreur-boot{padding:calc(env(safe-area-inset-top,0px) + 40px) 22px 22px;font:15px/1.5 var(--police,system-ui)}.px-erreur-boot p{margin:0 0 14px}.px-erreur-boot button{min-height:46px;padding:0 20px;border-radius:14px;border:2px solid #d993ad;background:none;color:#f1d6e0;font:600 15px var(--police,system-ui)}
 
 /* ---- les feuilles : une plaque qui monte du bas ---- */
 .px-feuille,.px-voile{position:fixed;inset:0;z-index:50;background:rgba(3,2,6,.78);display:flex;align-items:flex-end}
@@ -808,3 +813,13 @@ html.px-telecommande .px-holo-socle{bottom:calc(env(safe-area-inset-bottom,0px) 
 .ci-media{display:flex;align-items:center;justify-content:center;min-height:80px;background:rgba(0,0,0,.4);color:#ecebe9;font-size:28px}
 .ci-prise{animation:ci-prise 1s ease-in-out infinite alternate}@keyframes ci-prise{from{opacity:.35}to{opacity:.8}}
 html.px-calme .ci-prise{animation:none}
+
+/* 🔍 (0.69) chercher chez soi */
+.px-cl{display:flex;flex-direction:column;gap:10px;max-height:78vh}
+.px-cl-q{width:100%;box-sizing:border-box;padding:12px 14px;border-radius:14px;border:var(--trait,2px) solid var(--bord);background:var(--creux,#0a0712);color:inherit;font:16px var(--police);-webkit-appearance:none}
+.px-cl-liste{overflow:auto;display:flex;flex-direction:column;gap:2px;min-height:60px}
+.px-cl-l{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:8px 6px;border:0;border-radius:12px;background:none;color:inherit;font:inherit;min-height:52px}
+.px-cl-l:active{background:var(--surface2)}.px-cl-l b{display:block;font-weight:600}.px-cl-l small{display:block;color:var(--muted);font:11px var(--mono)}
+.px-cl-ic{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center}.px-cl-ic .xki,.px-cl-ic .px-g{width:100%;height:100%}
+.px-cl-bas{display:flex;gap:8px;flex-wrap:wrap}.px-cl-bas button{flex:1 1 auto;min-height:42px;border-radius:12px;border:var(--trait,2px) solid var(--bord);background:var(--surface2);color:inherit;font:600 13px var(--police)}
+.px-cl-vide,.px-cl-msg{margin:4px 2px;color:var(--muted);font:12px var(--mono)}.px-cl-msg:empty{display:none}

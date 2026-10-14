@@ -7,6 +7,12 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.69.0', titre: 'Démarrer toujours, ne plus déborder', points: [
+    'ploxi0n démarre même quand iOS a fermé sa base (« unable to open database file », iPhone verrouillé) : il réessaie, attend que tu déverrouilles, et sinon te dit pourquoi avec ↻ réessayer. La base reste chiffrée par iOS jusqu\'au premier déverrouillage, pour que le son et les raccourcis (dodo) marchent écran verrouillé.',
+    'La barre d\'un ploxion ne dépasse plus de l\'écran (elle défile dans elle-même) : plus rien ne se décale à gauche.',
+    'Moins de lag avec beaucoup de ploxions ouverts : un ploxion caché depuis 5 minutes s\'endort (il ne coûte plus rien, un toucher le réveille), jamais s\'il fait du son. Réglable : ⚙ › Navigation.',
+    '🔍 cherche d\'abord dans TES ploxions (sans accents, ceux qui sont ouverts d\'abord, Entrée ouvre le premier) ; le marketplace est en dessous, et ↻ tout mettre à jour d\'un toucher.',
+  ] },
   { v: '0.68.1', titre: 'Le cube ne fait que regarder', points: [
     '▣ Les pages d\'onglets se photographient sans toucher au ploxion : il ne bouge plus derrière le cube (bother ne recharge plus sa boîte, rien de tapé ne se perd).',
     '▣ Deux touchers rapides sur ▣ n\'ouvrent plus deux cubes ; changer d\'app pendant qu\'il s\'ouvre l\'annule ; le geste des bords « cube » le referme bien ; le plafond et le sol arrivent en fondu ; un appui long n\'ouvre plus le menu image d\'iOS.',

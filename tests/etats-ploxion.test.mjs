@@ -114,3 +114,21 @@ test('◎ le HUD de tuto : les neuf zones telles que réglées, tenir (▶ démo
     void racine;
   } finally { p.fin(); }
 });
+
+test('(0.69) le sommeil des cachés : caché depuis plus de 5 min, il s\'endort ; pas s\'il joue du son ; jamais si « jamais »', async () => {
+  const p = await page({ avion: true, ploxions: [] });
+  try {
+    let prefs = {}; const sons = new Set();
+    const { r, racine } = await monter(p, ['a', 'b', 'c'], { prefs: () => prefs, sonDe: (id) => sons.has(id) });
+    await r.ouvrir('c');
+    const t = Date.now() + 6 * 60000;
+    sons.add('b');
+    assert.equal(r.endormirVieux(t), 1, 'a dort ; b fait du son : il reste');
+    assert.deepEqual(r.vivants().sort(), ['b', 'c']); assert.ok(r.endormis().includes('a'));
+    assert.ok(!racine.querySelector('.px-hote[data-ploxion="a"]'), 'démonté : il ne coûte plus rien');
+    sons.delete('b'); prefs = { sommeil: 0 };
+    assert.equal(r.endormirVieux(t), 0, 'jamais');
+    prefs = {}; assert.equal(r.endormirVieux(Date.now()), 0, 'caché depuis moins de 5 min');
+    assert.equal(r.endormirVieux(t), 1); assert.equal(r.courant(), 'c', 'celui qu\'on regarde reste');
+  } finally { p.fin(); }
+});

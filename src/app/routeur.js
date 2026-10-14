@@ -23,7 +23,7 @@ const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><p
 export const ACTIONS_BORDS = [['precedente', '← app précédente'], ['suivante', 'app suivante →'], ['accueil', '⌂ accueil'], ['minimiser', '▁ minimiser'], ['basculer', '⧉ basculer'],
   ['chercher', 'chercher'], ['reglages', 'réglages'], ['portion', '◈ portion'], ['tsoin', '⧗ noter un tsoin'], ['freefall', '◇ freefall (gyroscope)'],
   ['etat', '▣ l\'état : plein écran, pip, cadre'], ['tuto', '◎ le tuto ici'], ['carte', '⊞ tout le xerboxion'], ['holo', '◈ le xerploxion (l\'hologramme)'], ['cube', '▣ ses pages, dans le cube'], ['rien', '— rien']];
-export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null, surMontrer = null, surTuto = null } = {}) {
+export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false, surChercher = null, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null, surMontrer = null, surTuto = null } = {}) {
   // ▤ (0.51) les mini docks : miniDocks = { surVivants(), surFermeture(id), page() } — ⧉ ouvre leur page, ils remplacent « en arrière-plan »
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
@@ -33,6 +33,11 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   //   minimiser : le ploxion reste vivant, l'accueil revient ; la rangée « en arrière-plan » le reprend d'un geste
   // Au plus MAX_VIVANTS : au-delà, le plus anciennement vu (hors celui qu'on regarde) est fermé (le droit au silence).
   const maxVivants = () => { const n = +prefs().maxVivants; return n === 0 ? Infinity : Math.max(1, Math.min(99, n || 12)); };   // 0 = sans limite (0.56)
+  // (0.69, RS-7 : « le lag quand on a plein de ploxions ouverts », 26 au compteur) LE SOMMEIL DES CACHÉS : un ploxion caché depuis plus de
+  // `sommeil` minutes (5 par défaut ; 0 = jamais) s'endort — démonté, gardé dans les mini docks, un toucher le réveille — sauf s'il fait du
+  // son (<audio>/<video> qui joue, ou Web Audio : sonDe, src/app/gel.js), s'il flotte (pip, cadre) ou s'il est sous le cube. Ses minuteurs,
+  // sa mémoire et ses requêtes s'arrêtent avec lui : les cachés ne coûtent plus rien.
+  const sommeilMs = () => { const m = prefs().sommeil; return m === 0 || m === '0' ? Infinity : Math.max(1, +m || 5) * 60000; };
   let courant = null;     // l'instance visible
   const vivants = new Map(); let pile = [];
   // LA SESSION (RS-7 12.10 : « quand on ferme l'app ou qu'elle crash, on ne retrouve jamais les apps ouvertes avant ») : à chaque changement,
@@ -78,7 +83,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (action === 'carte') return ouvrirCarte();   // (0.63) tout le xerboxion
     vibrer(action === 'portion' ? 'portion' : 'bord');
     if (action === 'tsoin') return tsoin ? tsoin() : null;
-    if (action === 'chercher') return ouvrir('marketplace', { chercher: '1' });
+    if (action === 'chercher') return surChercher ? surChercher() : ouvrir('marketplace', { chercher: '1' });   // (0.69) d'abord chez soi
     if (action === 'reglages') return ouvrir('reglages-app');
     if (action === 'portion') return doubleBord ? doubleBord() : (ouvrirExterne && ouvrirExterne('portion'));
     if (action.startsWith('ouvrir:')) { const id = action.slice(7); return parId.has(id) ? ouvrir(id) : (ouvrirExterne && ouvrirExterne(id)); }
@@ -661,7 +666,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     const b = e.target.closest('button'); if (!b || !racine.contains(b) || b.closest('.px-hote') || b.closest('.px-voile')) return;
     if (b.hasAttribute('data-compte')) { if (hud) hud.ouvrir(); return; }
     if (b.hasAttribute('data-reglages')) return ouvrir('reglages-app');
-    if (b.hasAttribute('data-chercher')) return ouvrir('marketplace', { chercher: '1' });
+    if (b.hasAttribute('data-chercher')) return surChercher ? surChercher() : ouvrir('marketplace', { chercher: '1' });
     if (b.hasAttribute('data-vocal')) return surVocal ? surVocal() : null;
     if (b.hasAttribute('data-tsoin')) return tsoin ? tsoin() : null;
     if (b.hasAttribute('data-hud-px')) return ouvrir(b.getAttribute('data-hud-px'));
@@ -696,6 +701,15 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   // Caché → ses vidéos s'arrêtent et ne préchargent plus ; le son (la musique) continue, c'est voulu.
   function couperVideos(hote) { try { for (const m of hote.querySelectorAll('video')) { if (!m.paused) m.pause(); m.preload = 'none'; } } catch (e) { /* */ } }
   function cacher(v) { if (!v) return; if (holoV === v) quitterHolo(); compter(v); couperVideos(v.hote); v.hote.hidden = true; fermerCube(v.id); v.hote.classList.remove('px-sans-entree'); v.vu = Date.now(); accrochesDe(v.id, n => { if (!n.hasAttribute('data-px-cache')) { n.setAttribute('data-px-cache', n.style.display || ''); n.style.display = 'none'; } }); }
+  const joue = (v) => { try { if ([...v.hote.querySelectorAll('audio,video')].some(m => !m.paused && !m.ended)) return true; } catch (e) { /* */ } try { return !!sonDe(v.id); } catch (e) { return false; } };
+  function endormirVieux(maintenant = Date.now()) {
+    const lim = sommeilMs(); if (!isFinite(lim)) return 0;
+    const l = [...vivants.values()].filter(v => v !== courant && !(flottant && flottant.v === v) && !(cubeP && cubeP.ouvert() === v.id) && maintenant - (v.vu || 0) > lim && !joue(v));
+    for (const v of l) { endormis = [{ id: v.id, params: v.params || null }, ...endormis.filter(e => e.id !== v.id)].slice(0, 12); tuer(v.id); }
+    if (l.length) { majBords(); if (courant) barre(parId.get(courant.id) || { nom: courant.id }, courant.id); noterSession(); }
+    return l.length;
+  }
+  if (W.setInterval) W.setInterval(() => { try { endormirVieux(); } catch (e) { /* */ } }, 60000);
   function tuer(id) {
     const v = vivants.get(id); if (!v) return;
     if (v === courant) { compter(v); courant = null; }
@@ -821,6 +835,8 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     /** (0.63) pour la carte : tout ce qui vit, dort ou est installé, et l'état de chacun */
     etatsCarte: () => ({ courant: courant ? courant.id : null, vivants: [...vivants.keys()], endormis: endormis.map(e => e.id), verrous: [...verrous].filter(id => !deverrouilles.has(id)) }),
     endormis: () => endormis.map(e => e.id),
+    /** (0.69) endormir maintenant ceux qui sont cachés depuis trop longtemps (rend combien) */
+    endormirVieux: (t) => endormirVieux(t),
     /** ▤ les ploxions vivants, pour les mini docks : { id, vu, ici, son } (son : un <audio>/<video> qui joue encore) */
     etatVivants: () => [...vivants.values()].map(v => ({ id: v.id, vu: v.vu || 0, ici: v === courant, son: (() => { try { return [...v.hote.querySelectorAll('audio,video')].some(m => !m.paused && !m.ended); } catch (e) { return false; } })() })),
     /** fermer un ploxion précis (✕ d'un mini dock) : celui qu'on regarde → comme « ‹ » ; un autre → démonté, la barre suit */

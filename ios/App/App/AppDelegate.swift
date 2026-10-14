@@ -57,6 +57,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 d.set(String(items.count) + " éléments, " + String(vide / 1_000_000) + " Mo", forKey: "CapacitorStorage.ploxi0n.caches-vides")
             } else { d.removeObject(forKey: "CapacitorStorage.ploxi0n.caches-vides") }
         }
+        // LA BASE QUAND L'IPHONE EST VERROUILLÉ (RS-7 14.10 : « ploxi0n n'a pas pu démarrer : … rc: 14 unable to open database file ») : la
+        // protection « Complete » de l'app ferme la base dès le verrouillage ; un démarrage en arrière-plan (le son, un raccourci « dodo »)
+        // ne pouvait plus l'ouvrir. Le dossier de la base et ce qu'il contient (la base, son journal) passent en « jusqu'au premier
+        // déverrouillage », le réglage par défaut d'iOS : chiffré tant que l'iPhone n'a pas été déverrouillé depuis son démarrage.
+        if let lib = fm.urls(for: .libraryDirectory, in: .userDomainMask).first {
+            let dossierBase = lib.appendingPathComponent("CapacitorDatabase", isDirectory: true)
+            let protection: [FileAttributeKey: Any] = [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication]
+            try? fm.createDirectory(at: dossierBase, withIntermediateDirectories: true, attributes: protection)
+            try? fm.setAttributes(protection, ofItemAtPath: dossierBase.path)
+            for f in (try? fm.contentsOfDirectory(atPath: dossierBase.path)) ?? [] {
+                try? fm.setAttributes(protection, ofItemAtPath: dossierBase.appendingPathComponent(f).path)
+            }
+        }
         let sur = plantages >= 2
         d.set(sur ? "1" : "0", forKey: "CapacitorStorage.ploxi0n.mode-sur")
         if !sur && d.string(forKey: "CapacitorStorage.ploxi0n.clavier-libre") != "off" { AppDelegate.clavierSansGeste() }

@@ -52,12 +52,13 @@ import { creerDemo } from './app/demo.js';
 import { creerCarteXer } from './app/carte-xer.js';
 import { creerCubeInterieur } from './app/cube-interieur.js';
 import { creerCubePages } from './app/cube-pages.js';
+import { creerChercherLocal } from './app/chercher-local.js';
 import { svgXerkion } from './app/xerkion-icone.js';
 import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.68.1';
+const VERSION = '0.69.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -108,7 +109,7 @@ async function demarrer() {
   const racine = document.getElementById('ploxi0n');
   boot(14, 'boxion local');
   // la garde : un appel au boxion local ne fige plus jamais l'app (5 s au plus, puis la valeur par défaut, noté)
-  const boxion = garderBoxion(await ouvrirBoxionLocal(), { delai: 5000, surLent: (i) => bootLog('⚠ boxion lent : ' + i.appel + ' > 5 s') });
+  const boxion = garderBoxion(await ouvrirBoxionLocal({ surEssai: (k, e) => { boot(14, 'boxion local : essai ' + (k + 1)); bootLog('⚠ boxion local, essai ' + k + ' refusé : ' + String(e && e.message).slice(0, 120)); } }), { delai: 5000, surLent: (i) => bootLog('⚠ boxion lent : ' + i.appel + ' > 5 s') });
   boot(12, 'boxion local ouvert');
   // l'espace libre du téléphone (AppDelegate) : au journal ; un disque presque plein fige tout
   try { const { Preferences } = await import('@capacitor/preferences'); const l = +((await sous3sPre(Preferences.get({ key: 'ploxi0n.espace-libre' }))).value || 0), v = (await sous3sPre(Preferences.get({ key: 'ploxi0n.caches-vides' }))).value;
@@ -147,7 +148,7 @@ async function demarrer() {
     : haptique.jouer(ev, o)), { crans: haptique.crans });
   window.jOSNatif.haptique = (x) => haptique.jouer(x);   // les ploxions (le clicker…) jouent un style, un motif ou un événement
   const bionsCharges = new Set();   // un seul chargement par bion, pour toute l'app
-  let routeur = null, gel = null, tutoHud = null;
+  let routeur = null, gel = null, tutoHud = null, chercheur = null;
   // ▤ (0.51) les mini docks : tout ce qui vit en arrière-plan (ploxions minimisés, musique, blouse, Santé, vidéo, vocal, brouillon), au-dessus du dock
   const miniDocks = creerMiniDocks({ routeur: () => routeur, prefs: () => prefs.lire(), vibrer: (x) => vibrer(x) });
   window.jOSMiniDock = miniDocks.api; prefs.surChangement(() => miniDocks.planifier());
@@ -335,7 +336,7 @@ async function demarrer() {
   // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xerbot (le monde physique)
   const modes = creerModes({ cadres, prefs, ouvrir: (id) => routeurProxy.ouvrir(id), connait: (id) => !!(routeur && routeur.connait(id)), source: SOURCE, vibrer: (x) => vibrer(x) });
   modes.attacher(racine);
-  routeur = creerRouteur({ panneau: () => modes.panneau(), racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id, p) => routeurProxy.ouvrir(id, p), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
+  routeur = creerRouteur({ sonDe: (id) => (gel ? gel.aDuSon(id) : false), surChercher: () => (chercheur ? chercheur.ouvrir() : routeur.ouvrir('marketplace', { chercher: '1' })), panneau: () => modes.panneau(), racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id, p) => routeurProxy.ouvrir(id, p), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
     miniDocks: { surVivants: () => miniDocks.planifier(), surFermeture: (id) => { miniDocks.surFermeture(id); if (gel) gel.liberer(id); }, page: () => miniDocks.ouvrirPage() },
     surMontrer: (id) => { if (gel) gel.degeler(id); },
     surTuto: (id) => (tutoHud ? tutoHud.ouvrir(id) : null),   // ◎ (0.63) haut gauche : le HUD de tuto
@@ -346,6 +347,10 @@ async function demarrer() {
   tutoHud = creerTutoHud({ boxion, routeur: () => routeur, demo, prefs: () => prefs.lire(), vibrer, glyphe: (n) => G(n), tsoin: (x) => tsoinNatif.enregistrer(x) });
   window.ploxi0nDemo = demo;
   // ⊞ (0.64) la carte du xerboxion : pincer la fractale, ⊞, le bord « tout le xerboxion »
+  // 🔍 (0.69) chercher d'abord chez soi : les ploxions installés, puis le marketplace ; ↻ tout mettre à jour (src/app/chercher-local.js)
+  chercheur = creerChercherLocal({ racine, liste: () => routeur.catalogue(), vivants: () => routeur.vivants(), ouvrir: (id) => routeurProxy.ouvrir(id), vibrer: (x, i) => vibrer(x, i),
+    marketplace: (q) => routeur.ouvrir('marketplace', q ? { chercher: '1', q } : { chercher: '1' }), majTout: async () => { const r = await depot.aJour(); await majAccueil().catch(() => {}); return r; },
+    icone: (p) => p.icone || svgXerkion(p, { seul: prefs.lire().styleIcones === 'glyphe' }) });
   // ▣ (0.68) le cube des pages : ▣ dans la barre d'un ploxion (src/app/cube-pages.js)
   routeur.brancherCube(creerCubePages({ W: window, boxion, vibrer: (x) => vibrer(x), liste: () => routeur.listeCarte(), vivants: () => routeur.vivants(), tsoins: () => tsoinNatif.liste(8),
     aller: (id) => routeurProxy.ouvrir(id), icone: (p) => p.icone || svgXerkion(p, { seul: prefs.lire().styleIcones === 'glyphe' }), glyphe: (n) => G(n) }));
@@ -509,4 +514,11 @@ async function demarrer() {
     import('@capacitor/app').then(({ App }) => App.addListener('appStateChange', (e) => { if (e.isActive) { raccourcis.recevoir().catch(() => {}); notifs.demarrer(); sante.synchroniser().catch(() => {}); } else { notifs.arreter(); publierValeurs().catch(() => {}); dossier.synchroniser().catch(() => {}); couperVideosArrierePlan(); } })).catch(() => {});
   }
 }
-demarrer().catch((e) => { try { window.__bootFin && window.__bootFin(); } catch (er) { /* */ } document.getElementById('ploxi0n').innerHTML = '<p class="px-erreur">ploxi0n n\'a pas pu démarrer : ' + String(e && e.message).replace(/[<&]/g, '') + '</p>'; });
+// (0.69) jamais un écran mort : la raison, ce qu'on peut y faire, et « réessayer » (la base fermée par iOS se rouvre une fois l'iPhone déverrouillé)
+demarrer().catch((e) => {
+  try { window.__bootFin && window.__bootFin(); } catch (er) { /* */ }
+  const r = document.getElementById('ploxi0n'), m = String(e && e.message).replace(/[<&]/g, '');
+  r.innerHTML = '<div class="px-erreur px-erreur-boot"><p>ploxi0n n\'a pas pu démarrer : ' + m + '</p>' + (e && e.verrouille ? '<p>Tes données sont chiffrées par iOS tant que l\'iPhone est verrouillé : déverrouille-le, puis réessaie.</p>' : '') + '<button type="button" data-reessayer-boot>↻ réessayer</button></div>';
+  const b = r.querySelector('[data-reessayer-boot]'); if (b) b.onclick = () => location.reload();
+  if (e && e.verrouille) document.addEventListener('visibilitychange', () => { if (!document.hidden) location.reload(); });   // revenu, déverrouillé : on repart
+});

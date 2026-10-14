@@ -102,6 +102,13 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.69 (14.10)** — Le démarrage : `ouvrirSqliteResilient` (`src/boxion-local/index.js`, 5 essais, attend le premier plan ; err.verrouille) +
+AppDelegate.swift passe Library/CapacitorDatabase en `completeUntilFirstUserAuthentication` (l'entitlement reste « Complete » : sa valeur doit
+suivre le profil d'Apple, ne pas la changer sans le portail). L'écran d'erreur a ↻ réessayer et se recharge au retour au premier plan.
+La barre : `.px-barre .px-hud` défile dans elle-même ; `html,body,#ploxi0n{overflow-x:clip}`. Le sommeil des cachés : `endormirVieux` (routeur,
+pref `sommeil` en minutes, 0 = jamais), jamais s'il joue (`<audio>/<video>`, ou Web Audio : `gel.aDuSon`, l'AudioContext attribué par sa pile).
+🔍 : `src/app/chercher-local.js` (option `surChercher` du routeur). Faux iPhone : `parcours-069.mjs`.
+
 **0.68 (14.10)** — RS-7 : « surtout, le cube c'est une vue pour les ploxions qui ont plusieurs pages ». `src/app/cube-interieur.js` est devenu
 la SALLE partagée (`monterSalle`, `facesDesPages` : fond = page i, droite i+1, gauche i−1, plafond i+2, sol i−2) ; `src/app/cube-pages.js` en
 fait le cube DES PAGES d'un ploxion (▣ `data-cube` dans la barre, action des bords « cube », `routeur.cube()`/`cubeActif()`). Les pages :
