@@ -64,7 +64,17 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
     if (t - varsT > 125) vars();
     else if (!varsMinute) varsMinute = W.setTimeout(() => { varsMinute = 0; vars(); }, 126 - (t - varsT));   // la dernière valeur arrive toujours
   }
-  function vars() { varsT = Date.now(); h.style.setProperty('--mx', s.x.toFixed(3)); h.style.setProperty('--my', (-s.y).toFixed(3)); }
+  // (0.64, RS-7 : « ultra lent ») --mx/--my n'est PLUS posé sur <html> : une propriété héritée qui change à la racine recalcule le style de
+  // TOUT le document — 238 ms par mesure au faux iPhone (CPU ×4) avec les 202 ploxions de RS-7, 8 fois par seconde : le fil principal
+  // saturé à l'accueil. Posé seulement sur ceux qui le lisent (le logo, le dock, la barre, les feuilles, les bulles, les mini docks) :
+  // leur sous-arbre, quelques dizaines de nœuds. Les valeurs restent lisibles : api.valeurs() (le widget cube).
+  const LECTEURS = '.px-logo,.px-dock,.px-barre,.px-tiroir,.px-bulle,.px-maintenant,.px-md';
+  let lecteurs = null, lecteursT = 0, vx = '0', vy = '0';
+  function vars() {
+    varsT = Date.now(); vx = s.x.toFixed(3); vy = (-s.y).toFixed(3);
+    if (!lecteurs || varsT - lecteursT > 600) { lecteursT = varsT; lecteurs = [...D.querySelectorAll(LECTEURS)]; }
+    for (const e of lecteurs) { e.style.setProperty('--mx', vx); e.style.setProperty('--my', vy); }
+  }
   // (0.44) LE GEL DU DÉMARRAGE (0.37 → 0.43, RS-7 sur iPhone ET iPad) : un échec ici retirait px-vivant de <html>, que ce module observait
   // lui-même → suivre() → redémarrer → échouer → retirer… une boucle de micro-tâches infinie : plus aucun dessin, plus aucun minuteur.
   // Désormais : <html> n'est plus observé, un échec est définitif pour la session, jamais deux démarrages en même temps.
@@ -100,7 +110,7 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
   }
   async function arreter() {
     if (!actif) return; actif = false;
-    h.classList.remove('px-anime'); h.style.setProperty('--mx', '0'); h.style.setProperty('--my', '0');
+    h.classList.remove('px-anime'); vx = vy = '0'; for (const e of lecteurs || []) { e.style.removeProperty('--mx'); e.style.removeProperty('--my'); } lecteurs = null;
     for (const [e] of cibles || []) e.style.transform = ''; cibles = null; if (varsMinute) { W.clearTimeout(varsMinute); varsMinute = 0; }
     if (web) { W.removeEventListener('devicemotion', surWeb); web = false; return; }
     try { if (ecoute) await ecoute.remove(); ecoute = null; if (P && !(W.__pxMouvementWeb > 0)) await P.mouvementFin(); } catch (e) { /* */ }   // (0.47) pas si un ploxion écoute encore devicemotion (web-natif.js)
@@ -115,6 +125,8 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
     /** un ploxion suit le téléphone : cb({ x, y (−1…1, lissés), gx, gy, gz, ax, ay, az }) → off() */
     ecouter(cb, { theme = true } = {}) { const l = theme ? abonnes : bruts; l.add(cb); suivre(); return () => { l.delete(cb); suivre(); }; },
     etat: () => ({ actif, source: web ? 'web' : actif ? 'CoreMotion' : null, erreur }),
+    /** (0.64) l'inclinaison du thème (−1…1), sans la lire sur <html> */
+    valeurs: () => ({ x: +vx, y: +vy }),
   };
   W.jOSNatif = W.jOSNatif || {}; W.jOSNatif.mouvement = api;
   W.ploxi0nMouvement = api;

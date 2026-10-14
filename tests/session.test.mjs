@@ -285,15 +285,18 @@ test('🌀 le thème vivant : la gravité → --mx/--my (neutre recentré, liss�
     const appels = []; let ecouteur = null;
     const plugin = { addListener: async (n, f) => { ecouteur = f; return { remove: async () => { ecouteur = null; } }; }, mouvementDebut: async (o) => appels.push(['debut', o.hz]), mouvementFin: async () => appels.push(['fin']) };
     const racine = W.document.getElementById('ploxi0n'); racine.classList.add('px-mode-accueil');
+    const dock = W.document.createElement('div'); dock.className = 'px-dock'; W.document.body.appendChild(dock);
     const m = creerMouvement({ W, prefs, plugin, racine }); await attendre(20);
     assert.ok(m.actif() && h.classList.contains('px-anime')); assert.deepEqual(appels[0], ['debut', 30]);
     ecouteur({ gx: 0, gy: -0.7 });                                  // tenu debout : le neutre
     for (let i = 0; i < 20; i++) ecouteur({ gx: 0.3, gy: -0.7 });  // incliné à droite
     await attendre(40);                                              // (0.53) appliqué à l'image suivante
-    const mx = +h.style.getPropertyValue('--mx'); assert.ok(mx > 0.5 && mx <= 1, 'incliné → --mx ' + mx);
+    const mx = +dock.style.getPropertyValue('--mx'); assert.ok(mx > 0.5 && mx <= 1, 'incliné → --mx ' + mx);
+    assert.equal(h.style.getPropertyValue('--mx'), '', '(0.64) plus jamais sur <html> : tout le document recalculé, 8 fois par seconde');
+    assert.equal(m.valeurs().x, mx);
     for (let i = 0; i < 2000; i++) ecouteur({ gx: 0.3, gy: -0.7 });  // gardé longtemps : devient le neutre
     await attendre(160); ecouteur({ gx: 0.3, gy: -0.7 }); await attendre(40);   // (0.53) les variables : au plus 8 fois par seconde
-    assert.ok(Math.abs(+h.style.getPropertyValue('--mx')) < 0.05, 'le neutre se recentre');
+    assert.ok(Math.abs(+dock.style.getPropertyValue('--mx')) < 0.05, 'le neutre se recentre');
     ecouteur({ gx: 0.3, gy: -0.7, ax: 1.2 }); assert.ok(h.classList.contains('px-choc'), 'un choc');
     racine.classList.replace('px-mode-accueil', 'px-mode-ploxion'); await attendre(20);
     assert.ok(!m.actif(), '(0.53) dans un ploxion, rien ne bouge (30 événements/s pour une ombre : le lag)');
@@ -305,7 +308,7 @@ test('🌀 le thème vivant : la gravité → --mx/--my (neutre recentré, liss�
     off(); await attendre(20); assert.ok(!m.actif(), 'plus personne n\'écoute : arrêté');
     racine.classList.replace('px-mode-ploxion', 'px-mode-accueil'); await attendre(20);
     P = { calme: true }; abonnes.forEach(f => f(P)); await attendre(10); assert.ok(!m.actif(), 'Calme coupe');
-    assert.ok(appels.some(a => a[0] === 'fin')); assert.equal(h.style.getPropertyValue('--mx'), '0');
+    assert.ok(appels.some(a => a[0] === 'fin')); assert.equal(dock.style.getPropertyValue('--mx'), ''); assert.equal(m.valeurs().x, 0);
   } finally { p.fin(); }
 });
 

@@ -7,6 +7,9 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.63.1', titre: 'L\'accueil n\'est plus lent', points: [
+    'La lenteur venait du thème vivant : 8 fois par seconde, il faisait recalculer TOUTE la page (avec 202 ploxions, l\'iPhone n\'arrivait plus à dessiner : 2 images par seconde au banc). Il ne touche plus que ce qui bouge vraiment (le logo, le dock, la barre, les feuilles) : 50 images par seconde au même banc, et l\'accueil se dessine deux fois plus vite.',
+  ] },
   { v: '0.63.0', titre: 'Fluide, et ça se sent', points: [
     { t: 'La fractale refaite pour être fluide : une seule boucle d\'images, l\'inclinaison du gyroscope posée sur tout le paquet (plus de tremblement), les cartes lointaines allégées. Elle se prépare pendant que ton doigt tient : l\'aperçu arrive sans à-coup.', essayer: 'apercu' },
     { t: 'Lance le paquet : il file sur son élan, ralentit et se pose. Un cran par carte qui passe : net quand c\'est lent, en rafale quand c\'est vite. Un doigt le rattrape au vol.', essayer: 'lancer' },

@@ -18,7 +18,7 @@ export function creerCube({ W = globalThis.window, boxion, valeurs = () => ({}),
   let choix = [...FACES_DEFAUT], dernier = '';
   const pret = boxion.get('reglages', 'cube').then(v => { if (Array.isArray(v) && v.length === 6) choix = v.map(String); }).catch(() => {});
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
-  const inclinaison = () => { const st = W.document.documentElement.style, r = (x) => Math.round((+x || 0) * 10) / 10; return { x: r(st.getPropertyValue('--mx')), y: r(st.getPropertyValue('--my')) }; };
+  const inclinaison = () => { const v = (W.ploxi0nMouvement && W.ploxi0nMouvement.valeurs) ? W.ploxi0nMouvement.valeurs() : { x: 0, y: 0 }, r = (x) => Math.round((+x || 0) * 10) / 10; return { x: r(v.x), y: r(v.y) }; };   // (0.64) plus lu sur <html>
   const lesFaces = () => faces(choix, valeurs() || {});
   async function publier() {
     await pret;
