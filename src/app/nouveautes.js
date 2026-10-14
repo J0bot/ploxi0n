@@ -7,6 +7,12 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.71.0', titre: 'Le terrax, le Pokémon Go du nexus', points: [
+    '🌍 Un nouveau ploxion, natif : le terrax. Le terrion, la carte du réel (le satellite de mappion, ta position) : touche +, ou tiens le doigt sur la carte, et pose quelque chose là. Ses souvenirs de mappion 🧿 y sont aussi.',
+    '👁 Le terrax, l\'AR : la caméra, et ce qui est posé autour de toi à sa vraie direction et à sa distance (GPS, boussole, inclinaison). « + poser ici » le grave à trois pas devant toi.',
+    '🛏 Ta chambre : tes objets à toi (ton robot, ton meuble), jamais envoyés. ⚑ Les quêtes : celles du jeu, et celles du code pour qui veut aider (docs/TERRAX.md). Tout est à toi par défaut ; partager au nexus, c\'est un geste, par objet.',
+    '◬ Le koin du ion a ses dossiers : ion, 3ion, seption, nexus. Glisse à droite pour monter d\'un palier, à gauche pour redescendre : une balade entre les réels.',
+  ] },
   { v: '0.70.0', titre: 'Le xer en image, ses voisins autour', points: [
     '📸 Fais une capture d\'écran (les boutons d\'iOS) : ploxi0n la sent. Un éclair, ton xer devient une image qui recule, et autour apparaissent ses voisins, en aperçu : en haut, en bas, à gauche, à droite.',
     '⊡ Glisse dans une direction : l\'app d\'à côté vient au centre (un cran par case, une butée s\'il n\'y a rien). Revenir dans l\'autre sens ramène toujours d\'où tu viens. Touche le centre : tu y entres. Pince : la carte entière.',

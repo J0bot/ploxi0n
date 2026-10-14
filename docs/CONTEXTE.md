@@ -102,6 +102,13 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.71 (14.10)** — 🌍 `src/terrax/terrax.js` (ploxion interne `terrax`, pages `[data-page-cube]` : terrion / terrax / chambre / quêtes ;
+géométrie pure testée : distanceCap, decaler, versTuile, projeter ; couches en lecture : mappion `box:mappion/souvenirs`, nexus `pull`).
+Le nexus : `nexus.push/pull` dans main.js = le protocole de jOSNexus (`/nexus/push|pull`, relayés par le shim). Le vrai nord : AppDelegate
+`mouvementDebut` en `.xMagneticNorthZVertical` + `cap` = m.heading → shim `webkitCompassHeading`. ◬ `src/terrax/koin-ion.js` sème les hubs
+perso (`store:xerkions-persos:items` + `box:xerkions-persos/items`). Le braindump et les quêtes : `docs/TERRAX.md`. Inventaire du nexus pour
+la suite (jOSCarte, jOSZone, jOSObjets, scan-reel, cubmap, SkyView) : docs/TERRAX.md §2.
+
 **0.70 (14.10)** — ⊡ `src/app/vue-xers.js` : `voisins(places, de, venu)` (cône 45°, un ploxion par direction, d'où l'on vient derrière soi),
 aperçus = `photographier` des hôtes vivants, sinon icône + nom ; places = `carteXer.placesAJour()` (sans ouvrir la carte). La capture d'écran :
 AppDelegate.swift (PloxionVC.viewDidLoad) observe `userDidTakeScreenshotNotification` → `bridge.triggerWindowJSEvent("ploxi0n-capture")` → main.js.

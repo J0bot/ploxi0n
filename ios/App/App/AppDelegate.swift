@@ -401,9 +401,13 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         let hz = max(5.0, min(60.0, call.getDouble("hz") ?? 30))
         mouvements.deviceMotionUpdateInterval = 1.0 / hz
         if !mouvements.isDeviceMotionActive {
-            mouvements.startDeviceMotionUpdates(to: .main) { [weak self] m, _ in
+            // (0.71, le terrax) LE NORD : le repère du nord magnétique quand l'iPhone l'a (le magnétomètre) ; « cap » = m.heading, en degrés
+            // depuis le nord, sens horaire (−1 sans boussole). Personne ne lisait le lacet : le thème et la fractale ne lisent que la gravité.
+            let repere: CMAttitudeReferenceFrame = CMMotionManager.availableAttitudeReferenceFrames().contains(.xMagneticNorthZVertical) ? .xMagneticNorthZVertical : .xArbitraryZVertical
+            mouvements.startDeviceMotionUpdates(using: repere, to: .main) { [weak self] m, _ in
                 guard let m = m else { return }
                 self?.notifyListeners("mouvement", data: [
+                    "cap": repere == .xMagneticNorthZVertical ? m.heading : -1.0,
                     "roll": m.attitude.roll, "pitch": m.attitude.pitch, "yaw": m.attitude.yaw,
                     "gx": m.gravity.x, "gy": m.gravity.y, "gz": m.gravity.z,
                     "ax": m.userAcceleration.x, "ay": m.userAcceleration.y, "az": m.userAcceleration.z,
@@ -935,7 +939,7 @@ class PloxionVC: CAPBridgeViewController {
         }
         // LA CAPTURE D'ÉCRAN (RS-7 14.10 : « faire la manœuvre des screenshots et avoir l'impression de faire un screenshot sur l'app, mais ça fait
         // comme une image : on peut dézoomer notre xer et voir les autres xers à côté ») : iOS prévient après chaque capture ; la page reçoit
-        // l'événement « ploxi0n-capture » sur window et en fait la photo du xer (src/app/capture-xer.js)
+        // l'événement « ploxi0n-capture » sur window et en fait la photo du xer (src/app/vue-xers.js)
         NotificationCenter.default.addObserver(forName: UIApplication.userDidTakeScreenshotNotification, object: nil, queue: .main) { [weak self] _ in
             self?.bridge?.triggerWindowJSEvent(eventName: "ploxi0n-capture")
         }

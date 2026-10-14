@@ -252,6 +252,8 @@ export function installerWebNatif({ W = globalThis.window, prefs = () => ({}), c
           accelerationIncludingGravity: { x: ((+s.gx || 0) + (+s.ax || 0)) * G, y: ((+s.gy || 0) + (+s.ay || 0)) * G, z: ((+s.gz || 0) + (+s.az || 0)) * G },
           rotationRate: { alpha: (+s.rz || 0) * deg, beta: (+s.rx || 0) * deg, gamma: (+s.ry || 0) * deg }, interval: intervalle };
         const or = { alpha: (((+s.yaw || 0) * deg) + 360) % 360, beta: (+s.pitch || 0) * deg, gamma: (+s.roll || 0) * deg, absolute: false };
+        // (0.71, le terrax) la boussole de CoreMotion (le repère du nord magnétique), comme celle de WebKit : webkitCompassHeading
+        if (s.cap != null && +s.cap >= 0) { or.webkitCompassHeading = +s.cap; or.webkitCompassAccuracy = 10; }
         if (compte.devicemotion || W.ondevicemotion) envoyer('devicemotion', mo);
         if (compte.deviceorientation || W.ondeviceorientation) envoyer('deviceorientation', or);
       };

@@ -54,12 +54,14 @@ import { creerCubeInterieur } from './app/cube-interieur.js';
 import { creerCubePages } from './app/cube-pages.js';
 import { creerChercherLocal } from './app/chercher-local.js';
 import { creerVueXers } from './app/vue-xers.js';
+import { creerTerrax } from './terrax/terrax.js';
+import { semerKoinIon } from './terrax/koin-ion.js';
 import { svgXerkion } from './app/xerkion-icone.js';
 import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.70.0';
+const VERSION = '0.71.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -300,6 +302,13 @@ async function demarrer() {
     aller: (id) => routeurProxy.ouvrir(id), icone: (p) => p.icone || svgXerkion(p, { seul: prefs.lire().styleIcones === 'glyphe' }), glyphe: (n) => G(n) }).ploxion);   // ≋ (0.64) chill-synth, phase 1 : le son en arrière-plan
   // 🥼 labo-cape (0.50, lot L1) : la blouse RS-7 en BLE, ou sa simulation (le moteur de cape-core)
   internes.push(creerCape({ boxion, vibrer: (x) => vibrer(x) }).ploxion);
+  // ◬ (0.71) le koin du ion : ses dossiers (ion, 3ion, seption, nexus) semés dans les hubs perso du labo, la balade entre les réels
+  semerKoinIon({ W: window, boxion }).catch(() => {});
+  // 🌍 (0.71) le terrax : le Pokémon Go du nexus (le terrion, l'AR, ta chambre, les quêtes) — docs/TERRAX.md
+  // le nexus : le protocole de jOSNexus (labo), relayé par le shim en mode connecté ; hors ligne, 503 et le terrax le dit
+  internes.push(creerTerrax({ boxion, vibrer: (x) => vibrer(x), nexus: {
+    push: async (kind, payload) => { const r = await fetch('/nexus/push', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ kind, payload }) }); const j = await r.json().catch(() => ({})); if (!(r.ok && j.ok)) throw new Error(j.message || 'le nexus ne répond pas (' + r.status + ')'); return true; },
+    pull: async (kind) => { const r = await fetch('/nexus/pull?kind=' + encodeURIComponent(kind)); if (!r.ok) return []; const j = await r.json().catch(() => ({})); return Array.isArray(j.items) ? j.items : []; } } }).ploxion);
   window.jOSNatif.sante = sante.api;
   setTimeout(() => sante.synchroniser().catch(() => {}), 5000);   // ☁ hors du chemin critique : le résumé santé (si activé et connecté)
   window.jOSNatif.tsoin = (o) => tsoinNatif.ouvrir(o || {});
