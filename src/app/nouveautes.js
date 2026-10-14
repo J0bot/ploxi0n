@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.70.0', titre: 'Le xer en image, ses voisins autour', points: [
+    '📸 Fais une capture d\'écran (les boutons d\'iOS) : ploxi0n la sent. Un éclair, ton xer devient une image qui recule, et autour apparaissent ses voisins, en aperçu : en haut, en bas, à gauche, à droite.',
+    '⊡ Glisse dans une direction : l\'app d\'à côté vient au centre (un cran par case, une butée s\'il n\'y a rien). Revenir dans l\'autre sens ramène toujours d\'où tu viens. Touche le centre : tu y entres. Pince : la carte entière.',
+    'Les voisins sont ceux de la carte du xerboxion : la même place pour chaque app, la même mémoire musculaire. Aussi : le geste des bords « ⊡ les xers à côté ».',
+  ] },
   { v: '0.69.0', titre: 'Démarrer toujours, ne plus déborder', points: [
     'ploxi0n démarre même quand iOS a fermé sa base (« unable to open database file », iPhone verrouillé) : il réessaie, attend que tu déverrouilles, et sinon te dit pourquoi avec ↻ réessayer. La base reste chiffrée par iOS jusqu\'au premier déverrouillage, pour que le son et les raccourcis (dodo) marchent écran verrouillé.',
     'La barre d\'un ploxion ne dépasse plus de l\'écran (elle défile dans elle-même) : plus rien ne se décale à gauche.',

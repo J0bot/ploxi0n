@@ -933,5 +933,11 @@ class PloxionVC: CAPBridgeViewController {
         NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in
             self?.setNeedsUpdateOfScreenEdgesDeferringSystemGestures()
         }
+        // LA CAPTURE D'ÉCRAN (RS-7 14.10 : « faire la manœuvre des screenshots et avoir l'impression de faire un screenshot sur l'app, mais ça fait
+        // comme une image : on peut dézoomer notre xer et voir les autres xers à côté ») : iOS prévient après chaque capture ; la page reçoit
+        // l'événement « ploxi0n-capture » sur window et en fait la photo du xer (src/app/capture-xer.js)
+        NotificationCenter.default.addObserver(forName: UIApplication.userDidTakeScreenshotNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.bridge?.triggerWindowJSEvent(eventName: "ploxi0n-capture")
+        }
     }
 }

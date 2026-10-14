@@ -823,3 +823,27 @@ html.px-calme .ci-prise{animation:none}
 .px-cl-ic{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center}.px-cl-ic .xki,.px-cl-ic .px-g{width:100%;height:100%}
 .px-cl-bas{display:flex;gap:8px;flex-wrap:wrap}.px-cl-bas button{flex:1 1 auto;min-height:42px;border-radius:12px;border:var(--trait,2px) solid var(--bord);background:var(--surface2);color:inherit;font:600 13px var(--police)}
 .px-cl-vide,.px-cl-msg{margin:4px 2px;color:var(--muted);font:12px var(--mono)}.px-cl-msg:empty{display:none}
+/* ⊡ (0.70) la vue des xers : le xer en image au centre, ses voisins de la carte qui dépassent des bords */
+.px-vx{position:fixed;inset:0;z-index:2147483200;background:radial-gradient(80% 60% at 50% 50%,rgba(70,60,120,.35),transparent 70%),#07060c;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.px-vx-plan{position:absolute;inset:0;will-change:transform}
+.px-vx-t{position:absolute;left:50%;top:50%;transform:translate(calc(-50% + var(--vx-x,0px)),calc(-50% + var(--vx-y,0px)));border-radius:26px;background:var(--bg,#0b0912);box-shadow:0 0 0 1.5px rgba(236,235,233,.35),0 18px 50px rgba(0,0,0,.55);transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .2s}
+.px-vx-t:not(.px-vx-centre){opacity:.62}
+.px-vx-centre{box-shadow:0 0 0 2px #ecebe9,0 0 40px rgba(150,130,255,.35),0 24px 60px rgba(0,0,0,.6)}
+.px-vx-ap{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none}
+.px-vx-ap>.ci-cliche{position:absolute;inset:0}
+.px-vx-carte{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#ecebe9;text-align:center;padding:12px}
+.px-vx-ic{width:44%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:44px}.px-vx-ic .xki,.px-vx-ic .px-g{width:100%;height:100%}
+.px-vx-carte b{font:600 17px var(--police)}.px-vx-carte small{font:600 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(236,235,233,.55)}
+.px-vx-clip{position:absolute;inset:0;border-radius:26px;overflow:hidden}
+.px-vx-nom{position:absolute;left:6px;top:-28px;max-width:calc(100% - 12px);padding:4px 10px;border-radius:12px;background:rgba(7,6,12,.78);color:#ecebe9;font:600 11px var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-vx-dirs{position:absolute;inset:0;pointer-events:none}
+.px-vx-d{position:absolute;width:8px;height:8px;border-radius:50%;background:#ecebe9;opacity:.8}.px-vx-d.px-vx-vide{opacity:.15}
+.px-vx-d-haut{left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);margin-left:-4px}.px-vx-d-bas{left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);margin-left:-4px}
+.px-vx-d-gauche{left:8px;top:50%;margin-top:-4px}.px-vx-d-droite{right:8px;top:50%;margin-top:-4px}
+.px-vx-x{position:absolute;right:14px;top:calc(env(safe-area-inset-top,0px) + 12px);width:40px;height:40px;min-height:0;border-radius:50%;border:1.5px solid rgba(236,235,233,.6);background:rgba(7,6,12,.7);color:#ecebe9;font-size:16px}
+.px-vx-aide{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 22px);margin:0;padding:6px 12px;border-radius:14px;background:rgba(7,6,12,.85);width:max-content;max-width:calc(100vw - 32px);text-align:center;font:600 10px var(--mono);letter-spacing:.06em;color:rgba(236,235,233,.65);pointer-events:none;animation:px-vx-aide 4s ease forwards}
+@keyframes px-vx-aide{0%,70%{opacity:1}100%{opacity:0}}
+.px-vx-entre .px-vx-t:not(.px-vx-centre),.px-vx-entre .px-vx-aide,.px-vx-entre .px-vx-x{opacity:0}
+.px-vx-eclair{position:absolute;inset:0;background:#fff;pointer-events:none;animation:px-vx-eclair .32s ease-out forwards}
+@keyframes px-vx-eclair{from{opacity:.85}to{opacity:0}}
+html.px-calme .px-vx-t{transition:none}html.px-calme .px-vx-eclair{animation:none;opacity:0}

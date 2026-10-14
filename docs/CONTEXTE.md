@@ -102,6 +102,11 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.70 (14.10)** — ⊡ `src/app/vue-xers.js` : `voisins(places, de, venu)` (cône 45°, un ploxion par direction, d'où l'on vient derrière soi),
+aperçus = `photographier` des hôtes vivants, sinon icône + nom ; places = `carteXer.placesAJour()` (sans ouvrir la carte). La capture d'écran :
+AppDelegate.swift (PloxionVC.viewDidLoad) observe `userDidTakeScreenshotNotification` → `bridge.triggerWindowJSEvent("ploxi0n-capture")` → main.js.
+Action des bords « xers » (option `surXers`). Faux iPhone : `parcours-vue-xers.mjs`.
+
 **0.69 (14.10)** — Le démarrage : `ouvrirSqliteResilient` (`src/boxion-local/index.js`, 5 essais, attend le premier plan ; err.verrouille) +
 AppDelegate.swift passe Library/CapacitorDatabase en `completeUntilFirstUserAuthentication` (l'entitlement reste « Complete » : sa valeur doit
 suivre le profil d'Apple, ne pas la changer sans le portail). L'écran d'erreur a ↻ réessayer et se recharge au retour au premier plan.

@@ -53,12 +53,13 @@ import { creerCarteXer } from './app/carte-xer.js';
 import { creerCubeInterieur } from './app/cube-interieur.js';
 import { creerCubePages } from './app/cube-pages.js';
 import { creerChercherLocal } from './app/chercher-local.js';
+import { creerVueXers } from './app/vue-xers.js';
 import { svgXerkion } from './app/xerkion-icone.js';
 import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.69.0';
+const VERSION = '0.70.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -148,7 +149,7 @@ async function demarrer() {
     : haptique.jouer(ev, o)), { crans: haptique.crans });
   window.jOSNatif.haptique = (x) => haptique.jouer(x);   // les ploxions (le clicker…) jouent un style, un motif ou un événement
   const bionsCharges = new Set();   // un seul chargement par bion, pour toute l'app
-  let routeur = null, gel = null, tutoHud = null, chercheur = null;
+  let routeur = null, gel = null, tutoHud = null, chercheur = null, vueXers = null;
   // ▤ (0.51) les mini docks : tout ce qui vit en arrière-plan (ploxions minimisés, musique, blouse, Santé, vidéo, vocal, brouillon), au-dessus du dock
   const miniDocks = creerMiniDocks({ routeur: () => routeur, prefs: () => prefs.lire(), vibrer: (x) => vibrer(x) });
   window.jOSMiniDock = miniDocks.api; prefs.surChangement(() => miniDocks.planifier());
@@ -336,7 +337,7 @@ async function demarrer() {
   // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xerbot (le monde physique)
   const modes = creerModes({ cadres, prefs, ouvrir: (id) => routeurProxy.ouvrir(id), connait: (id) => !!(routeur && routeur.connait(id)), source: SOURCE, vibrer: (x) => vibrer(x) });
   modes.attacher(racine);
-  routeur = creerRouteur({ sonDe: (id) => (gel ? gel.aDuSon(id) : false), surChercher: () => (chercheur ? chercheur.ouvrir() : routeur.ouvrir('marketplace', { chercher: '1' })), panneau: () => modes.panneau(), racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id, p) => routeurProxy.ouvrir(id, p), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
+  routeur = creerRouteur({ sonDe: (id) => (gel ? gel.aDuSon(id) : false), surChercher: () => (chercheur ? chercheur.ouvrir() : routeur.ouvrir('marketplace', { chercher: '1' })), surXers: () => (vueXers ? vueXers.ouvrir() : routeur.carte()), panneau: () => modes.panneau(), racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id, p) => routeurProxy.ouvrir(id, p), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
     miniDocks: { surVivants: () => miniDocks.planifier(), surFermeture: (id) => { miniDocks.surFermeture(id); if (gel) gel.liberer(id); }, page: () => miniDocks.ouvrirPage() },
     surMontrer: (id) => { if (gel) gel.degeler(id); },
     surTuto: (id) => (tutoHud ? tutoHud.ouvrir(id) : null),   // ◎ (0.63) haut gauche : le HUD de tuto
@@ -354,7 +355,13 @@ async function demarrer() {
   // ▣ (0.68) le cube des pages : ▣ dans la barre d'un ploxion (src/app/cube-pages.js)
   routeur.brancherCube(creerCubePages({ W: window, boxion, vibrer: (x) => vibrer(x), liste: () => routeur.listeCarte(), vivants: () => routeur.vivants(), tsoins: () => tsoinNatif.liste(8),
     aller: (id) => routeurProxy.ouvrir(id), icone: (p) => p.icone || svgXerkion(p, { seul: prefs.lire().styleIcones === 'glyphe' }), glyphe: (n) => G(n) }));
-  routeur.brancherCarte(creerCarteXer({ racine: document.body, liste: () => routeur.listeCarte(), courant: () => routeur.courant(), aller: (id) => routeur.aller(id), vibrer, boxion, calme: () => !!prefs.lire().calme, glyphe: (n) => G(n) }));
+  const carteXer = creerCarteXer({ racine: document.body, liste: () => routeur.listeCarte(), courant: () => routeur.courant(), aller: (id) => routeur.aller(id), vibrer, boxion, calme: () => !!prefs.lire().calme, glyphe: (n) => G(n) });
+  routeur.brancherCarte(carteXer);
+  // ⊡ (0.70) la vue des xers : le xer en image, ses voisins de la carte autour (glisser dans 4 directions) ; la capture d'écran d'iOS l'ouvre
+  vueXers = creerVueXers({ racine, liste: () => routeur.listeCarte(), places: () => carteXer.placesAJour(), courant: () => routeur.courant(),
+    hoteDe: (id) => document.querySelector('.px-scene>.px-hote[data-ploxion="' + CSS.escape(id) + '"]'), aller: (id) => routeur.aller(id), accueil: () => routeur.accueil(),
+    carte: () => routeur.carte(), vibrer: (x, i) => vibrer(x, i), calme: () => !!prefs.lire().calme, icone: (p) => p.icone || svgXerkion(p, { seul: prefs.lire().styleIcones === 'glyphe' }) });
+  window.addEventListener('ploxi0n-capture', () => { try { if (!vueXers.ouverte()) vueXers.ouvrir({ capture: true }); } catch (e) { /* */ } });
   // ❄ (0.53) le gel : un ploxion vivant mais caché n'anime plus (requestAnimationFrame mis de côté jusqu'à ce qu'on le revoie)
   gel = installerGel({ courant: () => routeur.courant(), vivants: () => routeur.vivants() });
   // ◇ (0.54) plus d'emoji dans l'interface de l'app : des glyphes du xerboxion (les ploxions du labo gardent leur contenu)

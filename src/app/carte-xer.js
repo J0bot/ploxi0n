@@ -190,5 +190,7 @@ export function creerCarteXer({ W = globalThis.window, racine, liste, courant = 
     const e = entrees.find(x => x.id === id); if (e) e.place = [nx, ny];
     vibrer('fx-pose'); construire();
   }
-  return { ouvrir, fermer, ouverte: () => !!el, places: () => ({ ...places }), chemin, camera: () => ({ ...cam }) };
+  return { ouvrir, fermer, ouverte: () => !!el, places: () => ({ ...places }), chemin, camera: () => ({ ...cam }),
+    /** (0.70) les places sans ouvrir la carte (la vue des xers, src/app/vue-xers.js) */
+    placesAJour: async () => placer(liste(), await lirePlaces()) };
 }
