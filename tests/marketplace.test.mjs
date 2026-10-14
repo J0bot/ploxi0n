@@ -658,3 +658,14 @@ test('(0.51) un ploxion servi dans sa page (Spotify : pas d\'app.js) s\'installe
   await d.completerBions();
   assert.equal(appels.filter(u => /jOSCineJournal/.test(u)).length, avant, 'noté absent : pas redemandé');
 });
+
+test('(0.67) la portée d\'un ploxion : natif, partout, partiel, nexus, web externe, pas mesuré', async () => {
+  const { porteeDe } = await import('../src/marketplace/marketplace.js');
+  assert.equal(porteeDe({ interne: true }), 'natif');
+  assert.equal(porteeDe({ compat: { classe: 'A', verdict: 'pret', complet: 'oui' } }), 'partout');
+  assert.equal(porteeDe({ compat: { classe: 'A' } }), 'partout');
+  assert.equal(porteeDe({ compat: { classe: 'A', verdict: 'pret', complet: 'non' } }), 'partiel');
+  assert.equal(porteeDe({ compat: { classe: 'B' } }), 'nexus');
+  assert.equal(porteeDe({ compat: { classe: 'C' } }), 'externe');
+  assert.equal(porteeDe({}), 'inconnu');
+});

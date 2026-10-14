@@ -771,3 +771,27 @@ html.px-px-chill body{
 .px-fx-xb .px-xb{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font:24px var(--mono);color:var(--txt)}
 .px-fx-xb .px-xb b{color:var(--bio)}.px-fx-xb .px-xb i{color:var(--muted)}
 html.px-telecommande .px-holo-socle{bottom:calc(env(safe-area-inset-bottom,0px) + 78px)}
+.px-holo-socle button{position:absolute;left:50%;bottom:52px;transform:translateX(-50%);pointer-events:auto;width:auto;min-height:0;height:30px;margin:0;padding:0 12px;border-radius:15px;border:1px solid rgba(140,240,255,.7);background:rgba(4,12,20,.8);color:#bff4ff;font:600 11px var(--mono);letter-spacing:.08em;white-space:nowrap}
+/* ▣ (0.67) dans le cube (src/app/cube-interieur.js) : l'écran est la face ouverte ; « le trait » pour les murs */
+.ci-salle{position:absolute;inset:0;overflow:hidden;background:#1f1f1d;perspective:380px}
+.ci-boite{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d}
+.ci-face{position:absolute;left:0;top:0;box-sizing:border-box;border:1.5px solid rgba(236,235,233,.55);background:#22221f;color:#ecebe9;padding:44px 14px 14px;overflow:hidden}
+.ci-trait{background:#1f1f1d;background-image:linear-gradient(rgba(236,235,233,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(236,235,233,.08) 1px,transparent 1px);background-size:40px 40px}
+.ci-etiquette{position:absolute;left:10px;top:10px;width:auto;min-height:0;height:28px;margin:0;padding:0 10px;border-radius:14px;border:1px solid rgba(236,235,233,.6);background:#1f1f1d;color:#ecebe9;font:600 11px var(--mono);letter-spacing:.06em}
+.ci-grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:10px}
+.ci-grille button{display:flex;flex-direction:column;align-items:center;gap:4px;width:auto;min-height:0;margin:0;padding:4px;border:0;background:none;color:#ecebe9;font:600 10px var(--police)}
+.ci-grille span,.ci-objet span{width:44px;height:44px;display:flex;align-items:center;justify-content:center}.ci-grille .xki,.ci-objet .xki{width:100%;height:100%}
+.ci-grille b{max-width:70px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-tsoins{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font:13px var(--police)}.ci-tsoins small{color:#d8b04a;font-family:var(--mono)}
+.ci-vide{margin:20px 0;font:600 12px var(--mono);color:rgba(236,235,233,.6)}
+.ci-img{width:100%;height:100%;object-fit:cover;border-radius:6px}
+.ci-objet{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:4px;color:#ecebe9;touch-action:none;-webkit-user-select:none;user-select:none}
+.ci-objet b{font:600 11px var(--police)}.ci-objet p{margin:0;padding:8px 12px;border:1.5px solid #ecebe9;border-radius:10px;background:#1f1f1d;font:600 16px var(--police);white-space:nowrap}
+.ci-objet img{width:120px;border-radius:10px;border:1.5px solid #ecebe9}.ci-objet .px-g{width:70px;height:70px;color:#ecebe9}
+.ci-barre{position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;align-items:center;gap:10px;pointer-events:none}
+.ci-barre button{pointer-events:auto;width:auto;min-height:0;height:36px;margin:0;padding:0 14px;border-radius:18px;border:1.5px solid #ecebe9;background:#1f1f1d;color:#ecebe9;font:600 12px var(--mono)}
+.ci-barre small{flex:1;font:600 10px var(--mono);color:rgba(236,235,233,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-feuille{position:absolute;inset:0;z-index:5;background:rgba(10,10,9,.6);display:flex;align-items:flex-end}
+.ci-feuille>div{width:100%;max-height:70%;overflow:auto;padding:16px 14px calc(env(safe-area-inset-bottom,0px) + 16px);border-radius:18px 18px 0 0;background:#1f1f1d;border-top:1.5px solid #ecebe9;display:flex;flex-direction:column;gap:6px}
+.ci-feuille p{margin:0 2px 6px;font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(236,235,233,.7)}
+.ci-feuille button{margin:0;min-height:40px;text-align:left;padding:0 12px;border-radius:10px;border:1px solid rgba(236,235,233,.3);background:none;color:#ecebe9;font:600 13px var(--police)}

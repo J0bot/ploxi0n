@@ -50,11 +50,13 @@ import { installerGel } from './app/gel.js';
 import { installerSansEmoji } from './app/sans-emoji.js';
 import { creerDemo } from './app/demo.js';
 import { creerCarteXer } from './app/carte-xer.js';
+import { creerCubeInterieur } from './app/cube-interieur.js';
+import { svgXerkion } from './app/xerkion-icone.js';
 import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.66.0';
+const VERSION = '0.67.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -246,7 +248,8 @@ async function demarrer() {
     depot.completerBions().then(r => { boxion.put('reglages', 'bions-v2', { le: new Date().toISOString(), r }); }).catch(() => {});
   }
   const internes = [
-    enregistrerMarketplace({ depot, vibrer, surChangement: () => majAccueil(), usage: () => boxion.get('usage', 'stats'), prefs: { lire: () => boxion.get('reglages', 'marketplace'), ecrire: (v) => boxion.put('reglages', 'marketplace', v) } }),
+    // (0.67) les icônes comme dans le xer (le xerkion), et les ploxions natifs de l'app dans le marketplace (leur portée : natif)
+    enregistrerMarketplace({ depot, vibrer, icone: (x) => svgXerkion(x, { seul: prefs.lire().styleIcones === 'glyphe' }), internes: () => (routeur ? routeur.catalogue().filter(p => p.interne) : []), surChangement: () => majAccueil(), usage: () => boxion.get('usage', 'stats'), prefs: { lire: () => boxion.get('reglages', 'marketplace'), ecrire: (v) => boxion.put('reglages', 'marketplace', v) } }),
     enregistrerXerEnLigne({}),
     enregistrerBanc({ boxion, version: VERSION }),
     enregistrerTrackpad({}),   // ◇ (0.60) les essais du trackpad haptique
@@ -288,7 +291,10 @@ async function demarrer() {
   // ◈ le cube des widgets : six infos des bions (les valeurs), et la dernière inclinaison du téléphone
   const cube = creerCube({ boxion, valeurs: () => (raccourcis ? raccourcis.toutes() : {}) });
   internes.push(sante.ploxion);
-  internes.push(creerChillSynth({ boxion, vibrer: (x) => vibrer(x) }).ploxion);   // ≋ (0.64) chill-synth, phase 1 : le son en arrière-plan
+  internes.push(creerChillSynth({ boxion, vibrer: (x) => vibrer(x) }).ploxion);
+  // ▣ (0.67) dans le cube : l'écran est la face ouverte ; les cinq autres, des xers ; l'intérieur, à peupler
+  internes.push(creerCubeInterieur({ boxion, vibrer: (x) => vibrer(x), liste: () => (routeur ? routeur.listeCarte() : []), vivants: () => (routeur ? routeur.vivants() : []), tsoins: () => tsoinNatif.liste(8),
+    aller: (id) => routeurProxy.ouvrir(id), icone: (p) => p.icone || svgXerkion(p, { seul: prefs.lire().styleIcones === 'glyphe' }), glyphe: (n) => G(n) }).ploxion);   // ≋ (0.64) chill-synth, phase 1 : le son en arrière-plan
   // 🥼 labo-cape (0.50, lot L1) : la blouse RS-7 en BLE, ou sa simulation (le moteur de cape-core)
   internes.push(creerCape({ boxion, vibrer: (x) => vibrer(x) }).ploxion);
   window.jOSNatif.sante = sante.api;
@@ -328,7 +334,7 @@ async function demarrer() {
   // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xerbot (le monde physique)
   const modes = creerModes({ cadres, prefs, ouvrir: (id) => routeurProxy.ouvrir(id), connait: (id) => !!(routeur && routeur.connait(id)), source: SOURCE, vibrer: (x) => vibrer(x) });
   modes.attacher(racine);
-  routeur = creerRouteur({ panneau: () => modes.panneau(), racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id) => routeurProxy.ouvrir(id), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
+  routeur = creerRouteur({ panneau: () => modes.panneau(), racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id, p) => routeurProxy.ouvrir(id, p), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
     miniDocks: { surVivants: () => miniDocks.planifier(), surFermeture: (id) => { miniDocks.surFermeture(id); if (gel) gel.liberer(id); }, page: () => miniDocks.ouvrirPage() },
     surMontrer: (id) => { if (gel) gel.degeler(id); },
     surTuto: (id) => (tutoHud ? tutoHud.ouvrir(id) : null),   // ◎ (0.63) haut gauche : le HUD de tuto

@@ -246,11 +246,18 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (t !== holo.ecrit) { holo.ecrit = t; holoV.hote.style.transform = t; }
     if (Math.abs(holo.cx - holo.x) + Math.abs(holo.cy - holo.y) > 0.002) holoImage = W.requestAnimationFrame(poserHolo);
   }
+  // (0.67, RS-7 : « il y a déjà un ploxion xerploxion qui montre ça ») COMPOSER : le labo a les consoles holographiques (xerploxion-<domaine>,
+  // hébergées par le ploxion « xerploxions », ?xerploxion=<id>) — un xerkion qui a la sienne l'ouvre ; les autres ploxions : l'hologramme
+  // d'ici, avec ◈ consoles pour la galerie du labo.
+  const CONSOLES = { dev: 'atelier', atelier: 'atelier', bouffe: 'bouffe', ferme: 'ferme', pont: 'pont', veille: 'veille' };
+  const consoleDe = (id) => { const d = String(id || '').replace(/^xerkion-/, ''); return /^xerkion-/.test(String(id || '')) && CONSOLES[d] ? 'xerploxion-' + CONSOLES[d] : null; };
   function basculerHolo(on) {
+    if (on !== false && !holoV && courant && consoleDe(courant.id) && ouvrirExterne) { vibrer('fx-ouvrir', 'xerploxions'); ouvrirExterne('xerploxions', { xerploxion: consoleDe(courant.id) }); return 'console'; }
     const v = on === false ? null : courant; if (!v && !holoV) { vibrer('fx-refus'); signaler('ouvre un ploxion : ◈ en fait un hologramme'); return false; }
     if (holoV && (on === false || holoV === v || on == null)) { quitterHolo(); return false; }
     holoV = v; v.hote.classList.add('px-holo'); racine.classList.add('px-holo-on');
-    holoSocle = D.createElement('div'); holoSocle.className = 'px-holo-socle'; holoSocle.innerHTML = '<i></i><b></b>'; racine.appendChild(holoSocle);
+    holoSocle = D.createElement('div'); holoSocle.className = 'px-holo-socle'; holoSocle.innerHTML = '<i></i><b></b>' + (ouvrirExterne ? '<button type="button" data-holo-consoles>◈ consoles du labo</button>' : ''); racine.appendChild(holoSocle);
+    const bc = holoSocle.querySelector('[data-holo-consoles]'); if (bc) bc.onclick = (e) => { e.stopPropagation(); quitterHolo(); ouvrirExterne('xerploxions'); };
     holo.x = holo.y = holo.cx = holo.cy = 0; holo.base = null; holo.ecrit = '';
     const M = W.jOSNatif && W.jOSNatif.mouvement;
     if (M && M.ecouter) holoOff = M.ecouter((e) => {

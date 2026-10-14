@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.67.0', titre: 'Dans le cube, et un marketplace qui dit où', points: [
+    '▣ « dans le cube », un nouveau ploxion : ton iPhone est une face du cube, tu regardes dedans. Penche-le (le gyroscope), les autres faces se montrent : le fond, les deux murs, le plafond, le sol. Chaque face est un xer que tu choisis (touche son étiquette) : l\'accueil, ce qui vit, tes tsoins, un koin, une image, ou le trait. ＋ peupler : pose dedans un ploxion, un texte, une image, un glyphe ; glisse-le, deux touchers le rapprochent ou l\'éloignent, appui long pour l\'enlever.',
+    '◈ Sur un xerkion du labo (dev, bouffe, ferme, pont, veille), ◈ ouvre sa vraie console xerploxion, celle du labo. Ailleurs, l\'hologramme local, avec « ◈ consoles du labo » sur son socle.',
+    'Le marketplace montre les icônes des ploxions comme dans ton xer, et dit où chacun tourne : ◇ partout (iPhone, Android, web, hors ligne), ◆ natif, ◐ partiel, ⇄ nexus (il lui faut le serveur du labo), ↗ web externe. En grille, filtre par portée ; les ploxions de l\'app y sont aussi.',
+  ] },
   { v: '0.66.0', titre: 'Le xerbion et le xerploxion', points: [
     { t: '⧈ Le xerbion d\'un ploxion (les données de ses bions) : sur la face du dessus du cube, ce que chacun de ses bions garde chez toi (ses clés, leur poids, quand), ce qu\'il garde lui-même, et ses tsoins.', essayer: 'cube' },
     '◈ Le xerploxion, la version holographique d\'un ploxion : ◈ dans sa barre. Il flotte au-dessus d\'un socle de projection, penché par ta main (le gyroscope), toujours vivant : tu t\'en sers comme avant. Un bord le remet à plat.',

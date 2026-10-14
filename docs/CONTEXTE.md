@@ -102,6 +102,14 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.66 → 0.67 (14.10)** — 0.66 : ⧈ le xerbion (`src/app/xerbion.js`, sur la face du dessus du cube de la fractale), ◈ le xerploxion (le
+ploxion en hologramme : « LE XERPLOXION » dans `src/app/routeur.js`, `tools/faux-iphone/parcours-holo.mjs`). 0.67 : ◈ sur un xerkion
+dev/bouffe/ferme/pont/veille ouvre le ploxion du labo `xerploxions` avec `{ xerploxion: 'xerploxion-<d>' }` (`CONSOLES`/`consoleDe`) ;
+⚠ pas vérifié que `xerploxions` lise ce paramètre passé au montage (son code vit au labo). ▣ « dans le cube » (`src/app/cube-interieur.js`,
+ploxion interne, gardé dans boxion_local « reglages/cube-interieur » ; `tools/faux-iphone/parcours-cube-interieur.mjs`). Le marketplace :
+`PORTEES`/`porteeDe` (depuis `compat` de `tools/audit-ploxions.mjs` : A prêt = partout, B = nexus, C = externe ; interne = natif), icônes
+xerkion (`icone`), ploxions internes (`internes`). Les puces de portée ne s'affichent qu'en grille/liste ; la vitrine a le rayon ◇ Partout.
+
 **0.63.1 → 0.65 (14.10)** — 0.63.1 : la lenteur, c'était le thème vivant (--mx sur <html>, tout le document recalculé 8×/s : 2 i/s à
 l'accueil de RS-7 au faux iPhone ×4 → 50 i/s ; `tools/faux-iphone/parcours-perf.mjs`). 0.64 : ☾ dodo/réveil (tsoin, ploxi0n://dodo,
 `comparerNuit` dans Santé), « Réduire les animations » = Calme, ≋ chill-synth phase 1 (`src/chill/chill-synth.js` : à valider sur
