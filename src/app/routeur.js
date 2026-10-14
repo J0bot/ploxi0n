@@ -22,7 +22,7 @@ const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><p
 /** (0.63) ce qu'un geste des bords peut faire (⚙ › Gestes des bords, le HUD de tuto) */
 export const ACTIONS_BORDS = [['precedente', '← app précédente'], ['suivante', 'app suivante →'], ['accueil', '⌂ accueil'], ['minimiser', '▁ minimiser'], ['basculer', '⧉ basculer'],
   ['chercher', 'chercher'], ['reglages', 'réglages'], ['portion', '◈ portion'], ['tsoin', '⧗ noter un tsoin'], ['freefall', '◇ freefall (gyroscope)'],
-  ['etat', '▣ l\'état : plein écran, pip, cadre'], ['tuto', '◎ le tuto ici'], ['carte', '⊞ tout le xerboxion'], ['holo', '◈ le xerploxion (l\'hologramme)'], ['rien', '— rien']];
+  ['etat', '▣ l\'état : plein écran, pip, cadre'], ['tuto', '◎ le tuto ici'], ['carte', '⊞ tout le xerboxion'], ['holo', '◈ le xerploxion (l\'hologramme)'], ['cube', '▣ ses pages, dans le cube'], ['rien', '— rien']];
 export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null, surMontrer = null, surTuto = null } = {}) {
   // ▤ (0.51) les mini docks : miniDocks = { surVivants(), surFermeture(id), page() } — ⧉ ouvre leur page, ils remplacent « en arrière-plan »
   const W = fenetre, D = W.document;
@@ -71,6 +71,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (action === 'minimiser') return courant ? minimiser() : (flottant ? null : vibrer('fx-refus'));   // à l'accueil : déjà là
     if (action === 'etat') return cyclerEtat();
     if (action === 'holo') return basculerHolo();
+    if (action === 'cube') return basculerCube();
     if (action === 'tuto') return surTuto ? surTuto(courant ? courant.id : null) : null;
     if (action === 'basculer') return vivants.size + endormis.length ? basculer() : null;
     if (action === 'freefall') return fractale.freefall();   // (0.60) l'appli au gyroscope (il a sa montée, pas de 'bord' en plus)
@@ -101,7 +102,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     b.addEventListener('pointerdown', (e) => {
       if (prefs().bords === false) return; tenus[cote] = true; if (tenus.g && tenus.d) lesDeux = true;
       annulerAppui(); annulerDroit();   // une tuile tenue ou un clic droit sous l'autre doigt ne partent pas pendant la fractale
-      quitterHolo();   // ◈ toucher un bord : l'hologramme redevient plat (la fractale prend l'hôte tel quel)
+      quitterHolo(); fermerCube();   // ◈ ▣ toucher un bord : l'hologramme redevient plat, le cube se referme (la fractale prend l'hôte tel quel)
       arme = false; pEcrit = 0; hist = [[e.timeStamp || Date.now(), e.clientX]];
       try { const sel = W.getSelection && W.getSelection(); if (sel && sel.rangeCount) sel.removeAllRanges(); } catch (er) { /* */ }
       racine.classList.add('px-tire-bord');
@@ -253,6 +254,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   const consoleDe = (id) => { const d = String(id || '').replace(/^xerkion-/, ''); return /^xerkion-/.test(String(id || '')) && CONSOLES[d] ? 'xerploxion-' + CONSOLES[d] : null; };
   function basculerHolo(on) {
     if (on !== false && !holoV && courant && consoleDe(courant.id) && ouvrirExterne) { vibrer('fx-ouvrir', 'xerploxions'); ouvrirExterne('xerploxions', { xerploxion: consoleDe(courant.id) }); return 'console'; }
+    if (on !== false) fermerCube();
     const v = on === false ? null : courant; if (!v && !holoV) { vibrer('fx-refus'); signaler('ouvre un ploxion : ◈ en fait un hologramme'); return false; }
     if (holoV && (on === false || holoV === v || on == null)) { quitterHolo(); return false; }
     holoV = v; v.hote.classList.add('px-holo'); racine.classList.add('px-holo-on');
@@ -274,6 +276,18 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     v.hote.classList.remove('px-holo'); v.hote.style.transform = ''; racine.classList.remove('px-holo-on');
     if (holoSocle) { holoSocle.remove(); holoSocle = null; }
   }
+  // ▣ (0.68) LE CUBE DES PAGES — RS-7 (14.10) : « surtout, le cube c'est une vue pour les ploxions qui ont plusieurs pages ». Le ploxion à
+  // l'écran devient l'intérieur d'un cube : sa page au fond, ses autres pages sur les murs (src/app/cube-pages.js, branché par main.js).
+  // ▣ dans sa barre, ou un geste des bords (« cube ») ; toucher un bord, changer d'app, l'hologramme : il se referme.
+  let cubeP = null;
+  function basculerCube(on) {
+    if (!cubeP) return false;
+    if (cubeP.ouvert() || on === false) { fermerCube(); return false; }
+    if (!courant) { vibrer('fx-refus'); signaler('ouvre un ploxion : ▣ montre ses pages dans un cube'); return false; }
+    quitterHolo();
+    return cubeP.ouvrir({ id: courant.id, hote: courant.hote, inst: courant.inst, dans: scene });
+  }
+  function fermerCube(id) { if (cubeP && cubeP.ouvert() && (id == null || cubeP.ouvert() === id)) cubeP.fermer(); }
   // LE DROIT AU SILENCE, appliqué : ce qu'un ploxion (ou ses bions) accroche directement à la page (une bulle flottante, un panneau…)
   // lui appartient ; caché quand il passe en arrière-plan, rendu quand on le reprend, retiré quand on le ferme. (RS-7 12.10 : un carré
   // flottait sur l'accueil, laissé par un ploxion fermé.) Ce que l'app accroche elle-même (px-*, mk-*) et les scripts ne comptent pas.
@@ -659,6 +673,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     if (b.hasAttribute('data-reessayer')) return ouvrir(b.getAttribute('data-reessayer'));
     if (b.hasAttribute('data-minimiser')) return minimiser();
     if (b.hasAttribute('data-holo')) return basculerHolo();
+    if (b.hasAttribute('data-cube')) return basculerCube();
     if (b.hasAttribute('data-reprendre')) return ouvrir(b.getAttribute('data-reprendre'));
     if (b.hasAttribute('data-tuer')) { tuer(b.getAttribute('data-tuer')); return courant ? null : accueil(); }
     if (b.hasAttribute('data-basculer')) return basculer();
@@ -680,12 +695,13 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
   // vidéos EN LECTURE, invisibles — et le mode audio d'arrière-plan gardait l'app éveillée : un flux continu toute la journée.
   // Caché → ses vidéos s'arrêtent et ne préchargent plus ; le son (la musique) continue, c'est voulu.
   function couperVideos(hote) { try { for (const m of hote.querySelectorAll('video')) { if (!m.paused) m.pause(); m.preload = 'none'; } } catch (e) { /* */ } }
-  function cacher(v) { if (!v) return; if (holoV === v) quitterHolo(); compter(v); couperVideos(v.hote); v.hote.hidden = true; v.hote.classList.remove('px-sans-entree'); v.vu = Date.now(); accrochesDe(v.id, n => { if (!n.hasAttribute('data-px-cache')) { n.setAttribute('data-px-cache', n.style.display || ''); n.style.display = 'none'; } }); }
+  function cacher(v) { if (!v) return; if (holoV === v) quitterHolo(); fermerCube(v.id); compter(v); couperVideos(v.hote); v.hote.hidden = true; v.hote.classList.remove('px-sans-entree'); v.vu = Date.now(); accrochesDe(v.id, n => { if (!n.hasAttribute('data-px-cache')) { n.setAttribute('data-px-cache', n.style.display || ''); n.style.display = 'none'; } }); }
   function tuer(id) {
     const v = vivants.get(id); if (!v) return;
     if (v === courant) { compter(v); courant = null; }
     if (flottant && flottant.v === v) poserFlottant(null);
     if (holoV === v) quitterHolo();
+    fermerCube(id);
     vivants.delete(id); pile = pile.filter(x => x !== id); fractale.oublier(id); pleins.delete(id);   // (0.63) sa carte part (sinon la toucher le faisait revivre)
     try { if (v.inst && typeof v.inst.unmount === 'function') v.inst.unmount(); } catch (e) { console.warn('[ploxi0n] unmount', id, e); }
     v.hote.innerHTML = ''; v.hote.remove(); majBords();
@@ -697,6 +713,7 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">' + G('retour') + '</button><span>' + (prefs().glyphes === false ? icone(p) : glyphePloxion(p)) + ' ' + texte(p.nom || id) + '</span>'
       + '<span class="px-hud"><span class="px-hud-c">' + (hud ? hud.html(true) : '') + '</span>'
       + (autres > 0 ? '<button class="px-mini" data-basculer aria-label="basculer entre les ploxions ouverts">' + G('basculer') + '<b>' + (autres + 1) + '</b></button>' : '')
+      + (id !== 'cube-interieur' ? '<button class="px-mini" data-cube aria-label="ses pages, dans le cube">▣</button>' : '')
       + '<button class="px-mini" data-holo aria-label="xerploxion, l\'hologramme">◈</button>'
       + '<button class="px-mini" data-minimiser aria-label="minimiser">' + G('minimiser') + '</button>'
       + (verrou && !p.interne ? '<button class="px-verrou" data-verrou aria-label="verrou Face ID">' + (verrous.has(id) ? G('verrou') : G('deverrou')) + '</button>' : '') + '</span></div>';
@@ -798,6 +815,8 @@ export function creerRouteur({ fenetre = globalThis.window, racine, catalogue = 
     aller: (id) => allerA(id, { muet: true }),
     /** (0.63) l'état du ploxion à l'écran (normal → plein → pip → cadre) ; ce qui flotte */
     holo: (on) => basculerHolo(on), holoActif: () => !!holoV,
+    /** (0.68) ▣ le cube des pages : brancher (main.js), ouvrir / fermer (sans argument : bascule), lequel est ouvert */
+    brancherCube(c) { cubeP = c || null; }, cube: (on) => basculerCube(on), cubeActif: () => (cubeP ? cubeP.ouvert() : null),
     etat: () => cyclerEtat(), flottant: () => (flottant ? { id: flottant.v.id, mode: flottant.mode } : null), plein: () => !!(courant && pleins.has(courant.id)),
     /** (0.63) pour la carte : tout ce qui vit, dort ou est installé, et l'état de chacun */
     etatsCarte: () => ({ courant: courant ? courant.id : null, vivants: [...vivants.keys()], endormis: endormis.map(e => e.id), verrous: [...verrous].filter(id => !deverrouilles.has(id)) }),

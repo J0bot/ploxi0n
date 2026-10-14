@@ -102,6 +102,15 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.68 (14.10)** — RS-7 : « surtout, le cube c'est une vue pour les ploxions qui ont plusieurs pages ». `src/app/cube-interieur.js` est devenu
+la SALLE partagée (`monterSalle`, `facesDesPages` : fond = page i, droite i+1, gauche i−1, plafond i+2, sol i−2) ; `src/app/cube-pages.js` en
+fait le cube DES PAGES d'un ploxion (▣ `data-cube` dans la barre, action des bords « cube », `routeur.cube()`/`cubeActif()`). Les pages :
+1. le contrat de l'instance montée `pages()`/`allerPage(cle,{muet})`/`garderEtat()` (marketplace, réglages) ; 2. une liste blanche d'onglets
+du DOM (`ONGLETS`) ; jamais `DANGER`, jamais les `EXCLUS` (cape, pomodoro). Les photos = clones inertes pris DERRIÈRE la salle en feuilletant
+le vrai ploxion, qui revient à sa page/son défilement/son état à la sortie. Piège : l'enveloppe des photos porte `px-hote` (le thème chill
+habille sous .px-hote) mais n'est pas enfant direct de la scène — ne pas chercher les hôtes autrement que `.px-scene>.px-hote` ou par
+`data-ploxion`. Faux iPhone : `tools/faux-iphone/parcours-cube-pages.mjs` (bother, réglages, marketplace).
+
 **0.66 → 0.67 (14.10)** — 0.66 : ⧈ le xerbion (`src/app/xerbion.js`, sur la face du dessus du cube de la fractale), ◈ le xerploxion (le
 ploxion en hologramme : « LE XERPLOXION » dans `src/app/routeur.js`, `tools/faux-iphone/parcours-holo.mjs`). 0.67 : ◈ sur un xerkion
 dev/bouffe/ferme/pont/veille ouvre le ploxion du labo `xerploxions` avec `{ xerploxion: 'xerploxion-<d>' }` (`CONSOLES`/`consoleDe`) ;

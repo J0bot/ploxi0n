@@ -795,3 +795,16 @@ html.px-telecommande .px-holo-socle{bottom:calc(env(safe-area-inset-bottom,0px) 
 .ci-feuille>div{width:100%;max-height:70%;overflow:auto;padding:16px 14px calc(env(safe-area-inset-bottom,0px) + 16px);border-radius:18px 18px 0 0;background:#1f1f1d;border-top:1.5px solid #ecebe9;display:flex;flex-direction:column;gap:6px}
 .ci-feuille p{margin:0 2px 6px;font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(236,235,233,.7)}
 .ci-feuille button{margin:0;min-height:40px;text-align:left;padding:0 12px;border-radius:10px;border:1px solid rgba(236,235,233,.3);background:none;color:#ecebe9;font:600 13px var(--police)}
+/* ▣ (0.68) le cube des pages : par-dessus l'hôte du ploxion (dans la scène) ; les faces de pages montrent leur photo, inerte */
+.px-cube-pages{position:absolute;inset:0;z-index:6;background:#1f1f1d;touch-action:none;-webkit-user-select:none;user-select:none}
+.ci-des-pages{touch-action:none}.ci-des-pages .ci-face,.ci-des-pages .ci-objet{transition:opacity .16s}
+.ci-tourne .ci-face{-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.ci-page{padding:0;background:#141412}.ci-fond.ci-page{border-color:#ecebe9;border-width:2px}
+.ci-photo{position:absolute;left:0;top:0;overflow:hidden;pointer-events:none}
+.ci-cliche{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.ci-sans-photo{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#ecebe9;font:600 15px var(--police)}.ci-sans-photo p{margin:0;font-size:42px}.ci-sans-photo small{font:600 10px var(--mono);opacity:.6}
+.ci-et-page{pointer-events:none;z-index:2;display:flex;align-items:center;max-width:calc(100% - 20px);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ci-entre .ci-face:not(.ci-fond),.ci-entre .ci-objet,.ci-entre .ci-etiquette{opacity:0}.ci-entre+.ci-barre{opacity:0;transition:opacity .16s}
+.ci-media{display:flex;align-items:center;justify-content:center;min-height:80px;background:rgba(0,0,0,.4);color:#ecebe9;font-size:28px}
+.ci-prise{animation:ci-prise 1s ease-in-out infinite alternate}@keyframes ci-prise{from{opacity:.35}to{opacity:.8}}
+html.px-calme .ci-prise{animation:none}

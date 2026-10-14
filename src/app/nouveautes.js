@@ -7,6 +7,12 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.68.0', titre: 'Le cube, la vue des pages d\'un ploxion', points: [
+    '▣ dans la barre d\'un ploxion : il devient l\'intérieur d\'un cube. La page où tu es au fond ; la suivante sur le mur de droite, la précédente à gauche, les autres au plafond et au sol. Penche l\'iPhone : tu vois les murs.',
+    'Glisse : le cube tourne, la page d\'à côté vient au fond. Touche une face : elle vient au fond. Touche le fond : tu entres dans cette page, le vrai ploxion, vivant. ⤢ (ou ▣) : tu reviens comme tu étais.',
+    'Ça marche déjà pour le marketplace (ses vues), les réglages (toutes leurs pages), bother, couleurs, minuteur, et tout ploxion qui a des onglets. Les faces sans page restent à toi : un xer au choix, et l\'intérieur se peuple (gardé pour chaque ploxion).',
+    'Ne pas nuire : le cube ne touche jamais un bouton qui agit (envoyer, installer, retirer…), ne feuillette pas la blouse ni le minuteur (il remettrait le chrono à zéro) ; il ne fait que regarder.',
+  ] },
   { v: '0.67.0', titre: 'Dans le cube, et un marketplace qui dit où', points: [
     '▣ « dans le cube », un nouveau ploxion : ton iPhone est une face du cube, tu regardes dedans. Penche-le (le gyroscope), les autres faces se montrent : le fond, les deux murs, le plafond, le sol. Chaque face est un xer que tu choisis (touche son étiquette) : l\'accueil, ce qui vit, tes tsoins, un koin, une image, ou le trait. ＋ peupler : pose dedans un ploxion, un texte, une image, un glyphe ; glisse-le, deux touchers le rapprochent ou l\'éloignent, appui long pour l\'enlever.',
     '◈ Sur un xerkion du labo (dev, bouffe, ferme, pont, veille), ◈ ouvre sa vraie console xerploxion, celle du labo. Ailleurs, l\'hologramme local, avec « ◈ consoles du labo » sur son socle.',

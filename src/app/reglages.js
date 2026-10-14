@@ -312,7 +312,12 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
     });
     const off = compte.surChangement(() => peindre());
     peindre();
-    return { unmount() { vivant = false; off(); hote.innerHTML = ''; } };
+    return { unmount() { vivant = false; off(); hote.innerHTML = ''; },
+      // ▣ (0.68) le contrat du cube des pages (src/app/cube-pages.js) : l'accueil des réglages (« * ») et chaque page de premier niveau
+      pages: () => [['*', 'réglages'], ...GROUPES.flatMap(([, l]) => l.map(([k, , n]) => [k, n]))].filter(([k]) => k === '*' || zone.querySelector('section[data-s="' + k + '"]'))
+        .map(([k, n]) => ({ cle: k, nom: n, actif: (page || '*') === k })),
+      allerPage(k, o = {}) { if (!vivant) return; page = k === '*' ? null : k; q = ''; const ch = hote.querySelector('[data-q]'); if (ch) ch.value = ''; filtrer(); if (!o.muet) vibrer('selection'); },
+      garderEtat() { const s = { page, q }; return () => { if (!vivant) return; page = s.page; q = s.q; const ch = hote.querySelector('[data-q]'); if (ch) ch.value = q; filtrer(); }; } };
   }
   W.jOSApps = W.jOSApps || {};
   W.jOSApps['reglages-app'] = { manifest: { id: 'reglages-app', name: 'Réglages', icon: '' }, mount };

@@ -9,7 +9,7 @@
 
 **Légende** : ✅ fait (version) · 🔨 en cours · ⏭ prochain · 💭 plus tard · ❓ attend une décision de RS-7 · ⚠ fait, mais jamais vu marcher sur l'iPhone
 
-*Dernière mise à jour : 0.67 (14.10) : ▣ « dans le cube » (l'iPhone = une face, on peuple l'intérieur, chaque face = un xer), ◈ ouvre la console xerploxion du labo sur un xerkion, le marketplace avec les icônes du xer et la portée (◇ partout, ◆ natif, ◐ partiel, ⇄ nexus, ↗ externe : prêt pour Android). 0.66 : ⧈ le xerbion (face du dessus du cube), ◈ le xerploxion. 0.65 : ⊞ la carte du xerboxion. 0.64 : ☾ dodo, ≋ chill-synth phase 1 (⚠ à valider sur l'iPhone),
+*Dernière mise à jour : 0.68 (14.10) : ▣ le cube des pages (▣ dans la barre d'un ploxion : sa page au fond, ses autres pages sur les murs ; glisser tourne, toucher le fond y entre ; marketplace, réglages, bother, couleurs, minuteur, tout ploxion à onglets). 0.67 : ▣ « dans le cube » (l'iPhone = une face, on peuple l'intérieur, chaque face = un xer), ◈ ouvre la console xerploxion du labo sur un xerkion, le marketplace avec les icônes du xer et la portée (◇ partout, ◆ natif, ◐ partiel, ⇄ nexus, ↗ externe : prêt pour Android). 0.66 : ⧈ le xerbion (face du dessus du cube), ◈ le xerploxion. 0.65 : ⊞ la carte du xerboxion. 0.64 : ☾ dodo, ≋ chill-synth phase 1 (⚠ à valider sur l'iPhone),
 Animations réduites, la fiche App Store. 0.63.1 : la lenteur (le thème vivant). ⏭ : VoiceOver et police plus grande (l'accessibilité),
 les sessions (test, xeroction, le xer de la revue), le portion (x = xers, y = sessions), chill-synth phases 2–4 après validation.
 Avant : 0.63 (14.10) : la fractale fluide (une boucle d'images, le ressort à élan, l'inclinaison sur les conteneurs,

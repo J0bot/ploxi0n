@@ -51,12 +51,13 @@ import { installerSansEmoji } from './app/sans-emoji.js';
 import { creerDemo } from './app/demo.js';
 import { creerCarteXer } from './app/carte-xer.js';
 import { creerCubeInterieur } from './app/cube-interieur.js';
+import { creerCubePages } from './app/cube-pages.js';
 import { svgXerkion } from './app/xerkion-icone.js';
 import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.67.0';
+const VERSION = '0.68.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -345,6 +346,9 @@ async function demarrer() {
   tutoHud = creerTutoHud({ boxion, routeur: () => routeur, demo, prefs: () => prefs.lire(), vibrer, glyphe: (n) => G(n), tsoin: (x) => tsoinNatif.enregistrer(x) });
   window.ploxi0nDemo = demo;
   // ⊞ (0.64) la carte du xerboxion : pincer la fractale, ⊞, le bord « tout le xerboxion »
+  // ▣ (0.68) le cube des pages : ▣ dans la barre d'un ploxion (src/app/cube-pages.js)
+  routeur.brancherCube(creerCubePages({ W: window, boxion, vibrer: (x) => vibrer(x), liste: () => routeur.listeCarte(), vivants: () => routeur.vivants(), tsoins: () => tsoinNatif.liste(8),
+    aller: (id) => routeurProxy.ouvrir(id), icone: (p) => p.icone || svgXerkion(p, { seul: prefs.lire().styleIcones === 'glyphe' }), glyphe: (n) => G(n) }));
   routeur.brancherCarte(creerCarteXer({ racine: document.body, liste: () => routeur.listeCarte(), courant: () => routeur.courant(), aller: (id) => routeur.aller(id), vibrer, boxion, calme: () => !!prefs.lire().calme, glyphe: (n) => G(n) }));
   // ❄ (0.53) le gel : un ploxion vivant mais caché n'anime plus (requestAnimationFrame mis de côté jusqu'à ce qu'on le revoie)
   gel = installerGel({ courant: () => routeur.courant(), vivants: () => routeur.vivants() });

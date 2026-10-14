@@ -280,7 +280,11 @@ export function enregistrerMarketplace({ W = globalThis.window, depot, surChange
       if (params.id) ouvrirFiche(String(params.id));
       if (params.chercher) { try { champ.focus(); } catch (e) { /* */ } }
     })();
-    return { ready: pret, unmount() { vivant = false; fermerFiche(); hote.innerHTML = ''; } };
+    return { ready: pret, unmount() { vivant = false; fermerFiche(); hote.innerHTML = ''; },
+      // ▣ (0.68) le contrat du cube des pages (src/app/cube-pages.js) : ses vues sont ses pages ; à la sortie, sa recherche et ses filtres reviennent
+      pages: () => VUES.map(([k, , n]) => ({ cle: k, nom: n, actif: k === vue })),
+      allerPage(k, o = {}) { if (!vivant || !VUES.some(v => v[0] === k)) return; if (!o.muet) vibrer('vue'); vue = k; q = ''; champ.value = ''; cat = ''; portee = ''; return peindre(); },
+      garderEtat() { const s = { vue, q, cat, portee }; return () => { if (!vivant) return; ({ vue, q, cat, portee } = s); champ.value = q; return peindre(); }; } };
   }
   W.jOSApps = W.jOSApps || {};
   W.jOSApps.marketplace = { manifest: { id: 'marketplace', name: 'Marketplace', icon: '🛍' }, mount };
