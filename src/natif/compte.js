@@ -58,6 +58,8 @@ export function creerCompte({ W = globalThis.window, boxion, http, source = SOUR
 
   return {
     pret, etat: () => etat,
+    /** (0.72) la feuille Apple seule (le social s'en sert pour les comptes j0bot : src/natif/social-apple.js) */
+    jetonApple: () => jetonApple(),
     surChangement(f) { abonnes.add(f); return () => abonnes.delete(f); },
     async connecter() {
       const a = new Uint8Array(32); W.crypto.getRandomValues(a); verifier = b64url(a);

@@ -253,6 +253,7 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         CAPPluginMethod(name: "lectureFin", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "lampe", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "apercu", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "capturerXer", returnType: CAPPluginReturnPromise),
     ]
 
     // 🔦 LA LAMPE DE POCHE (0.49) : lampe({ allume?, niveau? 0…1 }) ; sans « allume », elle bascule
@@ -290,6 +291,32 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         }
     }
     public func numberOfPreviewItems(in controller: QLPreviewController) -> Int { apercuURL == nil ? 0 : 1 }
+
+    // 📸 (0.72) LA PHOTO D'UN XER (RS-7 15.10 : « quand tu screenshot vraiment, ça s'enregistre sur l'appli dans le cache, pour avoir plus de vues
+    // rapidement sans devoir les fetch, juste nativement du téléphone ») : ce que montre la page, rendu par WebKit (takeSnapshot), à demi-largeur,
+    // en JPEG dans Caches/xers/<id>.jpg (régénérable : iOS peut le vider s'il manque de place) ; rend son chemin
+    @objc func capturerXer(_ call: CAPPluginCall) {
+        let brut = call.getString("id") ?? "accueil"
+        let propre = String(brut.map { ($0.isLetter || $0.isNumber || $0 == "-" || $0 == "_") ? $0 : "-" })
+        let id = String(propre.prefix(80))
+        DispatchQueue.main.async {
+            guard let web = self.bridge?.webView else { call.reject("capture : pas de page"); return }
+            let reglage = WKSnapshotConfiguration()
+            reglage.snapshotWidth = NSNumber(value: Double(web.bounds.width) * 0.5)
+            web.takeSnapshot(with: reglage) { image, erreur in
+                guard let image = image, let jpeg = image.jpegData(compressionQuality: 0.72) else { call.reject("capture : " + (erreur?.localizedDescription ?? "rien")); return }
+                let fm = FileManager.default
+                guard let caches = fm.urls(for: .cachesDirectory, in: .userDomainMask).first else { call.reject("capture : pas de cache"); return }
+                let dossier = caches.appendingPathComponent("xers", isDirectory: true)
+                try? fm.createDirectory(at: dossier, withIntermediateDirectories: true)
+                let fichier = dossier.appendingPathComponent(id + ".jpg")
+                do {
+                    try jpeg.write(to: fichier, options: .atomic)
+                    call.resolve(["chemin": fichier.path, "largeur": Double(image.size.width), "hauteur": Double(image.size.height)])
+                } catch { call.reject("capture : " + error.localizedDescription) }
+            }
+        }
+    }
     public func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem { (apercuURL ?? URL(fileURLWithPath: "/")) as NSURL }
 
     // ♫ À L'ÉCOUTE (0.48, RS-7 : l'écran verrouillé disait « Spotify Embedded Player », sans pochette, ±10 s au lieu de ⏮ ⏭). Le son des

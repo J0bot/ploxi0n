@@ -102,6 +102,14 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.72 (15.10)** — ▦ `ios/App/PloxionWidgets/PloxionWidgets.swift` : le kit HUD (`Peau` .chill/.mono, `PEAU`, `FondHUD`, `Tete`,
+`Etat`, `Ligne`, `Kion`, `Portion`), valeurs (tsoins-jour en héros, `.accessoryCircular`), cube (`surFace` : le texte imprimé sur les faces ;
+`.contentMarginsDisabled()`), lecture (`Disque`, `source`), épinglés (`g64` : le glyphe PNG rendu par `glyphePng`, src/natif/raccourcis.js).
+Le Swift n'est pas compilé ici : relu ligne par ligne + un vérificateur. 📸 `PloxiApple.capturerXer` (WKWebView.takeSnapshot → Caches/xers)
++ `src/natif/apercus.js` (index « reglages/apercus ») ; main.js photographie AVANT d'ouvrir la vue des xers. 🍏 `src/natif/social-apple.js` :
+bouton sur `#so-f-login` des ploxions social / socialion / ultimate-social (via `apresChargement`), POST api.j0bot.ch/api/v1/auth/apple
+(404 au 15.10 : docs/SOCIAL-APPLE.md, le contrat serveur), session dans `jos_social_token` / `jos_social_user`.
+
 **0.71 (14.10)** — 🌍 `src/terrax/terrax.js` (ploxion interne `terrax`, pages `[data-page-cube]` : terrion / terrax / chambre / quêtes ;
 géométrie pure testée : distanceCap, decaler, versTuile, projeter ; couches en lecture : mappion `box:mappion/souvenirs`, nexus `pull`).
 Le nexus : `nexus.push/pull` dans main.js = le protocole de jOSNexus (`/nexus/push|pull`, relayés par le shim). Le vrai nord : AppDelegate

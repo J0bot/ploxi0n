@@ -51,7 +51,7 @@ export function voisins(places, de, venu = null) {
 }
 
 export function creerVueXers({ W = globalThis.window, racine, liste = () => [], places = () => ({}), courant = () => null, hoteDe = () => null,
-  aller = () => {}, accueil = () => {}, carte = () => {}, vibrer = () => {}, icone = (p) => esc(p.icone || '◇'), calme = () => false } = {}) {
+  aller = () => {}, accueil = () => {}, carte = () => {}, vibrer = () => {}, icone = (p) => esc(p.icone || '◇'), calme = () => false, photo = () => null, oublierPhoto = () => {} } = {}) {
   const D = W.document;
   let el = null, plan = null, centre = null, cases = null, photos = new Map(), geste = null, anim = false, lesPlaces = {}, venu = null;
   const ecran = () => ({ w: W.innerWidth || 390, h: W.innerHeight || 844 });
@@ -64,6 +64,9 @@ export function creerVueXers({ W = globalThis.window, racine, liste = () => [], 
     let n = null;
     const h = id === ACCUEIL ? null : hoteDe(id);
     if (h) { try { n = photographier(W, h); } catch (e) { n = null; } }
+    // (0.72) sinon, la dernière capture d'écran de ce xer, gardée par le téléphone (src/natif/apercus.js) : un aperçu sans rien recharger
+    const src = n ? null : photo(id);
+    if (src) { n = D.createElement('div'); n.className = 'px-vx-photo'; const im = D.createElement('img'); im.alt = ''; im.decoding = 'async'; im.src = src; im.onerror = () => { oublierPhoto(id); im.remove(); n.classList.add('px-vx-sans'); }; n.appendChild(im); }
     if (!n) {
       n = D.createElement('div'); n.className = 'px-vx-carte';
       const p = id === ACCUEIL ? null : liste().find(x => x.id === id);

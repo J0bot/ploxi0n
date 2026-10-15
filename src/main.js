@@ -54,6 +54,9 @@ import { creerCubeInterieur } from './app/cube-interieur.js';
 import { creerCubePages } from './app/cube-pages.js';
 import { creerChercherLocal } from './app/chercher-local.js';
 import { creerVueXers } from './app/vue-xers.js';
+import { creerApercus } from './natif/apercus.js';
+import { SOCIAUX, surveillerSocial } from './natif/social-apple.js';
+import { PloxiApple } from './natif/plugins-app.js';
 import { creerTerrax } from './terrax/terrax.js';
 import { semerKoinIon } from './terrax/koin-ion.js';
 import { svgXerkion } from './app/xerkion-icone.js';
@@ -61,7 +64,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.71.0';
+const VERSION = '0.72.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -273,6 +276,15 @@ async function demarrer() {
     if (raccourcis) raccourcis.publier(liste).catch(() => {});   // l'app Raccourcis et Siri proposent les ploxions installés
   }
   const compte = creerCompte({ boxion, http: creerHttp(window) });
+  // 🍏 (0.72) le social avec l'Apple ID (src/natif/social-apple.js) : « Continuer avec Apple » sur son écran de connexion, comptes j0bot
+  const surveilles = new Map();
+  function socialApple(id) {
+    if (!SOCIAUX.has(id)) return;
+    const avant = surveilles.get(id); if (avant) avant();
+    const hote = document.querySelector('.px-scene>.px-hote[data-ploxion="' + CSS.escape(id) + '"]'); if (!hote) return;
+    surveilles.set(id, surveillerSocial({ W: window, hote, jetonApple: () => compte.jetonApple(), vibrer: (x) => vibrer(x), natif: () => !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()),
+      remonter: () => { if (routeur) routeur.ouvrir(id, { apple: String(Date.now()) }); } }));
+  }
   boot(62, 'ton compte');
   await compte.pret; compteRef = compte;
   { const e = compte.etat(); boot(64, e.connecte ? 'compte : ' + e.nom + ' · ' + e.palier : 'sans compte (tout reste ici)'); }
@@ -346,7 +358,7 @@ async function demarrer() {
   // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xerbot (le monde physique)
   const modes = creerModes({ cadres, prefs, ouvrir: (id) => routeurProxy.ouvrir(id), connait: (id) => !!(routeur && routeur.connait(id)), source: SOURCE, vibrer: (x) => vibrer(x) });
   modes.attacher(racine);
-  routeur = creerRouteur({ sonDe: (id) => (gel ? gel.aDuSon(id) : false), surChercher: () => (chercheur ? chercheur.ouvrir() : routeur.ouvrir('marketplace', { chercher: '1' })), surXers: () => (vueXers ? vueXers.ouvrir() : routeur.carte()), panneau: () => modes.panneau(), racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id, p) => routeurProxy.ouvrir(id, p), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: () => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
+  routeur = creerRouteur({ sonDe: (id) => (gel ? gel.aDuSon(id) : false), surChercher: () => (chercheur ? chercheur.ouvrir() : routeur.ouvrir('marketplace', { chercher: '1' })), surXers: () => (vueXers ? vueXers.ouvrir() : routeur.carte()), panneau: () => modes.panneau(), racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id, p) => routeurProxy.ouvrir(id, p), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: (id) => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); socialApple(id); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
     miniDocks: { surVivants: () => miniDocks.planifier(), surFermeture: (id) => { miniDocks.surFermeture(id); if (gel) gel.liberer(id); }, page: () => miniDocks.ouvrirPage() },
     surMontrer: (id) => { if (gel) gel.degeler(id); },
     surTuto: (id) => (tutoHud ? tutoHud.ouvrir(id) : null),   // ◎ (0.63) haut gauche : le HUD de tuto
@@ -367,10 +379,16 @@ async function demarrer() {
   const carteXer = creerCarteXer({ racine: document.body, liste: () => routeur.listeCarte(), courant: () => routeur.courant(), aller: (id) => routeur.aller(id), vibrer, boxion, calme: () => !!prefs.lire().calme, glyphe: (n) => G(n) });
   routeur.brancherCarte(carteXer);
   // ⊡ (0.70) la vue des xers : le xer en image, ses voisins de la carte autour (glisser dans 4 directions) ; la capture d'écran d'iOS l'ouvre
-  vueXers = creerVueXers({ racine, liste: () => routeur.listeCarte(), places: () => carteXer.placesAJour(), courant: () => routeur.courant(),
+  const apercus = creerApercus({ W: window, boxion, plugin: PloxiApple }); apercus.lire().catch(() => {});
+  vueXers = creerVueXers({ racine, photo: (id) => apercus.src(id), oublierPhoto: (id) => apercus.oublier(id), liste: () => routeur.listeCarte(), places: () => carteXer.placesAJour(), courant: () => routeur.courant(),
     hoteDe: (id) => document.querySelector('.px-scene>.px-hote[data-ploxion="' + CSS.escape(id) + '"]'), aller: (id) => routeur.aller(id), accueil: () => routeur.accueil(),
     carte: () => routeur.carte(), vibrer: (x, i) => vibrer(x, i), calme: () => !!prefs.lire().calme, icone: (p) => p.icone || svgXerkion(p, { seul: prefs.lire().styleIcones === 'glyphe' }) });
-  window.addEventListener('ploxi0n-capture', () => { try { if (!vueXers.ouverte()) vueXers.ouvrir({ capture: true }); } catch (e) { /* */ } });
+  // 📸 (0.72) la capture d'écran : d'abord la photo du xer, gardée par le téléphone (Caches/xers) ; ensuite seulement la vue (sinon on la photographierait)
+  window.addEventListener('ploxi0n-capture', async () => {
+    if (vueXers.ouverte()) return;
+    try { await apercus.capturer(routeur.courant() || '·'); } catch (e) { /* pas de photo : la vue s'ouvre quand même */ }
+    try { if (!vueXers.ouverte()) vueXers.ouvrir({ capture: true }); } catch (e) { /* */ }
+  });
   // ❄ (0.53) le gel : un ploxion vivant mais caché n'anime plus (requestAnimationFrame mis de côté jusqu'à ce qu'on le revoie)
   gel = installerGel({ courant: () => routeur.courant(), vivants: () => routeur.vivants() });
   // ◇ (0.54) plus d'emoji dans l'interface de l'app : des glyphes du xerboxion (les ploxions du labo gardent leur contenu)

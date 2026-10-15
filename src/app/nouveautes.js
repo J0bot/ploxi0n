@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.72.0', titre: 'Des widgets HUD, des captures gardées, le social avec Apple', points: [
+    '▦ Les widgets refaits, façon HUD : un fond profond avec sa grille et ses crochets de viseur, le kion ◇ en tête, des lettres d\'instrument. ploxi0n : tes tsoins du jour en grand (plus le titre de la musique coupé), tes pas, ce qui joue ; aussi en rond sur l\'écran verrouillé. Le cube : le texte imprimé SUR ses faces, un socle de lumière. À l\'écoute : la pochette en disque. Épinglés : les glyphes de tes ploxions, plus des emoji.',
+    '📸 Chaque capture d\'écran garde la photo de ton xer dans le téléphone : la vue des xers montre ces photos pour les apps fermées, tout de suite, sans rien recharger.',
+    '🍏 Le social : « Continuer avec Apple » sur son écran de connexion, un compte j0bot né de ton Apple ID, sans le compte xerboxion. Il attend la porte Apple du serveur des comptes (docs/SOCIAL-APPLE.md) : le bouton le dit tant qu\'elle manque.',
+  ] },
   { v: '0.71.0', titre: 'Le terrax, le Pokémon Go du nexus', points: [
     '🌍 Un nouveau ploxion, natif : le terrax. Le terrion, la carte du réel (le satellite de mappion, ta position) : touche +, ou tiens le doigt sur la carte, et pose quelque chose là. Ses souvenirs de mappion 🧿 y sont aussi.',
     '👁 Le terrax, l\'AR : la caméra, et ce qui est posé autour de toi à sa vraie direction et à sa distance (GPS, boussole, inclinaison). « + poser ici » le grave à trois pas devant toi.',
