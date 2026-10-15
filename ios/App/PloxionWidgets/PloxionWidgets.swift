@@ -271,7 +271,7 @@ struct VueValeurs: View {
                 Text(h.valeur).font(.system(size: 40, weight: .thin, design: .monospaced)).foregroundColor(PEAU.trait).lineLimit(1).minimumScaleFactor(0.4)
                     .contentTransition(.numericText()).lueur(PEAU.acc)
                 Text(h.titre.uppercased()).font(.system(size: 8, weight: .semibold, design: .monospaced)).tracking(1).foregroundColor(PEAU.acc).lineLimit(1).widgetAccentable()
-                if let le = h.le { (Text("↻ ") + Text(le, style: .relative)).font(.system(size: 7, design: .monospaced)).foregroundColor(PEAU.muet).lineLimit(1) }
+                if let le = h.le { Text("↻ \(Text(le, style: .relative))").font(.system(size: 7, design: .monospaced)).foregroundColor(PEAU.muet).lineLimit(1) }
             }
         } else {
             Text("—").font(.system(size: 40, weight: .thin, design: .monospaced)).foregroundColor(PEAU.muet)
@@ -479,7 +479,8 @@ struct FournisseurLecture: TimelineProvider {
         var img: UIImage? = nil
         if let adresse = o["image"] as? String, !adresse.isEmpty, UserDefaults(suiteName: GROUPE)?.string(forKey: "ploxi0n.lecture-pochette") == adresse,
            let dossier = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: GROUPE) {
-            img = UIImage(contentsOfFile: dossier.appendingPathComponent("lecture.jpg").path)
+            // (0.73) réduite : WidgetKit refuse une image plus grande que le widget (la pochette fait 900 px), et le widget restait vide
+            img = UIImage(contentsOfFile: dossier.appendingPathComponent("lecture.jpg").path)?.preparingThumbnail(of: CGSize(width: 240, height: 240))
         }
         return LectureEntree(date: Date(), titre: t, artiste: (o["artiste"] as? String) ?? "", enLecture: (o["enLecture"] as? Bool) ?? false, image: img, source: (o["ploxion"] as? String) ?? "")
     }

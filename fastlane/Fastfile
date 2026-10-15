@@ -95,6 +95,24 @@ def ajouter_vlc
   UI.success("VLC ajouté à l'app (#{VLC_PAQUET})")
 end
 
+# L'AR NATIVE (0.73, PloxiAR dans AppDelegate.swift : ARKit, RealityKit, RoomPlan) est dans CHAQUE build. Interrupteur de secours, si un
+# Xcode la refusait un jour : PLOXI0N_AR=0 → la condition de compilation PLOXI0N_SANS_AR sur la cible App (gem xcodeproj, sur le Mac de la
+# CI) : PloxiAR n'est pas compilé, le terrax garde son AR web.
+SANS_AR = ENV["PLOXI0N_AR"] == "0"
+def retirer_ar
+  require "xcodeproj"
+  projet = Xcodeproj::Project.open(File.expand_path("../#{PROJET}", __dir__))
+  app = projet.targets.find { |t| t.name == "App" }
+  app.build_configurations.each do |c|
+    v = c.build_settings["SWIFT_ACTIVE_COMPILATION_CONDITIONS"]
+    l = v.is_a?(Array) ? v : v.to_s.split(" ")
+    l = ["$(inherited)"] if l.empty?
+    c.build_settings["SWIFT_ACTIVE_COMPILATION_CONDITIONS"] = (l + ["PLOXI0N_SANS_AR"]).uniq.join(" ")
+  end
+  projet.save
+  UI.important("l'AR native retirée de ce build (PLOXI0N_AR=0)")
+end
+
 # l'identifiant des widgets sur le compte développeur, avec App Groups (le GROUPE lui-même s'assigne dans le portail : l'API ne le permet pas)
 def identifiant_widgets
   bid = asc(:get, "bundleIds?filter[identifier]=#{WID_ID}")["data"].first
@@ -129,6 +147,7 @@ platform :ios do
       UI.important("PrivacyInfo.xcprivacy pas ajouté : #{e.message}")
     end
     ajouter_vlc if VLC
+    retirer_ar if SANS_AR
     if WIDGETS
       ajouter_widgets
       identifiant_widgets

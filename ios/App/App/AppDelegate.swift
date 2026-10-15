@@ -16,6 +16,15 @@ import CoreMotion
 import MediaPlayer
 import AVKit
 import QuickLook
+// l'AR native (0.73) : PloxiAR plus bas. Interrupteur de secours : PLOXI0N_AR=0 (fastlane) la retire du build.
+#if !PLOXI0N_SANS_AR
+import ARKit
+import RealityKit
+import Combine
+#if canImport(RoomPlan)
+import RoomPlan
+#endif
+#endif
 #if canImport(MobileVLCKit)
 import MobileVLCKit
 #endif
@@ -270,20 +279,36 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
     }
 
     // 👁 LE VISUALISEUR DE FICHIERS (0.49) : QuickLook — PDF, images, vidéos, Office, Pages/Numbers/Keynote, texte, USDZ (3D/AR)…
-    // apercu({ base64, nom }) ou apercu({ chemin }) ; partager, imprimer, annoter : les boutons d'iOS.
+    // apercu({ base64, nom }) ou apercu({ chemin }) ou (0.73) apercu({ url }) : téléchargé par iOS (pas de CORS) ; partager, imprimer, annoter :
+    // les boutons d'iOS. Un USDZ s'ouvre en AR QUICK LOOK (l'onglet AR d'iOS) ; echelleReelle : à l'échelle 1, sans pincer (une pièce scannée).
     private var apercuURL: URL?
+    private var apercuEchelleReelle = false
     @objc func apercu(_ call: CAPPluginCall) {
         var url: URL? = nil
+        let echelle = call.getBool("echelleReelle") ?? false
         if let chemin = call.getString("chemin"), !chemin.isEmpty {
             url = chemin.hasPrefix("file://") ? URL(string: chemin) : URL(fileURLWithPath: chemin)
         } else if let b64 = call.getString("base64"), let data = Data(base64Encoded: b64, options: .ignoreUnknownCharacters) {
             let nom = (call.getString("nom") ?? "fichier").replacingOccurrences(of: "/", with: "-")
             let u = FileManager.default.temporaryDirectory.appendingPathComponent(nom.isEmpty ? "fichier" : nom)
             do { try data.write(to: u, options: .atomic); url = u } catch { call.reject("aperçu : \(error.localizedDescription)"); return }
+        } else if let lien = call.getString("url"), let distant = URL(string: lien), ["http", "https"].contains(distant.scheme?.lowercased() ?? "") {
+            URLSession.shared.downloadTask(with: distant) { tmp, _, erreur in
+                guard let tmp = tmp else { call.reject("aperçu : " + (erreur?.localizedDescription ?? "rien reçu")); return }
+                let nom = distant.lastPathComponent.isEmpty ? "fichier" : distant.lastPathComponent
+                let u = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + "-" + nom)
+                do { try FileManager.default.moveItem(at: tmp, to: u) } catch { call.reject("aperçu : \(error.localizedDescription)"); return }
+                self.montrerApercu(u, echelle, call)
+            }.resume()
+            return
         }
-        guard let fichier = url else { call.reject("aperçu : rien à montrer (chemin ou base64)"); return }
+        guard let fichier = url else { call.reject("aperçu : rien à montrer (chemin, base64 ou url)"); return }
+        montrerApercu(fichier, echelle, call)
+    }
+    private func montrerApercu(_ fichier: URL, _ echelle: Bool, _ call: CAPPluginCall) {
         DispatchQueue.main.async {
             self.apercuURL = fichier
+            self.apercuEchelleReelle = echelle
             let ql = QLPreviewController()
             ql.dataSource = self
             self.bridge?.viewController?.present(ql, animated: true)
@@ -317,7 +342,17 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
             }
         }
     }
-    public func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem { (apercuURL ?? URL(fileURLWithPath: "/")) as NSURL }
+    public func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
+        let u = apercuURL ?? URL(fileURLWithPath: "/")
+        #if !PLOXI0N_SANS_AR
+        if apercuEchelleReelle, ["usdz", "reality"].contains(u.pathExtension.lowercased()) {
+            let item = ARQuickLookPreviewItem(fileAt: u)
+            item.allowsContentScaling = false
+            return item
+        }
+        #endif
+        return u as NSURL
+    }
 
     // ♫ À L'ÉCOUTE (0.48, RS-7 : l'écran verrouillé disait « Spotify Embedded Player », sans pochette, ±10 s au lieu de ⏮ ⏭). Le son des
     // ploxions joue souvent dans un iframe d'un autre site (le SDK de Spotify) : la page (maintenant.js) sait ce qui joue et le publie ici —
@@ -949,11 +984,489 @@ final class EcranVLC: UIViewController, VLCMediaPlayerDelegate {
 }
 #endif
 
+// 👁 L'AR NATIVE (0.73). RS-7 (15.10) : « le plus important de tout, c'est l'AR ; utiliser au max les fonctions natives ; et AR Quick Look ».
+// ARKit + RealityKit, sans bibliothèque. Le terrax (src/terrax/terrax.js) l'appelle ; les autres ploxions par jOSNatif.ar.
+//   disponible()   → { ar, lidar, piece, chambre, pieces }   (chambre : la carte de ta chambre est gardée ; pieces : le dossier des scans)
+//   ouvrir({ mode: terre | chambre, objets: [{ id, x, y, z, taille, emoji, texte }], emojis, maillage })   l'AR en plein écran.
+//       terre   : le monde aligné sur la gravité ET le nord (x = est, z = sud, en mètres depuis l'iPhone à l'ouverture) : la page place
+//                 chaque objet à sa vraie direction et sa distance (GPS) ;
+//       chambre : la carte de ta chambre (ARWorldMap, Documents/terrax/chambre) est rechargée : tes objets reviennent à leur place exacte.
+//     LiDAR : le maillage du réel cache ce qui est derrière un mur, un meuble, une personne ; on peut le montrer (◇).
+//     Toucher le réel : poser là (le rayon sur la surface touchée) ; toucher un objet : le voir. Événement « ar » :
+//       { type: pose, id, x, y, z, emoji, texte } · { type: touche, id } · { type: chambre-neuve } · { type: ferme }
+//   fermer()
+//   scannerPiece() → { nom, chemin }   RoomPlan (iOS 16, LiDAR) : la pièce en USDZ dans Documents/terrax/pieces ; elle s'ouvre ensuite en
+//     AR Quick Look (PloxiApple.apercu, echelleReelle : la pièce posée à l'échelle 1).
+#if !PLOXI0N_SANS_AR
+@objc(PloxiAR)
+public class PloxiAR: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "PloxiAR"
+    public let jsName = "PloxiAR"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "disponible", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "ouvrir", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "fermer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "scannerPiece", returnType: CAPPluginReturnPromise),
+    ]
+    private weak var ecran: TerraxVC?
+
+    static func dossier(_ nom: String) -> URL? {
+        guard let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return nil }
+        let d = docs.appendingPathComponent("terrax", isDirectory: true).appendingPathComponent(nom, isDirectory: true)
+        try? FileManager.default.createDirectory(at: d, withIntermediateDirectories: true)
+        return d
+    }
+    static var carteChambre: URL? { dossier("chambre")?.appendingPathComponent("chambre.arworldmap") }
+
+    @objc func disponible(_ call: CAPPluginCall) {
+        var piece = false
+        #if canImport(RoomPlan)
+        if #available(iOS 16.0, *) { piece = RoomCaptureSession.isSupported }
+        #endif
+        let carte = PloxiAR.carteChambre.map { FileManager.default.fileExists(atPath: $0.path) } ?? false
+        call.resolve([
+            "ar": ARWorldTrackingConfiguration.isSupported,
+            "lidar": ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh),
+            "piece": piece,
+            "chambre": carte,
+            "pieces": PloxiAR.dossier("pieces")?.path ?? "",
+        ])
+    }
+
+    @objc func ouvrir(_ call: CAPPluginCall) {
+        guard ARWorldTrackingConfiguration.isSupported else { call.reject("l'AR n'est pas sur cet appareil"); return }
+        let objets = call.getArray("objets", JSObject.self) ?? []
+        let chambre = call.getString("mode") == "chambre"
+        let emojis = call.getArray("emojis", String.self) ?? []
+        let maillage = call.getBool("maillage") ?? false
+        DispatchQueue.main.async {
+            guard let hote = self.bridge?.viewController else { call.reject("AR : pas de page"); return }
+            if self.ecran != nil { call.reject("l'AR est déjà ouverte"); return }
+            let vc = TerraxVC()
+            vc.chambre = chambre
+            vc.objets = objets
+            if !emojis.isEmpty { vc.emojis = emojis }
+            vc.maillageVisible = maillage
+            vc.surEvenement = { [weak self] d in self?.notifyListeners("ar", data: d) }
+            vc.modalPresentationStyle = .fullScreen
+            self.ecran = vc
+            hote.present(vc, animated: true)
+            call.resolve(["ok": true])
+        }
+    }
+
+    @objc func fermer(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            self.ecran?.fermer()
+            call.resolve(["ok": true])
+        }
+    }
+
+    @objc func scannerPiece(_ call: CAPPluginCall) {
+        #if canImport(RoomPlan)
+        if #available(iOS 16.0, *) {
+            guard RoomCaptureSession.isSupported else { call.reject("le scan de pièce demande le LiDAR (iPhone Pro, iPad Pro)"); return }
+            DispatchQueue.main.async {
+                guard let hote = self.bridge?.viewController else { call.reject("scan : pas de page"); return }
+                let vc = PieceVC()
+                vc.modalPresentationStyle = .fullScreen
+                vc.fini = { u, erreur in
+                    if let u = u { call.resolve(["nom": u.lastPathComponent, "chemin": u.path]) } else { call.reject(erreur ?? "scan annulé") }
+                }
+                hote.present(vc, animated: true)
+            }
+            return
+        }
+        #endif
+        call.reject("le scan de pièce demande iOS 16 et le LiDAR")
+    }
+}
+
+// l'écran de l'AR : une ARView (RealityKit) sans configuration automatique, le guide d'Apple (ARCoachingOverlayView) par-dessus
+final class TerraxVC: UIViewController, ARSessionDelegate {
+    var chambre = false
+    var objets: [JSObject] = []
+    var emojis: [String] = ["✨", "🌳", "🗿", "🤖", "🪑", "🎵", "💡", "🍄"]
+    var maillageVisible = false
+    var surEvenement: (([String: Any]) -> Void)?
+    private var vue: ARView!
+    private var abonnement: Cancellable?
+    private var etiquettes: [ModelEntity] = []
+    private var infos: [String: (String, String)] = [:]
+    private let etat = UILabel()
+    private var lance = false
+    private var carteChargee = false
+    private var retrouvee = true
+    private var ferme = false
+
+    override var prefersStatusBarHidden: Bool { true }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        vue = ARView(frame: view.bounds, cameraMode: .ar, automaticallyConfigureSession: false)
+        vue.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        vue.session.delegate = self
+        view.addSubview(vue)
+        let guide = ARCoachingOverlayView(frame: view.bounds)
+        guide.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        guide.session = vue.session
+        guide.goal = .tracking
+        guide.activatesAutomatically = true
+        vue.addSubview(guide)
+        etat.textColor = .white
+        etat.font = .systemFont(ofSize: 14, weight: .semibold)
+        etat.textAlignment = .center
+        etat.numberOfLines = 2
+        etat.backgroundColor = UIColor(white: 0, alpha: 0.45)
+        etat.layer.cornerRadius = 14
+        etat.clipsToBounds = true
+        etat.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(etat)
+        let g = view.safeAreaLayoutGuide
+        let croix = bouton("✕", #selector(toucheFermer))
+        NSLayoutConstraint.activate([
+            croix.topAnchor.constraint(equalTo: g.topAnchor, constant: 8),
+            croix.trailingAnchor.constraint(equalTo: g.trailingAnchor, constant: -12),
+            etat.topAnchor.constraint(equalTo: g.topAnchor, constant: 8),
+            etat.leadingAnchor.constraint(equalTo: g.leadingAnchor, constant: 12),
+            etat.trailingAnchor.constraint(equalTo: croix.leadingAnchor, constant: -10),
+            etat.heightAnchor.constraint(greaterThanOrEqualToConstant: 44),
+        ])
+        if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
+            let b = bouton("  ◇ le maillage du réel  ", #selector(basculerMaillage))
+            b.leadingAnchor.constraint(equalTo: g.leadingAnchor, constant: 12).isActive = true
+            b.bottomAnchor.constraint(equalTo: g.bottomAnchor, constant: -12).isActive = true
+            if maillageVisible { vue.debugOptions.insert(.showSceneUnderstanding) }
+        }
+        if chambre {
+            let b = bouton("  ↺ nouvelle chambre  ", #selector(nouvelleChambre))
+            b.trailingAnchor.constraint(equalTo: g.trailingAnchor, constant: -12).isActive = true
+            b.bottomAnchor.constraint(equalTo: g.bottomAnchor, constant: -12).isActive = true
+        }
+        vue.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(toucher(_:))))
+        abonnement = vue.scene.subscribe(to: SceneEvents.Update.self) { [weak self] _ in self?.tourner() }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if lance { return }
+        lance = true
+        lancer(neuve: false)
+    }
+
+    private func bouton(_ titre: String, _ action: Selector) -> UIButton {
+        let b = UIButton(type: .system)
+        b.setTitle(titre, for: .normal)
+        b.setTitleColor(.white, for: .normal)
+        b.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        b.backgroundColor = UIColor(white: 0, alpha: 0.45)
+        b.layer.cornerRadius = 22
+        b.translatesAutoresizingMaskIntoConstraints = false
+        b.addTarget(self, action: action, for: .touchUpInside)
+        view.addSubview(b)
+        b.widthAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
+        b.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        return b
+    }
+
+    private func dire(_ t: String) { etat.text = "  " + t + "  " }
+
+    // la session : la terre alignée sur la gravité et le nord ; la chambre sur la gravité, avec sa carte gardée (ARWorldMap)
+    private func lancer(neuve: Bool) {
+        let c = ARWorldTrackingConfiguration()
+        c.worldAlignment = chambre ? .gravity : .gravityAndHeading
+        c.planeDetection = [.horizontal, .vertical]
+        if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
+            c.sceneReconstruction = .mesh
+            vue.environment.sceneUnderstanding.options.insert(.occlusion)
+        }
+        if ARWorldTrackingConfiguration.supportsFrameSemantics(.personSegmentationWithDepth) {
+            c.frameSemantics.insert(.personSegmentationWithDepth)
+        }
+        carteChargee = false
+        if chambre, !neuve, let u = PloxiAR.carteChambre, let data = try? Data(contentsOf: u),
+           let carte = try? NSKeyedUnarchiver.unarchivedObject(ofClass: ARWorldMap.self, from: data) {
+            c.initialWorldMap = carte
+            carteChargee = true
+        }
+        retrouvee = !carteChargee
+        if !carteChargee {
+            if chambre { objets = [] }   // sans sa carte, les places gardées de la chambre ne veulent plus rien dire
+            ajouterTous()
+        }
+        vue.session.run(c, options: neuve ? [.resetTracking, .removeExistingAnchors] : [])
+        dire(carteChargee ? "je retrouve ta chambre : regarde autour, doucement" : resume())
+    }
+
+    private func resume() -> String {
+        if chambre { return "ta chambre · à toi seul · touche une surface pour y poser un objet" }
+        return "\(etiquettes.count) autour de toi · touche le réel pour y poser quelque chose"
+    }
+
+    private func ajouterTous() {
+        for o in objets {
+            let x = Float(o["x"] as? Double ?? 0), y = Float(o["y"] as? Double ?? 0), z = Float(o["z"] as? Double ?? 0)
+            poser(id: o["id"] as? String ?? "", emoji: o["emoji"] as? String ?? "✨", texte: o["texte"] as? String ?? "",
+                  en: SIMD3<Float>(x, y, z), taille: Float(o["taille"] as? Double ?? 0.5))
+        }
+        objets = []
+    }
+
+    // un objet : son emoji et son texte dessinés une fois en image, sur un plan qui se tourne toujours vers toi (debout)
+    private func poser(id: String, emoji: String, texte: String, en p: SIMD3<Float>, taille: Float) {
+        guard let image = TerraxVC.etiquette(emoji, texte),
+              let tex = try? TextureResource.generate(from: image, options: .init(semantic: .color)) else { return }
+        var m = UnlitMaterial()
+        m.color = .init(tint: UIColor.white.withAlphaComponent(0.999), texture: .init(tex))
+        m.blending = .transparent(opacity: .init(floatLiteral: 1.0))
+        let t = max(0.15, min(taille, 12))
+        let e = ModelEntity(mesh: .generatePlane(width: t, height: t * 1.2), materials: [m])
+        e.name = id
+        e.collision = CollisionComponent(shapes: [.generateBox(size: SIMD3<Float>(t, t * 1.2, 0.04))])
+        let ancre = AnchorEntity(world: p)
+        ancre.addChild(e)
+        vue.scene.addAnchor(ancre)
+        etiquettes.append(e)
+        infos[id] = (emoji, texte)
+    }
+
+    static func etiquette(_ emoji: String, _ texte: String) -> CGImage? {
+        let f = UIGraphicsImageRendererFormat.default()
+        f.scale = 2
+        f.opaque = false
+        let l: CGFloat = 200, h: CGFloat = 240
+        let image = UIGraphicsImageRenderer(size: CGSize(width: l, height: h), format: f).image { _ in
+            let centre = NSMutableParagraphStyle()
+            centre.alignment = .center
+            (emoji as NSString).draw(in: CGRect(x: 0, y: 4, width: l, height: 146), withAttributes: [.font: UIFont.systemFont(ofSize: 118), .paragraphStyle: centre])
+            if texte.isEmpty { return }
+            let pastille = CGRect(x: 6, y: 156, width: l - 12, height: 78)
+            UIColor(white: 0.04, alpha: 0.7).setFill()
+            UIBezierPath(roundedRect: pastille, cornerRadius: 20).fill()
+            (texte as NSString).draw(in: pastille.insetBy(dx: 10, dy: 8), withAttributes: [.font: UIFont.systemFont(ofSize: 21, weight: .semibold), .foregroundColor: UIColor.white, .paragraphStyle: centre])
+        }
+        return image.cgImage
+    }
+
+    // à chaque image : chaque objet pivote (autour de la verticale) pour te faire face
+    private func tourner() {
+        let cam = vue.cameraTransform.translation
+        for e in etiquettes {
+            let p = e.position(relativeTo: nil)
+            e.setOrientation(simd_quatf(angle: atan2(cam.x - p.x, cam.z - p.z), axis: SIMD3<Float>(0, 1, 0)), relativeTo: nil)
+        }
+    }
+
+    @objc private func toucher(_ geste: UITapGestureRecognizer) {
+        let pt = geste.location(in: vue)
+        if let e = vue.entity(at: pt), !e.name.isEmpty, let i = infos[e.name] {
+            surEvenement?(["type": "touche", "id": e.name])
+            let a = UIAlertController(title: i.0, message: i.1.isEmpty ? nil : i.1, preferredStyle: .alert)
+            a.addAction(UIAlertAction(title: "ok", style: .default))
+            present(a, animated: true)
+            return
+        }
+        guard retrouvee else { dire("je retrouve d'abord ta chambre : regarde autour"); return }
+        var p: SIMD3<Float>
+        if let r = vue.raycast(from: pt, allowing: .estimatedPlane, alignment: .any).first {
+            let c = r.worldTransform.columns.3
+            p = SIMD3<Float>(c.x, c.y, c.z)
+        } else {
+            let m = vue.cameraTransform.matrix
+            let devant = -SIMD3<Float>(m.columns.2.x, m.columns.2.y, m.columns.2.z)
+            p = vue.cameraTransform.translation + devant * 1.5
+        }
+        choisir(p)
+    }
+
+    // poser : la feuille d'iOS (un texte, puis l'emoji)
+    private func choisir(_ p: SIMD3<Float>) {
+        let a = UIAlertController(title: "poser ici", message: chambre ? "dans ta chambre (à toi seul)" : "à cette place du réel", preferredStyle: .alert)
+        let invite = chambre ? "quoi ? (ton robot, ton meuble…)" : "qu'est-ce qu'il y a ici ?"
+        a.addTextField { t in t.placeholder = invite }
+        for e in emojis.prefix(8) {
+            a.addAction(UIAlertAction(title: e, style: .default) { [weak self, weak a] _ in
+                guard let self = self else { return }
+                let brut = a?.textFields?.first?.text ?? ""
+                let texte = String(brut.trimmingCharacters(in: .whitespacesAndNewlines).prefix(280))
+                let id = "tx" + String(Int(Date().timeIntervalSince1970 * 1000), radix: 36)
+                self.poser(id: id, emoji: e, texte: texte, en: p, taille: self.chambre ? 0.25 : 0.5)
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                self.surEvenement?(["type": "pose", "id": id, "x": Double(p.x), "y": Double(p.y), "z": Double(p.z), "emoji": e, "texte": texte])
+                self.dire(self.resume())
+            })
+        }
+        a.addAction(UIAlertAction(title: "annuler", style: .cancel))
+        present(a, animated: true)
+    }
+
+    @objc private func basculerMaillage() {
+        if vue.debugOptions.contains(.showSceneUnderstanding) { vue.debugOptions.remove(.showSceneUnderstanding) } else { vue.debugOptions.insert(.showSceneUnderstanding) }
+    }
+
+    @objc private func nouvelleChambre() {
+        let a = UIAlertController(title: "nouvelle chambre ?", message: "la carte de ta chambre recommence : tes objets restent dans ta liste, mais sans leur place en AR", preferredStyle: .alert)
+        a.addAction(UIAlertAction(title: "recommencer", style: .destructive) { [weak self] _ in
+            guard let self = self else { return }
+            if let u = PloxiAR.carteChambre { try? FileManager.default.removeItem(at: u) }
+            self.vue.scene.anchors.removeAll()
+            self.etiquettes.removeAll()
+            self.infos.removeAll()
+            self.lancer(neuve: true)
+            self.surEvenement?(["type": "chambre-neuve"])
+        })
+        a.addAction(UIAlertAction(title: "annuler", style: .cancel))
+        present(a, animated: true)
+    }
+
+    func session(_ session: ARSession, cameraDidChangeTrackingState camera: ARCamera) {
+        let s = camera.trackingState
+        if case .normal = s {
+            if !retrouvee {
+                retrouvee = true
+                ajouterTous()
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            }
+            dire(resume())
+        } else if case .limited(.relocalizing) = s {
+            dire("je retrouve ta chambre : regarde autour, doucement")
+        } else if case .limited(_) = s {
+            dire("bouge un peu l'iPhone, doucement")
+        }
+    }
+
+    func session(_ session: ARSession, didFailWithError error: Error) {
+        dire("l'AR : " + error.localizedDescription)
+    }
+
+    @objc private func toucheFermer() { fermer() }
+
+    // fermer : la chambre garde sa carte (si elle a été retrouvée, ou si elle est neuve) pour la prochaine fois
+    func fermer() {
+        if ferme { return }
+        ferme = true
+        let fin: () -> Void = { [weak self] in
+            guard let self = self else { return }
+            self.abonnement?.cancel()
+            self.abonnement = nil
+            self.vue.session.pause()
+            self.vue.scene.anchors.removeAll()
+            self.dismiss(animated: true) { self.surEvenement?(["type": "ferme"]) }
+        }
+        if chambre, retrouvee, let u = PloxiAR.carteChambre {
+            vue.session.getCurrentWorldMap { carte, _ in
+                if let carte = carte, let data = try? NSKeyedArchiver.archivedData(withRootObject: carte, requiringSecureCoding: true) {
+                    try? data.write(to: u, options: .atomic)
+                }
+                DispatchQueue.main.async { fin() }
+            }
+        } else {
+            fin()
+        }
+    }
+}
+
+#if canImport(RoomPlan)
+// le scan d'une pièce (RoomPlan, iOS 16, LiDAR) : la vue d'Apple guide le scan ; « terminer » → la pièce calculée → « garder » → un USDZ
+@available(iOS 16.0, *)
+final class PieceVC: UIViewController, RoomCaptureViewDelegate {
+    var fini: ((URL?, String?) -> Void)?
+    private var vue: RoomCaptureView?
+    private var chemin: URL?
+    private let finir = UIButton(type: .system)
+    private var lance = false
+    private var rendu = false
+
+    override var prefersStatusBarHidden: Bool { true }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        let v = RoomCaptureView(frame: view.bounds)
+        v.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        v.delegate = self
+        view.addSubview(v)
+        vue = v
+        let croix = UIButton(type: .system)
+        for (b, titre) in [(croix, "✕"), (finir, "  terminer le scan  ")] {
+            b.setTitle(titre, for: .normal)
+            b.setTitleColor(.white, for: .normal)
+            b.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
+            b.backgroundColor = UIColor(white: 0, alpha: 0.5)
+            b.layer.cornerRadius = 22
+            b.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(b)
+        }
+        croix.addTarget(self, action: #selector(annuler), for: .touchUpInside)
+        finir.addTarget(self, action: #selector(terminer), for: .touchUpInside)
+        let g = view.safeAreaLayoutGuide
+        NSLayoutConstraint.activate([
+            croix.topAnchor.constraint(equalTo: g.topAnchor, constant: 8),
+            croix.trailingAnchor.constraint(equalTo: g.trailingAnchor, constant: -12),
+            croix.widthAnchor.constraint(equalToConstant: 44),
+            croix.heightAnchor.constraint(equalToConstant: 44),
+            finir.bottomAnchor.constraint(equalTo: g.bottomAnchor, constant: -16),
+            finir.centerXAnchor.constraint(equalTo: g.centerXAnchor),
+            finir.heightAnchor.constraint(equalToConstant: 48),
+        ])
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if lance { return }
+        lance = true
+        vue?.captureSession.run(configuration: RoomCaptureSession.Configuration())
+    }
+
+    @objc private func terminer() {
+        if let c = chemin { rendre(c, nil); return }
+        finir.isEnabled = false
+        finir.setTitle("  je calcule la pièce…  ", for: .normal)
+        vue?.captureSession.stop()
+    }
+
+    @objc private func annuler() {
+        vue?.captureSession.stop()
+        if let c = chemin { try? FileManager.default.removeItem(at: c) }
+        rendre(nil, "scan annulé")
+    }
+
+    private func rendre(_ u: URL?, _ erreur: String?) {
+        if rendu { return }
+        rendu = true
+        dismiss(animated: true) { self.fini?(u, erreur) }
+    }
+
+    func captureView(shouldPresent roomDataForProcessing: CapturedRoomData, error: Error?) -> Bool { true }
+
+    func captureView(didPresent processedResult: CapturedRoom, error: Error?) {
+        if let error = error { rendre(nil, "scan : " + error.localizedDescription); return }
+        guard let dossier = PloxiAR.dossier("pieces") else { rendre(nil, "scan : pas de dossier"); return }
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd-HHmmss"
+        let u = dossier.appendingPathComponent("piece-" + f.string(from: Date()) + ".usdz")
+        do {
+            try processedResult.export(to: u)
+            chemin = u
+            finir.isEnabled = true
+            finir.setTitle("  ✓ garder la pièce  ", for: .normal)
+        } catch {
+            rendre(nil, "scan : " + error.localizedDescription)
+        }
+    }
+}
+#endif
+#endif
+
 class PloxionVC: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(PloxiVocal())
         bridge?.registerPluginInstance(PloxiApple())
         bridge?.registerPluginInstance(PloxiLecteur())
+        #if !PLOXI0N_SANS_AR
+        bridge?.registerPluginInstance(PloxiAR())
+        #endif
     }
     private var plein: Bool { UserDefaults.standard.string(forKey: "CapacitorStorage.ploxi0n.plein-ecran") == "1" }
     // l'indicateur d'accueil : le plugin SystemBars de Capacitor 8 le gère déjà (CAPBridgeViewController.prefersHomeIndicatorAutoHidden n'est

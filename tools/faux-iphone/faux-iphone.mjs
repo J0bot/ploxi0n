@@ -84,6 +84,9 @@ const natif = {
     meteo: () => ({ temperature: 12.4, ressentie: 11, condition: 'Nuageux', symbole: 'cloud.sun.fill', humidite: 0.7, vent: 9, uv: 2, jours: [], attribution: ' Weather', attributionLien: 'https://weatherkit.apple.com/legal-attribution.html' }),
     maisonListe: () => ({ accessoires: [{ id: 'a1', nom: 'Lampe salon', piece: 'Salon', maison: 'Chez moi', allume: false, basculable: true, joignable: true }, { id: 'a2', nom: 'Prise imprimante 3D', piece: 'Atelier', maison: 'Chez moi', allume: true, basculable: true, joignable: true }] }), maisonBasculer: (o) => ({ allume: o.allume ?? true }), gameCenter: () => ({ connecte: true, nom: 'testeur' }), ecranEveille: (o) => { eveil.push(o.actif); return { actif: o.actif }; }, lampe: (o) => ({ allume: o.allume ?? true }), apercu: () => ({ ok: true }), lecture: () => ({}), lectureFin: () => ({}),
   },
+  // 👁 (0.73) l'AR native : ouvrir rend tout de suite (l'écran d'iOS est par-dessus) ; le parcours émet ensuite pose / touche / ferme
+  PloxiAR: { disponible: () => ({ ar: true, lidar: true, piece: true, chambre: false, pieces: '/var/mobile/Documents/terrax/pieces' }), ouvrir: () => ({ ok: true }), fermer: () => ({ ok: true }),
+    scannerPiece: () => ({ nom: 'piece-2026-10-15-120000.usdz', chemin: '/var/mobile/Documents/terrax/pieces/piece-2026-10-15-120000.usdz' }) },
   PloxiLecteur: { moteurs: () => ({ apple: true, vlc: false }), ouvrir: (o) => ({ moteur: /\.mkv/.test(o.url) ? 'vlc' : 'apple' }), fermer: () => ({}) },
   PloxiVocal: { commencer: () => ({ chemin: '/tmp/vocal.m4a' }), arreter: () => ({ chemin: '/tmp/vocal.m4a', duree: 2, base64: '', type: 'audio/mp4' }), transcrire: (o) => ({ texte: 'ouvre le ploxion horloge', langue: o.langue, surLeTelephone: true }) },
   Share: { share: () => ({ activityType: 'com.apple.UIKit.activity.CopyToPasteboard' }), canShare: () => ({ value: true }) },

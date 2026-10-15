@@ -1,7 +1,7 @@
 // 📁 LES FICHIERS ET LE RESTE DU NATIF (0.49, la liste de RS-7 : zip et unzip, galerie photo native et importation, ouverture de fichiers
 // native, envoyer vers, visualiseur de fichiers, map native, mail, lampe de poche). Pour jOSNatif, donc pour tous les ploxions :
 //   envoyer(fichiers, { titre, texte })   « Envoyer vers » : la feuille de partage d'iOS AVEC les fichiers (AirDrop, Mail, Messages, Fichiers…)
-//   apercu(fichier)                       le visualiseur d'iOS (QuickLook) : PDF, images, vidéos, Office, Pages, texte, USDZ…
+//   apercu(fichier, { echelleReelle })     le visualiseur d'iOS (QuickLook) : PDF, images, vidéos, Office, Pages, texte, USDZ (AR Quick Look)…
 //   zip(fichiers) → Blob · dezipper(zip) → [{ nom, data: Uint8Array, taille }]
 //   photos.choisir({ max }) → [File]      la galerie native (plusieurs à la fois)
 //   photos.importer({ max })              → Fichiers › Sur mon iPhone › ploxi0n › Photos (et dans le boxion dès que l'envoi y est relayé)
@@ -44,11 +44,14 @@ export function creerFichiersNatif({ W = globalThis.window, apple = PloxiApple, 
     const { Share } = await imp('share', () => import('@capacitor/share'));
     return Share.share({ title: titre || undefined, text: texte || undefined, files, dialogTitle: titre || undefined });
   }
-  async function apercu(f) {
+  // (0.73) une adresse http(s) est téléchargée par iOS (pas de CORS) ; un .usdz s'ouvre en AR Quick Look ; { echelleReelle } : à l'échelle 1
+  async function apercu(f, o = {}) {
     if (!natif) throw new Error('aperçu : sur l\'iPhone');
-    if (typeof f === 'string' && /^(file:|\/)/.test(f)) return apple.apercu({ chemin: f });
-    if (typeof f === 'string' && /^https?:/i.test(f)) { const r = await W.fetch(f); const b = await r.blob(); return apercu({ nom: decodeURIComponent(f.split('/').pop().split('?')[0]) || 'fichier', data: new Uint8Array(await b.arrayBuffer()) }); }
-    return apple.apercu({ base64: enBase64(await enOctets(f)), nom: nomDe(f) });
+    const e = o && o.echelleReelle ? { echelleReelle: true } : {};
+    if (typeof f === 'string' && /^(file:|\/)/.test(f)) return apple.apercu({ chemin: f, ...e });
+    if (typeof f === 'string' && /^https?:/i.test(f)) return apple.apercu({ url: f, ...e });
+    if (typeof f === 'string' && /^(capacitor|blob|data):/i.test(f)) { const r = await W.fetch(f); const b = await r.blob(); return apercu({ nom: decodeURIComponent(f.split('/').pop().split('?')[0]) || 'fichier', data: new Uint8Array(await b.arrayBuffer()) }, o); }
+    return apple.apercu({ base64: enBase64(await enOctets(f)), nom: nomDe(f), ...e });
   }
   async function zip(fichiers) {
     const { zipSync } = await imp('fflate', () => import('fflate'));

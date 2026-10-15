@@ -106,14 +106,33 @@ Ce qui est posé est **à toi par défaut**, gardé dans boxion_local (« terrax
   format de jOSXerkionHub). Glisser à droite monte d'un palier (ion → 3ion → seption → ion), à gauche on redescend, en haut on ressort
   au koin du ion, en bas c'est le nexus. Le terrax est un koin du 3ion et du nexus.
 
+### L'AR native (0.73)
+
+RS-7 (15.10) : « le plus important de tout, c'est l'AR ; utiliser au max les fonctions natives ; et AR Quick Look ».
+
+- **Les yeux du terrax** : sur l'iPhone, « ouvrir les yeux » ouvre l'AR d'iOS (ARKit + RealityKit, le plugin `PloxiAR`). Le monde est
+  aligné sur la gravité et le nord : chaque objet est à sa vraie direction et à sa distance (au-delà de 150 m, il est rapproché et grandi,
+  sa direction reste vraie, son texte dit la vraie distance). Il te fait toujours face.
+- **Le LiDAR** (iPhone Pro) : le maillage du réel cache ce qui est derrière un mur, un meuble ; une personne passe devant les objets.
+  ◇ montre ce maillage : « une version 3D du réel ».
+- **Poser** : toucher le réel lance un rayon sur la surface touchée (le sol, une table, un mur) ; l'objet y est posé et gardé à sa
+  position GPS (plus sa hauteur). Toucher un objet le montre.
+- **La chambre en AR** : iOS garde la carte de la pièce (ARWorldMap) ; à la prochaine ouverture, il retrouve la pièce et chaque objet
+  revient à sa place exacte. Rien ne quitte l'iPhone.
+- **Le scan de la pièce** (RoomPlan, iOS 16, LiDAR) : murs, portes, fenêtres, meubles, en USDZ (Documents/terrax/pieces, visible dans
+  Fichiers). Il s'ouvre en **AR Quick Look** à l'échelle 1 : on pose sa chambre où l'on veut.
+- **AR Quick Look partout** : un lien `.usdz` / `.reality` (ou `rel="ar"`) dans un ploxion s'ouvre dans iOS (téléchargé par iOS, sans CORS).
+- **Pour tous les ploxions** : `jOSNatif.ar` (disponible, ouvrir, ecouter, fermer, scannerPiece, voirPiece).
+- Sans AR native (le web, un appareil sans ARKit, un build `PLOXI0N_AR=0`), l'AR web d'avant prend le relais.
+
 Ce qui existe au labo et qu'on composera ensuite : jOSCarte (les couches de la carte), jOSZone (la portée `zone` privée ou `nexus`
 commune), jOSObjets et room-map (la chambre), scan-reel (caméra + GPS + gyroscope), cubmap (les robots en BLE), jOSViewer et jOS3D
 (glTF, STL), SkyView dans boxion-rt (le premier AR boussole), et AR Quick Look en USDZ, déjà ouvert par `PloxiApple.apercu`.
 
 ## 3. Spéculatif (à valider avec RS-7)
 
-- Le vrai suivi du monde : ARKit (les plans, les ancres, le LiDAR de la chambre). Un gros morceau de Swift, derrière une option de build
-  (`PLOXI0N_AR`), comme `PLOXI0N_WIDGETS`.
+- La place au mètre près : les ancres géographiques d'ARKit (ARGeoAnchor), là où Apple a sa VPS (pas encore en Suisse, à vérifier).
+- L'AR à plusieurs : une session collaborative d'ARKit, les mêmes objets au même endroit pour chacun.
 - Les modèles 3D (glTF) dans l'AR, avec un rendu WebGPU ou Metal.
 - Le terrion partagé : un nexus commun où chacun corrige la carte du réel (comme OpenStreetMap, en 3D).
 - marsion, solax, solion, galaxion : les mêmes ploxions, sur d'autres corps.
@@ -139,8 +158,11 @@ Chaque quête a un identifiant : on la prend, on la fait, on la rend (une PR, un
 
 | id | quête |
 | --- | --- |
-| `ar-arkit` | Un plugin Swift ARKit (plans, ancres, `ARWorldTrackingConfiguration`) derrière `PLOXI0N_AR`, appelé par le terrax. |
-| `chambre-lidar` | Scanner une pièce au LiDAR (RoomPlan), la garder en USDZ dans boxion_local. |
+| `ar-arkit` | **Faite (0.73)** : `PloxiAR`, ARKit + RealityKit (nord, LiDAR, poser au rayon, la chambre gardée par ARWorldMap). |
+| `chambre-lidar` | **Faite (0.73)** : RoomPlan → USDZ (Documents/terrax/pieces), ouvert en AR Quick Look à l'échelle 1. |
+| `ar-geo` | Les ancres géographiques d'ARKit (ARGeoAnchor) là où Apple a sa VPS : la place au mètre près, au lieu du GPS. |
+| `ar-partage` | L'AR à plusieurs (une session collaborative d'ARKit) : voir les mêmes objets, au même endroit, en même temps. |
+| `usdz-ion` | Un modèle USDZ comme ion d'une ancre : en 3D dans l'AR, et en AR Quick Look. |
 | `gltf` | Afficher un modèle glTF à sa place GPS, le plus léger possible (WebGPU, sinon Metal natif). |
 | `tuiles-hors-ligne` | Garder les tuiles du terrion pour jouer sans réseau (un cache borné, par zone). |
 | `nexus-commun` | L'API du nexus pour les objets partagés (boxion-rt `/store`, jamais de jeton dans l'app). |

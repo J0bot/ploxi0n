@@ -102,6 +102,20 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.73 (15.10)** — 👁 l'AR native, RS-7 : « le plus important de tout, c'est l'AR ; utiliser au max les fonctions natives ; et AR Quick Look ».
+`AppDelegate.swift` : le plugin **`PloxiAR`** (disponible, ouvrir, fermer, scannerPiece ; événement « ar » : pose, touche, chambre-neuve,
+ferme), **`TerraxVC`** (ARView de RealityKit sans configuration automatique, `ARCoachingOverlayView` ; terre = `.gravityAndHeading`, x est,
+z sud ; chambre = `.gravity` + `initialWorldMap` gardée dans Documents/terrax/chambre ; LiDAR : `sceneReconstruction = .mesh` +
+occlusion, `.personSegmentationWithDepth` ; les objets = une image emoji + texte sur un plan qui pivote vers la caméra à chaque image ;
+toucher = `entity(at:)` sinon `raycast(.estimatedPlane)` → `UIAlertController`) et **`PieceVC`** (RoomPlan, iOS 16, `#if canImport` :
+`RoomCaptureView` → `CapturedRoom.export` → Documents/terrax/pieces/*.usdz). `PloxiApple.apercu` : `url` (téléchargé par iOS) et
+`echelleReelle` (`ARQuickLookPreviewItem`, `allowsContentScaling = false`). Tout l'AR est entre `#if !PLOXI0N_SANS_AR` : **secours =
+la variable PLOXI0N_AR=0** (GitHub › Settings › Variables, ou Codemagic) → fastlane `retirer_ar`. Page : `src/natif/ar-natif.js`
+(`creerArNatif`, `brancherLiensAR` : un lien .usdz / .reality / rel="ar" → AR Quick Look), `src/terrax/terrax.js` (`versAR` / `depuisAR`,
+« ouvrir les yeux » natif d'abord, l'AR web en repli ; la chambre : `place` {x,y,z} dans la carte de la chambre ; `piece` = le nom du USDZ).
+Le Swift n'est pas compilé ici : relu ligne par ligne + revue adverse. Faux iPhone : `parcours-ar.mjs`. Les widgets : la pochette réduite
+(`preparingThumbnail`), `Text` interpolé au lieu de `Text + Text`.
+
 **0.72 (15.10)** — ▦ `ios/App/PloxionWidgets/PloxionWidgets.swift` : le kit HUD (`Peau` .chill/.mono, `PEAU`, `FondHUD`, `Tete`,
 `Etat`, `Ligne`, `Kion`, `Portion`), valeurs (tsoins-jour en héros, `.accessoryCircular`), cube (`surFace` : le texte imprimé sur les faces ;
 `.contentMarginsDisabled()`), lecture (`Disque`, `source`), épinglés (`g64` : le glyphe PNG rendu par `glyphePng`, src/natif/raccourcis.js).

@@ -7,6 +7,14 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.73.0', titre: 'L\'AR native : le terrax voit le réel en 3D', points: [
+    '👁 Le terrax ouvre les yeux d\'iOS (ARKit) : le monde aligné sur la gravité et le nord, chaque objet à sa vraie direction et à sa distance, qui te fait toujours face. Avec le LiDAR, le réel cache ce qui est derrière un mur, un meuble, une personne ; ◇ montre le maillage du réel.',
+    '✋ Touche le réel : un rayon trouve la surface (le sol, une table, un mur) et y pose ce que tu veux, à sa vraie place sur le terrion. Touche un objet : tu le vois (et la quête regard avance).',
+    '🛏 Ta chambre en AR : iOS garde la carte de ta pièce ; à la prochaine ouverture, tes objets reviennent exactement à leur place. ↺ recommence une chambre neuve.',
+    '📐 Scanne ta pièce au LiDAR (iPhone Pro, iOS 16) : les murs, les portes, les meubles, en 3D. Elle s\'ouvre en AR Quick Look, à l\'échelle 1 : pose ta chambre dans le salon. Le fichier est aussi dans Fichiers › ploxi0n › terrax.',
+    '🔗 AR Quick Look partout : un lien vers un modèle 3D (.usdz, .reality) dans n\'importe quel ploxion s\'ouvre dans iOS, en 3D et en AR. Et jOSNatif.ar donne l\'AR native à tous les ploxions.',
+    '▦ Le widget « À l\'écoute » montre enfin sa pochette (elle était trop grande pour iOS).',
+  ] },
   { v: '0.72.0', titre: 'Des widgets HUD, des captures gardées, le social avec Apple', points: [
     '▦ Les widgets refaits, façon HUD : un fond profond avec sa grille et ses crochets de viseur, le kion ◇ en tête, des lettres d\'instrument. ploxi0n : tes tsoins du jour en grand (plus le titre de la musique coupé), tes pas, ce qui joue ; aussi en rond sur l\'écran verrouillé. Le cube : le texte imprimé SUR ses faces, un socle de lumière. À l\'écoute : la pochette en disque. Épinglés : les glyphes de tes ploxions, plus des emoji.',
     '📸 Chaque capture d\'écran garde la photo de ton xer dans le téléphone : la vue des xers montre ces photos pour les apps fermées, tout de suite, sans rien recharger.',

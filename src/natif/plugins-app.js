@@ -4,3 +4,4 @@ import { registerPlugin } from '@capacitor/core';
 export const PloxiApple = registerPlugin('PloxiApple');
 export const PloxiVocal = registerPlugin('PloxiVocal');
 export const PloxiLecteur = registerPlugin('PloxiLecteur');   // 🎞 le lecteur intégré (0.49)
+export const PloxiAR = registerPlugin('PloxiAR');           // 👁 l'AR native (0.73) : ARKit, RealityKit, RoomPlan (src/natif/ar-natif.js)

@@ -58,13 +58,14 @@ import { creerApercus } from './natif/apercus.js';
 import { SOCIAUX, surveillerSocial } from './natif/social-apple.js';
 import { PloxiApple } from './natif/plugins-app.js';
 import { creerTerrax } from './terrax/terrax.js';
+import { creerArNatif, brancherLiensAR } from './natif/ar-natif.js';
 import { semerKoinIon } from './terrax/koin-ion.js';
 import { svgXerkion } from './app/xerkion-icone.js';
 import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.72.0';
+const VERSION = '0.73.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -175,7 +176,12 @@ async function demarrer() {
   lecteurNatif.brancherOuvrir();   // (0.51) APRÈS web-natif : window.open d'un flux → le lecteur natif, pas Safari
   boot(24, 'le web devient natif');
   // 📁 (0.49) envoyer vers, aperçu (QuickLook), zip, la galerie, le sélecteur de fichiers, Plans, Mail, la lampe
-  { const fx = creerFichiersNatif(); Object.assign(window.jOSNatif, { envoyer: fx.envoyer, apercu: fx.apercu, zip: fx.zip, dezipper: fx.dezipper, photos: fx.photos, choisirFichiers: fx.ouvrir, carte: fx.carte, mail: fx.mail, lampe: fx.lampe }); }
+  { const fx = creerFichiersNatif(); Object.assign(window.jOSNatif, { envoyer: fx.envoyer, apercu: fx.apercu, zip: fx.zip, dezipper: fx.dezipper, photos: fx.photos, choisirFichiers: fx.ouvrir, carte: fx.carte, mail: fx.mail, lampe: fx.lampe });
+    // 👁 (0.73) un lien 3D d'un ploxion (.usdz, .reality, rel="ar") → AR Quick Look : une page d'app (WKWebView) ne sait pas l'ouvrir seule
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) brancherLiensAR({ D: document, apercu: (u) => fx.apercu(u) }); }
+  // 👁 (0.73) l'AR native (PloxiAR : ARKit, RealityKit, RoomPlan) : le terrax, et tous les ploxions par jOSNatif.ar
+  const arNatif = creerArNatif({ W: window });
+  window.jOSNatif.ar = { disponible: arNatif.disponible, ouvrir: arNatif.ouvrir, fermer: arNatif.fermer, ecouter: arNatif.ecouter, scannerPiece: arNatif.scannerPiece, voirPiece: arNatif.voirPiece };
   // ♫ à l'écoute : ce que jouent les ploxions (Spotify, Media Session) → l'écran verrouillé, le widget, le mini-lecteur (avant tout ploxion)
   const maintenant = creerMaintenant({ miniDock: miniDocks, courant: () => routeur && routeur.courant(), ouvrir: (id) => { if (routeur && routeur.connait(id)) routeur.ouvrir(id); },
     valeur: (k, t, v) => { try { return raccourcis ? raccourcis.valeur(k, t, v) : Promise.resolve(); } catch (e) { return Promise.resolve(); } } });   // raccourcis : déclaré plus bas
@@ -318,7 +324,7 @@ async function demarrer() {
   semerKoinIon({ W: window, boxion }).catch(() => {});
   // 🌍 (0.71) le terrax : le Pokémon Go du nexus (le terrion, l'AR, ta chambre, les quêtes) — docs/TERRAX.md
   // le nexus : le protocole de jOSNexus (labo), relayé par le shim en mode connecté ; hors ligne, 503 et le terrax le dit
-  internes.push(creerTerrax({ boxion, vibrer: (x) => vibrer(x), nexus: {
+  internes.push(creerTerrax({ boxion, vibrer: (x) => vibrer(x), ar: arNatif, nexus: {
     push: async (kind, payload) => { const r = await fetch('/nexus/push', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ kind, payload }) }); const j = await r.json().catch(() => ({})); if (!(r.ok && j.ok)) throw new Error(j.message || 'le nexus ne répond pas (' + r.status + ')'); return true; },
     pull: async (kind) => { const r = await fetch('/nexus/pull?kind=' + encodeURIComponent(kind)); if (!r.ok) return []; const j = await r.json().catch(() => ({})); return Array.isArray(j.items) ? j.items : []; } } }).ploxion);
   window.jOSNatif.sante = sante.api;
