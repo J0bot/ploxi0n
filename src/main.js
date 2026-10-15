@@ -65,7 +65,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.73.0';
+const VERSION = '0.74.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -181,7 +181,8 @@ async function demarrer() {
     if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) brancherLiensAR({ D: document, apercu: (u) => fx.apercu(u) }); }
   // 👁 (0.73) l'AR native (PloxiAR : ARKit, RealityKit, RoomPlan) : le terrax, et tous les ploxions par jOSNatif.ar
   const arNatif = creerArNatif({ W: window });
-  window.jOSNatif.ar = { disponible: arNatif.disponible, ouvrir: arNatif.ouvrir, fermer: arNatif.fermer, ecouter: arNatif.ecouter, scannerPiece: arNatif.scannerPiece, voirPiece: arNatif.voirPiece };
+  window.jOSNatif.ar = { disponible: arNatif.disponible, ouvrir: arNatif.ouvrir, fermer: arNatif.fermer, ecouter: arNatif.ecouter, scannerPiece: arNatif.scannerPiece, voirPiece: arNatif.voirPiece,
+    capturerObjet: arNatif.capturerObjet, voirObjet: arNatif.voirObjet };   // (0.74) Object Capture
   // ♫ à l'écoute : ce que jouent les ploxions (Spotify, Media Session) → l'écran verrouillé, le widget, le mini-lecteur (avant tout ploxion)
   const maintenant = creerMaintenant({ miniDock: miniDocks, courant: () => routeur && routeur.courant(), ouvrir: (id) => { if (routeur && routeur.connait(id)) routeur.ouvrir(id); },
     valeur: (k, t, v) => { try { return raccourcis ? raccourcis.valeur(k, t, v) : Promise.resolve(); } catch (e) { return Promise.resolve(); } } });   // raccourcis : déclaré plus bas

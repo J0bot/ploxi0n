@@ -121,6 +121,9 @@ RS-7 (15.10) : « le plus important de tout, c'est l'AR ; utiliser au max les fo
   revient à sa place exacte. Rien ne quitte l'iPhone.
 - **Le scan de la pièce** (RoomPlan, iOS 16, LiDAR) : murs, portes, fenêtres, meubles, en USDZ (Documents/terrax/pieces, visible dans
   Fichiers). Il s'ouvre en **AR Quick Look** à l'échelle 1 : on pose sa chambre où l'on veut.
+- **Object Capture** (0.74, iOS 17, LiDAR) : ton objet réel (un robot, un meuble IKEA) devient un modèle 3D, calculé sur l'iPhone, à
+  l'échelle réelle (Documents/terrax/objets). Il s'ouvre en AR Quick Look, et dans l'AR du terrax il est proposé quand on pose (📦) : le
+  vrai modèle, posé sur la surface, tourné vers toi, gardé à sa place (la chambre) ou à sa position GPS (vu en 3D jusqu'à 30 m).
 - **AR Quick Look partout** : un lien `.usdz` / `.reality` (ou `rel="ar"`) dans un ploxion s'ouvre dans iOS (téléchargé par iOS, sans CORS).
 - **Pour tous les ploxions** : `jOSNatif.ar` (disponible, ouvrir, ecouter, fermer, scannerPiece, voirPiece).
 - Sans AR native (le web, un appareil sans ARKit, un build `PLOXI0N_AR=0`), l'AR web d'avant prend le relais.
@@ -162,7 +165,8 @@ Chaque quête a un identifiant : on la prend, on la fait, on la rend (une PR, un
 | `chambre-lidar` | **Faite (0.73)** : RoomPlan → USDZ (Documents/terrax/pieces), ouvert en AR Quick Look à l'échelle 1. |
 | `ar-geo` | Les ancres géographiques d'ARKit (ARGeoAnchor) là où Apple a sa VPS : la place au mètre près, au lieu du GPS. |
 | `ar-partage` | L'AR à plusieurs (une session collaborative d'ARKit) : voir les mêmes objets, au même endroit, en même temps. |
-| `usdz-ion` | Un modèle USDZ comme ion d'une ancre : en 3D dans l'AR, et en AR Quick Look. |
+| `usdz-ion` | **À moitié faite (0.74)** : tes objets capturés (Object Capture) se posent en 3D dans l'AR. Reste : un USDZ comme ion d'une ancre du nexus. |
+| `objet-nexus` | Partager un objet 3D capturé au nexus (le fichier USDZ, sans jeton dans l'app) : que d'autres le voient en AR. |
 | `gltf` | Afficher un modèle glTF à sa place GPS, le plus léger possible (WebGPU, sinon Metal natif). |
 | `tuiles-hors-ligne` | Garder les tuiles du terrion pour jouer sans réseau (un cache borné, par zone). |
 | `nexus-commun` | L'API du nexus pour les objets partagés (boxion-rt `/store`, jamais de jeton dans l'app). |

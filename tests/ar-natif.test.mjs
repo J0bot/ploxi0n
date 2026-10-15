@@ -2,7 +2,7 @@
 // et sa carte, le scan de la pièce vu en AR Quick Look ; le plugin (un Proxy sur iOS) jamais rendu d'une fonction async ; les liens 3D.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { versAR, depuisAR, distanceCap, decaler, creerTerrax, LOIN_AR } from '../src/terrax/terrax.js';
+import { versAR, depuisAR, distanceCap, decaler, creerTerrax, LOIN_AR, PRES_MODELE, modelesDe } from '../src/terrax/terrax.js';
 import { creerArNatif, estLienAR, brancherLiensAR } from '../src/natif/ar-natif.js';
 import { creerFichiersNatif } from '../src/natif/fichiers-natif.js';
 import { page, attendre } from './aide.mjs';
@@ -31,11 +31,13 @@ function fauxAR({ chambre = false } = {}) {
   const ouverts = [], vus = []; let fn = null;
   return {
     ouverts, vus, emettre: (e) => fn && fn(e),
-    disponible: async () => ({ ar: true, lidar: true, piece: true, chambre, pieces: '/D/terrax/pieces' }),
+    disponible: async () => ({ ar: true, lidar: true, piece: true, chambre, objet: true, pieces: '/D/terrax/pieces', objets: '/D/terrax/objets' }),
     ouvrir: async (o) => { ouverts.push(o); return { ok: true }; },
     fermer: async () => ({}), ecouter: (f) => { fn = f; return () => { fn = null; }; },
     scannerPiece: async () => ({ nom: 'piece-2026-10-15-120000.usdz', chemin: '/D/terrax/pieces/piece-2026-10-15-120000.usdz' }),
     voirPiece: async (nom) => { vus.push(nom); return { ok: true }; },
+    capturerObjet: async () => ({ nom: 'objet-2026-10-15-121500.usdz', chemin: '/D/terrax/objets/objet-2026-10-15-121500.usdz' }),
+    voirObjet: async (nom) => { vus.push('objet:' + nom); return { ok: true }; },
   };
 }
 
@@ -142,4 +144,41 @@ test('🔗 un lien 3D d\'un ploxion → AR Quick Look ; une adresse http est té
     await fx.apercu('https://exemple.ch/modeles/robot.usdz'); await fx.apercu('/D/terrax/pieces/p.usdz', { echelleReelle: true });
     assert.deepEqual(appels, [{ url: 'https://exemple.ch/modeles/robot.usdz' }, { chemin: '/D/terrax/pieces/p.usdz', echelleReelle: true }]);
   } finally { p.fin(); }
+});
+
+test('📦 Object Capture : ton objet réel en 3D, vu en AR Quick Look, posé en vrai modèle dans l\'AR', async () => {
+  // la géométrie : le vrai modèle de près, son étiquette de loin ; la liste proposée à la pose
+  const pres = versAR(MOI, { id: 'm', ...decaler(MOI, 12, 45), modele: 'objet-1.usdz', rot: 1.2 }), loin = versAR(MOI, { id: 'm2', ...decaler(MOI, PRES_MODELE + 5, 45), modele: 'objet-1.usdz' });
+  assert.equal(pres.modele, 'objet-1.usdz'); assert.equal(pres.rot, 1.2); assert.equal(loin.modele, undefined, 'trop loin : l\'étiquette');
+  assert.deepEqual(modelesDe([{ capture: true, modele: 'a.usdz', texte: 'robot' }, { modele: 'a.usdz', place: {} }, { capture: true, modele: 'b.usdz', texte: 'chaise' }]), [{ nom: 'b.usdz', texte: 'chaise' }, { nom: 'a.usdz', texte: 'robot' }]);
+  const p = await page({ avion: true, ploxions: [] });
+  try {
+    const W = p.w, D = W.document, ar = fauxAR({ chambre: true });
+    creerTerrax({ W, boxion: p.boxion, ar });
+    const h = D.createElement('div'); D.body.appendChild(h);
+    const inst = W.jOSApps.terrax.mount(h); await attendre(60);
+    inst.allerPage('chambre'); await attendre(20);
+    h.querySelector('[data-tx="capturer"]').click(); await attendre(40);
+    const cap = (await p.boxion.get('terrax', 'objets')).find(x => x.capture);
+    assert.ok(cap && cap.modele === 'objet-2026-10-15-121500.usdz' && cap.lieu === 'chambre' && cap.emoji === '📦', 'ton objet 3D, à toi');
+    const ts = await p.boxion.lire('tsoins'); assert.ok(ts.some(x => x.entry.kind === 'terrax' && x.entry.action === 'capturer'), 'un tsoin');
+    h.querySelector('[data-tx="voir-objet"]').click(); await attendre(20);
+    assert.deepEqual(ar.vus, ['objet:' + cap.modele], 'AR Quick Look');
+    h.querySelector('[data-tx="annuler"]').click();
+    h.querySelector('[data-tx="ar-chambre"]').click(); await attendre(30);
+    assert.deepEqual(ar.ouverts[0].modeles, [{ nom: cap.modele, texte: cap.texte.slice(0, 40) }], 'proposé quand on pose');
+    ar.emettre({ type: 'pose', id: 'pm', x: 0.5, y: 0, z: -1, emoji: '📦', texte: 'mon robot', modele: cap.modele, rot: 0.7 }); await attendre(30);
+    const pose = (await p.boxion.get('terrax', 'objets')).find(x => x.id === 'pm');
+    assert.equal(pose.modele, cap.modele); assert.equal(pose.rot, 0.7); assert.ok(pose.place && !pose.capture, 'une instance posée, à sa place');
+    ar.emettre({ type: 'ferme' }); await attendre(20);
+    h.querySelector('[data-tx="ar-chambre"]').click(); await attendre(30);
+    const re = ar.ouverts[1].objets.find(x => x.id === 'pm');
+    assert.equal(re.modele, cap.modele); assert.equal(re.rot, 0.7);
+    assert.ok(!ar.ouverts[1].objets.some(x => x.id === cap.id), 'l\'objet capturé lui-même n\'a pas de place');
+    inst.unmount();
+  } finally { p.fin(); }
+  const apercus = [];
+  const a = creerArNatif({ W: { Capacitor: { isNativePlatform: () => true } }, plugin: { disponible: async () => ({ ar: true, objets: '/D/terrax/objets' }) }, apple: { apercu: async (o) => { apercus.push(o); } } });
+  await a.voirObjet('objet-1.usdz'); await assert.rejects(a.voirObjet('..'));
+  assert.deepEqual(apercus, [{ chemin: '/D/terrax/objets/objet-1.usdz', echelleReelle: true }]);
 });

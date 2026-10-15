@@ -21,6 +21,7 @@ import QuickLook
 import ARKit
 import RealityKit
 import Combine
+import SwiftUI
 #if canImport(RoomPlan)
 import RoomPlan
 #endif
@@ -997,6 +998,8 @@ final class EcranVLC: UIViewController, VLCMediaPlayerDelegate {
 //   fermer()
 //   scannerPiece() → { nom, chemin }   RoomPlan (iOS 16, LiDAR) : la pièce en USDZ dans Documents/terrax/pieces ; elle s'ouvre ensuite en
 //     AR Quick Look (PloxiApple.apercu, echelleReelle : la pièce posée à l'échelle 1).
+//   capturerObjet() → { nom, chemin }  (0.74) Object Capture (iOS 17, LiDAR) : ton objet réel en modèle 3D (USDZ, Documents/terrax/objets),
+//     vu en AR Quick Look et posé dans l'AR (ouvrir : objets[].modele, rot ; modeles : [{ nom, texte }] proposés quand on pose).
 #if !PLOXI0N_SANS_AR
 @objc(PloxiAR)
 public class PloxiAR: CAPPlugin, CAPBridgedPlugin {
@@ -1007,6 +1010,7 @@ public class PloxiAR: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "ouvrir", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "fermer", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "scannerPiece", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "capturerObjet", returnType: CAPPluginReturnPromise),
     ]
     private weak var ecran: TerraxVC?
 
@@ -1024,13 +1028,22 @@ public class PloxiAR: CAPPlugin, CAPBridgedPlugin {
         if #available(iOS 16.0, *) { piece = RoomCaptureSession.isSupported }
         #endif
         let carte = PloxiAR.carteChambre.map { FileManager.default.fileExists(atPath: $0.path) } ?? false
-        call.resolve([
+        let base: [String: Any] = [
             "ar": ARWorldTrackingConfiguration.isSupported,
             "lidar": ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh),
             "piece": piece,
             "chambre": carte,
             "pieces": PloxiAR.dossier("pieces")?.path ?? "",
-        ])
+            "objets": PloxiAR.dossier("objets")?.path ?? "",
+        ]
+        // ObjectCaptureSession.isSupported ne se lit que sur l'acteur principal
+        Task { @MainActor in
+            var d = base
+            var objet = false
+            if #available(iOS 17.0, *) { objet = ObjectCaptureSession.isSupported && PhotogrammetrySession.isSupported }
+            d["objet"] = objet
+            call.resolve(d)
+        }
     }
 
     @objc func ouvrir(_ call: CAPPluginCall) {
@@ -1039,6 +1052,7 @@ public class PloxiAR: CAPPlugin, CAPBridgedPlugin {
         let chambre = call.getString("mode") == "chambre"
         let emojis = call.getArray("emojis", String.self) ?? []
         let maillage = call.getBool("maillage") ?? false
+        let modeles = call.getArray("modeles", JSObject.self) ?? []
         DispatchQueue.main.async {
             guard let hote = self.bridge?.viewController else { call.reject("AR : pas de page"); return }
             if self.ecran != nil { call.reject("l'AR est déjà ouverte"); return }
@@ -1047,6 +1061,7 @@ public class PloxiAR: CAPPlugin, CAPBridgedPlugin {
             vc.objets = objets
             if !emojis.isEmpty { vc.emojis = emojis }
             vc.maillageVisible = maillage
+            vc.modeles = modeles
             vc.surEvenement = { [weak self] d in self?.notifyListeners("ar", data: d) }
             vc.modalPresentationStyle = .fullScreen
             self.ecran = vc
@@ -1080,6 +1095,22 @@ public class PloxiAR: CAPPlugin, CAPBridgedPlugin {
         #endif
         call.reject("le scan de pièce demande iOS 16 et le LiDAR")
     }
+
+    @objc func capturerObjet(_ call: CAPPluginCall) {
+        guard #available(iOS 17.0, *) else { call.reject("la capture d'objet demande iOS 17 et le LiDAR"); return }
+        Task { @MainActor in
+            guard ObjectCaptureSession.isSupported, PhotogrammetrySession.isSupported else {
+                call.reject("la capture d'objet demande le LiDAR (iPhone 12 Pro ou plus récent)"); return
+            }
+            guard let hote = self.bridge?.viewController else { call.reject("capture : pas de page"); return }
+            let vc = ObjetVC()
+            vc.modalPresentationStyle = .fullScreen
+            vc.fini = { u, erreur in
+                if let u = u { call.resolve(["nom": u.lastPathComponent, "chemin": u.path]) } else { call.reject(erreur ?? "capture annulée") }
+            }
+            hote.present(vc, animated: true)
+        }
+    }
 }
 
 // l'écran de l'AR : une ARView (RealityKit) sans configuration automatique, le guide d'Apple (ARCoachingOverlayView) par-dessus
@@ -1088,6 +1119,7 @@ final class TerraxVC: UIViewController, ARSessionDelegate {
     var objets: [JSObject] = []
     var emojis: [String] = ["✨", "🌳", "🗿", "🤖", "🪑", "🎵", "💡", "🍄"]
     var maillageVisible = false
+    var modeles: [JSObject] = []   // tes objets 3D (Object Capture) : { nom, texte }, proposés quand on pose
     var surEvenement: (([String: Any]) -> Void)?
     private var vue: ARView!
     private var abonnement: Cancellable?
@@ -1207,16 +1239,35 @@ final class TerraxVC: UIViewController, ARSessionDelegate {
     private func ajouterTous() {
         for o in objets {
             let x = Float(o["x"] as? Double ?? 0), y = Float(o["y"] as? Double ?? 0), z = Float(o["z"] as? Double ?? 0)
-            poser(id: o["id"] as? String ?? "", emoji: o["emoji"] as? String ?? "✨", texte: o["texte"] as? String ?? "",
-                  en: SIMD3<Float>(x, y, z), taille: Float(o["taille"] as? Double ?? 0.5))
+            let id = o["id"] as? String ?? "", texte = o["texte"] as? String ?? "", p = SIMD3<Float>(x, y, z)
+            if let nom = o["modele"] as? String, !nom.isEmpty, poserModele(id: id, nom: nom, texte: texte, en: p, rot: Float(o["rot"] as? Double ?? 0)) { continue }
+            poser(id: id, emoji: o["emoji"] as? String ?? "✨", texte: texte, en: p, taille: Float(o["taille"] as? Double ?? 0.5))
         }
         objets = []
+    }
+
+    // un objet 3D à toi (Object Capture) : le vrai modèle, à l'échelle 1, posé SUR le point (le bas du modèle), tourné comme à la pose
+    @discardableResult
+    private func poserModele(id: String, nom: String, texte: String, en p: SIMD3<Float>, rot: Float) -> Bool {
+        guard let u = PloxiAR.dossier("objets")?.appendingPathComponent(nom), FileManager.default.fileExists(atPath: u.path),
+              let e = try? Entity.loadModel(contentsOf: u) else { return false }
+        e.name = id
+        e.generateCollisionShapes(recursive: true)
+        let q = simd_quatf(angle: rot, axis: SIMD3<Float>(0, 1, 0))
+        let b = e.visualBounds(relativeTo: e)
+        e.orientation = q
+        e.position = q.act(SIMD3<Float>(-b.center.x, -b.min.y, -b.center.z))
+        let ancre = AnchorEntity(world: p)
+        ancre.addChild(e)
+        vue.scene.addAnchor(ancre)
+        infos[id] = ("📦", texte)
+        return true
     }
 
     // un objet : son emoji et son texte dessinés une fois en image, sur un plan qui se tourne toujours vers toi (debout)
     private func poser(id: String, emoji: String, texte: String, en p: SIMD3<Float>, taille: Float) {
         guard let image = TerraxVC.etiquette(emoji, texte),
-              let tex = try? TextureResource.generate(from: image, options: .init(semantic: .color)) else { return }
+              let tex = try? TextureResource.generate(from: image, withName: nil, options: .init(semantic: .color)) else { return }
         var m = UnlitMaterial()
         m.color = .init(tint: UIColor.white.withAlphaComponent(0.999), texture: .init(tex))
         m.blending = .transparent(opacity: .init(floatLiteral: 1.0))
@@ -1294,6 +1345,24 @@ final class TerraxVC: UIViewController, ARSessionDelegate {
                 self.poser(id: id, emoji: e, texte: texte, en: p, taille: self.chambre ? 0.25 : 0.5)
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 self.surEvenement?(["type": "pose", "id": id, "x": Double(p.x), "y": Double(p.y), "z": Double(p.z), "emoji": e, "texte": texte])
+                self.dire(self.resume())
+            })
+        }
+        // tes objets 3D : le vrai modèle, tourné vers toi
+        for m in modeles.prefix(5) {
+            guard let nom = m["nom"] as? String, !nom.isEmpty else { continue }
+            let titre = "📦 " + ((m["texte"] as? String).map { String($0.prefix(30)) } ?? "ton objet 3D")
+            a.addAction(UIAlertAction(title: titre, style: .default) { [weak self, weak a] _ in
+                guard let self = self else { return }
+                let brut = a?.textFields?.first?.text ?? ""
+                var texte = String(brut.trimmingCharacters(in: .whitespacesAndNewlines).prefix(280))
+                if texte.isEmpty { texte = m["texte"] as? String ?? "" }
+                let id = "tx" + String(Int(Date().timeIntervalSince1970 * 1000), radix: 36)
+                let cam = self.vue.cameraTransform.translation
+                let rot = atan2(cam.x - p.x, cam.z - p.z)
+                guard self.poserModele(id: id, nom: nom, texte: texte, en: p, rot: rot) else { self.dire("ce modèle 3D est introuvable"); return }
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                self.surEvenement?(["type": "pose", "id": id, "x": Double(p.x), "y": Double(p.y), "z": Double(p.z), "emoji": "📦", "texte": texte, "modele": nom, "rot": Double(rot)])
                 self.dire(self.resume())
             })
         }
@@ -1457,6 +1526,207 @@ final class PieceVC: UIViewController, RoomCaptureViewDelegate {
     }
 }
 #endif
+
+// 📦 OBJECT CAPTURE (0.74). RS-7 (15.10, la vidéo d'Apple « AR Quick Look, meet Object Capture ») : « ça pour l'AR ». Ton objet réel (un robot,
+// un meuble IKEA) devient un modèle 3D, sur l'iPhone, sans serveur : la capture guidée d'Apple (ObjectCaptureView, iOS 17, LiDAR) prend les
+// photos tout autour (Caches temporaires), puis PhotogrammetrySession calcule le modèle (USDZ, à l'échelle réelle) dans Documents/terrax/objets.
+// La capture est libérée avant le calcul (les deux ensemble, c'est trop de mémoire). Le modèle s'ouvre en AR Quick Look et se pose dans l'AR.
+@available(iOS 17.0, *)
+final class ObjetVC: UIViewController {
+    var fini: ((URL?, String?) -> Void)?
+    private var session: ObjectCaptureSession?
+    private var hote: UIViewController?
+    private var photogrammetrie: PhotogrammetrySession?
+    private var suivi: Task<Void, Never>?
+    private var calcul: Task<Void, Never>?
+    private let action = UIButton(type: .system)
+    private let etat = UILabel()
+    private var travail: URL?
+    private var sortie: URL?
+    private var eveilAvant = false
+    private var lance = false
+    private var calculLance = false
+    private var rendu = false
+
+    override var prefersStatusBarHidden: Bool { true }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        let s = ObjectCaptureSession()
+        session = s
+        let h = UIHostingController(rootView: ObjectCaptureView(session: s))
+        addChild(h)
+        h.view.frame = view.bounds
+        h.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.addSubview(h.view)
+        h.didMove(toParent: self)
+        hote = h
+        etat.textColor = .white
+        etat.font = .systemFont(ofSize: 14, weight: .semibold)
+        etat.textAlignment = .center
+        etat.numberOfLines = 3
+        etat.backgroundColor = UIColor(white: 0, alpha: 0.5)
+        etat.layer.cornerRadius = 14
+        etat.clipsToBounds = true
+        etat.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(etat)
+        let croix = UIButton(type: .system)
+        for (b, titre) in [(croix, "✕"), (action, "  …  ")] {
+            b.setTitle(titre, for: .normal)
+            b.setTitleColor(.white, for: .normal)
+            b.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
+            b.backgroundColor = UIColor(white: 0, alpha: 0.55)
+            b.layer.cornerRadius = 24
+            b.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(b)
+        }
+        croix.addTarget(self, action: #selector(annuler), for: .touchUpInside)
+        action.addTarget(self, action: #selector(agir), for: .touchUpInside)
+        action.isHidden = true
+        let g = view.safeAreaLayoutGuide
+        NSLayoutConstraint.activate([
+            croix.topAnchor.constraint(equalTo: g.topAnchor, constant: 8),
+            croix.trailingAnchor.constraint(equalTo: g.trailingAnchor, constant: -12),
+            croix.widthAnchor.constraint(equalToConstant: 48),
+            croix.heightAnchor.constraint(equalToConstant: 48),
+            etat.topAnchor.constraint(equalTo: g.topAnchor, constant: 8),
+            etat.leadingAnchor.constraint(equalTo: g.leadingAnchor, constant: 12),
+            etat.trailingAnchor.constraint(equalTo: croix.leadingAnchor, constant: -10),
+            etat.heightAnchor.constraint(greaterThanOrEqualToConstant: 48),
+            action.bottomAnchor.constraint(equalTo: g.bottomAnchor, constant: -16),
+            action.centerXAnchor.constraint(equalTo: g.centerXAnchor),
+            action.heightAnchor.constraint(equalToConstant: 52),
+        ])
+        dire("la caméra démarre…")
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if lance { return }
+        lance = true
+        eveilAvant = UIApplication.shared.isIdleTimerDisabled
+        UIApplication.shared.isIdleTimerDisabled = true   // l'écran reste allumé pendant la capture et le calcul
+        guard let s = session else { return }
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd-HHmmss"
+        let nom = "objet-" + f.string(from: Date())
+        let t = FileManager.default.temporaryDirectory.appendingPathComponent(nom, isDirectory: true)
+        let images = t.appendingPathComponent("images", isDirectory: true)
+        let points = t.appendingPathComponent("points", isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(at: images, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: points, withIntermediateDirectories: true)
+        } catch { rendre(nil, "capture : " + error.localizedDescription); return }
+        travail = t
+        sortie = PloxiAR.dossier("objets")?.appendingPathComponent(nom + ".usdz")
+        var c = ObjectCaptureSession.Configuration()
+        c.checkpointDirectory = points
+        s.start(imagesDirectory: images, configuration: c)
+        surEtat(s.state)
+        suivi = Task { [weak self] in
+            for await e in s.stateUpdates { self?.surEtat(e) }
+        }
+    }
+
+    private func dire(_ t: String) { etat.text = "  " + t + "  " }
+
+    private func montrer(_ t: String, _ bouton: String?) {
+        dire(t)
+        action.isHidden = bouton == nil
+        action.isEnabled = true
+        if let b = bouton { action.setTitle("  " + b + "  ", for: .normal) }
+    }
+
+    // les étapes de la capture d'Apple : prête → viser l'objet (la boîte) → capturer en tournant autour → terminer → le calcul
+    private func surEtat(_ e: ObjectCaptureSession.CaptureState) {
+        if rendu { return }
+        switch e {
+        case .initializing: montrer("la caméra démarre…", nil)
+        case .ready: montrer("pose ton objet sur une table, de l'espace tout autour ; vise-le", "◎ viser cet objet")
+        case .detecting: montrer("ajuste la boîte autour de l'objet", "● commencer la capture")
+        case .capturing: montrer("tourne lentement autour, puis plus haut ; termine quand le cercle est plein", "✓ terminer")
+        case .finishing: montrer("je range les photos…", nil)
+        case .completed: reconstruire()
+        case .failed(let erreur): rendre(nil, "capture : " + erreur.localizedDescription)
+        @unknown default: break
+        }
+    }
+
+    @objc private func agir() {
+        guard let s = session else { return }
+        switch s.state {
+        case .ready: if !s.startDetecting() { dire("je ne trouve pas d'objet : rapproche-toi, vise-le au centre") }
+        case .detecting: s.startCapturing()
+        case .capturing:
+            action.isEnabled = false
+            s.finish()
+        default: break
+        }
+    }
+
+    // le calcul, sur l'iPhone : la capture est d'abord libérée (caméra, mémoire)
+    private func reconstruire() {
+        if calculLance || rendu { return }
+        calculLance = true
+        suivi?.cancel()
+        suivi = nil
+        hote?.willMove(toParent: nil)
+        hote?.view.removeFromSuperview()
+        hote?.removeFromParent()
+        hote = nil
+        session = nil
+        guard let t = travail, let sortie = sortie else { rendre(nil, "capture : pas de dossier"); return }
+        montrer("je calcule ton objet en 3D… garde ploxi0n ouvert", nil)
+        var conf = PhotogrammetrySession.Configuration()
+        conf.checkpointDirectory = t.appendingPathComponent("points", isDirectory: true)
+        let p: PhotogrammetrySession
+        do {
+            p = try PhotogrammetrySession(input: t.appendingPathComponent("images", isDirectory: true), configuration: conf)
+            try p.process(requests: [.modelFile(url: sortie)])
+        } catch { rendre(nil, "calcul : " + error.localizedDescription); return }
+        photogrammetrie = p
+        calcul = Task { [weak self] in
+            do {
+                for try await o in p.outputs {
+                    guard let self = self else { return }
+                    if case .requestProgress(_, let f) = o {
+                        self.dire("je calcule ton objet en 3D… \(Int(f * 100)) %")
+                    } else if case .requestError(_, let erreur) = o {
+                        self.rendre(nil, "calcul : " + erreur.localizedDescription)
+                        return
+                    } else if case .processingCancelled = o {
+                        self.rendre(nil, "calcul annulé")
+                        return
+                    } else if case .processingComplete = o {
+                        if FileManager.default.fileExists(atPath: sortie.path) { self.rendre(sortie, nil) } else { self.rendre(nil, "calcul : pas de modèle") }
+                        return
+                    }
+                }
+            } catch {
+                self?.rendre(nil, "calcul : " + error.localizedDescription)
+            }
+        }
+    }
+
+    @objc private func annuler() {
+        session?.cancel()
+        photogrammetrie?.cancel()
+        rendre(nil, "capture annulée")
+    }
+
+    // une seule fin : la promesse de la page est tenue une fois ; les photos (temporaires) sont effacées
+    private func rendre(_ u: URL?, _ erreur: String?) {
+        if rendu { return }
+        rendu = true
+        suivi?.cancel()
+        calcul?.cancel()
+        UIApplication.shared.isIdleTimerDisabled = eveilAvant
+        if let t = travail { try? FileManager.default.removeItem(at: t) }
+        if u == nil, let s = sortie { try? FileManager.default.removeItem(at: s) }
+        dismiss(animated: true) { self.fini?(u, erreur) }
+    }
+}
 #endif
 
 class PloxionVC: CAPBridgeViewController {

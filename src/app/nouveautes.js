@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.74.0', titre: 'Object Capture : tes objets réels en 3D', points: [
+    '📦 Le terrax › chambre › « un objet en 3D » : la capture guidée d\'Apple (iOS 17, iPhone avec LiDAR). Vise ton objet, tourne autour : l\'iPhone calcule lui-même son modèle 3D, à l\'échelle réelle. Ton robot, ton meuble IKEA, ta plante.',
+    '👁 Il s\'ouvre en AR Quick Look : pose-le à l\'échelle 1 où tu veux, partage-le (AirDrop, Messages).',
+    '✋ Dans l\'AR du terrax (ta chambre ou les yeux du terrax), touche une surface : tes objets 3D sont proposés (📦). Le vrai modèle s\'y pose, tourné vers toi, et revient à sa place à la prochaine ouverture de ta chambre.',
+  ] },
   { v: '0.73.0', titre: 'L\'AR native : le terrax voit le réel en 3D', points: [
     '👁 Le terrax ouvre les yeux d\'iOS (ARKit) : le monde aligné sur la gravité et le nord, chaque objet à sa vraie direction et à sa distance, qui te fait toujours face. Avec le LiDAR, le réel cache ce qui est derrière un mur, un meuble, une personne ; ◇ montre le maillage du réel.',
     '✋ Touche le réel : un rayon trouve la surface (le sol, une table, un mur) et y pose ce que tu veux, à sa vraie place sur le terrion. Touche un objet : tu le vois (et la quête regard avance).',

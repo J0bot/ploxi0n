@@ -102,6 +102,18 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.74 (15.10)** — 📦 Object Capture (RS-7 montre la vidéo « AR Quick Look, meet Object Capture » : « ça pour l'AR »). `AppDelegate.swift` :
+`PloxiAR.capturerObjet` → **`ObjetVC`** (iOS 17 : `ObjectCaptureSession` + `ObjectCaptureView` dans un `UIHostingController` — d'où
+`import SwiftUI` ; `stateUpdates` → les boutons viser / capturer / terminer ; à `.completed`, la capture est libérée puis
+`PhotogrammetrySession(input:configuration:)` + `.modelFile(url:)` (détail `.reduced` par défaut sur iOS) → Documents/terrax/objets/*.usdz ;
+photos dans un dossier temporaire effacé). `disponible` rend `objet` (lu sur l'acteur principal : `ObjectCaptureSession.isSupported` est
+`@MainActor` sans `@preconcurrency`) et `objets`. `TerraxVC.poserModele` : `Entity.loadModel(contentsOf:)`, posé par le bas
+(`visualBounds`), tourné (`rot`) ; `modeles` = les objets capturés proposés dans la feuille de pose (événement pose : `modele`, `rot`).
+Page : `ar.capturerObjet` / `voirObjet`, terrax `capturerObjet`, `modelesDe`, `versAR` (le modèle jusqu'à 30 m, `PRES_MODELE`).
+**Méthode** : la doc d'Apple se lit d'ici en JSON (`https://developer.apple.com/tutorials/data/documentation/<framework>/<symbole>.json` :
+déclaration exacte, plateformes, membres) ; chaque API Swift ajoutée y a été vérifiée (pièges trouvés : `TextureResource.generate` a une
+jumelle `async` → `withName: nil` explicite ; `ARQuickLookPreviewItem` est dans QuickLook). Faux iPhone : `parcours-ar.mjs` (capture comprise).
+
 **0.73 (15.10)** — 👁 l'AR native, RS-7 : « le plus important de tout, c'est l'AR ; utiliser au max les fonctions natives ; et AR Quick Look ».
 `AppDelegate.swift` : le plugin **`PloxiAR`** (disponible, ouvrir, fermer, scannerPiece ; événement « ar » : pose, touche, chambre-neuve,
 ferme), **`TerraxVC`** (ARView de RealityKit sans configuration automatique, `ARCoachingOverlayView` ; terre = `.gravityAndHeading`, x est,
