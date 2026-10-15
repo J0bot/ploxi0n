@@ -19,57 +19,202 @@ private func lireJSON(_ cle: String) -> Any? {
     return try? JSONSerialization.jsonObject(with: d)
 }
 
-struct Px: Identifiable { let id: String; let nom: String; let icone: String }
-struct Valeur: Identifiable { let id: String; let titre: String; let valeur: String }
+struct Px: Identifiable { let id: String; let nom: String; let icone: String; var img: UIImage? = nil }
+struct Valeur: Identifiable { let id: String; let titre: String; let valeur: String; var le: Date? = nil }
 struct Entree: TimelineEntry { let date: Date; let ploxions: [Px]; let valeurs: [Valeur] }
 
 struct Fournisseur: TimelineProvider {
     func lire() -> Entree {
         let l = (lireJSON("ploxi0n.epingles") as? [[String: Any]] ?? []).compactMap { p -> Px? in
             guard let id = p["id"] as? String else { return nil }
-            return Px(id: id, nom: (p["nom"] as? String) ?? id, icone: (p["icone"] as? String) ?? "▣")
+            // (0.72) le glyphe du ploxion (le trait du xerboxion, rendu en PNG par l'app : raccourcis.js) ; l'emoji n'est plus qu'un repli
+            let img = (p["g64"] as? String).flatMap { Data(base64Encoded: $0) }.flatMap { UIImage(data: $0) }
+            return Px(id: id, nom: (p["nom"] as? String) ?? id, icone: (p["icone"] as? String) ?? "▣", img: img)
         }
         let o = lireJSON("ploxi0n.valeurs") as? [String: Any] ?? [:]
-        let v = ["musique", "tsoins-jour", "dernier-tsoin", "pas", "compte"].compactMap { k -> Valeur? in
+        // (0.72, RS-7 : « les widgets ne sont pas encore corrects ») les tsoins du jour en héros ; la musique n'est plus le titre coupé en 34 pt
+        let v = ["tsoins-jour", "pas", "musique", "dernier-tsoin", "compte"].compactMap { k -> Valeur? in
             guard let x = o[k] as? [String: Any] else { return nil }
-            return Valeur(id: k, titre: (x["titre"] as? String) ?? k, valeur: (x["valeur"] as? String) ?? "")
+            let le = (x["le"] as? Double).map { Date(timeIntervalSince1970: $0 / 1000) }
+            return Valeur(id: k, titre: (x["titre"] as? String) ?? k, valeur: (x["valeur"] as? String) ?? "", le: le)
         }
         return Entree(date: Date(), ploxions: l, valeurs: v)
     }
     func placeholder(in context: Context) -> Entree {
-        Entree(date: Date(), ploxions: [Px(id: "bother", nom: "bother me", icone: "🐛")], valeurs: [Valeur(id: "tsoins-jour", titre: "Tsoins aujourd'hui", valeur: "3")])
+        Entree(date: Date(), ploxions: [Px(id: "bother", nom: "bother me", icone: "▣")], valeurs: [Valeur(id: "tsoins-jour", titre: "Tsoins aujourd'hui", valeur: "25"), Valeur(id: "pas", titre: "pas", valeur: "2 550")])
     }
     func getSnapshot(in context: Context, completion: @escaping (Entree) -> Void) { completion(context.isPreview ? placeholder(in: context) : lire()) }
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entree>) -> Void) { completion(Timeline(entries: [lire()], policy: .never)) }
 }
 
-private let FOND = LinearGradient(colors: [Color(red: 0.09, green: 0.20, blue: 0.29), Color(red: 0.03, green: 0.04, blue: 0.08)], startPoint: .topLeading, endPoint: .bottomTrailing)
-private let ACCENT = Color(red: 0.25, green: 0.88, blue: 0.82)
+// ---- LE KIT HUD (0.72) : la grammaire de docs/LOOK.md §2 (tête glyphe + TITRE espacé + étiquette, état à point, rangées libellé/valeur),
+// dessinée avec les formes du lexique (le kion ◇, la portion ▣, le wormion ◎). Deux peaux : .chill (les jetons de l'app : dégradé, lueur —
+// « plus stylés et futuristes », RS-7 14.10) et .mono (LE TRAIT, docs/LOOK.md §3 : sans dégradé ni lueur). Une constante les change.
+struct Peau {
+    let fond0: Color, fond1: Color, trait: Color, acc: Color, bio: Color, muet: Color, lueur: CGFloat
+    static let chill = Peau(fond0: Color(red: 0.059, green: 0.043, blue: 0.094), fond1: Color(red: 0.027, green: 0.020, blue: 0.047),
+                            trait: Color(red: 0.867, green: 0.839, blue: 0.918), acc: Color(red: 0.647, green: 0.592, blue: 0.812),
+                            bio: Color(red: 0.475, green: 0.851, blue: 0.635), muet: Color(red: 0.498, green: 0.463, blue: 0.600), lueur: 5)
+    static let mono = Peau(fond0: Color(red: 0.122, green: 0.122, blue: 0.114), fond1: Color(red: 0.122, green: 0.122, blue: 0.114),
+                           trait: Color(red: 0.925, green: 0.922, blue: 0.914), acc: Color(red: 0.925, green: 0.922, blue: 0.914),
+                           bio: Color(red: 0.93, green: 0.78, blue: 0.24), muet: Color(red: 0.55, green: 0.55, blue: 0.53), lueur: 0)
+}
+private let PEAU = Peau.chill
+
+/** la lueur, seulement en pleine couleur (teinté, StandBy, écran verrouillé : rien) */
+struct Lueur: ViewModifier {
+    @Environment(\.widgetRenderingMode) var mode
+    let c: Color
+    func body(content: Content) -> some View { content.shadow(color: mode == .fullColor ? c.opacity(0.6) : .clear, radius: PEAU.lueur) }
+}
+extension View { func lueur(_ c: Color) -> some View { modifier(Lueur(c: c)) } }
+
+/** la grille HUD, tous les 12 pt */
+struct Grille: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        var x = r.minX
+        while x <= r.maxX { p.move(to: CGPoint(x: x, y: r.minY)); p.addLine(to: CGPoint(x: x, y: r.maxY)); x += 12 }
+        var y = r.minY
+        while y <= r.maxY { p.move(to: CGPoint(x: r.minX, y: y)); p.addLine(to: CGPoint(x: r.maxX, y: y)); y += 12 }
+        return p
+    }
+}
+/** les quatre crochets d'un viseur */
+struct Crochets: Shape {
+    func path(in r0: CGRect) -> Path {
+        let r = r0.insetBy(dx: 9, dy: 9)
+        let l: CGFloat = 8
+        let coins: [(CGPoint, CGFloat, CGFloat)] = [(CGPoint(x: r.minX, y: r.minY), 1, 1), (CGPoint(x: r.maxX, y: r.minY), -1, 1),
+                                                    (CGPoint(x: r.minX, y: r.maxY), 1, -1), (CGPoint(x: r.maxX, y: r.maxY), -1, -1)]
+        var p = Path()
+        for (c, sx, sy) in coins { p.move(to: CGPoint(x: c.x + l * sx, y: c.y)); p.addLine(to: c); p.addLine(to: CGPoint(x: c.x, y: c.y + l * sy)) }
+        return p
+    }
+}
+/** le kion : un losange et sa croix (la marque ◇ de ploxi0n) */
+struct Kion: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = polygone([CGPoint(x: r.midX, y: r.minY), CGPoint(x: r.maxX, y: r.midY), CGPoint(x: r.midX, y: r.maxY), CGPoint(x: r.minX, y: r.midY)])
+        p.move(to: CGPoint(x: r.midX, y: r.minY)); p.addLine(to: CGPoint(x: r.midX, y: r.maxY))
+        p.move(to: CGPoint(x: r.minX, y: r.midY)); p.addLine(to: CGPoint(x: r.maxX, y: r.midY))
+        return p
+    }
+}
+struct Losange: Shape {
+    func path(in r: CGRect) -> Path { polygone([CGPoint(x: r.midX, y: r.minY), CGPoint(x: r.maxX, y: r.midY), CGPoint(x: r.midX, y: r.maxY), CGPoint(x: r.minX, y: r.midY)]) }
+}
+/** le fond : le dégradé, une lueur au coin, la grille, un cadre dans le cadre, les crochets ; la pochette floutée dessous si on en a une */
+struct FondHUD: View {
+    var image: UIImage? = nil
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [PEAU.fond0, PEAU.fond1], startPoint: .top, endPoint: .bottom)
+            if let img = image { Color.clear.overlay(Image(uiImage: img).resizable().scaledToFill().blur(radius: 22).opacity(0.45)).clipped() }
+            RadialGradient(colors: [PEAU.acc.opacity(0.22), Color.clear], center: .topLeading, startRadius: 0, endRadius: 170)
+            Grille().stroke(PEAU.trait.opacity(0.045), lineWidth: 0.5)
+            ContainerRelativeShape().inset(by: 4).stroke(PEAU.trait.opacity(0.10), lineWidth: 1)
+            Crochets().stroke(PEAU.acc.opacity(0.75), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+        }
+    }
+}
+/** ◇ TITRE ········ ÉTIQUETTE */
+struct Tete: View {
+    let titre: String
+    let etiquette: String
+    var body: some View {
+        HStack(spacing: 5) {
+            Kion().stroke(PEAU.acc, lineWidth: 1).frame(width: 9, height: 9).widgetAccentable()
+            Text(titre.uppercased()).font(.system(size: 9, weight: .bold, design: .monospaced)).tracking(1.4).foregroundColor(PEAU.trait).lineLimit(1)
+            Spacer(minLength: 4)
+            Text(etiquette.uppercased()).font(.system(size: 8, weight: .medium, design: .monospaced)).tracking(1).foregroundColor(PEAU.muet).lineLimit(1)
+        }
+    }
+}
+/** ● EN LECTURE / ● PAUSE */
+struct Etat: View {
+    let actif: Bool
+    let texte: String
+    var body: some View {
+        HStack(spacing: 4) {
+            Circle().fill(actif ? PEAU.bio : PEAU.muet).frame(width: 5, height: 5).lueur(actif ? PEAU.bio : Color.clear)
+            Text(texte.uppercased()).font(.system(size: 8, weight: .semibold, design: .monospaced)).tracking(1.2).foregroundColor(actif ? PEAU.bio : PEAU.muet)
+        }
+    }
+}
+/** LIBELLÉ ········ valeur */
+struct Ligne: View {
+    let v: Valeur
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(v.titre.uppercased()).font(.system(size: 8, weight: .medium, design: .monospaced)).tracking(0.8).foregroundColor(PEAU.muet).lineLimit(1)
+            Spacer(minLength: 4)
+            Text(v.valeur).font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundColor(PEAU.trait).lineLimit(1)
+        }
+    }
+}
+/** un filet, sous le héros */
+struct Filet: View { var body: some View { Rectangle().fill(PEAU.trait.opacity(0.14)).frame(height: 0.5) } }
+
+// ---- 📌 LES ÉPINGLÉS : des glyphes dans des portions (plus d'emoji) ----
+struct GlyphePx: View {
+    let p: Px
+    var body: some View {
+        if let img = p.img {
+            Image(uiImage: img).renderingMode(.template).resizable().scaledToFit().foregroundColor(PEAU.acc).widgetAccentable()
+        } else {
+            ZStack {
+                Kion().stroke(PEAU.acc, lineWidth: 1.2)
+                Text(String(p.nom.prefix(1)).uppercased()).font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundColor(PEAU.trait)
+            }
+        }
+    }
+}
+/** une portion : un carré dans un carré, le glyphe au centre */
+struct Portion: View {
+    let p: Px
+    let cote: CGFloat
+    var body: some View {
+        ZStack {
+            Rectangle().stroke(PEAU.trait.opacity(0.18), lineWidth: 1)
+            Rectangle().stroke(PEAU.trait.opacity(0.10), lineWidth: 0.7).padding(cote * 0.12)
+            GlyphePx(p: p).frame(width: cote * 0.46, height: cote * 0.46).lueur(PEAU.acc)
+        }.frame(width: cote, height: cote)
+    }
+}
 
 struct VuePloxions: View {
     @Environment(\.widgetFamily) var famille
     let e: Entree
     var body: some View {
         if e.ploxions.isEmpty {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("📌 ploxi0n").font(.headline).foregroundColor(.white)
-                Text("Épingle des ploxions : ⚙ réglages → HUD").font(.caption).foregroundColor(.white.opacity(0.7))
-            }.widgetURL(URL(string: "ploxi0n://px/reglages-app"))
+            VStack(alignment: .leading, spacing: 6) {
+                Tete(titre: "épinglés", etiquette: "0 px")
+                Spacer(minLength: 0)
+                Text("Épingle des ploxions : ⚙ réglages → HUD").font(.system(size: 11, design: .monospaced)).foregroundColor(PEAU.muet)
+            }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).widgetURL(URL(string: "ploxi0n://px/reglages-app"))
         } else if famille == .systemSmall {
             // un petit widget ne connaît qu'un seul geste : le premier épinglé, en grand ; les autres en dessous
-            VStack(spacing: 6) {
-                Text(e.ploxions[0].icone).font(.system(size: 44))
-                Text(e.ploxions[0].nom).font(.caption).foregroundColor(.white).lineLimit(1)
-                HStack(spacing: 6) { ForEach(e.ploxions.dropFirst().prefix(3)) { p in Text(p.icone).font(.system(size: 16)) } }
-            }.widgetURL(URL(string: "ploxi0n://px/" + e.ploxions[0].id))
+            VStack(alignment: .leading, spacing: 6) {
+                Tete(titre: "épinglés", etiquette: "\(e.ploxions.count) px")
+                Spacer(minLength: 0)
+                HStack(spacing: 8) {
+                    Portion(p: e.ploxions[0], cote: 52)
+                    Text(e.ploxions[0].nom.uppercased()).font(.system(size: 10, weight: .bold, design: .monospaced)).tracking(1).foregroundColor(PEAU.trait).lineLimit(2)
+                }
+                HStack(spacing: 6) { ForEach(e.ploxions.dropFirst().prefix(3)) { p in Portion(p: p, cote: 28) } }
+            }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).widgetURL(URL(string: "ploxi0n://px/" + e.ploxions[0].id))
         } else {
-            HStack(spacing: 10) {
-                ForEach(e.ploxions.prefix(4)) { p in
-                    Link(destination: URL(string: "ploxi0n://px/" + p.id) ?? URL(string: "ploxi0n://")!) {
-                        VStack(spacing: 4) {
-                            Text(p.icone).font(.system(size: 34)).frame(width: 58, height: 58).background(Color.white.opacity(0.08)).clipShape(RoundedRectangle(cornerRadius: 14))
-                            Text(p.nom).font(.caption2).foregroundColor(.white.opacity(0.85)).lineLimit(1)
-                        }.frame(maxWidth: .infinity)
+            VStack(alignment: .leading, spacing: 8) {
+                Tete(titre: "épinglés", etiquette: "\(e.ploxions.count) px")
+                HStack(spacing: 0) {
+                    ForEach(e.ploxions.prefix(4)) { p in
+                        Link(destination: URL(string: "ploxi0n://px/" + p.id) ?? URL(string: "ploxi0n://")!) {
+                            VStack(spacing: 5) {
+                                Portion(p: p, cote: 52)
+                                Text(p.nom.uppercased()).font(.system(size: 8, weight: .semibold, design: .monospaced)).tracking(0.8).foregroundColor(PEAU.trait).lineLimit(1)
+                            }.frame(maxWidth: .infinity)
+                        }
                     }
                 }
             }
@@ -84,18 +229,52 @@ struct VueValeurs: View {
         switch famille {
         case .accessoryInline:
             Text("◇ " + (e.valeurs.first.map { $0.titre + " : " + $0.valeur } ?? "ploxi0n"))
+        case .accessoryCircular:
+            ZStack {
+                AccessoryWidgetBackground()
+                VStack(spacing: 1) {
+                    Kion().stroke(lineWidth: 1).frame(width: 9, height: 9).widgetAccentable()
+                    Text(e.valeurs.first?.valeur ?? "—").font(.system(size: 17, weight: .semibold, design: .monospaced)).lineLimit(1).minimumScaleFactor(0.5)
+                }
+            }
         case .accessoryRectangular:
             VStack(alignment: .leading, spacing: 1) {
-                Text("◇ ploxi0n").font(.headline)
-                ForEach(e.valeurs.prefix(2)) { v in Text(v.titre + " : " + v.valeur).font(.caption).lineLimit(1) }
+                Text("◇ PLOXI0N").font(.system(size: 13, weight: .bold, design: .monospaced))
+                ForEach(e.valeurs.prefix(2)) { v in Text(v.titre + " : " + v.valeur).font(.system(size: 11, design: .monospaced)).lineLimit(1) }
             }
-        default:
+        case .systemMedium:
             VStack(alignment: .leading, spacing: 6) {
-                Text("◇ ploxi0n").font(.caption).foregroundColor(ACCENT)
-                if let t = e.valeurs.first { Text(t.valeur).font(.system(size: 34, weight: .bold)).foregroundColor(.white); Text(t.titre).font(.caption2).foregroundColor(.white.opacity(0.7)) }
-                ForEach(e.valeurs.dropFirst().prefix(famille == .systemSmall ? 1 : 2)) { v in Text(v.titre + " : " + v.valeur).font(.caption2).foregroundColor(.white.opacity(0.85)).lineLimit(2) }
+                Tete(titre: "ploxi0n", etiquette: "tsoins // jour")
+                HStack(alignment: .top, spacing: 12) {
+                    heros.frame(maxWidth: .infinity, alignment: .leading)
+                    Rectangle().fill(PEAU.trait.opacity(0.14)).frame(width: 0.5)
+                    VStack(alignment: .leading, spacing: 5) {
+                        ForEach(e.valeurs.dropFirst().prefix(3)) { v in Ligne(v: v) }
+                        Spacer(minLength: 0)
+                    }.frame(maxWidth: .infinity)
+                }
+            }.widgetURL(URL(string: "ploxi0n://"))
+        default:
+            VStack(alignment: .leading, spacing: 5) {
+                Tete(titre: "ploxi0n", etiquette: "tsoins // jour")
+                heros
+                Filet()
+                ForEach(e.valeurs.dropFirst().prefix(2)) { v in Ligne(v: v) }
                 Spacer(minLength: 0)
             }.frame(maxWidth: .infinity, alignment: .leading).widgetURL(URL(string: "ploxi0n://"))
+        }
+    }
+    /** le héros : la première valeur, en grand et fin, qui luit ; quand elle a changé (l'ancienneté se met à jour toute seule) */
+    @ViewBuilder var heros: some View {
+        if let h = e.valeurs.first {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(h.valeur).font(.system(size: 40, weight: .thin, design: .monospaced)).foregroundColor(PEAU.trait).lineLimit(1).minimumScaleFactor(0.4)
+                    .contentTransition(.numericText()).lueur(PEAU.acc)
+                Text(h.titre.uppercased()).font(.system(size: 8, weight: .semibold, design: .monospaced)).tracking(1).foregroundColor(PEAU.acc).lineLimit(1).widgetAccentable()
+                if let le = h.le { (Text("↻ ") + Text(le, style: .relative)).font(.system(size: 7, design: .monospaced)).foregroundColor(PEAU.muet).lineLimit(1) }
+            }
+        } else {
+            Text("—").font(.system(size: 40, weight: .thin, design: .monospaced)).foregroundColor(PEAU.muet)
         }
     }
 }
@@ -103,7 +282,7 @@ struct VueValeurs: View {
 struct WidgetPloxions: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "ploxions", provider: Fournisseur()) { e in
-            VuePloxions(e: e).containerBackground(for: .widget) { FOND }
+            VuePloxions(e: e).containerBackground(for: .widget) { FondHUD() }
         }
         .configurationDisplayName("Ploxions épinglés")
         .description("Les ploxions de ton HUD, d'un geste.")
@@ -114,11 +293,11 @@ struct WidgetPloxions: Widget {
 struct WidgetValeurs: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "valeurs", provider: Fournisseur()) { e in
-            VueValeurs(e: e).containerBackground(for: .widget) { FOND }
+            VueValeurs(e: e).containerBackground(for: .widget) { FondHUD() }
         }
         .configurationDisplayName("ploxi0n")
-        .description("Tes tsoins du jour, le dernier tsoin, ton compte.")
-        .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular, .accessoryInline])
+        .description("Tes tsoins du jour, tes pas, ce qui joue, ton compte.")
+        .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular, .accessoryRectangular, .accessoryInline])
     }
 }
 
@@ -148,8 +327,8 @@ struct FournisseurCube: TimelineProvider {
         return CubeEntree(date: date, faces: faces, tour: tour, ix: (incl["x"] as? Double) ?? 0, iy: (incl["y"] as? Double) ?? 0)
     }
     func placeholder(in context: Context) -> CubeEntree {
-        CubeEntree(date: Date(), faces: [Face(id: 0, g: "⧗", t: "tsoins", v: "3"), Face(id: 1, g: "♫", t: "à l'écoute", v: "Keep It Psychedelic"), Face(id: 2, g: "👣", t: "pas", v: "4 200"),
-                                         Face(id: 3, g: "▣", t: "ploxions", v: "130"), Face(id: 4, g: "◇", t: "compte", v: "josion"), Face(id: 5, g: "✎", t: "dernier", v: "—")], tour: 0, ix: 0.3, iy: 0.1)
+        CubeEntree(date: Date(), faces: [Face(id: 0, g: "⧗", t: "tsoins", v: "25"), Face(id: 1, g: "♫", t: "à l'écoute", v: "Slow Stride"), Face(id: 2, g: "∷", t: "pas", v: "2 550"),
+                                         Face(id: 3, g: "▣", t: "ploxions", v: "213"), Face(id: 4, g: "◇", t: "compte", v: "josion"), Face(id: 5, g: "✎", t: "dernier", v: "—")], tour: 0, ix: 0.3, iy: 0.1)
     }
     func getSnapshot(in context: Context, completion: @escaping (CubeEntree) -> Void) { completion(context.isPreview ? placeholder(in: context) : lire(decalage: 0, date: Date())) }
     func getTimeline(in context: Context, completion: @escaping (Timeline<CubeEntree>) -> Void) {
@@ -172,19 +351,28 @@ private func centre(_ pts: [CGPoint]) -> CGPoint {
     let n = CGFloat(max(pts.count, 1))
     return CGPoint(x: pts.map { $0.x }.reduce(0, +) / n, y: pts.map { $0.y }.reduce(0, +) / n)
 }
+/** le carré 100×100 → la face (o, a, …, b) : le texte est IMPRIMÉ sur la face, en perspective (le sens de lecture est gardé) */
+private func surFace(_ o: CGPoint, _ a: CGPoint, _ b: CGPoint) -> CGAffineTransform {
+    CGAffineTransform(a: (a.x - o.x) / 100, b: (a.y - o.y) / 100, c: (b.x - o.x) / 100, d: (b.y - o.y) / 100, tx: o.x, ty: o.y)
+}
+private func reduit(_ pts: [CGPoint], _ k: CGFloat) -> [CGPoint] {
+    let c = centre(pts)
+    return pts.map { CGPoint(x: c.x + ($0.x - c.x) * k, y: c.y + ($0.y - c.y) * k) }
+}
 
-struct VueEtiquette: View {
+/** ce qu'une face porte : son glyphe, sa valeur, son titre */
+struct EtiquetteFace: View {
     let f: Face
-    let petit: Bool
     var body: some View {
-        VStack(spacing: 0) {
-            Text(f.g).font(.system(size: petit ? 13 : 16))
-            Text(f.v).font(.system(size: petit ? 10 : 12, weight: .bold)).foregroundColor(.white).lineLimit(1).minimumScaleFactor(0.5)
-        }.frame(width: petit ? 46 : 58)
+        VStack(spacing: 3) {
+            Text(f.g).font(.system(size: 18)).foregroundColor(PEAU.acc)
+            Text(f.v).font(.system(size: 22, weight: .bold, design: .monospaced)).foregroundColor(PEAU.trait).lineLimit(2).minimumScaleFactor(0.35).multilineTextAlignment(.center)
+            Text(f.t.uppercased()).font(.system(size: 9, weight: .semibold, design: .monospaced)).tracking(1.2).foregroundColor(PEAU.muet).lineLimit(1).minimumScaleFactor(0.6)
+        }.padding(10).frame(width: 100, height: 100)
     }
 }
 
-/** un cube isométrique : le dessus, la gauche, la droite ; penché comme le téléphone l'était (ix, iy) */
+/** un cube isométrique : le dessus, la gauche, la droite ; penché comme le téléphone l'était (ix, iy) ; un socle de lumière dessous */
 struct DessinCube: View {
     let e: CubeEntree
     var body: some View {
@@ -206,20 +394,35 @@ struct DessinCube: View {
             let dessus = [t0, t1, t2, t3], gauche = [t3, t2, b2, b3], droite = [t2, t1, b1, b2]
             let n = e.faces.count
             let fd = e.faces[((e.tour % n) + n) % n], fg = e.faces[(((e.tour + 1) % n) + n) % n], fr = e.faces[(((e.tour + 2) % n) + n) % n]
-            ZStack {
-                polygone(gauche).fill(Color(red: 0.10, green: 0.08, blue: 0.16))
-                polygone(droite).fill(Color(red: 0.06, green: 0.05, blue: 0.10))
-                polygone(dessus).fill(Color(red: 0.16, green: 0.13, blue: 0.24))
-                polygone(gauche).stroke(Color.white.opacity(0.14), lineWidth: 1.5)
-                polygone(droite).stroke(Color.white.opacity(0.10), lineWidth: 1.5)
-                polygone(dessus).stroke(ACCENT.opacity(0.75), lineWidth: 1.5)
+            let ww = max(geo.size.width, 1), hh = max(geo.size.height, 1)
+            let up = { (p: CGPoint) -> UnitPoint in UnitPoint(x: p.x / ww, y: p.y / hh) }
+            ZStack(alignment: .topLeading) {
+                Ellipse().fill(RadialGradient(colors: [PEAU.acc.opacity(0.35), Color.clear], center: .center, startRadius: 0, endRadius: s * 1.2))
+                    .frame(width: s * 2.6, height: s * 0.7).position(x: cx, y: b2.y + s * 0.12)
+                polygone(gauche).fill(LinearGradient(colors: [PEAU.acc.opacity(0.22), PEAU.fond1], startPoint: up(t3), endPoint: up(b2)))
+                polygone(droite).fill(LinearGradient(colors: [PEAU.acc.opacity(0.10), PEAU.fond1], startPoint: up(t1), endPoint: up(b2)))
+                polygone(dessus).fill(LinearGradient(colors: [PEAU.acc.opacity(0.45), PEAU.fond0], startPoint: up(t0), endPoint: up(t2)))
+                polygone(reduit(dessus, 0.72)).stroke(PEAU.trait.opacity(0.10), lineWidth: 0.7)
+                polygone(gauche).stroke(PEAU.trait.opacity(0.16), lineWidth: 1)
+                polygone(droite).stroke(PEAU.trait.opacity(0.12), lineWidth: 1)
+                polygone(dessus).stroke(PEAU.acc, lineWidth: 1.4).lueur(PEAU.acc)
                 Group {
-                    VueEtiquette(f: fd, petit: w < 150).position(centre(dessus))
-                    VueEtiquette(f: fg, petit: w < 150).position(centre(gauche))
-                    VueEtiquette(f: fr, petit: w < 150).position(centre(droite))
+                    EtiquetteFace(f: fd).transformEffect(surFace(t3, t0, t2))
+                    EtiquetteFace(f: fg).transformEffect(surFace(t3, t2, b3))
+                    EtiquetteFace(f: fr).transformEffect(surFace(t2, t1, b2))
                 }.id(e.tour).transition(.push(from: .trailing))
             }
         }
+    }
+}
+
+/** ⟲ dans un losange */
+struct BoutonTourner: View {
+    var body: some View {
+        Button(intent: TournerCube()) {
+            Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 10, weight: .bold)).foregroundColor(PEAU.acc)
+                .frame(width: 24, height: 24).overlay(Losange().stroke(PEAU.acc.opacity(0.6), lineWidth: 1))
+        }.buttonStyle(.plain).widgetAccentable()
     }
 }
 
@@ -228,20 +431,26 @@ struct VueCube: View {
     let e: CubeEntree
     var body: some View {
         if famille == .systemMedium {
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 DessinCube(e: e).frame(maxWidth: .infinity)
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Tete(titre: "cube", etiquette: "bions // 6")
                     ForEach(e.faces) { f in
-                        HStack(spacing: 4) { Text(f.g).font(.caption2); Text(f.v).font(.caption2.bold()).foregroundColor(.white).lineLimit(1) }
+                        HStack(spacing: 5) {
+                            Text(f.g).font(.system(size: 9)).foregroundColor(PEAU.acc).frame(width: 12)
+                            Text(f.t.uppercased()).font(.system(size: 8, weight: .medium, design: .monospaced)).tracking(0.6).foregroundColor(PEAU.muet).lineLimit(1)
+                            Spacer(minLength: 2)
+                            Text(f.v).font(.system(size: 9, weight: .semibold, design: .monospaced)).foregroundColor(PEAU.trait).lineLimit(1)
+                        }
                     }
                     Spacer(minLength: 0)
-                    Button(intent: TournerCube()) { Label("tourner", systemImage: "arrow.triangle.2.circlepath").font(.caption2) }.tint(ACCENT)
+                    BoutonTourner()
                 }.frame(maxWidth: .infinity, alignment: .leading)
-            }.widgetURL(URL(string: "ploxi0n://px/reglages-app"))
+            }.padding(12).widgetURL(URL(string: "ploxi0n://px/reglages-app"))
         } else {
             ZStack(alignment: .topTrailing) {
                 DessinCube(e: e)
-                Button(intent: TournerCube()) { Image(systemName: "arrow.triangle.2.circlepath").font(.caption).foregroundColor(ACCENT) }.buttonStyle(.plain)
+                BoutonTourner().padding(10)
             }.widgetURL(URL(string: "ploxi0n://px/reglages-app"))
         }
     }
@@ -250,16 +459,17 @@ struct VueCube: View {
 struct WidgetCube: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "cube", provider: FournisseurCube()) { e in
-            VueCube(e: e).containerBackground(for: .widget) { FOND }
+            VueCube(e: e).containerBackground(for: .widget) { FondHUD() }
         }
         .configurationDisplayName("Cube")
         .description("Six infos de tes bions sur un cube ; ⟲ pour le tourner.")
         .supportedFamilies([.systemSmall, .systemMedium])
+        .contentMarginsDisabled()
     }
 }
 
 // ---- ♫ À L'ÉCOUTE -------------------------------------------------------------------------------------------------------------------------
-struct LectureEntree: TimelineEntry { let date: Date; let titre: String; let artiste: String; let enLecture: Bool; let image: UIImage? }
+struct LectureEntree: TimelineEntry { let date: Date; let titre: String; let artiste: String; let enLecture: Bool; let image: UIImage?; var source: String = "" }
 
 struct FournisseurLecture: TimelineProvider {
     func lire() -> LectureEntree {
@@ -271,9 +481,9 @@ struct FournisseurLecture: TimelineProvider {
            let dossier = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: GROUPE) {
             img = UIImage(contentsOfFile: dossier.appendingPathComponent("lecture.jpg").path)
         }
-        return LectureEntree(date: Date(), titre: t, artiste: (o["artiste"] as? String) ?? "", enLecture: (o["enLecture"] as? Bool) ?? false, image: img)
+        return LectureEntree(date: Date(), titre: t, artiste: (o["artiste"] as? String) ?? "", enLecture: (o["enLecture"] as? Bool) ?? false, image: img, source: (o["ploxion"] as? String) ?? "")
     }
-    func placeholder(in context: Context) -> LectureEntree { LectureEntree(date: Date(), titre: "Keep It Psychedelic", artiste: "GMS, Z-Cat", enLecture: true, image: nil) }
+    func placeholder(in context: Context) -> LectureEntree { LectureEntree(date: Date(), titre: "Slow Stride", artiste: "YOUTH 83", enLecture: true, image: nil, source: "spotify") }
     func getSnapshot(in context: Context, completion: @escaping (LectureEntree) -> Void) { completion(context.isPreview ? placeholder(in: context) : lire()) }
     func getTimeline(in context: Context, completion: @escaping (Timeline<LectureEntree>) -> Void) { completion(Timeline(entries: [lire()], policy: .never)) }
 }
@@ -282,49 +492,65 @@ struct VuePochette: View {
     let e: LectureEntree
     var body: some View {
         if let img = e.image { Image(uiImage: img).resizable().scaledToFill() }
-        else { ZStack { Color.white.opacity(0.06); Text("♫").font(.system(size: 28)).foregroundColor(ACCENT) } }
+        else { ZStack { PEAU.fond1; Text("♫").font(.system(size: 26)).foregroundColor(PEAU.acc) } }
+    }
+}
+/** la pochette en wormion : des cercles autour, le trou au centre, une lueur quand ça joue */
+struct Disque: View {
+    let e: LectureEntree
+    var body: some View {
+        ZStack {
+            Circle().stroke(PEAU.acc.opacity(0.35), lineWidth: 1)
+            Circle().stroke(PEAU.trait.opacity(0.15), lineWidth: 0.7).padding(4)
+            Color.clear.overlay(VuePochette(e: e)).clipShape(Circle()).padding(8)
+            Circle().fill(PEAU.fond1).frame(width: 7, height: 7)
+        }.aspectRatio(1, contentMode: .fit).lueur(e.enLecture ? PEAU.bio : Color.clear)
     }
 }
 
 struct VueLecture: View {
     @Environment(\.widgetFamily) var famille
     let e: LectureEntree
-    func bouton(_ symbole: String, _ commande: String) -> some View {
+    func bouton(_ symbole: String, _ commande: String, plein: Bool = false) -> some View {
         Link(destination: URL(string: "ploxi0n://lecture/" + commande) ?? URL(string: "ploxi0n://")!) {
-            Image(systemName: symbole).font(.system(size: 18, weight: .semibold)).foregroundColor(.white).frame(maxWidth: .infinity)
+            Image(systemName: symbole).font(.system(size: 13, weight: .bold)).foregroundColor(plein ? PEAU.fond1 : PEAU.trait)
+                .frame(maxWidth: .infinity, minHeight: 28).background(plein ? PEAU.acc : Color.clear)
+                .overlay(Rectangle().stroke(PEAU.trait.opacity(plein ? 0 : 0.25), lineWidth: 1))
         }
     }
     var body: some View {
         if e.titre.isEmpty {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("♫ à l'écoute").font(.caption).foregroundColor(ACCENT)
-                Text("Rien ne joue").font(.headline).foregroundColor(.white)
-                Text("Lance de la musique dans un ploxion (Spotify…)").font(.caption2).foregroundColor(.white.opacity(0.7))
-            }.frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .leading, spacing: 6) {
+                Tete(titre: "à l'écoute", etiquette: "—")
+                Spacer(minLength: 0)
+                Etat(actif: false, texte: "rien ne joue")
+                Text("Lance de la musique dans un ploxion (Spotify…)").font(.system(size: 10, design: .monospaced)).foregroundColor(PEAU.muet)
+            }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         } else {
             switch famille {
             case .accessoryRectangular:
                 VStack(alignment: .leading, spacing: 1) {
                     Text((e.enLecture ? "♫ " : "⏸ ") + e.titre).font(.headline).lineLimit(1)
-                    Text(e.artiste).font(.caption).lineLimit(1)
+                    Text(e.artiste).font(.system(size: 11, design: .monospaced)).lineLimit(1)
                 }
             case .systemMedium:
                 HStack(spacing: 12) {
-                    VuePochette(e: e).frame(width: 110, height: 110).clipShape(RoundedRectangle(cornerRadius: 14))
+                    Disque(e: e).frame(width: 110, height: 110)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(e.enLecture ? "♫ à l'écoute" : "⏸ en pause").font(.caption2).foregroundColor(ACCENT)
-                        Text(e.titre).font(.headline).foregroundColor(.white).lineLimit(2)
-                        Text(e.artiste).font(.caption).foregroundColor(.white.opacity(0.75)).lineLimit(1)
+                        Tete(titre: "à l'écoute", etiquette: e.source)
+                        Etat(actif: e.enLecture, texte: e.enLecture ? "en lecture" : "pause")
+                        Text(e.titre).font(.system(size: 15, weight: .semibold)).foregroundColor(PEAU.trait).lineLimit(2)
+                        Text(e.artiste).font(.system(size: 10, design: .monospaced)).foregroundColor(PEAU.muet).lineLimit(1)
                         Spacer(minLength: 0)
-                        HStack { bouton("backward.fill", "precedent"); bouton(e.enLecture ? "pause.fill" : "play.fill", "toggle"); bouton("forward.fill", "suivant") }
+                        HStack(spacing: 6) { bouton("backward.fill", "precedent"); bouton(e.enLecture ? "pause.fill" : "play.fill", "toggle", plein: true); bouton("forward.fill", "suivant") }
                     }
                 }
             default:
                 VStack(alignment: .leading, spacing: 4) {
-                    VuePochette(e: e).frame(width: 64, height: 64).clipShape(RoundedRectangle(cornerRadius: 12))
+                    HStack(alignment: .top) { Disque(e: e).frame(width: 62, height: 62); Spacer(minLength: 0); Etat(actif: e.enLecture, texte: e.enLecture ? "live" : "pause") }
                     Spacer(minLength: 0)
-                    Text(e.titre).font(.caption.bold()).foregroundColor(.white).lineLimit(2)
-                    Text(e.artiste).font(.caption2).foregroundColor(.white.opacity(0.75)).lineLimit(1)
+                    Text(e.titre).font(.system(size: 13, weight: .semibold)).foregroundColor(PEAU.trait).lineLimit(2)
+                    Text(e.artiste.uppercased()).font(.system(size: 9, weight: .medium, design: .monospaced)).tracking(0.8).foregroundColor(PEAU.muet).lineLimit(1)
                 }.frame(maxWidth: .infinity, alignment: .leading).widgetURL(URL(string: "ploxi0n://lecture/ouvrir"))
             }
         }
@@ -334,7 +560,7 @@ struct VueLecture: View {
 struct WidgetLecture: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "lecture", provider: FournisseurLecture()) { e in
-            VueLecture(e: e).containerBackground(for: .widget) { FOND }
+            VueLecture(e: e).containerBackground(for: .widget) { FondHUD(image: e.image) }
         }
         .configurationDisplayName("À l'écoute")
         .description("Ce que jouent tes ploxions, la pochette, ⏮ ⏯ ⏭.")
