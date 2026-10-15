@@ -182,3 +182,30 @@ test('📦 Object Capture : ton objet réel en 3D, vu en AR Quick Look, posé en
   await a.voirObjet('objet-1.usdz'); await assert.rejects(a.voirObjet('..'));
   assert.deepEqual(apercus, [{ chemin: '/D/terrax/objets/objet-1.usdz', echelleReelle: true }]);
 });
+
+test('🛡 la revue : une seule ouverture à la fois ; un nom de fichier propre pour AR Quick Look', async () => {
+  const p = await page({ avion: true, ploxions: [] });
+  try {
+    const W = p.w, D = W.document, ar = fauxAR();
+    let refus = 0; const ouvrir = ar.ouvrir; ar.ouvrir = async (o) => { if (ar.ouverts.length) { refus++; throw new Error('l\'AR est déjà ouverte'); } return ouvrir(o); };
+    creerTerrax({ W, boxion: p.boxion, ar });
+    const h = D.createElement('div'); D.body.appendChild(h);
+    const inst = W.jOSApps.terrax.mount(h); await attendre(60);
+    inst.allerPage('terrax'); h.querySelector('[data-tx="yeux"]').click(); h.querySelector('[data-tx="yeux"]').click();   // sans position : il attend
+    await attendre(30); inst.position(MOI, false); await attendre(400);
+    assert.equal(ar.ouverts.length, 1, 'un double toucher n\'ouvre qu\'une fois'); assert.equal(refus, 0);
+    h.querySelector('[data-tx="yeux"]').click(); await attendre(40);   // iOS la refuse (déjà ouverte) : la session de la page reste
+    assert.equal(refus, 1);
+    ar.emettre({ type: 'pose', id: 'apres-refus', x: 1, z: -1, emoji: '✨' }); await attendre(30);
+    assert.ok((await p.boxion.get('terrax', 'objets')).some(x => x.id === 'apres-refus'), 'la pose est toujours gardée');
+    assert.ok(!h.querySelector('.tx-video').srcObject, 'pas d\'AR web en dessous');
+    inst.unmount();
+  } finally { p.fin(); }
+  const appels = [];
+  const fetch = async (u) => (/404/.test(u) ? { ok: false, status: 404 } : { ok: true, blob: async () => ({ type: /blob/.test(u) ? 'model/vnd.usdz+zip' : '', arrayBuffer: async () => new ArrayBuffer(2) }) });
+  const fx = creerFichiersNatif({ W: { Capacitor: { isNativePlatform: () => true }, fetch }, apple: { apercu: async (o) => { appels.push(o); return { ok: true }; } } });
+  await fx.apercu('capacitor://localhost/px/m/robot%20bleu.usdz#allowsContentScaling=0');
+  await fx.apercu('blob:capacitor://localhost/1b2c-3d');
+  await assert.rejects(fx.apercu('capacitor://localhost/404.usdz'), /404/);
+  assert.deepEqual(appels.map(a => a.nom), ['robot bleu.usdz', '1b2c-3d.usdz']);
+});

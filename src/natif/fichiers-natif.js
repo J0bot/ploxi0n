@@ -50,7 +50,14 @@ export function creerFichiersNatif({ W = globalThis.window, apple = PloxiApple, 
     const e = o && o.echelleReelle ? { echelleReelle: true } : {};
     if (typeof f === 'string' && /^(file:|\/)/.test(f)) return apple.apercu({ chemin: f, ...e });
     if (typeof f === 'string' && /^https?:/i.test(f)) return apple.apercu({ url: f, ...e });
-    if (typeof f === 'string' && /^(capacitor|blob|data):/i.test(f)) { const r = await W.fetch(f); const b = await r.blob(); return apercu({ nom: decodeURIComponent(f.split('/').pop().split('?')[0]) || 'fichier', data: new Uint8Array(await b.arrayBuffer()) }, o); }
+    if (typeof f === 'string' && /^(capacitor|blob|data):/i.test(f)) {
+      const r = await W.fetch(f); if (!r.ok) throw new Error('aperçu : ' + r.status);
+      const b = await r.blob();
+      // le nom sans ?requête ni #fragment ; sans extension (blob:, data:, rel="ar"), celle du type : sinon AR Quick Look ne reconnaît pas le USDZ
+      let nom = f.startsWith('data:') ? '' : f.split('/').pop().split(/[?#]/)[0]; try { nom = decodeURIComponent(nom); } catch (e) { /* tel quel */ }
+      if (!/\.[a-z0-9]+$/i.test(nom)) nom = (nom || 'fichier') + (/usdz/i.test(b.type) ? '.usdz' : /reality/i.test(b.type) ? '.reality' : '');
+      return apercu({ nom, data: new Uint8Array(await b.arrayBuffer()) }, o);
+    }
     return apple.apercu({ base64: enBase64(await enOctets(f)), nom: nomDe(f), ...e });
   }
   async function zip(fichiers) {

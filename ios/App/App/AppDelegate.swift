@@ -294,9 +294,10 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
             let u = FileManager.default.temporaryDirectory.appendingPathComponent(nom.isEmpty ? "fichier" : nom)
             do { try data.write(to: u, options: .atomic); url = u } catch { call.reject("aperçu : \(error.localizedDescription)"); return }
         } else if let lien = call.getString("url"), let distant = URL(string: lien), ["http", "https"].contains(distant.scheme?.lowercased() ?? "") {
-            URLSession.shared.downloadTask(with: distant) { tmp, _, erreur in
+            URLSession.shared.downloadTask(with: distant) { tmp, reponse, erreur in
+                if let h = reponse as? HTTPURLResponse, !(200..<300).contains(h.statusCode) { call.reject("aperçu : HTTP \(h.statusCode)"); return }
                 guard let tmp = tmp else { call.reject("aperçu : " + (erreur?.localizedDescription ?? "rien reçu")); return }
-                let nom = distant.lastPathComponent.isEmpty ? "fichier" : distant.lastPathComponent
+                let nom = reponse?.suggestedFilename ?? (distant.lastPathComponent.isEmpty ? "fichier" : distant.lastPathComponent)
                 let u = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + "-" + nom)
                 do { try FileManager.default.moveItem(at: tmp, to: u) } catch { call.reject("aperçu : \(error.localizedDescription)"); return }
                 self.montrerApercu(u, echelle, call)
@@ -1114,7 +1115,7 @@ public class PloxiAR: CAPPlugin, CAPBridgedPlugin {
 }
 
 // l'écran de l'AR : une ARView (RealityKit) sans configuration automatique, le guide d'Apple (ARCoachingOverlayView) par-dessus
-final class TerraxVC: UIViewController, ARSessionDelegate {
+final class TerraxVC: UIViewController, ARSessionDelegate, ARCoachingOverlayViewDelegate {
     var chambre = false
     var objets: [JSObject] = []
     var emojis: [String] = ["✨", "🌳", "🗿", "🤖", "🪑", "🎵", "💡", "🍄"]
@@ -1124,6 +1125,7 @@ final class TerraxVC: UIViewController, ARSessionDelegate {
     private var vue: ARView!
     private var abonnement: Cancellable?
     private var etiquettes: [ModelEntity] = []
+    private var chargements: [AnyCancellable] = []   // les modèles 3D chargés hors du fil principal
     private var infos: [String: (String, String)] = [:]
     private let etat = UILabel()
     private var lance = false
@@ -1145,6 +1147,7 @@ final class TerraxVC: UIViewController, ARSessionDelegate {
         guide.session = vue.session
         guide.goal = .tracking
         guide.activatesAutomatically = true
+        guide.delegate = self
         vue.addSubview(guide)
         etat.textColor = .white
         etat.font = .systemFont(ofSize: 14, weight: .semibold)
@@ -1217,10 +1220,14 @@ final class TerraxVC: UIViewController, ARSessionDelegate {
             c.frameSemantics.insert(.personSegmentationWithDepth)
         }
         carteChargee = false
-        if chambre, !neuve, let u = PloxiAR.carteChambre, let data = try? Data(contentsOf: u),
-           let carte = try? NSKeyedUnarchiver.unarchivedObject(ofClass: ARWorldMap.self, from: data) {
-            c.initialWorldMap = carte
-            carteChargee = true
+        if chambre, !neuve, let u = PloxiAR.carteChambre, FileManager.default.fileExists(atPath: u.path) {
+            if let data = try? Data(contentsOf: u), let carte = try? NSKeyedUnarchiver.unarchivedObject(ofClass: ARWorldMap.self, from: data) {
+                c.initialWorldMap = carte
+                carteChargee = true
+            } else {
+                try? FileManager.default.removeItem(at: u)   // illisible : une chambre neuve, les places de la page sont oubliées
+                surEvenement?(["type": "chambre-neuve"])
+            }
         }
         retrouvee = !carteChargee
         if !carteChargee {
@@ -1249,18 +1256,22 @@ final class TerraxVC: UIViewController, ARSessionDelegate {
     // un objet 3D à toi (Object Capture) : le vrai modèle, à l'échelle 1, posé SUR le point (le bas du modèle), tourné comme à la pose
     @discardableResult
     private func poserModele(id: String, nom: String, texte: String, en p: SIMD3<Float>, rot: Float) -> Bool {
-        guard let u = PloxiAR.dossier("objets")?.appendingPathComponent(nom), FileManager.default.fileExists(atPath: u.path),
-              let e = try? Entity.loadModel(contentsOf: u) else { return false }
-        e.name = id
-        e.generateCollisionShapes(recursive: true)
-        let q = simd_quatf(angle: rot, axis: SIMD3<Float>(0, 1, 0))
-        let b = e.visualBounds(relativeTo: e)
-        e.orientation = q
-        e.position = q.act(SIMD3<Float>(-b.center.x, -b.min.y, -b.center.z))
-        let ancre = AnchorEntity(world: p)
-        ancre.addChild(e)
-        vue.scene.addAnchor(ancre)
+        guard let u = PloxiAR.dossier("objets")?.appendingPathComponent(nom), FileManager.default.fileExists(atPath: u.path) else { return false }
         infos[id] = ("📦", texte)
+        Entity.loadModelAsync(contentsOf: u).sink(receiveCompletion: { [weak self] fin in
+            if case .failure = fin { self?.poser(id: id, emoji: "📦", texte: texte, en: p, taille: 0.3) }
+        }, receiveValue: { [weak self] e in
+            guard let self = self, !self.ferme else { return }
+            e.name = id
+            e.generateCollisionShapes(recursive: true)
+            let q = simd_quatf(angle: rot, axis: SIMD3<Float>(0, 1, 0))
+            let b = e.visualBounds(relativeTo: e)
+            e.orientation = q
+            e.position = q.act(SIMD3<Float>(-b.center.x, -b.min.y, -b.center.z))
+            let ancre = AnchorEntity(world: p)
+            ancre.addChild(e)
+            self.vue.scene.addAnchor(ancre)
+        }).store(in: &chargements)
         return true
     }
 
@@ -1275,6 +1286,7 @@ final class TerraxVC: UIViewController, ARSessionDelegate {
         let e = ModelEntity(mesh: .generatePlane(width: t, height: t * 1.2), materials: [m])
         e.name = id
         e.collision = CollisionComponent(shapes: [.generateBox(size: SIMD3<Float>(t, t * 1.2, 0.04))])
+        e.position = SIMD3<Float>(0, t * 0.6, 0)   // le bas de l'étiquette sur le point touché (sinon le LiDAR cache sa moitié sous la surface)
         let ancre = AnchorEntity(world: p)
         ancre.addChild(e)
         vue.scene.addAnchor(ancre)
@@ -1310,6 +1322,7 @@ final class TerraxVC: UIViewController, ARSessionDelegate {
     }
 
     @objc private func toucher(_ geste: UITapGestureRecognizer) {
+        if ferme { return }
         let pt = geste.location(in: vue)
         if let e = vue.entity(at: pt), !e.name.isEmpty, let i = infos[e.name] {
             surEvenement?(["type": "touche", "id": e.name])
@@ -1336,7 +1349,7 @@ final class TerraxVC: UIViewController, ARSessionDelegate {
         let a = UIAlertController(title: "poser ici", message: chambre ? "dans ta chambre (à toi seul)" : "à cette place du réel", preferredStyle: .alert)
         let invite = chambre ? "quoi ? (ton robot, ton meuble…)" : "qu'est-ce qu'il y a ici ?"
         a.addTextField { t in t.placeholder = invite }
-        for e in emojis.prefix(8) {
+        for e in emojis.prefix(12) {
             a.addAction(UIAlertAction(title: e, style: .default) { [weak self, weak a] _ in
                 guard let self = self else { return }
                 let brut = a?.textFields?.first?.text ?? ""
@@ -1409,6 +1422,16 @@ final class TerraxVC: UIViewController, ARSessionDelegate {
         dire("l'AR : " + error.localizedDescription)
     }
 
+    // une interruption (un appel, une autre app) : le repère peut avoir bougé. ARKit tente de le retrouver ; d'ici là, ni pose ni carte
+    // enregistrée (le cas .normal remet retrouvee à true)
+    func sessionWasInterrupted(_ session: ARSession) { retrouvee = false }
+    func sessionShouldAttemptRelocalization(_ session: ARSession) -> Bool { true }
+    // « recommencer » du guide d'Apple : le repère est perdu ; on ferme sans écraser la carte, la page rouvrira
+    func coachingOverlayViewDidRequestSessionReset(_ coachingOverlayView: ARCoachingOverlayView) {
+        retrouvee = false
+        fermer()
+    }
+
     @objc private func toucheFermer() { fermer() }
 
     // fermer : la chambre garde sa carte (si elle a été retrouvée, ou si elle est neuve) pour la prochaine fois
@@ -1419,11 +1442,13 @@ final class TerraxVC: UIViewController, ARSessionDelegate {
             guard let self = self else { return }
             self.abonnement?.cancel()
             self.abonnement = nil
+            self.chargements.removeAll()
             self.vue.session.pause()
             self.vue.scene.anchors.removeAll()
-            self.dismiss(animated: true) { self.surEvenement?(["type": "ferme"]) }
+            (self.presentingViewController ?? self).dismiss(animated: true) { self.surEvenement?(["type": "ferme"]) }
         }
-        if chambre, retrouvee, let u = PloxiAR.carteChambre {
+        let statut = vue.session.currentFrame?.worldMappingStatus
+        if chambre, retrouvee, statut == .mapped || statut == .extending, let u = PloxiAR.carteChambre {
             vue.session.getCurrentWorldMap { carte, _ in
                 if let carte = carte, let data = try? NSKeyedArchiver.archivedData(withRootObject: carte, requiringSecureCoding: true) {
                     try? data.write(to: u, options: .atomic)
@@ -1510,6 +1535,7 @@ final class PieceVC: UIViewController, RoomCaptureViewDelegate {
     func captureView(shouldPresent roomDataForProcessing: CapturedRoomData, error: Error?) -> Bool { true }
 
     func captureView(didPresent processedResult: CapturedRoom, error: Error?) {
+        if rendu { return }
         if let error = error { rendre(nil, "scan : " + error.localizedDescription); return }
         guard let dossier = PloxiAR.dossier("pieces") else { rendre(nil, "scan : pas de dossier"); return }
         let f = DateFormatter()

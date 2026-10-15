@@ -102,6 +102,15 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.74.1 (15.10)** — Revue adverse de l'AR (3 angles + 3 sceptiques, avec la doc d'Apple en JSON) ; corrigé : `TerraxVC` délégué du guide
+(`coachingOverlayViewDidRequestSessionReset` → fermer sans carte), `sessionWasInterrupted` → `retrouvee = false`,
+`sessionShouldAttemptRelocalization` → true ; la carte de la chambre enregistrée seulement si `worldMappingStatus` est `.mapped` ou `.extending`,
+une carte illisible effacée (+ « chambre-neuve ») ; l'étiquette posée par son bas (`position.y = 0,6·t`) ; `poserModele` en
+`Entity.loadModelAsync` (repli : l'étiquette 📦) ; `fermer()` → `(presentingViewController ?? self).dismiss` ; PieceVC ignore un `didPresent`
+après annulation ; `apercu({ url })` : statut HTTP, `suggestedFilename` ; page : `uneFois` (une ouverture AR / scan / capture à la fois, « déjà
+ouverte » ne perd plus la session), fichiers-natif (sans #fragment, extension du type pour blob:/data:, `r.ok`). Restent (non bloquants,
+notés par la revue) : reprendre un calcul Object Capture interrompu (le checkpoint le permet), refuser une 2e présentation native.
+
 **0.74 (15.10)** — 📦 Object Capture (RS-7 montre la vidéo « AR Quick Look, meet Object Capture » : « ça pour l'AR »). `AppDelegate.swift` :
 `PloxiAR.capturerObjet` → **`ObjetVC`** (iOS 17 : `ObjectCaptureSession` + `ObjectCaptureView` dans un `UIHostingController` — d'où
 `import SwiftUI` ; `stateUpdates` → les boutons viser / capturer / terminer ; à `.completed`, la capture est libérée puis

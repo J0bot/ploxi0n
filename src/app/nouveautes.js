@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.74.1', titre: 'L\'AR plus solide', points: [
+    '👁 Un appel ou une autre app pendant l\'AR : le terrax retrouve son repère avant de te laisser poser, et ta chambre n\'est jamais enregistrée de travers. « Recommencer » du guide d\'iOS ferme l\'AR proprement.',
+    '✋ Ce que tu poses tient SUR la surface (avant, le LiDAR en cachait la moitié dessous). Tes objets 3D se chargent sans figer l\'AR. Les 12 emojis sont dans la feuille de pose.',
+    '🔗 AR Quick Look : un lien en erreur le dit au lieu d\'ouvrir une page vide ; un modèle sans extension s\'ouvre quand même.',
+  ] },
   { v: '0.74.0', titre: 'Object Capture : tes objets réels en 3D', points: [
     '📦 Le terrax › chambre › « un objet en 3D » : la capture guidée d\'Apple (iOS 17, iPhone avec LiDAR). Vise ton objet, tourne autour : l\'iPhone calcule lui-même son modèle 3D, à l\'échelle réelle. Ton robot, ton meuble IKEA, ta plante.',
     '👁 Il s\'ouvre en AR Quick Look : pose-le à l\'échelle 1 où tu veux, partage-le (AirDrop, Messages).',

@@ -349,7 +349,11 @@ export function creerTerrax({ W = globalThis.window, boxion = null, vibrer = () 
     // ================= l'AR native (0.73) : PloxiAR =================
     const attendrePosition = (ms) => new Promise((ok) => { const t0 = Date.now(); const f = () => { if (moi || !vivant) return ok(moi); if (Date.now() - t0 > ms) return ok(null); W.setTimeout(f, 250); }; f(); });
     const direAR = (t) => { const i = hote.querySelector('[data-tx-info]'); if (i) i.textContent = t; const m = hote.querySelector('[data-tx-msg]'); if (m && page === 'chambre') m.textContent = t; };
-    async function ouvrirARNative() {
+    // une seule ouverture à la fois (un double toucher, ou pendant « je cherche ta position… ») : sinon la 2e, refusée par iOS, perdait la 1re
+    let occupe = false;
+    const uneFois = (f) => async (...a) => { if (occupe) return; occupe = true; try { return await f(...a); } finally { occupe = false; } };
+    const dejaOuverte = (er) => /déjà ouverte/.test(String((er && er.message) || er));
+    const ouvrirARNative = uneFois(async () => {
       suivre(true); direAR('je cherche ta position…');
       const p = moi || await attendrePosition(8000);
       if (!vivant) return;
@@ -359,9 +363,9 @@ export function creerTerrax({ W = globalThis.window, boxion = null, vibrer = () 
       sessionAR = { mode: 'terre', moi: { lat: p.lat, lon: p.lon } }; vibrer('fx-ouvrir');
       direAR(l.length + ' autour de toi · les yeux du terrax (ARKit' + (dispoAR && dispoAR.lidar ? ' + LiDAR' : '') + ')');
       try { await ar.ouvrir({ mode: 'terre', objets: l.map(({ d, ...x }) => x), emojis: EMOJIS, modeles: modelesDe(objets) }); }
-      catch (er) { sessionAR = null; direAR('l\'AR native : ' + String(er.message || er).slice(0, 60) + ' · l\'AR web prend le relais'); ouvrirYeux(); }
-    }
-    async function ouvrirChambreAR() {
+      catch (er) { if (dejaOuverte(er)) return; sessionAR = null; direAR('l\'AR native : ' + String(er.message || er).slice(0, 60) + ' · l\'AR web prend le relais'); ouvrirYeux(); }
+    });
+    const ouvrirChambreAR = uneFois(async () => {
       await lire();
       const avecCarte = !!(dispoAR && dispoAR.chambre);
       // sans la carte de la chambre, les places gardées ne veulent plus rien dire
@@ -369,25 +373,25 @@ export function creerTerrax({ W = globalThis.window, boxion = null, vibrer = () 
       const l = avecCarte ? objets.filter(o => o.lieu === 'chambre' && o.place).map(o => ({ id: o.id, x: o.place.x, y: o.place.y, z: o.place.z, taille: 0.25, emoji: o.emoji, texte: (o.texte || '').slice(0, 40), ...(o.modele ? { modele: o.modele, rot: +o.rot || 0 } : {}) })) : [];
       sessionAR = { mode: 'chambre' }; vibrer('fx-ouvrir');
       try { await ar.ouvrir({ mode: 'chambre', objets: l, emojis: EMOJIS, modeles: modelesDe(objets) }); }
-      catch (er) { sessionAR = null; direAR('l\'AR native : ' + String(er.message || er).slice(0, 80)); }
-    }
-    async function scannerPiece() {
+      catch (er) { if (dejaOuverte(er)) return; sessionAR = null; direAR('l\'AR native : ' + String(er.message || er).slice(0, 80)); }
+    });
+    const scannerPiece = uneFois(async () => {
       try {
         const r = await ar.scannerPiece(); await lire();
         if (!r || !r.nom) return;
         const o = { id: 'tx' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36), emoji: '📐', texte: 'ta pièce · ' + new Date().toLocaleDateString('fr-CH'), lieu: 'chambre', lat: null, lon: null, le: Date.now(), piece: r.nom };
         objets.push(o); garder(); tsoin('scanner', o); vibrer('succes'); peindrePage(); if (vivant) montrer(o.id);
       } catch (er) { if (!/annul/i.test(String((er && er.message) || er))) { direAR('le scan : ' + String((er && er.message) || er).slice(0, 80)); vibrer('erreur'); } }
-    }
+    });
     // (0.74) Object Capture : ton objet réel → un modèle 3D (USDZ), à toi ; il se pose ensuite dans l'AR (📦 dans la feuille d'iOS)
-    async function capturerObjet() {
+    const capturerObjet = uneFois(async () => {
       try {
         const r = await ar.capturerObjet(); await lire();
         if (!r || !r.nom) return;
         const o = { id: 'tx' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36), emoji: '📦', texte: 'ton objet 3D · ' + new Date().toLocaleDateString('fr-CH'), lieu: 'chambre', lat: null, lon: null, le: Date.now(), capture: true, modele: r.nom };
         objets.push(o); garder(); tsoin('capturer', o); vibrer('succes'); peindrePage(); if (vivant) montrer(o.id);
       } catch (er) { if (!/annul/i.test(String((er && er.message) || er))) { direAR('la capture : ' + String((er && er.message) || er).slice(0, 80)); vibrer('erreur'); } }
-    }
+    });
     // ce que l'AR native raconte : une pose (gardée ici, comme une pose sur la carte), un objet touché (la quête regard), la chambre neuve
     function surAR(e) {
       const s = sessionAR; if (!s || !e) return;
