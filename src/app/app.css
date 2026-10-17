@@ -890,3 +890,29 @@ html.px-calme .px-vx-t{transition:none}html.px-calme .px-vx-eclair{animation:non
 
 /* 📸 (0.72) la dernière capture d'un xer, gardée par le téléphone */
 .px-vx-photo{position:absolute;inset:0;background:#07060c}.px-vx-photo img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+
+/* 🤖 (0.75) XERB0T · le contrôleur (src/xerbot/controleur.js) : les mêmes onglets et la même palette que le terrax */
+.xb{position:absolute;inset:0;display:flex;flex-direction:column;background:#06080a;color:#e8f2ea;font:14px var(--police)}
+.xb-p[hidden]{display:none !important}
+.xb-p{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px calc(env(safe-area-inset-bottom,0px) + 40px);display:flex;flex-direction:column;gap:8px}
+.xb button,.xb select,.xb input{min-height:44px;border-radius:12px;border:1.5px solid rgba(255,255,255,.22);background:rgba(13,18,16,.95);color:#e8f2ea;font:600 14px var(--police);padding:0 12px;box-sizing:border-box}
+.xb input[type=range]{padding:0;border:0;background:none;accent-color:#79f2a8;min-width:110px;flex:1}
+.xb input[type=color]{width:48px;padding:2px;flex:none}
+.xb-liste{display:flex;flex-direction:column;gap:6px}
+.xb-app{display:flex !important;align-items:center;gap:12px;min-height:58px !important;text-align:left;width:100%}
+.xb-app .g{font-size:22px;width:30px;text-align:center;color:#79f2a8}.xb-app>span:nth-child(2){flex:1;min-width:0}
+.xb-app b,.xb-e b{display:block;font:600 15px var(--police);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xb-app small,.xb-e small{display:block;color:#9db8a6;font:12px var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xb-point{width:10px;height:10px;border-radius:50%;flex:none;background:#55605a}.xb-point.ok{background:#79f2a8;box-shadow:0 0 10px #79f2a8}.xb-point.ko{background:#ff6b6b}
+.xb-tete{display:flex;align-items:center;gap:10px}.xb-tete b{flex:1;font:600 17px var(--police)}.xb-tete button{min-width:44px}
+.xb-sous{margin:0;color:#9db8a6;font:12px var(--mono)}.xb-err{margin:0;color:#ffb3b3;font:12px var(--mono)}
+.xb-dom{margin:10px 2px 0;font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#79f2a8}
+.xb-e{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px;border-radius:14px;background:#0d1210;border:1px solid rgba(255,255,255,.08)}
+.xb-e>span:first-child{flex:1 1 140px;min-width:120px}.xb-hl{opacity:.45}
+.xb-c{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex:1 1 180px;min-width:0}.xb select{max-width:100%}
+.xb-int{min-width:92px}.xb-int.on{background:#79f2a8 !important;color:#06080a !important;border-color:#79f2a8 !important}
+.xb-sensible{border-color:#ffb36b !important}
+.xb-ligne{display:flex;gap:6px;flex-wrap:wrap;width:100%}.xb-ligne input{flex:1 1 140px;min-width:0}
+.xb-form{display:flex;flex-direction:column;gap:6px}
+.xb-log{margin:0;padding:10px;border-radius:12px;background:#000;color:#9db8a6;font:11px/1.45 var(--mono);white-space:pre-wrap;word-break:break-all;max-height:40vh;overflow:auto}
+.xb-retirer{margin-top:14px;color:#ffb3b3 !important;border-color:rgba(255,120,120,.4) !important}

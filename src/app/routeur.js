@@ -66,8 +66,10 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
   // trois zones (haut, milieu, bas) ; les deux bords ensemble aussi — chaque geste fait l'action choisie (⚙ › Navigation, prefs().gestes)
   // (0.63, RS-7 : « haut gauche, le HUD de tuto ; en bas à gauche, cycler l'état du ploxion (plein écran, normal, pip, frame) ; à droite en
   // bas, accueil ou minimiser ; les deux côtés en même temps, c'est le portion »)
-  const GESTES_DEFAUT = { 'g-haut': 'tuto', 'g-milieu': 'precedente', 'g-bas': 'etat', 'd-haut': 'chercher', 'd-milieu': 'suivante', 'd-bas': 'minimiser',
-    'deux-haut': 'portion', 'deux-milieu': 'portion', 'deux-bas': 'portion' };
+  // (0.75, RS-7 17.10, sa capture des réglages : « je veux que ça soit par défaut avec ces settings ») : à droite en bas l'accueil ; les deux
+  // bords : en haut le portion, au milieu les xers à côté, en bas tout le xerboxion
+  const GESTES_DEFAUT = { 'g-haut': 'tuto', 'g-milieu': 'precedente', 'g-bas': 'etat', 'd-haut': 'chercher', 'd-milieu': 'suivante', 'd-bas': 'accueil',
+    'deux-haut': 'portion', 'deux-milieu': 'xers', 'deux-bas': 'carte' };
   const geste = (k) => { const g = prefs().gestes || {}; return g[k] || GESTES_DEFAUT[k]; };
   function faire(action, { vitesse = 0, cubeFerme = false } = {}) {
     if (!action || action === 'rien') return;

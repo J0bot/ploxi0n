@@ -6,11 +6,18 @@
 //   🤖 xerbot     XERB0T, la couche robotique : le poste de pilotage du monde physique — la blouse (labo-cape), les appareils
 //                 Bluetooth, la maison (HomeKit), la lampe, les tags NFC (les kions dans le réel), le Wi-Fi, et le bus xerbot.cmd
 // Réglage : prefs.mode ; <html> porte px-m-<mode> (le CSS cache la grille quand un panneau la remplace).
+/** « avance 1 », « tourne 90 », « stop » → la commande legacy du contrat xerbot v1 { cmd, d?, deg?, src, ts } */
+export function commandeLegacy(t) {
+  const [cmd, n] = String(t || '').trim().split(/\s+/), x = parseFloat(n);
+  const c = { cmd: (cmd || '').toLowerCase(), src: 'ploxi0n', ts: Date.now() };
+  if (!isNaN(x)) { if (/^tourne/.test(c.cmd)) c.deg = x; else c.d = x; }
+  return c;
+}
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 import { glyphe as G, versGlyphe } from './glyphes.js';   // ◇ (0.54) des glyphes, plus d'emoji
 export const MODES = [['chill-tekk', 'chilltekk', 'chill-tekk'], ['xerboxion', 'xerboxion', 'xerboxion'], ['xerbot', 'xerbot', 'xerbot']];
 
-export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, connait = () => false, source = 'https://labo.j0bot.ch', chemin = '/home', vibrer = () => {}, cadres = null }) {
+export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, connait = () => false, source = 'https://labo.j0bot.ch', chemin = '/home', vibrer = () => {}, cadres = null, controleur = null }) {
   const D = W.document, N = () => W.jOSNatif || {};
   const mode = () => (MODES.some(m => m[0] === (prefs.lire().mode || '')) ? prefs.lire().mode : 'chill-tekk');
   const appliquer = () => { for (const [m] of MODES) D.documentElement.classList.toggle('px-m-' + m, mode() === m); };
@@ -41,15 +48,19 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
   const carte = (ic, titre, sous, actions) => '<div class="px-xb-c"><span class="ic">' + versGlyphe(ic) + '</span><span><b>' + esc(titre) + '</b><small>' + sous + '</small></span><span class="act">' + actions + '</span></div>';
   function panneauXerbot() {
     const m = xb.maison;
+    // (0.75) le contrôleur d'abord : tes appareils, leur état d'un coup d'œil
+    let resume = 'Home Assistant, WLED, ESPHome, Tasmota, les Pi, les Arduino/ESP';
+    if (controleur && xb.appareils) { const l = xb.appareils, ok = l.filter(a => { const r = controleur.etat(a.id); return r && r.en_ligne && !r.erreur; }).length; resume = l.length ? ok + ' en ligne sur ' + l.length + ' appareil(s)' : 'rien encore : ajoute tes appareils'; }
     return '<div class="px-mode-p px-xerbot"><p class="px-grave">🤖 XERB0T · le monde physique</p>'
+      + (controleur ? carte('🤖', 'le contrôleur', esc(resume), '<button data-xb="controleur">ouvrir</button>') : '')
       + carte('🥼', 'labo-cape', 'la blouse RS-7 : températures, consigne, LEDs', '<button data-xb="cape">ouvrir</button>')
-      + carte('ᛒ', 'Bluetooth', xb.ble ? esc(xb.ble) : 'un capteur, un robot, une lampe…', '<button data-xb="ble">chercher</button>' + (connait('ultimate-bluetooth') ? '<button data-xb="ub">ultimate</button>' : ''))
+      + carte('ᛒ', 'Bluetooth', xb.ble ? esc(xb.ble) : 'un capteur, un robot, une lampe…', '<button data-xb="ble">chercher</button>' + (connait('bluetooth') ? '<button data-xb="ub">ultimate</button>' : ''))
       + carte('🏠', 'La maison', m == null ? 'HomeKit : tes accessoires' : m.length ? m.length + ' accessoire(s)' : 'aucun accessoire', '<button data-xb="maison">' + (m == null ? 'voir' : '↻') + '</button>')
       + (m && m.length ? '<div class="px-xb-maison">' + m.slice(0, 12).map(a => '<button data-xb-acc="' + esc(a.id) + '" class="' + (a.allume ? 'on' : '') + '"' + (a.basculable && a.joignable ? '' : ' disabled') + '>' + esc(a.nom) + '<small>' + esc(a.piece || a.maison || '') + '</small></button>').join('') + '</div>' : '')
       + carte('🔦', 'La lampe', xb.lampe ? 'allumée' : 'éteinte', '<button data-xb="lampe">' + (xb.lampe ? 'éteindre' : 'allumer') + '</button>')
       + carte('◉', 'NFC · les kions dans le réel', xb.nfc ? esc(xb.nfc) : 'lire un tag (un ploxion, un tsoin, un objet)', '<button data-xb="nfc">lire</button>')
       + carte('📶', 'Wi-Fi', xb.wifi ? esc(xb.wifi) : 'le réseau de la blouse, du robot, du boxion', '<button data-xb="wifi">voir</button>')
-      + '<p class="px-grave">bus xerbot.cmd</p><div class="px-xb-bus"><input data-xb-cmd placeholder="une commande pour les robots (ex. avance 1m)" autocomplete="off"><button data-xb="envoyer">envoyer</button></div>'
+      + '<p class="px-grave">le bus xerbot</p><div class="px-xb-bus"><input data-xb-cmd placeholder="une commande pour le robot (ex. avance 1, tourne 90, stop)" autocomplete="off"><button data-xb="envoyer">envoyer</button></div>'
       + '<pre class="px-cape-log">' + esc(xb.messages.map(x => new Date(x.le).toLocaleTimeString('fr-CH') + '  ' + x.port + ' ' + (typeof x.p === 'string' ? x.p : JSON.stringify(x.p))).join('\n') || 'rien encore : la blouse, ultimate-bluetooth et les robots y publient') + '</pre></div>';
   }
   // (0.52) une page d'erreur dans l'iframe (hors réseau, labo injoignable) est blanche et illisible depuis ici : on sonde le labo d'abord
@@ -74,17 +85,22 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
     return puces() + (m === 'xerboxion' ? panneauXerboxion() : m === 'xerbot' ? panneauXerbot() : '');
   }
   function rafraichir() { const p = D.querySelector('.px-accueil .px-mode-p.px-xerbot'); if (p) p.outerHTML = panneauXerbot(); }
+  // le résumé du contrôleur : la liste au premier affichage, puis chaque changement d'état
+  if (controleur) { controleur.liste().then((l) => { xb.appareils = l; if (mode() === 'xerbot') rafraichir(); }).catch(() => {}); controleur.surChangement(() => { controleur.liste().then((l) => { xb.appareils = l; if (mode() === 'xerbot') rafraichir(); }); }); }
   async function action(b) {
     const a = b.getAttribute('data-xb'), n = N();
     try {
       if (a === 'cape') return ouvrir('cape');
-      if (a === 'ub') return ouvrir('ultimate-bluetooth');
+      if (a === 'ub') return ouvrir('bluetooth');   // (0.75) « Ultimate Bluetooth » a l'id bluetooth au labo
+      if (a === 'controleur') return ouvrir('controleur');
       if (a === 'ble') { const d = await W.navigator.bluetooth.requestDevice({ acceptAllDevices: true }); xb.ble = (d.name || d.id) + ' · trouvé'; }
       if (a === 'maison') xb.maison = n.maison ? await n.maison.liste() : [];
       if (a === 'lampe') { const r = await n.lampe(!xb.lampe); xb.lampe = !!(r && r.allume); }
       if (a === 'nfc') { const l = await n.nfc.lire(); xb.nfc = l.map(r => r.texte || r.type).join(' · ') || 'tag vide'; }
       if (a === 'wifi') { const w = await n.wifiInfo(); xb.wifi = (w.ssid || 'pas de Wi-Fi') + (w.ip ? ' · ' + w.ip : ''); }
-      if (a === 'envoyer') { const i = D.querySelector('[data-xb-cmd]'); const t = i && i.value.trim(); if (!t) return; if (W.jOSPorts && W.jOSPorts.emit) W.jOSPorts.emit('xerbot', 'cmd', t); i.value = ''; }
+      // (0.75) le contrat xerbot v1 du labo : la forme legacy « command » { cmd, d?, deg?, src } (routée au robot par défaut) ;
+      // l'ancienne chaîne brute sur ploxion.xerbot.cmd, personne ne l'écoutait
+      if (a === 'envoyer') { const i = D.querySelector('[data-xb-cmd]'); const t = i && i.value.trim(); if (!t) return; if (W.jOSPorts && W.jOSPorts.emit) W.jOSPorts.emit('xerbot', 'command', commandeLegacy(t)); i.value = ''; }
       vibrer('succes');
     } catch (e) { vibrer('erreur'); xb.messages.unshift({ le: Date.now(), port: '⚠', p: String((e && e.message) || e) }); }
     rafraichir();

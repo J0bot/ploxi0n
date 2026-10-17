@@ -31,6 +31,7 @@ const appels = [];            // chaque appel natif
 const nonSimules = new Map(); // plugin.methode → n
 const auditeurs = []; let presse = ''; const eveil = []; const ouvertsBrowser = [], verrous = [];         // { plugin, evenement, callbackId }
 let page = null, mouvementMinuteur = null;
+const wledFaux = { state: { on: true, bri: 128, seg: [{ col: [[255, 80, 0]], fx: 0, pal: 0 }] }, info: { name: 'Ruban du salon', ver: '0.15.0', leds: { count: 60, pwr: 420 } }, effects: ['Solid', 'Blink', 'Breathe'], palettes: ['Default', 'Lava'] };
 
 function base(nom) { if (!bases.has(nom)) bases.set(nom, new DatabaseSync(':memory:')); return bases.get(nom); }
 function emettre(plugin, evenement, data) {
@@ -75,6 +76,9 @@ const natif = {
   ScreenOrientation: { orientation: () => ({ type: 'portrait-primary' }), lock: () => ({}), unlock: () => ({}) },
   Geolocation: { checkPermissions: () => ({ location: 'granted', coarseLocation: 'granted' }), getCurrentPosition: () => ({ timestamp: Date.now(), coords: { latitude: 46.52, longitude: 6.63, accuracy: 10 } }), watchPosition: () => ({ timestamp: Date.now(), coords: { latitude: 46.52, longitude: 6.63, accuracy: 10 } }), clearWatch: () => ({}) },
   PloxiApple: {
+    reseauChercher: () => ({ services: [{ nom: 'WLED-salon', type: '_wled._tcp.', domaine: 'local.', txt: { mac: 'aabbcc' } }, { nom: 'Maison', type: '_home-assistant._tcp.', domaine: 'local.', txt: { internal_url: 'http://10.0.0.9:8123', location_name: 'Maison' } }] }),
+    reseauResoudre: (o) => (o.nom === 'WLED-salon' ? { hote: '10.0.0.7', port: 80 } : { hote: '10.0.0.9', port: 8123 }),
+    httpFlux: () => ({ lignes: [], statut: 0 }),
     mouvementDebut: (o) => {
       clearInterval(mouvementMinuteur); let t = 0;
       mouvementMinuteur = setInterval(() => { t += 0.1; emettre('PloxiApple', 'mouvement', { roll: Math.sin(t) * 0.2, pitch: 0.6 + Math.cos(t) * 0.1, yaw: 0, gx: Math.sin(t) * 0.2, gy: -0.8, gz: -0.5, ax: 0, ay: 0, az: 0, rx: 0, ry: 0, rz: 0 }); }, 1000 / Math.max(5, Math.min(30, o.hz || 30)));
@@ -85,6 +89,7 @@ const natif = {
     maisonListe: () => ({ accessoires: [{ id: 'a1', nom: 'Lampe salon', piece: 'Salon', maison: 'Chez moi', allume: false, basculable: true, joignable: true }, { id: 'a2', nom: 'Prise imprimante 3D', piece: 'Atelier', maison: 'Chez moi', allume: true, basculable: true, joignable: true }] }), maisonBasculer: (o) => ({ allume: o.allume ?? true }), gameCenter: () => ({ connecte: true, nom: 'testeur' }), ecranEveille: (o) => { eveil.push(o.actif); return { actif: o.actif }; }, lampe: (o) => ({ allume: o.allume ?? true }), apercu: () => ({ ok: true }), lecture: () => ({}), lectureFin: () => ({}),
   },
   // 👁 (0.73) l'AR native : ouvrir rend tout de suite (l'écran d'iOS est par-dessus) ; le parcours émet ensuite pose / touche / ferme
+  // (0.75) Bonjour : un WLED et un Home Assistant s'annoncent
   PloxiAR: { disponible: () => ({ ar: true, lidar: true, piece: true, chambre: false, objet: true, pieces: '/var/mobile/Documents/terrax/pieces', objets: '/var/mobile/Documents/terrax/objets' }), ouvrir: () => ({ ok: true }), fermer: () => ({ ok: true }),
     capturerObjet: () => ({ nom: 'objet-2026-10-15-121500.usdz', chemin: '/var/mobile/Documents/terrax/objets/objet-2026-10-15-121500.usdz' }),
     scannerPiece: () => ({ nom: 'piece-2026-10-15-120000.usdz', chemin: '/var/mobile/Documents/terrax/pieces/piece-2026-10-15-120000.usdz' }) },
@@ -94,7 +99,16 @@ const natif = {
   Browser: { open: (o) => { ouvertsBrowser.push(o.url); return {}; }, close: () => ({}) },
   ScreenOrientation: { orientation: () => ({ type: 'portrait-primary' }), lock: (o) => { verrous.push(o.orientation); return {}; }, unlock: () => ({}) },
   BluetoothLe: { initialize: () => ({}), requestDevice: () => ({ deviceId: 'AA:BB', name: 'Polar H10' }), connect: () => ({}), disconnect: () => ({}), read: () => ({ value: '5a' }), write: () => ({}), startNotifications: () => ({}), getServices: () => ({ services: [] }) },
-  CapacitorHttp: {}, CapacitorCookies: {}, WebView: { getServerBasePath: () => ({ path: '' }) }, Console: { log: () => ({}) },
+  // 🤖 (0.75) le réseau local du contrôleur XERB0T : un WLED (10.0.0.7) et un Home Assistant (10.0.0.9:8123, jeton « bon ») simulés
+  CapacitorHttp: { request: (o) => { const u = new URL(o.url); const j = (status, data) => ({ status, data: JSON.stringify(data), headers: { 'Content-Type': 'application/json' }, url: o.url });
+    if (u.hostname === '10.0.0.7') { const st = wledFaux.state;
+      if (u.pathname === '/json/info') return j(200, wledFaux.info);
+      if (u.pathname === '/json') return j(200, wledFaux);
+      if (u.pathname === '/presets.json') return j(200, { 0: {}, 1: { n: 'Soirée' } });
+      if (u.pathname === '/json/state' && o.method === 'POST') { const c = typeof o.data === 'string' ? JSON.parse(o.data) : o.data; if (c.on === 't') st.on = !st.on; else Object.assign(st, c); return j(200, { success: true }); } }
+    if (u.hostname === '10.0.0.9' && u.port === '8123') { if ((o.headers || {}).Authorization !== 'Bearer bon') return j(401, {}); if (u.pathname === '/api/states') return j(200, [{ entity_id: 'light.salon', state: 'on', attributes: { friendly_name: 'Salon', brightness: 200, supported_color_modes: ['brightness'] } }, { entity_id: 'sensor.temp', state: '21.5', attributes: { unit_of_measurement: '°C', friendly_name: 'Température' } }]); return j(200, []); }
+    throw new Error('Could not connect to the server.'); } },
+  CapacitorCookies: {}, WebView: { getServerBasePath: () => ({ path: '' }) }, Console: { log: () => ({}) },
 };
 
 function repondre({ pluginId, methodName, options, callbackId }) {

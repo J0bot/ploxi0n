@@ -102,6 +102,15 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.75 (17.10)** — 🤖 XERB0T · le contrôleur (docs/XERBOT.md). `src/xerbot/reseau.js` (CapacitorHttp sans le jeton du labo, délai court,
+2 essais ; `PloxiApple.httpFlux` pour le SSE ; Bonjour `reseauChercher` / `reseauResoudre` en NWBrowser / NWConnection IPv4, `import Network`
+dans AppDelegate — ne jamais nommer NWEndpoint/NWPath, NetworkExtension a les mêmes) ; `adaptateurs.js` (ha, wled, esphome, tasmota, pi =
+Glances, boxion, http ; une forme d'entité commune ; `sonder` en parallèle) ; `controleur.js` (registre `xerbot/appareils`, jetons via jOSVerrou,
+BLE UART, HomeKit, le pont du bus xerbot v1 : `idBus`, `versActions`, ack/state ; le ploxion `controleur`). Le mode xerbot : la carte du
+contrôleur, la commande legacy du contrat (`commandeLegacy`), « ultimate » → l'id `bluetooth`. Info.plist : NSAllowsLocalNetworking,
+NSLocalNetworkUsageDescription, NSBonjourServices. Les bords par défaut de RS-7 (d-bas accueil, deux-milieu xers, deux-bas carte).
+Inventaire du nexus pour le physique : scratchpad (rapports labo/boxion/natif) résumé dans docs/XERBOT.md.
+
 **0.74.1 (15.10)** — Revue adverse de l'AR (3 angles + 3 sceptiques, avec la doc d'Apple en JSON) ; corrigé : `TerraxVC` délégué du guide
 (`coachingOverlayViewDidRequestSessionReset` → fermer sans carte), `sessionWasInterrupted` → `retrouvee = false`,
 `sessionShouldAttemptRelocalization` → true ; la carte de la chambre enregistrée seulement si `worldMappingStatus` est `.mapped` ou `.extending`,

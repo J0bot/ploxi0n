@@ -478,16 +478,19 @@ test('les deux bords en même temps ouvrent portion (même depuis l\'accueil vid
   try {
     const racine = W.document.createElement('div'); W.document.body.appendChild(racine);
     const ouverts = [], vib = [];
-    const r = creerRouteur({ fenetre: W, racine, catalogue: [], vibrer: (x) => vib.push(x), doubleBord: () => ouverts.push('portion') });
+    const r = creerRouteur({ fenetre: W, racine, catalogue: [], vibrer: (x) => vib.push(x), doubleBord: () => ouverts.push('portion'), surXers: () => ouverts.push('xers') });
     await r.accueil();
     const g = racine.querySelector('.px-bord-g'), d = racine.querySelector('.px-bord-d');
-    g.getBoundingClientRect = d.getBoundingClientRect = () => ({ top: 0, height: 0 });   // le milieu
-    const ev = (el, t, x) => el.dispatchEvent(new W.MouseEvent(t, { clientX: x, bubbles: true }));
-    ev(g, 'pointerdown', 2); ev(d, 'pointerdown', 380); ev(g, 'pointermove', 80); ev(d, 'pointermove', 300);
+    g.getBoundingClientRect = d.getBoundingClientRect = () => ({ top: 0, height: 1000 });
+    const ev = (el, t, x, y = 50) => el.dispatchEvent(new W.MouseEvent(t, { clientX: x, clientY: y, bubbles: true }));
+    ev(g, 'pointerdown', 2); ev(d, 'pointerdown', 380); ev(g, 'pointermove', 80); ev(d, 'pointermove', 300);   // en haut : le portion
     ev(g, 'pointerup', 80); assert.deepEqual(ouverts, [], 'pas avant d\'avoir lâché les deux');
     ev(d, 'pointerup', 300);
     assert.deepEqual(ouverts, ['portion']); assert.ok(vib.includes('portion'));
     ev(d, 'pointerdown', 380); ev(d, 'pointerup', 300); assert.deepEqual(ouverts, ['portion'], 'un seul bord ne l\'ouvre pas');
+    // (0.75, les réglages de RS-7) au milieu, les deux bords : les xers à côté
+    ev(g, 'pointerdown', 2, 500); ev(d, 'pointerdown', 380, 500); ev(g, 'pointermove', 80, 500); ev(d, 'pointermove', 300, 500); ev(g, 'pointerup', 80, 500); ev(d, 'pointerup', 300, 500);
+    assert.deepEqual(ouverts, ['portion', 'xers']);
   } finally { p.fin(); }
 });
 

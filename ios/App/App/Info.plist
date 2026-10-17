@@ -103,9 +103,25 @@
 	<dict>
 		<key>NSAllowsArbitraryLoadsInWebContent</key>
 		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
 		<key>NSAllowsArbitraryLoadsForMedia</key>
 		<true/>
 	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>ploxi0n trouve et pilote les appareils de ton réseau : Home Assistant, WLED, ESPHome, Tasmota, tes Raspberry Pi et tes boxions.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_home-assistant._tcp</string>
+		<string>_wled._tcp</string>
+		<string>_esphomelib._tcp</string>
+		<string>_http._tcp</string>
+		<string>_arduino._tcp</string>
+		<string>_ssh._tcp</string>
+		<string>_workstation._tcp</string>
+		<string>_mqtt._tcp</string>
+		<string>_shelly._tcp</string>
+	</array>
 	<key>NSHomeKitUsageDescription</key>
 	<string>ploxi0n allume, éteint et montre les accessoires de ta maison depuis tes ploxions.</string>
 	<key>NSAppleMusicUsageDescription</key>

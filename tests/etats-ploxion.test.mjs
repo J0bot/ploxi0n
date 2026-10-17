@@ -21,7 +21,8 @@ test('▣ normal → plein → pip → cadre → normal, au bord bas gauche', as
   try {
     const { r, racine, W } = await monter(p, ['a', 'b']);
     await r.ouvrir('a');
-    assert.equal(r.GESTES_DEFAUT['g-bas'], 'etat'); assert.equal(r.GESTES_DEFAUT['g-haut'], 'tuto'); assert.equal(r.GESTES_DEFAUT['deux-milieu'], 'portion');
+    assert.equal(r.GESTES_DEFAUT['g-bas'], 'etat'); assert.equal(r.GESTES_DEFAUT['g-haut'], 'tuto'); assert.equal(r.GESTES_DEFAUT['deux-milieu'], 'xers');
+    assert.deepEqual(r.GESTES_DEFAUT, { 'g-haut': 'tuto', 'g-milieu': 'precedente', 'g-bas': 'etat', 'd-haut': 'chercher', 'd-milieu': 'suivante', 'd-bas': 'accueil', 'deux-haut': 'portion', 'deux-milieu': 'xers', 'deux-bas': 'carte' }, 'les réglages de RS-7 (17.10)');
     assert.equal(r.etat(), 'plein');
     assert.ok(racine.classList.contains('px-plein-ploxion') && r.plein(), 'plein écran : la barre s\'efface');
     assert.equal(r.etat(), 'pip');

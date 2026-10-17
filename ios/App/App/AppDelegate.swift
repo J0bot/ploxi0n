@@ -9,6 +9,7 @@ import MusicKit
 import CoreLocation
 import HomeKit
 import NetworkExtension
+import Network   // (0.75) Bonjour et le réseau local du contrôleur XERB0T (NWBrowser, NWConnection) ; ne jamais nommer NWEndpoint/NWPath (NetworkExtension a les mêmes noms)
 import GameKit
 import WebKit
 import ObjectiveC
@@ -237,6 +238,14 @@ public class PloxiVocal: CAPPlugin, CAPBridgedPlugin {
     }
 }
 
+// (0.75) l'état partagé des fermetures du réseau local (toujours lu et écrit sur la même file)
+final class BoiteReseau {
+    var services: [String: [String: Any]] = [:]
+    var fini = false
+    var lignes: [String] = []
+    var statut = 0
+}
+
 // 🍎 LES SERVICES D'APPLE (RS-7 12.10 : « ajoute MusicKit, ShazamKit, WeatherKit comme utilisables ») : un plugin de l'app, jOSNatif côté page.
 //   meteo({lat,lng})        WeatherKit : maintenant + 7 jours (l'attribution « Apple Weather » doit être affichée : rendue avec)
 //   shazam()                ShazamKit (iOS 17+) : écoute le micro, rend titre, artiste, pochette, lien Apple Music
@@ -264,6 +273,9 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         CAPPluginMethod(name: "lampe", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "apercu", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "capturerXer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "reseauChercher", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "reseauResoudre", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "httpFlux", returnType: CAPPluginReturnPromise),
     ]
 
     // 🔦 LA LAMPE DE POCHE (0.49) : lampe({ allume?, niveau? 0…1 }) ; sans « allume », elle bascule
@@ -344,6 +356,97 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
             }
         }
     }
+    // 🤖 (0.75) LE RÉSEAU LOCAL DU CONTRÔLEUR XERB0T (RS-7 16.10 : « se connecter avec Home Assistant, WLED, les ESP, Arduino, Raspberry Pi ;
+    // un controller pour checker et contrôler tout ça ») — le HTTP lui-même passe par CapacitorHttp (natif, sans CORS) :
+    //   reseauChercher({ types, duree })        Bonjour (NWBrowser) : ce qui s'annonce sur le réseau → { services: [{ nom, type, domaine, txt }] }
+    //                                           (chaque type doit être dans Info.plist, NSBonjourServices)
+    //   reseauResoudre({ nom, type, domaine })  → { hote (IPv4), port }
+    //   httpFlux({ url, duree, entetes })       lit un flux (SSE : ESPHome /events, boxion-rt /events) pendant `duree` ms → { lignes, statut }
+    @objc func reseauChercher(_ call: CAPPluginCall) {
+        let types = Array((call.getArray("types", String.self) ?? []).filter { $0.hasPrefix("_") && $0.hasSuffix("._tcp") }.prefix(16))
+        let duree = max(1.0, min(15.0, (call.getDouble("duree") ?? 4000) / 1000))
+        let file = DispatchQueue(label: "ploxi0n.reseau.chercher")
+        let boite = BoiteReseau()
+        var navigateurs: [NWBrowser] = []
+        for t in types {
+            let n = NWBrowser(for: .bonjourWithTXTRecord(type: t, domain: nil), using: NWParameters())
+            n.browseResultsChangedHandler = { resultats, _ in
+                for r in resultats {
+                    guard case let .service(nom, type, domaine, _) = r.endpoint else { continue }
+                    var txt: [String: String] = [:]
+                    if case let .bonjour(enr) = r.metadata { txt = enr.dictionary }
+                    boite.services[type + "|" + nom] = ["nom": nom, "type": type, "domaine": domaine, "txt": txt]
+                }
+            }
+            n.start(queue: file)
+            navigateurs.append(n)
+        }
+        let tous = navigateurs
+        file.asyncAfter(deadline: .now() + duree) {
+            for n in tous { n.cancel() }
+            call.resolve(["services": Array(boite.services.values)])
+        }
+    }
+
+    @objc func reseauResoudre(_ call: CAPPluginCall) {
+        guard let nom = call.getString("nom"), let type = call.getString("type") else { call.reject("résoudre : nom et type"); return }
+        let domaine = call.getString("domaine") ?? "local."
+        let p = NWParameters.tcp
+        if let ip = p.defaultProtocolStack.internetProtocol as? NWProtocolIP.Options { ip.version = .v4 }   // une adresse IPv4 : simple à mettre dans une URL
+        let c = NWConnection(to: .service(name: nom, type: type, domain: domaine, interface: nil), using: p)
+        let file = DispatchQueue(label: "ploxi0n.reseau.resoudre")
+        let boite = BoiteReseau()
+        let finir: (String?, Int, String?) -> Void = { hote, port, erreur in
+            if boite.fini { return }
+            boite.fini = true
+            c.cancel()
+            if let h = hote { call.resolve(["hote": h, "port": port]) } else { call.reject("résoudre : " + (erreur ?? "rien")) }
+        }
+        c.stateUpdateHandler = { etat in
+            switch etat {
+            case .ready:
+                if case let .hostPort(hote, port)? = c.currentPath?.remoteEndpoint {
+                    var h = "\(hote)"
+                    if let i = h.firstIndex(of: "%") { h = String(h[..<i]) }
+                    finir(h, Int(port.rawValue), nil)
+                } else {
+                    finir(nil, 0, "pas d'adresse")
+                }
+            case .failed(let e): finir(nil, 0, e.localizedDescription)
+            case .waiting(let e): finir(nil, 0, e.localizedDescription)
+            default: break
+            }
+        }
+        c.start(queue: file)
+        file.asyncAfter(deadline: .now() + 6) { finir(nil, 0, "délai dépassé") }
+    }
+
+    @objc func httpFlux(_ call: CAPPluginCall) {
+        guard let s = call.getString("url"), let u = URL(string: s), ["http", "https"].contains(u.scheme?.lowercased() ?? "") else { call.reject("flux : une url http"); return }
+        let duree = max(0.3, min(10.0, (call.getDouble("duree") ?? 2000) / 1000))
+        var req = URLRequest(url: u)
+        req.timeoutInterval = duree + 3
+        req.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+        for (k, v) in call.getObject("entetes") ?? [:] { if let t = v as? String { req.setValue(t, forHTTPHeaderField: k) } }
+        let requete = req
+        Task {
+            let boite = BoiteReseau()
+            do {
+                let (flux, reponse) = try await URLSession.shared.bytes(for: requete)
+                boite.statut = (reponse as? HTTPURLResponse)?.statusCode ?? 0
+                let tache = flux.task
+                DispatchQueue.global().asyncAfter(deadline: .now() + duree) { tache.cancel() }
+                for try await ligne in flux.lines {
+                    boite.lignes.append(ligne)
+                    if boite.lignes.count >= 3000 { tache.cancel(); break }
+                }
+            } catch {
+                // la fin voulue (la durée écoulée) arrive ici aussi : on rend ce qui a été lu
+            }
+            call.resolve(["lignes": boite.lignes, "statut": boite.statut])
+        }
+    }
+
     public func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
         let u = apercuURL ?? URL(fileURLWithPath: "/")
         #if !PLOXI0N_SANS_AR

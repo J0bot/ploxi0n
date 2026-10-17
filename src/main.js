@@ -59,13 +59,15 @@ import { SOCIAUX, surveillerSocial } from './natif/social-apple.js';
 import { PloxiApple } from './natif/plugins-app.js';
 import { creerTerrax } from './terrax/terrax.js';
 import { creerArNatif, brancherLiensAR } from './natif/ar-natif.js';
+import { creerReseauLocal } from './xerbot/reseau.js';
+import { creerControleur } from './xerbot/controleur.js';
 import { semerKoinIon } from './terrax/koin-ion.js';
 import { svgXerkion } from './app/xerkion-icone.js';
 import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.74.1';
+const VERSION = '0.75.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -325,6 +327,11 @@ async function demarrer() {
   semerKoinIon({ W: window, boxion }).catch(() => {});
   // 🌍 (0.71) le terrax : le Pokémon Go du nexus (le terrion, l'AR, ta chambre, les quêtes) — docs/TERRAX.md
   // le nexus : le protocole de jOSNexus (labo), relayé par le shim en mode connecté ; hors ligne, 503 et le terrax le dit
+  // 🤖 (0.75) XERB0T · le contrôleur : Home Assistant, WLED, ESPHome, Tasmota, les Pi, les boxions, les Arduino/ESP (HTTP, Bluetooth), HomeKit ;
+  // le réseau local en natif (CapacitorHttp sans le jeton du labo, Bonjour) ; chaque lumière, chaque prise sur le bus xerbot v1 du labo
+  const controleur = creerControleur({ W: window, boxion, reseau: creerReseauLocal({ W: window, plugin: PloxiApple }), vibrer: (x) => vibrer(x) });
+  internes.push(controleur.ploxion);
+  window.jOSXerbotReel = { devices: () => controleur.api.devices(), etat: (id) => controleur.api.etat(id) };
   internes.push(creerTerrax({ boxion, vibrer: (x) => vibrer(x), ar: arNatif, nexus: {
     push: async (kind, payload) => { const r = await fetch('/nexus/push', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ kind, payload }) }); const j = await r.json().catch(() => ({})); if (!(r.ok && j.ok)) throw new Error(j.message || 'le nexus ne répond pas (' + r.status + ')'); return true; },
     pull: async (kind) => { const r = await fetch('/nexus/pull?kind=' + encodeURIComponent(kind)); if (!r.ok) return []; const j = await r.json().catch(() => ({})); return Array.isArray(j.items) ? j.items : []; } } }).ploxion);
@@ -363,7 +370,7 @@ async function demarrer() {
   window.jOSEcranAccueil = ecranAccueil;
   boot(78, 'l\'accueil');
   // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xerbot (le monde physique)
-  const modes = creerModes({ cadres, prefs, ouvrir: (id) => routeurProxy.ouvrir(id), connait: (id) => !!(routeur && routeur.connait(id)), source: SOURCE, vibrer: (x) => vibrer(x) });
+  const modes = creerModes({ cadres, prefs, ouvrir: (id) => routeurProxy.ouvrir(id), connait: (id) => !!(routeur && routeur.connait(id)), source: SOURCE, vibrer: (x) => vibrer(x), controleur: controleur.api });
   modes.attacher(racine);
   routeur = creerRouteur({ sonDe: (id) => (gel ? gel.aDuSon(id) : false), surChercher: () => (chercheur ? chercheur.ouvrir() : routeur.ouvrir('marketplace', { chercher: '1' })), surXers: () => (vueXers ? vueXers.ouvrir() : routeur.carte()), panneau: () => modes.panneau(), racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id, p) => routeurProxy.ouvrir(id, p), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: (id) => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); socialApple(id); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
     miniDocks: { surVivants: () => miniDocks.planifier(), surFermeture: (id) => { miniDocks.surFermeture(id); if (gel) gel.liberer(id); }, page: () => miniDocks.ouvrirPage() },

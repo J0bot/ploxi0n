@@ -7,6 +7,13 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.75.0', titre: 'XERB0T : le contrôleur du monde physique', points: [
+    '🤖 Un nouveau ploxion, XERB0T · le contrôleur (et en tête du mode xerbot) : tes appareils, leur état d\'un coup d\'œil, et leurs commandes. Home Assistant, WLED, ESPHome, Tasmota, tes Raspberry Pi (Glances), tes boxions, n\'importe quel ESP ou Arduino qui parle HTTP, et HomeKit.',
+    '🔍 « chercher sur le réseau » : ce qui s\'annonce (Bonjour) apparaît seul ; un toucher l\'ajoute. Ou une adresse : la famille se reconnaît seule. Un Arduino ou un ESP en Bluetooth (HM-10, Nordic UART) : un petit terminal.',
+    '💡 Allumer, la luminosité, la couleur, les effets, les palettes, les presets de WLED ; les volets, le chauffage, les scènes, les boutons de Home Assistant. Une serrure ou une porte de garage demande « sûr ? ». Le jeton de Home Assistant reste dans le trousseau d\'iOS (Face ID).',
+    '⇄ Chaque lumière, chaque prise est aussi sur le bus xerbot du labo : le centre xerbot, cublumiere et tes scripts pilotent le vrai matériel.',
+    '↔ Les bords par défaut, ceux de RS-7 : à droite en bas l\'accueil ; les deux bords au milieu, les xers à côté ; en bas, tout le xerboxion.',
+  ] },
   { v: '0.74.1', titre: 'L\'AR plus solide', points: [
     '👁 Un appel ou une autre app pendant l\'AR : le terrax retrouve son repère avant de te laisser poser, et ta chambre n\'est jamais enregistrée de travers. « Recommencer » du guide d\'iOS ferme l\'AR proprement.',
     '✋ Ce que tu poses tient SUR la surface (avant, le LiDAR en cachait la moitié dessous). Tes objets 3D se chargent sans figer l\'AR. Les 12 emojis sont dans la feuille de pose.',
