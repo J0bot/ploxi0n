@@ -7,7 +7,7 @@
 // Réglages : boxion_local « reglages/cube » = [6 clés de valeurs].
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 export const FACES_DEFAUT = ['tsoins-jour', 'musique', 'pas', 'ploxions', 'compte', 'dernier-tsoin'];
-export const GLYPHES = { 'tsoins-jour': '⧗', 'dernier-tsoin': '✎', musique: '♫', pas: '∷', sommeil: '☾', ploxions: '▣', compte: '◇', mode: '◈' };   // (0.54) aucun emoji : le widget les écrit tels quels
+export const GLYPHES = { 'px.clicker': '◈', 'tsoins-jour': '⧗', 'dernier-tsoin': '✎', musique: '♫', pas: '∷', sommeil: '☾', ploxions: '▣', compte: '◇', mode: '◈' };   // (0.54) aucun emoji : le widget les écrit tels quels
 
 /** les six faces : [{ k, g (glyphe), t (titre), v (valeur) }] */
 export function faces(choix, valeurs) {

@@ -102,6 +102,22 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.78 (18.10)** — ◈ le clicker et le Clickion en natif. Les VRAIS bundles du labo (`/px/xp/app.js`, `/px/clickion/app.js`, format 2) sont
+copiés tels quels dans `public/ploxions/{xp,clickion}/app.js` (+ `public/bions/jOSGame.js`, sans réseau) ; `index.json` : `"labo": true` →
+`installerLocal` garde `origine` = le labo, donc ↻ tout mettre à jour les suit (sinon `pack` reste figé). Les deux embarquent le même moteur
+`jOSXerClicker` (script 1, identique) et partagent `xb:xpclick` + boxion `xp/idle` (le shim : boxion_local) + `window.__xpPartie`.
+`src/jeu/clicker-natif.js` : `toucherRapide` (le routeur ne fait jamais de clic droit sur `.xc-coeur/[data-orb]/.ck-cube/[data-cube]` d'un hôte
+xp/clickion) ; `installerToucherRapide` (pointerdown → un click synthétique par doigt, le click d'iOS qui suit avalé) ; le moteur enveloppé par
+un `defineProperty` sur window (son `production(ctx)` donne le contexte) → `auRetour()` rattrape l'absence quand seul le Clickion est monté ;
+`px.clicker` publié (jOSRaccourcis.valeur, toutes les 60 s et en partant). `src/app/silence.js` : pour `PLOXIONS_QUI_FUIENT` (xp), les écouteurs
+window/document posés pendant le mount sont décrochés à l'unmount. `bionsTouches` ignore un bion que le code définit lui-même
+(jOSXerClicker : 404 de 3,5 Mo évité). Faux iPhone : `parcours-clicker.mjs` (7 touchers à 3, 2, 1, 1 doigts = 7).
+**À corriger dans le labo (RS-7, pas d'accès ici)** : xp L1044 le `visibilitychange` jamais retiré ; xp `vueDefis` et clickion ck-verrou
+utilisent `data-aller` (réservé au routeur de l'app, sans effet tant qu'ils sont dans `.px-hote`) ; clickion ne rattrape qu'au mount (ajouter
+`C.rattraper` sur visibilitychange visible) et n'affiche jamais le gain d'absence ; clickion › ferme : `dessiner()` complet chaque seconde tant
+qu'une parcelle est mûre ; l'élan (watchPosition haute précision) continue quand l'app est cachée ; le textarea d'export en 11 px (iOS zoome) ;
+le tic de xp tourne et écrit le localStorage chaque seconde même caché.
+
 **0.77 (18.10)** — § mes xers (`src/app/xers.js`, ploxion interne `mes-xers`). Un xer = `{ prefs (PREFS_XER seulement : pas haptique,
 Calme, vivants, sommeil), hud, accueil (routeur.docAccueil / chargerAccueil), fond (sa photo à part : boxion « xers/fond:<id> », fond.poserImage),
 barre, ploxions }` ; boxion « xers/liste », « xers/actif ». Basculer : garderActif() puis poser() puis `jos:xer` + bus `ploxion.xer.change`

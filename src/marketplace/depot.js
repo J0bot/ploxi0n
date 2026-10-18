@@ -18,7 +18,11 @@ export function bionsDuBundle(js) {
 
 /** les bions qu'un code TOUCHE (window.jOSX…, jOSX.f()) : beaucoup de bundles n'en déclarent aucun (RS-7 11.10 : xerkions, ultimate-social) */
 export function bionsTouches(js, sauf = '') {
-  return [...new Set((String(js || '').match(/\bjOS[A-Z][A-Za-z0-9]{0,47}\b/g) || []))].filter(b => b !== sauf && !FOURNIS.has(b));
+  const s = String(js || '');
+  // (0.78) un bion que le code définit LUI-MÊME (window.jOSXerClicker = { … } dans 🎮 Jeu et le Clickion) n'est pas à télécharger : le labo
+  // ne le sert pas seul, et son 404 est une page de 3,5 Mo
+  const definis = new Set([...s.matchAll(/\bwindow\.(jOS[A-Z][A-Za-z0-9]{0,47})\s*=(?!=)/g)].map(m => m[1]));
+  return [...new Set(s.match(/\bjOS[A-Z][A-Za-z0-9]{0,47}\b/g) || [])].filter(b => b !== sauf && !FOURNIS.has(b) && !definis.has(b));
 }
 
 /** (0.51) le code d'un ploxion servi DANS sa page (/px/<id>, sans app.js : spotify, wiki, notes, calendar…) : le dernier
@@ -156,7 +160,8 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
         const bj = lireBionLocal ? await lireBionLocal(b).catch(() => null) : null;
         if (bj && bj.includes(b)) { await boxion.put('bions', b, { js: bj, hash: await sha256(bj), le: new Date().toISOString() }); bions.push(b); }
       }
-      await boxion.put(NS, id, { id, nom: p.nom, icone: p.icone, js, hash: await sha256(js), etag: null, origine: 'pack', installe: new Date().toISOString(), bions }); await boxion.del(META, 'installes-index').catch(() => {});
+      // (0.78) « labo » : embarqué pour le premier lancement, mais tenu à jour depuis le labo (↻ tout mettre à jour) ; sinon, figé avec l'app
+      await boxion.put(NS, id, { id, nom: p.nom, icone: p.icone, js, hash: await sha256(js), etag: null, origine: p.labo ? source : 'pack', installe: new Date().toISOString(), bions }); await boxion.del(META, 'installes-index').catch(() => {});
       await garderListe([...(await liste()), id]);
       await boxion.append('tsoins', { kind: 'marketplace', action: 'installer', id, origine: 'pack' });
       return { id };

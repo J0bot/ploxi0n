@@ -7,6 +7,13 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.78.0', titre: 'Le clicker et le Clickion, dans l\'app', points: [
+    '🎮 Le Jeu (le clicker du xerboxion) et ◈ le Clickion sont dans l\'app dès le premier lancement, même sans réseau, et restent à jour depuis le labo. Une seule partie pour les deux, gardée dans ton iPhone.',
+    '👆 Chaque doigt compte, dès qu\'il touche : tape à plusieurs doigts sur la cité ou le Cube, sans le petit délai d\'iOS. Un appui long ne mange plus de toucher.',
+    '⏱ Le Clickion resté ouvert pendant que ton iPhone dormait : au retour, ce que ta partie a produit pendant ton absence est ajouté, et dit.',
+    '◈ Ta partie dans les widgets : le Cube (⚙ › Widgets) peut montrer « clicker du xerboxion ».',
+    '✪ La progression du Jeu (niveau, XP, succès) marche enfin dans l\'app : il lui manquait son moteur.',
+  ] },
   { v: '0.77.0', titre: 'Plusieurs xers, et les partager', points: [
     '§ Un nouveau ploxion, mes xers (aussi sur les bords : « § changer de xer ») : le xer, c\'est l\'interface entière sur les mêmes ploxions. Ton accueil (pages, dossiers), ton dock, ta barre du haut, ton fond, ton mode et tes gestes des bords.',
     '⧉ Crée-en autant que tu veux : une copie de celui-ci, ou un modèle (Épuré, XERB0T, xerboxion, chill-tekk). Change de xer d\'un toucher : celui que tu quittes est gardé tel quel, rien ne se perd.',

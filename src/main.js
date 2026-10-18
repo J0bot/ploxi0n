@@ -63,6 +63,7 @@ import { creerReseauLocal } from './xerbot/reseau.js';
 import { envelopperQR, reparerAffichage } from './app/liens-publics.js';
 import { creerPartage } from './app/partage.js';
 import { creerXers } from './app/xers.js';
+import { creerClickerNatif, toucherRapide } from './jeu/clicker-natif.js';
 import { creerControleur } from './xerbot/controleur.js';
 import { semerKoinIon } from './terrax/koin-ion.js';
 import { svgXerkion } from './app/xerkion-icone.js';
@@ -70,7 +71,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.77.0';
+const VERSION = '0.78.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -351,6 +352,9 @@ async function demarrer() {
     hud: { config: () => hud.config(), regler: (c) => hud.regler(c) }, barre: { config: () => barreHaut.config(), regler: (c) => barreHaut.regler(c) } });
   internes.push(xers.ploxion);
   window.ploxi0nXers = xers;
+  // ◈ (0.78) le clicker et le clickion en natif : le toucher instantané, le temps d'absence rattrapé, la partie dans les widgets
+  const clickerNatif = creerClickerNatif({ W: window, publier: (k, t, v) => (raccourcis ? raccourcis.valeur(k, t, v) : null), signaler: (t) => routeur && routeur.signaler(t), vibrer: (x) => vibrer(x) });
+  window.ploxi0nClicker = clickerNatif;
   internes.push(creerTerrax({ boxion, vibrer: (x) => vibrer(x), ar: arNatif, nexus: {
     push: async (kind, payload) => { const r = await fetch('/nexus/push', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ kind, payload }) }); const j = await r.json().catch(() => ({})); if (!(r.ok && j.ok)) throw new Error(j.message || 'le nexus ne répond pas (' + r.status + ')'); return true; },
     pull: async (kind) => { const r = await fetch('/nexus/pull?kind=' + encodeURIComponent(kind)); if (!r.ok) return []; const j = await r.json().catch(() => ({})); return Array.isArray(j.items) ? j.items : []; } } }).ploxion);
@@ -396,6 +400,7 @@ async function demarrer() {
     surMontrer: (id) => { if (gel) gel.degeler(id); },
     surTuto: (id) => (tutoHud ? tutoHud.ouvrir(id) : null),   // ◎ (0.63) haut gauche : le HUD de tuto
     partager: (id) => partage.partagerPloxion(id),   // ↗ (0.76) le menu d'un ploxion › le partager
+    toucherRapide,   // ◈ (0.78) le cœur d'un clicker n'est jamais un clic droit
     tsoin: () => tsoinNatif.ouvrir(), surSession: (x) => { boxion.put('reglages', 'session', x).catch(() => {}); barreHaut.peindre(); usage.track(x.courant); } });
   window.ploxi0nRouteur = routeur;
   // ▶ (0.63) les démos (un doigt fantôme fait le geste pour de vrai) et le HUD de tuto (haut gauche) : « le jeu, c'est le tuto »

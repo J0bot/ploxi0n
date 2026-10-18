@@ -10,6 +10,7 @@
 // actions : le ranger dans un dossier, le mettre sur une page, l'ajouter à l'écran d'accueil de l'iPhone (ecranAccueil(id), main.js).
 // Face ID : « reglages/verrous » = [ids] ; un ploxion verrouillé ne s'ouvre qu'avec jOSVerrou.ouvrir().
 
+import { PLOXIONS_QUI_FUIENT, monterEnSilence } from './silence.js';
 import { glyphe, glyphePloxion } from './glyphes.js';
 import { svgXerkion, glypheCategorie } from './xerkion-icone.js';
 import { creerFractale, glisser } from './fractale.js';
@@ -23,7 +24,7 @@ const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><p
 export const ACTIONS_BORDS = [['precedente', '← app précédente'], ['suivante', 'app suivante →'], ['accueil', '⌂ accueil'], ['minimiser', '▁ minimiser'], ['basculer', '⧉ basculer'],
   ['chercher', 'chercher'], ['reglages', 'réglages'], ['portion', '◈ portion'], ['tsoin', '⧗ noter un tsoin'], ['freefall', '◇ freefall (gyroscope)'],
   ['etat', '▣ l\'état : plein écran, pip, cadre'], ['tuto', '◎ le tuto ici'], ['carte', '⊞ tout le xerboxion'], ['holo', '◈ le xerploxion (l\'hologramme)'], ['cube', '▣ ses pages, dans le cube'], ['xers', '⊡ les xers à côté (aperçus, 4 directions)'], ['inviter', '✉ inviter quelqu\'un · partager'], ['mes-xers', '§ changer de xer'], ['rien', '— rien']];
-export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false, surChercher = null, surXers = null, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null, surMontrer = null, surTuto = null, partager = null } = {}) {
+export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false, surChercher = null, surXers = null, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null, surMontrer = null, surTuto = null, partager = null, silence = PLOXIONS_QUI_FUIENT, toucherRapide = null } = {}) {
   // ▤ (0.51) les mini docks : miniDocks = { surVivants(), surFermeture(id), page() } — ⧉ ouvre leur page, ils remplacent « en arrière-plan »
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
@@ -654,6 +655,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
   racine.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'mouse' || prefs().clicDroit === false) return;
     const t = e.target; if (!t.closest || !t.closest('.px-hote') || t.closest('input,textarea,select,[contenteditable]:not([contenteditable=false])')) return;
+    if (toucherRapide && toucherRapide(t)) return;   // ◈ (0.78) le cœur d'un clicker : chaque toucher compte, jamais un clic droit
     const x0 = e.clientX, y0 = e.clientY;
     droit = { x0, y0, t: W.setTimeout(() => {
       droit = null;
@@ -793,7 +795,8 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
       const lien = params && typeof params.lien === 'string' && params.lien.length > 1 ? (params.lien.startsWith('?') ? params.lien : '?' + params.lien) : null;
       const avant = lien && W.history && W.history.replaceState ? W.location.search : null;
       if (avant !== null) { try { W.history.replaceState(W.history.state, '', W.location.pathname + lien + W.location.hash); } catch (er) { /* */ } }
-      try { v.inst = app.mount(hote, { embed: false, standalone: false, plein: true, host: 'ploxi0n', params: params || null, onglet: params && params.onglet }) || {}; }
+      const o = { embed: false, standalone: false, plein: true, host: 'ploxi0n', params: params || null, onglet: params && params.onglet };
+      try { v.inst = silence.has(id) ? monterEnSilence(W, app, hote, o) : (app.mount(hote, o) || {}); }   // 🤫 (0.78) src/app/silence.js
       finally { if (avant !== null) W.setTimeout(() => { try { W.history.replaceState(W.history.state, '', W.location.pathname + avant + W.location.hash); } catch (er) { /* */ } }, 2000); }
     } catch (er) {
       hote.innerHTML = '<p class="px-erreur">Ce ploxion n\'a pas pu s\'ouvrir : ' + texte(er.message) + '</p>';
