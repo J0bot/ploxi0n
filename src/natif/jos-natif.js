@@ -18,6 +18,7 @@
 import { PloxiApple, PloxiVocal } from './plugins-app.js';
 import { MOTS } from './vocabulaire.js';
 import { creerFenetre } from './haptique.js';
+import { publierTexte } from '../app/liens-publics.js';
 
 export function installerJosNatif(W = globalThis.window, { haptics = () => import('@capacitor/haptics') } = {}) {
   const natif = !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
@@ -60,6 +61,7 @@ export function installerJosNatif(W = globalThis.window, { haptics = () => impor
   const api = {
     v: 1, natif,
     async partager({ texte = '', url, titre } = {}) {
+      texte = publierTexte(texte); url = url && publierTexte(url);   // (0.76) jamais un lien capacitor://localhost vers l'extérieur
       if (natif) { const { Share } = await import('@capacitor/share'); return Share.share({ title: titre, text: texte, url, dialogTitle: titre }); }
       if (W.navigator.share) return W.navigator.share({ title: titre, text: texte, url });
       throw new Error('partage indisponible');
@@ -71,7 +73,7 @@ export function installerJosNatif(W = globalThis.window, { haptics = () => impor
       fin() { if (!natif) return Promise.resolve(); if (sessions) sessions--; return sessions ? Promise.resolve() : fermerCrans(); },
       ouverte: () => ouverte,
     },
-    async copier(texte) { if (natif) { const { Clipboard } = await import('@capacitor/clipboard'); return Clipboard.write({ string: String(texte) }); } return W.navigator.clipboard.writeText(String(texte)); },
+    async copier(texte) { texte = publierTexte(String(texte)); if (natif) { const { Clipboard } = await import('@capacitor/clipboard'); return Clipboard.write({ string: String(texte) }); } return W.navigator.clipboard.writeText(String(texte)); },
     async coller() { if (natif) { const { Clipboard } = await import('@capacitor/clipboard'); return (await Clipboard.read()).value || ''; } return W.navigator.clipboard.readText(); },
     async photo({ source = 'camera' } = {}) {
       if (!natif) throw new Error('photo : seulement sur l\'iPhone');

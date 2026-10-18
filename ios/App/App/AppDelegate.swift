@@ -17,6 +17,7 @@ import CoreMotion
 import MediaPlayer
 import AVKit
 import QuickLook
+import CoreImage   // (0.76) le QR code du partage en personne (CIQRCodeGenerator)
 // l'AR native (0.73) : PloxiAR plus bas. Interrupteur de secours : PLOXI0N_AR=0 (fastlane) la retire du build.
 #if !PLOXI0N_SANS_AR
 import ARKit
@@ -276,6 +277,7 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         CAPPluginMethod(name: "reseauChercher", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "reseauResoudre", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "httpFlux", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "qr", returnType: CAPPluginReturnPromise),
     ]
 
     // 🔦 LA LAMPE DE POCHE (0.49) : lampe({ allume?, niveau? 0…1 }) ; sans « allume », elle bascule
@@ -362,6 +364,18 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
     //                                           (chaque type doit être dans Info.plist, NSBonjourServices)
     //   reseauResoudre({ nom, type, domaine })  → { hote (IPv4), port }
     //   httpFlux({ url, duree, entetes })       lit un flux (SSE : ESPHome /events, boxion-rt /events) pendant `duree` ms → { lignes, statut }
+    // ↗ (0.76) LE QR CODE (RS-7 17.10 : « inviter des gens plus facilement, partager des ploxions ») : qr({ texte, echelle }) → { base64 (PNG), cote }
+    @objc func qr(_ call: CAPPluginCall) {
+        guard let texte = call.getString("texte"), !texte.isEmpty, let filtre = CIFilter(name: "CIQRCodeGenerator") else { call.reject("qr : un texte"); return }
+        filtre.setValue(Data(texte.utf8), forKey: "inputMessage")
+        filtre.setValue("M", forKey: "inputCorrectionLevel")
+        guard let brut = filtre.outputImage else { call.reject("qr : rien"); return }
+        let echelle = CGFloat(max(4, min(24, call.getInt("echelle") ?? 12)))
+        let image = brut.transformed(by: CGAffineTransform(scaleX: echelle, y: echelle))
+        guard let cg = CIContext().createCGImage(image, from: image.extent), let png = UIImage(cgImage: cg).pngData() else { call.reject("qr : rendu"); return }
+        call.resolve(["base64": png.base64EncodedString(), "cote": Int(image.extent.width)])
+    }
+
     @objc func reseauChercher(_ call: CAPPluginCall) {
         let types = Array((call.getArray("types", String.self) ?? []).filter { $0.hasPrefix("_") && $0.hasSuffix("._tcp") }.prefix(16))
         let duree = max(1.0, min(15.0, (call.getDouble("duree") ?? 4000) / 1000))

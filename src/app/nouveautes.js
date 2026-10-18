@@ -7,6 +7,12 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.76.0', titre: 'Inviter et partager, sans zbeul', points: [
+    '✉ Un nouveau ploxion, inviter · partager (aussi sur les bords : « ✉ inviter quelqu\'un ») : un toucher, et ton invitation a son lien et son QR. En personne, montre le QR ; sinon, envoie le lien. La personne crée son compte et devient ton amie.',
+    '🔗 Les liens qui sortent de l\'app marchent enfin : avant, une invitation, un salon ou un curseur partagés depuis l\'iPhone donnaient un lien « capacitor://localhost » que personne ne pouvait ouvrir. Maintenant c\'est le lien du labo (il ouvre ploxi0n chez qui l\'a, la page du ploxion chez les autres), dans tous les ploxions, sans en réécrire un seul.',
+    '↗ Partager un ploxion : appui long sur un ploxion › « le partager », ou depuis inviter · partager. Son lien et son QR, faits par l\'iPhone sans réseau.',
+    '📥 Un lien reçu (une invitation, un salon, un curseur) s\'ouvre dans l\'app avec ses paramètres. Copié dans un message : « ouvrir un lien reçu ».',
+  ] },
   { v: '0.75.0', titre: 'XERB0T : le contrôleur du monde physique', points: [
     '🤖 Un nouveau ploxion, XERB0T · le contrôleur (et en tête du mode xerbot) : tes appareils, leur état d\'un coup d\'œil, et leurs commandes. Home Assistant, WLED, ESPHome, Tasmota, tes Raspberry Pi (Glances), tes boxions, n\'importe quel ESP ou Arduino qui parle HTTP, et HomeKit.',
     '🔍 « chercher sur le réseau » : ce qui s\'annonce (Bonjour) apparaît seul ; un toucher l\'ajoute. Ou une adresse : la famille se reconnaît seule. Un Arduino ou un ESP en Bluetooth (HM-10, Nordic UART) : un petit terminal.',

@@ -22,8 +22,8 @@ const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><p
 /** (0.63) ce qu'un geste des bords peut faire (⚙ › Gestes des bords, le HUD de tuto) */
 export const ACTIONS_BORDS = [['precedente', '← app précédente'], ['suivante', 'app suivante →'], ['accueil', '⌂ accueil'], ['minimiser', '▁ minimiser'], ['basculer', '⧉ basculer'],
   ['chercher', 'chercher'], ['reglages', 'réglages'], ['portion', '◈ portion'], ['tsoin', '⧗ noter un tsoin'], ['freefall', '◇ freefall (gyroscope)'],
-  ['etat', '▣ l\'état : plein écran, pip, cadre'], ['tuto', '◎ le tuto ici'], ['carte', '⊞ tout le xerboxion'], ['holo', '◈ le xerploxion (l\'hologramme)'], ['cube', '▣ ses pages, dans le cube'], ['xers', '⊡ les xers à côté (aperçus, 4 directions)'], ['rien', '— rien']];
-export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false, surChercher = null, surXers = null, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null, surMontrer = null, surTuto = null } = {}) {
+  ['etat', '▣ l\'état : plein écran, pip, cadre'], ['tuto', '◎ le tuto ici'], ['carte', '⊞ tout le xerboxion'], ['holo', '◈ le xerploxion (l\'hologramme)'], ['cube', '▣ ses pages, dans le cube'], ['xers', '⊡ les xers à côté (aperçus, 4 directions)'], ['inviter', '✉ inviter quelqu\'un · partager'], ['rien', '— rien']];
+export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false, surChercher = null, surXers = null, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null, surMontrer = null, surTuto = null, partager = null } = {}) {
   // ▤ (0.51) les mini docks : miniDocks = { surVivants(), surFermeture(id), page() } — ⧉ ouvre leur page, ils remplacent « en arrière-plan »
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
@@ -84,6 +84,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     if (action === 'freefall') return fractale.freefall();   // (0.60) l'appli au gyroscope (il a sa montée, pas de 'bord' en plus)
     if (action === 'carte') return ouvrirCarte();   // (0.63) tout le xerboxion
     if (action === 'xers') return surXers ? surXers() : ouvrirCarte();   // (0.70) le xer en image, ses voisins autour
+    if (action === 'inviter') return ouvrir('inviter');   // ✉ (0.76)
     vibrer(action === 'portion' ? 'portion' : 'bord');
     if (action === 'tsoin') return tsoin ? tsoin() : null;
     if (action === 'chercher') return surChercher ? surChercher() : ouvrir('marketplace', { chercher: '1' });   // (0.69) d'abord chez soi
@@ -537,6 +538,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     const f = D.createElement('div'); f.className = 'px-voile';
     f.innerHTML = '<div class="px-tiroir px-menu"><p class="px-ft"><span class="px-ic" style="--t:' + teinte(id) + '">' + icone(p) + '</span> ' + texte(p.nom || id) + '</p>'
       + '<button data-m="ouvrir">▶ ouvrir</button>'
+      + (partager ? '<button data-m="partager">↗ le partager<small>un lien et un QR : il s\'ouvre dans ploxi0n chez qui l\'a, sur le web sinon</small></button>' : '')
       + (hud ? '<button data-m="epingler">' + (ep.includes(id) ? 'retirer du dock' : 'épingler au dock') + '<small>et dans le widget « Ploxions épinglés »</small></button>' : '')
       + (ecranAccueil ? '<button data-m="iphone">sur l\'écran d\'accueil de l\'iPhone</button>' : '')
       + (ecranAccueil && ecranAccueil.atelier && !p.interne ? '<button data-m="icone">son icône : la changer, la proposer au labo</button>' : '')
@@ -559,6 +561,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
       if (b.hasAttribute('data-vers-dossier')) return ranger(id, 'dossier', b.getAttribute('data-vers-dossier'));
       if (b.hasAttribute('data-ranger')) return ranger(id, b.getAttribute('data-ranger'));
       if (m === 'ouvrir') return ouvrir(id);
+      if (m === 'partager') return partager(id);   // ↗ (0.76)
       if (m === 'iphone') return ecranAccueil(id);
       if (m === 'icone') return ecranAccueil.atelier(id);   // ⬡ (0.55) l'atelier de son xerkion
       if (m === 'epingler') { const c = hud.config(); c.epingles = c.epingles.includes(id) ? c.epingles.filter(x => x !== id) : [...c.epingles, id].slice(-4); const el = c.elements.find(x => x.k === 'epingles'); if (el) el.on = true; await hud.regler(c); return accueil(); }
@@ -784,7 +787,13 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
       // standalone:false : dans le labo, un ploxion « seul » (/px/<id>) fait parfois location.replace('/px/autre?tab=…') — dans l'app, ça
       // rechargerait tout ploxi0n ; non seul, il passe par jOS.openPloxion, c'est-à-dire par ce routeur
       if (apresChargement) { try { apresChargement(id); } catch (er) { /* un plugion ne casse pas l'ouverture */ } }
-      v.inst = app.mount(hote, { embed: false, standalone: false, plein: true, host: 'ploxi0n', params: params || null, onglet: params && params.onglet }) || {};
+      // ↗ (0.76) un lien reçu (…/px/<id>?code=…&join=…) : les ploxions du labo lisent leurs paramètres dans location.search — ils y sont le
+      // temps du montage (le routeur, lui, vit dans le #)
+      const lien = params && typeof params.lien === 'string' && params.lien.length > 1 ? (params.lien.startsWith('?') ? params.lien : '?' + params.lien) : null;
+      const avant = lien && W.history && W.history.replaceState ? W.location.search : null;
+      if (avant !== null) { try { W.history.replaceState(W.history.state, '', W.location.pathname + lien + W.location.hash); } catch (er) { /* */ } }
+      try { v.inst = app.mount(hote, { embed: false, standalone: false, plein: true, host: 'ploxi0n', params: params || null, onglet: params && params.onglet }) || {}; }
+      finally { if (avant !== null) W.setTimeout(() => { try { W.history.replaceState(W.history.state, '', W.location.pathname + avant + W.location.hash); } catch (er) { /* */ } }, 2000); }
     } catch (er) {
       hote.innerHTML = '<p class="px-erreur">Ce ploxion n\'a pas pu s\'ouvrir : ' + texte(er.message) + '</p>';
     }

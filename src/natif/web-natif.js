@@ -20,6 +20,7 @@
 // Chaque branchement est indépendant (un échec n'empêche pas les autres) ; ⚙ › Natif les montre et peut tout couper.
 import { MOTS } from './vocabulaire.js';
 import { PloxiApple, PloxiVocal } from './plugins-app.js';
+import { publierTexte } from '../app/liens-publics.js';   // (0.76) un lien de l'app (capacitor://localhost…) qui sort devient celui du labo
 
 export const BRANCHEMENTS = [
   ['vibrate', '📳', 'navigator.vibrate', 'le Taptic Engine'],
@@ -145,7 +146,8 @@ export function installerWebNatif({ W = globalThis.window, prefs = () => ({}), c
       definir(nav, 'share', async (d = {}) => {
         if (d.files && d.files.length) { if (W.jOSNatif && W.jOSNatif.envoyer) return W.jOSNatif.envoyer([...d.files], { titre: d.title, texte: d.text }); if (avant) return avant(d); }   // (0.49) les fichiers aussi
         // (0.51) un lien vers l'app elle-même (capacitor://localhost/local#stremio=…) n'ouvre rien chez l'autre : il devient celui du labo
-        const pub = (x) => (typeof x === 'string' && lienPublic ? x.split(W.location.origin + '/').join(lienPublic.replace(/\/$/, '') + '/') : x);
+        // (0.76) et /local?px=<id> → /px/<id> (le lien universel : il ouvre ploxi0n chez qui l'a), src/app/liens-publics.js
+        const pub = (x) => (typeof x === 'string' && lienPublic ? publierTexte(x.split(W.location.origin + '/').join('capacitor://localhost/'), lienPublic.replace(/\/$/, '')) : x);
         await m.share().then(s => s.Share.share({ title: d.title, text: pub(d.text), url: pub(d.url), dialogTitle: d.title }));
       });
       definir(nav, 'canShare', () => true);
@@ -154,7 +156,7 @@ export function installerWebNatif({ W = globalThis.window, prefs = () => ({}), c
     brancher('clipboard', () => {
       const avant = nav.clipboard || {};
       const presse = {
-        writeText: (t) => m.clipboard().then(c => c.Clipboard.write({ string: String(t) })).then(() => {}),
+        writeText: (t) => m.clipboard().then(c => c.Clipboard.write({ string: publierTexte(String(t)) })).then(() => {}),
         readText: () => m.clipboard().then(c => c.Clipboard.read()).then(r => (r && r.value) || ''),
         write: (items) => avant.write ? avant.write.call(avant, items) : Promise.reject(exception('NotAllowedError', 'presse-papiers : texte seulement')),
         read: () => avant.read ? avant.read.call(avant) : Promise.reject(exception('NotAllowedError', 'presse-papiers : texte seulement')),

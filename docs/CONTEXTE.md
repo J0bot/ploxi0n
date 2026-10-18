@@ -102,6 +102,14 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.76 (18.10)** — ✉ inviter · partager. La cause du zbeul : les ploxions du labo font leurs liens avec `location.origin`
+(`capacitor://localhost` dans l'app). `src/app/liens-publics.js` répare à chaque SORTIE (feuille de partage, presse-papiers, jOSNatif.partager/
+copier, le bion jOSQR enveloppé par un `defineProperty` sur window, les champs readonly observés) : `…/local?px=<id>&…` → `https://labo.j0bot.ch/px/<id>?…`
+(lien universel, l'AASA couvre `/px/*`). Et à l'ENTRÉE : `lienRecu` (`/px/`, `/app/ouvrir/`, `?px=`, `/join?inv=` → le ploxion invitation,
+`ploxi0n://px/`) ; le routeur pose `params.lien` dans `location.search` le temps du montage (là où les ploxions lisent `code`, `join`, `cur`).
+`src/app/partage.js` : `creerInvitation` (POST /api/v1/invites, Bearer `jos_social_token`, HTTP natif), la feuille (QR `PloxiApple.qr`,
+CIQRCodeGenerator), le ploxion interne `inviter`. Faux iPhone : `parcours-partage.mjs`.
+
 **0.75 (17.10)** — 🤖 XERB0T · le contrôleur (docs/XERBOT.md). `src/xerbot/reseau.js` (CapacitorHttp sans le jeton du labo, délai court,
 2 essais ; `PloxiApple.httpFlux` pour le SSE ; Bonjour `reseauChercher` / `reseauResoudre` en NWBrowser / NWConnection IPv4, `import Network`
 dans AppDelegate — ne jamais nommer NWEndpoint/NWPath, NetworkExtension a les mêmes) ; `adaptateurs.js` (ha, wled, esphome, tasmota, pi =

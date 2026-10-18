@@ -916,3 +916,18 @@ html.px-calme .px-vx-t{transition:none}html.px-calme .px-vx-eclair{animation:non
 .xb-form{display:flex;flex-direction:column;gap:6px}
 .xb-log{margin:0;padding:10px;border-radius:12px;background:#000;color:#9db8a6;font:11px/1.45 var(--mono);white-space:pre-wrap;word-break:break-all;max-height:40vh;overflow:auto}
 .xb-retirer{margin-top:14px;color:#ffb3b3 !important;border-color:rgba(255,120,120,.4) !important}
+
+/* ✉ (0.76) inviter · partager (src/app/partage.js) : la feuille (QR natif, lien, partager, copier) et le ploxion « inviter » */
+.px-pt{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.px-pt-sous{margin:0;color:var(--muted);font-size:13px}
+.px-pt-qr{align-self:center;width:min(62vw,260px);aspect-ratio:1;border-radius:16px;background:#fff;padding:12px;display:grid;place-items:center;transition:width .25s ease}
+.px-pt-qr img{width:100%;height:100%;image-rendering:pixelated}.px-pt-qr span{color:#666;font:12px var(--mono)}
+.px-pt-qr.grand{width:min(92vw,520px)}
+.px-pt-lien{min-height:44px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:13px var(--mono);padding:0 12px}
+.px-pt-b{display:flex;gap:8px}.px-pt-b button{flex:1}
+.px-inviter{display:flex;flex-direction:column;gap:10px;padding:16px 14px calc(env(safe-area-inset-bottom,0px) + 40px);overflow-y:auto;height:100%;box-sizing:border-box}
+.px-gros{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-height:64px;padding:12px 14px;border-radius:16px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);text-align:left;font:inherit}
+.px-gros b{font:600 16px var(--police)}.px-gros small{color:var(--muted);font-size:12px}
+.px-gros.p{background:var(--accent,#79f2a8);color:#06080a;border-color:transparent}.px-gros.p small{color:rgba(0,0,0,.65)}
+.px-inviter input{min-height:44px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);padding:0 12px;font:14px var(--police)}
+.px-iv-l{display:flex;flex-wrap:wrap;gap:6px}.px-iv-l button{min-height:40px;padding:0 12px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:600 13px var(--police)}

@@ -60,6 +60,8 @@ import { PloxiApple } from './natif/plugins-app.js';
 import { creerTerrax } from './terrax/terrax.js';
 import { creerArNatif, brancherLiensAR } from './natif/ar-natif.js';
 import { creerReseauLocal } from './xerbot/reseau.js';
+import { envelopperQR, reparerAffichage } from './app/liens-publics.js';
+import { creerPartage } from './app/partage.js';
 import { creerControleur } from './xerbot/controleur.js';
 import { semerKoinIon } from './terrax/koin-ion.js';
 import { svgXerkion } from './app/xerkion-icone.js';
@@ -67,7 +69,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.75.0';
+const VERSION = '0.76.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -116,6 +118,8 @@ async function demarrer() {
   clavierAuToucher();
   installerClavierIos({ W: window });   // les bons attributs pour le clavier d'iOS (dictée, trousseau, codes SMS, Entrée)
   const racine = document.getElementById('ploxi0n');
+  // ↗ (0.76) les liens qui sortent de l'app : jOSQR (le bion QR du labo, chargé plus tard) enveloppé dès maintenant ; les champs qui montrent un lien
+  envelopperQR(window); reparerAffichage(racine);
   boot(14, 'boxion local');
   // la garde : un appel au boxion local ne fige plus jamais l'app (5 s au plus, puis la valeur par défaut, noté)
   const boxion = garderBoxion(await ouvrirBoxionLocal({ surEssai: (k, e) => { boot(14, 'boxion local : essai ' + (k + 1)); bootLog('⚠ boxion local, essai ' + k + ' refusé : ' + String(e && e.message).slice(0, 120)); } }), { delai: 5000, surLent: (i) => bootLog('⚠ boxion lent : ' + i.appel + ' > 5 s') });
@@ -329,9 +333,14 @@ async function demarrer() {
   // le nexus : le protocole de jOSNexus (labo), relayé par le shim en mode connecté ; hors ligne, 503 et le terrax le dit
   // 🤖 (0.75) XERB0T · le contrôleur : Home Assistant, WLED, ESPHome, Tasmota, les Pi, les boxions, les Arduino/ESP (HTTP, Bluetooth), HomeKit ;
   // le réseau local en natif (CapacitorHttp sans le jeton du labo, Bonjour) ; chaque lumière, chaque prise sur le bus xerbot v1 du labo
-  const controleur = creerControleur({ W: window, boxion, reseau: creerReseauLocal({ W: window, plugin: PloxiApple }), vibrer: (x) => vibrer(x) });
+  const reseauLocal = creerReseauLocal({ W: window, plugin: PloxiApple });
+  const controleur = creerControleur({ W: window, boxion, reseau: reseauLocal, vibrer: (x) => vibrer(x) });
   internes.push(controleur.ploxion);
   window.jOSXerbotReel = { devices: () => controleur.api.devices(), etat: (id) => controleur.api.etat(id) };
+  // ✉ (0.76) inviter · partager : l'invitation du social (lien universel + QR natif), un palier, un ploxion, un lien reçu
+  const estNatif = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  const partage = creerPartage({ W: window, routeur: () => routeur, qr: estNatif ? (o) => PloxiApple.qr(o) : null, requete: (o) => reseauLocal.requete(o), vibrer: (x) => vibrer(x), racine });
+  internes.push(partage.ploxion);
   internes.push(creerTerrax({ boxion, vibrer: (x) => vibrer(x), ar: arNatif, nexus: {
     push: async (kind, payload) => { const r = await fetch('/nexus/push', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ kind, payload }) }); const j = await r.json().catch(() => ({})); if (!(r.ok && j.ok)) throw new Error(j.message || 'le nexus ne répond pas (' + r.status + ')'); return true; },
     pull: async (kind) => { const r = await fetch('/nexus/pull?kind=' + encodeURIComponent(kind)); if (!r.ok) return []; const j = await r.json().catch(() => ({})); return Array.isArray(j.items) ? j.items : []; } } }).ploxion);
@@ -376,6 +385,7 @@ async function demarrer() {
     miniDocks: { surVivants: () => miniDocks.planifier(), surFermeture: (id) => { miniDocks.surFermeture(id); if (gel) gel.liberer(id); }, page: () => miniDocks.ouvrirPage() },
     surMontrer: (id) => { if (gel) gel.degeler(id); },
     surTuto: (id) => (tutoHud ? tutoHud.ouvrir(id) : null),   // ◎ (0.63) haut gauche : le HUD de tuto
+    partager: (id) => partage.partagerPloxion(id),   // ↗ (0.76) le menu d'un ploxion › le partager
     tsoin: () => tsoinNatif.ouvrir(), surSession: (x) => { boxion.put('reglages', 'session', x).catch(() => {}); barreHaut.peindre(); usage.track(x.courant); } });
   window.ploxi0nRouteur = routeur;
   // ▶ (0.63) les démos (un doigt fantôme fait le geste pour de vrai) et le HUD de tuto (haut gauche) : « le jeu, c'est le tuto »

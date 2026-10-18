@@ -79,6 +79,8 @@ const natif = {
     reseauChercher: () => ({ services: [{ nom: 'WLED-salon', type: '_wled._tcp.', domaine: 'local.', txt: { mac: 'aabbcc' } }, { nom: 'Maison', type: '_home-assistant._tcp.', domaine: 'local.', txt: { internal_url: 'http://10.0.0.9:8123', location_name: 'Maison' } }] }),
     reseauResoudre: (o) => (o.nom === 'WLED-salon' ? { hote: '10.0.0.7', port: 80 } : { hote: '10.0.0.9', port: 8123 }),
     httpFlux: () => ({ lignes: [], statut: 0 }),
+    // (0.76) le QR de CoreImage : un PNG 1×1 (le parcours vérifie le texte demandé, dans appels)
+    qr: (o) => { if (!o.texte) throw new Error('qr : un texte'); return { base64: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==', cote: 300 }; },
     mouvementDebut: (o) => {
       clearInterval(mouvementMinuteur); let t = 0;
       mouvementMinuteur = setInterval(() => { t += 0.1; emettre('PloxiApple', 'mouvement', { roll: Math.sin(t) * 0.2, pitch: 0.6 + Math.cos(t) * 0.1, yaw: 0, gx: Math.sin(t) * 0.2, gy: -0.8, gz: -0.5, ax: 0, ay: 0, az: 0, rx: 0, ry: 0, rz: 0 }); }, 1000 / Math.max(5, Math.min(30, o.hz || 30)));
@@ -107,6 +109,8 @@ const natif = {
       if (u.pathname === '/presets.json') return j(200, { 0: {}, 1: { n: 'Soirée' } });
       if (u.pathname === '/json/state' && o.method === 'POST') { const c = typeof o.data === 'string' ? JSON.parse(o.data) : o.data; if (c.on === 't') st.on = !st.on; else Object.assign(st, c); return j(200, { success: true }); } }
     if (u.hostname === '10.0.0.9' && u.port === '8123') { if ((o.headers || {}).Authorization !== 'Bearer bon') return j(401, {}); if (u.pathname === '/api/states') return j(200, [{ entity_id: 'light.salon', state: 'on', attributes: { friendly_name: 'Salon', brightness: 200, supported_color_modes: ['brightness'] } }, { entity_id: 'sensor.temp', state: '21.5', attributes: { unit_of_measurement: '°C', friendly_name: 'Température' } }]); return j(200, []); }
+    // (0.76) l'invite du social : le jeton « bon » a droit à un code
+    if (u.hostname === 'api.j0bot.ch' && u.pathname === '/api/v1/invites' && o.method === 'POST') return (o.headers || {}).Authorization === 'Bearer bon' ? j(201, { code: 'FAUX42' }) : j(401, { message: 'Unauthenticated.' });
     throw new Error('Could not connect to the server.'); } },
   CapacitorCookies: {}, WebView: { getServerBasePath: () => ({ path: '' }) }, Console: { log: () => ({}) },
 };
