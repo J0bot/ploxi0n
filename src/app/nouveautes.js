@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.79.0', titre: 'Game Center : le classement du clicker', points: [
+    '🏆 Le Jeu et le Clickion se connectent à Game Center à ta première partie. Ton record part dans le classement du clicker, tout seul, à chaque fois qu\'il monte.',
+    '🏆 Dans la barre du Jeu et du Clickion : le classement, mondial et de tous les temps, par l\'écran de Game Center (tes amis aussi).',
+  ] },
   { v: '0.78.0', titre: 'Le clicker et le Clickion, dans l\'app', points: [
     '🎮 Le Jeu (le clicker du xerboxion) et ◈ le Clickion sont dans l\'app dès le premier lancement, même sans réseau, et restent à jour depuis le labo. Une seule partie pour les deux, gardée dans ton iPhone.',
     '👆 Chaque doigt compte, dès qu\'il touche : tape à plusieurs doigts sur la cité ou le Cube, sans le petit délai d\'iOS. Un appui long ne mange plus de toucher.',

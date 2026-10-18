@@ -102,6 +102,15 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.79 (18.10)** — 🏆 Game Center pour le clicker (RS-7 : « j'ai déjà ajouté ça sur le truc Apple »). L'ID du classement n'est écrit nulle
+part : `PloxiApple.gameCenterClassements` (`GKLeaderboard.loadLeaderboards(IDs: nil)`) les liste, `choisirClassements` prend celui qui parle
+de clicker/xer/score/record (sinon le seul qui n'est pas « Xeroctions » 001 ; « dim » = celui des dimensions). Le score = `floor(max(stats.meilleur,
+L) × 100)` (le record en exposant, au centième : il faut « décimal, 2 décimales, plus haut = mieux » dans App Store Connect). Envoyé au plus
+toutes les 2 min quand il monte, et en partant ; les derniers envoyés sont dans boxion « reglages/game-center ». `gameCenterOuvrir` :
+`GKAccessPoint.shared.trigger(leaderboardID:playerScope:timeScope:)` (iOS 18), sinon `trigger(state: .leaderboards)`. Le routeur a
+`boutonsBarre(id)` (🏆 pour xp et clickion). Signatures vérifiées contre la doc d'Apple (JSON). **🦀 Décision de RS-7 : plus tard, Rust
+uniquement (Bevy…) : `docs/RUST.md`.**
+
 **0.78 (18.10)** — ◈ le clicker et le Clickion en natif. Les VRAIS bundles du labo (`/px/xp/app.js`, `/px/clickion/app.js`, format 2) sont
 copiés tels quels dans `public/ploxions/{xp,clickion}/app.js` (+ `public/bions/jOSGame.js`, sans réseau) ; `index.json` : `"labo": true` →
 `installerLocal` garde `origine` = le labo, donc ↻ tout mettre à jour les suit (sinon `pack` reste figé). Les deux embarquent le même moteur
@@ -274,6 +283,8 @@ son xerploxion.
 6. Plus tard : le mode xeroction ; Live Activities (la musique : `maintenant.js` a tout) ; ⏯ du widget sans ouvrir l'app.
 
 ## 4. Les décisions de RS-7 (à ne pas re-demander)
+
+- **(18.10) Plus tard, du Rust uniquement**, « avec du Bevy ou autre truc » : le code neuf vise Rust (WASM et natif) ; le chemin est dans `docs/RUST.md`.
 
 - Santé « connecté » = **les deux** : `jOSSante` pour le hub, ET un résumé sur le boxion, opt-in, éteint par défaut.
 - Lecteur = **Apple d'abord, VLC en repli** ; Stremio seul = **un bouton « ▶ ploxi0n »** (lien `ploxi0n://lire`).

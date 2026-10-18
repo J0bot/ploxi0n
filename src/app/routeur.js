@@ -24,7 +24,7 @@ const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><p
 export const ACTIONS_BORDS = [['precedente', '← app précédente'], ['suivante', 'app suivante →'], ['accueil', '⌂ accueil'], ['minimiser', '▁ minimiser'], ['basculer', '⧉ basculer'],
   ['chercher', 'chercher'], ['reglages', 'réglages'], ['portion', '◈ portion'], ['tsoin', '⧗ noter un tsoin'], ['freefall', '◇ freefall (gyroscope)'],
   ['etat', '▣ l\'état : plein écran, pip, cadre'], ['tuto', '◎ le tuto ici'], ['carte', '⊞ tout le xerboxion'], ['holo', '◈ le xerploxion (l\'hologramme)'], ['cube', '▣ ses pages, dans le cube'], ['xers', '⊡ les xers à côté (aperçus, 4 directions)'], ['inviter', '✉ inviter quelqu\'un · partager'], ['mes-xers', '§ changer de xer'], ['rien', '— rien']];
-export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false, surChercher = null, surXers = null, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null, surMontrer = null, surTuto = null, partager = null, silence = PLOXIONS_QUI_FUIENT, toucherRapide = null } = {}) {
+export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false, surChercher = null, surXers = null, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null, surMontrer = null, surTuto = null, partager = null, silence = PLOXIONS_QUI_FUIENT, toucherRapide = null, boutonsBarre = null } = {}) {
   // ▤ (0.51) les mini docks : miniDocks = { surVivants(), surFermeture(id), page() } — ⧉ ouvre leur page, ils remplacent « en arrière-plan »
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
@@ -687,6 +687,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     if (b.hasAttribute('data-reessayer')) return ouvrir(b.getAttribute('data-reessayer'));
     if (b.hasAttribute('data-minimiser')) return minimiser();
     if (b.hasAttribute('data-holo')) return basculerHolo();
+    if (b.hasAttribute('data-barre-x')) { const x = boutonsBarre ? (boutonsBarre(b.getAttribute('data-barre-px')) || []).find(y => y.cle === b.getAttribute('data-barre-x')) : null; return x ? x.faire() : null; }
     if (b.hasAttribute('data-cube')) return basculerCube();
     if (b.hasAttribute('data-reprendre')) return ouvrir(b.getAttribute('data-reprendre'));
     if (b.hasAttribute('data-tuer')) { tuer(b.getAttribute('data-tuer')); return courant ? null : accueil(); }
@@ -736,6 +737,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
       + '<span class="px-hud"><span class="px-hud-c">' + (hud ? hud.html(true) : '') + '</span>'
       + (autres > 0 ? '<button class="px-mini" data-basculer aria-label="basculer entre les ploxions ouverts">' + G('basculer') + '<b>' + (autres + 1) + '</b></button>' : '')
       + (id !== 'cube-interieur' ? '<button class="px-mini" data-cube aria-label="ses pages, dans le cube">▣</button>' : '')
+      + (boutonsBarre ? (boutonsBarre(id) || []).map(x => '<button class="px-mini" data-barre-x="' + texte(x.cle) + '" data-barre-px="' + texte(id) + '" aria-label="' + texte(x.label || x.cle) + '">' + texte(x.texte) + '</button>').join('') : '')   // 🏆 (0.79) ceux d'un ploxion (le classement du clicker)
       + '<button class="px-mini" data-holo aria-label="xerploxion, l\'hologramme">◈</button>'
       + '<button class="px-mini" data-minimiser aria-label="minimiser">' + G('minimiser') + '</button>'
       + (verrou && !p.interne ? '<button class="px-verrou" data-verrou aria-label="verrou Face ID">' + (verrous.has(id) ? G('verrou') : G('deverrou')) + '</button>' : '') + '</span></div>';

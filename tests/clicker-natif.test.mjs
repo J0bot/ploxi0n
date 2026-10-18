@@ -2,7 +2,7 @@
 // d'absence rattrapé par le moteur du labo, la partie publiée pour les widgets ; les vrais bundles du pack montent et jouent
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { creerClickerNatif, toucherRapide, resumePartie } from '../src/jeu/clicker-natif.js';
+import { creerClickerNatif, toucherRapide, resumePartie, choisirClassements, scoresPartie } from '../src/jeu/clicker-natif.js';
 import { page, attendre } from './aide.mjs';
 
 const touche = (W, el, id) => el.dispatchEvent(new W.PointerEvent('pointerdown', { bubbles: true, pointerId: id, pointerType: 'touch', clientX: 10, clientY: 10 }));
@@ -67,5 +67,51 @@ test('⏱ le Clickion seul, resté ouvert pendant que l\'iPhone dormait : le tem
     cn._cache(Date.now() - 3600e3); const h2 = D.createElement('div'); h2.className = 'px-hote'; h2.dataset.ploxion = 'xp'; D.body.appendChild(h2);
     assert.equal(cn.auRetour(), null, '🎮 Jeu ouvert : il rattrape lui-même (jamais deux fois)');
     cn.arreter();
+  } finally { p.fin(); }
+});
+
+test('🏆 Game Center : le classement du clicker trouvé parmi ceux de l\'app, le record en exposant au centième', () => {
+  assert.deepEqual(choisirClassements([{ id: '001', titre: 'Xeroctions' }, { id: 'clicker.record', titre: 'Clicker du xerboxion' }, { id: 'clicker.dims', titre: 'Dimensions' }]), { record: 'clicker.record', dims: 'clicker.dims' });
+  assert.deepEqual(choisirClassements([{ id: '001', titre: 'Xeroctions' }, { id: '002', titre: 'Le meilleur' }]), { record: '002', dims: null }, 'le seul qui n\'est pas Xeroctions');
+  assert.deepEqual(choisirClassements([{ id: '001', titre: 'Xeroctions' }]), { record: null, dims: null });
+  assert.deepEqual(choisirClassements([{ id: 'a', titre: 'A' }, { id: 'b', titre: 'B' }]), { record: null, dims: null }, 'deux inconnus : on ne devine pas');
+  assert.deepEqual(scoresPartie({ L: 12.3, dims: 4.9, stats: { meilleur: 45.666 } }), { record: 4566, dims: 4 });
+  assert.equal(scoresPartie({ L: null, stats: {} }), null);
+  assert.ok(scoresPartie({ L: 1e300, stats: {} }).record <= Number.MAX_SAFE_INTEGER);
+});
+
+test('🏆 se connecter à la première partie, envoyer quand le record monte, 🏆 dans la barre ouvre le classement', async () => {
+  const p = await page({ avion: true, ploxions: [] });
+  try {
+    const W = p.w, D = W.document, appels = [], garde = { v: null };
+    const jeu = { connecter: async () => { appels.push('connecter'); return { connecte: true, nom: 'RS-7' }; }, classements: async () => [{ id: '001', titre: 'Xeroctions' }, { id: 'ploxi0n.clicker', titre: 'Clicker' }],
+      score: async (c, s) => { appels.push(['score', c, s]); return { ok: true }; }, ouvrir: async (c) => { appels.push(['ouvrir', c]); return { ok: true }; } };
+    const cn = creerClickerNatif({ W, jeu, intervalle: 20, garder: { lire: () => garde.v, ecrire: (v) => { garde.v = v; } } });
+    assert.deepEqual(cn.boutonsBarre('piano'), []); assert.equal(cn.boutonsBarre('xp')[0].texte, '🏆');
+    W.localStorage.setItem('xb:xpclick', JSON.stringify({ L: 20, stats: { meilleur: 20.5 } }));
+    const h = D.createElement('div'); h.className = 'px-hote'; h.dataset.ploxion = 'xp'; D.body.appendChild(h);
+    await attendre(120);
+    assert.deepEqual(appels.slice(0, 2), ['connecter', ['score', 'ploxi0n.clicker', 2050]]);
+    assert.deepEqual(garde.v, { record: 2050, dims: 0 });
+    assert.equal(await cn.envoyerScore(true), null, 'rien de neuf : rien envoyé');
+    W.localStorage.setItem('xb:xpclick', JSON.stringify({ L: 31, stats: { meilleur: 31 } }));
+    await cn.boutonsBarre('xp')[0].faire();
+    assert.deepEqual(appels.slice(-2), [['score', 'ploxi0n.clicker', 3100], ['ouvrir', 'ploxi0n.clicker']]);
+    assert.equal(appels.filter(a => a === 'connecter').length, 1, 'une seule connexion');
+    cn.arreter();
+  } finally { p.fin(); }
+});
+
+test('🏆 le routeur : les boutons d\'un ploxion dans sa barre', async () => {
+  const { creerRouteur } = await import('../src/app/routeur.js');
+  const p = await page({ avion: true, ploxions: [] });
+  try {
+    const W = p.w, D = W.document; let n = 0;
+    W.jOSApps = W.jOSApps || {}; W.jOSApps.xp = { manifest: { id: 'xp' }, mount: (h) => { h.innerHTML = '<p>jeu</p>'; return {}; } };
+    const racine = D.createElement('div'); D.body.appendChild(racine);
+    const r = creerRouteur({ fenetre: W, racine, catalogue: [{ id: 'xp', nom: 'Jeu' }], boutonsBarre: (id) => (id === 'xp' ? [{ cle: 'classement', texte: '🏆', faire: () => { n++; } }] : []) });
+    await r.ouvrir('xp');
+    const b = racine.querySelector('[data-barre-x="classement"]'); assert.ok(b, 'le bouton dans la barre');
+    b.click(); assert.equal(n, 1);
   } finally { p.fin(); }
 });

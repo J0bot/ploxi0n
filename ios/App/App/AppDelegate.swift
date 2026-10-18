@@ -266,6 +266,8 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         CAPPluginMethod(name: "wifiRejoindre", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "gameCenter", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "gameCenterScore", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "gameCenterClassements", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "gameCenterOuvrir", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "mouvementDebut", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "mouvementFin", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "ecranEveille", returnType: CAPPluginReturnPromise),
@@ -679,6 +681,26 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         guard let classement = call.getString("classement"), let score = call.getInt("score") else { call.reject("classement et score manquants"); return }
         GKLeaderboard.submitScore(score, context: 0, player: GKLocalPlayer.local, leaderboardIDs: [classement]) { err in
             if let err = err { call.reject("Game Center : \(err.localizedDescription)") } else { call.resolve(["ok": true]) }
+        }
+    }
+    // ◈ (0.79) les classements de l'app (IDs: nil = tous ceux d'App Store Connect) : { classements: [{ id, titre }] } — le JS y trouve celui du clicker
+    @objc func gameCenterClassements(_ call: CAPPluginCall) {
+        GKLeaderboard.loadLeaderboards(IDs: nil) { liste, err in
+            if let err = err { call.reject("Game Center : \(err.localizedDescription)"); return }
+            let l: [[String: String]] = (liste ?? []).map { ["id": $0.baseLeaderboardID, "titre": $0.title ?? ""] }
+            call.resolve(["classements": l])
+        }
+    }
+    // 🏆 (0.79) le classement par l'écran de Game Center (le point d'accès d'iOS) ; sans id, ou avant iOS 18 : la liste des classements
+    @objc func gameCenterOuvrir(_ call: CAPPluginCall) {
+        let id = call.getString("classement") ?? ""
+        Task { @MainActor in
+            if #available(iOS 18.0, *), !id.isEmpty {
+                GKAccessPoint.shared.trigger(leaderboardID: id, playerScope: .global, timeScope: .allTime)
+            } else {
+                GKAccessPoint.shared.trigger(state: .leaderboards) {}
+            }
+            call.resolve(["ok": true])
         }
     }
 

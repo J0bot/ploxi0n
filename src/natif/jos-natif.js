@@ -114,7 +114,9 @@ export function installerJosNatif(W = globalThis.window, { haptics = () => impor
     wifi: (ssid, mdp) => PloxiApple.wifiRejoindre({ ssid: String(ssid), mdp: mdp ? String(mdp) : '' }),   // 📶 rejoindre un Wi-Fi
     // 🎮 💭 (14.10) le classement « Xeroctions » (App Store Connect, ID 001 : temps écoulé au centième, croissant, meilleur score) = le temps pour
     // boucler une xeroction : jeu.score('001', centiemes) quand la session xeroction existera ; puis les activités et les défis (un lien profond)
-    jeu: { connecter: () => PloxiApple.gameCenter(), score: (classement, score) => PloxiApple.gameCenterScore({ classement: String(classement), score: Math.round(+score || 0) }) },   // 🎮 Game Center
+    // (0.79) classements() : ceux de l'app dans App Store Connect ; ouvrir(id) : l'écran de Game Center sur ce classement
+    jeu: { connecter: () => PloxiApple.gameCenter(), score: (classement, score) => PloxiApple.gameCenterScore({ classement: String(classement), score: Math.round(+score || 0) }),
+      classements: () => PloxiApple.gameCenterClassements().then(r => (r && Array.isArray(r.classements) ? r.classements : [])), ouvrir: (classement) => PloxiApple.gameCenterOuvrir({ classement: classement ? String(classement) : '' }) },   // 🎮 Game Center
     // (0.47) le reste du natif, en une ligne chacun
     dictee: {   // 🎙 la dictée DANS l'app : commencer() puis arreter() → le texte (reconnaissance d'iOS, vocabulaire du xerboxion)
       commencer: () => PloxiVocal.commencer(),
