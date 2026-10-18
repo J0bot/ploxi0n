@@ -26,7 +26,7 @@ export async function creerInvitation({ W, requete, label = '' }) {
 export function creerPartage({ W = globalThis.window, routeur = () => null, qr = null, requete, natif = () => W.jOSNatif || {}, vibrer = () => {}, racine = null } = {}) {
   const D = W.document;
   /** la feuille : un titre, un QR, le lien ; ↗ partager, copier */
-  async function feuille({ titre, lien, texte = '', sous = '' }) {
+  async function feuille({ titre, lien, texte = '', sous = '', qr: avecQr = true }) {
     const f = D.createElement('div'); f.className = 'px-voile px-partage';
     f.innerHTML = '<div class="px-tiroir px-pt"><p class="px-ft">' + esc(titre) + '</p>' + (sous ? '<p class="px-pt-sous">' + esc(sous) + '</p>' : '')
       + '<div class="px-pt-qr" data-pt-qr><span>QR…</span></div>'
@@ -45,7 +45,7 @@ export function creerPartage({ W = globalThis.window, routeur = () => null, qr =
     });
     // le QR en personne : natif (CoreImage) ; toucher l'agrandit
     const z = f.querySelector('[data-pt-qr]');
-    if (qr) {
+    if (qr && avecQr) {
       try { const r = await qr({ texte: lien, echelle: 12 }); if (r && r.base64) z.innerHTML = '<img alt="QR du lien" src="data:image/png;base64,' + r.base64 + '">'; else z.remove(); } catch (er) { z.remove(); }
       if (z.isConnected) z.addEventListener('click', () => { z.classList.toggle('grand'); vibrer('selection'); });
     } else z.remove();

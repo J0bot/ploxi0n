@@ -16,7 +16,7 @@ import { creerEcranAccueil, specPerso } from './natif/ecran-accueil.js';
 import { creerNotifs } from './natif/notifs.js';
 import { creerHud } from './app/hud.js';
 import { enregistrerReglages } from './app/reglages.js';
-import { creerPrefs } from './app/prefs.js';
+import { creerPrefs, PREFS_DEFAUT } from './app/prefs.js';
 import { installerJosNatif } from './natif/jos-natif.js';
 import { brancherPlugions } from './natif/plugions.js';
 import { installerLecteur } from './natif/lecteur.js';
@@ -62,6 +62,7 @@ import { creerArNatif, brancherLiensAR } from './natif/ar-natif.js';
 import { creerReseauLocal } from './xerbot/reseau.js';
 import { envelopperQR, reparerAffichage } from './app/liens-publics.js';
 import { creerPartage } from './app/partage.js';
+import { creerXers } from './app/xers.js';
 import { creerControleur } from './xerbot/controleur.js';
 import { semerKoinIon } from './terrax/koin-ion.js';
 import { svgXerkion } from './app/xerkion-icone.js';
@@ -69,7 +70,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.76.0';
+const VERSION = '0.77.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -194,14 +195,18 @@ async function demarrer() {
     valeur: (k, t, v) => { try { return raccourcis ? raccourcis.valeur(k, t, v) : Promise.resolve(); } catch (e) { return Promise.resolve(); } } });   // raccourcis : déclaré plus bas
   window.jOSNatif.lecture = maintenant.api;
   // un ploxion en ouvre un autre (jOSXerPrefs.ouvrir, jOS.openPloxion) : s'il n'est pas installé et qu'il y a du réseau, on l'installe à la volée
+  // un ploxion absent : installé (le pack hors ligne d'abord, puis le labo) ; rend vrai s'il est là ensuite
+  async function installerAbsent(id) {
+    if (routeur.connait(id)) return true;
+    try {
+      if (depot.packLocal().some(p => p.id === id)) { await depot.installerLocal(id); await majAccueil(); }   // (0.52) le pack hors ligne d'abord (Pomodoro → Minuteur, sans réseau)
+      else { const c = await depot.catalogue({ reseau: false }); const m = (c.items || []).find(x => x.id === id) || {}; await installerAvecBarre({ depot, id, meta: { nom: m.nom, icone: m.icone }, vibrer: (x) => vibrer(x) }); await majAccueil(); }   // ⬇ la barre (un xerkion, un lien…)
+    } catch (e) { return false; }
+    return routeur.connait(id);
+  }
   const routeurProxy = {
     async ouvrir(id, params) {
-      if (!routeur.connait(id)) {
-        try {
-          if (depot.packLocal().some(p => p.id === id)) { await depot.installerLocal(id); await majAccueil(); }   // (0.52) le pack hors ligne d'abord (Pomodoro → Minuteur, sans réseau)
-          else { const c = await depot.catalogue({ reseau: false }); const m = (c.items || []).find(x => x.id === id) || {}; await installerAvecBarre({ depot, id, meta: { nom: m.nom, icone: m.icone }, vibrer: (x) => vibrer(x) }); await majAccueil(); }   // ⬇ la barre (un xerkion, un lien…)
-        } catch (e) { return false; }
-      }
+      if (!routeur.connait(id) && !(await installerAbsent(id))) return false;
       return routeur.ouvrir(id, params);
     },
     connait: (id) => routeur.connait(id), fermer: () => routeur.fermer(),
@@ -341,6 +346,11 @@ async function demarrer() {
   const estNatif = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
   const partage = creerPartage({ W: window, routeur: () => routeur, qr: estNatif ? (o) => PloxiApple.qr(o) : null, requete: (o) => reseauLocal.requete(o), vibrer: (x) => vibrer(x), racine });
   internes.push(partage.ploxion);
+  // § (0.77) mes xers : l'interface entière (accueil, dock, barre du haut, fond, mode, apparence) sur les mêmes ploxions ; en changer, les partager
+  const xers = creerXers({ boxion, prefs, defautPrefs: PREFS_DEFAUT, routeur: () => routeur, partage, vibrer: (x) => vibrer(x), installer: (id) => installerAbsent(id), fond,
+    hud: { config: () => hud.config(), regler: (c) => hud.regler(c) }, barre: { config: () => barreHaut.config(), regler: (c) => barreHaut.regler(c) } });
+  internes.push(xers.ploxion);
+  window.ploxi0nXers = xers;
   internes.push(creerTerrax({ boxion, vibrer: (x) => vibrer(x), ar: arNatif, nexus: {
     push: async (kind, payload) => { const r = await fetch('/nexus/push', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ kind, payload }) }); const j = await r.json().catch(() => ({})); if (!(r.ok && j.ok)) throw new Error(j.message || 'le nexus ne répond pas (' + r.status + ')'); return true; },
     pull: async (kind) => { const r = await fetch('/nexus/pull?kind=' + encodeURIComponent(kind)); if (!r.ok) return []; const j = await r.json().catch(() => ({})); return Array.isArray(j.items) ? j.items : []; } } }).ploxion);

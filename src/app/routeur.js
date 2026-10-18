@@ -22,7 +22,7 @@ const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><p
 /** (0.63) ce qu'un geste des bords peut faire (⚙ › Gestes des bords, le HUD de tuto) */
 export const ACTIONS_BORDS = [['precedente', '← app précédente'], ['suivante', 'app suivante →'], ['accueil', '⌂ accueil'], ['minimiser', '▁ minimiser'], ['basculer', '⧉ basculer'],
   ['chercher', 'chercher'], ['reglages', 'réglages'], ['portion', '◈ portion'], ['tsoin', '⧗ noter un tsoin'], ['freefall', '◇ freefall (gyroscope)'],
-  ['etat', '▣ l\'état : plein écran, pip, cadre'], ['tuto', '◎ le tuto ici'], ['carte', '⊞ tout le xerboxion'], ['holo', '◈ le xerploxion (l\'hologramme)'], ['cube', '▣ ses pages, dans le cube'], ['xers', '⊡ les xers à côté (aperçus, 4 directions)'], ['inviter', '✉ inviter quelqu\'un · partager'], ['rien', '— rien']];
+  ['etat', '▣ l\'état : plein écran, pip, cadre'], ['tuto', '◎ le tuto ici'], ['carte', '⊞ tout le xerboxion'], ['holo', '◈ le xerploxion (l\'hologramme)'], ['cube', '▣ ses pages, dans le cube'], ['xers', '⊡ les xers à côté (aperçus, 4 directions)'], ['inviter', '✉ inviter quelqu\'un · partager'], ['mes-xers', '§ changer de xer'], ['rien', '— rien']];
 export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false, surChercher = null, surXers = null, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null, surMontrer = null, surTuto = null, partager = null } = {}) {
   // ▤ (0.51) les mini docks : miniDocks = { surVivants(), surFermeture(id), page() } — ⧉ ouvre leur page, ils remplacent « en arrière-plan »
   const W = fenetre, D = W.document;
@@ -85,6 +85,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     if (action === 'carte') return ouvrirCarte();   // (0.63) tout le xerboxion
     if (action === 'xers') return surXers ? surXers() : ouvrirCarte();   // (0.70) le xer en image, ses voisins autour
     if (action === 'inviter') return ouvrir('inviter');   // ✉ (0.76)
+    if (action === 'mes-xers') return ouvrir('mes-xers');   // § (0.77)
     vibrer(action === 'portion' ? 'portion' : 'bord');
     if (action === 'tsoin') return tsoin ? tsoin() : null;
     if (action === 'chercher') return surChercher ? surChercher() : ouvrir('marketplace', { chercher: '1' });   // (0.69) d'abord chez soi
@@ -897,5 +898,14 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     vueAccueil(v) { if (v === undefined) return accueilDoc.vue || 'grille'; accueilDoc.vue = v; garder(); return v; },
     async retirerPloxion(id) { tuer(id); if (retirer) await retirer(id); },
     reinitialiserAccueil() { accueilDoc = { dossiers: [], pages: [] }; pageCourante = 0; dossierOuvert = null; garder(); },
+    /** § (0.77) l'accueil d'un xer : le lire (une copie), le poser */
+    docAccueil: () => JSON.parse(JSON.stringify(accueilDoc)),
+    chargerAccueil(doc) {
+      const g = (l) => (Array.isArray(l) ? l.filter(d => d && Array.isArray(d.ids)).map(d => ({ nom: String(d.nom || '…'), ids: d.ids.filter(x => typeof x === 'string') })) : []);
+      accueilDoc = { dossiers: g(doc && doc.dossiers), pages: g(doc && doc.pages) };
+      if (doc && Array.isArray(doc.ordre)) accueilDoc.ordre = doc.ordre.filter(x => typeof x === 'string');
+      if (doc && typeof doc.vue === 'string') accueilDoc.vue = doc.vue;
+      pageCourante = 0; dossierOuvert = null; garder();
+    },
   };
 }

@@ -7,6 +7,12 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.77.0', titre: 'Plusieurs xers, et les partager', points: [
+    '§ Un nouveau ploxion, mes xers (aussi sur les bords : « § changer de xer ») : le xer, c\'est l\'interface entière sur les mêmes ploxions. Ton accueil (pages, dossiers), ton dock, ta barre du haut, ton fond, ton mode et tes gestes des bords.',
+    '⧉ Crée-en autant que tu veux : une copie de celui-ci, ou un modèle (Épuré, XERB0T, xerboxion, chill-tekk). Change de xer d\'un toucher : celui que tu quittes est gardé tel quel, rien ne se perd.',
+    '↗ Partage un xer : un lien et un QR. Ton ami le reçoit dans ploxi0n, voit ses ploxions, installe ceux qui lui manquent s\'il veut, et l\'essaie. Ta photo de fond reste chez toi.',
+    '▣ Un ploxion épinglé ne déborde plus de la barre d\'un ploxion ouvert.',
+  ] },
   { v: '0.76.0', titre: 'Inviter et partager, sans zbeul', points: [
     '✉ Un nouveau ploxion, inviter · partager (aussi sur les bords : « ✉ inviter quelqu\'un ») : un toucher, et ton invitation a son lien et son QR. En personne, montre le QR ; sinon, envoie le lien. La personne crée son compte et devient ton amie.',
     '🔗 Les liens qui sortent de l\'app marchent enfin : avant, une invitation, un salon ou un curseur partagés depuis l\'iPhone donnaient un lien « capacitor://localhost » que personne ne pouvait ouvrir. Maintenant c\'est le lien du labo (il ouvre ploxi0n chez qui l\'a, la page du ploxion chez les autres), dans tous les ploxions, sans en réécrire un seul.',

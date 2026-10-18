@@ -102,6 +102,14 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.77 (18.10)** — § mes xers (`src/app/xers.js`, ploxion interne `mes-xers`). Un xer = `{ prefs (PREFS_XER seulement : pas haptique,
+Calme, vivants, sommeil), hud, accueil (routeur.docAccueil / chargerAccueil), fond (sa photo à part : boxion « xers/fond:<id> », fond.poserImage),
+barre, ploxions }` ; boxion « xers/liste », « xers/actif ». Basculer : garderActif() puis poser() puis `jos:xer` + bus `ploxion.xer.change`
+(le contrat du ploxion xer-switch du labo). Partager : JSON → deflate-raw (CompressionStream) → base64url, `…/app/ouvrir/mes-xers?app=1&x=z…`
+(≈ 600 caractères, QR jusqu'à 2000) ; recevoir : `nettoyerXer` (clés et types connus, actions des bords connues), jamais posé sans toucher.
+`installerAbsent(id)` dans main.js (partagé avec routeurProxy). Faux iPhone : `parcours-xers.mjs`. Corrigé : `.px-h-b:has(>.xki)` sans taille
+hors du dock (un épinglé géant dans la barre d'un ploxion).
+
 **0.76 (18.10)** — ✉ inviter · partager. La cause du zbeul : les ploxions du labo font leurs liens avec `location.origin`
 (`capacitor://localhost` dans l'app). `src/app/liens-publics.js` répare à chaque SORTIE (feuille de partage, presse-papiers, jOSNatif.partager/
 copier, le bion jOSQR enveloppé par un `defineProperty` sur window, les champs readonly observés) : `…/local?px=<id>&…` → `https://labo.j0bot.ch/px/<id>?…`
