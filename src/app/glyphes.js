@@ -102,6 +102,8 @@ const DEPUIS_EMOJI = { '🔎': 'chercher', '⚙': 'reglages', '⚙️': 'reglage
 
 /** le nom du glyphe d'un emoji (ou null) */
 export function nomDepuisEmoji(e) { const k = String(e || '').replace(/[\uFE0F\u200D]/g, ''); return DEPUIS_EMOJI[k] || DEPUIS_EMOJI[e] || null; }
+/** (0.82) un glyphe dessiné dans l'atelier des glyphes du labo (/px/icones.json, src/app/icones-labo.js) : son corps déjà nettoyé */
+export function ajouterGlyphe(nom, corps) { if (/^[a-z0-9][a-z0-9_-]{0,40}$/.test(String(nom || '')) && typeof corps === 'string' && corps) { GLYPHES[nom] = corps; return true; } return false; }
 /** un glyphe en SVG inline (hérite la couleur du texte) ; nom inconnu → le point (ion) */
 export function glyphe(nom, cls = '') {
   const g = GLYPHES[nom] || GLYPHES[DEPUIS_EMOJI[nom]] || null;

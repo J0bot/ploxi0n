@@ -67,6 +67,7 @@ import { creerClickerNatif, toucherRapide } from './jeu/clicker-natif.js';
 import { creerMisesAJour } from './marketplace/mises-a-jour.js';
 import { installerAppsALaDemande } from './shim/apps-a-la-demande.js';
 import { creerWikiNatif } from './app/wiki-natif.js';
+import { creerIconesLabo } from './app/icones-labo.js';
 import { creerControleur } from './xerbot/controleur.js';
 import { semerKoinIon } from './terrax/koin-ion.js';
 import { svgXerkion } from './app/xerkion-icone.js';
@@ -74,7 +75,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.81.0';
+const VERSION = '0.82.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -291,9 +292,12 @@ async function demarrer() {
     lireBionLocal: async (b) => { const r = await fetchOrigine('/bions/' + encodeURIComponent(b) + '.js'); if (!r.ok) throw new Error('bion absent'); return r.text(); },
     surMisAJour: (id) => { if (routeur) routeur.oublier(id); },
     surInstalle: (id, composes) => { if (routeur && composes && composes.length) setTimeout(() => installerDependances(composes).catch(() => {}), 500); } });   // ⧉ (0.81)   // ↻ (0.80) l'ancien code quitte la page : la prochaine ouverture lit le nouveau
+  // ⬡ (0.82) les icônes du labo (/px/icones.json : retouches pour tous, les tiennes, les glyphes dessinés), avec ton jeton ; gardées hors ligne
+  const iconesLabo = creerIconesLabo({ source: SOURCE, http: httpRelais, boxion });
+  await iconesLabo.pret;
   // ↻ (0.80) les mises à jour des ploxions : automatiques (par défaut), et ⚙ › Ploxions
   const maj = creerMisesAJour({ depot, boxion, routeur: () => routeur, signaler: (t) => routeur && routeur.signaler(t), apres: () => majAccueil(),
-    completer: async () => installerDependances((await depot.dependances()).map(x => x.id)) });   // ⧉ (0.81) les dépendances qui manquent, à chaque vérification
+    completer: async () => { if (await iconesLabo.recharger().catch(() => false)) await majAccueil().catch(() => {}); return installerDependances((await depot.dependances()).map(x => x.id)); } });   // ⧉ (0.81) les dépendances qui manquent, à chaque vérification
   window.ploxi0nMaj = maj;
   // les ploxions de base (index.json « base » : bother me pour les testeurs) : installés une fois, au premier lancement ; retirables ensuite
   const deja = (await boxion.get('reglages', 'base-installes')) || [];
@@ -320,7 +324,8 @@ async function demarrer() {
     const cat = new Map(((await depot.catalogue({ reseau: false }).catch(() => null)) || { items: [] }).items.map(x => [x.id, x]));
     // ⬡ (0.55) le xerkion d'un ploxion : celui du labo (registre), retouché par l'atelier de la personne (palette, cœur, koins, glyphe)
     const perso = (await boxion.get('reglages', 'apps-accueil-perso').catch(() => null)) || {};
-    const xk = (id) => { const o = Object.assign({}, (cat.get(id) || {}).xerkion, specPerso(perso[id])); return Object.keys(o).length ? o : null; };
+    // ⬡ (0.82) le registre, puis les retouches du labo pour tous, puis les tiennes au labo, puis celles de l'atelier de l'app (src/app/icones-labo.js)
+    const xk = (id) => { const o = Object.assign({}, (cat.get(id) || {}).xerkion, iconesLabo.tous(id), specPerso(iconesLabo.mien(id)), specPerso(perso[id])); return Object.keys(o).length ? o : null; };
     const liste = [...installes.map(p => ({ id: p.id, nom: p.nom, icone: p.icone, categorie: (cat.get(p.id) || {}).categorie || 'Autres', cat_icone: (cat.get(p.id) || {}).cat_icone || '📦', bions: p.bions || [], cat: (cat.get(p.id) || {}).cat || null, type: (cat.get(p.id) || {}).type || null, koins: (cat.get(p.id) || {}).koins, centre: (cat.get(p.id) || {}).centre || null, xerkion: xk(p.id) })),
       ...internes.map(p => ({ categorie: 'ploxi0n', cat_icone: '◇', ...p }))];
     routeur.majCatalogue(liste, o);
@@ -394,8 +399,9 @@ async function demarrer() {
     push: async (kind, payload) => { const r = await fetch('/nexus/push', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ kind, payload }) }); const j = await r.json().catch(() => ({})); if (!(r.ok && j.ok)) throw new Error(j.message || 'le nexus ne répond pas (' + r.status + ')'); return true; },
     pull: async (kind) => { const r = await fetch('/nexus/pull?kind=' + encodeURIComponent(kind)); if (!r.ok) return []; const j = await r.json().catch(() => ({})); return Array.isArray(j.items) ? j.items : []; } } }).ploxion);
   window.jOSNatif.sante = sante.api;
-  setTimeout(() => sante.synchroniser().catch(() => {}), 5000);
-  if (!modeSurJs) maj.demarrer();   // ↻ (0.80) la première vérification 20 s après le lancement, puis à la fréquence choisie   // ☁ hors du chemin critique : le résumé santé (si activé et connecté)
+  setTimeout(() => sante.synchroniser().catch(() => {}), 5000);   // ☁ hors du chemin critique : le résumé santé (si activé et connecté)
+  if (!modeSurJs) maj.demarrer();   // ↻ (0.80) la première vérification 20 s après le lancement, puis à la fréquence choisie
+  setTimeout(() => iconesLabo.recharger().then(c => (c ? majAccueil() : null)).catch(() => {}), 3000);   // ⬡ (0.82) tes glyphes dessinés au labo
   window.jOSNatif.tsoin = (o) => tsoinNatif.ouvrir(o || {});
   const hud = creerHud({ compte, boxion, vocalEnCours: () => vocal.enCours(), trouver: (id) => routeur && routeur.catalogue().find(p => p.id === id), modeConnecte: () => modeConnecte, prefs: () => prefs.lire() });
   await hud.pret;

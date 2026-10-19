@@ -102,6 +102,15 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.82 (19.10)** — Le labo a fait les deux corrections demandées (déployées, vérifiées en ligne ici) : la CSP vaut `frame-ancestors 'self'
+https://*.j0bot.ch capacitor://localhost` (les cadres du labo s'affichent dans l'app ; une autre app iOS pourrait aussi les encadrer, mais sans
+la session de RS-7 : chaque app a ses cookies) ; `/wiki/<slug>?fragment=1` ne rend que `<article class="wiki-app">` (sans `<head>`, donc sans
+canonical : le lecteur garde le chemin demandé). ⬡ `/px/icones.json` (l'atelier des glyphes du labo, lu par la coquille avec la session) :
+`src/app/icones-labo.js` le lit par `httpRelais` (X-Ploxi0n + Bearer), garde `reglages/icones-labo`, relit au lancement (3 s) et à chaque
+vérification des mises à jour (`maj.completer`). `glyphes[{nom, corps}]` → `nettoyerCorps` (DOMParser SVG : path/circle/rect/line/polyline/
+polygon/ellipse/g, la géométrie seulement, `class` f/p) → `ajouterGlyphe` (glyphes.js) ; l'icône d'un ploxion = registre ← `tous[id]` ←
+`specPerso(mien[id])` ← l'atelier de l'app (main.js `xk`).
+
 **0.81 (19.10)** — ⧉ les ploxions composés et 📖 le wiki. Les captures de RS-7 (Ultimate social : « carte / social / chat indisponible
 ici ») : ultimate-social (et socialion, space, stockage, theme, dl) montent leurs sous-ploxions par `jOSApps.monter(id, hôte, ctx)` si
 `jOSApps.peut(id)` — le contrat de la coquille du labo (monde.html : charge, peut, ensure, monter → `{ unmount, ready, lazy, robuste, instance }`).
@@ -114,7 +123,7 @@ javascript:) ; `data-wiki` pour les liens internes, `data-externe` pour le reste
 `cadres-labo.js` remplace l'iframe /wiki… (même réécrite en https://labo… par le shim) par le lecteur, suit `ploxion.wiki.goto`. Le sommaire
 (#ancres) défile sans toucher au # du routeur. Faux iPhone : `parcours-composes.mjs` (le labo simulé : le vrai ultimate-social et le vrai article,
 `tests/donnees/`).
-**❓ À faire dans le labo (RS-7)** : (1) la CSP du labo (`frame-ancestors 'self' https://*.j0bot.ch`, config/csp.php) : ajouter
+**✅ Fait par le labo le 19.10 (voir 0.82)** — demandé alors : (1) la CSP du labo (`frame-ancestors 'self' https://*.j0bot.ch`, config/csp.php) : ajouter
 `capacitor://localhost` — alors ideas (/ideas), makelab (/objets/), files et ultimate-files (/boxions), xerkions, universal-suit et phone-test
 s'affichent DANS l'app sans rien changer ici (cadres-labo.js le détecte par un HEAD) ; (2) `/wiki/{slug}?fragment=1` qui ne rend que
 `.wiki-app` (le lecteur le demande déjà) : 30 Ko au lieu de 1,1 Mo par page.

@@ -18,6 +18,9 @@ export default async function ({ page, ecrire, appels }) {
   await page.evaluate(() => window.ploxi0nRouteur.ouvrir('wiki')); await page.waitForTimeout(2500);
   await ecrire('03-wiki');
   const wiki = await page.evaluate(() => { const a = document.querySelector('.px-hote[data-ploxion="wiki"] .px-wiki-a'); return a ? { titre: (a.querySelector('h1') || {}).textContent, liens: a.querySelectorAll('a[data-wiki]').length } : null; });
+  // ⬡ (0.82) le glyphe dessiné au labo, sur la tuile de « social » (relu 3 s après le lancement)
+  await page.evaluate(() => window.ploxi0nRouteur.accueil()); await page.waitForTimeout(800);
+  const glypheDessine = await page.evaluate(() => { const t = document.querySelector('[data-id="social"] svg'); return t ? /50,8 92,92 8,92/.test(t.innerHTML) && !/script/.test(t.innerHTML) : null; });
   const http = appels.filter(a => a.p === 'CapacitorHttp' && a.m === 'get').map(a => a.o.url.replace('https://labo.j0bot.ch', '').replace(/maj=[a-z0-9]+/, 'maj=…')).slice(0, 14);
-  return { fil, salons, installes, wiki, http };
+  return { fil, salons, installes, wiki, glypheDessine, http };
 }

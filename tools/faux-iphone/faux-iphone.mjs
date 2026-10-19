@@ -38,6 +38,8 @@ function laboFaux(url) {
   const r = (status, data, type = 'text/html') => ({ status, data, headers: { 'Content-Type': type }, url });
   const u = new URL(url);
   if (u.hostname !== 'labo.j0bot.ch') throw new Error('Could not connect to the server.');
+  // (0.82) l'atelier des glyphes du labo : un glyphe dessiné, posé sur l'icône de « social » pour tous
+  if (u.pathname === '/px/icones.json') return r(200, JSON.stringify({ ok: true, tous: { social: { glyphe: 'dessine-rs7', pal: 2 } }, mien: {}, glyphes: [{ nom: 'dessine-rs7', corps: '<polygon points="50,8 92,92 8,92"/><circle cx="50" cy="64" r="11" class="f"/><script>alert(1)</script>' }], avis: {}, admin: false }), 'application/json');
   if (u.pathname === '/px/registry.json') return r(200, JSON.stringify(['ultimate-social', ...SOUS].map(id => ({ id, name: id, hasScreen: true, enabled: true, status: 'live', cat_label: 'Social' }))), 'application/json');
   const m = /^\/px\/([^/]+)\/app\.js$/.exec(u.pathname);
   if (m && m[1] === 'ultimate-social') return r(200, readFileSync(path.join(DONNEES, 'ultimate-social.labo.js'), 'utf8'), 'application/javascript');
