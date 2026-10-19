@@ -102,6 +102,13 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.83 (19.10)** — 🔑 le labo connecté tout seul (RS-7, capture du mode xerboxion : « j'ai un code »). Le contrat complet et ce que le labo
+doit faire : **docs/CONNEXION-LABO.md**. Côté app : `src/natif/connexion-labo.js` (`adresse(chemin)`, `emballer(url)`) ; `modes.js` : le cadre
+naît en `about:blank` avec `data-vers`, la règle du labo (HEAD) puis l'adresse connectée ; `cadres-labo.js` : `connecter(p)` ; main.js enveloppe
+`jOSNatif.navigateur` (une adresse du labo → connectée). Un 404 de `/api/app/passe` = la route pas encore là : l'adresse simple jusqu'au
+prochain lancement. iOS bloque les cookies tiers d'un cadre : seuls les cookies `Partitioned` (WebKit 26.2+) tiennent → le labo doit poser sa
+session ainsi quand `Sec-Fetch-Dest: iframe`. Faux iPhone : `parcours-connexion-labo.mjs` (HEAD avec la nouvelle CSP, le passe simulé).
+
 **0.82 (19.10)** — Le labo a fait les deux corrections demandées (déployées, vérifiées en ligne ici) : la CSP vaut `frame-ancestors 'self'
 https://*.j0bot.ch capacitor://localhost` (les cadres du labo s'affichent dans l'app ; une autre app iOS pourrait aussi les encadrer, mais sans
 la session de RS-7 : chaque app a ses cookies) ; `/wiki/<slug>?fragment=1` ne rend que `<article class="wiki-app">` (sans `<head>`, donc sans

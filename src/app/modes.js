@@ -17,7 +17,7 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '
 import { glyphe as G, versGlyphe } from './glyphes.js';   // ◇ (0.54) des glyphes, plus d'emoji
 export const MODES = [['chill-tekk', 'chilltekk', 'chill-tekk'], ['xerboxion', 'xerboxion', 'xerboxion'], ['xerbot', 'xerbot', 'xerbot']];
 
-export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, connait = () => false, source = 'https://labo.j0bot.ch', chemin = '/home', vibrer = () => {}, cadres = null, controleur = null }) {
+export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, connait = () => false, source = 'https://labo.j0bot.ch', chemin = '/home', vibrer = () => {}, cadres = null, controleur = null, connecter = null }) {
   const D = W.document, N = () => W.jOSNatif || {};
   const mode = () => (MODES.some(m => m[0] === (prefs.lire().mode || '')) ? prefs.lire().mode : 'chill-tekk');
   const appliquer = () => { for (const [m] of MODES) D.documentElement.classList.toggle('px-m-' + m, mode() === m); };
@@ -43,7 +43,7 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
   function panneauXerboxion() {
     if (W.navigator.onLine === false) return '<div class="px-mode-p"><p class="px-grave">⬡ xerboxion</p><p>L\'UI du labo demande le réseau. Hors ligne : ◇ chill-tekk.</p></div>';
     // (0.52) l'iframe reste invisible tant que l'UI du labo n'est pas là (plus de grand rectangle blanc) ; dessous, « ça arrive »
-    return '<div class="px-mode-p px-labo"><p class="px-labo-attente">⬡ l\'UI du labo arrive…</p><iframe onload="this.dataset.charge=1;if(this.dataset.ok)this.style.opacity=1" style="opacity:0" title="xerboxion" src="' + esc(source + chemin) + '?app=ploxi0n" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; geolocation" referrerpolicy="origin"></iframe></div>';
+    return '<div class="px-mode-p px-labo"><p class="px-labo-attente">⬡ l\'UI du labo arrive…</p><iframe onload="this.dataset.charge=1;if(this.dataset.ok&&this.getAttribute(\'src\')!==\'about:blank\')this.style.opacity=1" style="opacity:0" title="xerboxion" src="about:blank" data-vers="' + esc(chemin) + '?app=ploxi0n" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; geolocation" referrerpolicy="origin"></iframe></div>';
   }
   const carte = (ic, titre, sous, actions) => '<div class="px-xb-c"><span class="ic">' + versGlyphe(ic) + '</span><span><b>' + esc(titre) + '</b><small>' + sous + '</small></span><span class="act">' + actions + '</span></div>';
   function panneauXerbot() {
@@ -71,7 +71,14 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
       const regle = cadres ? cadres.permis(chemin) : Promise.race([W.fetch(source + chemin, { mode: 'no-cors', cache: 'no-store' }).then(() => 'oui'), new Promise((ok) => W.setTimeout(() => ok('injoignable'), 8000))]).catch(() => 'injoignable');
       regle.then((r) => {
         const p = f.closest('.px-labo'); if (!p) return;
-        if (r === 'oui') { f.dataset.ok = '1'; if (f.dataset.charge) f.style.opacity = '1'; return; }
+        // 🔑 (0.83) le labo accepte le cadre : l'adresse qui te CONNECTE (un passe à usage unique, src/natif/connexion-labo.js), pas « j'ai un code »
+        if (r === 'oui') {
+          f.dataset.ok = '1';
+          const vers = f.dataset.vers; if (!vers || f.dataset.parti) { if (f.dataset.charge) f.style.opacity = '1'; return; }
+          f.dataset.parti = '1'; delete f.dataset.charge;
+          (connecter ? connecter(vers) : Promise.resolve(source + vers)).catch(() => source + vers).then((u) => { if (f.isConnected) f.setAttribute('src', u); });
+          return;
+        }
         p.innerHTML = r === 'non'
           ? '<div class="px-cadre-labo"><span class="g">⬡</span><b>L\'UI du labo ne s\'affiche pas encore dans l\'app</b><small>le labo n\'accepte d\'être encadré que par lui-même (frame-ancestors) ; en attendant, elle s\'ouvre à côté</small><button type="button" data-xb-ouvrir>ouvrir le labo</button></div>'
           : '<p class="px-labo-attente">⬡ le labo ne répond pas · ◇ chill-tekk en attendant</p>';

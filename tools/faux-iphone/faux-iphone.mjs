@@ -125,6 +125,9 @@ const natif = {
   // (0.81) le labo simulé pour les ploxions composés (le vrai ultimate-social, ses onglets) et le wiki (le vrai article « xerboxion »)
   CapacitorHttp: { get: (o) => laboFaux(o.url),
     request: (o) => { const u = new URL(o.url); const j = (status, data) => ({ status, data: JSON.stringify(data), headers: { 'Content-Type': 'application/json' }, url: o.url });
+    // (0.83) le labo : la règle d'encadrement (HEAD : il accepte l'app depuis le 19.10) et le passe à usage unique (seulement avec un jeton)
+    if (u.hostname === 'labo.j0bot.ch' && o.method === 'HEAD') return { status: 200, data: '', headers: { 'content-security-policy': "frame-ancestors 'self' https://*.j0bot.ch capacitor://localhost" }, url: o.url };
+    if (u.hostname === 'labo.j0bot.ch' && u.pathname === '/api/app/passe' && o.method === 'POST') return /^Bearer .+/.test((o.headers || {}).Authorization || '') ? j(200, { passe: 'faux-passe-0123456789abcdef', expire: new Date(Date.now() + 60e3).toISOString() }) : j(401, { message: 'Unauthenticated.' });
     if (u.hostname === '10.0.0.7') { const st = wledFaux.state;
       if (u.pathname === '/json/info') return j(200, wledFaux.info);
       if (u.pathname === '/json') return j(200, wledFaux);

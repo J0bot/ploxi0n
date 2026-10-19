@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.83.0', titre: 'Le labo te reconnaît tout seul', points: [
+    '🔑 Le mode xerboxion, les pages du labo dans tes ploxions et le navigateur intégré t\'ouvrent le labo déjà connecté, avec ton compte de l\'app : plus de « j\'ai un code ».',
+    '🔒 Ton jeton ne sort jamais dans une adresse : l\'app demande au labo un passe qui ne sert qu\'une fois, pendant une minute.',
+  ] },
   { v: '0.82.0', titre: 'Les pages du labo et tes glyphes, dans l\'app', points: [
     '⬡ Les glyphes que tu dessines dans l\'atelier des glyphes du labo apparaissent sur tes icônes dans l\'app, avec les retouches du labo et les tiennes.',
     '▣ Les ploxions qui affichent une page du labo s\'ouvrent enfin dans l\'app : idées, makelab, fichiers, xerkions, universal-suit (le labo l\'accepte maintenant).',

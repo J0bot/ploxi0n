@@ -68,6 +68,7 @@ import { creerMisesAJour } from './marketplace/mises-a-jour.js';
 import { installerAppsALaDemande } from './shim/apps-a-la-demande.js';
 import { creerWikiNatif } from './app/wiki-natif.js';
 import { creerIconesLabo } from './app/icones-labo.js';
+import { creerConnexionLabo } from './natif/connexion-labo.js';
 import { creerControleur } from './xerbot/controleur.js';
 import { semerKoinIon } from './terrax/koin-ion.js';
 import { svgXerkion } from './app/xerkion-icone.js';
@@ -75,7 +76,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.82.0';
+const VERSION = '0.83.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -286,8 +287,12 @@ async function demarrer() {
   const compat = await lireJson('/marketplace/compat.json', {});
   // ⬡ (0.53) les cadres du labo : un <iframe src="/wiki"> d'un ploxion vise le labo ; refusé par sa CSP → une carte « ouvrir »
   // 📖 (0.81) le wiki se lit dans l'app (src/app/wiki-natif.js) : l'article seul, gardé pour le hors ligne, les liens entre termes restent ici
+  // 🔑 (0.83) le labo connecté tout seul : un passe à usage unique (POST /api/app/passe, ton jeton) → /app/entrer?passe=…&vers=… ;
+  // le cadre du mode xerboxion, les cadres des ploxions et le navigateur intégré y passent (src/natif/connexion-labo.js)
+  const connexionLabo = creerConnexionLabo({ source: SOURCE, requete: (o) => httpRelais.requete(o), connecte: () => !!(compteRef && compteRef.etat().connecte), enLigne: () => navigator.onLine !== false });
+  { const nav0 = window.jOSNatif.navigateur.bind(window.jOSNatif); window.jOSNatif.navigateur = async (u, ...r) => nav0(await connexionLabo.emballer(u), ...r); }
   const wikiNatif = creerWikiNatif({ source: SOURCE, http: creerHttp(window, async () => ({})), boxion, navigateur: (u) => window.jOSNatif.navigateur(u), vibrer: (x) => vibrer(x) });
-  const cadres = creerCadresLabo({ source: SOURCE, tete: (u) => creerHttp(window, async () => ({})).tete(u), navigateur: (u) => window.jOSNatif.navigateur(u), lecteur: wikiNatif });
+  const cadres = creerCadresLabo({ source: SOURCE, tete: (u) => creerHttp(window, async () => ({})).tete(u), navigateur: (u) => window.jOSNatif.navigateur(u), lecteur: wikiNatif, connecter: (c) => connexionLabo.adresse(c) });
   const depot = creerDepot({ boxion, http: creerHttp(window, enTetes), estAdmin: () => !!(compteRef && compteRef.etat().admin), compat, packLocal: pack, lireLocal: async (id) => (await fetch('/ploxions/' + encodeURIComponent(id) + '/app.js')).text(),
     lireBionLocal: async (b) => { const r = await fetchOrigine('/bions/' + encodeURIComponent(b) + '.js'); if (!r.ok) throw new Error('bion absent'); return r.text(); },
     surMisAJour: (id) => { if (routeur) routeur.oublier(id); },
@@ -435,7 +440,7 @@ async function demarrer() {
   window.jOSEcranAccueil = ecranAccueil;
   boot(78, 'l\'accueil');
   // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xerbot (le monde physique)
-  const modes = creerModes({ cadres, prefs, ouvrir: (id) => routeurProxy.ouvrir(id), connait: (id) => !!(routeur && routeur.connait(id)), source: SOURCE, vibrer: (x) => vibrer(x), controleur: controleur.api });
+  const modes = creerModes({ cadres, connecter: (c) => connexionLabo.adresse(c), prefs, ouvrir: (id) => routeurProxy.ouvrir(id), connait: (id) => !!(routeur && routeur.connait(id)), source: SOURCE, vibrer: (x) => vibrer(x), controleur: controleur.api });
   modes.attacher(racine);
   routeur = creerRouteur({ sonDe: (id) => (gel ? gel.aDuSon(id) : false), surChercher: () => (chercheur ? chercheur.ouvrir() : routeur.ouvrir('marketplace', { chercher: '1' })), surXers: () => (vueXers ? vueXers.ouvrir() : routeur.carte()), panneau: () => modes.panneau(), racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id, p) => routeurProxy.ouvrir(id, p), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges }), apresChargement: (id) => { boxion.get('reglages', 'bions-coupes').then(c => brancherPlugions(window, new Set(c || []))).catch(() => {}); socialApple(id); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
     miniDocks: { surVivants: () => miniDocks.planifier(), surFermeture: (id) => { miniDocks.surFermeture(id); if (gel) gel.liberer(id); }, page: () => miniDocks.ouvrirPage() },
