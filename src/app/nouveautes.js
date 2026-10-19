@@ -7,6 +7,12 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.80.0', titre: 'Tes ploxions à jour tout seuls', points: [
+    '↻ Tes ploxions se mettent à jour tout seuls : au lancement, puis toutes les 6 h (ou 1 h, ou 24 h), avec du réseau. Ce qui a changé est dit en bas de l\'écran.',
+    '⚙ › Ploxions › mises à jour : l\'interrupteur, la fréquence, les bions aussi, et « vérifier » maintenant, avec la progression.',
+    '✓ Un ploxion mis à jour l\'est vraiment : sa nouvelle version s\'ouvre tout de suite, sans redémarrer l\'app (s\'il est ouvert, dès que tu le fermes). Les bions dont il a besoin viennent avec lui, et iOS ne sert plus une vieille copie.',
+    '◇ Les ploxions embarqués avec l\'app suivent aussi le labo dès qu\'il en a une version plus récente.',
+  ] },
   { v: '0.79.0', titre: 'Game Center : le classement du clicker', points: [
     '🏆 Le Jeu et le Clickion se connectent à Game Center à ta première partie. Ton record part dans le classement du clicker, tout seul, à chaque fois qu\'il monte.',
     '🏆 Dans la barre du Jeu et du Clickion : le classement, mondial et de tous les temps, par l\'écran de Game Center (tes amis aussi).',

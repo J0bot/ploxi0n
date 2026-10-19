@@ -103,7 +103,9 @@ const natif = {
   ScreenOrientation: { orientation: () => ({ type: 'portrait-primary' }), lock: (o) => { verrous.push(o.orientation); return {}; }, unlock: () => ({}) },
   BluetoothLe: { initialize: () => ({}), requestDevice: () => ({ deviceId: 'AA:BB', name: 'Polar H10' }), connect: () => ({}), disconnect: () => ({}), read: () => ({ value: '5a' }), write: () => ({}), startNotifications: () => ({}), getServices: () => ({ services: [] }) },
   // 🤖 (0.75) le réseau local du contrôleur XERB0T : un WLED (10.0.0.7) et un Home Assistant (10.0.0.9:8123, jeton « bon ») simulés
-  CapacitorHttp: { request: (o) => { const u = new URL(o.url); const j = (status, data) => ({ status, data: JSON.stringify(data), headers: { 'Content-Type': 'application/json' }, url: o.url });
+  // (0.80) les mises à jour : le labo répond « 304, pas changé » pour un app.js
+  CapacitorHttp: { get: (o) => (/labo\.j0bot\.ch\/px\/[^/]+\/app\.js/.test(o.url) ? { status: 304, data: '', headers: {}, url: o.url } : (() => { throw new Error('Could not connect to the server.'); })()),
+    request: (o) => { const u = new URL(o.url); const j = (status, data) => ({ status, data: JSON.stringify(data), headers: { 'Content-Type': 'application/json' }, url: o.url });
     if (u.hostname === '10.0.0.7') { const st = wledFaux.state;
       if (u.pathname === '/json/info') return j(200, wledFaux.info);
       if (u.pathname === '/json') return j(200, wledFaux);

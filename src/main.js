@@ -64,6 +64,7 @@ import { envelopperQR, reparerAffichage } from './app/liens-publics.js';
 import { creerPartage } from './app/partage.js';
 import { creerXers } from './app/xers.js';
 import { creerClickerNatif, toucherRapide } from './jeu/clicker-natif.js';
+import { creerMisesAJour } from './marketplace/mises-a-jour.js';
 import { creerControleur } from './xerbot/controleur.js';
 import { semerKoinIon } from './terrax/koin-ion.js';
 import { svgXerkion } from './app/xerkion-icone.js';
@@ -71,7 +72,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.79.0';
+const VERSION = '0.80.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -262,7 +263,11 @@ async function demarrer() {
   // ⬡ (0.53) les cadres du labo : un <iframe src="/wiki"> d'un ploxion vise le labo ; refusé par sa CSP → une carte « ouvrir »
   const cadres = creerCadresLabo({ source: SOURCE, tete: (u) => creerHttp(window, async () => ({})).tete(u), navigateur: (u) => window.jOSNatif.navigateur(u) });
   const depot = creerDepot({ boxion, http: creerHttp(window, enTetes), estAdmin: () => !!(compteRef && compteRef.etat().admin), compat, packLocal: pack, lireLocal: async (id) => (await fetch('/ploxions/' + encodeURIComponent(id) + '/app.js')).text(),
-    lireBionLocal: async (b) => { const r = await fetchOrigine('/bions/' + encodeURIComponent(b) + '.js'); if (!r.ok) throw new Error('bion absent'); return r.text(); } });
+    lireBionLocal: async (b) => { const r = await fetchOrigine('/bions/' + encodeURIComponent(b) + '.js'); if (!r.ok) throw new Error('bion absent'); return r.text(); },
+    surMisAJour: (id) => { if (routeur) routeur.oublier(id); } });   // ↻ (0.80) l'ancien code quitte la page : la prochaine ouverture lit le nouveau
+  // ↻ (0.80) les mises à jour des ploxions : automatiques (par défaut), et ⚙ › Ploxions
+  const maj = creerMisesAJour({ depot, boxion, routeur: () => routeur, signaler: (t) => routeur && routeur.signaler(t), apres: () => majAccueil() });
+  window.ploxi0nMaj = maj;
   // les ploxions de base (index.json « base » : bother me pour les testeurs) : installés une fois, au premier lancement ; retirables ensuite
   const deja = (await boxion.get('reglages', 'base-installes')) || [];
   for (const id of (indexPack.base || []).filter(b => !deja.includes(b))) {
@@ -362,7 +367,8 @@ async function demarrer() {
     push: async (kind, payload) => { const r = await fetch('/nexus/push', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ kind, payload }) }); const j = await r.json().catch(() => ({})); if (!(r.ok && j.ok)) throw new Error(j.message || 'le nexus ne répond pas (' + r.status + ')'); return true; },
     pull: async (kind) => { const r = await fetch('/nexus/pull?kind=' + encodeURIComponent(kind)); if (!r.ok) return []; const j = await r.json().catch(() => ({})); return Array.isArray(j.items) ? j.items : []; } } }).ploxion);
   window.jOSNatif.sante = sante.api;
-  setTimeout(() => sante.synchroniser().catch(() => {}), 5000);   // ☁ hors du chemin critique : le résumé santé (si activé et connecté)
+  setTimeout(() => sante.synchroniser().catch(() => {}), 5000);
+  if (!modeSurJs) maj.demarrer();   // ↻ (0.80) la première vérification 20 s après le lancement, puis à la fréquence choisie   // ☁ hors du chemin critique : le résumé santé (si activé et connecté)
   window.jOSNatif.tsoin = (o) => tsoinNatif.ouvrir(o || {});
   const hud = creerHud({ compte, boxion, vocalEnCours: () => vocal.enCours(), trouver: (id) => routeur && routeur.catalogue().find(p => p.id === id), modeConnecte: () => modeConnecte, prefs: () => prefs.lire() });
   await hud.pret;
@@ -372,7 +378,7 @@ async function demarrer() {
   const notifs = creerNotifs({ boxion, vibrer, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id) => routeurProxy.ouvrir(id) });
   await notifs.pret;
   boot(73, 'notifications');
-  internes.push(enregistrerReglages({ compte, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, prefs, vibrer, haptique, lecteur, lecteurNatif, sante, cube, valeurs: () => (raccourcis ? raccourcis.toutes() : {}), version: VERSION }));
+  internes.push(enregistrerReglages({ compte, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, prefs, vibrer, haptique, lecteur, lecteurNatif, sante, cube, valeurs: () => (raccourcis ? raccourcis.toutes() : {}), version: VERSION, maj }));
   // le vecteur xerion de ce téléphone : le temps passé par ploxion (même forme que jOSUsage du labo : { px: { id: { opens, seconds, lastAt } } })
   async function surUsage(id, sec) {
     const u = (await boxion.get('usage', 'stats')) || { px: {} };

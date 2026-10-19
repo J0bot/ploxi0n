@@ -26,7 +26,7 @@ export const GROUPES = [   // [page, glyphe (src/app/glyphes.js), nom]
 ];
 export const SOUS = { gestes: 'navigation', 'haptique-motifs': 'haptique', 'haptique-evenements': 'haptique', 'haptique-fractale': 'haptique', 'haptique-ploxions': 'haptique' };
 
-export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, vibrer = () => {}, haptique = null, lecteur = null, lecteurNatif = null, sante = null, cube = null, valeurs = () => ({}), version = '?' }) {
+export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, vibrer = () => {}, haptique = null, lecteur = null, lecteurNatif = null, sante = null, cube = null, valeurs = () => ({}), version = '?', maj = null }) {
   const ELS = { tsoin: '⧗ noter un tsoin', vocal: 'vocal', compte: 'compte', reseau: 'réseau et mode connecté', heure: 'heure', chercher: 'chercher un ploxion', epingles: 'ploxions épinglés' };
   function mount(hote) {
     let vivant = true, q = '', composition = [], page = null;   // page : null = l'accueil des réglages
@@ -71,7 +71,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         apparence: P ? [P.themeVivant !== false ? 'thème vivant' : null, P.pleinEcran ? 'plein écran' : null, P.calme ? 'calme' : null, 'icônes ' + P.icones].filter(Boolean).join(' · ') : '',
         haptique: P && P.haptique === false ? 'coupée' : 'motifs, événements, signatures', lecteur: 'le lecteur intégré (Apple, VLC), écran verrouillé, AirPlay',
         navigation: P ? [P.bords ? 'les bords' : null, P.telecommande !== false ? 'télécommande' : null, 'gestes'].filter(Boolean).join(' · ') : '', hud: c.epingles.length + ' épinglé(s)' + (P && P.dock === false ? ' · sans dock' : '') + (P ? ' · ▤ ' + (P.miniDocks == null ? 2 : P.miniDocks) + ' mini docks' : ''),
-        accueil: 'dossiers et pages', ploxions: installes.length + ' installé(s)', bions: bions.length + ' bion(s)', donnees: nRoutes + ' réponse(s) gardée(s)', apropos: 'ploxi0n ' + version,
+        accueil: 'dossiers et pages', ploxions: installes.length + ' installé(s)' + (maj ? ' · ↻ ' + (maj.reglage().auto ? 'à jour tout seul' : 'mises à jour à la main') : ''), bions: bions.length + ' bion(s)', donnees: nRoutes + ' réponse(s) gardée(s)', apropos: 'ploxi0n ' + version,
       };
       zone.innerHTML = '<div data-accueil>' + GROUPES.map(([g, l]) => (g ? '<h3>' + esc(g) + '</h3>' : '<h3>&nbsp;</h3>') + '<div class="bloc">' + l.filter(([k]) => (k !== 'sante' || sante) && (k !== 'widgets' || cube)).filter(([k]) => k !== 'notifs' || notifs).map(([k, i, n]) => lien(k, i, n, etats[k])).join('') + '</div>').join('') + '</div>'
         + section('natif', 'Natif', '<div class="bloc">' + bascule('data-pb="webNatif"', !P || P.webNatif !== false, 'Le web devient natif', 'les API web de TOUS les ploxions passent par l\'iPhone (au prochain lancement si tu changes)')
@@ -179,7 +179,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + '<p class="msg">épinglés au dock et au widget (4 au plus)</p><div class="bloc"><div class="pins">' + (cat.length ? cat.map(p => '<button class="pin' + (c.epingles.includes(p.id) ? ' on' : '') + '" data-pin="' + esc(p.id) + '" title="' + esc(p.nom) + '">' + esc(p.icone || '▣') + '</button>').join('') : '<span class="msg">installe des ploxions d\'abord</span>') + '</div></div>')
         + section('iphone', 'Écran d\'accueil de l\'iPhone', '<div class="bloc"><div class="l"><span>Tes ploxions en apps<small>une icône par ploxion, qui ouvre ploxi0n directement dessus</small></span><button class="p" data-a="apps">choisir</button></div></div>')
         + section('accueil', 'Accueil', '<div class="bloc"><div class="l"><span>Dossiers et pages<small>appui long sur un ploxion pour le ranger</small></span><button data-a="accueil">tout remettre</button></div></div>')
-        + section('ploxions', 'Ploxions · ' + installes.length, '<div class="bloc"><div class="l"><span>Mises à jour<small>les ploxions installés depuis le réseau</small></span><button data-a="ajour">vérifier</button></div>'
+        + section('ploxions', 'Ploxions · ' + installes.length, (maj ? '<p class="msg">↻ mises à jour</p>' + maj.html() + '<p class="msg">installés</p>' : '') + '<div class="bloc">' + (maj ? '' : '<div class="l"><span>Mises à jour<small>les ploxions installés depuis le réseau</small></span><button data-a="ajour">vérifier</button></div>')
           + installes.map(p => '<div class="l"><span class="ic" style="color:hsl(' + 0 + ' 0% 80%)">' + glyphePloxion(p) + '</span><span>' + esc(p.nom || p.id) + '<small>' + ko(tailles[p.id] || 0) + ' · ' + heures((usage[p.id] || {}).seconds) + ' · ' + (p.origine === 'pack' ? 'pack' : 'réseau') + (verrous.includes(p.id) ? ' · ' : '') + '</small></span>'
             + '<span class="act"><button class="danger" data-retirer="' + esc(p.id) + '" aria-label="retirer"></button></span></div>').join('') + '</div>')
         + section('bions', 'Bions · ' + bions.length, '<div class="bloc"><div class="l"><span>Compléter<small>ce que chaque ploxion touche, servi par le labo</small></span><button data-a="bions">compléter</button></div>'
@@ -204,6 +204,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         + '<p class="msg" data-msg></p>';
       filtrer();
       if (lecteurNatif) lecteurNatif.moteurs().then(m => { const el = zone.querySelector('[data-moteurs]'); if (el && m) el.textContent = 'ce build : Apple ' + (m.apple ? '✓' : '—') + ' · VLC ' + (m.vlc ? '✓ (MKV, DTS, sous-titres)' : '— (build avec l\'option « vlc » pour l\'avoir)'); }).catch(() => {});
+      if (maj) { const m = zone.querySelector('.px-maj'); if (m) maj.brancher(m); }   // ↻ (0.80) les mises à jour des ploxions
       if (cube && cube.animer) cube.animer(zone.querySelector('.px-cube-scene'));   // (0.54) l'aperçu du cube vit tout seul
       { const el = zone.querySelector('[data-mouvement]'); if (el && W.ploxi0nMouvement) { const e = W.ploxi0nMouvement.etat(); el.textContent = e.actif ? '✓ ' + e.source + ' · penche le téléphone' : e.erreur ? '⚠ ' + e.erreur + (e.erreur.includes('web') ? '' : ' — touche l\'écran une fois pour essayer le capteur du navigateur') : 'en attente (hors Calme, app visible)'; } }
       // le journal du dernier démarrage (l'écran de chargement) : le total, et les étapes les plus lentes

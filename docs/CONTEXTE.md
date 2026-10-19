@@ -102,6 +102,16 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.80 (19.10)** — ↻ les mises à jour des ploxions. Pourquoi « pas à jour directement » : (1) une fois monté, un ploxion restait dans la page
+(`W.jOSApps[id]`) : le nouveau code n'était lu qu'au redémarrage → `routeur.oublier(id)` (jOSApps, `script[data-ploxion]`, `style[data-px-css]`),
+tout de suite, ou à sa fermeture s'il est vivant (`aOublier`, dans `tuer`) ; le dépôt l'appelle par `surMisAJour` ; (2) une nouvelle version ne
+téléchargeait pas ses nouveaux bions → `resoudreBions` dans `aJour` ; (3) iOS pouvait servir une copie en cache → `?maj=<t>` + `Cache-Control:
+no-cache` ; (4) le pack restait figé → il suit le labo s'il a mieux (sinon `a-jour` sans erreur). `aJour({ concurrence: 6, ids, progres, auto })` ;
+un 404 (`maj-introuvables`) attend 7 jours en automatique. `src/marketplace/mises-a-jour.js` : `reglages/maj` = { auto: true, bions: true, heures: 6 },
+`reglages/maj-etat` ; `demarrer()` (20 s après le lancement, un tic toutes les 15 min, au retour dans l'app) ; la section de ⚙ › Ploxions
+(`html`/`brancher`). Les bions mis à jour se chargent au prochain lancement (garde `if (window.jOSX) return`, et le moteur partagé du clicker
+aussi). Le faux iPhone simule maintenant `CapacitorHttp.get` (304 pour un app.js du labo). Faux iPhone : `parcours-maj.mjs`.
+
 **0.79 (18.10)** — 🏆 Game Center pour le clicker (RS-7 : « j'ai déjà ajouté ça sur le truc Apple »). L'ID du classement n'est écrit nulle
 part : `PloxiApple.gameCenterClassements` (`GKLeaderboard.loadLeaderboards(IDs: nil)`) les liste, `choisirClassements` prend celui qui parle
 de clicker/xer/score/record (sinon le seul qui n'est pas « Xeroctions » 001 ; « dim » = celui des dimensions). Le score = `floor(max(stats.meilleur,

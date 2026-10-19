@@ -46,7 +46,7 @@ async function sha256(texte) {
   return Array.from(new Uint8Array(h), b => b.toString(16).padStart(2, '0')).join('');
 }
 
-export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLocal = [], lireLocal = null, lireBionLocal = null, estAdmin = () => false }) {
+export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLocal = [], lireLocal = null, lireBionLocal = null, estAdmin = () => false, surMisAJour = null }) {
   const NS = 'ploxions', META = 'marketplace';
   async function liste() { const l = await boxion.get(META, 'installes'); return Array.isArray(l) ? l : []; }
   async function garderListe(l) { await boxion.put(META, 'installes', [...new Set(l)]); }
@@ -166,21 +166,43 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       await boxion.append('tsoins', { kind: 'marketplace', action: 'installer', id, origine: 'pack' });
       return { id };
     },
-    async aJour() {
-      const res = [];
-      for (const id of await liste()) {
-        const p = await boxion.get(NS, id); if (!p || p.origine === 'pack') continue;
+    /** (0.80) tout mettre à jour. RS-7 (19.10) : « des fois il y a des ploxions qui ne sont pas à jour directement ». Trois causes réparées ici :
+     *  une copie gardée en cache par iOS (?maj= et Cache-Control: no-cache), les bions d'une nouvelle version jamais téléchargés (resoudreBions),
+     *  les ploxions du pack figés pour toujours (ils suivent le labo dès qu'il en a une version plus récente) ; et 6 à la fois au lieu d'un par un.
+     *  Un ploxion servi dans sa page (spotify, wiki : pas d'app.js) se relit dans sa page. → [{ id, etat: a-jour | mis-a-jour | erreur, detail? }] */
+    async aJour({ concurrence = 6, ids = null, progres = null, auto = false } = {}) {
+      // (0.80) introuvable au labo (son 404 : une page de 3,5 Mo) : l'automatique ne le redemande pas pendant 7 jours ; « vérifier » si
+      const introuvables = (await boxion.get(META, 'maj-introuvables').catch(() => null)) || {};
+      const tous = (ids || await liste()).filter(id => !(auto && introuvables[id] && Date.now() - introuvables[id] < 7 * 864e5)), res = [];
+      let i = 0, fait = 0;
+      const un = async (id) => {
+        const p = await boxion.get(NS, id); if (!p) return null;
+        const pack = p.origine === 'pack';
         try {
-          const r = await http.get(source + '/px/' + encodeURIComponent(id) + '/app.js', { headers: p.etag ? { 'If-None-Match': p.etag } : {} });
-          if (r.status === 304) { res.push({ id, etat: 'a-jour' }); continue; }
-          if (r.status !== 200 || !valide(r.texte, id)) { res.push({ id, etat: 'erreur', detail: 'HTTP ' + r.status }); continue; }
+          const casse = 'maj=' + Date.now().toString(36);
+          let r = await http.get(source + '/px/' + encodeURIComponent(id) + '/app.js?' + casse, { headers: { 'Cache-Control': 'no-cache', ...(p.etag ? { 'If-None-Match': p.etag } : {}) } });
+          if (r.status === 304) return { id, etat: 'a-jour' };
+          if (r.status !== 200 || /^\s*<(!doctype|html)/i.test(r.texte || '')) {
+            const pg = await http.get(source + '/px/' + encodeURIComponent(id) + '?' + casse, { headers: { Accept: 'text/html', 'Cache-Control': 'no-cache' } }).catch(() => null);
+            const js = pg && pg.status === 200 ? bundleDeLaPage(pg.texte, id) : null;
+            if (!js) return pack ? { id, etat: 'a-jour', detail: 'pack' } : { id, etat: 'erreur', detail: 'HTTP ' + r.status };
+            r = { status: 200, texte: js, entetes: {} };
+          }
+          if (!valide(r.texte, id)) return pack ? { id, etat: 'a-jour', detail: 'pack' } : { id, etat: 'erreur', detail: 'pas un ploxion' };
           const h = await sha256(r.texte);
-          if (h === p.hash) { res.push({ id, etat: 'a-jour' }); continue; }
-          await boxion.put(NS, id, { ...p, js: r.texte, hash: h, etag: (r.entetes && (r.entetes.etag || r.entetes.ETag)) || null, maj: new Date().toISOString() }); await boxion.del(META, 'installes-index').catch(() => {});
+          if (h === p.hash) return { id, etat: 'a-jour' };
+          const { bions, manquants } = await resoudreBions(r.texte);
+          await boxion.put(NS, id, { ...p, js: r.texte, hash: h, bions: [...new Set([...(p.bions || []), ...bions])], manquants, origine: source, etag: (r.entetes && (r.entetes.etag || r.entetes.ETag)) || null, maj: new Date().toISOString() });
           await boxion.append('tsoins', { kind: 'marketplace', action: 'mettre-a-jour', id, hash: h });
-          res.push({ id, etat: 'mis-a-jour' });
-        } catch (e) { res.push({ id, etat: 'erreur', detail: e.message }); }
-      }
+          if (surMisAJour) try { surMisAJour(id); } catch (e) { /* */ }   // (0.80) l'app décharge l'ancien code (routeur.oublier)
+          return { id, etat: 'mis-a-jour' };
+        } catch (e) { return { id, etat: 'erreur', detail: e.message }; }
+      };
+      const ouvrier = async () => { while (i < tous.length) { const id = tous[i++]; const x = await un(id); fait++; if (x) res.push(x); if (progres) try { progres({ fait, total: tous.length, id }); } catch (e) { /* */ } } };
+      await Promise.all(Array.from({ length: Math.max(1, Math.min(concurrence, tous.length)) }, ouvrier));
+      if (res.some(x => x.etat === 'mis-a-jour')) await boxion.del(META, 'installes-index').catch(() => {});
+      for (const x of res) { if (x.etat === 'erreur' && /^HTTP 404$|pas un ploxion/.test(x.detail || '')) introuvables[x.id] = Date.now(); else delete introuvables[x.id]; }
+      await boxion.put(META, 'maj-introuvables', introuvables).catch(() => {});
       return res;
     },
     async retirer(id) {

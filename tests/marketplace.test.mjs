@@ -14,7 +14,7 @@ function serveur() {
       { id: 'pomo', name: 'Pomodoro', icon: '🍅', hasScreen: true, enabled: true, admin: false, status: 'live', description: 'minuteur', cat_label: 'Temps' },
       { id: 'secret', name: 'Admin', hasScreen: true, enabled: true, admin: true, status: 'live' },
       { id: 'idee', name: 'Idée', hasScreen: false, enabled: true, status: 'idea' } ]), entetes: {} };
-    const m = url.match(/\/px\/([^/]+)\/app\.js$/); const id = m && decodeURIComponent(m[1]);
+    const m = url.match(/\/px\/([^/]+)\/app\.js(?:\?|$)/); const id = m && decodeURIComponent(m[1]);
     if (!s.js[id]) return { status: 404, texte: '', entetes: {} };
     if (headers['If-None-Match'] && headers['If-None-Match'] === s.etag[id]) return { status: 304, texte: '', entetes: {} };
     return { status: 200, texte: s.js[id], entetes: { etag: s.etag[id] } };

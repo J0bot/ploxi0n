@@ -373,6 +373,14 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
   }
   let verrous = new Set(), accueilDoc = { dossiers: [], pages: [] }, pageCourante = 0;
   const charges = new Map();
+  // ↻ (0.80) un ploxion mis à jour : son ancien code quitte la page (jOSApps, son <script>, son <style>), la prochaine ouverture lit le nouveau.
+  // Ouvert (vivant) : il garde l'ancien jusqu'à sa fermeture (on ne coupe pas une musique, une partie) — oublié à ce moment-là.
+  const aOublier = new Set();
+  function oublierCode(id) {
+    aOublier.delete(id); charges.delete(id);
+    try { if (W.jOSApps) delete W.jOSApps[id]; } catch (e) { /* */ }
+    for (const n of D.querySelectorAll('script[data-ploxion="' + id + '"],style[data-px-css="' + id + '"]')) n.remove();
+  }
   const pret = boxion ? Promise.all([
     boxion.get('reglages', 'verrous').then(v => { verrous = new Set(Array.isArray(v) ? v : []); }),
     boxion.get('reglages', 'accueil').then(v => { if (v && Array.isArray(v.dossiers)) accueilDoc = { pages: [], ...v }; if (!Array.isArray(accueilDoc.pages)) accueilDoc.pages = []; }),
@@ -725,7 +733,8 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     if (v === courant) { compter(v); courant = null; }
     if (flottant && flottant.v === v) poserFlottant(null);
     if (holoV === v) quitterHolo();
-    vivants.delete(id); pile = pile.filter(x => x !== id); fractale.oublier(id); pleins.delete(id);   // (0.63) sa carte part (sinon la toucher le faisait revivre)
+    vivants.delete(id); pile = pile.filter(x => x !== id); fractale.oublier(id); pleins.delete(id);
+    if (aOublier.has(id)) W.setTimeout(() => { if (!vivants.has(id)) oublierCode(id); }, 0);   // ↻ (0.80) après son unmount   // (0.63) sa carte part (sinon la toucher le faisait revivre)
     try { if (v.inst && typeof v.inst.unmount === 'function') v.inst.unmount(); } catch (e) { console.warn('[ploxi0n] unmount', id, e); }
     v.hote.innerHTML = ''; v.hote.remove(); fermerCube(id); majBords();   // ▣ après : hôte parti, sa salle part tout de suite
     accrochesDe(id, n => { accroches.delete(n); try { n.remove(); } catch (e) { /* */ } });
@@ -903,6 +912,10 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     vueAccueil(v) { if (v === undefined) return accueilDoc.vue || 'grille'; accueilDoc.vue = v; garder(); return v; },
     async retirerPloxion(id) { tuer(id); if (retirer) await retirer(id); },
     reinitialiserAccueil() { accueilDoc = { dossiers: [], pages: [] }; pageCourante = 0; dossierOuvert = null; garder(); },
+    /** ↻ (0.80) son code a changé : 'fait' (déchargé), 'a-la-fermeture' (il est ouvert), 'interne' (un ploxion de l'app : rien) */
+    oublier(id) { if (parId.has(id) && parId.get(id).interne) return 'interne'; if (vivants.has(id)) { aOublier.add(id); return 'a-la-fermeture'; } oublierCode(id); return 'fait'; },
+    /** les ploxions qui attendent leur fermeture pour prendre leur nouvelle version */
+    enAttenteDeMaj: () => [...aOublier],
     /** § (0.77) l'accueil d'un xer : le lire (une copie), le poser */
     docAccueil: () => JSON.parse(JSON.stringify(accueilDoc)),
     chargerAccueil(doc) {
