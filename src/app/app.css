@@ -945,3 +945,30 @@ html.px-calme .px-vx-t{transition:none}html.px-calme .px-vx-eclair{animation:non
 .px-xr-recu{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:16px;border:var(--trait) dashed var(--accent,#79f2a8);background:var(--surface)}
 .px-xr-recu .px-ft,.px-xr-recu .px-sous{margin:0}
 .px-xr-c{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+/* 📖 (0.81) le wiki natif (src/app/wiki-natif.js) : l'article du labo, avec nos styles */
+.px-wiki-hote{position:absolute;inset:0;display:flex;overflow:hidden}
+.px-wiki{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;width:100%;background:var(--bg)}
+.px-wiki-b{display:flex;gap:6px;align-items:center;padding:8px 10px;border-bottom:var(--trait) solid var(--bord)}
+.px-wiki-b input{flex:1;min-width:0;min-height:40px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);padding:0 12px;font:16px var(--police)}
+.px-wiki-b button{min-width:40px;min-height:40px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:600 16px var(--police)}
+.px-wiki-b button:disabled{opacity:.35}
+.px-wiki-p{flex:1;min-width:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 40px)}
+.px-wiki-m{color:var(--muted);font-size:13px}.px-wiki-m a{color:var(--accent,#79f2a8)}
+.px-wiki-a{color:var(--txt);font:15px/1.6 var(--police);overflow-wrap:anywhere;max-width:100%}.px-wiki-a *{max-width:100%;box-sizing:border-box}.px-wiki-a pre,.px-wiki-a code{white-space:pre-wrap}
+.px-wiki-a h1,.px-wiki-a .wiki-h1,.px-wiki-a .wiki-title{font:700 24px/1.2 var(--police);margin:4px 0 10px}
+.px-wiki-a h2,.px-wiki-a .wiki-h2{font:600 18px/1.3 var(--police);margin:22px 0 8px;padding-bottom:4px;border-bottom:var(--trait) solid var(--bord)}
+.px-wiki-a a[data-wiki]{color:var(--accent,#79f2a8);text-decoration:none;border-bottom:1px dotted currentColor}
+.px-wiki-a a[data-externe]{color:var(--txt);text-decoration:underline}
+.px-wiki-a img{max-width:100%;height:auto;border-radius:10px}
+.px-wiki-a svg{max-width:100%;height:auto}.px-wiki-a .xr-glyph svg,.px-wiki-a .infobox__glyph svg{width:64px;height:64px}
+.px-wiki-a .infobox,.px-wiki-a .wiki-toc,.px-wiki-a .term-section,.px-wiki-a .wiki-layer{border:var(--trait) solid var(--bord);border-radius:14px;background:var(--surface);padding:10px 12px;margin:10px 0}
+.px-wiki-a .infobox__row{display:flex;gap:8px;justify-content:space-between;font-size:13px;padding:3px 0}.px-wiki-a .infobox__label{color:var(--muted)}
+.px-wiki-a .term-chip,.px-wiki-a .ion-chip,.px-wiki-a .badge{display:inline-block;padding:2px 9px;margin:2px;border-radius:99px;border:var(--trait) solid var(--bord);font-size:12.5px}
+.px-wiki-a ul,.px-wiki-a ol{padding-left:20px}.px-wiki-a .wiki-toc__title{font-weight:600}
+.px-wiki-a .wiki-subtitle,.px-wiki-a .term-meta,.px-wiki-a .term-hatnote{color:var(--muted);font-size:13px}
+.px-wiki-a table{border-collapse:collapse;max-width:100%;display:block;overflow-x:auto}.px-wiki-a td,.px-wiki-a th{border:var(--trait) solid var(--bord);padding:4px 8px}
+/* ⧉ (0.81) un sous-ploxion qui arrive (jOSApps.monter) */
+.px-ald{display:flex;flex-direction:column;gap:6px;padding:16px;color:var(--txt);font:15px var(--police)}.px-ald small{color:var(--muted);font-size:12.5px}
+.px-ald button{align-self:flex-start;min-height:38px;padding:0 14px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:600 13px var(--police)}
+.px-ald-r{display:inline-block;animation:px-ald-t 1.2s linear infinite}@keyframes px-ald-t{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.px-ald-r{animation:none}}

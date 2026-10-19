@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.81.0', titre: 'Les ploxions composés et le wiki, dans l\'app', points: [
+    '⧉ Les ploxions qui en composent d\'autres marchent : Ultimate social (le fil, les salons, les amis, la carte, les idées, le profil), socialion, space, stockage… Chaque onglet qui manque s\'installe tout seul la première fois, au lieu de « indisponible ici ».',
+    '⧉ Les dépendances : installer un ploxion installe aussi, en fond, ceux qu\'il compose. Ceux qui manquaient déjà arrivent à la prochaine mise à jour automatique.',
+    '📖 Le wiki se lit dans l\'app : l\'article seul, avec ses liens entre termes (← pour revenir), un terme à chercher, ⚄ au hasard, ≡ le lexique. Chaque page lue reste là, même hors ligne.',
+  ] },
   { v: '0.80.0', titre: 'Tes ploxions à jour tout seuls', points: [
     '↻ Tes ploxions se mettent à jour tout seuls : au lancement, puis toutes les 6 h (ou 1 h, ou 24 h), avec du réseau. Ce qui a changé est dit en bas de l\'écran.',
     '⚙ › Ploxions › mises à jour : l\'interrupteur, la fréquence, les bions aussi, et « vérifier » maintenant, avec la progression.',

@@ -31,6 +31,22 @@ const appels = [];            // chaque appel natif
 const nonSimules = new Map(); // plugin.methode → n
 const auditeurs = []; let presse = ''; const eveil = []; const ouvertsBrowser = [], verrous = [];         // { plugin, evenement, callbackId }
 let page = null, mouvementMinuteur = null;
+const DONNEES = path.join(RACINE, 'tests/donnees');
+const SOUS = ['social', 'chat', 'carte', 'amis', 'profil', 'idee', 'atelier'];
+const sousBundle = (id) => `window.jOSApps=window.jOSApps||{};window.jOSApps[${JSON.stringify(id)}]={manifest:{id:${JSON.stringify(id)},name:${JSON.stringify(id)}},mount(h){h.innerHTML='<div style="padding:16px;color:#cfe">◇ le ploxion <b>${id}</b>, installé à la demande</div>';return{unmount(){h.innerHTML=''}}}};`;
+function laboFaux(url) {
+  const r = (status, data, type = 'text/html') => ({ status, data, headers: { 'Content-Type': type }, url });
+  const u = new URL(url);
+  if (u.hostname !== 'labo.j0bot.ch') throw new Error('Could not connect to the server.');
+  if (u.pathname === '/px/registry.json') return r(200, JSON.stringify(['ultimate-social', ...SOUS].map(id => ({ id, name: id, hasScreen: true, enabled: true, status: 'live', cat_label: 'Social' }))), 'application/json');
+  const m = /^\/px\/([^/]+)\/app\.js$/.exec(u.pathname);
+  if (m && m[1] === 'ultimate-social') return r(200, readFileSync(path.join(DONNEES, 'ultimate-social.labo.js'), 'utf8'), 'application/javascript');
+  if (m && SOUS.includes(m[1])) return r(200, sousBundle(m[1]), 'application/javascript');
+  if (m) return r(304, '');
+  if (/^\/wiki\/xerboxion\b/.test(u.pathname)) return r(200, readFileSync(path.join(DONNEES, 'wiki-xerboxion.labo.html'), 'utf8'));
+  if (/^\/wiki/.test(u.pathname)) return r(404, '<!doctype html>404');
+  return r(404, '<!doctype html>404');
+}
 const wledFaux = { state: { on: true, bri: 128, seg: [{ col: [[255, 80, 0]], fx: 0, pal: 0 }] }, info: { name: 'Ruban du salon', ver: '0.15.0', leds: { count: 60, pwr: 420 } }, effects: ['Solid', 'Blink', 'Breathe'], palettes: ['Default', 'Lava'] };
 
 function base(nom) { if (!bases.has(nom)) bases.set(nom, new DatabaseSync(':memory:')); return bases.get(nom); }
@@ -104,7 +120,8 @@ const natif = {
   BluetoothLe: { initialize: () => ({}), requestDevice: () => ({ deviceId: 'AA:BB', name: 'Polar H10' }), connect: () => ({}), disconnect: () => ({}), read: () => ({ value: '5a' }), write: () => ({}), startNotifications: () => ({}), getServices: () => ({ services: [] }) },
   // 🤖 (0.75) le réseau local du contrôleur XERB0T : un WLED (10.0.0.7) et un Home Assistant (10.0.0.9:8123, jeton « bon ») simulés
   // (0.80) les mises à jour : le labo répond « 304, pas changé » pour un app.js
-  CapacitorHttp: { get: (o) => (/labo\.j0bot\.ch\/px\/[^/]+\/app\.js/.test(o.url) ? { status: 304, data: '', headers: {}, url: o.url } : (() => { throw new Error('Could not connect to the server.'); })()),
+  // (0.81) le labo simulé pour les ploxions composés (le vrai ultimate-social, ses onglets) et le wiki (le vrai article « xerboxion »)
+  CapacitorHttp: { get: (o) => laboFaux(o.url),
     request: (o) => { const u = new URL(o.url); const j = (status, data) => ({ status, data: JSON.stringify(data), headers: { 'Content-Type': 'application/json' }, url: o.url });
     if (u.hostname === '10.0.0.7') { const st = wledFaux.state;
       if (u.pathname === '/json/info') return j(200, wledFaux.info);

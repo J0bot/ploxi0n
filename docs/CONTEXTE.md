@@ -102,6 +102,23 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.81 (19.10)** — ⧉ les ploxions composés et 📖 le wiki. Les captures de RS-7 (Ultimate social : « carte / social / chat indisponible
+ici ») : ultimate-social (et socialion, space, stockage, theme, dl) montent leurs sous-ploxions par `jOSApps.monter(id, hôte, ctx)` si
+`jOSApps.peut(id)` — le contrat de la coquille du labo (monde.html : charge, peut, ensure, monter → `{ unmount, ready, lazy, robuste, instance }`).
+ploxi0n avait `peut = routeur.connait` (installé seulement) → `src/shim/apps-a-la-demande.js` : non énumérables sur jOSApps ; `ensureApp` (main) =
+`installerSilencieux` (pack, puis `depot.installer`, sans barre) + `routeur.chargerApp`. Les dépendances : `ploxionsComposes(js)` (les `app: 'x'`,
+`jOSApps.monter/ensure('x')`, `jOSApps['x']` lus, pas assignés) ; `depot.installer` rend `composes` et appelle `surInstalle` → installées en fond ;
+`depot.dependances()` + `maj.completer` : ce qui manque, à chaque vérification. Le wiki (`src/app/wiki-natif.js`) : la page `/wiki/<slug>`
+(3,6 Mo, 1,1 Mo gzippé : toute la coquille du labo) lue en HTTP natif, on garde `.wiki-app` (~30 Ko), nettoyée (`RETIRER`, on*, style,
+javascript:) ; `data-wiki` pour les liens internes, `data-externe` pour le reste ; boxion « wiki/<chemin> » (frais 24 h, hors ligne : le cache) ;
+`cadres-labo.js` remplace l'iframe /wiki… (même réécrite en https://labo… par le shim) par le lecteur, suit `ploxion.wiki.goto`. Le sommaire
+(#ancres) défile sans toucher au # du routeur. Faux iPhone : `parcours-composes.mjs` (le labo simulé : le vrai ultimate-social et le vrai article,
+`tests/donnees/`).
+**❓ À faire dans le labo (RS-7)** : (1) la CSP du labo (`frame-ancestors 'self' https://*.j0bot.ch`, config/csp.php) : ajouter
+`capacitor://localhost` — alors ideas (/ideas), makelab (/objets/), files et ultimate-files (/boxions), xerkions, universal-suit et phone-test
+s'affichent DANS l'app sans rien changer ici (cadres-labo.js le détecte par un HEAD) ; (2) `/wiki/{slug}?fragment=1` qui ne rend que
+`.wiki-app` (le lecteur le demande déjà) : 30 Ko au lieu de 1,1 Mo par page.
+
 **0.80 (19.10)** — ↻ les mises à jour des ploxions. Pourquoi « pas à jour directement » : (1) une fois monté, un ploxion restait dans la page
 (`W.jOSApps[id]`) : le nouveau code n'était lu qu'au redémarrage → `routeur.oublier(id)` (jOSApps, `script[data-ploxion]`, `style[data-px-css]`),
 tout de suite, ou à sa fermeture s'il est vivant (`aOublier`, dans `tuer`) ; le dépôt l'appelle par `surMisAJour` ; (2) une nouvelle version ne

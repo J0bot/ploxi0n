@@ -916,6 +916,8 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     oublier(id) { if (parId.has(id) && parId.get(id).interne) return 'interne'; if (vivants.has(id)) { aOublier.add(id); return 'a-la-fermeture'; } oublierCode(id); return 'fait'; },
     /** les ploxions qui attendent leur fermeture pour prendre leur nouvelle version */
     enAttenteDeMaj: () => [...aOublier],
+    /** ⧉ (0.81) le code d'un ploxion installé, dans la page, sans l'ouvrir (jOSApps.ensure / monter) → Promise<app> */
+    chargerApp: (id) => charger(id),
     /** § (0.77) l'accueil d'un xer : le lire (une copie), le poser */
     docAccueil: () => JSON.parse(JSON.stringify(accueilDoc)),
     chargerAccueil(doc) {

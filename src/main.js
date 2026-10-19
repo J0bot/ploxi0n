@@ -65,6 +65,8 @@ import { creerPartage } from './app/partage.js';
 import { creerXers } from './app/xers.js';
 import { creerClickerNatif, toucherRapide } from './jeu/clicker-natif.js';
 import { creerMisesAJour } from './marketplace/mises-a-jour.js';
+import { installerAppsALaDemande } from './shim/apps-a-la-demande.js';
+import { creerWikiNatif } from './app/wiki-natif.js';
 import { creerControleur } from './xerbot/controleur.js';
 import { semerKoinIon } from './terrax/koin-ion.js';
 import { svgXerkion } from './app/xerkion-icone.js';
@@ -72,7 +74,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.80.0';
+const VERSION = '0.81.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -206,6 +208,27 @@ async function demarrer() {
     } catch (e) { return false; }
     return routeur.connait(id);
   }
+  // ⧉ (0.81) sans barre ni ouverture : un sous-ploxion (jOSApps.monter) ou une dépendance ; le pack d'abord, puis le labo
+  async function installerSilencieux(id) {
+    if (routeur.connait(id)) return true;
+    try {
+      if (depot.packLocal().some(p => p.id === id)) await depot.installerLocal(id);
+      else { const c = await depot.catalogue({ reseau: false }).catch(() => ({ items: [] })); const m = (c.items || []).find(x => x.id === id) || {}; await depot.installer(id, { nom: m.nom, icone: m.icone }); }
+      await majAccueil();
+    } catch (e) { return false; }
+    return routeur.connait(id);
+  }
+  // ⧉ (0.81) les dépendances : ce qu'un ploxion installé compose (ses onglets, jOSApps.monter…) s'installe en fond, une fois, en ligne
+  const depVus = new Set();
+  async function installerDependances(ids) {
+    const faits = [];
+    for (const id of (ids || []).slice(0, 12)) {
+      if (depVus.has(id) || routeur.connait(id) || navigator.onLine === false) continue;
+      depVus.add(id);
+      if (await installerSilencieux(id)) faits.push(id);
+    }
+    return faits;
+  }
   const routeurProxy = {
     async ouvrir(id, params) {
       if (!routeur.connait(id) && !(await installerAbsent(id))) return false;
@@ -261,12 +284,16 @@ async function demarrer() {
   const indexPack = await lireJson('/ploxions/index.json', { ploxions: [] }), pack = indexPack.ploxions || [];
   const compat = await lireJson('/marketplace/compat.json', {});
   // ⬡ (0.53) les cadres du labo : un <iframe src="/wiki"> d'un ploxion vise le labo ; refusé par sa CSP → une carte « ouvrir »
-  const cadres = creerCadresLabo({ source: SOURCE, tete: (u) => creerHttp(window, async () => ({})).tete(u), navigateur: (u) => window.jOSNatif.navigateur(u) });
+  // 📖 (0.81) le wiki se lit dans l'app (src/app/wiki-natif.js) : l'article seul, gardé pour le hors ligne, les liens entre termes restent ici
+  const wikiNatif = creerWikiNatif({ source: SOURCE, http: creerHttp(window, async () => ({})), boxion, navigateur: (u) => window.jOSNatif.navigateur(u), vibrer: (x) => vibrer(x) });
+  const cadres = creerCadresLabo({ source: SOURCE, tete: (u) => creerHttp(window, async () => ({})).tete(u), navigateur: (u) => window.jOSNatif.navigateur(u), lecteur: wikiNatif });
   const depot = creerDepot({ boxion, http: creerHttp(window, enTetes), estAdmin: () => !!(compteRef && compteRef.etat().admin), compat, packLocal: pack, lireLocal: async (id) => (await fetch('/ploxions/' + encodeURIComponent(id) + '/app.js')).text(),
     lireBionLocal: async (b) => { const r = await fetchOrigine('/bions/' + encodeURIComponent(b) + '.js'); if (!r.ok) throw new Error('bion absent'); return r.text(); },
-    surMisAJour: (id) => { if (routeur) routeur.oublier(id); } });   // ↻ (0.80) l'ancien code quitte la page : la prochaine ouverture lit le nouveau
+    surMisAJour: (id) => { if (routeur) routeur.oublier(id); },
+    surInstalle: (id, composes) => { if (routeur && composes && composes.length) setTimeout(() => installerDependances(composes).catch(() => {}), 500); } });   // ⧉ (0.81)   // ↻ (0.80) l'ancien code quitte la page : la prochaine ouverture lit le nouveau
   // ↻ (0.80) les mises à jour des ploxions : automatiques (par défaut), et ⚙ › Ploxions
-  const maj = creerMisesAJour({ depot, boxion, routeur: () => routeur, signaler: (t) => routeur && routeur.signaler(t), apres: () => majAccueil() });
+  const maj = creerMisesAJour({ depot, boxion, routeur: () => routeur, signaler: (t) => routeur && routeur.signaler(t), apres: () => majAccueil(),
+    completer: async () => installerDependances((await depot.dependances()).map(x => x.id)) });   // ⧉ (0.81) les dépendances qui manquent, à chaque vérification
   window.ploxi0nMaj = maj;
   // les ploxions de base (index.json « base » : bother me pour les testeurs) : installés une fois, au premier lancement ; retirables ensuite
   const deja = (await boxion.get('reglages', 'base-installes')) || [];
@@ -471,14 +498,13 @@ async function demarrer() {
   window.addEventListener('online', () => routeur.rafraichirHud()); window.addEventListener('offline', () => routeur.rafraichirHud());
   await majAccueil();
   boot(86, routeur.catalogue().length + ' ploxions à l\'accueil');
-  // jOSApps.monter / peut, comme dans le labo : un ploxion en monte un autre dans un coin (fill the gaps, les « ultimate »). Démontable.
-  window.jOSApps.peut = (id) => routeur.connait(id);
-  window.jOSApps.monter = (id, hote, ctx) => {
-    let inst = null, mort = false;
-    const pret = routeur.charger(id).then(app => { if (mort) return null; inst = app.mount(hote, ctx || { embed: true }) || null; return inst; })
-      .catch(e => { if (hote) hote.textContent = '⚠ « ' + id + ' » indisponible : ' + (e && e.message); });
-    return { ready: pret, unmount() { mort = true; if (inst && inst.unmount) { try { inst.unmount(); } catch (e) { /* */ } } inst = null; } };
-  };
+  // ⧉ (0.81) jOSApps.monter / peut / ensure / charge, le contrat de la coquille du labo : un ploxion en compose d'autres (ultimate-social :
+  // social, chat, carte…). Avant, peut() = « installé » → « indisponible ici » ; maintenant le sous-ploxion s'installe tout seul (src/shim/apps-a-la-demande.js)
+  let catalogueIds = new Set();
+  const lireCatalogueIds = () => depot.catalogue({ reseau: false }).then(c => { catalogueIds = new Set((c.items || []).map(x => x.id)); }).catch(() => {});
+  lireCatalogueIds();
+  installerAppsALaDemande({ W: window, connu: (id) => routeur.connait(id) || depot.packLocal().some(p => p.id === id) || catalogueIds.has(id) || (!catalogueIds.size && navigator.onLine !== false),
+    ensureApp: async (id) => { if (!routeur.connait(id) && !(await installerSilencieux(id))) throw new Error('ploxion « ' + id + ' » : introuvable au labo'); return routeur.chargerApp(id); } });
   window.ploxi0n = { boxion, shim, routeur, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte };
   brancherLiens({ routeur, compte, installer: (id) => routeurProxy.ouvrir(id), lecture: (c) => maintenant.commander(c), lire: (o) => lecteurNatif.ouvrir(o.url, o).catch(() => {}),
     // ☾ (0.64) ploxi0n://dodo et ploxi0n://reveil : un raccourci, le Toucher au dos, ou l'automatisation « quand Sommeil s'active » d'iOS le notent seuls

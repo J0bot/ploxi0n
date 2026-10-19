@@ -7,6 +7,7 @@
 //   aJour()          pour chaque ploxion installé depuis le réseau : If-None-Match (ETag) → 304 = à jour, 200 = une mise à jour
 //   retirer(id), installes(), bundle(id)
 // http = { get(url, { headers }) → { status, texte, entetes } } : CapacitorHttp sur l'iPhone (pas de CORS), fetch ailleurs, un faux en test.
+import { ploxionsComposes } from '../shim/apps-a-la-demande.js';
 export const SOURCE = 'https://labo.j0bot.ch';
 // les bions que l'app fournit déjà (le shim, Face ID, le pack) : jamais téléchargés
 export const FOURNIS = new Set(['jOSApps', 'jOSPorts', 'jOSTsoin', 'jOSBoxion', 'jOS', 'jOSXerPrefs', 'jOSMobile', 'jOSb', 'jOSVerrou', 'jOSNatif', 'jOSRaccourcis', 'jOSEcranAccueil', 'jOSKeyboard', 'jOSUsage', 'jOSSante', 'jOSMiniDock']);
@@ -46,7 +47,7 @@ async function sha256(texte) {
   return Array.from(new Uint8Array(h), b => b.toString(16).padStart(2, '0')).join('');
 }
 
-export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLocal = [], lireLocal = null, lireBionLocal = null, estAdmin = () => false, surMisAJour = null }) {
+export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLocal = [], lireLocal = null, lireBionLocal = null, estAdmin = () => false, surMisAJour = null, surInstalle = null }) {
   const NS = 'ploxions', META = 'marketplace';
   async function liste() { const l = await boxion.get(META, 'installes'); return Array.isArray(l) ? l : []; }
   async function garderListe(l) { await boxion.put(META, 'installes', [...new Set(l)]); }
@@ -148,7 +149,9 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       await boxion.put(NS, id, doc); await boxion.del(META, 'installes-index').catch(() => {});
       await garderListe([...(await liste()), id]);
       await boxion.append('tsoins', { kind: 'marketplace', action: 'installer', id, hash: doc.hash });
-      return { id, hash: doc.hash, octets: r.texte.length, bions, manquants };
+      const composes = ploxionsComposes(r.texte, id);
+      if (surInstalle) try { surInstalle(id, composes); } catch (e) { /* (0.81) l'app installe ses dépendances en fond */ }
+      return { id, hash: doc.hash, octets: r.texte.length, bions, manquants, composes };
     },
     async installerLocal(id) {
       const p = packLocal.find(x => x.id === id); if (!p || !lireLocal) throw new Error(id + ' n\'est pas dans le pack hors ligne');
@@ -204,6 +207,16 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       for (const x of res) { if (x.etat === 'erreur' && /^HTTP 404$|pas un ploxion/.test(x.detail || '')) introuvables[x.id] = Date.now(); else delete introuvables[x.id]; }
       await boxion.put(META, 'maj-introuvables', introuvables).catch(() => {});
       return res;
+    },
+    /** (0.81) les ploxions que les ploxions installés COMPOSENT (leurs onglets, jOSApps.monter…) et qui manquent, connus du catalogue du labo */
+    async dependances() {
+      const ids = await liste(), ici = new Set(ids), c = await this.catalogue({ reseau: false }).catch(() => ({ items: [] })), labo = new Set((c.items || []).map(x => x.id));
+      const pack = new Set(packLocal.map(x => x.id)), out = new Map();
+      for (const id of ids) {
+        const p = await boxion.get(NS, id); if (!p || !p.js) continue;
+        for (const d of ploxionsComposes(p.js, id)) if (!ici.has(d) && (labo.has(d) || pack.has(d))) { if (!out.has(d)) out.set(d, []); out.get(d).push(id); }
+      }
+      return [...out].map(([id, pour]) => ({ id, pour }));
     },
     async retirer(id) {
       await boxion.del(NS, id); await boxion.del(META, 'installes-index').catch(() => {});

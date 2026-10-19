@@ -11,7 +11,7 @@ export const MAJ_DEFAUT = { auto: true, bions: true, heures: 6 };
 export const FREQUENCES = [[1, 'toutes les heures'], [6, 'toutes les 6 h'], [24, 'une fois par jour']];
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-export function creerMisesAJour({ W = globalThis.window, depot, boxion, routeur = () => null, signaler = () => {}, apres = async () => {}, enLigne = () => W.navigator.onLine !== false, maintenant = () => Date.now() }) {
+export function creerMisesAJour({ W = globalThis.window, depot, boxion, routeur = () => null, signaler = () => {}, apres = async () => {}, enLigne = () => W.navigator.onLine !== false, maintenant = () => Date.now(), completer = null }) {
   let r = { ...MAJ_DEFAUT }, etat = null, enCours = null, minuteur = null;
   const pret = Promise.all([boxion.get('reglages', 'maj').catch(() => null), boxion.get('reglages', 'maj-etat').catch(() => null)])
     .then(([a, b]) => { if (a && typeof a === 'object') r = { ...MAJ_DEFAUT, ...a }; if (b && typeof b === 'object') etat = b; });
@@ -28,9 +28,12 @@ export function creerMisesAJour({ W = globalThis.window, depot, boxion, routeur 
       if (r.bions && depot.bions && depot.majBion) {
         for (const b of await depot.bions().catch(() => [])) { try { if ((await depot.majBion(b.nom)) === 'mis-a-jour') bions++; } catch (e) { /* un bion introuvable n'arrête pas les autres */ } }
       }
-      etat = { le: maintenant(), mis, erreurs, bions, aJour: res.length - mis.length - erreurs.length };
+      // ⧉ (0.81) les dépendances : ce que les ploxions installés composent (ultimate-social → social, chat, carte…) et qui manque
+      let ajoutes = []; if (completer) { try { ajoutes = (await completer()) || []; } catch (e) { /* hors ligne en route */ } }
+      etat = { le: maintenant(), mis, erreurs, bions, ajoutes, aJour: res.length - mis.length - erreurs.length };
       await boxion.put('reglages', 'maj-etat', etat).catch(() => {});
       if (mis.length) { try { await apres(mis); } catch (e) { /* l'accueil se redessine */ } }
+      if (auto && ajoutes.length) signaler('⧉ ' + ajoutes.length + ' ploxion' + (ajoutes.length > 1 ? 's' : '') + ' dont tes ploxions ont besoin : ' + ajoutes.slice(0, 4).join(', ') + (ajoutes.length > 4 ? '…' : ''));
       if (auto && (mis.length || bions)) {
         const att = routeur() && routeur().enAttenteDeMaj ? routeur().enAttenteDeMaj() : [];
         signaler('↻ ' + (mis.length ? mis.length + ' ploxion' + (mis.length > 1 ? 's' : '') + ' à jour (' + mis.slice(0, 3).join(', ') + (mis.length > 3 ? '…' : '') + ')' : '') + (mis.length && bions ? ' · ' : '') + (bions ? bions + ' bion' + (bions > 1 ? 's' : '') + ' au prochain lancement' : '') + (att.length ? ' · ' + att.join(', ') + ' : à sa fermeture' : ''));
@@ -74,7 +77,7 @@ export function creerMisesAJour({ W = globalThis.window, depot, boxion, routeur 
       const x = await verifier({ progres: ({ fait, total }) => { s.textContent = '↻ ' + fait + ' / ' + total + '…'; } }).catch((er) => ({ erreur: er.message }));
       b.disabled = false;
       s.textContent = x.erreur ? '⚠ ' + x.erreur : x.horsLigne ? 'hors ligne : réessaie avec du réseau'
-        : (x.mis.length ? '✓ ' + x.mis.length + ' mis à jour : ' + x.mis.join(', ') : '✓ tout est à jour') + (x.bions ? ' · ' + x.bions + ' bion(s) au prochain lancement' : '') + (x.erreurs.length ? ' · en erreur (labo injoignable, ou ploxion retiré du labo) : ' + x.erreurs.join(', ') : '');
+        : (x.mis.length ? '✓ ' + x.mis.length + ' mis à jour : ' + x.mis.join(', ') : '✓ tout est à jour') + (x.ajoutes && x.ajoutes.length ? ' · ajoutés (dépendances) : ' + x.ajoutes.join(', ') : '') + (x.bions ? ' · ' + x.bions + ' bion(s) au prochain lancement' : '') + (x.erreurs.length ? ' · en erreur (labo injoignable, ou ploxion retiré du labo) : ' + x.erreurs.join(', ') : '');
     });
   }
   return { pret, verifier, demarrer, regler, reglage: () => ({ ...r }), etat: () => (etat ? { ...etat } : null), html, brancher, arreter: () => W.clearInterval(minuteur) };
