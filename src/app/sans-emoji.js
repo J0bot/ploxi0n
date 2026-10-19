@@ -8,7 +8,8 @@ const EMOJI = /(\p{Extended_Pictographic}(?:️|‍\p{Extended_Pictographic}|\p{
 const IGNORER = 'svg,script,style,textarea,input,select,option,[contenteditable],.px-g-e';
 
 // (19.10, le labo) ignorer : un sélecteur de plus à laisser tel quel — ce que les gens ÉCRIVENT (posts, messages, bios) garde ses emojis
-export function installerSansEmoji({ W = globalThis.window, interne = () => true, actif = () => true, ignorer = '' } = {}) {
+// (19.10, le labo) inconnu(emoji) → un SVG pour un emoji hors du dictionnaire (le labo : un glyphe généré, stable) ; sans lui, il disparaît (l'app)
+export function installerSansEmoji({ W = globalThis.window, interne = () => true, actif = () => true, ignorer = '', inconnu = null } = {}) {
   const D = W.document, IGN = IGNORER + (ignorer ? ',' + ignorer : '');
   const dansApp = (el) => { const h = el.closest('.px-hote'); return !h || interne(h.dataset.ploxion || ''); };
   function traiter(t) {
@@ -19,7 +20,8 @@ export function installerSansEmoji({ W = globalThis.window, interne = () => true
     while ((m = EMOJI.exec(v))) {
       frag.append(v.slice(dernier, m.index));
       const n = nomDepuisEmoji(m[1]);
-      if (n) { const s = D.createElement('span'); s.className = 'px-g-e'; s.innerHTML = glyphe(n); frag.append(s); if (m[2]) frag.append(' '); }
+      const g = n ? glyphe(n) : (inconnu ? inconnu(m[1]) : null);
+      if (g) { const s = D.createElement('span'); s.className = 'px-g-e'; s.innerHTML = g; frag.append(s); if (m[2]) frag.append(' '); }
       dernier = m.index + m[0].length;
     }
     frag.append(v.slice(dernier));
