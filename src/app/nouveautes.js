@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.92.0', titre: 'L\'allure chill-tekk, le wormion et le portion en trackpads', points: [
+    '○ Le wormion des koins est un trackpad : tourne le doigt autour de son centre, il remonte ce que tu avais ouvert, un cran tous les 30° ; lâche pour l\'ouvrir. Un simple toucher : le temps, comme avant.',
+    '□ Le portion aussi : glisse ← l\'app d\'avant, → l\'app d\'après, ↑ dézoomer vers la map, ↓ l\'accueil. Tu sens le grain sous le pouce ; il dit ce qui va se passer avant que tu lâches.',
+    '◇ La bande, le système, les ambiances (le son qui joue s\'allume), les koins et la map prennent l\'allure chill-tekk du xerboxion : plaques, creux, filets, mono.',
+  ] },
   { v: '0.91.0', titre: 'L\'écran verrouillé, les widgets, les notifications', points: [
     '🏝 Activités en direct : ☾ dodo affiche le chrono de ta nuit sur l\'écran verrouillé et la Dynamic Island, jusqu\'au réveil ; un vocal qui enregistre ; le minuteur des ambiances. Les ploxions peuvent aussi en lancer.',
     '▦ Le widget « Un ploxion » : sur l\'écran d\'accueil, choisis un ploxion (appui long › Modifier) ; il montre ce qu\'il publie, une valeur, une courbe, un bouton. Le journal y met tes tsoins du jour.',

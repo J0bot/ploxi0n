@@ -36,6 +36,24 @@ cocher en plus dans le portail.
 
 Jamais de clé dans git, dans une adresse ou dans l'app.
 
+**Ou, sans fichier (le labo tourne dans Coolify)** : le conteneur est recréé à chaque déploiement, un fichier posé à la main dans
+`storage/` peut disparaître. Le plus simple : coller le CONTENU du `.p8` dans une variable d'environnement de l'application Coolify
+(Configuration › Environment Variables), cochée « secret » et pas « build variable » :
+
+- `APNS_KEY_P8` = tout le texte du fichier, de `-----BEGIN PRIVATE KEY-----` à `-----END PRIVATE KEY-----` (Coolify garde les retours à la
+  ligne ; sinon, une seule ligne en base64 dans `APNS_KEY_P8_B64`) ;
+- `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_TOPIC`, `APNS_PROD` comme ci-dessus, sans `APNS_KEY_PATH`.
+
+Côté code : prendre `APNS_KEY_P8` (ou décoder `APNS_KEY_P8_B64`) s'il existe, sinon lire `APNS_KEY_PATH`. Les deux passent par
+`config/services.php`, jamais `env()` ailleurs (le cache de config).
+
+**Un secret du dépôt GitHub ne suffit pas** : le labo envoie les notifications depuis le serveur, à chaque message, longtemps après le
+déploiement. Un secret GitHub n'existe que pendant un workflow ; il ne servirait que si le déploiement l'écrivait lui-même dans l'env du
+serveur, ce qui revient à la variable Coolify avec un intermédiaire de plus.
+
+**Où trouver Key ID et Team ID** : le Key ID est affiché sur la page de la clé (Keys › « ploxi0n push ») et dans le nom du fichier
+`AuthKey_<KEYID>.p8` ; le Team ID est en haut à droite du portail developer.apple.com, sous ton nom, et dans Membership details.
+
 ### 2. Les routes (le garde des routes de l'app : le jeton de `/api/app/moi`)
 
 `POST /api/app/push`

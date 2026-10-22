@@ -102,6 +102,17 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.92 (22.10)** — RS-7 : « une meilleure allure chill-tekk à ces nouveaux changements ; le but c'est que le wormion et le portion soient
+comme des trackpads ».
+- ○ □ `src/app/pads.js` : `creerPadWormion` (rotation signée autour du centre, un cran tous les 30° = `CRAN_ANGLE`, horaire = plus loin dans
+  le passé ; lâcher ouvre, un toucher = l'action `temps`) et `creerPadPortion` (le grain de `creerTexture` du banc trackpad, `directionDe` :
+  ← `precedente`, → `suivante`, ↑ `carte`, ↓ `accueil` ; un toucher = la map). `koins.js` : `PADS` rend ces deux cases en surfaces
+  (`[data-pad]`) ; main.js fournit `listeTemps` (vivants récents puis endormis, sans l'actuel, 12 max) et `aller`.
+- ◇ app.css, du bloc 0.87 à la fin : bande, btop, ambiances (`.px-amb-on` posé par ambiances.js sur le son qui joue), koins, pads, map
+  (plaques, `--blob*`, `.px-map-ici` en `--acc2`, la feuille « ＋ un hub »). Que les jetons du thème : les modes suivent.
+- Faux iPhone : `parcours-koins.mjs` (tourne le wormion, glisse le portion → la map), `parcours-map.mjs`, `parcours-lot.mjs`, `parcours-bande-niri.mjs`.
+- ❓ la vue des xers en carrés aussi ? l'échelle des rangs pour l'icône (toujours au labo).
+
 **0.91 (22.10)** — RS-7 : « la clé APNs sur le labo, les glyphes [pour l'icône du rang], parfait, live activités et widget ».
 - 🏝 **Live Activities** : `PloxiActivite` (ActivityAttributes) défini À L'IDENTIQUE dans AppDelegate.swift (`#if canImport(ActivityKit)`) et
   PloxionWidgets.swift ; PloxiApple `activiteDebut/Maj/Fin` (iOS 16.2+) ; la vue `ActivitePloxi0n` (écran verrouillé, Dynamic Island) dans
