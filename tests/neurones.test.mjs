@@ -64,7 +64,22 @@ test('〰 la couche : seulement avec px-organique ; les cellules imbriquées von
 
 test('〰 les variantes : des nombres, chacune complète ; le terminal sans onde', async () => {
   const { VARIANTES } = await import('../src/bions/membrane.js');
-  assert.deepEqual(Object.keys(VARIANTES), ['nerfs', 'vaisseaux', 'cables', 'gelee', 'terminal']);
+  assert.deepEqual(Object.keys(VARIANTES).filter(k => !VARIANTES[k].lot), ['nerfs', 'vaisseaux', 'cables', 'gelee', 'terminal'], 'le premier lot');
+  assert.ok(Object.keys(VARIANTES).filter(k => VARIANTES[k].lot === 2).length >= 11, 'le deuxième lot, plus alien');
   for (const [k, v] of Object.entries(VARIANTES)) for (const c of ['flou', 'onde', 'freq', 'epais', 'paroi', 'ame', 'clair', 'halo']) assert.equal(typeof v[c], 'number', k + '.' + c);
   assert.equal(VARIANTES.terminal.onde, 0);
+});
+
+test('〰 les excroissances : fixes (le même dessin), dans le bon sens ; un faisceau garde ses fibres visibles', async () => {
+  const { cils, faisceau, vertebres, coulures, epines, hasard } = await import('../src/bions/excroissances.js');
+  const q = { x: 0, y: 0, w: 200, h: 120 };
+  assert.deepEqual(cils(q), cils(q), 'fixe');
+  assert.equal(hasard(1, 2, 3), hasard(1, 2, 3));
+  for (const c of cils(q, { long: 18, large: 7 })) {   // chaque cil a une base large (le long du bord), pas une ligne plate
+    const [[ax, ay], [bx, by]] = c.pts; assert.ok(Math.hypot(ax - bx, ay - by) > 5, 'la base du cil');
+  }
+  const f = faisceau({ x: 0, y: 0, w: 30, h: 20 }, 3);
+  assert.equal(f.length, 3); assert.ok(f.every(x => x.h >= 4.5), 'assez épaisses pour le goo');
+  assert.ok(vertebres({ x: 0, y: 0, w: 40, h: 10 }).length >= 4);
+  assert.equal(epines(q).length, 4); assert.equal(coulures(q, { n: 3 }).length, 6);
 });

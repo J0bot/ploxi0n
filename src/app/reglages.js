@@ -4,6 +4,7 @@
 // un accueil court (cinq groupes, une ligne par catégorie avec son état en un mot et ›), chaque catégorie sur sa page (‹ pour revenir),
 // et des sous-pages pour ce qui est long (les gestes des bords ; l'haptique : motifs, événements, signatures). La recherche fouille tout.
 // Les bions : chacun avec sa taille et les ploxions qui l'utilisent ; le couper (plus chargé), le mettre à jour, le retirer s'il ne sert plus.
+import { VARIANTES } from '../bions/membrane.js';   // (0.95) les peaux de l'organique
 import { SUJETS as SUJETS_PUSH } from '../natif/push.js';
 import { ACTIONS_BORDS } from './routeur.js';
 import { testerClavier } from './clavier.js';
@@ -123,7 +124,8 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
           + bascule('data-pb="themeVivant"', P.themeVivant !== false, 'Thème vivant', 'le thème suit le téléphone (gyroscope, accéléromètre) : le fond glisse, les icônes flottent et attrapent la lumière, un choc les fait tressauter')
           + '<div class="l ls"><span>État du mouvement<small data-mouvement>…</small></span></div>'
           + bascule('data-pb="glyphes"', P.glyphes !== false, 'Les glyphes du xerboxion', 'des glyphes au trait pour les icônes et l\'interface ; coupé : les emoji du labo') + seg('styleIcones', [['xerboxion', 'xerboxion'], ['glyphe', 'glyphe seul']], P.styleIcones || 'xerboxion', 'Style des icônes', 'xerboxion : la forme dit le type (losange, xerkion, cubion…) et le glyphe est au centre ; glyphe seul : le glyphe en grand. Chaque app peut avoir le sien (appui long › son icône)') + bascule('data-pb="pxChill"', P.pxChill !== false, 'Chill-tekk pour tous les ploxions', 'leurs couleurs, polices, boutons et champs suivent ceux de l\'app (les variables du xer, --xr-*) ; coupé : chacun garde son style du labo')
-          + seg('variante', [['nerfs', 'nerfs'], ['vaisseaux', 'vaisseaux'], ['cables', 'câbles'], ['gelee', 'gelée'], ['terminal', 'terminal']], P.variante || 'nerfs', 'L\'organique', 'cinq peaux pour le xer organique : compare-les et dis laquelle est la bonne (nerfs : translucide · vaisseaux : mou, épais · câbles : fins, néon · gelée : les blobs des planches · terminal : du verre, The Expanse)')
+          + seg('variante', Object.entries(VARIANTES).filter(([, v]) => !v.lot).map(([k, v]) => [k, v.nom]), P.variante || 'nerfs', 'L\'organique · lot 1', 'les peaux du xer organique : compare-les en direct')
+          + seg('variante', Object.entries(VARIANTES).filter(([, v]) => v.lot === 2).map(([k, v]) => [k, v.nom]), P.variante || 'nerfs', 'L\'organique · lot 2 (alien)', 'câbles × gelée, puis Giger, Rick et Morty, cyberpunk, cyberglysm, tribal tekkno…')
           + bascule('data-pb="grain"', P.grain, 'Patine', 'le grain usé des plaques')
           + bascule('data-pb="contraste"', P.contraste === 'fort', 'Contraste fort', 'textes et bords plus clairs')
           + bascule('data-pb="calme"', P.calme, 'Calme', 'plus aucune animation, même aux gestes')

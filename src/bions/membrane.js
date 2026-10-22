@@ -4,7 +4,10 @@
 // src/app/neurones.js ; <html data-px-variante="…"> choisit (prefs.variante, ⚙ › Apparence › Organique).
 //   flou   le goo (σ) : plus grand, des jonctions plus rondes, molles      onde/freq  l'ondulation (amplitude, longueur d'onde)
 //   epais  la paroi (px)      paroi/ame/halo  leur opacité      clair  l'âme : combien elle tire vers le blanc      gouttes  les koins des coins
-//   chanfrein  les coins coupés en biais (le terminal) au lieu d'arrondis
+//   chanfrein  les coins coupés en biais (le terminal) au lieu d'arrondis      photophores  des points de lumière (--bio) piqués dans la paroi
+//   contour  un trait autour (--n-contour, noir par défaut), en px : le cartoon (Rick et Morty), le néon double (cyberpunk)
+//   scan  le halo en lignes de balayage      glitch  l'amplitude des bandes décalées + le dédoublement vert / violet (cyberglysm)
+//   geo  ce qui pousse : { faisceau: n, vertebres, cils, ventouses, epines } (src/bions/excroissances.js)      lot  2 = le deuxième lot à comparer
 export const VARIANTES = {
   nerfs: { nom: 'nerfs', desc: 'paroi translucide, une lumière au milieu', flou: 5, onde: 10, freq: 0.016, epais: 4, paroi: 0.62, ame: 0.5, clair: 0.55, halo: 0.4, gouttes: true },
   vaisseaux: { nom: 'vaisseaux', desc: 'parois épaisses et molles, des jonctions rondes', flou: 7.5, onde: 14, freq: 0.011, epais: 6, paroi: 0.5, ame: 0.28, clair: 0.3, halo: 0.3, gouttes: true },
@@ -12,6 +15,21 @@ export const VARIANTES = {
   gelee: { nom: 'gelée', desc: 'les blobs lumineux des planches : opaques, gouttes rondes', flou: 6, onde: 10, freq: 0.016, epais: 6, paroi: 1, ame: 0.35, clair: 0.4, halo: 0.7, gouttes: true },
   // le hand terminal de The Expanse (RS-7 22.10, l'image : une plaque de verre, ses arêtes qui luisent ambre, les coins coupés en biais — ses
   // vieux koins de la planche 1 ; un terminal « bête » qui parle au réseau du lieu : le boxion)
+  // ---- LE DEUXIÈME LOT (RS-7 22.10 : « j'aime l'organisation de câble et la texture de gelée ; donne-moi des trucs bien plus alien ») :
+  // tous partent de câbles (fins, presque droits, une âme) × gelée (opaque, le halo) ; geo = ce qui pousse (src/bions/excroissances.js)
+  cablegel: { lot: 2, nom: 'câble-gelée', desc: 'la base : l\'organisation des câbles, la texture de la gelée', flou: 3, onde: 3, freq: 0.02, epais: 4.5, paroi: 1, ame: 0.8, clair: 0.6, halo: 0.7, gouttes: true },
+  faisceaux: { lot: 2, nom: 'faisceaux', desc: 'chaque synapse est une gerbe de trois fibres (la fibre optique)', flou: 2, onde: 2, freq: 0.02, epais: 3.5, paroi: 1, ame: 0.95, clair: 0.8, halo: 0.75, gouttes: true, geo: { faisceau: 3 } },
+  mycelium: { lot: 2, nom: 'mycélium', desc: 'des cils poussent tout autour, des filaments relient', flou: 1.8, onde: 4, freq: 0.03, epais: 3.5, paroi: 0.95, ame: 0.7, clair: 0.55, halo: 0.75, gouttes: false, geo: { faisceau: 2, cils: { densite: 0.08, long: 18, large: 7 } } },
+  xeno: { lot: 2, nom: 'xéno', desc: 'biomécanique (Giger) : des tubes à vertèbres, des épines aux coins', flou: 2.2, onde: 2, freq: 0.02, epais: 5, paroi: 1, ame: 0.45, clair: 0.35, halo: 0.5, gouttes: false, geo: { vertebres: { pas: 9, gonfle: 1.7 }, epines: { long: 24, large: 10 } } },
+  abysses: { lot: 2, nom: 'abysses', desc: 'les grands fonds : des photophores dans la paroi, des ventouses sur le bord', flou: 3.5, onde: 6, freq: 0.018, epais: 5, paroi: 0.9, ame: 0, clair: 0, halo: 0.55, gouttes: true, photophores: true, geo: { ventouses: { pas: 24, r: 4.5 } } },
+  cristal: { lot: 2, nom: 'cristal', desc: 'un minéral alien : des arêtes déchiquetées, les coins coupés, des pointes', flou: 1.2, onde: 7, freq: 0.09, epais: 3, paroi: 1, ame: 0.7, clair: 0.7, halo: 0.65, gouttes: false, chanfrein: true, geo: { epines: { long: 11, large: 5 } } },
+  // RS-7 22.10 : « inspiration alien de Giger, ou Rick et Morty ; en fait un mélange complet de tout »
+  portail: { lot: 2, nom: 'portail', desc: 'Rick et Morty : la slime verte, un gros contour noir cartoon, des coulures', flou: 4, onde: 16, freq: 0.012, epais: 4, paroi: 1, ame: 0.6, clair: 0.5, halo: 0.6, gouttes: true, contour: 3, geo: { coulures: { n: 3, long: 16, large: 6 } } },
+  melange: { lot: 2, nom: 'mélange', desc: 'tout : les vertèbres de Giger, les cils, les photophores, le contour et les coulures de Rick et Morty', flou: 2.2, onde: 8, freq: 0.015, epais: 4.5, paroi: 1, ame: 0.55, clair: 0.5, halo: 0.6, gouttes: true, contour: 2.5, photophores: true, geo: { vertebres: { pas: 10, gonfle: 1.5 }, cils: { densite: 0.05, long: 16, large: 7 }, coulures: { n: 2, long: 14, large: 6 } } },
+  // RS-7 22.10 : « et il en faut un cyberpunk, un cyberglysm, un autre tribal tekkno »
+  cyberpunk: { lot: 2, nom: 'cyberpunk', desc: 'coins coupés, double trait néon (vert, jaune), des fibres, le halo en lignes de balayage', flou: 1.2, onde: 0, freq: 0.02, epais: 2.5, paroi: 1, ame: 0.9, clair: 0.75, halo: 0.8, gouttes: false, chanfrein: true, contour: 1.5, scan: true, geo: { faisceau: 2 } },
+  cyberglysm: { lot: 2, nom: 'cyberglysm', desc: 'l\'organique qui bugge : tranché en bandes décalées, dédoublé vert / violet', flou: 2.5, onde: 3, freq: 0.02, epais: 3.5, paroi: 1, ame: 0.8, clair: 0.6, halo: 0.6, gouttes: true, glitch: 14 },
+  tribal: { lot: 2, nom: 'tribal tekkno', desc: 'des lames épaisses, de longues épines, un gros contour noir : un tatouage tribal sur une machine', flou: 2, onde: 9, freq: 0.01, epais: 6, paroi: 1, ame: 0.3, clair: 0.3, halo: 0.45, gouttes: false, contour: 3.5, geo: { epines: { long: 28, large: 11 }, cils: { densite: 0.025, long: 26, large: 12 } } },
   terminal: { nom: 'terminal', desc: 'le hand terminal de The Expanse : du verre, des arêtes ambre, les coins coupés', flou: 1, onde: 0, freq: 0.02, epais: 1.6, paroi: 0.9, ame: 0.6, clair: 0.5, halo: 0.55, gouttes: false, chanfrein: true },
 };
 const NS = 'http://www.w3.org/2000/svg';
@@ -25,7 +43,8 @@ export function filtre(id, p, couche) {
   return '<filter id="' + id + '" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">'
     + '<feGaussianBlur in="SourceGraphic" stdDeviation="' + n(p.flou) + '" result="b"/>'
     + (p.onde ? '<feTurbulence type="fractalNoise" baseFrequency="' + n(p.freq) + '" numOctaves="1" seed="7" result="n"/>'
-      + '<feDisplacementMap in="b" in2="n" scale="' + n(p.onde) + '" xChannelSelector="R" yChannelSelector="G" result="d"/>' : '<feOffset in="b" result="d"/>')
+      + '<feDisplacementMap in="b" in2="n" scale="' + n(p.onde) + '" xChannelSelector="R" yChannelSelector="G" result="d0"/>' : '<feOffset in="b" result="d0"/>')
+    + (p.glitch ? '<feTurbulence type="turbulence" baseFrequency="0 0.07" numOctaves="1" seed="11" result="gn"/><feDisplacementMap in="d0" in2="gn" scale="' + n(p.glitch) + '" xChannelSelector="R" yChannelSelector="A" result="d"/>' : '<feOffset in="d0" result="d"/>')
     + '<feColorMatrix in="d" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 22 -11" result="m"/>'
     + (couche === 'dd' ? '<feMorphology in="m" operator="erode" radius="' + n(p.epais) + '"/>'
       : '<feMorphology in="m" operator="erode" radius="' + n(p.epais) + '" result="e"/><feComposite in="m" in2="e" operator="out" result="paroi0"/>'
@@ -34,7 +53,15 @@ export function filtre(id, p, couche) {
           + '<feComposite in="e1" in2="e2" operator="out" result="ame0"/>'
           + '<feColorMatrix in="ame0" type="matrix" values="' + n(1 - p.clair) + ' 0 0 0 ' + n(p.clair) + ' 0 ' + n(1 - p.clair) + ' 0 0 ' + n(p.clair) + ' 0 0 ' + n(1 - p.clair) + ' 0 ' + n(p.clair) + ' 0 0 0 ' + n(p.ame) + ' 0" result="ame"/>' : '')
         + '<feGaussianBlur in="m" stdDeviation="' + n(p.flou + 2) + '" result="h"/><feColorMatrix in="h" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 ' + n(p.halo) + ' 0" result="halo"/>'
-        + '<feMerge><feMergeNode in="halo"/><feMergeNode in="paroi"/>' + (p.ame ? '<feMergeNode in="ame"/>' : '') + '</feMerge>')
+        // les photophores : un bruit fin, seuillé → des points ; seulement dans la paroi ; la couleur de .px-f-photo (--bio)
+        + (p.photophores ? '<feTurbulence type="fractalNoise" baseFrequency=".32" numOctaves="1" seed="3" result="pn"/>'
+          + '<feColorMatrix in="pn" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 14 0 0 0 -8.4" result="pm"/>'
+          + '<feComposite in="pm" in2="paroi0" operator="in" result="pz"/><feFlood class="px-f-photo" result="pc"/><feComposite in="pc" in2="pz" operator="in" result="photo"/>' : '')
+        + (p.contour ? '<feMorphology in="m" operator="dilate" radius="' + n(p.contour) + '" result="dil"/><feComposite in="dil" in2="m" operator="out" result="ct0"/><feFlood class="px-f-contour" result="cc"/><feComposite in="cc" in2="ct0" operator="in" result="contour"/>' : '')
+        + (p.scan ? '<feTurbulence type="fractalNoise" baseFrequency="0 0.5" numOctaves="1" seed="5" result="sn"/><feColorMatrix in="sn" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 9 0 0 0 -4" result="sl"/><feComposite in="halo" in2="sl" operator="in" result="halo2"/>' : '')
+        + (p.glitch ? '<feOffset in="paroi0" dx="3" dy="0" result="g1"/><feFlood class="px-f-glitch1" result="gc1"/><feComposite in="gc1" in2="g1" operator="in" result="glA"/>'
+          + '<feOffset in="paroi0" dx="-3" dy="1" result="g2"/><feFlood class="px-f-glitch2" result="gc2"/><feComposite in="gc2" in2="g2" operator="in" result="glB"/>' : '')
+        + '<feMerge><feMergeNode in="' + (p.scan ? 'halo2' : 'halo') + '"/>' + (p.glitch ? '<feMergeNode in="glA"/><feMergeNode in="glB"/>' : '') + (p.contour ? '<feMergeNode in="contour"/>' : '') + '<feMergeNode in="paroi"/>' + (p.ame ? '<feMergeNode in="ame"/>' : '') + (p.photophores ? '<feMergeNode in="photo"/>' : '') + '</feMerge>')
     + '</filter>';
 }
 /** les grilles serrées (data-neurones="fin") : tout plus petit */

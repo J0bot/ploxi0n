@@ -15,6 +15,7 @@
 //   data-neurones-cellules="button" (0.95) les cellules par un sélecteur (sans marquer chaque élément) : elles reçoivent la classe px-neurone
 import { synapses, koinsDe, SEUIL } from '../bions/synapses.js';
 import { VARIANTES, filtres, idFiltre, variante } from '../bions/membrane.js';
+import { faisceau, vertebres, cils, ventouses, epines, coulures, formeSvg } from '../bions/excroissances.js';
 export { VARIANTES };
 export { synapses, koinsDe, SEUIL };
 const NS = 'http://www.w3.org/2000/svg';
@@ -44,10 +45,16 @@ export function creerNeurones({ W = globalThis.window } = {}) {
     if (cle === g.cle) return; g.cle = cle;
     if (!cs.length) { if (g.svg) g.svg.innerHTML = ''; return; }
     if (!g.svg || !g.svg.isConnected) { g.svg = D.createElementNS(NS, 'svg'); g.svg.setAttribute('class', 'px-neurones'); g.svg.setAttribute('aria-hidden', 'true'); c.insertBefore(g.svg, c.firstChild); }
-    const M = 16, x0 = Math.min(...cs.map(q => q.x)) - M, y0 = Math.min(...cs.map(q => q.y)) - M;
+    const M = 30, x0 = Math.min(...cs.map(q => q.x)) - M, y0 = Math.min(...cs.map(q => q.y)) - M;
     const L = Math.max(...cs.map(q => q.x + q.w)) + M - x0, H = Math.max(...cs.map(q => q.y + q.h)) + M - y0;
     filtres(D, v);
-    const ponts = synapses(cs, { seuil, autres: fin ? 0.2 : 0.5 });
+    const geo = pv.geo || {};
+    // (0.95, le deuxième lot) ce qui pousse : les ponts en faisceaux ; sur les ponts, des vertèbres ; sur les cellules, cils, ventouses, épines
+    const ponts = synapses(cs, { seuil, autres: fin ? 0.2 : 0.5 }).flatMap(p => faisceau(p, geo.faisceau || 1));
+    const pousses = [
+      ...(geo.vertebres ? ponts.flatMap(p => vertebres(p, geo.vertebres)) : []),
+      ...(fin ? [] : cs.flatMap(q => [...(geo.cils ? cils(q, geo.cils) : []).map(f => [f, q]), ...(geo.ventouses ? ventouses(q, geo.ventouses) : []).map(f => [f, q]), ...(geo.epines ? epines(q, geo.epines) : []).map(f => [f, q]), ...(geo.coulures ? coulures(q, geo.coulures) : []).map(f => [f, q])])),
+    ];
     // (0.95) le terminal : les coins coupés en biais (un octogone), comme le verre du hand terminal et les vieux koins de RS-7
     const cellule = (q, f) => {
       if (!pv.chanfrein) return '<rect x="' + (q.x - x0) + '" y="' + (q.y - y0) + '" width="' + q.w + '" height="' + q.h + '" rx="' + r1(q.rx) + '" fill="' + f + '"/>';
@@ -59,7 +66,8 @@ export function creerNeurones({ W = globalThis.window } = {}) {
     g.svg.setAttribute('width', L); g.svg.setAttribute('height', H); g.svg.setAttribute('viewBox', '0 0 ' + L + ' ' + H);
     g.svg.style.left = x0 + 'px'; g.svg.style.top = y0 + 'px';
     const gouttes = fin || !pv.gouttes ? '' : cs.map(q => koinsDe(q).map(k => '<circle cx="' + r1(k.cx - x0) + '" cy="' + r1(k.cy - y0) + '" r="' + r1(k.r) + '" fill="' + q.bord + '"/>').join('')).join('');
-    g.svg.innerHTML = '<g filter="url(#' + idFiltre(v, 'mb', fin) + ')">' + corps('bord') + gouttes + '</g><g class="px-neurones-dd" filter="url(#' + idFiltre(v, 'dd', fin) + ')">' + corps('fond') + '</g>';
+    const excr = pousses.map(x => (Array.isArray(x) ? formeSvg(x[0], x0, y0, x[1].bord) : formeSvg(x, x0, y0, cs[0].bord))).join('');
+    g.svg.innerHTML = '<g filter="url(#' + idFiltre(v, 'mb', fin) + ')">' + corps('bord') + gouttes + excr + '</g><g class="px-neurones-dd" filter="url(#' + idFiltre(v, 'dd', fin) + ')">' + corps('fond') + '</g>';
     if (g.ro) { g.ro.disconnect(); g.ro.observe(c); for (const el of c.querySelectorAll('[data-neurone],.px-neurone')) g.ro.observe(el); }
   }
   function tout() {

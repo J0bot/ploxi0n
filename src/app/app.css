@@ -1202,3 +1202,29 @@ html.px-organique[data-px-variante="gelee"] .px-neurones-dd{opacity:.95}
 /* le hand terminal de The Expanse, dans SES couleurs : le verre (#222222 translucide), les arêtes vert pâle #8bc88b, les coins coupés */
 html.px-organique[data-px-variante="terminal"]{--memb:#8bc88b;--memb2:#b0b0b0;--acc:#8bc88b;--acc2:#029402}
 html.px-organique[data-px-variante="terminal"] .px-neurones-dd{opacity:.5}
+/* (0.95) LE DEUXIÈME LOT, plus alien (câbles × gelée) — toujours la seule palette de RS-7 */
+.px-f-photo{flood-color:var(--bio)}
+html.px-organique[data-px-variante="cablegel"]{--memb:#0cdb0c;--memb2:#37008a}
+html.px-organique[data-px-variante="cablegel"] .px-neurones-dd{opacity:.95}
+html.px-organique[data-px-variante="faisceaux"]{--memb:#00fe44;--memb2:#310573}
+html.px-organique[data-px-variante="faisceaux"] .px-neurones-dd{opacity:.92}
+html.px-organique[data-px-variante="mycelium"]{--memb:#8bc88b;--memb2:#029402}
+html.px-organique[data-px-variante="mycelium"] .px-neurones-dd{opacity:.9}
+html.px-organique[data-px-variante="xeno"]{--memb:#37008a;--memb2:#4d4d4d;--surface:#191919;--surface2:#222222}
+html.px-organique[data-px-variante="xeno"] .px-neurones-dd{opacity:.97}
+html.px-organique[data-px-variante="abysses"]{--memb:#310573;--memb2:#20024d;--bio:#0cdb0c}
+html.px-organique[data-px-variante="abysses"] .px-neurones-dd{opacity:.85}
+html.px-organique[data-px-variante="cristal"]{--memb:#d9d9d9;--memb2:#8bc88b}
+html.px-organique[data-px-variante="cristal"] .px-neurones-dd{opacity:.55}
+.px-f-contour{flood-color:var(--n-contour,#191919)}
+.px-f-glitch1{flood-color:var(--memb2)}.px-f-glitch2{flood-color:#00fe44}
+html.px-organique[data-px-variante="portail"]{--memb:#0cdb0c;--memb2:#00fe44;--surface:#014116;--surface2:#004817}
+html.px-organique[data-px-variante="portail"] .px-neurones-dd{opacity:.9}
+html.px-organique[data-px-variante="melange"]{--memb:#007d28;--memb2:#37008a;--bio:#00fe44}
+html.px-organique[data-px-variante="melange"] .px-neurones-dd{opacity:.93}
+html.px-organique[data-px-variante="cyberpunk"]{--memb:#00fe44;--memb2:#37008a;--n-contour:#ffff00;--surface:#191919;--surface2:#222222}
+html.px-organique[data-px-variante="cyberpunk"] .px-neurones-dd{opacity:.9}
+html.px-organique[data-px-variante="cyberglysm"]{--memb:#0cdb0c;--memb2:#37008a}
+html.px-organique[data-px-variante="cyberglysm"] .px-neurones-dd{opacity:.92}
+html.px-organique[data-px-variante="tribal"]{--memb:#007d28;--memb2:#014116;--n-contour:#191919;--surface:#191919}
+html.px-organique[data-px-variante="tribal"] .px-neurones-dd{opacity:.96}

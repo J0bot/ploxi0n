@@ -5,7 +5,9 @@ export default async function ({ page, ecrire }) {
   await page.reload(); await page.waitForTimeout(3000);
   for (const id of ['systeme', 'ambiances']) { await page.evaluate((i) => window.ploxi0n.routeur.ouvrir(i), id); await page.waitForTimeout(500); await page.evaluate(() => window.ploxi0n.routeur.faire('minimiser')); await page.waitForTimeout(300); }
   const vues = {};
-  for (const v of ['nerfs', 'vaisseaux', 'cables', 'gelee', 'terminal']) {
+  // la liste : PX_VARIANTES=a,b,c (le deuxième lot : cablegel,faisceaux,…) ; sinon le premier lot
+  const liste = (process.env.PX_VARIANTES || 'nerfs,vaisseaux,cables,gelee,terminal').split(',');
+  for (const v of liste) {
     await page.evaluate((x) => document.documentElement.setAttribute('data-px-variante', x), v);
     await page.evaluate(() => window.ploxi0n.routeur.faire('accueil')); await page.waitForTimeout(400);
     for (let k = 0; k < 3; k++) { await page.click('[data-koin="gauche"]'); await page.waitForTimeout(200); }
