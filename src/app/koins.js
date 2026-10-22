@@ -13,6 +13,8 @@
 // Un toucher sur un koin : il grandit (une étape par toucher, comme sur le carnet) ; à la dernière, les cases. Glisser vers le haut : tout de
 // suite les cases. Toucher ailleurs, ou une case : il se replie. Rien n'est caché sans retour : ‹ et ▁ sont dans la barre des glyphes.
 import { glyphe as G } from './glyphes.js';
+import { creerPadWormion, creerPadPortion } from './pads.js';   // ○ □ (0.92) le wormion et le portion : des trackpads
+export const PADS = { wormion: true, portion: true };   // (0.92) ces cases-là sont des trackpads
 export const ETAPES = 4;   // 0 replié (petit) · 1 moyen · 2 grand · 3 les cases
 export const CASES = { gauche: [['trion', 'koins'], ['wormion', 'temps']], droite: [['xer', 'xers'], ['portion', 'carte']] };
 export const BARRE = [['retour', 'retour', '‹'], ['tsoin', 'tsoin', ''], ['wormion', 'temps', ''], ['trion', 'koins', ''], ['portion', 'carte', ''], ['ploxion', 'accueil', ''], ['xeroction', 'toi', ''], ['minimiser', 'minimiser', '▁']];
@@ -33,7 +35,9 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
     if (racine) return;
     racine = D.createElement('div'); racine.className = 'px-koins-r';
     racine.innerHTML = ['gauche', 'droite'].map(c => '<button type="button" class="px-koin px-koin-' + c + '" data-koin="' + c + '" data-etape="0" aria-label="koin ' + c + '">' + TRI(c === 'droite') + '</button>'
-      + '<div class="px-koin-cases px-koin-cases-' + c + '" data-cases="' + c + '" hidden>' + CASES[c].map(([g, k]) => '<button type="button" data-koin-a="' + k + '" aria-label="' + NOMS[k] + '">' + G(g) + '<small>' + NOMS[k].split(' (')[0] + '</small></button>').join('') + '</div>').join('')
+      + '<div class="px-koin-cases px-koin-cases-' + c + '" data-cases="' + c + '" hidden>' + CASES[c].map(([g, k]) => (PADS[g]
+        ? '<div class="px-koin-pad px-koin-pad-' + g + '" data-pad="' + g + '" role="slider" aria-label="' + NOMS[k] + ' (trackpad)"><span class="px-pad-g">' + G(g) + '</span>' + (g === 'wormion' ? '<i data-pad-a></i>' : '<i data-pad-p></i>') + '<b data-pad-l></b><small data-pad-s></small></div>'
+        : '<button type="button" data-koin-a="' + k + '" aria-label="' + NOMS[k] + '">' + G(g) + '<small>' + NOMS[k].split(' (')[0] + '</small></button>')).join('') + '</div>').join('')
       + '<nav class="px-koin-barre" hidden>' + BARRE.map(([g, k, t]) => '<button type="button" data-koin-a="' + k + '" aria-label="' + NOMS[k] + '">' + (t || G(g)) + '</button>').join('') + '</nav>'
       + '<div class="px-koin-voile" hidden></div>';
     D.body.appendChild(racine);
@@ -47,6 +51,11 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
     }
     racine.addEventListener('click', (e) => { const a = e.target.closest('[data-koin-a]'); if (a) { e.stopPropagation(); faire(a.getAttribute('data-koin-a')); } });
     racine.querySelector('.px-koin-voile').addEventListener('click', () => replier());
+    // ○ □ (0.92) les trackpads : le wormion fait défiler le temps (ce que tu avais ouvert), le portion glisse dans la fractale
+    creerPadWormion({ W, el: racine.querySelector('[data-pad="wormion"]'), vibrer, liste: () => (actions.listeTemps ? actions.listeTemps() : []),
+      choisir: (id) => { replier(); if (actions.aller) actions.aller(id); }, toucher: () => faire('temps') });
+    creerPadPortion({ W, el: racine.querySelector('[data-pad="portion"]'), vibrer, toucher: () => faire('carte'),
+      faire: (d) => { replier(); const f = { gauche: actions.precedente, droite: actions.suivante, haut: actions.carte, bas: actions.accueil }[d]; if (f) { vibrer('fx-arrivee'); try { f(); } catch (e) { /* */ } } } });
     // l'appui long sur le tsoin de la barre : le journal (record → rejouer)
     const ts = racine.querySelector('.px-koin-barre [data-koin-a="tsoin"]'); let t = 0;
     ts.addEventListener('pointerdown', () => { t = W.setTimeout(() => { t = -1; replier(); vibrer('appui'); if (actions.journal) actions.journal(); }, 520); });

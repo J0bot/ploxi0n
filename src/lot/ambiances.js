@@ -68,6 +68,7 @@ export function creerAmbiances({ W = globalThis.window, boxion, Contexte = W.Aud
     };
     const regler = (k, v) => {
       etat.volumes[k] = v; garder();
+      const lg = hote.querySelector('[data-amb="' + k + '"]'); if (lg && lg.closest('label')) lg.closest('label').classList.toggle('px-amb-on', v > 0);   // (0.92) la veilleuse : ce qui joue
       if (v > 0 && !demarrer()) return;
       if (!ctx) return;
       if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(() => {});
@@ -86,7 +87,7 @@ export function creerAmbiances({ W = globalThis.window, boxion, Contexte = W.Aud
     const toutCouper = (garderVolumes = false) => {
       if (activite) { try { activite.fin(); } catch (e) { /* */ } }
       for (const s of sons.values()) s.arreter(); sons.clear();
-      if (!garderVolumes) { etat.volumes = {}; garder(); hote.querySelectorAll('[data-amb]').forEach(i => { i.value = 0; }); }
+      if (!garderVolumes) { etat.volumes = {}; garder(); hote.querySelectorAll('[data-amb]').forEach(i => { i.value = 0; i.closest('label').classList.remove('px-amb-on'); }); }
       if (audio) { try { audio.pause(); } catch (e) { /* */ } audio.srcObject = null; audio.remove(); audio = null; }
       if (ctx) { try { ctx.close(); } catch (e) { /* */ } ctx = null; maitre = null; }
     };
@@ -103,7 +104,7 @@ export function creerAmbiances({ W = globalThis.window, boxion, Contexte = W.Aud
     pret.then(() => {
       if (!vivant) return;
       hote.querySelector('[data-amb-maitre]').value = etat.maitre;
-      for (const [k] of SONS) { const v = +etat.volumes[k] || 0; hote.querySelector('[data-amb="' + k + '"]').value = v; }
+      for (const [k] of SONS) { const v = +etat.volumes[k] || 0, i = hote.querySelector('[data-amb="' + k + '"]'); i.value = v; i.closest('label').classList.toggle('px-amb-on', v > 0); }
       // le mélange d'avant revient affiché ; il ne joue qu'au premier geste (iOS veut un geste pour lancer un son)
     });
     hote.addEventListener('pointerdown', function premier() {

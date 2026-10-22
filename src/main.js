@@ -585,7 +585,10 @@ async function demarrer() {
     koins: () => (routeur.connait('xerkion-perso-koin-ion') ? routeur.ouvrir('xerkion-perso-koin-ion') : routeur.signaler('le koin du ion n\'est pas encore semé ici')),
     temps: () => routeur.faire('basculer'), xers: () => routeur.faire('mes-xers'), carte: () => routeur.faire('map'),   // □ portion : la map (0.90)
     tsoin: () => tsoinNatif.ouvrir(), journal: () => routeurProxy.ouvrir('journal-tsoins'), accueil: () => routeur.faire('accueil'),
-    toi: () => routeurProxy.ouvrir('reglages-app'), retour: () => (routeur.courant() ? routeur.retour() : null), minimiser: () => routeur.faire('minimiser') } });
+    toi: () => routeurProxy.ouvrir('reglages-app'), retour: () => (routeur.courant() ? routeur.retour() : null), minimiser: () => routeur.faire('minimiser'),
+    // ○ □ (0.92) les trackpads : le temps (le plus récent d'abord), et les directions du portion
+    listeTemps: () => { const cat = routeur.catalogue(), nom = (id) => ((cat.find(p => p.id === id) || {}).nom || id); return [...routeur.vivants().slice().reverse(), ...routeur.endormis()].filter((id, i, l) => id !== routeur.courant() && l.indexOf(id) === i).slice(0, 12).map(id => ({ id, nom: nom(id) })); },
+    aller: (id) => routeurProxy.ouvrir(id), precedente: () => routeur.faire('precedente'), suivante: () => routeur.faire('suivante') } });
   koins.poser(); prefs.surChangement(() => koins.poser());
   window.ploxi0n = { boxion, shim, routeur, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte, koins };
   brancherLiens({ routeur, compte, surLien: (r) => { const c = invitationDuLien(r); if (c) boxion.put('social', 'invitation', { code: c, le: Date.now() }).catch(() => {}); }, installer: (id) => routeurProxy.ouvrir(id), lecture: (c) => maintenant.commander(c), lire: (o) => lecteurNatif.ouvrir(o.url, o).catch(() => {}),

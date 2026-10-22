@@ -23,9 +23,12 @@ test('◺◿ un toucher : une étape ; à la dernière, les quatre cases et la b
     const g = D.querySelector('[data-koin="gauche"]');
     for (let i = 1; i < ETAPES; i++) { g.click(); assert.equal(g.getAttribute('data-etape'), String(i)); }
     assert.equal(D.querySelector('[data-cases="gauche"]').hidden, false); assert.equal(D.querySelector('[data-cases="droite"]').hidden, false);
-    assert.deepEqual([...D.querySelectorAll('[data-cases] [data-koin-a]')].map(b => b.getAttribute('data-koin-a')), ['koins', 'temps', 'xers', 'carte']);
+    assert.deepEqual([...D.querySelectorAll('[data-cases] [data-koin-a]')].map(b => b.getAttribute('data-koin-a')), ['koins', 'xers']);
+    assert.deepEqual([...D.querySelectorAll('[data-cases] [data-pad]')].map(b => b.getAttribute('data-pad')), ['wormion', 'portion'], '(0.92) des trackpads');
     assert.equal(D.querySelectorAll('.px-koin-barre [data-koin-a]').length, 8);
-    D.querySelector('[data-cases="droite"] [data-koin-a="carte"]').click();
+    // un toucher sur le portion (sans glisser) : la carte (la map)
+    const pad = D.querySelector('[data-pad="portion"]');
+    pad.dispatchEvent(new W.PointerEvent('pointerdown', { clientX: 50, clientY: 50, bubbles: true })); pad.dispatchEvent(new W.PointerEvent('pointerup', { clientX: 51, clientY: 50, bubbles: true }));
     assert.deepEqual(faits, ['carte']); assert.deepEqual(k.etape(), { gauche: 0, droite: 0 }, 'replié');
     assert.equal(D.querySelector('[data-cases="gauche"]').hidden, true);
     // le voile replie
