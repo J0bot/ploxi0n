@@ -102,6 +102,21 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.93 (22.10)** — RS-7 : « je veux que les bords soient plus épais, et plus organiques, genre ondulé, mais que les éléments du UI se collent
+entre eux comme des neurones ».
+- 〰 `src/app/neurones.js` : un groupe `[data-neurones]` (« fin » : un flou court pour les grilles serrées ; `data-neurones-seuil`), ses
+  cellules `[data-neurone]` à toute profondeur (un groupe imbriqué garde les siennes). Derrière, une couche SVG `.px-neurones` : la membrane
+  (couleur `--n-bord`) et le dedans (`--n-fond`, rétréci de 3 px par feMorphology), passés dans un filtre flou → turbulence FIXE → seuil
+  d'alpha (« goo ») ; les synapses = `synapses()` : un arbre (union-find, les plus proches d'abord) + une part fixe de liens en plus. Rien
+  n'est redessiné si la géométrie et les couleurs n'ont pas changé (une clé) ; MutationObserver + ResizeObserver, un rAF.
+- Les cellules deviennent transparentes (le grain reste). `html.px-organique` (`prefs.organique`, vrai par défaut ; ⚙ › Apparence ›
+  Bords organiques) : `--trait` passe à 3 px partout.
+- Branché : les koins (la racine, 4 cases + la barre ; la couche à z 40, entre le voile et les cases), la map (la barre du haut, le plan :
+  les hubs collés par leurs portails, seuil 64 ; dans chaque hub, ses koins et le centre, « fin »), le système, les ambiances.
+- ⚠ les filtres SVG coûtent au dessin, pas à l'affichage : à vérifier sur l'iPhone (la map, le plus gros : ≈ 900 × 900 px). Pas sur
+  l'accueil : le thème vivant y fait flotter les icônes par transform, la couche ne les suivrait pas (💭 à faire en les dessinant dans la
+  même boucle rAF que le thème vivant).
+
 **0.92 (22.10)** — RS-7 : « une meilleure allure chill-tekk à ces nouveaux changements ; le but c'est que le wormion et le portion soient
 comme des trackpads ».
 - ○ □ `src/app/pads.js` : `creerPadWormion` (rotation signée autour du centre, un cran tous les 30° = `CRAN_ANGLE`, horaire = plus loin dans

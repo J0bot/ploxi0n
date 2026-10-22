@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.93.0', titre: 'Les bords organiques, les neurones', points: [
+    '〰 Les bords sont plus épais et ondulent doucement, comme une membrane.',
+    '🧠 Les éléments voisins se collent comme des neurones : leurs membranes se rejoignent par des synapses. Les cases des koins et leur barre, les hubs de la map (collés par leurs portails) et leurs koins autour du centre, les plaques du système, les ambiances.',
+    '⚙ › Apparence › Bords organiques : coupé, les plaques d\'avant reviennent.',
+  ] },
   { v: '0.92.0', titre: 'L\'allure chill-tekk, le wormion et le portion en trackpads', points: [
     '○ Le wormion des koins est un trackpad : tourne le doigt autour de son centre, il remonte ce que tu avais ouvert, un cran tous les 30° ; lâche pour l\'ouvrir. Un simple toucher : le temps, comme avant.',
     '□ Le portion aussi : glisse ← l\'app d\'avant, → l\'app d\'après, ↑ dézoomer vers la map, ↓ l\'accueil. Tu sens le grain sous le pouce ; il dit ce qui va se passer avant que tu lâches.',

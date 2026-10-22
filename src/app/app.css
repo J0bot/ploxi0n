@@ -1105,3 +1105,27 @@ html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,
 .px-map-ed .seg{display:flex;gap:6px;margin-bottom:6px}.px-map-ed .seg button{flex:1;margin:0;min-height:44px;font:600 16px var(--mono);color:var(--muted)}
 .px-map-ed .seg button.on{border-color:var(--acc);color:var(--acc);background:var(--creux)}
 .px-map-ed-k input[type=checkbox]{accent-color:var(--acc);width:18px;height:18px;margin:0}
+
+/* 〰 (0.93) LES BORDS ORGANIQUES ET LES NEURONES (src/app/neurones.js ; RS-7 22.10 : « les bords plus épais, plus organiques, genre ondulé,
+   mais que les éléments du UI se collent entre eux comme des neurones »). Un groupe [data-neurones], ses cellules [data-neurone] : une couche SVG
+   derrière dessine les corps (une membrane épaisse qui ondule, le dedans) et les synapses entre voisins ; la cellule devient transparente
+   (son grain reste). --n-fond, --n-bord : les couleurs du corps. Coupé (⚙ › Apparence › Bords organiques) : les plaques d'avant. */
+html.px-organique{--trait:3px}
+:where(html.px-organique [data-neurones]){position:relative}
+html.px-organique [data-neurones]{isolation:isolate}
+html.px-organique [data-neurone]{--n-fond:var(--surface);--n-bord:var(--bord2);background-color:transparent!important;border-color:transparent!important;box-shadow:none!important}
+.px-neurones{position:absolute;z-index:-1;pointer-events:none;overflow:visible}
+html:not(.px-organique) .px-neurones,html:not(.px-organique) .px-neurones-defs{display:none}
+html.px-organique [data-neurone].on,html.px-organique [data-neurone]:active{--n-bord:var(--acc2)}
+/* les koins : la couche passe au-dessus du voile (39), sous les cases (41) */
+.px-koins-r>.px-neurones{z-index:40}
+html.px-organique .px-koin-pad{--n-fond:var(--creux)}
+html.px-organique .px-koin-pad.px-pad-actif,html.px-organique .px-koin-pad:not([data-dir=""]){--n-bord:var(--acc)}
+/* la map : les hubs collés par leurs portails ; le hub où tu es, la membrane lilas ; dans chaque hub, ses koins autour du centre */
+html.px-organique .px-map-c{--n-bord:var(--bord)}
+html.px-organique .px-map-ici{--n-bord:var(--acc2)}
+html.px-organique .px-map-centre,html.px-organique .px-map-k-hub{--n-fond:var(--creux)}
+html.px-organique .px-map-k-hub{--n-bord:var(--acc2)}
+html.px-organique .px-map-g{gap:7px}
+/* le système, les ambiances : les plaques se touchent, la xerminal pend sous la dernière */
+html.px-organique .px-btop [data-btop]{gap:14px}

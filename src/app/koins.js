@@ -33,12 +33,12 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
     D.documentElement.classList.toggle('px-koins', on);
     if (!on) { if (racine) { racine.remove(); racine = null; } return; }
     if (racine) return;
-    racine = D.createElement('div'); racine.className = 'px-koins-r';
+    racine = D.createElement('div'); racine.className = 'px-koins-r'; racine.setAttribute('data-neurones', '');   // 〰 (0.93) les cases et la barre : des neurones
     racine.innerHTML = ['gauche', 'droite'].map(c => '<button type="button" class="px-koin px-koin-' + c + '" data-koin="' + c + '" data-etape="0" aria-label="koin ' + c + '">' + TRI(c === 'droite') + '</button>'
       + '<div class="px-koin-cases px-koin-cases-' + c + '" data-cases="' + c + '" hidden>' + CASES[c].map(([g, k]) => (PADS[g]
-        ? '<div class="px-koin-pad px-koin-pad-' + g + '" data-pad="' + g + '" role="slider" aria-label="' + NOMS[k] + ' (trackpad)"><span class="px-pad-g">' + G(g) + '</span>' + (g === 'wormion' ? '<i data-pad-a></i>' : '<i data-pad-p></i>') + '<b data-pad-l></b><small data-pad-s></small></div>'
-        : '<button type="button" data-koin-a="' + k + '" aria-label="' + NOMS[k] + '">' + G(g) + '<small>' + NOMS[k].split(' (')[0] + '</small></button>')).join('') + '</div>').join('')
-      + '<nav class="px-koin-barre" hidden>' + BARRE.map(([g, k, t]) => '<button type="button" data-koin-a="' + k + '" aria-label="' + NOMS[k] + '">' + (t || G(g)) + '</button>').join('') + '</nav>'
+        ? '<div class="px-koin-pad px-koin-pad-' + g + '" data-pad="' + g + '" data-neurone role="slider" aria-label="' + NOMS[k] + ' (trackpad)"><span class="px-pad-g">' + G(g) + '</span>' + (g === 'wormion' ? '<i data-pad-a></i>' : '<i data-pad-p></i>') + '<b data-pad-l></b><small data-pad-s></small></div>'
+        : '<button type="button" data-koin-a="' + k + '" data-neurone aria-label="' + NOMS[k] + '">' + G(g) + '<small>' + NOMS[k].split(' (')[0] + '</small></button>')).join('') + '</div>').join('')
+      + '<nav class="px-koin-barre" data-neurone hidden>' + BARRE.map(([g, k, t]) => '<button type="button" data-koin-a="' + k + '" aria-label="' + NOMS[k] + '">' + (t || G(g)) + '</button>').join('') + '</nav>'
       + '<div class="px-koin-voile" hidden></div>';
     D.body.appendChild(racine);
     // toucher : une étape de plus ; glisser vers le haut : les cases

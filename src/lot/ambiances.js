@@ -49,9 +49,9 @@ export function creerAmbiances({ W = globalThis.window, boxion, Contexte = W.Aud
   function mount(hote) {
     let vivant = true, ctx = null, maitre = null, audio = null, tampons = null, fin = 0, finA = 0;
     const sons = new Map();
-    hote.innerHTML = '<div class="px-page px-ambiances"><p class="px-grave">≈ ambiances</p><p class="px-sous">mélange les sons ; ils continuent quand tu passes à un autre ploxion ou que tu minimises (▁) ; ‹ les coupe</p><div data-amb-sons></div>'
-      + '<div class="px-amb-b"><label>volume <input type="range" min="0" max="1" step="0.01" data-amb-maitre></label><div class="seg" data-amb-min>' + MINUTEURS.map(m => '<button type="button" data-amb-min="' + m + '">' + (m ? m + ' min' : '∞') + '</button>').join('') + '</div>'
-      + '<button type="button" data-amb-tout>■ tout couper</button></div></div>';
+    hote.innerHTML = '<div class="px-page px-ambiances" data-neurones="fin"><p class="px-grave">≈ ambiances</p><p class="px-sous">mélange les sons ; ils continuent quand tu passes à un autre ploxion ou que tu minimises (▁) ; ‹ les coupe</p><div data-amb-sons data-neurone></div>'
+      + '<div class="px-amb-b"><label>volume <input type="range" min="0" max="1" step="0.01" data-amb-maitre></label><div class="seg" data-amb-min>' + MINUTEURS.map(m => '<button type="button" data-amb-min="' + m + '" data-neurone>' + (m ? m + ' min' : '∞') + '</button>').join('') + '</div>'
+      + '<button type="button" data-amb-tout data-neurone>■ tout couper</button></div></div>';
     const liste = hote.querySelector('[data-amb-sons]');
     liste.innerHTML = SONS.map(([k, n, g]) => '<label class="px-amb-l"><span class="g">' + esc(g) + '</span><span class="n">' + esc(n) + '</span><input type="range" min="0" max="1" step="0.01" value="0" data-amb="' + k + '"></label>').join('');
     const demarrer = () => {

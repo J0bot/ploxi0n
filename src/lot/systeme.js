@@ -36,8 +36,8 @@ export function creerSysteme({ W = globalThis.window, systeme = null, appareil =
   function mount(hote) {
     let vivant = true, minuteur = 0, raf = 0, images = 0, t0 = W.performance.now(), latence = null, enSonde = false;
     const hist = { fps: [], mem: [], lat: [] };
-    hote.innerHTML = '<div class="px-page px-btop"><p class="px-grave">▤ système</p><div data-btop></div>'
-      + '<div class="px-btop-b"><button type="button" class="px-gros" data-btop-xerminal><b>❯_ le xerminal</b><small>le fastfetch du xerboxion, au labo</small></button></div></div>';
+    hote.innerHTML = '<div class="px-page px-btop" data-neurones><p class="px-grave">▤ système</p><div data-btop></div>'
+      + '<div class="px-btop-b"><button type="button" class="px-gros" data-neurone data-btop-xerminal><b>❯_ le xerminal</b><small>le fastfetch du xerboxion, au labo</small></button></div></div>';
     const zone = hote.querySelector('[data-btop]');
     hote.querySelector('[data-btop-xerminal]').addEventListener('click', () => ouvrir('xerminal'));
     // la fluidité : les images peintes par seconde (un rAF qui compte ; il s'arrête avec le ploxion)
@@ -55,16 +55,16 @@ export function creerSysteme({ W = globalThis.window, systeme = null, appareil =
       const th = THERMIQUE[x.s.thermique] || THERMIQUE.inconnu;
       const disque = x.s.disqueTotal > 0 ? 1 - x.s.disqueLibre / x.s.disqueTotal : null;
       const px = ploxions();
-      zone.innerHTML = '<div class="px-btop-p"><h4>appareil</h4>'
+      zone.innerHTML = '<div class="px-btop-p" data-neurone><h4>appareil</h4>'
         + ligne('modèle', esc([x.a.model, x.a.operatingSystem && (x.a.operatingSystem + ' ' + (x.a.osVersion || ''))].filter(Boolean).join(' · ') || '—'))
         + ligne('allumé', esc(duree(x.s.depuis))) + ligne('cœurs', esc(x.coeurs || '—'))
         + ligne('thermique', esc(th[0]), '', th[1]) + ligne('économie', x.s.economie == null ? '—' : x.s.economie ? 'oui' : 'non', '', x.s.economie ? 'mi' : '')
-        + '</div><div class="px-btop-p"><h4>l\'app</h4>'
+        + '</div><div class="px-btop-p" data-neurone><h4>l\'app</h4>'
         + ligne('images/s', esc(fps), '<code>' + courbe(hist.fps, 60) + '</code>', fps < 30 ? 'ko' : fps < 50 ? 'mi' : 'ok')
         + ligne('mémoire', esc(octets(memApp)) + (memTot ? ' / ' + esc(octets(memTot)) : ''), memApp ? '<code>' + courbe(hist.mem) + '</code>' : '')
         + ligne('stockage web', esc(octets(x.web.usage)) + (x.web.quota ? ' / ' + esc(octets(x.web.quota)) : ''), x.web.quota ? '<code>' + jauge(x.web.usage / x.web.quota) + '</code>' : '')
         + ligne('ploxions', px.vivants.length + ' vivant' + (px.vivants.length > 1 ? 's' : '') + (px.endormis.length ? ' · ' + px.endormis.length + ' endormi' + (px.endormis.length > 1 ? 's' : '') : ''), esc(px.vivants.slice(0, 6).join(' · ')))
-        + '</div><div class="px-btop-p"><h4>énergie · disque · réseau</h4>'
+        + '</div><div class="px-btop-p" data-neurone><h4>énergie · disque · réseau</h4>'
         + ligne('batterie', x.b.niveau == null ? '—' : Math.round(x.b.niveau * 100) + ' %' + (x.b.enCharge ? ' ⚡' : ''), x.b.niveau == null ? '' : '<code>' + jauge(x.b.niveau) + '</code>', x.b.niveau != null && x.b.niveau < 0.2 && !x.b.enCharge ? 'ko' : '')
         + ligne('disque', disque == null ? '—' : esc(octets(x.s.disqueLibre)) + ' libres / ' + esc(octets(x.s.disqueTotal)), disque == null ? '' : '<code>' + jauge(disque) + '</code>', disque != null && disque > 0.92 ? 'ko' : '')
         + ligne('réseau', x.r.connecte === false ? 'hors ligne' : esc(x.r.type || (x.r.connecte ? 'connecté' : '—')), '', x.r.connecte === false ? 'ko' : '')

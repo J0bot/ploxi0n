@@ -5,8 +5,9 @@
 //   bords       glisser depuis les bords pour changer d'app appuiLong le menu d'un ploxion à l'appui long
 //   maxVivants  ploxions gardés vivants en arrière-plan    dock       le dock en bas de l'accueil
 //   plaque      la plaque gravée « cycle … » de l'accueil
+//   organique   (0.93) les bords épais et ondulés, les éléments collés comme des neurones (src/app/neurones.js)
 //   haptique    les retours haptiques (ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs…)
-export const PREFS_DEFAUT = { barreClavier: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'chill-tekk', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'xerboxion', fractale: true, pagesCote: true, bande: false, koins: false, activites: true };
+export const PREFS_DEFAUT = { barreClavier: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'chill-tekk', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'xerboxion', fractale: true, pagesCote: true, bande: false, koins: false, activites: true, organique: true };
 
 export function creerPrefs({ W = globalThis.window, boxion }) {
   let p = { ...PREFS_DEFAUT };
@@ -27,6 +28,7 @@ export function creerPrefs({ W = globalThis.window, boxion }) {
     h.classList.toggle('px-sans-plaque', !p.plaque);
     h.classList.toggle('px-sans-bords', !p.bords);
     h.classList.toggle('px-telecommande', p.telecommande !== false);
+    h.classList.toggle('px-organique', p.organique !== false);   // 〰 (0.93) les neurones
   }
   return {
     pret, appliquer,

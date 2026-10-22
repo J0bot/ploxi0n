@@ -76,22 +76,22 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
   // ---- la balade ----
   function mount(hote, params) {
     let vivant = true, ici = null, pas = [], drag = null, glisse = false, repli = false;   // repli : un hub de secours, faute de la map du labo
-    hote.innerHTML = '<div class="px-map"><div class="px-map-b"><button type="button" data-map="pas" aria-label="revenir sur tes pas">‹</button><span class="px-map-ou" data-map-ou></span>'
-      + '<button type="button" data-map="depart" aria-label="le xerboxion">' + G('xerboxion') + '</button><button type="button" data-map="creer" aria-label="créer un hub">＋</button></div>'
-      + '<div class="px-map-v" data-map-v><div class="px-map-plan" data-map-plan></div></div><div class="px-map-autres" data-map-autres></div></div>';
+    hote.innerHTML = '<div class="px-map"><div class="px-map-b" data-neurones><button type="button" data-map="pas" data-neurone aria-label="revenir sur tes pas">‹</button><span class="px-map-ou" data-map-ou></span>'
+      + '<button type="button" data-map="depart" data-neurone aria-label="le xerboxion">' + G('xerboxion') + '</button><button type="button" data-map="creer" data-neurone aria-label="créer un hub">＋</button></div>'
+      + '<div class="px-map-v" data-map-v><div class="px-map-plan" data-map-plan data-neurones data-neurones-seuil="64"></div></div><div class="px-map-autres" data-map-autres></div></div>';
     const vue = hote.querySelector('[data-map-v]'), plan = hote.querySelector('[data-map-plan]');
     const taille = () => { const w = vue.clientWidth || W.innerWidth || 390, h = vue.clientHeight || (W.innerHeight || 800) * 0.7; return Math.round(Math.min(w * 0.74, h * 0.62)); };
     function koinHtml(k) {
       const hub = String(k.ploxion || '').startsWith('xerkion-') && hubs.has(k.ploxion);
       const g = hub ? G(hubs.get(k.ploxion).center || 'portion') : (nomDepuisEmoji(k.icon) ? G(nomDepuisEmoji(k.icon)) : glyphePloxion({ id: k.ploxion, nom: k.label }));
-      return '<button type="button" class="px-map-k' + (hub ? ' px-map-k-hub' : '') + '" data-k="' + esc(k.ploxion || '') + '" title="' + esc(k.label || k.ploxion) + '">' + g + '<small>' + esc(k.label || k.ploxion || '') + '</small></button>';
+      return '<button type="button" class="px-map-k' + (hub ? ' px-map-k-hub' : '') + '" data-neurone data-k="' + esc(k.ploxion || '') + '" title="' + esc(k.label || k.ploxion) + '">' + g + '<small>' + esc(k.label || k.ploxion || '') + '</small></button>';
     }
     function carre(id, role) {
       const h = hubs.get(id); if (!h) return '';
       const ks = (h.koins || []).filter(k => k && k.ploxion), n = ks.length;
-      return '<div class="px-map-c px-map-' + role + '" data-c="' + esc(id) + '"><div class="px-map-t"><b>' + esc(nomDe(h)) + '</b><span>' + esc(h.essence || '') + (h.perso ? ' · à toi' : '') + '</span>'
+      return '<div class="px-map-c px-map-' + role + '" data-neurone data-c="' + esc(id) + '"><div class="px-map-t"><b>' + esc(nomDe(h)) + '</b><span>' + esc(h.essence || '') + (h.perso ? ' · à toi' : '') + '</span>'
         + (role === 'ici' && h.perso ? '<button type="button" data-map="modifier" aria-label="modifier">✎</button>' : '') + '</div>'
-        + '<div class="px-map-g">' + ks.slice(0, 12).map(koinHtml).join('') + '<div class="px-map-centre">' + G(h.center || 'ion') + '</div></div>'
+        + '<div class="px-map-g" data-neurones="fin">' + ks.slice(0, 12).map(koinHtml).join('') + '<div class="px-map-centre" data-neurone>' + G(h.center || 'ion') + '</div></div>'
         + '<div class="px-map-pied">' + n + ' koin' + (n > 1 ? 's' : '') + (n > 12 ? ' (+' + (n - 12) + ')' : '') + ' · ' + (h.portals || []).filter(Boolean).length + ' portail' + ((h.portals || []).filter(Boolean).length > 1 ? 's' : '') + '</div></div>';
     }
     function peindre() {
