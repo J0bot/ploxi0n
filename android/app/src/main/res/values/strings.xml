@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ploxi0n</string>
+    <string name="title_activity_main">ploxi0n</string>
+    <string name="package_name">ch.j0bot.ploxi0n</string>
+    <string name="custom_url_scheme">ch.j0bot.ploxi0n</string>
+</resources>
