@@ -1,0 +1,576 @@
+{
+"schema": "xerkions",
+"items": [
+{
+"id": "xerkion-xerboxion",
+"nom": "Xerboxion",
+"icone": "▦",
+"template": "hub",
+"center": "blocs",
+"essence": "xerboxion",
+"koins": [
+{
+"label": "la porte",
+"ploxion": "presentation",
+"icon": "🎤"
+},
+{
+"label": "les blocs",
+"ploxion": "blocs",
+"icon": "🧱"
+},
+{
+"label": "contribuer",
+"ploxion": "contribuer",
+"icon": "🌱"
+},
+{
+"label": "l'atelier",
+"ploxion": "atelier",
+"icon": "🛠"
+},
+{
+"label": "la galerie",
+"ploxion": "xerkions",
+"icon": "⬡"
+},
+{
+"label": "la carte",
+"ploxion": "carte",
+"icon": "🗺"
+},
+{
+"label": "le browser",
+"ploxion": "web",
+"icon": "🌐"
+},
+{
+"label": "le jeu de vie",
+"ploxion": "timeline",
+"icon": "⏳"
+}
+],
+"portals": [
+"xerkion-decouverte",
+"xerkion-core",
+"xerkion-vie",
+"xerkion-connaissance"
+]
+},
+{
+"id": "xerkion-decouverte",
+"nom": "Découverte",
+"icone": "▦",
+"template": "hub",
+"center": "lanceur",
+"essence": "trouver",
+"koins": [
+{
+"label": "lanceur",
+"ploxion": "lanceur",
+"icon": "🚀"
+},
+{
+"label": "ploxions",
+"ploxion": "browser",
+"icon": "🎛"
+},
+{
+"label": "recherche",
+"ploxion": "recherche",
+"icon": "🔎"
+},
+{
+"label": "atlas",
+"ploxion": "atlas",
+"icon": "🗺"
+},
+{
+"label": "phares",
+"ploxion": "phares",
+"icon": "⭐"
+},
+{
+"label": "random",
+"ploxion": "random",
+"icon": "🎲"
+},
+{
+"label": "tech-tree",
+"ploxion": "techtree",
+"icon": "🌳"
+},
+{
+"label": "installer",
+"ploxion": "download",
+"icon": "📥"
+},
+{
+"label": "carte repos",
+"ploxion": "repomap",
+"icon": "🗺️"
+}
+],
+"portals": [
+"xerkion-reglages",
+"xerkion-accueil",
+"xerkion-outils",
+"xerkion-audio",
+"xerkion-xerboxion"
+]
+},
+{
+"id": "xerkion-core",
+"nom": "Core opérateur",
+"icone": "▦",
+"template": "hub",
+"center": "kion",
+"essence": "xion",
+"koins": [
+{
+"label": "xion",
+"ploxion": "xion",
+"icon": "🛸"
+},
+{
+"label": "op",
+"ploxion": "op",
+"icon": "✦"
+},
+{
+"label": "forge",
+"ploxion": "forge",
+"icon": "⚒"
+},
+{
+"label": "term",
+"ploxion": "xerminal",
+"icon": "⌨️"
+},
+{
+"label": "tsoin",
+"ploxion": "tsoin",
+"icon": "⦿"
+},
+{
+"label": "coord",
+"ploxion": "coord",
+"icon": "📡"
+}
+],
+"portals": [
+"xerkion-boxion",
+"xerkion-ui",
+"xerkion-tsoin",
+"xerkion-forge",
+"xerkion-xerboxion"
+]
+},
+{
+"id": "xerkion-vie",
+"nom": "Vie",
+"icone": "▦",
+"template": "hub",
+"center": "wormion",
+"essence": "vie",
+"koins": [
+{
+"label": "web",
+"ploxion": "web",
+"icon": "🌐"
+},
+{
+"label": "vidéos",
+"ploxion": "youtube",
+"icon": "▶"
+},
+{
+"label": "idées",
+"ploxion": "ideas",
+"icon": "💡"
+},
+{
+"label": "budget",
+"ploxion": "finance",
+"icon": "🪙"
+},
+{
+"label": "agenda",
+"ploxion": "calendar",
+"icon": "📅"
+},
+{
+"label": "roadmap",
+"ploxion": "roadmap",
+"icon": "🗺️"
+}
+],
+"portals": [
+"xerkion-navigation",
+"xerkion-bouffe",
+"xerkion-sante",
+"xerkion-bureau",
+"xerkion-xerboxion"
+]
+},
+{
+"id": "xerkion-connaissance",
+"nom": "Connaissance",
+"icone": "▦",
+"template": "hub",
+"center": "portion",
+"essence": "savoir",
+"koins": [
+{
+"label": "wiki",
+"ploxion": "wiki",
+"icon": "📖"
+},
+{
+"label": "dico",
+"ploxion": "dictionnaire",
+"icon": "📖"
+},
+{
+"label": "savoir",
+"ploxion": "knowledge",
+"icon": "🧠"
+},
+{
+"label": "arbre",
+"ploxion": "tree",
+"icon": "🌳"
+},
+{
+"label": "xp",
+"ploxion": "xp",
+"icon": "🎮"
+}
+],
+"portals": [
+"xerkion-crea",
+"xerkion-etudes",
+"xerkion-knowledge",
+"xerkion-xerboxion"
+]
+},
+{
+"id": "xerkion-reglages",
+"nom": "Réglages",
+"icone": "▦",
+"template": "hub",
+"center": "reglages",
+"essence": "réglage",
+"koins": [
+{
+"label": "réglages",
+"ploxion": "reglages",
+"icon": "⚙️"
+},
+{
+"label": "noyau",
+"ploxion": "noyau",
+"icon": "⚙"
+},
+{
+"label": "edit ui",
+"ploxion": "edit-ui",
+"icon": "🎛"
+},
+{
+"label": "apparence",
+"ploxion": "apparence",
+"icon": "🖼"
+},
+{
+"label": "transitions",
+"ploxion": "transition",
+"icon": "🌀"
+},
+{
+"label": "écrans",
+"ploxion": "screens",
+"icon": "🖥️"
+},
+{
+"label": "mode kion",
+"ploxion": "kion-map",
+"icon": "▦"
+},
+{
+"label": "zoom ∞",
+"ploxion": "hud",
+"icon": "🌀"
+}
+],
+"portals": [
+"xerkion-ui",
+"xerkion-rendu",
+"xerkion-decouverte"
+]
+},
+{
+"id": "xerkion-accueil",
+"nom": "Accueil",
+"icone": "▦",
+"template": "hub",
+"center": "lorion",
+"essence": "accueil",
+"koins": [
+{
+"label": "lorion",
+"ploxion": "lorion",
+"icon": "🌱"
+},
+{
+"label": "onboarding",
+"ploxion": "onboarding",
+"icon": "🪜"
+},
+{
+"label": "invitation",
+"ploxion": "invitation",
+"icon": "🔑"
+},
+{
+"label": "inviter",
+"ploxion": "invite",
+"icon": "✉️"
+},
+{
+"label": "contribuer",
+"ploxion": "contribuer",
+"icon": "🌱"
+},
+{
+"label": "1er boxion",
+"ploxion": "premier-boxion",
+"icon": "🖥️"
+},
+{
+"label": "ios",
+"ploxion": "ios",
+"icon": "🍏"
+},
+{
+"label": "libre",
+"ploxion": "libre",
+"icon": "🧲"
+}
+],
+"portals": [
+"xerkion-social",
+"xerkion-decouverte",
+"xerkion-bureau"
+]
+},
+{
+"id": "xerkion-boxion",
+"nom": "Boxion",
+"icone": "▦",
+"template": "hub",
+"center": "kion",
+"essence": "boxion",
+"koins": [
+{
+"label": "boxion",
+"ploxion": "boxion",
+"icon": "⬚"
+},
+{
+"label": "fs",
+"ploxion": "filesystem",
+"icon": "🗂"
+},
+{
+"label": "labo",
+"ploxion": "labo",
+"icon": "⚡"
+},
+{
+"label": "nexus",
+"ploxion": "nexus",
+"icon": "⛰"
+}
+],
+"portals": [
+"xerkion-core",
+"xerkion-ender",
+"xerkion-machine",
+"xerkion-navigation"
+]
+},
+{
+"id": "xerkion-ui",
+"nom": "UI",
+"icone": "▦",
+"template": "hub",
+"center": "kion",
+"essence": "ui",
+"koins": [
+{
+"label": "nombres",
+"ploxion": "ui",
+"icon": "🔢"
+},
+{
+"label": "thèmes",
+"ploxion": "themes",
+"icon": "🎨"
+},
+{
+"label": "blocs",
+"ploxion": "designer",
+"icon": "🧩"
+},
+{
+"label": "market",
+"ploxion": "marketplace",
+"icon": "◧"
+},
+{
+"label": "zoom",
+"ploxion": "zoom",
+"icon": "🔍"
+},
+{
+"label": "dico",
+"ploxion": "dictionnaire",
+"icon": "📖"
+}
+],
+"portals": [
+"xerkion-core",
+"xerkion-rendu",
+"xerkion-crea",
+"xerkion-reglages"
+]
+},
+{
+"id": "xerkion-navigation",
+"nom": "Navigation",
+"icone": "▦",
+"template": "hub",
+"center": "kion",
+"essence": "map",
+"koins": [
+{
+"label": "carte",
+"ploxion": "map",
+"icon": "🗺️"
+},
+{
+"label": "pièce",
+"ploxion": "room-map",
+"icon": "🗺️"
+},
+{
+"label": "zoom",
+"ploxion": "zoom",
+"icon": "🔍"
+},
+{
+"label": "fichier",
+"ploxion": "filesystem",
+"icon": "🗂"
+},
+{
+"label": "wordion",
+"ploxion": "wordion",
+"icon": "🔤"
+}
+],
+"portals": [
+"xerkion-boxion",
+"xerkion-terre",
+"xerkion-vie",
+"xerkion-3d"
+]
+},
+{
+"id": "xerkion-bouffe",
+"nom": "Bouffe",
+"icone": "▦",
+"template": "hub",
+"center": "wormion",
+"essence": "stock",
+"koins": [
+{
+"label": "stock",
+"ploxion": "inventaire",
+"icon": "🗄️"
+},
+{
+"label": "frigo",
+"ploxion": "frigo",
+"icon": "❄️"
+},
+{
+"label": "cuisine",
+"ploxion": "cuisine",
+"icon": "🍳"
+},
+{
+"label": "courses",
+"ploxion": "courses",
+"icon": "🛒"
+},
+{
+"label": "bouffe",
+"ploxion": "bouffe",
+"icon": "🍔"
+}
+],
+"portals": [
+"xerkion-vie",
+"xerkion-ferme",
+"xerkion-fete"
+]
+},
+{
+"id": "xerkion-crea",
+"nom": "Créa",
+"icone": "▦",
+"template": "hub",
+"center": "wormion",
+"essence": "idée",
+"koins": [
+{
+"label": "dump",
+"ploxion": "braindump",
+"icon": "🧠"
+},
+{
+"label": "idée",
+"ploxion": "idee",
+"icon": "💡"
+},
+{
+"label": "mur",
+"ploxion": "murion",
+"icon": "🧱"
+},
+{
+"label": "blocs",
+"ploxion": "designer",
+"icon": "🧩"
+},
+{
+"label": "notes",
+"ploxion": "notes",
+"icon": "🗒️"
+},
+{
+"label": "post-it",
+"ploxion": "post-it",
+"icon": "📌"
+}
+],
+"portals": [
+"xerkion-ui",
+"xerkion-connaissance",
+"xerkion-glyphes"
+]
+}
+]
+}

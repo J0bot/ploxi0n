@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.90.0', titre: 'La map, en carrés', points: [
+    '▦ La map du xerboxion dans l\'app : les hubs du labo, en carrés. Le hub où tu es au centre, son glyphe et ses koins ; ses voisins dépassent des bords. Glisse pour y aller, ‹ pour revenir sur tes pas, touche un koin pour l\'ouvrir.',
+    '＋ Crée tes hubs : un nom, un glyphe, tes ploxions comme koins, le côté où il se pose. Ils vont dans le même rangement que la map du labo : connecté, tu les retrouves là-bas.',
+    '□ Le portion des koins et le geste « la map » des bords y mènent. Hors ligne, la dernière map revient.',
+  ] },
   { v: '0.89.0', titre: 'Les koins du carnet', points: [
     '◇ Les glyphes du lexique sont ceux du carnet de RS-7 : xeroction, tsoin, wormion, trion, portion, ploxion, et le xer.',
     '◺◿ ⚙ › HUD et dock › Les koins (prototype) : deux koins dans les coins du bas remplacent le dock et la barre. Touche-les : ils grandissent, jusqu\'à deux carrés de deux cases et la barre des glyphes.',

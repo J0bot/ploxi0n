@@ -68,6 +68,7 @@ import { creerMisesAJour } from './marketplace/mises-a-jour.js';
 import { creerRemontee } from './app/remontee-tsoins.js';
 import { creerSysteme } from './lot/systeme.js';
 import { creerKoins } from './app/koins.js';
+import { creerMap } from './app/map-hubs.js';
 import { creerAmbiances } from './lot/ambiances.js';
 import { installerAppsALaDemande } from './shim/apps-a-la-demande.js';
 import { creerWikiNatif } from './app/wiki-natif.js';
@@ -80,7 +81,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.89.0';
+const VERSION = '0.90.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -392,6 +393,10 @@ async function demarrer() {
     ploxions: () => ({ vivants: routeur ? routeur.vivants() : [], endormis: routeur && routeur.endormis ? routeur.endormis() : [] }),
     ouvrir: (id) => routeurProxy.ouvrir(id) }).ploxion);
   internes.push(creerAmbiances({ W: window, boxion, vibrer: (x) => vibrer(x) }).ploxion);
+  // ▦ (0.90) la map du xerboxion en carrés : les hubs du labo (/px/xerkions.json) et les tiens, une balade de portail en portail ; en créer
+  internes.push(creerMap({ boxion, vibrer: (x) => vibrer(x), enLigne: () => navigator.onLine !== false,
+    charger: async () => { const r = await httpRelais.get(SOURCE + '/px/xerkions.json', { headers: { Accept: 'application/json' } }); if (r.status !== 200) throw new Error('map : ' + r.status); const d = JSON.parse(r.texte || '{}'); return Array.isArray(d.items) ? d.items : []; },
+    ploxions: () => (routeur ? routeur.catalogue().filter(p => !p.interne || p.id === 'journal-tsoins') : []), ouvrir: (id) => routeurProxy.ouvrir(id) }).ploxion);
   // ⧗ (0.86) les tsoins de l'iPhone remontent à ton boxion (si tu le choisis : ⚙ › Réseau) ; « me demander un tsoin » après une session
   const remontee = creerRemontee({ boxion, distant, signaler: (t) => routeur && routeur.signaler(t),
     proposer: ({ minutes }) => miniDocks.publier({ cle: 'tsoin-session', titre: 'un tsoin de ta session ?', icone: '⧗', sous: minutes + ' min dans l\'app, juste avant ta pause', ouvrir: () => { miniDocks.retirer('tsoin-session'); tsoinNatif.ouvrir({ texte: '' }); },
@@ -555,7 +560,7 @@ async function demarrer() {
   // ◺◿ (0.89) les koins remplacent le dock et le HUD (le carnet de RS-7, docs/KOINS.md) : ⚙ › HUD et dock › Les koins
   const koins = creerKoins({ actif: () => !!prefs.lire().koins, vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
     koins: () => (routeur.connait('xerkion-perso-koin-ion') ? routeur.ouvrir('xerkion-perso-koin-ion') : routeur.signaler('le koin du ion n\'est pas encore semé ici')),
-    temps: () => routeur.faire('basculer'), xers: () => routeur.faire('mes-xers'), carte: () => routeur.faire('carte'),
+    temps: () => routeur.faire('basculer'), xers: () => routeur.faire('mes-xers'), carte: () => routeur.faire('map'),   // □ portion : la map (0.90)
     tsoin: () => tsoinNatif.ouvrir(), journal: () => routeurProxy.ouvrir('journal-tsoins'), accueil: () => routeur.faire('accueil'),
     toi: () => routeurProxy.ouvrir('reglages-app'), retour: () => (routeur.courant() ? routeur.retour() : null), minimiser: () => routeur.faire('minimiser') } });
   koins.poser(); prefs.surChangement(() => koins.poser());

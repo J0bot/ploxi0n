@@ -102,6 +102,15 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.90 (22.10)** — ▦ la map en carrés (RS-7, sur une capture de la vue des xers : « je veux pouvoir me balader comme ça plutôt, avec des
+carrés, et faut remplir avec les infos de la map ; je kiffe la map du labo, de pouvoir en créer »). `src/app/map-hubs.js`, ploxion interne
+`map` (action des bords `map`, la case portion des koins). Les hubs du labo : `/px/xerkions.json` (template `hub` : center, koins, portals),
+par le HTTP natif, gardés dans boxion « map/xerkions ». Les tiens : jOSStore `xerkions-persos` (localStorage `store:xerkions-persos:items` +
+`jOSBoxion.save('xerkions-persos','items')`, qui part au labo en mode connecté). `voisins()` : portals[0..3] = droite, gauche, haut, bas,
+complétés par le retour des portails des autres, le reste en « d'autres portails ». Un hub = un carré : son glyphe au centre (2×2 d'une
+grille 4×4), ses koins dans l'anneau (12 au plus). Faux iPhone : `parcours-map.mjs` (fixture `tests/donnees/xerkions.labo.json`, 12 hubs).
+❓ RS-7 : la vue des xers (0.70) passe-t-elle aussi aux carrés, ou la map la remplace-t-elle ?
+
 **0.89 (22.10)** — ◺◿ les koins du carnet de RS-7 (deux pages : `docs/look/references/koins-0*.jpg`, transcrites dans **docs/KOINS.md**,
 avec ce qui est posé, ma lecture, et les maillons qui manquent). `glyphes.js` : xeroction, tsoin, wormion, trion, portion redessinés d'après
 le carnet, `ploxion` et `xer` ajoutés. `src/app/koins.js` (`prefs.koins`, coupé par défaut) : html.px-koins efface `.px-dock` et la
