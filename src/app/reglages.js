@@ -208,7 +208,9 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
           + '<div class="l"><span>Dossier dans Fichiers<small data-dossier>Sur mon iPhone › ploxi0n : tsoins, vocaux, fond, Dépôt</small></span><button data-a="dossier">mettre à jour</button></div>'
           + '<div class="l"><span>Ploxions installés<small>la place qu\'ils prennent, leurs bions, retirer</small></span><button data-a="gestion">ouvrir</button></div>'
           + '<div class="l"><span>Nouveautés<small>ce qui a changé, version par version</small></span><button data-a="nouveautes">voir</button></div>'
-          + '<div class="l"><span>Le tuto d\'accueil<small>les gestes et les features, en 9 cartes</small></span><button data-a="tuto">revoir</button></div>'
+          + '<div class="l"><span>Le guide<small>quatre gestes, sur la vraie interface</small></span><button data-a="tuto">revoir</button></div>'
+          + '<div class="l"><span>ⓘ C\'est quoi ça ?<small>touche n\'importe quoi : l\'app te dit ce que c\'est</small></span><button data-a="quoi">essayer</button></div>'
+          + '<div class="l"><span>Les astuces<small>une phrase la première fois que tu croises quelque chose</small></span><button data-a="astuces">les remontrer</button></div>'
           + '<div class="l"><span>▦ Widgets<small>le cube des bions, à l\'écoute, épinglés</small></span><button data-rg-aller="widgets">voir</button></div>'
           + '<div class="l"><span>⌨ Tester le clavier<small>si le clavier ne s\'ouvre pas : le rapport dit où ça casse</small></span><button class="p" data-a="clavier">tester</button></div>'
           + '<div class="l"><span>Banc iPhone</span><button data-ouvrir="banc">ouvrir</button></div><div class="l"><span>Bother me (un souci, une idée)</span><button data-ouvrir="bother">ouvrir</button></div></div>')
@@ -309,6 +311,8 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
         else if (a === 'nouveautes') { if (W.ploxi0nNouveautes) W.ploxi0nNouveautes.tout(); }
         else if (a === 'barre-haut') { if (W.ploxi0nBarreHaut) W.ploxi0nBarreHaut.composer(); }
         else if (a === 'tuto') { if (W.ploxi0nTuto) W.ploxi0nTuto.montrer(); }
+        else if (a === 'quoi') { if (W.ploxi0nTuto && W.ploxi0nTuto.cestQuoi) W.ploxi0nTuto.cestQuoi(); }
+        else if (a === 'astuces') { if (W.ploxi0nTuto && W.ploxi0nTuto.remettreAstuces) { await W.ploxi0nTuto.remettreAstuces(); b.textContent = 'c\'est fait'; } }
         else if (a === 'widgets') { if (W.ploxi0nWidgets) { await W.ploxi0nWidgets.publier(); await new Promise(r => W.setTimeout(r, 700)); } await peindre(); msg('✓ republié : regarde tes widgets (iOS peut prendre quelques secondes)'); }
         else if (a === 'clavier') { await testerClavier({ W, version }); }
         else if (a === 'notif') { await notifs.tester(); msg('✓ elle arrive dans 5 secondes'); }

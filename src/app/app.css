@@ -1113,7 +1113,7 @@ html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,
 html.px-organique{--trait:3px}
 :where(html.px-organique [data-neurones]){position:relative}
 html.px-organique [data-neurones]{isolation:isolate}
-html.px-organique [data-neurone]{--n-fond:var(--surface);--n-bord:var(--bord2);background-color:transparent!important;border-color:transparent!important;box-shadow:none!important}
+html.px-organique :is([data-neurone],.px-neurone){--n-fond:var(--surface);--n-bord:var(--bord2);background-color:transparent!important;border-color:transparent!important;box-shadow:none!important}
 .px-neurones{position:absolute;z-index:-1;pointer-events:none;overflow:visible}
 html:not(.px-organique) .px-neurones,html:not(.px-organique) .px-neurones-defs{display:none}
 html.px-organique [data-neurone].on,html.px-organique [data-neurone]:active{--n-bord:var(--acc2)}
@@ -1141,9 +1141,9 @@ html.px-organique{
   --txt:#e6e0fa; --muted:#8c84b8; --grave:#6c6599;
   --memb:#2fd890; --memb2:#8a5cff;
 }
-html.px-organique [data-neurone]{--n-fond:var(--surface);--n-bord:var(--memb)}
-html.px-organique .px-neurones-dd{opacity:.92}
-html.px-organique [data-neurone].on,html.px-organique [data-neurone]:active{--n-bord:var(--memb2)}
+html.px-organique :is([data-neurone],.px-neurone){--n-fond:var(--surface);--n-bord:var(--memb)}
+html.px-organique .px-neurones-dd{opacity:.8}   /* (0.95) le dedans en verre : le fond passe à travers */
+html.px-organique :is([data-neurone],.px-neurone):is(.on,:active){--n-bord:var(--memb2)}
 /* le vert et le violet alternent, comme sur les planches (les membranes passent de l'un à l'autre dans les tubes) */
 html.px-organique .px-koin-cases>button{--n-bord:var(--memb2)}
 html.px-organique .px-koin-pad{--n-bord:var(--memb)}
@@ -1154,3 +1154,36 @@ html.px-organique .px-map-k{--n-bord:var(--memb2)}
 html.px-organique .px-map-k-hub{--n-bord:var(--memb)}
 html.px-organique .px-btop-p:nth-child(2n){--n-bord:var(--memb2)}
 html.px-organique [data-amb-min]{--n-bord:var(--memb2)}
+
+/* 🧭 (0.95) LE GUIDE (src/app/guide.js) : le projecteur (tout s'assombrit sauf la cible ; l'ombre ne prend pas les touchers), une bulle d'une
+   phrase, un doigt qui pulse sur ce qu'il faut toucher (seulement pendant le guide) */
+.px-guide{position:fixed;inset:0;z-index:90;pointer-events:none}
+.px-guide-trou{position:fixed;border-radius:18px;box-shadow:0 0 0 200vmax rgba(4,3,12,.74);border:2px solid var(--bio);pointer-events:none;transition:all .25s}
+.px-guide-voile{position:fixed;inset:0;background:rgba(4,3,12,.74)}
+.px-guide-astuce .px-guide-trou{box-shadow:0 0 0 200vmax rgba(4,3,12,.45)}
+.px-guide-quoi .px-guide-voile{background:rgba(4,3,12,.25)}
+.px-guide-doigt{position:fixed;width:44px;height:44px;border-radius:50%;background:rgba(121,217,162,.35);border:2px solid var(--bio);animation:px-guide-pouls 1.3s ease-in-out infinite}
+@keyframes px-guide-pouls{0%,100%{transform:scale(.7);opacity:.9}50%{transform:scale(1.05);opacity:.4}}
+html.px-calme .px-guide-doigt{animation:none}
+.px-guide-bulle{position:fixed;left:16px;right:16px;pointer-events:auto;background:var(--surface2) var(--grain);border:var(--trait) solid var(--bio);border-radius:18px;padding:14px 16px 12px;color:var(--txt);box-shadow:0 14px 40px -12px rgba(0,0,0,.85)}
+.px-guide-bulle p{margin:0;font:600 16px/1.35 var(--police)}
+.px-guide-bulle small{display:block;margin-top:6px;color:var(--muted);font-size:13px;line-height:1.35}
+.px-guide-b{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+.px-guide-b button{min-height:40px;padding:0 14px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:600 14px var(--police)}
+.px-guide-b button.p{background:var(--acc);border-color:var(--acc);color:#0d0a16;margin-left:auto}
+.px-guide-n{font:500 11px var(--mono);letter-spacing:.14em;color:var(--grave)}
+/* 〰 (0.95) L'ORGANIQUE DANS TOUS LES PLOXIONS (RS-7 22.10 : « appliqué à tous les ploxions de tout le xerboxion : le wiki, terrax, tout a le
+   même UI et le même HUD » ; « le but : transformer ploxi0n en xerboxion complet »). Les ploxions se peignent avec les variables du xer
+   (--xr-*, 0.52) : en organique, leurs bords deviennent des membranes (vert translucide, le halo), leurs rayons ceux d'une cellule ; leurs
+   boutons et champs sans style propre prennent la membrane. Sans SVG (des milliers d'éléments) : bord translucide + halo + le filet clair. */
+html.px-organique.px-px-chill body{--xr-border:rgba(47,216,144,.5);--xr-line:rgba(138,92,255,.38);--xr-radius:16px;--xr-glow:rgba(47,216,144,.35);--xr-accent-soft:rgba(164,139,255,.16);--xr-accent-weak:rgba(164,139,255,.1)}
+:where(html.px-organique.px-px-chill .px-hote) :where(button,select,input:not([type=checkbox],[type=radio],[type=range],[type=color],[type=file]),textarea){
+  background:rgba(23,18,54,.72);border:2.5px solid rgba(47,216,144,.5);border-radius:14px 16px 13px 15px;
+  box-shadow:0 0 12px -3px rgba(47,216,144,.45),inset 0 0 0 1px rgba(220,255,240,.06)}
+:where(html.px-organique.px-px-chill .px-hote) :where(button:active){border-color:rgba(138,92,255,.7);box-shadow:0 0 14px -2px rgba(138,92,255,.55)}
+:where(html.px-organique.px-px-chill .px-hote) :where(hr){border-top:2px solid rgba(47,216,144,.35)}
+/* le HUD : la barre d'un ploxion, le dock, les modes, les vues — des cellules ; la plaque qui les portait s'efface */
+html.px-organique .px-barre[data-neurones]{background:transparent;border-bottom-color:transparent}
+html.px-organique .px-dock[data-neurones],html.px-organique .px-modes[data-neurones],html.px-organique .px-vues[data-neurones]{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+html.px-organique .px-modes .px-neurone,html.px-organique .px-vues .px-neurone{--n-bord:var(--memb2)}
+html.px-organique .px-modes .px-neurone.on,html.px-organique .px-vues .px-neurone.on{--n-bord:var(--memb)}

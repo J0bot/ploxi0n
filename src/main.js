@@ -28,7 +28,7 @@ import { installerImages } from './natif/images.js';
 import { installerClavierIos, barreClavier, comprendre } from './natif/clavier-ios.js';
 import { trouverPloxion } from './natif/vocabulaire.js';
 import { creerVocal } from './natif/vocal.js';
-import { creerOnboarding } from './app/onboarding.js';
+import { creerGuide } from './app/guide.js';   // 🧭 (0.95) le guide remplace les neuf cartes (onboarding.js)
 import { creerNouveautes } from './app/nouveautes.js';
 import { creerTsoinNatif } from './natif/tsoin-natif.js';
 import { creerBarreHaut } from './app/barre-haut.js';
@@ -587,6 +587,7 @@ async function demarrer() {
     koins: () => (routeur.connait('xerkion-perso-koin-ion') ? routeur.ouvrir('xerkion-perso-koin-ion') : routeur.signaler('le koin du ion n\'est pas encore semé ici')),
     temps: () => routeur.faire('basculer'), xers: () => routeur.faire('mes-xers'), carte: () => routeur.faire('map'),   // □ portion : la map (0.90)
     tsoin: () => tsoinNatif.ouvrir(), journal: () => routeurProxy.ouvrir('journal-tsoins'), accueil: () => routeur.faire('accueil'),
+    quoi: () => { if (window.ploxi0nTuto && window.ploxi0nTuto.cestQuoi) window.ploxi0nTuto.cestQuoi(); },   // ⓘ (0.95) c'est quoi ça ?
     toi: () => routeurProxy.ouvrir('reglages-app'), retour: () => (routeur.courant() ? routeur.retour() : null), minimiser: () => routeur.faire('minimiser'),
     // ○ □ (0.92) les trackpads : le temps (le plus récent d'abord), et les directions du portion
     listeTemps: () => { const cat = routeur.catalogue(), nom = (id) => ((cat.find(p => p.id === id) || {}).nom || id); return [...routeur.vivants().slice().reverse(), ...routeur.endormis()].filter((id, i, l) => id !== routeur.courant() && l.indexOf(id) === i).slice(0, 12).map(id => ({ id, nom: nom(id) })); },
@@ -630,8 +631,9 @@ async function demarrer() {
   }
   hud.surChangement(() => publierValeurs().catch(() => {}));
   raccourcis.publier(routeur.catalogue()).catch(() => {});   // le catalogue est déjà là : seulement le publier vers Raccourcis
-  // 🧭 le tuto d'accueil : une fois (par version du tuto) ; ⚙ › À propos › « revoir le tuto »
-  const tuto = creerOnboarding({ boxion, vibrer: (x) => vibrer(x), connecter: () => compte.connecter() });
+  // 🧭 (0.95) le guide : apprendre en faisant (une fois par version du guide), les astuces au bon moment, « c'est quoi ça ? » ;
+  // ⚙ › À propos › « revoir le guide »
+  const tuto = creerGuide({ boxion, routeur: () => routeur, vibrer: (x) => vibrer(x), demo, connecter: () => compte.connecter() });
   window.ploxi0nTuto = tuto;
   // ✦ après une mise à jour : ce qui a changé (pas au tout premier lancement : le tuto)
   const nouveautes = creerNouveautes({ boxion, version: VERSION, vibrer: (x) => vibrer(x), essayer: (nom) => demo.jouer(nom) });

@@ -11,6 +11,7 @@
 // repeint chaque seconde : rien ne bouge, rien n'est refait). html.px-organique (⚙ › Apparence › Bords organiques) ; sinon rien n'est dessiné.
 //   data-neurones="fin"          un flou court, pour les grilles serrées (la map : 5 px entre les koins)
 //   data-neurones-seuil="60"     l'écart maximal d'une synapse (26 px par défaut)
+//   data-neurones-cellules="button" (0.95) les cellules par un sélecteur (sans marquer chaque élément) : elles reçoivent la classe px-neurone
 const NS = 'http://www.w3.org/2000/svg';
 export const SEUIL = 26, EPAIS = 4;
 
@@ -51,8 +52,15 @@ function filtres(D) {
     + '<feDisplacementMap in="b" in2="n" scale="' + onde + '" xChannelSelector="R" yChannelSelector="G" result="d"/>'
     + '<feColorMatrix in="d" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 22 -11" result="m"/>'
     + (eroder ? '<feMorphology in="m" operator="erode" radius="' + EPAIS + '"/>'
-      : '<feGaussianBlur in="m" stdDeviation="' + (flou + 2) + '" result="h"/><feColorMatrix in="h" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 .55 0" result="halo"/>'
-        + '<feMerge><feMergeNode in="halo"/><feMergeNode in="m"/></feMerge>') + '</filter>';
+      // (0.95, RS-7 : « plus translucide : comme des neurones, des câbles électriques, des vaisseaux sanguins, des nerfs ») la paroi seule,
+      // translucide (le fond passe à travers) ; au milieu de la paroi, un filet plus clair (la lumière dans le nerf, l'âme du câble) ; le halo
+      : '<feMorphology in="m" operator="erode" radius="' + EPAIS + '" result="e"/><feComposite in="m" in2="e" operator="out" result="paroi"/>'
+        + '<feMorphology in="m" operator="erode" radius="' + (EPAIS * 0.3) + '" result="e1"/><feMorphology in="m" operator="erode" radius="' + (EPAIS * 0.65) + '" result="e2"/>'
+        + '<feComposite in="e1" in2="e2" operator="out" result="ame0"/>'
+        + '<feColorMatrix in="ame0" type="matrix" values=".45 0 0 0 .55 0 .45 0 0 .55 0 0 .45 0 .55 0 0 0 .5 0" result="ame"/>'
+        + '<feColorMatrix in="paroi" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 .62 0" result="paroiT"/>'
+        + '<feGaussianBlur in="m" stdDeviation="' + (flou + 2) + '" result="h"/><feColorMatrix in="h" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 .4 0" result="halo"/>'
+        + '<feMerge><feMergeNode in="halo"/><feMergeNode in="paroiT"/><feMergeNode in="ame"/></feMerge>') + '</filter>';
   const s = D.createElementNS(NS, 'svg');
   s.setAttribute('class', 'px-neurones-defs'); s.setAttribute('aria-hidden', 'true'); s.setAttribute('width', '0'); s.setAttribute('height', '0');
   s.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none';
@@ -79,8 +87,10 @@ export function creerNeurones({ W = globalThis.window } = {}) {
     const fin = c.getAttribute('data-neurones') === 'fin', seuil = nombre(c.getAttribute('data-neurones-seuil'), SEUIL);
     const cr = c.getBoundingClientRect(), s = cr.width && c.offsetWidth ? cr.width / c.offsetWidth : 1;
     const cs = [];
-    for (const el of c.querySelectorAll('[data-neurone]')) {
+    const sel = c.getAttribute('data-neurones-cellules');
+    for (const el of c.querySelectorAll(sel ? ':scope ' + sel : '[data-neurone]')) {
       if (!el.parentElement || el.parentElement.closest('[data-neurones]') !== c) continue;   // la cellule d'un groupe imbriqué
+      if (sel && !el.classList.contains('px-neurone')) el.classList.add('px-neurone');
       const r = el.getBoundingClientRect(); if (!r.width || !r.height) continue;   // caché
       const st = W.getComputedStyle(el);
       cs.push({ x: r1((r.left - cr.left) / s + c.scrollLeft - c.clientLeft), y: r1((r.top - cr.top) / s + c.scrollTop - c.clientTop), w: r1(r.width / s), h: r1(r.height / s),
@@ -100,7 +110,7 @@ export function creerNeurones({ W = globalThis.window } = {}) {
     const sfx = fin ? '-fin' : '';
     const gouttes = fin ? '' : cs.map(q => koinsDe(q).map(k => '<circle cx="' + r1(k.cx - x0) + '" cy="' + r1(k.cy - y0) + '" r="' + r1(k.r) + '" fill="' + q.bord + '"/>').join('')).join('');
     g.svg.innerHTML = '<g filter="url(#px-f-mb' + sfx + ')">' + corps('bord') + gouttes + '</g><g class="px-neurones-dd" filter="url(#px-f-dd' + sfx + ')">' + corps('fond') + '</g>';
-    if (g.ro) { g.ro.disconnect(); g.ro.observe(c); for (const el of c.querySelectorAll('[data-neurone]')) g.ro.observe(el); }
+    if (g.ro) { g.ro.disconnect(); g.ro.observe(c); for (const el of c.querySelectorAll('[data-neurone],.px-neurone')) g.ro.observe(el); }
   }
   function tout() {
     prevu = false;

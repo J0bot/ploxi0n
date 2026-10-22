@@ -17,8 +17,8 @@ import { creerPadWormion, creerPadPortion } from './pads.js';   // ○ □ (0.92
 export const PADS = { wormion: true, portion: true };   // (0.92) ces cases-là sont des trackpads
 export const ETAPES = 4;   // 0 replié (petit) · 1 moyen · 2 grand · 3 les cases
 export const CASES = { gauche: [['trion', 'koins'], ['wormion', 'temps']], droite: [['xer', 'xers'], ['portion', 'carte']] };
-export const BARRE = [['retour', 'retour', '‹'], ['tsoin', 'tsoin', ''], ['wormion', 'temps', ''], ['trion', 'koins', ''], ['portion', 'carte', ''], ['ploxion', 'accueil', ''], ['xeroction', 'toi', ''], ['minimiser', 'minimiser', '▁']];
-const NOMS = { koins: 'le koin du ion', temps: 'le temps (ce que tu avais ouvert)', xers: 'mes xers', carte: 'tout le xerboxion', tsoin: 'noter un tsoin', accueil: 'les ploxions', toi: 'toi (compte, réglages)', retour: 'retour', minimiser: 'minimiser' };
+export const BARRE = [['retour', 'retour', '‹'], ['tsoin', 'tsoin', ''], ['wormion', 'temps', ''], ['trion', 'koins', ''], ['portion', 'carte', ''], ['ploxion', 'accueil', ''], ['xeroction', 'toi', ''], ['quoi', 'quoi', 'ⓘ'], ['minimiser', 'minimiser', '▁']];
+const NOMS = { koins: 'le koin du ion', temps: 'le temps (ce que tu avais ouvert)', xers: 'mes xers', carte: 'tout le xerboxion', tsoin: 'noter un tsoin', accueil: 'les ploxions', toi: 'toi (compte, réglages)', retour: 'retour', minimiser: 'minimiser', quoi: 'c\'est quoi ça ? (touche quelque chose)' };
 // un koin de coin : un triangle rectangle (l'angle droit dans le coin de l'écran) et ses triangles emboîtés
 const TRI = (g) => '<svg viewBox="0 0 100 100" aria-hidden="true">' + (g ? '<g transform="translate(100 0) scale(-1 1)">' : '<g>')
   + '<polygon points="2,98 2,4 96,98"/><polygon points="14,86 14,40 60,86"/><polygon points="24,76 24,60 40,76" class="f"/></g></svg>';

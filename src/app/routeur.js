@@ -458,7 +458,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
   const ligne = (p, meta, part) => '<button class="px-ligne" data-id="' + texte(p.id) + '"><span class="px-ic" style="--t:' + teinte(p.id) + '">' + icone(p) + '</span><span class="px-ligne-t"><b>' + (verrous.has(p.id) ? G('verrou') + ' ' : '') + texte(p.nom || p.id) + '</b><small>' + texte(meta || '') + '</small>'
     + (part != null ? '<i class="px-jauge"><i style="width:' + Math.round(part * 100) + '%"></i></i>' : '') + '</span></button>';
   function dock() {
-    return '<nav class="px-dock px-hud px-visiere"><span class="px-hud-c">' + (hud ? hud.html() : '') + '</span></nav>';
+    return '<nav class="px-dock px-hud px-visiere" data-neurones="fin" data-neurones-cellules=".px-hud-c>button"><span class="px-hud-c">' + (hud ? hud.html() : '') + '</span></nav>';
   }
   async function aPlat(vue, tous) {
     const u = vue === 'usage' || vue === 'recents' ? (((usage && await usage().catch(() => null)) || {}).px || {}) : {};
@@ -506,7 +506,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     // droite « bibliothèque » (tout, par catégorie) ; pageCourante reste l'index LOGIQUE (0 = la page principale), le DOM est décalé de sp
     const sp = prefs().pagesCote !== false ? 1 : 0;
     pageCourante = Math.max(-sp, Math.min(pageCourante, pages.length - 1 + sp));
-    const vues = '<div class="px-vues">' + VUES_ACCUEIL.map(([k, i, n]) => '<button data-vue-accueil="' + k + '"' + (k === vue ? ' class="on"' : '') + '>' + G(i) + ' ' + n + '</button>').join('') + '</div>';
+    const vues = '<div class="px-vues" data-neurones="fin" data-neurones-cellules="button">' + VUES_ACCUEIL.map(([k, i, n]) => '<button data-vue-accueil="' + k + '"' + (k === vue ? ' class="on"' : '') + '>' + G(i) + ' ' + n + '</button>').join('') + '</div>';
     const plat = vue !== 'grille' && vue !== 'compacte';
     ecran.innerHTML = '<div class="px-accueil px-vue-' + vue + '"><header class="px-tete"><h1>' + LOGO + '<b>ploxi0n</b></h1><button class="px-modif" data-edition>' + (edition ? 'terminé' : G('editer')) + '</button></header>'
       + (panneau ? panneau() : '')   // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xerbot
@@ -751,7 +751,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
   }
   function barre(p, id) {
     const autres = vivants.size - 1 + endormis.length;
-    ecran.innerHTML = '<div class="px-barre"><button class="px-retour" data-retour aria-label="retour">' + G('retour') + '</button><span>' + (prefs().glyphes === false ? icone(p) : glyphePloxion(p)) + ' ' + texte(p.nom || id) + '</span>'
+    ecran.innerHTML = '<div class="px-barre" data-neurones data-neurones-cellules=".px-retour,.px-mini,.px-hud-c>button">' + '<button class="px-retour" data-retour aria-label="retour">' + G('retour') + '</button><span>' + (prefs().glyphes === false ? icone(p) : glyphePloxion(p)) + ' ' + texte(p.nom || id) + '</span>'
       + '<span class="px-hud"><span class="px-hud-c">' + (hud ? hud.html(true) : '') + '</span>'
       + (autres > 0 ? '<button class="px-mini" data-basculer aria-label="basculer entre les ploxions ouverts">' + G('basculer') + '<b>' + (autres + 1) + '</b></button>' : '')
       + (id !== 'cube-interieur' ? '<button class="px-mini" data-cube aria-label="ses pages, dans le cube">▣</button>' : '')

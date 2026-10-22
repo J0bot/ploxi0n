@@ -40,7 +40,7 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
   // XERB0T : le bus (les ploxions et la blouse y parlent) ; les derniers messages s'affichent
   try { if (W.jOSPorts && W.jOSPorts.on) W.jOSPorts.on('*', (p, topic) => { if (!/^ploxion\.xerbot\./.test(topic || '')) return; xb.messages.unshift({ le: Date.now(), port: topic.slice(15), p }); xb.messages.length = Math.min(xb.messages.length, 12); if (mode() === 'xerbot') rafraichir(); }); } catch (e) { /* */ }
 
-  const puces = () => '<div class="px-modes" role="tablist">' + MODES.map(([k, i, n]) => '<button data-mode="' + k + '" class="' + (k === mode() ? 'on' : '') + '">' + G(i) + ' ' + n + '</button>').join('') + '</div>';
+  const puces = () => '<div class="px-modes" role="tablist" data-neurones="fin" data-neurones-cellules="button">' + MODES.map(([k, i, n]) => '<button data-mode="' + k + '" class="' + (k === mode() ? 'on' : '') + '">' + G(i) + ' ' + n + '</button>').join('') + '</div>';
   function panneauXerboxion() {
     if (W.navigator.onLine === false) return '<div class="px-mode-p"><p class="px-grave">⬡ xerboxion</p><p>L\'UI du labo demande le réseau. Hors ligne : ◇ chill-tekk.</p></div>';
     // (0.52) l'iframe reste invisible tant que l'UI du labo n'est pas là (plus de grand rectangle blanc) ; dessous, « ça arrive »
