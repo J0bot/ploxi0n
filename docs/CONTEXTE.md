@@ -102,6 +102,13 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.87 (22.10)** — ▥ la bande façon niri (`src/app/bande.js`, `prefs.bande`, coupée par défaut). Le routeur garde tout (montrer, cacher,
+sommeil, pile) et appelle `bande.poser()` à la fin de `montrer()` ; la bande ne pose que `width`/`transform` sur les `.px-hote` (jamais de
+déplacement DOM : un iframe se rechargerait). L'ordre : `ordreBande` + `placerDansOrdre` (à droite de `depuis`, le courant au moment
+d'`ouvrir`) ; `fileBords` le suit quand la bande est là. Le voisin visible (`.px-bande-voisin`) ne s'endort pas. `glisser()` (l'animation des
+bords) est coupé en bande : la transition CSS des colonnes la remplace. La vue d'ensemble : `ouvrirVue()` (échelle 0,34, une ligne qui se
+glisse, les endormis en pointillés). Action des bords `bande`. Faux iPhone : `parcours-bande-niri.mjs`.
+
 **0.86 (22.10)** — ⧗ les tsoins remontent au boxion. Le journal boxion_local « tsoins » (tsoins notés, jOSTsoin.mark des ploxions, marketplace,
 terrax, xerbot, compte…) restait sur le téléphone. `src/app/remontee-tsoins.js` : modes `non` (défaut), `tsoins` (kind tsoin et vocal), `tout`,
 `tampon` (part seulement sur « envoyer ») ; passer de « non » à un mode part de MAINTENANT (« tout depuis le début » pour le passé) ; jOSBoxion

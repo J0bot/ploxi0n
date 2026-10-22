@@ -164,6 +164,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
           + bascule('data-pb="telecommande"', P.telecommande !== false, 'Télécommande', 'les barres en bas de l\'écran : tout au pouce (chill-tekk : on est tous des flemmards)')
           + bascule('data-pb="reprendre"', P.reprendre !== false, 'Reprendre là où j\'en étais', 'après une fermeture ou un plantage : le ploxion de devant rouvert, les autres endormis dans ⧉')
           + bascule('data-pb="bords"', P.bords, 'Les bords', 'glisser depuis le bord gauche ou droit pour passer d\'une app à l\'autre')
+          + bascule('data-pb="bande"', !!P.bande, 'La bande (façon niri)', 'tes ploxions en colonnes : la suivante dépasse à droite (la toucher l\'amène devant), le nouveau s\'ouvre à droite ; ▥ la vue d\'ensemble (appui long sur le bord de la suivante, ou un geste des bords)')
           + bascule('data-pb="appuiLong"', P.appuiLong, 'Appui long sur l\'accueil', 'le menu d\'un ploxion (épingler, déplacer, retirer…)')
           + bascule('data-pb="clicDroit"', P.clicDroit !== false, 'Appui long = clic droit', 'dans les ploxions : leurs menus du clic droit s\'ouvrent')
           + bascule('data-pb="fractale"', P.fractale !== false, 'Tenir un bord : aperçu, fractale, slider', 'tenir 0,3 s : l\'app d\'à côté passe la tête (tire-la) ; 0,9 s : toutes tes apps en fractale (glisse, lâche sur une) ; 1,9 s : le slider défile tout seul, lâche pour ouvrir')

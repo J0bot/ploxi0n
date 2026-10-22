@@ -7,6 +7,12 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.87.0', titre: 'La bande, façon niri', points: [
+    '▥ ⚙ › Navigation › La bande : tes ploxions en colonnes. Celle d\'à côté dépasse à droite, vivante ; la toucher l\'amène devant.',
+    '→ Un ploxion ouvert depuis un autre s\'ouvre juste à sa droite. Les bords font défiler la bande dans cet ordre.',
+    '▥ La vue d\'ensemble : appui long sur le bord de la colonne suivante (ou le geste « la bande » des bords) : toutes tes colonnes en petit, glisse, touche.',
+    '⇆ En paysage, deux colonnes côte à côte.',
+  ] },
   { v: '0.86.0', titre: 'Tes tsoins rejoignent ton boxion', points: [
     '⧗ ⚙ › Réseau › Mes tsoins au boxion : rien (par défaut), tes tsoins notés, tout ton journal, ou un tampon que tu envoies quand tu veux.',
     '↑ Chaque jour de ce téléphone devient une page de ton boxion. Renvoyer ne double rien ; hors ligne, ça part au retour.',

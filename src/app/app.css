@@ -972,3 +972,16 @@ html.px-calme .px-vx-t{transition:none}html.px-calme .px-vx-eclair{animation:non
 .px-ald button{align-self:flex-start;min-height:38px;padding:0 14px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:600 13px var(--police)}
 .px-ald-r{display:inline-block;animation:px-ald-t 1.2s linear infinite}@keyframes px-ald-t{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.px-ald-r{animation:none}}
+/* ▥ (0.87) la bande façon niri (src/app/bande.js) : des colonnes posées par translation ; la suivante dépasse à droite ; la vue d'ensemble */
+.px-scene.px-bande{overflow:hidden}
+.px-scene.px-bande>.px-hote.px-bande-col{transition:transform .28s cubic-bezier(.2,.9,.3,1),opacity .2s;animation:none;transform-origin:0 0;will-change:transform;border-right:1px solid var(--bord2,rgba(255,255,255,.12))}
+.px-scene.px-bande-calme>.px-hote.px-bande-col{transition:none}
+.px-scene.px-bande>.px-hote.px-bande-voisin{opacity:.55;pointer-events:none}
+.px-bande-suite{position:absolute;top:0;bottom:0;z-index:5;background:transparent;border:0;padding:0;margin:0;-webkit-tap-highlight-color:transparent}
+.px-bande-suite::after{content:'';position:absolute;left:0;top:50%;width:3px;height:48px;margin-top:-24px;border-radius:2px;background:var(--acc,#7fdcb0);opacity:.6}
+.px-scene.px-bande-vue>.px-hote.px-bande-col{opacity:1;pointer-events:none;box-shadow:0 0 0 1px var(--bord2,rgba(255,255,255,.2));border-radius:14px;overflow:hidden}
+.px-bande-calque{position:absolute;inset:0;z-index:6;touch-action:none;transition:transform .2s}
+.px-bande-etiquette{position:absolute;background:transparent;border:1px solid var(--bord2,rgba(255,255,255,.25));border-radius:6px;color:var(--txt,#eee);padding:0;display:flex;align-items:flex-end;justify-content:center}
+.px-bande-etiquette>span{transform:translateY(calc(100% + 8px));font:600 11px/1.2 var(--police,system-ui);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.px-bande-etiquette.px-bande-endormi{border-style:dashed;align-items:center}
+.px-bande-etiquette.px-bande-endormi>span{transform:none;opacity:.7}

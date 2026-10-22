@@ -15,6 +15,7 @@ import { glyphe, glyphePloxion } from './glyphes.js';
 import { svgXerkion, glypheCategorie } from './xerkion-icone.js';
 import { creerFractale, glisser } from './fractale.js';
 import { lireXerbion, htmlXerbion } from './xerbion.js';
+import { creerBande, placerDansOrdre } from './bande.js';
 const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 // le logo (losanges concentriques), transparent : les espaces entre les losanges sont des trous
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
@@ -23,7 +24,7 @@ const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><p
 /** (0.63) ce qu'un geste des bords peut faire (⚙ › Gestes des bords, le HUD de tuto) */
 export const ACTIONS_BORDS = [['precedente', '← app précédente'], ['suivante', 'app suivante →'], ['accueil', '⌂ accueil'], ['minimiser', '▁ minimiser'], ['basculer', '⧉ basculer'],
   ['chercher', 'chercher'], ['reglages', 'réglages'], ['portion', '◈ portion'], ['tsoin', '⧗ noter un tsoin'], ['freefall', '◇ freefall (gyroscope)'],
-  ['etat', '▣ l\'état : plein écran, pip, cadre'], ['tuto', '◎ le tuto ici'], ['carte', '⊞ tout le xerboxion'], ['holo', '◈ le xerploxion (l\'hologramme)'], ['cube', '▣ ses pages, dans le cube'], ['xers', '⊡ les xers à côté (aperçus, 4 directions)'], ['inviter', '✉ inviter quelqu\'un · partager'], ['mes-xers', '§ changer de xer'], ['rien', '— rien']];
+  ['etat', '▣ l\'état : plein écran, pip, cadre'], ['tuto', '◎ le tuto ici'], ['carte', '⊞ tout le xerboxion'], ['holo', '◈ le xerploxion (l\'hologramme)'], ['cube', '▣ ses pages, dans le cube'], ['bande', '▥ la bande : vue d\'ensemble'], ['xers', '⊡ les xers à côté (aperçus, 4 directions)'], ['inviter', '✉ inviter quelqu\'un · partager'], ['mes-xers', '§ changer de xer'], ['rien', '— rien']];
 export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false, surChercher = null, surXers = null, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null, surMontrer = null, surTuto = null, partager = null, silence = PLOXIONS_QUI_FUIENT, toucherRapide = null, boutonsBarre = null } = {}) {
   // ▤ (0.51) les mini docks : miniDocks = { surVivants(), surFermeture(id), page() } — ⧉ ouvre leur page, ils remplacent « en arrière-plan »
   const W = fenetre, D = W.document;
@@ -78,6 +79,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     if (action === 'accueil') { if (courant) { cacher(courant); courant = null; } pile = []; vibrer('bord'); return accueil(); }
     if (action === 'minimiser') return courant ? minimiser() : (flottant ? null : vibrer('fx-refus'));   // à l'accueil : déjà là
     if (action === 'etat') return cyclerEtat();
+    if (action === 'bande') { if (!prefs().bande) return signaler('▥ la bande : ⚙ › Navigation'); if (bande.vueOuverte()) { bande.fermerVue(); bande.poser(); return; } return bande.ouvrirVue() ? null : signaler('ouvre d\'abord un ploxion'); }
     if (action === 'holo') return basculerHolo();
     if (action === 'cube') return cubeFerme ? false : basculerCube();   // le bord l'a déjà refermé (à son pointerdown) : ne pas le rouvrir
     if (action === 'tuto') return surTuto ? surTuto(courant ? courant.id : null) : null;
@@ -309,7 +311,10 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
   }).observe(D.body, { childList: true });
   function accrochesDe(id, f) { for (const [n, x] of accroches) if (x === id) f(n); }
   /** passer à l'app d'à côté : sens +1 (suivante), -1 (précédente) ; l'accueil est au bout de la file */
-  const fileBords = () => [null, ...vivants.keys(), ...endormis.map(e => e.id)];
+  // ▥ (0.87) avec la bande, son ordre : le nouveau à droite de celui d'où on l'ouvre (niri) ; sans elle, comme avant
+  let ordreBande = [];
+  const ordreDeBande = () => { const ex = [...vivants.keys(), ...endormis.map(e => e.id)], s = new Set(ex); const o = ordreBande.filter(i => s.has(i)); for (const i of ex) if (!o.includes(i)) o.push(i); return o; };
+  const fileBords = () => (prefs().bande ? [null, ...ordreDeBande()] : [null, ...vivants.keys(), ...endormis.map(e => e.id)]);
   let rafale = 0, arrivee = 0;
   function aCote(sens, { vitesse = 0 } = {}) {
     const file = fileBords();
@@ -332,13 +337,16 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     if (cible == null) accueil();
     else if (!vivants.has(cible) || bloque(cible)) { if (vivants.has(cible)) ouvrir(cible); else reveiller(cible); }
     else { montrer(vivants.get(cible)); entrant = courant ? courant.hote : null; }
-    if (sens && !prefs().calme) glisser({ W, sortant: sortant ? sortant.hote : null, entrant, ecran: cible == null ? ecran : null, scene, sens, vitesse });
+    if (sens && !prefs().calme && !prefs().bande) glisser({ W, sortant: sortant ? sortant.hote : null, entrant, ecran: cible == null ? ecran : null, scene, sens, vitesse });
     // (0.63) l'app d'à côté ARRIVE : sa signature, à la fin du glissement — chaque app se reconnaît sans regarder ; seule la dernière d'une rafale
     if (arrivee) { W.clearTimeout(arrivee); arrivee = 0; }
     if (signer && (cible == null || entrant)) arrivee = W.setTimeout(() => { arrivee = 0; vibrer('fx-arrivee', cible); }, prefs().calme ? 0 : 185);
   }
   // ⧉ (0.59) tenir un bord : l'aperçu, la fractale, le slider (src/app/fractale.js)
   // (0.63) jamais sous une feuille, pendant un tri de tuiles ou pendant une demande Face ID (tri et verifEnCours : lus à l'exécution)
+  const bande = creerBande({ W, scene, actif: () => !!prefs().bande && !holoV, vivants: () => [...vivants.values()].filter(v => !(flottant && flottant.v === v)).map(v => ({ id: v.id, hote: v.hote })),
+    ordre: () => ordreDeBande(), courant: () => (courant ? courant.id : null), nomDe: (id) => (parId.get(id) || {}).nom || id, vibrer: (x) => vibrer(x), calme: () => !!prefs().calme,
+    aller: (id, sens) => allerA(id, { sens, arrivee: true }) });
   const fractale = creerFractale({ W, racine, scene, vibrer, glyphe: (n) => G(n), calme: () => !!prefs().calme,
     actif: () => prefs().fractale !== false && prefs().bords !== false && !tri && !verifEnCours && !D.querySelector('.px-voile,.px-feuille,.px-tuto'),
     surVide: () => signaler('ouvre d\'abord un ploxion'), carte: (o) => ouvrirCarte(o),
@@ -722,7 +730,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
   const joue = (v) => { try { if ([...v.hote.querySelectorAll('audio,video')].some(m => !m.paused && !m.ended)) return true; } catch (e) { /* */ } try { return !!sonDe(v.id); } catch (e) { return false; } };
   function endormirVieux(maintenant = Date.now()) {
     const lim = sommeilMs(); if (!isFinite(lim)) return 0;
-    const l = [...vivants.values()].filter(v => v !== courant && !(flottant && flottant.v === v) && !(cubeP && cubeP.ouvert() === v.id) && maintenant - (v.vu || 0) > lim && !joue(v));
+    const l = [...vivants.values()].filter(v => v !== courant && !(flottant && flottant.v === v) && !(cubeP && cubeP.ouvert() === v.id) && !v.hote.classList.contains('px-bande-voisin') && maintenant - (v.vu || 0) > lim && !joue(v));   // ▥ le voisin de la bande se voit : il ne dort pas
     for (const v of l) { endormis = [{ id: v.id, params: v.params || null }, ...endormis.filter(e => e.id !== v.id)].slice(0, 12); tuer(v.id); }
     if (l.length) { majBords(); if (courant) barre(parId.get(courant.id) || { nom: courant.id }, courant.id); noterSession(); }
     return l.length;
@@ -772,12 +780,13 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     racine.classList.add('px-mode-ploxion'); racine.classList.remove('px-mode-accueil');
     barre(parId.get(v.id) || { nom: v.id }, v.id);
     try { W.history.replaceState(null, '', '#/' + encodeURIComponent(v.id)); } catch (er) { /* */ }
+    bande.poser();   // ▥ (0.87) la bande, si elle est choisie : les colonnes autour de celle-ci
   }
 
   async function ouvrir(id, params) {
     if (!parId.has(id)) return false;
     await pret;
-    const p = parId.get(id);
+    const p = parId.get(id), depuis = courant ? courant.id : null;
     if (courant && courant.id === id && !params) return true;
     endormis = endormis.filter(x => x.id !== id);
     if (bloque(id)) {
@@ -794,6 +803,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     if (!muet) vibrer('ouvrir', id);
     const hote = D.createElement('div'); hote.className = 'px-hote'; hote.dataset.ploxion = id; scene.appendChild(hote);
     const v = { id, inst: {}, hote, debut: 0, vu: Date.now(), params: params || null };
+    ordreBande = placerDansOrdre(ordreBande, id, depuis, !!prefs().bande);
     vivants.set(id, v); montrer(v);
     try {
       const app = await charger(id);
