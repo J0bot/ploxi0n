@@ -65,6 +65,7 @@ import { creerPartage } from './app/partage.js';
 import { creerXers } from './app/xers.js';
 import { creerClickerNatif, toucherRapide } from './jeu/clicker-natif.js';
 import { creerMisesAJour } from './marketplace/mises-a-jour.js';
+import { creerRemontee } from './app/remontee-tsoins.js';
 import { installerAppsALaDemande } from './shim/apps-a-la-demande.js';
 import { creerWikiNatif } from './app/wiki-natif.js';
 import { creerIconesLabo } from './app/icones-labo.js';
@@ -76,7 +77,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.85.0';
+const VERSION = '0.86.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -378,6 +379,10 @@ async function demarrer() {
   const tsoinNatif = creerTsoinNatif({ boxion, vibrer: (x) => vibrer(x), vocal, contexte: () => (routeur ? routeur.courant() : null),
     distant: () => (compte.etat().connecte && modeConnecte && navigator.onLine !== false ? window.jOSBoxion : null) });
   internes.push(tsoinNatif.ploxion);
+  // ⧗ (0.86) les tsoins de l'iPhone remontent à ton boxion (si tu le choisis : ⚙ › Réseau) ; « me demander un tsoin » après une session
+  const remontee = creerRemontee({ boxion, distant, signaler: (t) => routeur && routeur.signaler(t),
+    proposer: ({ minutes }) => miniDocks.publier({ cle: 'tsoin-session', titre: 'un tsoin de ta session ?', icone: '⧗', sous: minutes + ' min dans l\'app, juste avant ta pause', ouvrir: () => { miniDocks.retirer('tsoin-session'); tsoinNatif.ouvrir({ texte: '' }); },
+      actions: [{ id: 'noter', icone: '⧗', nom: 'noter', faire: () => { miniDocks.retirer('tsoin-session'); tsoinNatif.ouvrir({ texte: '' }); } }] }) });
   // 📦 le gestionnaire : les ploxions installés, leur place, leurs bions
   internes.push(enregistrerGestion({ depot, vibrer: (x) => vibrer(x), ouvrir: (id) => routeurProxy.ouvrir(id), retirer: async (id) => { await routeur.retirerPloxion(id); await majAccueil(); } }));
   // ❤ la santé : Apple Santé lue sur le téléphone (le ploxion « Santé ») ; jOSNatif.sante pour les ploxions, sur accord
@@ -423,7 +428,7 @@ async function demarrer() {
     pull: async (kind) => { const r = await fetch('/nexus/pull?kind=' + encodeURIComponent(kind)); if (!r.ok) return []; const j = await r.json().catch(() => ({})); return Array.isArray(j.items) ? j.items : []; } } }).ploxion);
   window.jOSNatif.sante = sante.api;
   setTimeout(() => sante.synchroniser().catch(() => {}), 5000);   // ☁ hors du chemin critique : le résumé santé (si activé et connecté)
-  if (!modeSurJs) maj.demarrer();   // ↻ (0.80) la première vérification 20 s après le lancement, puis à la fréquence choisie
+  if (!modeSurJs) { maj.demarrer(); remontee.demarrer(); }   // ↻ (0.80) la première vérification 20 s après le lancement, puis à la fréquence choisie
   setTimeout(() => iconesLabo.recharger().then(c => (c ? majAccueil() : null)).catch(() => {}), 3000);   // ⬡ (0.82) tes glyphes dessinés au labo
   window.jOSNatif.tsoin = (o) => tsoinNatif.ouvrir(o || {});
   const hud = creerHud({ compte, boxion, vocalEnCours: () => vocal.enCours(), trouver: (id) => routeur && routeur.catalogue().find(p => p.id === id), modeConnecte: () => modeConnecte, prefs: () => prefs.lire() });
@@ -434,7 +439,7 @@ async function demarrer() {
   const notifs = creerNotifs({ boxion, vibrer, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id) => routeurProxy.ouvrir(id) });
   await notifs.pret;
   boot(73, 'notifications');
-  internes.push(enregistrerReglages({ compte, social, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, prefs, vibrer, haptique, lecteur, lecteurNatif, sante, cube, valeurs: () => (raccourcis ? raccourcis.toutes() : {}), version: VERSION, maj }));
+  internes.push(enregistrerReglages({ compte, social, remontee, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, prefs, vibrer, haptique, lecteur, lecteurNatif, sante, cube, valeurs: () => (raccourcis ? raccourcis.toutes() : {}), version: VERSION, maj }));
   // le vecteur xerion de ce téléphone : le temps passé par ploxion (même forme que jOSUsage du labo : { px: { id: { opens, seconds, lastAt } } })
   async function surUsage(id, sec) {
     const u = (await boxion.get('usage', 'stats')) || { px: {} };

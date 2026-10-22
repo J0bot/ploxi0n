@@ -49,6 +49,7 @@ function laboFaux(url) {
   if (/^\/wiki/.test(u.pathname)) return r(404, '<!doctype html>404');
   return r(404, '<!doctype html>404');
 }
+const boxionFaux = new Map();   // (0.86) le boxion du compte, côté labo
 const wledFaux = { state: { on: true, bri: 128, seg: [{ col: [[255, 80, 0]], fx: 0, pal: 0 }] }, info: { name: 'Ruban du salon', ver: '0.15.0', leds: { count: 60, pwr: 420 } }, effects: ['Solid', 'Blink', 'Breathe'], palettes: ['Default', 'Lava'] };
 
 function base(nom) { if (!bases.has(nom)) bases.set(nom, new DatabaseSync(':memory:')); return bases.get(nom); }
@@ -136,6 +137,12 @@ const natif = {
       if (u.pathname === '/presets.json') return j(200, { 0: {}, 1: { n: 'Soirée' } });
       if (u.pathname === '/json/state' && o.method === 'POST') { const c = typeof o.data === 'string' ? JSON.parse(o.data) : o.data; if (c.on === 't') st.on = !st.on; else Object.assign(st, c); return j(200, { success: true }); } }
     if (u.hostname === '10.0.0.9' && u.port === '8123') { if ((o.headers || {}).Authorization !== 'Bearer bon') return j(401, {}); if (u.pathname === '/api/states') return j(200, [{ entity_id: 'light.salon', state: 'on', attributes: { friendly_name: 'Salon', brightness: 200, supported_color_modes: ['brightness'] } }, { entity_id: 'sensor.temp', state: '21.5', attributes: { unit_of_measurement: '°C', friendly_name: 'Température' } }]); return j(200, []); }
+    // (0.86) jOSBoxion connecté : un boxion en mémoire (load/save), seulement avec un jeton
+    if (u.hostname === 'labo.j0bot.ch' && u.pathname.startsWith('/px/boxion/')) { if (!/^Bearer .+/.test((o.headers || {}).Authorization || '')) return j(401, { message: 'Unauthenticated.' });
+      const b = typeof o.data === 'string' ? JSON.parse(o.data) : (o.data || {});
+      if (u.pathname === '/px/boxion/load') { const k = u.searchParams.get('ns') + '/' + u.searchParams.get('key'); return j(200, boxionFaux.has(k) ? boxionFaux.get(k) : { item: null }); }
+      if (u.pathname === '/px/boxion/save' && o.method === 'POST') { boxionFaux.set(b.ns + '/' + b.key, { ns: b.ns, key: b.key, name: b.name, data: b.data, savedAt: new Date().toISOString() }); return j(200, { ok: true }); }
+      if (u.pathname === '/px/boxion/list') return j(200, { items: [...boxionFaux.values()].filter(d => !u.searchParams.get('ns') || d.ns === u.searchParams.get('ns')).map(d => ({ ns: d.ns, key: d.key, name: d.name })) }); }
     // (0.85) l'envoi de fichiers : le FS du labo reçoit du multipart (comme le Swift : chaque fichier DOIT avoir fileName et contentType)
     if (u.hostname === 'labo.j0bot.ch' && u.pathname === '/fs/write' && o.method === 'POST') {
       if (o.dataType !== 'formData' || !Array.isArray(o.data)) return j(422, { message: 'pas du multipart : ' + o.dataType });

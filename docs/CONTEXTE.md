@@ -102,6 +102,14 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.86 (22.10)** — ⧗ les tsoins remontent au boxion. Le journal boxion_local « tsoins » (tsoins notés, jOSTsoin.mark des ploxions, marketplace,
+terrax, xerbot, compte…) restait sur le téléphone. `src/app/remontee-tsoins.js` : modes `non` (défaut), `tsoins` (kind tsoin et vocal), `tout`,
+`tampon` (part seulement sur « envoyer ») ; passer de « non » à un mode part de MAINTENANT (« tout depuis le début » pour le passé) ; jOSBoxion
+du compte par `distant.appel` (GET /px/boxion/load puis POST save), ns `tsoins-iphone`, clé `<jour>.<appareil>` (`reglages/appareil-id`),
+fusion par `seq`, 3000 par document ; curseur dans `reglages/tsoins-remontee-etat`, avancé seulement après un save réussi. « Me demander un
+tsoin » : session ≥ 2 min puis pause ≥ 20 min → un mini dock « un tsoin de ta session ? ». ❓ pour RS-7 : partager le journal d'un ploxion au
+Nexus ou au chaoxion (où, quel format). Faux iPhone : `parcours-remontee-tsoins.mjs`.
+
 **0.85 (22.10)** — 📤 l'envoi de fichiers par le mode connecté (RS-7 a choisi 8 chantiers de la feuille de route : celui-ci d'abord). Le relais
 du shim (`jos.js`) passe maintenant FormData, Blob, ArrayBuffer : `src/shim/corps-fichier.js` → `{ dataType: 'formData' | 'file', data }`, que
 `creerHttp().requete` (depot.js) donne à `CapacitorHttp.request` (iOS pose le boundary ; ⚠ le Swift force-déballe `fileName` et `contentType`

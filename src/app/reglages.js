@@ -26,7 +26,7 @@ export const GROUPES = [   // [page, glyphe (src/app/glyphes.js), nom]
 ];
 export const SOUS = { gestes: 'navigation', 'haptique-motifs': 'haptique', 'haptique-evenements': 'haptique', 'haptique-fractale': 'haptique', 'haptique-ploxions': 'haptique' };
 
-export function enregistrerReglages({ W = globalThis.window, compte, social = null, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, vibrer = () => {}, haptique = null, lecteur = null, lecteurNatif = null, sante = null, cube = null, valeurs = () => ({}), version = '?', maj = null }) {
+export function enregistrerReglages({ W = globalThis.window, compte, social = null, remontee = null, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, vibrer = () => {}, haptique = null, lecteur = null, lecteurNatif = null, sante = null, cube = null, valeurs = () => ({}), version = '?', maj = null }) {
   const ELS = { tsoin: '⧗ noter un tsoin', vocal: 'vocal', compte: 'compte', reseau: 'réseau et mode connecté', heure: 'heure', chercher: 'chercher un ploxion', epingles: 'ploxions épinglés' };
   function mount(hote) {
     let vivant = true, q = '', composition = [], page = null;   // page : null = l'accueil des réglages
@@ -104,7 +104,8 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
             return '<div class="bloc"><div class="l"><span>🎉 le social : ' + esc(n) + '<small>ton compte j0bot (api.j0bot.ch) : tes spaces, tes messages, tes amis, tes invitations</small></span></div>'
               + '<div class="l"><span>Supprimer ce compte du social<small>pour de bon, tout de suite : ses spaces (et leurs salons), ses messages, ses invitations, ses amitiés</small></span><button class="danger" data-a="supprimer-social">supprimer…</button></div></div>'; })()))
         + section('reseau', 'Réseau', '<div class="bloc">' + bascule('data-t="mode"', modeConnecte(), 'Mode connecté', 'les ploxions joignent labo.j0bot.ch' + (e.connecte ? ' avec ton compte' : '') + ' ; hors ligne, leur dernière réponse')
-          + '<div class="l"><span>Source<small>labo.j0bot.ch (le marketplace, les bions, le mode connecté)</small></span></div></div>')
+          + '<div class="l"><span>Source<small>labo.j0bot.ch (le marketplace, les bions, le mode connecté)</small></span></div></div>'
+          + (remontee ? '<p class="msg">⧗ tes tsoins (0.86)</p>' + remontee.html() : ''))
         + (notifs ? section('notifs', 'Notifications', '<div class="bloc"><div class="l"><span>Une notification de test<small>elle arrive 5 s après : verrouille le téléphone</small></span><button data-a="notif">tester</button></div>'
           + bascule('data-t="coord"', notifs.reglage().coord, 'Messages de coord', e.connecte ? 'tant que l\'app est ouverte ; app fermée : bientôt (APNs)' : 'connecte-toi avec le compte admin') + '</div>') : '')
         + (P ? section('apparence', 'Apparence', '<div class="bloc">'
@@ -209,6 +210,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
       filtrer();
       if (lecteurNatif) lecteurNatif.moteurs().then(m => { const el = zone.querySelector('[data-moteurs]'); if (el && m) el.textContent = 'ce build : Apple ' + (m.apple ? '✓' : '—') + ' · VLC ' + (m.vlc ? '✓ (MKV, DTS, sous-titres)' : '— (build avec l\'option « vlc » pour l\'avoir)'); }).catch(() => {});
       if (maj) { const m = zone.querySelector('.px-maj'); if (m) maj.brancher(m); }   // ↻ (0.80) les mises à jour des ploxions
+      if (remontee) { const m = zone.querySelector('.px-remontee'); if (m) remontee.brancher(m, () => peindre()); }   // ⧗ (0.86) les tsoins au boxion
       if (cube && cube.animer) cube.animer(zone.querySelector('.px-cube-scene'));   // (0.54) l'aperçu du cube vit tout seul
       { const el = zone.querySelector('[data-mouvement]'); if (el && W.ploxi0nMouvement) { const e = W.ploxi0nMouvement.etat(); el.textContent = e.actif ? '✓ ' + e.source + ' · penche le téléphone' : e.erreur ? '⚠ ' + e.erreur + (e.erreur.includes('web') ? '' : ' — touche l\'écran une fois pour essayer le capteur du navigateur') : 'en attente (hors Calme, app visible)'; } }
       // le journal du dernier démarrage (l'écran de chargement) : le total, et les étapes les plus lentes

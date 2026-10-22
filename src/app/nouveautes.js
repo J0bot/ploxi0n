@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.86.0', titre: 'Tes tsoins rejoignent ton boxion', points: [
+    '⧗ ⚙ › Réseau › Mes tsoins au boxion : rien (par défaut), tes tsoins notés, tout ton journal, ou un tampon que tu envoies quand tu veux.',
+    '↑ Chaque jour de ce téléphone devient une page de ton boxion. Renvoyer ne double rien ; hors ligne, ça part au retour.',
+    '⧗ « Me demander un tsoin après une session » : quand tu reviens après une pause, un mini dock te propose de noter ce que tu venais de faire.',
+  ] },
   { v: '0.85.0', titre: 'Tes fichiers partent au labo', points: [
     '📤 Connecté, les ploxions envoient enfin des fichiers au labo et à ton boxion : photos, documents, tout ce qu\'ils te proposent d\'envoyer. Avant : « pas encore relayé ».',
     '📷 Importer des photos les garde sur l\'iPhone (Fichiers › ploxi0n › Photos) et, connecté, les envoie aussi dans ton boxion (Photos).',
