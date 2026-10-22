@@ -102,6 +102,17 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.95 en cours (22.10, poussé : `b27eaa6`)** — le guide (`src/app/guide.js` : 4 étapes sur la vraie interface, les astuces une fois,
+« ⓘ c'est quoi ça ? ») ; l'organique translucide (nerfs, vaisseaux, câbles) ; tous les ploxions (--xr-*) et le HUD (barre, dock, modes, vues)
+en membranes ; les bions `src/bions/synapses.js` et `src/bions/membrane.js` ; CINQ PEAUX à comparer (nerfs, vaisseaux, câbles, gelée,
+terminal — le hand terminal de The Expanse) : `parcours-variantes.mjs` → `build/fi-var/comparer-5-peaux.png` ; **uniquement la palette de
+RS-7** (extraite de ses SVG : #007d28 #37008a #0cdb0c #8bc88b #191919 #222222…). ❓ RS-7 choisit une peau (ou un mélange).
+⏭ demandé le 22.10, pas encore fait : les tsoins de xer (le CSS d'un xer figé à un instant, l'historique) ; les koins = des mini trackpads
+de zoom ; la map fractale (tout se zoome) ; les vues entrées/sorties des ploxions et des bions (le shim + la pile, `gel.js` `auteur` ;
+exécuter chaque bion dans son propre script `bion/<nom>.js` pour les reconnaître) ; 🐛 **le ploxion musique ne joue pas Spotify** ;
+la visualisation musicale (avseoul particleEqualizer, dataarts webgl-globe, Chrome Experiments) ; le ploxion morse (googlecreativelab
+morse-learn) ; Rust → WASM là où ça calcule vraiment (pas le dessin : WebKit le fait déjà en natif).
+
 **0.94 (22.10)** — le xer organique, le mode de base. RS-7 : « avant on avait le xer ploxi0n, maintenant c'est le xer chill-tekk, l'ancien
 thème est gardé tel qu'il était ; le truc de base, c'est que tout le UI entier ait l'air vivant ». Ses planches : `chill-tekk_ui` (des SVG
 Figma + des rendus : membranes vert biolumineux / violet qui luisent, gouttes aux coins, verre sombre, tubes entre les cellules, synapses).
