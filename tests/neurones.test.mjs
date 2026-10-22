@@ -43,16 +43,28 @@ test('〰 la couche : seulement avec px-organique ; les cellules imbriquées von
   D.documentElement.classList.add('px-organique');
   n.scanner(); n.tout();
   assert.equal(n.groupes(), 2);
-  assert.ok(D.getElementById('px-f-mb') && D.getElementById('px-f-dd-fin'), 'les filtres, une fois');
+  assert.ok(D.getElementById('px-f-nerfs-mb') && D.getElementById('px-f-nerfs-dd-fin'), 'les filtres de la variante (nerfs par défaut), une fois');
   const s1 = D.getElementById('g').querySelector(':scope>.px-neurones'), s2 = D.getElementById('g2').querySelector(':scope>.px-neurones');
   assert.ok(s1 && s2);
   // g : a, b, c (pas d) → 3 corps par calque, et des ponts ; g2 : d seul, le filtre fin
   const g1 = s1.querySelectorAll('g'); assert.equal(g1.length, 2);
   assert.ok(g1[0].querySelectorAll('rect').length >= 3 + 2, 'a, b, c et au moins deux synapses');
   assert.equal(s2.querySelectorAll('g')[0].querySelectorAll('rect').length, 1);
-  assert.match(s2.querySelector('g').getAttribute('filter'), /px-f-mb-fin/);
+  assert.match(s2.querySelector('g').getAttribute('filter'), /px-f-nerfs-mb-fin/);
   const avant = s1.innerHTML; s1.setAttribute('data-x', '1');
   n.tout(); assert.equal(s1.innerHTML, avant, 'rien n\'a bougé : rien n\'est refait');
+  // (0.95) une autre variante : ses filtres, le dessin refait
+  D.documentElement.setAttribute('data-px-variante', 'terminal'); for (const x of [s1, s2]) x.removeAttribute('data-x');
+  n.scanner(); n.tout();
+  assert.ok(D.getElementById('px-f-terminal-mb'), 'les filtres du terminal');
+  assert.match(D.getElementById('g').querySelector(':scope>.px-neurones g').getAttribute('filter'), /px-f-terminal-mb/);
   D.documentElement.classList.remove('px-organique'); n.tout();
   assert.equal(D.querySelector('.px-neurones'), null, 'coupé : la couche s\'en va');
+});
+
+test('〰 les variantes : des nombres, chacune complète ; le terminal sans onde', async () => {
+  const { VARIANTES } = await import('../src/bions/membrane.js');
+  assert.deepEqual(Object.keys(VARIANTES), ['nerfs', 'vaisseaux', 'cables', 'gelee', 'terminal']);
+  for (const [k, v] of Object.entries(VARIANTES)) for (const c of ['flou', 'onde', 'freq', 'epais', 'paroi', 'ame', 'clair', 'halo']) assert.equal(typeof v[c], 'number', k + '.' + c);
+  assert.equal(VARIANTES.terminal.onde, 0);
 });

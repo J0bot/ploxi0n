@@ -8,7 +8,7 @@
 //   mode        (0.94) organique (le mode de base : membranes et neurones, src/app/neurones.js) | chill-tekk (le xer d'avant) | xerboxion | xerbot
 //   organiqueVu (0.94) la bascule unique vers l'organique est faite (le xer d'avant est gardé dans « mes xers », src/app/xers.js)
 //   haptique    les retours haptiques (ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs…)
-export const PREFS_DEFAUT = { barreClavier: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'organique', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'xerboxion', fractale: true, pagesCote: true, bande: false, koins: false, activites: true, organiqueVu: true };
+export const PREFS_DEFAUT = { barreClavier: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'organique', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'xerboxion', fractale: true, pagesCote: true, bande: false, koins: false, activites: true, organiqueVu: true, variante: 'nerfs' };
 
 export function creerPrefs({ W = globalThis.window, boxion }) {
   let p = { ...PREFS_DEFAUT };
@@ -35,7 +35,8 @@ export function creerPrefs({ W = globalThis.window, boxion }) {
     h.classList.toggle('px-sans-plaque', !p.plaque);
     h.classList.toggle('px-sans-bords', !p.bords);
     h.classList.toggle('px-telecommande', p.telecommande !== false);
-    h.classList.toggle('px-organique', p.mode === 'organique');   // 〰 (0.94) le xer organique : les membranes, les neurones
+    h.classList.toggle('px-organique', p.mode === 'organique');
+    h.setAttribute('data-px-variante', p.variante || 'nerfs');   // (0.95) nerfs | vaisseaux | cables | gelee | terminal (src/bions/membrane.js)   // 〰 (0.94) le xer organique : les membranes, les neurones
   }
   return {
     pret, appliquer,
