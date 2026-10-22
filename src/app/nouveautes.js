@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.89.0', titre: 'Les koins du carnet', points: [
+    '◇ Les glyphes du lexique sont ceux du carnet de RS-7 : xeroction, tsoin, wormion, trion, portion, ploxion, et le xer.',
+    '◺◿ ⚙ › HUD et dock › Les koins (prototype) : deux koins dans les coins du bas remplacent le dock et la barre. Touche-les : ils grandissent, jusqu\'à deux carrés de deux cases et la barre des glyphes.',
+  ] },
   { v: '0.88.0', titre: 'Le système et les ambiances', points: [
     '▤ Système (façon btop) : la fluidité de l\'app, sa mémoire, le disque, la batterie, l\'état thermique, le mode économie, le réseau et la latence jusqu\'au labo, tes ploxions vivants. Et le xerminal du labo à un toucher.',
     '≈ Ambiances (façon Blanket) : pluie, vent, vagues, feu, orage, ruisseau, bruits rose et brun. Mélange-les ; ils continuent pendant que tu fais autre chose, avec un minuteur. Fabriqués sur place : hors ligne, rien à télécharger.',

@@ -999,3 +999,26 @@ html.px-calme .px-vx-t{transition:none}html.px-calme .px-vx-eclair{animation:non
 .px-amb-l{display:grid;grid-template-columns:1.6em 6.5em 1fr;align-items:center;gap:8px;padding:6px 2px}
 .px-amb-l .g{font-size:1.2em;text-align:center;opacity:.8}.px-amb-l input,.px-amb-b input{width:100%;accent-color:var(--acc,#7fdcb0)}
 .px-amb-b{display:grid;gap:10px;margin-top:8px}
+/* ◺◿ (0.89) les koins remplacent le dock et le HUD (src/app/koins.js, le carnet de RS-7 : docs/KOINS.md) */
+html.px-koins .px-dock,html.px-koins .px-mode-ploxion .px-ecran>.px-barre{display:none}
+html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.px-koins-r{position:fixed;inset:auto 0 0 0;height:0;z-index:40;color:var(--txt,#ecebe9)}
+.px-koin{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 2px);width:58px;height:58px;padding:0;margin:0;border:0;background:transparent;color:inherit;z-index:42;
+  transition:width .26s cubic-bezier(.2,.9,.3,1),height .26s cubic-bezier(.2,.9,.3,1),opacity .2s;-webkit-tap-highlight-color:transparent}
+.px-koin-gauche{left:2px}.px-koin-droite{right:2px}
+.px-koin svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linejoin:round;opacity:.85}
+.px-koin svg .f{fill:currentColor}
+.px-koin[data-etape="1"]{width:30vw;height:30vw}.px-koin[data-etape="2"]{width:47vw;height:47vw}
+.px-koin[data-etape="3"]{opacity:0;pointer-events:none}
+.px-koins-r.px-koins-ouverts .px-koin{width:58px;height:58px}
+.px-koin-voile{position:fixed;inset:0;z-index:39;background:rgba(10,10,12,.55)}
+.px-koin-cases{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);width:calc(50vw - 15px);display:grid;grid-template-rows:1fr 1fr;gap:6px;z-index:41}
+.px-koin-cases-gauche{left:10px}.px-koin-cases-droite{right:10px}
+.px-koin-cases>button{aspect-ratio:1/1;max-height:22vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:2px solid currentColor;border-radius:0;background:var(--fond,#1f1f1d);color:inherit;padding:8px;font:600 10px/1.2 var(--police,system-ui);letter-spacing:.1em;text-transform:uppercase}
+.px-koin-cases>button .px-g{width:56%;height:56%;fill:none;stroke:currentColor;stroke-width:3}
+.px-koin-cases>button .px-g .f{fill:currentColor}
+.px-koin-barre{position:fixed;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px + min(44vh, 100vw - 30px) + 12px);z-index:41;display:flex;justify-content:space-between;border:2px solid currentColor;background:var(--fond,#1f1f1d);padding:6px 4px}
+.px-koin-barre>button{flex:1;min-width:0;height:38px;border:0;background:transparent;color:inherit;font:600 20px/1 var(--police,system-ui);display:flex;align-items:center;justify-content:center}
+.px-koin-barre>button .px-g{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:4}
+.px-koin-barre>button .px-g .f{fill:currentColor}
+.px-koin-cases[hidden],.px-koin-barre[hidden],.px-koin-voile[hidden]{display:none}

@@ -102,6 +102,13 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.89 (22.10)** — ◺◿ les koins du carnet de RS-7 (deux pages : `docs/look/references/koins-0*.jpg`, transcrites dans **docs/KOINS.md**,
+avec ce qui est posé, ma lecture, et les maillons qui manquent). `glyphes.js` : xeroction, tsoin, wormion, trion, portion redessinés d'après
+le carnet, `ploxion` et `xer` ajoutés. `src/app/koins.js` (`prefs.koins`, coupé par défaut) : html.px-koins efface `.px-dock` et la
+`.px-barre` d'un ploxion ; deux koins de coin, 4 étapes (`data-etape`), à la dernière deux carrés de deux cases (trion, wormion | xer,
+portion) et la barre des glyphes ; les actions passent par le routeur (`faire('carte'|'basculer'|'mes-xers'|'accueil'|'minimiser')`,
+`retour()`). Faux iPhone : `parcours-koins.mjs`.
+
 **0.88 (22.10)** — 📚 le lot de ploxions, premier sous-lot (composer d'abord : le registre du labo a déjà `web`, `math`, `xerminal`, `notes`,
 `pdf` ; mpv = le lecteur intégré de la 0.49). Nouveaux, internes, hors ligne : `src/lot/systeme.js` (▤ btop : fps mesurés au rAF, Device.getInfo
 `memUsed`, `navigator.storage.estimate`, batterie, réseau, latence HEAD jusqu'au labo, et le Swift `PloxiApple.systeme` : thermalState,
