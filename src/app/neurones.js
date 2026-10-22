@@ -12,7 +12,7 @@
 //   data-neurones="fin"          un flou court, pour les grilles serrées (la map : 5 px entre les koins)
 //   data-neurones-seuil="60"     l'écart maximal d'une synapse (26 px par défaut)
 const NS = 'http://www.w3.org/2000/svg';
-export const SEUIL = 26, EPAIS = 3;
+export const SEUIL = 26, EPAIS = 4;
 
 /** les synapses entre des cellules { x, y, w, h } : les paires côte à côte (l'écart sous le seuil, assez en face l'une de l'autre) ; pas un
  *  treillis : un arbre qui relie chaque cellule à au moins une autre (les plus proches d'abord), et quelques liens de plus (part ≈ autres) */
@@ -40,19 +40,32 @@ export function synapses(cs, { seuil = SEUIL, autres = 0.35 } = {}) {
   }).map(({ ecart, a, ...p }) => p);
 }
 
-/** les filtres, une fois : la membrane et le dedans, normaux et fins (même turbulence, même graine : les deux calques restent alignés) */
+/** les filtres, une fois : la membrane (et son halo) et le dedans, normaux et fins (même turbulence, même graine : les calques restent alignés).
+ *  (0.94, le xer organique, d'après les planches de RS-7 : des membranes qui luisent, vert biolumineux et violet) le halo = la membrane floutée,
+ *  posée dessous, à demi */
 function filtres(D) {
   if (D.getElementById('px-f-mb')) return;
-  const f = (id, flou, onde, freq, eroder) => '<filter id="' + id + '" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">'
+  const f = (id, flou, onde, freq, eroder) => '<filter id="' + id + '" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">'
     + '<feGaussianBlur in="SourceGraphic" stdDeviation="' + flou + '" result="b"/>'
     + '<feTurbulence type="fractalNoise" baseFrequency="' + freq + '" numOctaves="1" seed="7" result="n"/>'
     + '<feDisplacementMap in="b" in2="n" scale="' + onde + '" xChannelSelector="R" yChannelSelector="G" result="d"/>'
-    + '<feColorMatrix in="d" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 22 -11"' + (eroder ? ' result="m"/><feMorphology in="m" operator="erode" radius="' + EPAIS + '"/>' : '/>') + '</filter>';
+    + '<feColorMatrix in="d" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 22 -11" result="m"/>'
+    + (eroder ? '<feMorphology in="m" operator="erode" radius="' + EPAIS + '"/>'
+      : '<feGaussianBlur in="m" stdDeviation="' + (flou + 2) + '" result="h"/><feColorMatrix in="h" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 .55 0" result="halo"/>'
+        + '<feMerge><feMergeNode in="halo"/><feMergeNode in="m"/></feMerge>') + '</filter>';
   const s = D.createElementNS(NS, 'svg');
   s.setAttribute('class', 'px-neurones-defs'); s.setAttribute('aria-hidden', 'true'); s.setAttribute('width', '0'); s.setAttribute('height', '0');
   s.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none';
   s.innerHTML = '<defs>' + f('px-f-mb', 5, 10, 0.016, false) + f('px-f-dd', 5, 10, 0.016, true) + f('px-f-mb-fin', 3, 6, 0.026, false) + f('px-f-dd-fin', 3, 6, 0.026, true) + '</defs>';
   D.body.appendChild(s);
+}
+
+/** les KOINS d'une cellule (0.94 : les gouttes des coins, sur les planches de RS-7) : aux quatre coins d'une grande cellule, une goutte de
+ *  membrane (le goo la fond dans le bord : un coin bombé). Les petites cellules n'en ont pas (le koin d'un koin serait du bruit). */
+export function koinsDe(q, { min = 120 } = {}) {
+  if (q.w < min || q.h < min) return [];
+  const r = Math.max(6, Math.min(13, Math.min(q.w, q.h) / 14)), d = r * 0.55;
+  return [[q.x + d, q.y + d], [q.x + q.w - d, q.y + d], [q.x + d, q.y + q.h - d], [q.x + q.w - d, q.y + q.h - d]].map(([cx, cy], i) => ({ cx, cy, r, coin: i }));
 }
 
 export function creerNeurones({ W = globalThis.window } = {}) {
@@ -85,7 +98,8 @@ export function creerNeurones({ W = globalThis.window } = {}) {
     g.svg.setAttribute('width', L); g.svg.setAttribute('height', H); g.svg.setAttribute('viewBox', '0 0 ' + L + ' ' + H);
     g.svg.style.left = x0 + 'px'; g.svg.style.top = y0 + 'px';
     const sfx = fin ? '-fin' : '';
-    g.svg.innerHTML = '<g filter="url(#px-f-mb' + sfx + ')">' + corps('bord') + '</g><g filter="url(#px-f-dd' + sfx + ')">' + corps('fond') + '</g>';
+    const gouttes = fin ? '' : cs.map(q => koinsDe(q).map(k => '<circle cx="' + r1(k.cx - x0) + '" cy="' + r1(k.cy - y0) + '" r="' + r1(k.r) + '" fill="' + q.bord + '"/>').join('')).join('');
+    g.svg.innerHTML = '<g filter="url(#px-f-mb' + sfx + ')">' + corps('bord') + gouttes + '</g><g class="px-neurones-dd" filter="url(#px-f-dd' + sfx + ')">' + corps('fond') + '</g>';
     if (g.ro) { g.ro.disconnect(); g.ro.observe(c); for (const el of c.querySelectorAll('[data-neurone]')) g.ro.observe(el); }
   }
   function tout() {

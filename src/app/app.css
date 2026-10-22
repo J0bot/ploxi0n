@@ -1129,3 +1129,28 @@ html.px-organique .px-map-k-hub{--n-bord:var(--acc2)}
 html.px-organique .px-map-g{gap:7px}
 /* le système, les ambiances : les plaques se touchent, la xerminal pend sous la dernière */
 html.px-organique .px-btop [data-btop]{gap:14px}
+
+/* 〰 (0.94) LE XER ORGANIQUE (RS-7 22.10 : « avant on avait le xer ploxi0n, maintenant c'est le xer chill-tekk, gardé tel qu'il était ; le
+   truc de base, c'est que tout le UI entier ait l'air vivant »). Le mode de base : html.px-m-organique + html.px-organique (prefs.js). D'après
+   ses planches (chill-tekk_ui) : un fond bleu-nuit presque noir, des membranes épaisses qui LUISENT (vert biolumineux, violet), un dedans de
+   verre sombre, des gouttes aux coins (les koins), des tubes entre les cellules. Le chill-tekk d'avant ne change pas (ses jetons du haut). */
+html.px-organique{
+  --bg:#060515; --surface:#100c26; --surface2:#171236; --creux:#09071c;
+  --bord:#2c2560; --bord2:#3f3590; --filet:rgba(170,150,255,.08);
+  --acc:#a48bff; --acc2:#7d5cf5; --bio:#3cf0a2; --glow:rgba(60,240,162,.35);
+  --txt:#e6e0fa; --muted:#8c84b8; --grave:#6c6599;
+  --memb:#2fd890; --memb2:#8a5cff;
+}
+html.px-organique [data-neurone]{--n-fond:var(--surface);--n-bord:var(--memb)}
+html.px-organique .px-neurones-dd{opacity:.92}
+html.px-organique [data-neurone].on,html.px-organique [data-neurone]:active{--n-bord:var(--memb2)}
+/* le vert et le violet alternent, comme sur les planches (les membranes passent de l'un à l'autre dans les tubes) */
+html.px-organique .px-koin-cases>button{--n-bord:var(--memb2)}
+html.px-organique .px-koin-pad{--n-bord:var(--memb)}
+html.px-organique .px-koin-pad.px-pad-actif,html.px-organique .px-koin-pad:not([data-dir=""]){--n-bord:var(--bio)}
+html.px-organique .px-map-c{--n-bord:var(--memb)}
+html.px-organique .px-map-ici{--n-bord:var(--memb2)}
+html.px-organique .px-map-k{--n-bord:var(--memb2)}
+html.px-organique .px-map-k-hub{--n-bord:var(--memb)}
+html.px-organique .px-btop-p:nth-child(2n){--n-bord:var(--memb2)}
+html.px-organique [data-amb-min]{--n-bord:var(--memb2)}

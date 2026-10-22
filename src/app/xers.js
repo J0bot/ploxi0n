@@ -16,7 +16,7 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '
 
 /** les préférences qui sont l'interface (un xer les porte) ; les autres restent celles de l'iPhone */
 export const PREFS_XER = ['mode', 'styleIcones', 'glyphes', 'icones', 'contraste', 'dock', 'plaque', 'barreHaut', 'pleinEcran', 'pxChill', 'themeVivant', 'fractale', 'pagesCote', 'gestes', 'grain', 'miniDocks', 'bords', 'telecommande'];
-const MODES = ['chill-tekk', 'xerboxion', 'xerbot'];
+const MODES = ['organique', 'chill-tekk', 'xerboxion', 'xerbot'];
 const ACTIONS = new Set(ACTIONS_BORDS.map(a => a[0]));
 const ID = /^[A-Za-z0-9._-]{1,80}$/;
 /** des modèles, posés par-dessus une copie de ton xer */
@@ -24,7 +24,8 @@ export const MODELES = [
   { id: 'epure', nom: 'Épuré', icone: '▢', desc: 'une seule barre, rien qui bouge : l\'essentiel', prefs: { plaque: false, themeVivant: false, fractale: false, pagesCote: false, grain: false, miniDocks: 0, pxChill: false } },
   { id: 'xerbot', nom: 'XERB0T', icone: '🤖', desc: 'le poste de pilotage du monde physique', prefs: { mode: 'xerbot' }, epingler: ['controleur'] },
   { id: 'xerboxion', nom: 'xerboxion', icone: '⬡', desc: 'l\'UI du labo comme accueil, le dock de l\'app par-dessus', prefs: { mode: 'xerboxion' } },
-  { id: 'chill-tekk', nom: 'chill-tekk', icone: '◇', desc: 'le xer classique, calme', prefs: { mode: 'chill-tekk', themeVivant: true, grain: true } },
+  { id: 'organique', nom: 'organique', icone: '〰', desc: 'le xer vivant : des membranes, des neurones, tout se zoome', prefs: { mode: 'organique', themeVivant: true, grain: true } },
+  { id: 'chill-tekk', nom: 'chill-tekk', icone: '◇', desc: 'le xer classique, calme (celui d\'avant la 0.94)', prefs: { mode: 'chill-tekk', themeVivant: true, grain: true } },
 ];
 
 // ---- nettoyer ce qui vient d'ailleurs (un lien reçu) : seulement des clés connues, des types connus ----
@@ -97,8 +98,23 @@ export function creerXers({ W = globalThis.window, boxion, prefs, hud = null, ba
     const [l, a] = await Promise.all([boxion.get('xers', 'liste').catch(() => null), boxion.get('xers', 'actif').catch(() => null)]);
     liste = Array.isArray(l) ? l.filter(x => x && x.id) : [];
     actif = typeof a === 'string' && liste.some(x => x.id === a) ? a : null;
-    if (!liste.length) { const x = { ...(await capturer()), id: 'x1', nom: 'mon xer', icone: '◇' }; liste = [x]; actif = x.id; await ecrire(); }
+    const neuf = !liste.length;   // un tout premier xer : pas de chill-tekk d'avant à garder
+    if (neuf) { const x = { ...(await capturer()), id: 'x1', nom: 'mon xer', icone: '◇' }; liste = [x]; actif = x.id; await ecrire(); }
     else if (!actif) { actif = liste[0].id; await ecrire(); }
+    // 〰 (0.94) LE SNAPSHOT DU XER CHILL-TEKK. RS-7 (22.10) : « on va faire une snapshot et créer le xer organique ; avant on avait le xer
+    // ploxi0n, maintenant c'est le xer chill-tekk, l'ancien thème est gardé tel qu'il était ». Une fois : une copie du xer actif, au mode
+    // chill-tekk, rangée dans « mes xers » (on y revient d'un toucher) ; le xer actif, lui, passe à l'organique (prefs.js fait la même bascule)
+    if (!(await boxion.get('xers', 'snapshot-chill-tekk').catch(() => null))) {
+      const a = liste.find(x => x.id === actif) || liste[0];
+      if (!neuf && a && !liste.some(x => x.id === 'chill-tekk')) {
+        const snap = JSON.parse(JSON.stringify(a)); snap.id = 'chill-tekk'; snap.nom = 'chill-tekk'; snap.icone = '◇'; snap.desc = 'le xer d\'avant, tel qu\'il était (snapshot 0.94)'; snap.maj = Date.now();
+        snap.prefs = { ...(snap.prefs || {}), mode: 'chill-tekk' };
+        const im = await boxion.get('xers', 'fond:' + a.id).catch(() => null); if (im) await boxion.put('xers', 'fond:chill-tekk', im).catch(() => {});
+        if (a.prefs && (!a.prefs.mode || a.prefs.mode === 'chill-tekk')) a.prefs = { ...a.prefs, mode: 'organique' };
+        liste.push(snap); await ecrire();
+      }
+      await boxion.put('xers', 'snapshot-chill-tekk', { le: Date.now() }).catch(() => {});
+    }
   }
   const ecrire = () => Promise.all([boxion.put('xers', 'liste', liste), boxion.put('xers', 'actif', actif)]).catch(() => {});
   /** l'interface telle qu'elle est maintenant */

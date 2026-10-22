@@ -5,9 +5,10 @@
 //   bords       glisser depuis les bords pour changer d'app appuiLong le menu d'un ploxion à l'appui long
 //   maxVivants  ploxions gardés vivants en arrière-plan    dock       le dock en bas de l'accueil
 //   plaque      la plaque gravée « cycle … » de l'accueil
-//   organique   (0.93) les bords épais et ondulés, les éléments collés comme des neurones (src/app/neurones.js)
+//   mode        (0.94) organique (le mode de base : membranes et neurones, src/app/neurones.js) | chill-tekk (le xer d'avant) | xerboxion | xerbot
+//   organiqueVu (0.94) la bascule unique vers l'organique est faite (le xer d'avant est gardé dans « mes xers », src/app/xers.js)
 //   haptique    les retours haptiques (ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs…)
-export const PREFS_DEFAUT = { barreClavier: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'chill-tekk', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'xerboxion', fractale: true, pagesCote: true, bande: false, koins: false, activites: true, organique: true };
+export const PREFS_DEFAUT = { barreClavier: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'organique', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'xerboxion', fractale: true, pagesCote: true, bande: false, koins: false, activites: true, organiqueVu: true };
 
 export function creerPrefs({ W = globalThis.window, boxion }) {
   let p = { ...PREFS_DEFAUT };
@@ -16,7 +17,13 @@ export function creerPrefs({ W = globalThis.window, boxion }) {
   let mq = null; try { mq = W.matchMedia ? W.matchMedia('(prefers-reduced-motion: reduce)') : null; } catch (e) { mq = null; }
   const ios = () => !!(mq && mq.matches);
   if (mq && mq.addEventListener) mq.addEventListener('change', () => { appliquer(); for (const f of abonnes) { try { f({ ...p, calme: !!p.calme || ios() }); } catch (e) { /* */ } } });
-  const pret = boxion.get('reglages', 'app').then(v => { if (v && typeof v === 'object') p = { ...PREFS_DEFAUT, ...v }; }).catch(() => {});
+  const pret = boxion.get('reglages', 'app').then(v => {
+    if (!v || typeof v !== 'object') return;
+    p = { ...PREFS_DEFAUT, ...v };
+    // 〰 (0.94, RS-7 : « avant on avait le xer ploxi0n, maintenant c'est le xer chill-tekk ; le truc de base, c'est ce qu'on fait maintenant ») :
+    // une fois, le chill-tekk d'avant passe à l'organique ; son snapshot reste dans « mes xers » (xers.js), on y revient d'un toucher
+    if (!v.organiqueVu) { if (!v.mode || v.mode === 'chill-tekk') p.mode = 'organique'; p.organiqueVu = true; p.migreOrganique = true; boxion.put('reglages', 'app', p).catch(() => {}); }
+  }).catch(() => {});
   function appliquer() {
     const h = W.document.documentElement;
     h.classList.toggle('px-sans-grain', !p.grain);
@@ -28,7 +35,7 @@ export function creerPrefs({ W = globalThis.window, boxion }) {
     h.classList.toggle('px-sans-plaque', !p.plaque);
     h.classList.toggle('px-sans-bords', !p.bords);
     h.classList.toggle('px-telecommande', p.telecommande !== false);
-    h.classList.toggle('px-organique', p.organique !== false);   // 〰 (0.93) les neurones
+    h.classList.toggle('px-organique', p.mode === 'organique');   // 〰 (0.94) le xer organique : les membranes, les neurones
   }
   return {
     pret, appliquer,

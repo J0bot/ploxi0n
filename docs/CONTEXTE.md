@@ -102,6 +102,21 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.94 (22.10)** — le xer organique, le mode de base. RS-7 : « avant on avait le xer ploxi0n, maintenant c'est le xer chill-tekk, l'ancien
+thème est gardé tel qu'il était ; le truc de base, c'est que tout le UI entier ait l'air vivant ». Ses planches : `chill-tekk_ui` (des SVG
+Figma + des rendus : membranes vert biolumineux / violet qui luisent, gouttes aux coins, verre sombre, tubes entre les cellules, synapses).
+- `modes.js` : `organique` en tête de MODES (glyphe `neurone`), le défaut. `prefs.js` : `mode: 'organique'` par défaut ; une fois
+  (`organiqueVu`), un chill-tekk enregistré passe à l'organique ; `html.px-organique` ⇔ mode organique (la bascule 0.93 des réglages s'en va).
+- `xers.js` : modèle « organique » ; une fois (`xers/snapshot-chill-tekk`), chez qui avait déjà ses xers, une copie du xer actif au mode
+  chill-tekk, rangée dans mes xers. ⚠ RS-7 précise ensuite : le snapshot d'un xer = **l'état de son CSS à un moment** (« les tsoins de xer ») :
+  à faire (⏭ ci-dessous).
+- `neurones.js` : la membrane a son halo (feGaussianBlur posé dessous), 4 px d'épaisseur, des gouttes aux coins des grandes cellules
+  (`koinsDe`). app.css : les jetons de l'organique sous `html.px-organique` (--memb vert, --memb2 violet).
+- ⏭ (demandé le 22.10, dans l'ordre) : les tsoins de xer (figer le CSS d'un xer, revenir à un instant) ; les koins = des mini trackpads
+  pour zoomer / dézoomer le ploxion ; la map fractale (tout se zoome : réseau des hubs → hub → koin/ploxion → ses bions) ; les vues
+  entrées/sorties de chaque ploxion et bion (observées par le shim + lues dans le code ; la pile dit qui appelle, `gel.js` `auteur`) ;
+  le tuto amélioré au maximum (« les gens me disent que c'est trop compliqué »).
+
 **0.93 (22.10)** — RS-7 : « je veux que les bords soient plus épais, et plus organiques, genre ondulé, mais que les éléments du UI se collent
 entre eux comme des neurones ».
 - 〰 `src/app/neurones.js` : un groupe `[data-neurones]` (« fin » : un flou court pour les grilles serrées ; `data-neurones-seuil`), ses

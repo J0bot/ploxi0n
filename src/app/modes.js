@@ -1,6 +1,7 @@
 // ◈ LES MODES (0.50, RS-7 : « je veux qu'il y ait aussi un mode xerbot, et un mode xerboxion ; le mode xerboxion, c'est d'avoir l'UI du
 // labo »). Trois façons d'habiter l'app, un toucher en haut de l'accueil :
-//   ◇ chill-tekk  l'accueil de ploxi0n : tes ploxions, calme
+//   〰 organique   (0.94, RS-7 : « que tout le UI entier ait l'air vivant ») l'accueil de ploxi0n, en membranes et en neurones ; le mode de base
+//   ◇ chill-tekk  l'accueil de ploxi0n : tes ploxions, calme (le xer d'avant la 0.94, gardé tel qu'il était)
 //   ⬡ xerboxion   l'UI du labo (labo.j0bot.ch) comme accueil, le dock de l'app par-dessus ; un ploxion qu'elle ouvre
 //                 (postMessage { ploxi0n: 'ouvrir', id }) s'ouvre dans l'app, en natif
 //   🤖 xerbot     XERB0T, la couche robotique : le poste de pilotage du monde physique — la blouse (labo-cape), les appareils
@@ -15,11 +16,11 @@ export function commandeLegacy(t) {
 }
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 import { glyphe as G, versGlyphe } from './glyphes.js';   // ◇ (0.54) des glyphes, plus d'emoji
-export const MODES = [['chill-tekk', 'chilltekk', 'chill-tekk'], ['xerboxion', 'xerboxion', 'xerboxion'], ['xerbot', 'xerbot', 'xerbot']];
+export const MODES = [['organique', 'neurone', 'organique'], ['chill-tekk', 'chilltekk', 'chill-tekk'], ['xerboxion', 'xerboxion', 'xerboxion'], ['xerbot', 'xerbot', 'xerbot']];
 
 export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, connait = () => false, source = 'https://labo.j0bot.ch', chemin = '/home', vibrer = () => {}, cadres = null, controleur = null, connecter = null }) {
   const D = W.document, N = () => W.jOSNatif || {};
-  const mode = () => (MODES.some(m => m[0] === (prefs.lire().mode || '')) ? prefs.lire().mode : 'chill-tekk');
+  const mode = () => (MODES.some(m => m[0] === (prefs.lire().mode || '')) ? prefs.lire().mode : 'organique');
   const appliquer = () => { for (const [m] of MODES) D.documentElement.classList.toggle('px-m-' + m, mode() === m); };
   appliquer(); prefs.surChangement(appliquer);
   const xb = { messages: [], maison: null, nfc: null, ble: null, wifi: null, lampe: false };

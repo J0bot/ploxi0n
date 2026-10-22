@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.94.0', titre: 'Le xer organique', points: [
+    '〰 Le nouveau mode de base : organique. Des membranes qui luisent, vert et violet, des gouttes aux coins, des cellules reliées comme des neurones.',
+    '◇ Le chill-tekk d\'avant est gardé tel qu\'il était : en haut de l\'accueil, ou dans § mes xers (« chill-tekk »).',
+  ] },
   { v: '0.93.0', titre: 'Les bords organiques, les neurones', points: [
     '〰 Les bords sont plus épais et ondulent doucement, comme une membrane.',
     '🧠 Les éléments voisins se collent comme des neurones : leurs membranes se rejoignent par des synapses. Les cases des koins et leur barre, les hubs de la map (collés par leurs portails) et leurs koins autour du centre, les plaques du système, les ambiances.',
