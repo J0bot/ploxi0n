@@ -102,6 +102,14 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.88 (22.10)** — 📚 le lot de ploxions, premier sous-lot (composer d'abord : le registre du labo a déjà `web`, `math`, `xerminal`, `notes`,
+`pdf` ; mpv = le lecteur intégré de la 0.49). Nouveaux, internes, hors ligne : `src/lot/systeme.js` (▤ btop : fps mesurés au rAF, Device.getInfo
+`memUsed`, `navigator.storage.estimate`, batterie, réseau, latence HEAD jusqu'au labo, et le Swift `PloxiApple.systeme` : thermalState,
+isLowPowerModeEnabled, physicalMemory, volumeAvailableCapacityForImportantUsage) ; `src/lot/ambiances.js` (≈ Blanket : 8 sons en Web Audio,
+bruits blanc/rose/brun filtrés et modulés ; sortie par un `<audio>` MediaStreamDestination → le routeur voit qu'il joue et ne l'endort pas ;
+‹ coupe, ▁ garde). Reste du lot : Foliate (EPUB), coffre Obsidian ; ❓ Zotero (clé), LocalSend (entitlement multicast), AppFlowy (web).
+Faux iPhone : `parcours-lot.mjs`.
+
 **0.87 (22.10)** — ▥ la bande façon niri (`src/app/bande.js`, `prefs.bande`, coupée par défaut). Le routeur garde tout (montrer, cacher,
 sommeil, pile) et appelle `bande.poser()` à la fin de `montrer()` ; la bande ne pose que `width`/`transform` sur les `.px-hote` (jamais de
 déplacement DOM : un iframe se rechargerait). L'ordre : `ordreBande` + `placerDansOrdre` (à droite de `depuis`, le courant au moment

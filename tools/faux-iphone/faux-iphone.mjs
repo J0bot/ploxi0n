@@ -95,6 +95,8 @@ const natif = {
   ScreenOrientation: { orientation: () => ({ type: 'portrait-primary' }), lock: () => ({}), unlock: () => ({}) },
   Geolocation: { checkPermissions: () => ({ location: 'granted', coarseLocation: 'granted' }), getCurrentPosition: () => ({ timestamp: Date.now(), coords: { latitude: 46.52, longitude: 6.63, accuracy: 10 } }), watchPosition: () => ({ timestamp: Date.now(), coords: { latitude: 46.52, longitude: 6.63, accuracy: 10 } }), clearWatch: () => ({}) },
   PloxiApple: {
+    // (0.88) le système (btop) : ce que seul iOS sait
+    systeme: () => ({ thermique: 'tiede', economie: false, memoire: 6 * 1073741824, coeurs: 6, depuis: 200000, disqueLibre: 41.5 * 1073741824, disqueTotal: 128 * 1073741824 }),
     reseauChercher: () => ({ services: [{ nom: 'WLED-salon', type: '_wled._tcp.', domaine: 'local.', txt: { mac: 'aabbcc' } }, { nom: 'Maison', type: '_home-assistant._tcp.', domaine: 'local.', txt: { internal_url: 'http://10.0.0.9:8123', location_name: 'Maison' } }] }),
     reseauResoudre: (o) => (o.nom === 'WLED-salon' ? { hote: '10.0.0.7', port: 80 } : { hote: '10.0.0.9', port: 8123 }),
     httpFlux: () => ({ lignes: [], statut: 0 }),

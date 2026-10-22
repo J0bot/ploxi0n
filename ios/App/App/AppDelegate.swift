@@ -280,6 +280,7 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         CAPPluginMethod(name: "reseauResoudre", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "httpFlux", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "qr", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "systeme", returnType: CAPPluginReturnPromise),
     ]
 
     // 🔦 LA LAMPE DE POCHE (0.49) : lampe({ allume?, niveau? 0…1 }) ; sans « allume », elle bascule
@@ -376,6 +377,25 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         let image = brut.transformed(by: CGAffineTransform(scaleX: echelle, y: echelle))
         guard let cg = CIContext().createCGImage(image, from: image.extent), let png = UIImage(cgImage: cg).pngData() else { call.reject("qr : rendu"); return }
         call.resolve(["base64": png.base64EncodedString(), "cote": Int(image.extent.width)])
+    }
+
+    // ▤ (0.88) le ploxion système (btop) : ce que seul iOS sait — l'état thermique, le mode économie, le disque, la mémoire, les cœurs
+    @objc func systeme(_ call: CAPPluginCall) {
+        let p = ProcessInfo.processInfo
+        let thermique: String
+        switch p.thermalState {
+        case .nominal: thermique = "nominal"
+        case .fair: thermique = "tiede"
+        case .serious: thermique = "chaud"
+        case .critical: thermique = "critique"
+        @unknown default: thermique = "inconnu"
+        }
+        var libre: Double = -1, total: Double = -1
+        if let v = try? URL(fileURLWithPath: NSHomeDirectory()).resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey, .volumeTotalCapacityKey]) {
+            if let l = v.volumeAvailableCapacityForImportantUsage { libre = Double(l) }
+            if let t = v.volumeTotalCapacity { total = Double(t) }
+        }
+        call.resolve(["thermique": thermique, "economie": p.isLowPowerModeEnabled, "memoire": Double(p.physicalMemory), "coeurs": p.activeProcessorCount, "depuis": p.systemUptime, "disqueLibre": libre, "disqueTotal": total])
     }
 
     @objc func reseauChercher(_ call: CAPPluginCall) {

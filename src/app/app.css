@@ -985,3 +985,17 @@ html.px-calme .px-vx-t{transition:none}html.px-calme .px-vx-eclair{animation:non
 .px-bande-etiquette>span{transform:translateY(calc(100% + 8px));font:600 11px/1.2 var(--police,system-ui);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .px-bande-etiquette.px-bande-endormi{border-style:dashed;align-items:center}
 .px-bande-etiquette.px-bande-endormi>span{transform:none;opacity:.7}
+/* ▤ (0.88) le système, façon btop (src/lot/systeme.js) */
+.px-btop [data-btop]{display:grid;gap:10px}
+.px-btop-p{border:1px solid var(--bord2,rgba(255,255,255,.18));border-radius:4px;padding:8px 10px 6px;font:12px/1.5 ui-monospace,Menlo,monospace}
+.px-btop-p h4{margin:-16px 0 4px;padding:0 4px;display:inline-block;background:var(--fond,#121014);font:600 10px/1.4 var(--police,system-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--acc,#7fdcb0)}
+.px-btop-l{display:grid;grid-template-columns:7.5em 1fr;gap:0 8px;align-items:baseline}
+.px-btop-l .k{opacity:.6}.px-btop-l .p{grid-column:2;opacity:.85;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.px-btop-l code{font:inherit;letter-spacing:-.05em;color:var(--acc,#7fdcb0)}
+.px-btop-ok .v{color:var(--acc,#7fdcb0)}.px-btop-mi .v{color:#e8c46a}.px-btop-ko .v{color:#ef7b7b}
+.px-btop-b{margin-top:12px}
+/* ≈ (0.88) les ambiances (src/lot/ambiances.js) */
+.px-ambiances [data-amb-sons]{display:grid;gap:4px;margin:10px 0}
+.px-amb-l{display:grid;grid-template-columns:1.6em 6.5em 1fr;align-items:center;gap:8px;padding:6px 2px}
+.px-amb-l .g{font-size:1.2em;text-align:center;opacity:.8}.px-amb-l input,.px-amb-b input{width:100%;accent-color:var(--acc,#7fdcb0)}
+.px-amb-b{display:grid;gap:10px;margin-top:8px}

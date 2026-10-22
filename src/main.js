@@ -66,6 +66,8 @@ import { creerXers } from './app/xers.js';
 import { creerClickerNatif, toucherRapide } from './jeu/clicker-natif.js';
 import { creerMisesAJour } from './marketplace/mises-a-jour.js';
 import { creerRemontee } from './app/remontee-tsoins.js';
+import { creerSysteme } from './lot/systeme.js';
+import { creerAmbiances } from './lot/ambiances.js';
 import { installerAppsALaDemande } from './shim/apps-a-la-demande.js';
 import { creerWikiNatif } from './app/wiki-natif.js';
 import { creerIconesLabo } from './app/icones-labo.js';
@@ -77,7 +79,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.87.0';
+const VERSION = '0.88.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -379,6 +381,16 @@ async function demarrer() {
   const tsoinNatif = creerTsoinNatif({ boxion, vibrer: (x) => vibrer(x), vocal, contexte: () => (routeur ? routeur.courant() : null),
     distant: () => (compte.etat().connecte && modeConnecte && navigator.onLine !== false ? window.jOSBoxion : null) });
   internes.push(tsoinNatif.ploxion);
+  // ▤ ≈ (0.88) le lot de ploxions de RS-7 : le système (btop) et les ambiances (Blanket), dans l'app, hors ligne
+  const natifLot = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  internes.push(creerSysteme({ W: window,
+    systeme: natifLot ? () => PloxiApple.systeme() : null,
+    appareil: natifLot ? async () => { const { Device } = await import('@capacitor/device'); const i = await Device.getInfo(); return { model: i.model, operatingSystem: i.operatingSystem, osVersion: i.osVersion, memUsed: i.memUsed }; } : null,
+    batterie: natifLot ? () => window.jOSNatif.batterie() : null, reseau: natifLot ? () => window.jOSNatif.reseau() : async () => ({ connecte: navigator.onLine !== false }),
+    sonder: () => httpRelais.tete(SOURCE + '/favicon.ico'),
+    ploxions: () => ({ vivants: routeur ? routeur.vivants() : [], endormis: routeur && routeur.endormis ? routeur.endormis() : [] }),
+    ouvrir: (id) => routeurProxy.ouvrir(id) }).ploxion);
+  internes.push(creerAmbiances({ W: window, boxion, vibrer: (x) => vibrer(x) }).ploxion);
   // ⧗ (0.86) les tsoins de l'iPhone remontent à ton boxion (si tu le choisis : ⚙ › Réseau) ; « me demander un tsoin » après une session
   const remontee = creerRemontee({ boxion, distant, signaler: (t) => routeur && routeur.signaler(t),
     proposer: ({ minutes }) => miniDocks.publier({ cle: 'tsoin-session', titre: 'un tsoin de ta session ?', icone: '⧗', sous: minutes + ' min dans l\'app, juste avant ta pause', ouvrir: () => { miniDocks.retirer('tsoin-session'); tsoinNatif.ouvrir({ texte: '' }); },

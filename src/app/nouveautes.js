@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.88.0', titre: 'Le système et les ambiances', points: [
+    '▤ Système (façon btop) : la fluidité de l\'app, sa mémoire, le disque, la batterie, l\'état thermique, le mode économie, le réseau et la latence jusqu\'au labo, tes ploxions vivants. Et le xerminal du labo à un toucher.',
+    '≈ Ambiances (façon Blanket) : pluie, vent, vagues, feu, orage, ruisseau, bruits rose et brun. Mélange-les ; ils continuent pendant que tu fais autre chose, avec un minuteur. Fabriqués sur place : hors ligne, rien à télécharger.',
+  ] },
   { v: '0.87.0', titre: 'La bande, façon niri', points: [
     '▥ ⚙ › Navigation › La bande : tes ploxions en colonnes. Celle d\'à côté dépasse à droite, vivante ; la toucher l\'amène devant.',
     '→ Un ploxion ouvert depuis un autre s\'ouvre juste à sa droite. Les bords font défiler la bande dans cet ordre.',
