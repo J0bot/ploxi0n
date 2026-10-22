@@ -55,7 +55,7 @@ import { creerCubePages } from './app/cube-pages.js';
 import { creerChercherLocal } from './app/chercher-local.js';
 import { creerVueXers } from './app/vue-xers.js';
 import { creerApercus } from './natif/apercus.js';
-import { SOCIAUX, surveillerSocial } from './natif/social-apple.js';
+import { SOCIAUX, surveillerSocial, invitationDuLien, sessionSocial, supprimerCompteSocial } from './natif/social-apple.js';
 import { PloxiApple } from './natif/plugins-app.js';
 import { creerTerrax } from './terrax/terrax.js';
 import { creerArNatif, brancherLiensAR } from './natif/ar-natif.js';
@@ -76,7 +76,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.83.0';
+const VERSION = '0.84.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -339,11 +339,21 @@ async function demarrer() {
   const compte = creerCompte({ boxion, http: creerHttp(window) });
   // 🍏 (0.72) le social avec l'Apple ID (src/natif/social-apple.js) : « Continuer avec Apple » sur son écran de connexion, comptes j0bot
   const surveilles = new Map();
+  // (0.84) ses appels à api.j0bot.ch passent par le HTTP natif : l'api ne répond pas en CORS à capacitor://localhost (jusqu'à son redéploiement)
+  const reseauSocial = creerReseauLocal({ W: window });
+  const fetchSocial = async (url, o = {}) => {
+    const r = await reseauSocial.requete({ methode: o.method || 'GET', url, entetes: o.headers || {}, corps: o.body ? JSON.parse(o.body) : undefined, delai: 15000, essais: 1 });
+    return { status: r.status, ok: r.status >= 200 && r.status < 300, json: async () => r.json };
+  };
+  // (0.84) l'invitation du social qui a ouvert l'app (…?px=invite&code=…) : gardée 30 jours, pour « Continuer avec Apple »
+  const invitationSocial = async () => { const g = await boxion.get('social', 'invitation').catch(() => null); return g && g.code && Date.now() - (g.le || 0) < 30 * 864e5 ? g.code : ''; };
+  const social = { etat: () => sessionSocial(window), supprimer: () => supprimerCompteSocial({ W: window, fetch: fetchSocial }) };
   function socialApple(id) {
     if (!SOCIAUX.has(id)) return;
     const avant = surveilles.get(id); if (avant) avant();
     const hote = document.querySelector('.px-scene>.px-hote[data-ploxion="' + CSS.escape(id) + '"]'); if (!hote) return;
     surveilles.set(id, surveillerSocial({ W: window, hote, jetonApple: () => compte.jetonApple(), vibrer: (x) => vibrer(x), natif: () => !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()),
+      fetch: fetchSocial, invitation: invitationSocial, oublier: () => boxion.del('social', 'invitation'),
       remonter: () => { if (routeur) routeur.ouvrir(id, { apple: String(Date.now()) }); } }));
   }
   boot(62, 'ton compte');
@@ -416,7 +426,7 @@ async function demarrer() {
   const notifs = creerNotifs({ boxion, vibrer, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id) => routeurProxy.ouvrir(id) });
   await notifs.pret;
   boot(73, 'notifications');
-  internes.push(enregistrerReglages({ compte, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, prefs, vibrer, haptique, lecteur, lecteurNatif, sante, cube, valeurs: () => (raccourcis ? raccourcis.toutes() : {}), version: VERSION, maj }));
+  internes.push(enregistrerReglages({ compte, social, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, prefs, vibrer, haptique, lecteur, lecteurNatif, sante, cube, valeurs: () => (raccourcis ? raccourcis.toutes() : {}), version: VERSION, maj }));
   // le vecteur xerion de ce téléphone : le temps passé par ploxion (même forme que jOSUsage du labo : { px: { id: { opens, seconds, lastAt } } })
   async function surUsage(id, sec) {
     const u = (await boxion.get('usage', 'stats')) || { px: {} };
@@ -517,7 +527,7 @@ async function demarrer() {
   installerAppsALaDemande({ W: window, connu: (id) => routeur.connait(id) || depot.packLocal().some(p => p.id === id) || catalogueIds.has(id) || (!catalogueIds.size && navigator.onLine !== false),
     ensureApp: async (id) => { if (!routeur.connait(id) && !(await installerSilencieux(id))) throw new Error('ploxion « ' + id + ' » : introuvable au labo'); return routeur.chargerApp(id); } });
   window.ploxi0n = { boxion, shim, routeur, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte };
-  brancherLiens({ routeur, compte, installer: (id) => routeurProxy.ouvrir(id), lecture: (c) => maintenant.commander(c), lire: (o) => lecteurNatif.ouvrir(o.url, o).catch(() => {}),
+  brancherLiens({ routeur, compte, surLien: (r) => { const c = invitationDuLien(r); if (c) boxion.put('social', 'invitation', { code: c, le: Date.now() }).catch(() => {}); }, installer: (id) => routeurProxy.ouvrir(id), lecture: (c) => maintenant.commander(c), lire: (o) => lecteurNatif.ouvrir(o.url, o).catch(() => {}),
     // ☾ (0.64) ploxi0n://dodo et ploxi0n://reveil : un raccourci, le Toucher au dos, ou l'automatisation « quand Sommeil s'active » d'iOS le notent seuls
     actions: { dodo: () => tsoinNatif.dodo().then(() => routeur.signaler('☾ dodo noté')).catch(() => {}), reveil: () => tsoinNatif.reveil().catch(() => {}),
       tsoin: () => tsoinNatif.ouvrir({}), vocal: () => vocal.basculer().catch(() => {}), lampe: () => window.jOSNatif.lampe().catch(() => {}) } });   // une icône de l'écran d'accueil vers un ploxion absent : installé à la volée

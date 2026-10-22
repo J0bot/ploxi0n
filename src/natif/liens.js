@@ -1,7 +1,7 @@
 // Les LIENS vers un ploxion : ploxi0n://px/<id> (schéma de l'app : avec l'app Raccourcis d'iOS, « Ouvrir l'URL » + « Ajouter à l'écran
 // d'accueil » = une icône par ploxion sur l'écran d'accueil de l'iPhone) et les raccourcis de l'icône (appui long sur ploxi0n).
 import { lienRecu } from '../app/liens-publics.js';
-export function brancherLiens({ W = globalThis.window, routeur, compte = null, installer = null, lecture = null, lire = null, actions = {} }) {
+export function brancherLiens({ W = globalThis.window, routeur, compte = null, surLien = () => {}, installer = null, lecture = null, lire = null, actions = {} }) {
   const natif = !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
   if (!natif) return;
   // (0.76) lien : les paramètres du lien (?code=…&join=…), rendus au ploxion dans location.search (src/app/liens-publics.js)
@@ -27,7 +27,7 @@ export function brancherLiens({ W = globalThis.window, routeur, compte = null, i
       if (u.host === 'lecture') { if (lecture) lecture(u.pathname.replace(/^\/+/, '').split('/')[0]); return; }   // ♫ les boutons du widget « À l'écoute » (0.48)
       // les liens universels (Associated Domains, 0.27) : https://labo.j0bot.ch/px/<id>… et /app/ouvrir/<id>
       const r = lienRecu(e.url);   // (0.76) …/px/<id>?…, /app/ouvrir/<id>, ?px=<id>, /join?inv=…, ploxi0n://px/<id>?…
-      if (r) { aller(r.id, r.lien); return; }
+      if (r) { try { surLien(r); } catch (er) { /* */ } aller(r.id, r.lien); return; }   // (0.84) surLien : une invitation du social est gardée
       if (/^https?:$/.test(u.protocol)) { routeur.accueil(); return; }
       const m = (u.host === 'px' ? u.pathname : u.pathname.replace(/^\/px/, '')).replace(/^\/+/, ''); aller(decodeURIComponent(m.split('/')[0]));
     } catch (er) { /* lien illisible */ }

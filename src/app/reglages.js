@@ -26,7 +26,7 @@ export const GROUPES = [   // [page, glyphe (src/app/glyphes.js), nom]
 ];
 export const SOUS = { gestes: 'navigation', 'haptique-motifs': 'haptique', 'haptique-evenements': 'haptique', 'haptique-fractale': 'haptique', 'haptique-ploxions': 'haptique' };
 
-export function enregistrerReglages({ W = globalThis.window, compte, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, vibrer = () => {}, haptique = null, lecteur = null, lecteurNatif = null, sante = null, cube = null, valeurs = () => ({}), version = '?', maj = null }) {
+export function enregistrerReglages({ W = globalThis.window, compte, social = null, hud, routeur, depot, boxion, modeConnecte, notifs = null, prefs = null, vibrer = () => {}, haptique = null, lecteur = null, lecteurNatif = null, sante = null, cube = null, valeurs = () => ({}), version = '?', maj = null }) {
   const ELS = { tsoin: '⧗ noter un tsoin', vocal: 'vocal', compte: 'compte', reseau: 'réseau et mode connecté', heure: 'heure', chercher: 'chercher un ploxion', epingles: 'ploxions épinglés' };
   function mount(hote) {
     let vivant = true, q = '', composition = [], page = null;   // page : null = l'accueil des réglages
@@ -98,7 +98,11 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
           + (e.connecte ? '<button data-a="sortir">se déconnecter</button>' : '<button class="p" data-a="connecter">se connecter</button>') + '</div>'
           // (0.52) règle App Store 5.1.1(v) : supprimer son compte DEPUIS l'app → la page du labo où la suppression se termine
           + (e.connecte ? '<div class="l"><span>Supprimer mon compte<small>sur labo.j0bot.ch : ton compte, ton boxion en ligne, tes tsoins partagés. Ce téléphone garde ses données (› Données pour les effacer).</small></span><button class="danger" data-a="supprimer-compte">supprimer…</button></div>' : '')
-          + '</div>')
+          + '</div>'
+          // (0.84) le compte du social (api.j0bot.ch : « Continuer avec Apple » le crée dans l'app) : le supprimer d'ici aussi (règle 5.1.1(v))
+          + ((() => { const so = social && social.etat(); if (!so) return ''; const n = (so.user && so.user.username) || 'ton compte';
+            return '<div class="bloc"><div class="l"><span>🎉 le social : ' + esc(n) + '<small>ton compte j0bot (api.j0bot.ch) : tes spaces, tes messages, tes amis, tes invitations</small></span></div>'
+              + '<div class="l"><span>Supprimer ce compte du social<small>pour de bon, tout de suite : ses spaces (et leurs salons), ses messages, ses invitations, ses amitiés</small></span><button class="danger" data-a="supprimer-social">supprimer…</button></div></div>'; })()))
         + section('reseau', 'Réseau', '<div class="bloc">' + bascule('data-t="mode"', modeConnecte(), 'Mode connecté', 'les ploxions joignent labo.j0bot.ch' + (e.connecte ? ' avec ton compte' : '') + ' ; hors ligne, leur dernière réponse')
           + '<div class="l"><span>Source<small>labo.j0bot.ch (le marketplace, les bions, le mode connecté)</small></span></div></div>')
         + (notifs ? section('notifs', 'Notifications', '<div class="bloc"><div class="l"><span>Une notification de test<small>elle arrive 5 s après : verrouille le téléphone</small></span><button data-a="notif">tester</button></div>'
@@ -279,7 +283,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
       if (b.hasAttribute('data-ouvrir')) return R().ouvrir(b.getAttribute('data-ouvrir'));
       if (b.hasAttribute('data-deverrou')) { if (await R().deverrouiller(b.getAttribute('data-deverrou'))) peindre(); return; }
       // les gestes qui détruisent : un premier toucher demande « sûr ? »
-      const destructif = b.hasAttribute('data-retirer') || b.hasAttribute('data-bion-retirer') || b.getAttribute('data-a') === 'reset' || b.getAttribute('data-a') === 'supprimer-compte';
+      const destructif = b.hasAttribute('data-retirer') || b.hasAttribute('data-bion-retirer') || b.getAttribute('data-a') === 'reset' || b.getAttribute('data-a') === 'supprimer-compte' || b.getAttribute('data-a') === 'supprimer-social';
       if (destructif && !b.classList.contains('sur')) { b.classList.add('sur'); b.dataset.avant = b.textContent; b.textContent = 'sûr ?'; return; }
       try {
         if (b.hasAttribute('data-retirer')) { const id = b.getAttribute('data-retirer'); await (R().retirerPloxion ? R().retirerPloxion(id) : depot.retirer(id)); msg('✓ ' + id + ' retiré'); return peindre(); }
@@ -302,6 +306,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, hud, routeu
         else if (a === 'connecter') await compte.connecter();
         else if (a === 'sortir') { await compte.deconnecter(); }
         else if (a === 'supprimer-compte') { await W.jOSNatif.navigateur(((depot && depot.source) || 'https://labo.j0bot.ch') + '/profile'); msg('la page de ton compte s\'ouvre : « supprimer le compte » en bas ; ensuite, déconnecte-toi ici'); }
+        else if (a === 'supprimer-social') { await social.supprimer(); await peindre(); msg('✓ ton compte du social est supprimé'); return; }
         else if (a === 'accueil') { R().reinitialiserAccueil(); msg('✓ accueil remis à zéro'); }
         else if (a === 'bions') { const r = await depot.completerBions(); msg(r.length ? '✓ ' + r.map(x => x.id + ' +' + (x.apres - x.avant)).join(' · ') : '✓ rien à compléter'); }
         else if (a === 'bions-maj') { let n = 0; for (const x of await depot.bions()) { try { if ((await depot.majBion(x.nom)) === 'mis-a-jour') n++; } catch (er) { /* un bion introuvable n'arrête pas les autres */ } } msg('✓ ' + n + ' bion' + (n > 1 ? 's' : '') + ' mis à jour'); }

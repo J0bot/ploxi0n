@@ -7,6 +7,12 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.84.0', titre: 'Le social avec Apple, pour de vrai', points: [
+    '🍏 « Continuer avec Apple » sur l\'écran du social marche : la porte d\'api.j0bot.ch est ouverte.',
+    '🎟 Le social reste sur invitation : ouvre le lien qu\'un ami t\'a envoyé, puis « Continuer avec Apple » crée ton compte tout seul. Sans lien, colle-le sous le bouton.',
+    '🔗 Déjà un compte j0bot ? Identifiant et mot de passe, puis « Lier mon Apple ID » : la prochaine fois, Apple suffit.',
+    '🗑 ⚙ › Compte : supprimer ton compte du social, pour de bon, depuis l\'app.',
+  ] },
   { v: '0.83.0', titre: 'Le labo te reconnaît tout seul', points: [
     '🔑 Le mode xerboxion, les pages du labo dans tes ploxions et le navigateur intégré t\'ouvrent le labo déjà connecté, avec ton compte de l\'app : plus de « j\'ai un code ».',
     '🔒 Ton jeton ne sort jamais dans une adresse : l\'app demande au labo un passe qui ne sert qu\'une fois, pendant une minute.',

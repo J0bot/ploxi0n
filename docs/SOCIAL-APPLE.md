@@ -15,9 +15,15 @@ xerboxion social ».
 - **Indépendant du xerboxion** : c'est un compte j0bot (celui du social), né de l'Apple ID ou retrouvé par lui. Le compte du labo
   (`labo.j0bot.ch/api/app/apple`, ⚙ › Compte) n'entre pas en jeu.
 
-## Ce qui manque : la route d'api.j0bot.ch (la quête `social-apple`)
+## ✅ 0.84 (22.10) : la route est déployée, sur invitation
 
-Au 15.10, `POST /api/v1/auth/apple` répond 404, et le bouton le dit. Le code d'api.j0bot.ch n'est pas dans les dépôts de cette session.
+api.j0bot.ch (J0bot/api-j0bot) : un Apple ID lié → `200 { user, token }` ; nouveau avec `code` (une invitation du social) → `201`, compte
+pseudonyme ami de l'inviteur ; nouveau sans `code` → `403 { message, invitation_requise: true }`. L'app garde le code d'un lien d'invitation
+qui l'a ouverte, sinon propose de le coller, ou de lier l'Apple ID à un compte existant (`/auth/apple/lier` après `/auth/login`).
+⚙ › Compte supprime le compte du social (`DELETE /me`). Ci-dessous, le contrat d'origine (15.10).
+
+## Le contrat d'origine (15.10)
+
 La route, côté serveur :
 
 **Requête** : `POST /api/v1/auth/apple`, JSON.

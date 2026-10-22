@@ -117,6 +117,8 @@ const natif = {
   PloxiLecteur: { moteurs: () => ({ apple: true, vlc: false }), ouvrir: (o) => ({ moteur: /\.mkv/.test(o.url) ? 'vlc' : 'apple' }), fermer: () => ({}) },
   PloxiVocal: { commencer: () => ({ chemin: '/tmp/vocal.m4a' }), arreter: () => ({ chemin: '/tmp/vocal.m4a', duree: 2, base64: '', type: 'audio/mp4' }), transcrire: (o) => ({ texte: 'ouvre le ploxion horloge', langue: o.langue, surLeTelephone: true }) },
   Share: { share: () => ({ activityType: 'com.apple.UIKit.activity.CopyToPasteboard' }), canShare: () => ({ value: true }) },
+  // (0.84) la feuille « Se connecter avec Apple » : un jeton d'identité (le nonce haché est ignoré ici)
+  SignInWithApple: { authorize: () => ({ response: { identityToken: 'jwt.faux-apple', givenName: 'Tom', familyName: null, email: null, user: 'sub-faux' } }) },
   Browser: { open: (o) => { ouvertsBrowser.push(o.url); return {}; }, close: () => ({}) },
   ScreenOrientation: { orientation: () => ({ type: 'portrait-primary' }), lock: (o) => { verrous.push(o.orientation); return {}; }, unlock: () => ({}) },
   BluetoothLe: { initialize: () => ({}), requestDevice: () => ({ deviceId: 'AA:BB', name: 'Polar H10' }), connect: () => ({}), disconnect: () => ({}), read: () => ({ value: '5a' }), write: () => ({}), startNotifications: () => ({}), getServices: () => ({ services: [] }) },
@@ -134,6 +136,13 @@ const natif = {
       if (u.pathname === '/presets.json') return j(200, { 0: {}, 1: { n: 'Soirée' } });
       if (u.pathname === '/json/state' && o.method === 'POST') { const c = typeof o.data === 'string' ? JSON.parse(o.data) : o.data; if (c.on === 't') st.on = !st.on; else Object.assign(st, c); return j(200, { success: true }); } }
     if (u.hostname === '10.0.0.9' && u.port === '8123') { if ((o.headers || {}).Authorization !== 'Bearer bon') return j(401, {}); if (u.pathname === '/api/states') return j(200, [{ entity_id: 'light.salon', state: 'on', attributes: { friendly_name: 'Salon', brightness: 200, supported_color_modes: ['brightness'] } }, { entity_id: 'sensor.temp', state: '21.5', attributes: { unit_of_measurement: '°C', friendly_name: 'Température' } }]); return j(200, []); }
+    // (0.84) « Continuer avec Apple » (api.j0bot.ch) : un Apple ID nouveau sans invitation → 403 ; avec le code FAUX42 → le compte ; DELETE /me
+    if (u.hostname === 'api.j0bot.ch' && u.pathname === '/api/v1/auth/apple' && o.method === 'POST') { const b = typeof o.data === 'string' ? JSON.parse(o.data) : (o.data || {});
+      if (!b.identity_token || !b.nonce) return j(422, { message: 'jeton manquant' });
+      if (!b.code) return j(403, { message: 'Cet Apple ID n\'a pas encore de compte j0bot.', invitation_requise: true });
+      return b.code === 'FAUX42' ? j(201, { token: 'bon', user: { id: 'u1', username: 'tom', identity_level: 'pseudonym' } }) : j(422, { message: 'Invitation invalide, expirée ou épuisée.' }); }
+    if (u.hostname === 'api.j0bot.ch' && u.pathname === '/api/v1/me' && o.method === 'DELETE') { const b = typeof o.data === 'string' ? JSON.parse(o.data) : (o.data || {});
+      return (o.headers || {}).Authorization === 'Bearer bon' && b.confirmer === 'supprimer' ? j(200, { message: 'Compte supprimé.' }) : j(401, { message: 'Unauthenticated.' }); }
     // (0.76) l'invite du social : le jeton « bon » a droit à un code
     if (u.hostname === 'api.j0bot.ch' && u.pathname === '/api/v1/invites' && o.method === 'POST') return (o.headers || {}).Authorization === 'Bearer bon' ? j(201, { code: 'FAUX42' }) : j(401, { message: 'Unauthenticated.' });
     throw new Error('Could not connect to the server.'); } },

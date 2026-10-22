@@ -102,6 +102,15 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.84 (22.10)** — 🍏🎟 le social avec Apple, pour de vrai. api.j0bot.ch (dépôt J0bot/api-j0bot, `main`) a la porte depuis le 22.10 :
+`POST /api/v1/auth/apple` (Apple ID lié → 200 ; nouveau + `code` d'invitation valide → 201, un compte pseudonyme ami de l'inviteur ; nouveau sans
+code → 403 `invitation_requise`), `POST /auth/apple/lier` (Bearer), `DELETE /me` `{ confirmer: "supprimer" }`. Côté app (`src/natif/social-apple.js`) :
+le code d'un lien `…?px=invite&code=…` qui ouvre l'app est gardé (`liens.js` → `surLien` → boxion « social/invitation ») et part tout seul ; sinon un
+panneau sous le bouton (coller le lien ; ou lier avec l'identifiant et le mot de passe de l'écran du social), sans remontrer la feuille d'Apple ;
+⚙ › Compte : supprimer le compte du social. ⚠ **CORS** : l'api ne répondait qu'à `*.j0bot.ch`, pas à `capacitor://localhost` → le social du labo
+ne pouvait pas lire l'api dans l'app. Corrigé côté api (`config/cors.php`, commit `787b072`, **à redéployer**) ; les appels Apple de l'app passent
+déjà par le HTTP natif. Faux iPhone : `parcours-social-apple.mjs` (lien → code gardé → Apple → compte → suppression).
+
 **0.83 (19.10)** — 🔑 le labo connecté tout seul (RS-7, capture du mode xerboxion : « j'ai un code »). Le contrat complet et ce que le labo
 doit faire : **docs/CONNEXION-LABO.md**. Côté app : `src/natif/connexion-labo.js` (`adresse(chemin)`, `emballer(url)`) ; `modes.js` : le cadre
 naît en `about:blank` avec `data-vers`, la règle du labo (HEAD) puis l'adresse connectée ; `cadres-labo.js` : `connecter(p)` ; main.js enveloppe
