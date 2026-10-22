@@ -324,14 +324,17 @@ export function creerHttp(W = globalThis.window, enTetes = async () => ({})) {
     },
     /** une requête quelconque (le relais du shim) ; fetchReseau = le fetch d'origine (le shim remplace W.fetch) */
     async requete({ methode = 'GET', url, headers = {}, corps }, fetchReseau = W.fetch.bind(W)) {
+      const fichier = corps && typeof corps === 'object' && corps.dataType ? corps : null;   // 📤 (0.85) { dataType: 'formData' | 'file', data, type, original }
       if (natif()) {
         const { CapacitorHttp } = await import('@capacitor/core');
-        let data; if (corps) { try { data = JSON.parse(corps); } catch (e) { data = corps; } }
-        const r = await CapacitorHttp.request({ method: methode, url, headers: { ...(await enTetes()), ...headers }, data, responseType: 'text' });
+        let data; if (corps && !fichier) { try { data = JSON.parse(corps); } catch (e) { data = corps; } }
+        const he = { ...(await enTetes()), ...headers };
+        if (fichier) { for (const k of Object.keys(he)) if (k.toLowerCase() === 'content-type') delete he[k]; if (fichier.dataType === 'file') he['Content-Type'] = fichier.type || 'application/octet-stream'; }
+        const r = await CapacitorHttp.request({ method: methode, url, headers: he, data: fichier ? fichier.data : data, ...(fichier ? { dataType: fichier.dataType } : {}), responseType: 'text' });
         const h = {}; for (const k in (r.headers || {})) h[k.toLowerCase()] = r.headers[k];
         return { status: r.status, texte: typeof r.data === 'string' ? r.data : JSON.stringify(r.data), entetes: h };
       }
-      const r = await fetchReseau(url, { method: methode, headers: { ...(await enTetes()), ...headers }, body: corps });
+      const r = await fetchReseau(url, { method: methode, headers: { ...(await enTetes()), ...headers }, body: fichier ? fichier.original : corps });
       const h = {}; r.headers.forEach((v, k) => { h[k.toLowerCase()] = v; });
       return { status: r.status, texte: await r.text(), entetes: h };
     },

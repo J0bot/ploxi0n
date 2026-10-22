@@ -19,6 +19,9 @@
 // {status, texte, entetes} } : les routes nommées (ex. /bother → https://labo.j0bot.ch/api/app/bother) et, en MODE CONNECTÉ (general()),
 // toute autre route du serveur partent sur le réseau ; un GET réussi est gardé (boxion_local « routes ») et resservi hors ligne.
 
+import { corpsRelayable } from './corps-fichier.js';
+import { installerXhrRelais } from './xhr-relais.js';
+
 const NS_LS = 'localStorage';
 const NS_BOX = (ns) => 'box:' + ns;
 // (0.39, RS-7 : « ça reste bloqué » au lancement) /marketplace et /bions sont des fichiers DE L'APP : avant, en mode connecté, ils partaient
@@ -264,11 +267,13 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
       const cible = rel.vers(p) + url.search;
       etat.sortants.push(cible);
       try {
-        const corps = init && init.body != null ? (typeof init.body === 'string' ? init.body : init.body instanceof W.URLSearchParams ? init.body.toString() : null) : undefined;
-        if (corps === null) throw new Error('corps non texte (fichier) : pas encore relayé');
+        // 📤 (0.85) les fichiers aussi : FormData, Blob, ArrayBuffer → le multipart ou le binaire du HTTP natif (src/shim/corps-fichier.js)
+        const corps = await corpsRelayable(init && init.body, W);
+        if (corps === null) throw new Error('corps en flux : pas relayé');
         const h = {}; const hi = (init && init.headers) || {};
         if (hi instanceof W.Headers) hi.forEach((v, k) => { h[k] = v; }); else Object.assign(h, hi);
         delete h['X-CSRF-TOKEN']; delete h['x-csrf-token'];
+        if (corps && typeof corps === 'object') for (const k of Object.keys(h)) if (k.toLowerCase() === 'content-type') delete h[k];   // iOS pose le sien (le boundary)
         const r = await relais.envoyer({ methode, url: cible, headers: { Accept: 'application/json', ...h }, corps });
         const type = (r.entetes && (r.entetes['content-type'] || r.entetes['Content-Type'])) || 'application/json';
         // (0.42) jamais une réponse horodatée (?since=, ?t=, ?_=, ?after= : une clé neuve à chaque sondage → le cache grossissait sans fin et
@@ -290,6 +295,8 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
     boxion.append('manques', { methode, route: p }).catch(() => {});
     return json({ ok: false, horsLigne: true, route: p, message: 'pas encore dans ploxi0n hors ligne' }, 503);
   };
+  // 📤 (0.85) un XMLHttpRequest vers une route du serveur passe par ce fetch (le FS du labo envoie ainsi, pour suivre la progression)
+  installerXhrRelais(W, (u) => u.origin === W.location.origin && !ASSETS.test(u.pathname) && u.pathname !== '/' && u.pathname !== '/index.html');
 
   return {
     moi,

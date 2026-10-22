@@ -76,7 +76,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.84.0';
+const VERSION = '0.85.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -189,7 +189,8 @@ async function demarrer() {
   lecteurNatif.brancherOuvrir();   // (0.51) APRÈS web-natif : window.open d'un flux → le lecteur natif, pas Safari
   boot(24, 'le web devient natif');
   // 📁 (0.49) envoyer vers, aperçu (QuickLook), zip, la galerie, le sélecteur de fichiers, Plans, Mail, la lampe
-  { const fx = creerFichiersNatif(); Object.assign(window.jOSNatif, { envoyer: fx.envoyer, apercu: fx.apercu, zip: fx.zip, dezipper: fx.dezipper, photos: fx.photos, choisirFichiers: fx.ouvrir, carte: fx.carte, mail: fx.mail, lampe: fx.lampe });
+  let photosVersBoxion = null;   // 📤 (0.85) posé plus bas, quand le mode connecté est connu
+  { const fx = creerFichiersNatif({ versBoxion: (f, c) => (photosVersBoxion ? photosVersBoxion(f, c) : null) }); Object.assign(window.jOSNatif, { envoyer: fx.envoyer, apercu: fx.apercu, zip: fx.zip, dezipper: fx.dezipper, photos: fx.photos, choisirFichiers: fx.ouvrir, carte: fx.carte, mail: fx.mail, lampe: fx.lampe });
     // 👁 (0.73) un lien 3D d'un ploxion (.usdz, .reality, rel="ar") → AR Quick Look : une page d'app (WKWebView) ne sait pas l'ouvrir seule
     if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) brancherLiensAR({ D: document, apercu: (u) => fx.apercu(u) }); }
   // 👁 (0.73) l'AR native (PloxiAR : ARKit, RealityKit, RoomPlan) : le terrax, et tous les ploxions par jOSNatif.ar
@@ -255,6 +256,13 @@ async function demarrer() {
       let data = null; try { data = JSON.parse(r.texte || 'null'); } catch (e) { /* */ }
       return { status: r.status, data };
     },
+  };
+  // 📤 (0.85) les photos importées partent aussi dans ton boxion (le FS du labo, /fs/write, en multipart) : connecté et en ligne seulement
+  photosVersBoxion = async (f, chemin) => {
+    if (!distant.actif()) return null;
+    const fd = new FormData(); fd.append('path', '/' + chemin); fd.append('file', f, f.name || 'photo.jpg');
+    const r = await window.fetch('/fs/write', { method: 'POST', headers: { Accept: 'application/json' }, body: fd });   // le shim relaie
+    return r.ok;
   };
   boot(30, 'le shim jOS · tsoins');
   const shim = await installerShim({ boxion, routeur: routeurProxy, relais, distant });

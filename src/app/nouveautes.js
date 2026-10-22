@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.85.0', titre: 'Tes fichiers partent au labo', points: [
+    '📤 Connecté, les ploxions envoient enfin des fichiers au labo et à ton boxion : photos, documents, tout ce qu\'ils te proposent d\'envoyer. Avant : « pas encore relayé ».',
+    '📷 Importer des photos les garde sur l\'iPhone (Fichiers › ploxi0n › Photos) et, connecté, les envoie aussi dans ton boxion (Photos).',
+    '◔ Les envois qui montrent leur progression marchent aussi dans l\'app.',
+  ] },
   { v: '0.84.0', titre: 'Le social avec Apple, pour de vrai', points: [
     '🍏 « Continuer avec Apple » sur l\'écran du social marche : la porte d\'api.j0bot.ch est ouverte.',
     '🎟 Le social reste sur invitation : ouvre le lien qu\'un ami t\'a envoyé, puis « Continuer avec Apple » crée ton compte tout seul. Sans lien, colle-le sous le bouton.',

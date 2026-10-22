@@ -102,6 +102,14 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.85 (22.10)** — 📤 l'envoi de fichiers par le mode connecté (RS-7 a choisi 8 chantiers de la feuille de route : celui-ci d'abord). Le relais
+du shim (`jos.js`) passe maintenant FormData, Blob, ArrayBuffer : `src/shim/corps-fichier.js` → `{ dataType: 'formData' | 'file', data }`, que
+`creerHttp().requete` (depot.js) donne à `CapacitorHttp.request` (iOS pose le boundary ; ⚠ le Swift force-déballe `fileName` et `contentType`
+d'un fichier : toujours fournis). `src/shim/xhr-relais.js` : un XMLHttpRequest asynchrone vers une route du serveur passe par le fetch du shim
+(le FS du labo envoie par XHR pour la progression). `photos.importer` envoie aussi au boxion (`/fs/write`, Photos/) quand `distant.actif()`.
+Faux iPhone : `parcours-envoi-fichiers.mjs`. Les 7 autres chantiers choisis (22.10) : tsoins → boxion + journal du mode test, la bande niri,
+le lot de ploxions, Live Activities, un widget par ploxion, l'icône selon le rang, les notifications push (APNs : la clé, décision de RS-7).
+
 **0.84 (22.10)** — 🍏🎟 le social avec Apple, pour de vrai. api.j0bot.ch (dépôt J0bot/api-j0bot, `main`) a la porte depuis le 22.10 :
 `POST /api/v1/auth/apple` (Apple ID lié → 200 ; nouveau + `code` d'invitation valide → 201, un compte pseudonyme ami de l'inviteur ; nouveau sans
 code → 403 `invitation_requise`), `POST /auth/apple/lier` (Bearer), `DELETE /me` `{ confirmer: "supprimer" }`. Côté app (`src/natif/social-apple.js`) :

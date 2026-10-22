@@ -136,6 +136,11 @@ const natif = {
       if (u.pathname === '/presets.json') return j(200, { 0: {}, 1: { n: 'Soirée' } });
       if (u.pathname === '/json/state' && o.method === 'POST') { const c = typeof o.data === 'string' ? JSON.parse(o.data) : o.data; if (c.on === 't') st.on = !st.on; else Object.assign(st, c); return j(200, { success: true }); } }
     if (u.hostname === '10.0.0.9' && u.port === '8123') { if ((o.headers || {}).Authorization !== 'Bearer bon') return j(401, {}); if (u.pathname === '/api/states') return j(200, [{ entity_id: 'light.salon', state: 'on', attributes: { friendly_name: 'Salon', brightness: 200, supported_color_modes: ['brightness'] } }, { entity_id: 'sensor.temp', state: '21.5', attributes: { unit_of_measurement: '°C', friendly_name: 'Température' } }]); return j(200, []); }
+    // (0.85) l'envoi de fichiers : le FS du labo reçoit du multipart (comme le Swift : chaque fichier DOIT avoir fileName et contentType)
+    if (u.hostname === 'labo.j0bot.ch' && u.pathname === '/fs/write' && o.method === 'POST') {
+      if (o.dataType !== 'formData' || !Array.isArray(o.data)) return j(422, { message: 'pas du multipart : ' + o.dataType });
+      const f = o.data.find(x => x.type === 'base64File'); if (!f || !f.fileName || !f.contentType) throw new Error('Swift : fileName ou contentType manquant (force unwrap)');
+      return j(200, { ok: true, path: (o.data.find(x => x.key === 'path') || {}).value, octets: Buffer.from(f.value, 'base64').length, contentType: f.contentType, entetes: Object.keys(o.headers || {}) }); }
     // (0.84) « Continuer avec Apple » (api.j0bot.ch) : un Apple ID nouveau sans invitation → 403 ; avec le code FAUX42 → le compte ; DELETE /me
     if (u.hostname === 'api.j0bot.ch' && u.pathname === '/api/v1/auth/apple' && o.method === 'POST') { const b = typeof o.data === 'string' ? JSON.parse(o.data) : (o.data || {});
       if (!b.identity_token || !b.nonce) return j(422, { message: 'jeton manquant' });

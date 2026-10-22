@@ -4,7 +4,7 @@
 //   apercu(fichier, { echelleReelle })     le visualiseur d'iOS (QuickLook) : PDF, images, vidéos, Office, Pages, texte, USDZ (AR Quick Look)…
 //   zip(fichiers) → Blob · dezipper(zip) → [{ nom, data: Uint8Array, taille }]
 //   photos.choisir({ max }) → [File]      la galerie native (plusieurs à la fois)
-//   photos.importer({ max })              → Fichiers › Sur mon iPhone › ploxi0n › Photos (et dans le boxion dès que l'envoi y est relayé)
+//   photos.importer({ max })              → Fichiers › Sur mon iPhone › ploxi0n › Photos ; (0.85) et dans ton boxion (Photos/), connecté
 //   ouvrir({ types })  → [File]           le sélecteur de fichiers d'iOS (Fichiers, iCloud Drive, clés USB…)
 //   carte.ouvrir({ lat, lng, nom } | { adresse }) · carte.itineraire({ … }, mode)   Plans d'Apple
 //   mail({ a, cc, objet, corps })         Mail d'iOS
@@ -25,7 +25,8 @@ const enOctets = async (f) => {
 const enBase64 = (o) => { let s = ''; for (let i = 0; i < o.length; i += 0x8000) s += String.fromCharCode.apply(null, o.subarray(i, i + 0x8000)); return btoa(s); };
 const nomDe = (f, i = 0) => String((f && (f.nom || f.name)) || ('fichier-' + (i + 1))).replace(/[/\\]/g, '-').slice(0, 120);
 
-export function creerFichiersNatif({ W = globalThis.window, apple = PloxiApple, charger = {} } = {}) {
+/** versBoxion(fichier, chemin) → vrai si envoyé (0.85 : le FS du labo, /fs/write, relayé par le mode connecté) ; null : pas connecté */
+export function creerFichiersNatif({ W = globalThis.window, apple = PloxiApple, charger = {}, versBoxion = () => null } = {}) {
   const natif = !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
   const imp = (n, f) => (charger[n] || f)();
   const fs = () => imp('fs', () => import('@capacitor/filesystem'));
@@ -89,7 +90,10 @@ export function creerFichiersNatif({ W = globalThis.window, apple = PloxiApple, 
       const l = await photos.choisir({ max });
       const { Filesystem, Directory } = await fs();
       for (const f of l) await Filesystem.writeFile({ path: 'ploxi0n/Photos/' + f.name, data: enBase64(await enOctets(f)), directory: Directory.Documents, recursive: true });
-      return { n: l.length, ou: 'Fichiers › Sur mon iPhone › ploxi0n › Photos', fichiers: l.map(f => f.name) };
+      // 📤 (0.85) et dans ton boxion, si l'app y est connectée (une photo qui échoue reste sur l'iPhone, les autres partent)
+      let boxion = null;
+      for (const f of l) { let ok = null; try { ok = await versBoxion(f, 'Photos/' + f.name); } catch (e) { ok = false; } if (ok !== null) boxion = (boxion || 0) + (ok ? 1 : 0); }
+      return { n: l.length, ou: 'Fichiers › Sur mon iPhone › ploxi0n › Photos' + (boxion ? ' · ' + boxion + ' dans ton boxion (Photos)' : ''), fichiers: l.map(f => f.name), boxion };
     },
   };
   /** le sélecteur de fichiers d'iOS (Fichiers, iCloud Drive…) : l'<input type=file> que WebKit ouvre en natif */
