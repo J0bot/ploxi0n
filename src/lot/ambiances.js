@@ -40,7 +40,7 @@ export function fabriquer(ctx, nom, b) {
   return { sortie, arreter() { for (const a of arrets) { try { a.stop(); } catch (e) { /* déjà arrêté */ } try { a.disconnect(); } catch (e) { /* */ } } try { sortie.disconnect(); } catch (e) { /* */ } } };
 }
 
-export function creerAmbiances({ W = globalThis.window, boxion, Contexte = W.AudioContext || W.webkitAudioContext, vibrer = () => {} }) {
+export function creerAmbiances({ W = globalThis.window, boxion, Contexte = W.AudioContext || W.webkitAudioContext, vibrer = () => {}, activite = null }) {
   const D = W.document;
   let etat = { volumes: {}, maitre: 0.8 };
   const pret = boxion.get('reglages', 'ambiances').then(v => { if (v && typeof v === 'object') etat = { volumes: {}, maitre: 0.8, ...v }; }).catch(() => {});
@@ -79,10 +79,12 @@ export function creerAmbiances({ W = globalThis.window, boxion, Contexte = W.Aud
     // le minuteur : 20 s de fondu, puis tout s'arrête
     const minuter = (m) => {
       W.clearTimeout(fin); W.clearTimeout(finA); hote.querySelectorAll('[data-amb-min] button').forEach(b => b.classList.toggle('on', +b.getAttribute('data-amb-min') === m));
+      if (activite) { try { if (m) { const n = [...sons.keys()].map(k => (SONS.find(x => x[0] === k) || [k, k])[1]).join(' · '); activite.debut({ titre: 'ambiances', sous: n || 'le minuteur', fin: Date.now() + m * 60e3 }); } else activite.fin(); } catch (e) { /* 🏝 (0.91) jamais bloquant */ } }
       if (!m) return;
       fin = W.setTimeout(() => { if (maitre && ctx) maitre.gain.setTargetAtTime(0, ctx.currentTime, 6); finA = W.setTimeout(() => toutCouper(true), 20000); }, Math.max(0, m * 60e3 - 20000));
     };
     const toutCouper = (garderVolumes = false) => {
+      if (activite) { try { activite.fin(); } catch (e) { /* */ } }
       for (const s of sons.values()) s.arreter(); sons.clear();
       if (!garderVolumes) { etat.volumes = {}; garder(); hote.querySelectorAll('[data-amb]').forEach(i => { i.value = 0; }); }
       if (audio) { try { audio.pause(); } catch (e) { /* */ } audio.srcObject = null; audio.remove(); audio = null; }

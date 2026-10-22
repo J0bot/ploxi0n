@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.91.0', titre: 'L\'écran verrouillé, les widgets, les notifications', points: [
+    '🏝 Activités en direct : ☾ dodo affiche le chrono de ta nuit sur l\'écran verrouillé et la Dynamic Island, jusqu\'au réveil ; un vocal qui enregistre ; le minuteur des ambiances. Les ploxions peuvent aussi en lancer.',
+    '▦ Le widget « Un ploxion » : sur l\'écran d\'accueil, choisis un ploxion (appui long › Modifier) ; il montre ce qu\'il publie, une valeur, une courbe, un bouton. Le journal y met tes tsoins du jour.',
+    '🔔 ⚙ › Notifications › Même app fermée : tes notifications arrivent même quand ploxi0n est fermé (dès que le labo les envoie). Choisis les sujets : coord, messages, bother, ploxions.',
+  ] },
   { v: '0.90.0', titre: 'La map, en carrés', points: [
     '▦ La map du xerboxion dans l\'app : les hubs du labo, en carrés. Le hub où tu es au centre, son glyphe et ses koins ; ses voisins dépassent des bords. Glisse pour y aller, ‹ pour revenir sur tes pas, touche un koin pour l\'ouvrir.',
     '＋ Crée tes hubs : un nom, un glyphe, tes ploxions comme koins, le côté où il se pose. Ils vont dans le même rangement que la map du labo : connecté, tu les retrouves là-bas.',

@@ -31,11 +31,39 @@ import RoomPlan
 #if canImport(MobileVLCKit)
 import MobileVLCKit
 #endif
+#if canImport(ActivityKit)
+import ActivityKit
+
+// 🏝 (0.91) LES LIVE ACTIVITIES (écran verrouillé, Dynamic Island) : un tsoin en cours, un vocal, un minuteur, ce qu'un ploxion suit.
+// Le MÊME type, au caractère près, dans l'extension (ios/App/PloxionWidgets/PloxionWidgets.swift) : ActivityKit les apparie par leur nom.
+struct PloxiActivite: ActivityAttributes {
+    public struct ContentState: Codable, Hashable {
+        var titre: String
+        var sous: String
+        var glyphe: String          // un symbole SF (hourglass, mic, timer, waveform…)
+        var debut: Date?            // un chrono qui monte depuis
+        var fin: Date?              // un compte à rebours jusqu'à
+        var progression: Double?    // 0…1
+    }
+    var genre: String               // tsoin, vocal, minuteur, ploxion
+    var ploxion: String             // le toucher ouvre ploxi0n://px/<ploxion>
+}
+#endif
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+
+    // 🔔 (0.91) LES NOTIFICATIONS PUSH (APNs, RS-7 22.10 : « la clé APNs sur le labo ») : le jeton de l'iPhone passe au plugin
+    // @capacitor/push-notifications (src/natif/push.js l'envoie au labo, qui détient la clé .p8 et envoie les notifications)
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications, object: deviceToken)
+    }
+
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: error)
+    }
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // les raccourcis automatiques (Raccourcis.swift) : la liste des ploxions proposés à Siri et à l'app Raccourcis suit les installations
@@ -136,7 +164,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         guard let g = UserDefaults(suiteName: "group.ch.j0bot.ploxi0n") else { ecrireEtat(["groupe": false]); return }
         let conteneur = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.ch.j0bot.ploxi0n") != nil
         var change = false, tailles: [String: Int] = [:]
-        for k in ["ploxi0n.epingles", "ploxi0n.valeurs", "ploxi0n.lecture", "ploxi0n.cube"] {
+        for k in ["ploxi0n.epingles", "ploxi0n.valeurs", "ploxi0n.lecture", "ploxi0n.cube", "ploxi0n.px-widgets"] {   // (0.91) le widget « un ploxion »
             let v = UserDefaults.standard.string(forKey: "CapacitorStorage." + k)
             tailles[k] = v?.count ?? -1
             if v != nil && g.string(forKey: k) != v { g.set(v, forKey: k); change = true }
@@ -281,6 +309,9 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         CAPPluginMethod(name: "httpFlux", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "qr", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "systeme", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "activiteDebut", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "activiteMaj", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "activiteFin", returnType: CAPPluginReturnPromise),
     ]
 
     // 🔦 LA LAMPE DE POCHE (0.49) : lampe({ allume?, niveau? 0…1 }) ; sans « allume », elle bascule
@@ -397,6 +428,59 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         }
         call.resolve(["thermique": thermique, "economie": p.isLowPowerModeEnabled, "memoire": Double(p.physicalMemory), "coeurs": p.activeProcessorCount, "depuis": p.systemUptime, "disqueLibre": libre, "disqueTotal": total])
     }
+
+    // 🏝 (0.91) les Live Activities : debut → { id } ; maj(id, …) ; fin(id) (sans id : toutes). Les dates en millisecondes (JS).
+    @objc func activiteDebut(_ call: CAPPluginCall) {
+        #if canImport(ActivityKit)
+        if #available(iOS 16.2, *) {
+            guard ActivityAuthorizationInfo().areActivitiesEnabled else { call.reject("activités en direct coupées : Réglages › ploxi0n"); return }
+            let attributs = PloxiActivite(genre: call.getString("genre") ?? "ploxion", ploxion: call.getString("ploxion") ?? "accueil")
+            do {
+                let a = try Activity.request(attributes: attributs, content: ActivityContent(state: etatActivite(call), staleDate: nil), pushType: nil)
+                call.resolve(["id": a.id])
+            } catch { call.reject("activité : \(error.localizedDescription)") }
+            return
+        }
+        #endif
+        call.reject("activités en direct : iOS 16.2 ou plus")
+    }
+
+    @objc func activiteMaj(_ call: CAPPluginCall) {
+        #if canImport(ActivityKit)
+        if #available(iOS 16.2, *) {
+            guard let id = call.getString("id"), let a = Activity<PloxiActivite>.activities.first(where: { $0.id == id }) else { call.reject("activité inconnue"); return }
+            let etat = etatActivite(call)
+            Task { await a.update(ActivityContent(state: etat, staleDate: nil)); call.resolve() }
+            return
+        }
+        #endif
+        call.reject("activités en direct : iOS 16.2 ou plus")
+    }
+
+    @objc func activiteFin(_ call: CAPPluginCall) {
+        #if canImport(ActivityKit)
+        if #available(iOS 16.2, *) {
+            let id = call.getString("id")
+            let liste = Activity<PloxiActivite>.activities.filter { id == nil || $0.id == id }
+            Task {
+                for a in liste { await a.end(ActivityContent(state: a.content.state, staleDate: nil), dismissalPolicy: .immediate) }
+                call.resolve(["n": liste.count])
+            }
+            return
+        }
+        #endif
+        call.resolve(["n": 0])
+    }
+
+    #if canImport(ActivityKit)
+    @available(iOS 16.2, *)
+    private func etatActivite(_ call: CAPPluginCall) -> PloxiActivite.ContentState {
+        let date: (String) -> Date? = { k in call.getDouble(k).map { Date(timeIntervalSince1970: $0 / 1000) } }
+        return PloxiActivite.ContentState(titre: String((call.getString("titre") ?? "ploxi0n").prefix(60)), sous: String((call.getString("sous") ?? "").prefix(80)),
+                                          glyphe: call.getString("glyphe") ?? "hourglass", debut: date("debut"), fin: date("fin"),
+                                          progression: call.getDouble("progression").map { min(1, max(0, $0)) })
+    }
+    #endif
 
     @objc func reseauChercher(_ call: CAPPluginCall) {
         let types = Array((call.getArray("types", String.self) ?? []).filter { $0.hasPrefix("_") && $0.hasSuffix("._tcp") }.prefix(16))

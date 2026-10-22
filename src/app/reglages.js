@@ -4,6 +4,7 @@
 // un accueil court (cinq groupes, une ligne par catégorie avec son état en un mot et ›), chaque catégorie sur sa page (‹ pour revenir),
 // et des sous-pages pour ce qui est long (les gestes des bords ; l'haptique : motifs, événements, signatures). La recherche fouille tout.
 // Les bions : chacun avec sa taille et les ploxions qui l'utilisent ; le couper (plus chargé), le mettre à jour, le retirer s'il ne sert plus.
+import { SUJETS as SUJETS_PUSH } from '../natif/push.js';
 import { ACTIONS_BORDS } from './routeur.js';
 import { testerClavier } from './clavier.js';
 import { PLUGIONS } from '../natif/plugions.js';
@@ -107,7 +108,11 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
           + '<div class="l"><span>Source<small>labo.j0bot.ch (le marketplace, les bions, le mode connecté)</small></span></div></div>'
           + (remontee ? '<p class="msg">⧗ tes tsoins (0.86)</p>' + remontee.html() : ''))
         + (notifs ? section('notifs', 'Notifications', '<div class="bloc"><div class="l"><span>Une notification de test<small>elle arrive 5 s après : verrouille le téléphone</small></span><button data-a="notif">tester</button></div>'
-          + bascule('data-t="coord"', notifs.reglage().coord, 'Messages de coord', e.connecte ? 'tant que l\'app est ouverte ; app fermée : bientôt (APNs)' : 'connecte-toi avec le compte admin') + '</div>') : '')
+          + bascule('data-t="coord"', notifs.reglage().coord, 'Messages de coord', e.connecte ? 'tant que l\'app est ouverte (et app fermée : « même app fermée » ci-dessous)' : 'connecte-toi avec le compte admin') + '</div>'
+          // 🔔 (0.91) le push (APNs, la clé sur le labo) et 🏝 les activités en direct
+          + (notifs.push ? (() => { const pr = notifs.push.reglage(); return '<div class="bloc">' + bascule('data-t="push"', !!pr.actif, 'Même app fermée (push)', e.connecte ? 'le labo t\'envoie tes notifications ; ' + (pr.erreur ? '⚠ ' + pr.erreur : pr.envoye ? 'jeton envoyé au labo' : 'pas encore envoyé') : 'connecte-toi d\'abord (le labo envoie à ton compte)')
+            + (pr.actif ? '<div class="l ls"><span>Les sujets</span><div class="seg">' + SUJETS_PUSH.map(([k, n]) => '<button data-push-sujet="' + k + '"' + (pr.sujets.includes(k) ? ' class="on"' : '') + ' title="' + esc(n) + '">' + esc(k) + '</button>').join('') + '</div></div>' : '') + '</div>'; })() : '')
+          + (P ? '<div class="bloc">' + bascule('data-pb="activites"', P.activites !== false, 'Activités en direct', 'sur l\'écran verrouillé et la Dynamic Island : ☾ dodo, un vocal, le minuteur des ambiances, ce que tes ploxions suivent') + '</div>' : '')) : '')
         + (P ? section('apparence', 'Apparence', '<div class="bloc">'
           + seg('vue', [['grille', 'grille'], ['compacte', 'compacte'], ['liste', 'liste'], ['usage', 'usage'], ['recents', 'récents'], ['categories', 'catégories']], R().vueAccueil ? R().vueAccueil() : 'grille', 'Vue de l\'accueil')
           + seg('icones', [['petites', 'petites'], ['normales', 'normales'], ['grandes', 'grandes']], P.icones, 'Taille des icônes')
@@ -252,6 +257,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
       if (t.matches('[data-t="sante-partage"]') && sante) { const p = await sante.partager(t.checked); msg(t.checked ? (p.dernier ? '✓ envoyé à ton boxion' : '✓ activé : il partira dès que tu es connecté') : '✓ plus rien n\'est envoyé'); return; }
       if (t.matches('[data-t="mode"]')) { modeConnecte(t.checked); hud.regler(hud.config()); return; }
       if (t.matches('[data-t="coord"]')) { try { await notifs.coord(t.checked); const n = t.checked ? await notifs.verifierCoord() : []; msg(t.checked ? '✓ coord surveillé' + (n.length ? ' : ' + n.length + ' nouveau(x)' : '') : 'coord : plus de notifications'); } catch (er) { t.checked = false; await notifs.coord(false); msg('⚠ ' + (er.message || er)); } return; }
+      if (t.matches('[data-t="push"]') && notifs && notifs.push) { try { if (t.checked) { await notifs.push.activer(); msg('✓ ploxi0n demande son jeton à iOS, puis l\'envoie au labo'); } else { await notifs.push.couper(); msg('push coupé : le labo oublie ce téléphone'); } } catch (er) { t.checked = false; msg('⚠ ' + (er.message || er)); } W.setTimeout(() => peindre(), 1500); return; }
       if (t.matches('[data-el]')) return majHud(c => { c.elements[+t.getAttribute('data-el')].on = t.checked; });
       if (t.matches('[data-pb]') && prefs) { const k = t.getAttribute('data-pb'); await prefs.regler({ [k]: k === 'contraste' ? (t.checked ? 'fort' : 'normal') : t.checked }); return; }
       if (t.matches('[data-geste]') && prefs) { const g = { ...(prefs.lire().gestes || {}), [t.getAttribute('data-geste')]: t.value }; await prefs.regler({ gestes: g }); return; }
@@ -278,6 +284,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
       if (b.hasAttribute('data-motif-suppr')) { await haptique.supprimer(b.getAttribute('data-motif-suppr')); return peindre(); }
       if (b.hasAttribute('data-hdens') && haptique && haptique.assignerDensite) { await haptique.assignerDensite(b.getAttribute('data-hdens')); vibrer('selection'); return peindre(); }
       if (b.hasAttribute('data-lnat-moteur') && lecteurNatif) { await lecteurNatif.regler({ moteur: b.getAttribute('data-lnat-moteur') }); vibrer('selection'); return peindre(); }
+      if (b.hasAttribute('data-push-sujet') && notifs && notifs.push) { ev.preventDefault(); const k = b.getAttribute('data-push-sujet'), l = notifs.push.reglage().sujets; await notifs.push.sujets(l.includes(k) ? l.filter(x => x !== k) : [...l, k]); vibrer('selection'); return peindre(); }
       if (b.hasAttribute("data-rg-aller")) return aller(b.getAttribute("data-rg-aller"));
       if (b.hasAttribute("data-rg-retour")) return aller(SOUS[page] || null);
       if (b.hasAttribute('data-monter')) { ev.preventDefault(); const i = +b.getAttribute('data-monter'); return majHud(c => { const [x] = c.elements.splice(i, 1); c.elements.splice(i - 1, 0, x); }); }

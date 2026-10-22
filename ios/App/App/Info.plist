@@ -94,6 +94,9 @@
 	<string>ploxi0n n'écrit dans Santé que ce que tu lui demandes d'enregistrer.</string>
 	<key>NFCReaderUsageDescription</key>
 	<string>ploxi0n lit les tags NFC que tu approches, pour les ploxions qui s'en servent.</string>
+	<!-- 🏝 (0.91) les Live Activities : écran verrouillé et Dynamic Island (PloxiApple.activiteDebut ; la vue : l'extension PloxionWidgets) -->
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>bluetooth-central</string>

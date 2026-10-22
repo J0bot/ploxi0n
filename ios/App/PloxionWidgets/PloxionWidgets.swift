@@ -12,6 +12,7 @@ import WidgetKit
 import SwiftUI
 import UIKit
 import AppIntents
+import ActivityKit
 
 private let GROUPE = "group.ch.j0bot.ploxi0n"
 private func lireJSON(_ cle: String) -> Any? {
@@ -612,6 +613,188 @@ struct ControlePloxi0n: ControlWidget {
     }
 }
 
+// ---- 🏝 LES LIVE ACTIVITIES (0.91) : écran verrouillé et Dynamic Island. L'app les lance (PloxiApple.activiteDebut, AppDelegate.swift) ;
+// le MÊME type que dans l'app, au caractère près (ActivityKit les apparie par leur nom).
+struct PloxiActivite: ActivityAttributes {
+    public struct ContentState: Codable, Hashable {
+        var titre: String
+        var sous: String
+        var glyphe: String          // un symbole SF (hourglass, mic, timer, waveform…)
+        var debut: Date?            // un chrono qui monte depuis
+        var fin: Date?              // un compte à rebours jusqu'à
+        var progression: Double?    // 0…1
+    }
+    var genre: String               // tsoin, vocal, minuteur, ploxion
+    var ploxion: String             // le toucher ouvre ploxi0n://px/<ploxion>
+}
+
+/** le temps d'une activité : le compte à rebours s'il y a une fin, sinon le chrono depuis le début, sinon rien */
+struct TempsActivite: View {
+    let e: PloxiActivite.ContentState
+    var taille: CGFloat = 26
+    var body: some View {
+        if let f = e.fin { Text(f, style: .timer).font(.system(size: taille, weight: .thin, design: .monospaced)).monospacedDigit().multilineTextAlignment(.trailing) }
+        else if let d = e.debut { Text(d, style: .timer).font(.system(size: taille, weight: .thin, design: .monospaced)).monospacedDigit().multilineTextAlignment(.trailing) }
+        else { EmptyView() }
+    }
+}
+
+struct VueActivite: View {
+    let ctx: ActivityViewContext<PloxiActivite>
+    var body: some View {
+        let e = ctx.state
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                Image(systemName: e.glyphe).font(.system(size: 20, weight: .light)).foregroundColor(PEAU.acc).frame(width: 34, height: 34)
+                    .overlay(Rectangle().stroke(PEAU.acc.opacity(0.7), lineWidth: 1))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(e.titre.uppercased()).font(.system(size: 12, weight: .semibold, design: .monospaced)).tracking(1.5).foregroundColor(PEAU.trait).lineLimit(1)
+                    if !e.sous.isEmpty { Text(e.sous).font(.system(size: 12)).foregroundColor(PEAU.muet).lineLimit(1) }
+                }
+                Spacer(minLength: 6)
+                TempsActivite(e: e).foregroundColor(PEAU.trait).frame(maxWidth: 120, alignment: .trailing)
+            }
+            if let p = e.progression { ProgressView(value: p).tint(PEAU.acc) }
+        }
+        .padding(14)
+        .activityBackgroundTint(PEAU.fond0.opacity(0.92))
+        .activitySystemActionForegroundColor(PEAU.trait)
+        .widgetURL(URL(string: "ploxi0n://px/\(ctx.attributes.ploxion)"))
+    }
+}
+
+struct ActivitePloxi0n: Widget {
+    var body: some WidgetConfiguration {
+        ActivityConfiguration(for: PloxiActivite.self) { ctx in
+            VueActivite(ctx: ctx)
+        } dynamicIsland: { ctx in
+            DynamicIsland {
+                DynamicIslandExpandedRegion(.leading) {
+                    Image(systemName: ctx.state.glyphe).font(.system(size: 22, weight: .light)).foregroundColor(PEAU.acc).padding(.leading, 4)
+                }
+                DynamicIslandExpandedRegion(.trailing) {
+                    TempsActivite(e: ctx.state, taille: 22).foregroundColor(PEAU.trait).frame(maxWidth: 100, alignment: .trailing)
+                }
+                DynamicIslandExpandedRegion(.center) {
+                    Text(ctx.state.titre).font(.system(size: 14, weight: .semibold, design: .monospaced)).foregroundColor(PEAU.trait).lineLimit(1)
+                }
+                DynamicIslandExpandedRegion(.bottom) {
+                    VStack(spacing: 6) {
+                        if !ctx.state.sous.isEmpty { Text(ctx.state.sous).font(.system(size: 12)).foregroundColor(PEAU.muet).lineLimit(1) }
+                        if let p = ctx.state.progression { ProgressView(value: p).tint(PEAU.acc) }
+                    }
+                }
+            } compactLeading: {
+                Image(systemName: ctx.state.glyphe).foregroundColor(PEAU.acc)
+            } compactTrailing: {
+                TempsActivite(e: ctx.state, taille: 13).foregroundColor(PEAU.trait).frame(maxWidth: 52)
+            } minimal: {
+                Image(systemName: ctx.state.glyphe).foregroundColor(PEAU.acc)
+            }
+            .widgetURL(URL(string: "ploxi0n://px/\(ctx.attributes.ploxion)"))
+        }
+    }
+}
+
+// ---- ▦ UN PLOXION (0.91, « un widget par ploxion ») : on choisit le ploxion dans la configuration du widget (appui long › Modifier) ;
+// il montre ce que ce ploxion publie (jOSWidget.publier : une valeur, son unité, une ligne, une courbe, un bouton), sinon son glyphe et
+// son nom. L'app écrit « ploxi0n.px-widgets » = { liste: [{ id, nom }], px: { id: { nom, valeur, unite, sous, serie, bouton, g64, le } } }.
+struct PxWidgetEntite: AppEntity {
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Ploxion"
+    static var defaultQuery = PxWidgetRequete()
+    var id: String
+    var nom: String
+    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(nom)") }
+}
+private func pxWidgetsTous() -> [PxWidgetEntite] {
+    let o = lireJSON("ploxi0n.px-widgets") as? [String: Any] ?? [:]
+    return (o["liste"] as? [[String: Any]] ?? []).compactMap { p in (p["id"] as? String).map { PxWidgetEntite(id: $0, nom: (p["nom"] as? String) ?? $0) } }
+}
+struct PxWidgetRequete: EntityQuery {
+    func entities(for identifiers: [String]) async throws -> [PxWidgetEntite] { pxWidgetsTous().filter { identifiers.contains($0.id) } }
+    func suggestedEntities() async throws -> [PxWidgetEntite] { pxWidgetsTous() }
+    func defaultResult() async -> PxWidgetEntite? { pxWidgetsTous().first }
+}
+struct ChoisirPloxion: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Un ploxion"
+    static var description = IntentDescription("Le ploxion que ce widget montre.")
+    @Parameter(title: "Ploxion") var ploxion: PxWidgetEntite?
+}
+struct PxEntree: TimelineEntry {
+    let date: Date; let id: String; let nom: String; let valeur: String; let unite: String; let sous: String
+    let serie: [Double]; let boutonTitre: String?; let boutonUrl: URL?; let img: UIImage?; let le: Date?
+}
+struct FournisseurPx: AppIntentTimelineProvider {
+    func lire(_ id: String?) -> PxEntree {
+        let o = lireJSON("ploxi0n.px-widgets") as? [String: Any] ?? [:]
+        let px = o["px"] as? [String: Any] ?? [:]
+        let ident = id ?? pxWidgetsTous().first?.id ?? "accueil"
+        let d = px[ident] as? [String: Any] ?? [:]
+        let nom = (d["nom"] as? String) ?? pxWidgetsTous().first(where: { $0.id == ident })?.nom ?? ident
+        let b = d["bouton"] as? [String: Any]
+        let lien = (b?["lien"] as? String).flatMap { URL(string: $0) }
+        let img = (d["g64"] as? String).flatMap { Data(base64Encoded: $0) }.flatMap { UIImage(data: $0) }
+        return PxEntree(date: Date(), id: ident, nom: nom, valeur: (d["valeur"] as? String) ?? "", unite: (d["unite"] as? String) ?? "", sous: (d["sous"] as? String) ?? "",
+                        serie: (d["serie"] as? [Double]) ?? [], boutonTitre: b?["titre"] as? String, boutonUrl: lien,
+                        img: img, le: (d["le"] as? Double).map { Date(timeIntervalSince1970: $0 / 1000) })
+    }
+    func placeholder(in context: Context) -> PxEntree {
+        PxEntree(date: Date(), id: "systeme", nom: "Système", valeur: "60", unite: "img/s", sous: "la fluidité", serie: [40, 55, 60, 58, 60, 60, 52, 60], boutonTitre: nil, boutonUrl: nil, img: nil, le: nil)
+    }
+    func snapshot(for configuration: ChoisirPloxion, in context: Context) async -> PxEntree { context.isPreview ? placeholder(in: context) : lire(configuration.ploxion?.id) }
+    func timeline(for configuration: ChoisirPloxion, in context: Context) async -> Timeline<PxEntree> { Timeline(entries: [lire(configuration.ploxion?.id)], policy: .never) }
+}
+/** une courbe au trait, à partir d'une série */
+struct Courbe: Shape {
+    let serie: [Double]
+    func path(in r: CGRect) -> Path {
+        var p = Path(); guard serie.count > 1, let lo = serie.min(), let hi = serie.max() else { return p }
+        let e = hi - lo == 0 ? 1 : hi - lo
+        for (i, v) in serie.enumerated() {
+            let pt = CGPoint(x: r.minX + r.width * CGFloat(i) / CGFloat(serie.count - 1), y: r.maxY - r.height * CGFloat((v - lo) / e))
+            if i == 0 { p.move(to: pt) } else { p.addLine(to: pt) }
+        }
+        return p
+    }
+}
+struct VuePx: View {
+    let e: PxEntree
+    @Environment(\.widgetFamily) var famille
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                if let i = e.img { Image(uiImage: i).resizable().scaledToFit().frame(width: 16, height: 16) } else { Image(systemName: "square.grid.2x2").font(.system(size: 12)).foregroundColor(PEAU.acc) }
+                Text(e.nom.uppercased()).font(.system(size: 9, weight: .semibold, design: .monospaced)).tracking(1).foregroundColor(PEAU.acc).lineLimit(1)
+            }
+            Spacer(minLength: 0)
+            if e.valeur.isEmpty {
+                Text("ouvrir").font(.system(size: 13, design: .monospaced)).foregroundColor(PEAU.muet)
+            } else {
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(e.valeur).font(.system(size: famille == .accessoryRectangular ? 20 : 34, weight: .thin, design: .monospaced)).foregroundColor(PEAU.trait).lineLimit(1).minimumScaleFactor(0.4)
+                    if !e.unite.isEmpty { Text(e.unite).font(.system(size: 10, design: .monospaced)).foregroundColor(PEAU.muet) }
+                }
+            }
+            if !e.sous.isEmpty { Text(e.sous).font(.system(size: 10)).foregroundColor(PEAU.muet).lineLimit(1) }
+            if e.serie.count > 1 && famille != .accessoryRectangular { Courbe(serie: e.serie).stroke(PEAU.acc, lineWidth: 1.2).frame(height: famille == .systemSmall ? 18 : 26) }
+            if famille == .systemMedium, let t = e.boutonTitre, let u = e.boutonUrl {
+                Link(destination: u) { Text(t).font(.system(size: 11, weight: .semibold, design: .monospaced)).foregroundColor(PEAU.trait).padding(.horizontal, 10).padding(.vertical, 4).overlay(Rectangle().stroke(PEAU.acc, lineWidth: 1)) }
+            }
+        }
+        .widgetURL(URL(string: "ploxi0n://px/\(e.id)"))
+    }
+}
+struct WidgetUnPloxion: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "un-ploxion", intent: ChoisirPloxion.self, provider: FournisseurPx()) { e in
+            VuePx(e: e).containerBackground(for: .widget) { FondHUD() }
+        }
+        .configurationDisplayName("Un ploxion")
+        .description("Ce qu'un ploxion publie : une valeur, une courbe, un bouton. Appui long › Modifier pour le choisir.")
+        .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular])
+    }
+}
+
 @main
 struct PloxionWidgets: WidgetBundle {
     var body: some Widget {
@@ -619,6 +802,8 @@ struct PloxionWidgets: WidgetBundle {
         WidgetValeurs()
         WidgetCube()
         WidgetLecture()
+        WidgetUnPloxion()
+        ActivitePloxi0n()
         if #available(iOS 18.0, *) {
             ControleTsoin()
             ControleVocal()

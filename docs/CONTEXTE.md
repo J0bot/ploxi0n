@@ -102,6 +102,21 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.91 (22.10)** — RS-7 : « la clé APNs sur le labo, les glyphes [pour l'icône du rang], parfait, live activités et widget ».
+- 🏝 **Live Activities** : `PloxiActivite` (ActivityAttributes) défini À L'IDENTIQUE dans AppDelegate.swift (`#if canImport(ActivityKit)`) et
+  PloxionWidgets.swift ; PloxiApple `activiteDebut/Maj/Fin` (iOS 16.2+) ; la vue `ActivitePloxi0n` (écran verrouillé, Dynamic Island) dans
+  l'extension ; Info.plist `NSSupportsLiveActivities`. JS : `src/natif/activites.js` (une activité par clé : dodo, vocal, ambiances, px:<id>) ;
+  dodo/réveil passent par le nouveau `surTsoin` de tsoin-natif. ⚙ › Notifications › Activités en direct (`prefs.activites`).
+- ▦ **Un ploxion** (widget configurable, AppIntentConfiguration + `PxWidgetEntite`) : Préférences `ploxi0n.px-widgets` → l'AppDelegate copie
+  dans l'App Group (ajouté à la liste des clés copiées) → l'extension. JS : `src/natif/widgets-ploxions.js`, `window.jOSWidget.publier`.
+  Le journal des tsoins publie « N tsoins aujourd'hui » et un bouton « + tsoin » (`?nouveau=1` ouvre le composeur).
+- 🔔 **Push** : `@capacitor/push-notifications` (8.1.3, `cap sync`), l'AppDelegate relaie le jeton
+  (`.capacitorDidRegisterForRemoteNotifications`) ; `src/natif/push.js` (POST/DELETE /api/app/push avec le jeton du compte ; les sujets ;
+  toucher → `data.ouvrir`). `aps-environment` et la capability étaient déjà là. ⏭ côté labo : **docs/PUSH.md** (la clé .p8, les routes, l'envoi).
+- Les Live Activities et le widget ne se voient qu'avec l'extension : un build « widgets » (Codemagic l'a toujours ; GitHub : l'entrée widgets).
+- ⏭ l'icône selon le rang, avec les glyphes : il manque l'échelle des rangs (bion → … → xeroction, au labo).
+Faux iPhone : `parcours-natif-091.mjs`.
+
 **0.90 (22.10)** — ▦ la map en carrés (RS-7, sur une capture de la vue des xers : « je veux pouvoir me balader comme ça plutôt, avec des
 carrés, et faut remplir avec les infos de la map ; je kiffe la map du labo, de pouvoir en créer »). `src/app/map-hubs.js`, ploxion interne
 `map` (action des bords `map`, la case portion des koins). Les hubs du labo : `/px/xerkions.json` (template `hub` : center, koins, portals),

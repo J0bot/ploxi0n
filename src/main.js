@@ -10,7 +10,10 @@ import { creerDepot, creerHttp, SOURCE } from './marketplace/depot.js';
 import { enregistrerMarketplace } from './marketplace/marketplace.js';
 import { enregistrerXerEnLigne } from './app/xer-en-ligne.js';
 import { brancherLiens } from './natif/liens.js';
-import { creerRaccourcis } from './natif/raccourcis.js';
+import { creerRaccourcis, glyphePng } from './natif/raccourcis.js';
+import { creerActivites } from './natif/activites.js';
+import { creerWidgetsPloxions } from './natif/widgets-ploxions.js';
+import { creerPush, SUJETS as SUJETS_PUSH } from './natif/push.js';
 import { creerCompte } from './natif/compte.js';
 import { creerEcranAccueil, specPerso } from './natif/ecran-accueil.js';
 import { creerNotifs } from './natif/notifs.js';
@@ -81,7 +84,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.90.0';
+const VERSION = '0.91.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -375,12 +378,28 @@ async function demarrer() {
   if (navigator.onLine !== false) { compte.rafraichir().catch(() => {}); if (window.jOSBoxion.pousser) window.jOSBoxion.pousser().catch(() => {}); }   // le rang et « admin » à jour (un jeton expiré → déconnecté)
   const reglerModeConnecte = (v) => { if (v != null) { modeConnecte = !!v; boxion.put('reglages', 'mode-connecte', modeConnecte); } return modeConnecte; };
   // 🎙 les vocaux : enregistrer, transcrire (iOS, le vocabulaire du xerboxion), garder ; jOSNatif.vocal pour les ploxions
+  // 🏝 (0.91) les Live Activities : ce qui est en cours sur l'écran verrouillé et la Dynamic Island (src/natif/activites.js)
+  const activites = creerActivites({ plugin: PloxiApple, boxion, natif: () => !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()), actif: () => prefs.lire().activites !== false });
+  window.jOSNatif.activite = { debut: (o) => activites.pour((routeur && routeur.courant()) || 'accueil').debut(o), maj: (o) => activites.pour((routeur && routeur.courant()) || 'accueil').maj(o), fin: () => activites.pour((routeur && routeur.courant()) || 'accueil').fin() };
+  // ▦ (0.91) un widget par ploxion : jOSWidget.publier({ valeur, unite, sous, serie, bouton }) (src/natif/widgets-ploxions.js)
+  const widgetsPx = creerWidgetsPloxions({ boxion, catalogue: () => (routeur ? routeur.catalogue() : []), courant: () => (routeur ? routeur.courant() : null),
+    glyphePng: (p) => glyphePng(window, p),
+    ecrire: async (k, v) => { if (!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) return; const { Preferences } = await import('@capacitor/preferences'); await Preferences.set({ key: k, value: v }); } });
+  window.jOSWidget = { publier: (d, id) => widgetsPx.publier(d, id), retirer: (id) => widgetsPx.retirer(id) };
   const vocal = creerVocal({ boxion, catalogue: () => (routeur ? routeur.catalogue() : []), vibrer: (x) => vibrer(x), ouvrir: (id, p) => routeurProxy.ouvrir(id, p),
-    surEtat: (on) => { if (routeur) routeur.rafraichirHud(); if (!on) return miniDocks.retirer('vocal');   // ▤ 🎙 le vocal qui enregistre : ■ depuis l'accueil
+    surEtat: (on) => { if (routeur) routeur.rafraichirHud(); if (on) activites.debut('vocal', { genre: 'vocal', titre: 'vocal', sous: 'j\'enregistre', glyphe: 'vocal', debut: Date.now() }); else activites.fin('vocal');
+      if (!on) return miniDocks.retirer('vocal');   // ▤ 🎙 le vocal qui enregistre : ■ depuis l'accueil
       miniDocks.publier({ cle: 'vocal', titre: 'j\'enregistre…', icone: '🎙', enCours: true, fermable: false, sous: '■ pour arrêter et transcrire', ouvrir: () => vocal.basculer(), actions: [{ id: 'stop', icone: '■', nom: 'arrêter', faire: () => vocal.basculer() }] }); } });
   window.jOSNatif.vocal = vocal.api;
   // ⧗ les tsoins natifs : le composeur (dock, geste, Siri, jOSNatif.tsoin) et le journal ; connecté, ils partent aussi au boxion
-  const tsoinNatif = creerTsoinNatif({ boxion, vibrer: (x) => vibrer(x), vocal, contexte: () => (routeur ? routeur.courant() : null),
+  // 🏝 ☾ (0.91) dodo lance le chrono de la nuit sur l'écran verrouillé, réveil l'arrête ; ▦ le widget du journal : les tsoins du jour
+  const surTsoin = async (e) => {
+    if (e.genre === 'dodo') activites.debut('dodo', { genre: 'tsoin', ploxion: 'journal-tsoins', titre: 'dodo', sous: 'bonne nuit · réveil pour l\'arrêter', glyphe: 'dodo', debut: Date.now() });
+    if (e.genre === 'reveil') activites.fin('dodo');
+    const jour = new Date().toDateString(), l = await tsoinNatif.liste(500).catch(() => []), n = l.filter(t => new Date(t.le || t.t).toDateString() === jour).length;
+    widgetsPx.publier({ valeur: String(n), unite: 'tsoin' + (n > 1 ? 's' : ''), sous: 'aujourd\'hui · ' + String(e.d || e.genre).slice(0, 40), bouton: { titre: '+ tsoin', params: { nouveau: '1' } } }, 'journal-tsoins').catch(() => {});
+  };
+  const tsoinNatif = creerTsoinNatif({ boxion, vibrer: (x) => vibrer(x), vocal, contexte: () => (routeur ? routeur.courant() : null), surTsoin: (e) => { surTsoin(e).catch(() => {}); },
     distant: () => (compte.etat().connecte && modeConnecte && navigator.onLine !== false ? window.jOSBoxion : null) });
   internes.push(tsoinNatif.ploxion);
   // ▤ ≈ (0.88) le lot de ploxions de RS-7 : le système (btop) et les ambiances (Blanket), dans l'app, hors ligne
@@ -392,7 +411,7 @@ async function demarrer() {
     sonder: () => httpRelais.tete(SOURCE + '/favicon.ico'),
     ploxions: () => ({ vivants: routeur ? routeur.vivants() : [], endormis: routeur && routeur.endormis ? routeur.endormis() : [] }),
     ouvrir: (id) => routeurProxy.ouvrir(id) }).ploxion);
-  internes.push(creerAmbiances({ W: window, boxion, vibrer: (x) => vibrer(x) }).ploxion);
+  internes.push(creerAmbiances({ W: window, boxion, vibrer: (x) => vibrer(x), activite: { debut: (o) => activites.debut('ambiances', { genre: 'minuteur', ploxion: 'ambiances', glyphe: 'ambiances', ...o }), fin: () => activites.fin('ambiances') } }).ploxion);
   // ▦ (0.90) la map du xerboxion en carrés : les hubs du labo (/px/xerkions.json) et les tiens, une balade de portail en portail ; en créer
   internes.push(creerMap({ boxion, vibrer: (x) => vibrer(x), enLigne: () => navigator.onLine !== false,
     charger: async () => { const r = await httpRelais.get(SOURCE + '/px/xerkions.json', { headers: { Accept: 'application/json' } }); if (r.status !== 200) throw new Error('map : ' + r.status); const d = JSON.parse(r.texte || '{}'); return Array.isArray(d.items) ? d.items : []; },
@@ -455,6 +474,10 @@ async function demarrer() {
   // ⚙ les réglages : un ploxion interne, au bout du ⚙ de l'accueil (jamais retirable)
   // les notifications (test, et les messages de coord tant que l'app est au premier plan ; la vraie « app fermée » demande APNs)
   const notifs = creerNotifs({ boxion, vibrer, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id) => routeurProxy.ouvrir(id) });
+  // 🔔 (0.91) les notifications push, app fermée aussi (la clé APNs vit sur le labo : docs/PUSH.md)
+  const push = creerPush({ boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id, p) => routeurProxy.ouvrir(id, p || undefined), vibrer: (x) => vibrer(x),
+    signaler: (t) => routeur && routeur.signaler(t), connecte: () => !!(compteRef && compteRef.etat().connecte) });
+  notifs.push = push;
   await notifs.pret;
   boot(73, 'notifications');
   internes.push(enregistrerReglages({ compte, social, remontee, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, prefs, vibrer, haptique, lecteur, lecteurNatif, sante, cube, valeurs: () => (raccourcis ? raccourcis.toutes() : {}), version: VERSION, maj }));
@@ -674,7 +697,7 @@ async function demarrer() {
     const c = routeur && routeur.courant(), h = c && document.querySelector('.px-hote[data-ploxion="' + CSS.escape(c) + '"]'); const m = h && !h.hidden && [...h.querySelectorAll('video')].find(v => !v.paused && !v.ended);
     if (m && m.webkitSupportsPresentationMode && m.webkitSupportsPresentationMode('picture-in-picture') && m.webkitPresentationMode !== 'picture-in-picture') m.webkitSetPresentationMode('picture-in-picture'); } catch (e) { /* refusé : elle s'arrête */ } }
   function couperVideosArrierePlan() { lecteurNatif.garde.arrierePlan(); pipAuto(); try { for (const m of document.querySelectorAll('video')) { if (!m.paused && document.pictureInPictureElement !== m && !m.webkitPresentationMode?.startsWith?.('picture')) m.pause(); } } catch (e) { /* */ } }
-  if (!modeSurJs) notifs.demarrer();
+  if (!modeSurJs) { notifs.demarrer(); push.demarrer().catch(() => {}); widgetsPx.rafraichir(); }
   else { const b = document.createElement('div'); b.className = 'px-bulle'; b.textContent = '🛟 mode sûr pour ce lancement (le prochain réessaie tout). S\'il s\'est ouvert : le coupable est le fond photo, le thème vivant ou la session — dis-le à bother me.'; racine.appendChild(b); setTimeout(() => b.remove(), 9000); }
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
     // Face ID (0.55) : en arrière-plan, les ploxions verrouillés se referment ; au retour, celui qui était à l'écran redemande le visage

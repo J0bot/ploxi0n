@@ -14,7 +14,7 @@ export const GENRES = [['fait', '⧗ fait'], ['idee', '💡 idée'], ['note', '�
 export const VITE = [['dodo', '☾ dodo', 'je vais me coucher'], ['reveil', '☀ réveil', 'je me lève']];
 const MAX_PHOTO = 1.5e6;
 
-export function creerTsoinNatif({ W = globalThis.window, boxion, vibrer = () => {}, contexte = () => null, vocal = null, distant = () => null }) {
+export function creerTsoinNatif({ W = globalThis.window, boxion, vibrer = () => {}, contexte = () => null, vocal = null, distant = () => null, surTsoin = () => {} }) {
   const D = W.document, nj = () => W.jOSNatif || {};
   async function enregistrer({ texte = '', genre = 'fait', ploxion = null, lieu = null, photo = null, vocalId = null } = {}) {
     const d = String(texte || '').trim();
@@ -27,6 +27,7 @@ export function creerTsoinNatif({ W = globalThis.window, boxion, vibrer = () => 
     // au boxion (connecté) : la même API que le xer ; jOSBoxion connecté file l'écriture hors ligne
     const jb = distant(); if (jb && jb.set) { try { await jb.set('tsoins-natifs', id, e, d.slice(0, 80) || genre); } catch (er) { /* la copie locale fait foi */ } }
     vibrer('succes');
+    try { surTsoin(e); } catch (er) { /* (0.91) les activités, le widget : jamais bloquants */ }
     return e;
   }
   async function liste(n = 200) {
@@ -100,7 +101,10 @@ export function creerTsoinNatif({ W = globalThis.window, boxion, vibrer = () => 
   }
 
   /** le journal ⧗ : un ploxion interne */
-  function mount(hote) {
+  function mount(hote, o) {
+    // ▦ (0.91) le bouton « + tsoin » du widget (ploxi0n://px/journal-tsoins?nouveau=1) : le composeur s'ouvre aussi
+    const params = (o && o.params) || o || {};
+    if (params.nouveau || /[?&]nouveau=1/.test(String(params.lien || ''))) W.setTimeout(() => ouvrir(), 250);
     let vivant = true;
     const dessiner = async () => {
       const l = await liste(); if (!vivant) return;

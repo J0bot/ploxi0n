@@ -50,7 +50,9 @@ function laboFaux(url) {
   if (/^\/wiki/.test(u.pathname)) return r(404, '<!doctype html>404');
   return r(404, '<!doctype html>404');
 }
-const boxionFaux = new Map();   // (0.86) le boxion du compte, côté labo
+const boxionFaux = new Map();
+const activitesFaux = [];   // (0.91) les Live Activities lancées
+const pushFaux = [];   // (0.91) les jetons reçus par le faux labo   // (0.86) le boxion du compte, côté labo
 const wledFaux = { state: { on: true, bri: 128, seg: [{ col: [[255, 80, 0]], fx: 0, pal: 0 }] }, info: { name: 'Ruban du salon', ver: '0.15.0', leds: { count: 60, pwr: 420 } }, effects: ['Solid', 'Blink', 'Breathe'], palettes: ['Default', 'Lava'] };
 
 function base(nom) { if (!bases.has(nom)) bases.set(nom, new DatabaseSync(':memory:')); return bases.get(nom); }
@@ -95,7 +97,14 @@ const natif = {
   TextToSpeech: { speak: () => ({}), stop: () => ({}), getSupportedLanguages: () => ({ languages: ['fr-FR', 'en-US'] }) },
   ScreenOrientation: { orientation: () => ({ type: 'portrait-primary' }), lock: () => ({}), unlock: () => ({}) },
   Geolocation: { checkPermissions: () => ({ location: 'granted', coarseLocation: 'granted' }), getCurrentPosition: () => ({ timestamp: Date.now(), coords: { latitude: 46.52, longitude: 6.63, accuracy: 10 } }), watchPosition: () => ({ timestamp: Date.now(), coords: { latitude: 46.52, longitude: 6.63, accuracy: 10 } }), clearWatch: () => ({}) },
+  // (0.91) les notifications push : la permission, puis le jeton (l'événement « registration », comme iOS)
+  PushNotifications: { requestPermissions: () => ({ receive: 'granted' }), checkPermissions: () => ({ receive: 'granted' }),
+    register: () => { setTimeout(() => emettre('PushNotifications', 'registration', { value: 'faux-jeton-apns-0123' }), 60); return {}; }, unregister: () => ({}) },
   PloxiApple: {
+    // (0.91) les Live Activities
+    activiteDebut: (o) => { activitesFaux.push({ ...o, id: 'act-' + (activitesFaux.length + 1) }); return { id: 'act-' + activitesFaux.length }; },
+    activiteMaj: (o) => { const a = activitesFaux.find(x => x.id === o.id); if (!a) throw new Error('activité inconnue'); Object.assign(a, o); return {}; },
+    activiteFin: (o) => { const n = activitesFaux.filter(x => !o.id || x.id === o.id).length; for (const x of activitesFaux) if (!o.id || x.id === o.id) x.finie = true; return { n }; },
     // (0.88) le système (btop) : ce que seul iOS sait
     systeme: () => ({ thermique: 'tiede', economie: false, memoire: 6 * 1073741824, coeurs: 6, depuis: 200000, disqueLibre: 41.5 * 1073741824, disqueTotal: 128 * 1073741824 }),
     reseauChercher: () => ({ services: [{ nom: 'WLED-salon', type: '_wled._tcp.', domaine: 'local.', txt: { mac: 'aabbcc' } }, { nom: 'Maison', type: '_home-assistant._tcp.', domaine: 'local.', txt: { internal_url: 'http://10.0.0.9:8123', location_name: 'Maison' } }] }),
@@ -140,6 +149,9 @@ const natif = {
       if (u.pathname === '/presets.json') return j(200, { 0: {}, 1: { n: 'Soirée' } });
       if (u.pathname === '/json/state' && o.method === 'POST') { const c = typeof o.data === 'string' ? JSON.parse(o.data) : o.data; if (c.on === 't') st.on = !st.on; else Object.assign(st, c); return j(200, { success: true }); } }
     if (u.hostname === '10.0.0.9' && u.port === '8123') { if ((o.headers || {}).Authorization !== 'Bearer bon') return j(401, {}); if (u.pathname === '/api/states') return j(200, [{ entity_id: 'light.salon', state: 'on', attributes: { friendly_name: 'Salon', brightness: 200, supported_color_modes: ['brightness'] } }, { entity_id: 'sensor.temp', state: '21.5', attributes: { unit_of_measurement: '°C', friendly_name: 'Température' } }]); return j(200, []); }
+    // (0.91) le push : le labo garde le jeton du compte (seulement avec un jeton de compte)
+    if (u.hostname === 'labo.j0bot.ch' && u.pathname === '/api/app/push') { if (!/^Bearer .+/.test((o.headers || {}).Authorization || '')) return j(401, { message: 'Unauthenticated.' });
+      const b = typeof o.data === 'string' ? JSON.parse(o.data) : (o.data || {}); pushFaux.push({ methode: o.method, ...b }); return j(o.method === 'DELETE' ? 200 : 201, { ok: true }); }
     // (0.86) jOSBoxion connecté : un boxion en mémoire (load/save), seulement avec un jeton
     if (u.hostname === 'labo.j0bot.ch' && u.pathname.startsWith('/px/boxion/')) { if (!/^Bearer .+/.test((o.headers || {}).Authorization || '')) return j(401, { message: 'Unauthenticated.' });
       const b = typeof o.data === 'string' ? JSON.parse(o.data) : (o.data || {});
@@ -223,7 +235,7 @@ const etat = await page.evaluate(() => ({
   texte: document.body.innerText.slice(0, 600),
 }));
 let resultatsEtapes = null;
-if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
+if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
 clearInterval(mouvementMinuteur);
 const resume = { url, mode: web ? 'web' : (opts.includes('--sans-plugions') ? 'ios-sans-plugions' : 'ios'), demarre, dureeBoot, etat,
   appelsNatifs: Object.entries(appels.reduce((a, x) => { const k = x.p + '.' + x.m; a[k] = (a[k] || 0) + 1; return a; }, {})).sort((a, b) => b[1] - a[1]),
