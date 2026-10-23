@@ -8,6 +8,8 @@
 //   3. « C'EST QUOI ÇA ? » : touche n'importe quoi, l'app dit ce que c'est (l'astuce connue, sinon son nom) ; rien ne s'ouvre. ⓘ dans la barre
 //      des koins, ⚙ › À propos, et la dernière étape.
 // boxion_local « reglages/guide » = { vu: VERSION_GUIDE, astuces: [ids vues] }.
+import { signature } from './diagnostic.js';   // (0.99.18) « c'est quoi ça ? » sur l'inconnu
+
 export const VERSION_GUIDE = 2;   // 1 = les neuf cartes d'avant : tout le monde voit le nouveau guide une fois
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -107,7 +109,7 @@ export function creerGuide({ W = globalThis.window, boxion, routeur = () => null
     const a = ASTUCES.find(x => el.closest(x.cible)) || null;
     const nom = (el.closest('[aria-label]') || {}).getAttribute ? (el.closest('[aria-label]') || el).getAttribute('aria-label') : '';
     const titre = (el.closest('[title]') || {}).getAttribute ? (el.closest('[title]') || el).getAttribute('title') : '';
-    const txt = a ? a.texte : (nom || titre || (el.textContent || '').trim().slice(0, 80) || 'une partie de l\'interface');
+    const txt = a ? a.texte : (nom || titre || (el.textContent || '').trim().slice(0, 80) || 'une partie de l\'interface : ' + signature(el));   // (0.99.18) l'inconnu dit ce qu'il est et d'où il vient
     return txt;
   }
   function cestQuoi() {

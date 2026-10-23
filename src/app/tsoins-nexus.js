@@ -1,5 +1,7 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1792726655000,"Le pont : l'index en mémoire, la taille par l'index, le flux calculé une fois"],
+export const COMMITS = [[1792727900000,"La bionisation : le digesteur trouve les bions déguisés"],
+  [1792727658000,"0.99.17 : le pont allégé, le cœur en Rust, le digesteur des ploxions"],
+  [1792726655000,"Le pont : l'index en mémoire, la taille par l'index, le flux calculé une fois"],
   [1792725811000,"0.99.16 : le pas à pas du synthé"],
   [1792725443000,"0.99.15 : Autour, la boussole et les trottinettes en direct"],
   [1792725137000,"0.99.14 : toutes les langues, le début"],

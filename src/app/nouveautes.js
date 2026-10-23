@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.18', titre: 'Des bugs en moins', points: [
+    '◈ La map dézoomée montre tout son voisinage, plus de hubs coupés net.',
+    '▦ L\'atelier des peaux ne déborde plus à droite ; plus aucune page ne glisse de côté. Les onglets des ploxions du labo ne sont plus tronqués.',
+    '◎ ⚙ › À propos › Diagnostic de l\'écran : ce qui flotte, ce qui est incliné, ce qui déborde (« dans 5 s » pour aller sur l\'écran qui cloche), à copier. « c\'est quoi ça ? » dit d\'où vient ce qu\'il ne connaît pas.',
+  ] },
   { v: '0.99.17', titre: 'Plus léger, et le début du Rust', points: [
     '⚡ Avec beaucoup de ploxions : les réglages et la map ne relisent plus le code entier de chaque ploxion. Pendant un tour de l\'app, plus aucun ploxion n\'est relu à travers le pont natif.',
     '🦀 Le cœur de l\'app en Rust commence (la basse partagée, Autour, les langues), prouvé identique au JS, et le digesteur des ploxions : la route vers « tout natif ».',

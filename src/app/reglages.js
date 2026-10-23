@@ -13,7 +13,8 @@ import { PLUGIONS } from '../natif/plugions.js';
 import { STYLES, EVENEMENTS, MOTIFS_APP, DENSITES } from '../natif/haptique.js';
 import { BRANCHEMENTS } from '../natif/web-natif.js';
 import { versGlyphe, glyphePloxion } from './glyphes.js';
-import { LANGUES } from '../bions/dire.js';   // ⟡ (0.99.14) la langue de l'app   // ◇ (0.54) des glyphes, plus d'emoji
+import { LANGUES } from '../bions/dire.js';
+import { diagnostic, diagnosticDans, dernierDiagnostic } from './diagnostic.js';   // ◎ (0.99.18)   // ⟡ (0.99.14) la langue de l'app   // ◇ (0.54) des glyphes, plus d'emoji
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const ko = (n) => n < 1024 ? n + ' o' : n < 1048576 ? Math.round(n / 1024) + ' Ko' : (Math.round(n / 104857.6) / 10) + ' Mo';
@@ -216,6 +217,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
         + section('donnees', 'Données', '<div class="bloc"><div class="l"><span>Réponses gardées pour le mode avion<small>' + nRoutes + ' route' + (nRoutes > 1 ? 's' : '') + '</small></span><button data-a="routes">vider</button></div>'
           + '<div class="l"><span>Réinitialiser les réglages<small>accueil, HUD, apparence, verrous… (tes ploxions, tes tsoins et ton compte restent)</small></span><button class="danger" data-a="reset">réinitialiser</button></div></div>')
         + section('apropos', 'À propos', '<div class="bloc"><div class="l"><span>ploxi0n ' + esc(version) + '<small>' + esc(W.navigator.onLine !== false ? 'en ligne' : 'hors ligne') + ' · cycle ' + (new Date().getFullYear() + 5000) + '</small></span></div>'
+          + '<div class="l ls"><span>◎ Diagnostic de l\'écran<small>ce qui flotte par-dessus, ce qui est incliné en 3D, ce qui déborde : à copier et à envoyer quand quelque chose cloche</small></span><div class="seg"><button data-rg-diag>relever ici</button><button data-rg-diag-plus-tard>dans 5 s (va sur l\'écran qui cloche)</button><button data-rg-diag-copier hidden>copier</button></div><pre data-rg-diag-sortie hidden style="white-space:pre-wrap;font:10.5px/1.35 var(--mono,monospace);max-height:320px;overflow:auto;margin:8px 0 0;color:var(--muted,#8aa0c0)"></pre></div>'
           + '<div class="l ls"><span>◇ Dernier démarrage<small data-demarrage>…</small></span></div>'
           + '<div class="l"><span>Dossier dans Fichiers<small data-dossier>Sur mon iPhone › ploxi0n : tsoins, vocaux, fond, Dépôt</small></span><button data-a="dossier">mettre à jour</button></div>'
           + '<div class="l"><span>Ploxions installés<small>la place qu\'ils prennent, leurs bions, retirer</small></span><button data-a="gestion">ouvrir</button></div>'
@@ -303,6 +305,9 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
       if (b.hasAttribute("data-rg-retour")) return aller(SOUS[page] || null);
       if (b.hasAttribute('data-monter')) { ev.preventDefault(); const i = +b.getAttribute('data-monter'); return majHud(c => { const [x] = c.elements.splice(i, 1); c.elements.splice(i - 1, 0, x); }); }
       if (b.hasAttribute('data-pin')) { const id = b.getAttribute('data-pin'); return majHud(c => { c.epingles = c.epingles.includes(id) ? c.epingles.filter(x => x !== id) : [...c.epingles, id].slice(-4); if (!c.elements.find(x => x.k === 'epingles').on) c.elements.find(x => x.k === 'epingles').on = true; }); }
+      if (b.hasAttribute('data-rg-diag')) { const o = hote.querySelector('[data-rg-diag-sortie]'), c = hote.querySelector('[data-rg-diag-copier]'); o.textContent = (dernierDiagnostic() ? 'LE RELEVÉ D\'AVANT (5 s après)\n' + dernierDiagnostic() + '\n\n— ICI —\n' : '') + diagnostic(W); o.hidden = false; c.hidden = false; vibrer('selection'); return; }
+      if (b.hasAttribute('data-rg-diag-plus-tard')) { b.textContent = 'relevé dans 5 s…'; vibrer('selection'); diagnosticDans(5000, W).then(() => { vibrer('succes'); b.textContent = 'relevé ✓ (touche « relever ici » pour le voir)'; }); return; }
+      if (b.hasAttribute('data-rg-diag-copier')) { const t = (hote.querySelector('[data-rg-diag-sortie]') || {}).textContent || ''; try { W.navigator.clipboard.writeText(t).then(() => { b.textContent = 'copié ✓'; vibrer('succes'); }, () => {}); } catch (e) { /* */ } return; }
       if (b.hasAttribute('data-pv') && prefs) { ev.preventDefault(); const k = b.getAttribute('data-pv'), v = b.getAttribute('data-v'); if (k === 'vue') { if (R().vueAccueil) R().vueAccueil(v); } else await prefs.regler({ [k]: k === 'maxVivants' || k === 'miniDocks' || k === 'sommeil' ? +v : v }); return peindre(); }
       if (b.hasAttribute('data-ouvrir')) return R().ouvrir(b.getAttribute('data-ouvrir'));
       if (b.hasAttribute('data-deverrou')) { if (await R().deverrouiller(b.getAttribute('data-deverrou'))) peindre(); return; }

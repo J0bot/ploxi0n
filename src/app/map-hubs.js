@@ -265,6 +265,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
       if (ox != null) { const r = el.getBoundingClientRect(); el.style.transformOrigin = Math.round(ox - r.left) + 'px ' + Math.round(oy - r.top) + 'px'; }
       el.style.transition = anime ? 'transform .28s cubic-bezier(.2,.9,.3,1)' : 'none';
       el.style.transform = Math.abs(echelle - 1) < 0.01 ? '' : 'scale(' + echelle.toFixed(3) + ')';
+      el.style.overflow = echelle < 0.99 ? 'visible' : '';   /* (0.99.18, RS-7 : la map coupée net au dézoom) la vue réduite ne coupe plus ses voisins : seul le cadre de la map coupe, en plein */
       carte.setAttribute('data-detail', detailDe(echelle));
       const ni = hote.querySelector('[data-map-niveau]'); if (ni) ni.textContent = '×' + echelle.toFixed(2);
     }
