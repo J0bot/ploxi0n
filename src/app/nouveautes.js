@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.95.0', titre: 'Seize peaux, un guide', points: [
+    '〰 L\'organique a seize peaux : nerfs, vaisseaux, câbles, gelée, terminal ; et les aliens : xéno (Giger), cyberpunk, cyberglysm, tribal tekkno, mycélium, abysses, portail, cristal… ⚙ › Apparence › L\'organique : essaie-les en direct.',
+    '🧭 Un nouveau guide : quatre gestes, sur la vraie interface. Et ⓘ « c\'est quoi ça ? » dans la barre des koins : touche n\'importe quoi, l\'app te dit ce que c\'est.',
+    '◇ Tous les ploxions prennent l\'organique : leurs bords, leurs boutons, la barre du haut.',
+  ] },
   { v: '0.94.0', titre: 'Le xer organique', points: [
     '〰 Le nouveau mode de base : organique. Des membranes qui luisent, vert et violet, des gouttes aux coins, des cellules reliées comme des neurones.',
     '◇ Le chill-tekk d\'avant est gardé tel qu\'il était : en haut de l\'accueil, ou dans § mes xers (« chill-tekk »).',
