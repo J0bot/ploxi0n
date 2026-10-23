@@ -77,3 +77,11 @@ Ce que fait chaque glyphe, d'après les mots de la page. C'est **ma lecture, à 
 - **Les étapes 2 et 3** (les grands koins) : montrent-elles déjà quelque chose, ou grandissent-elles seulement ?
 - **Les koins du haut** (page 1, l'écran a quatre koins) : ils servent à quoi sur le téléphone ?
 - **Le mot en miroir** au bas de la page 1 : qu'est-ce qu'il dit ?
+
+## Le wormion et le portion, de gros knobs (RS-7, 23.10)
+
+« Faut voir le wormion et le portion comme des gros knobs qui sont connectés à plein de knobs ; chaque action est un knob. » Le wormion
+(le temps) et le portion (la fractale) ne sont pas des boutons mais des **knobs maîtres** : tourner l'un entraîne les knobs qui lui sont
+reliés. Chaque action de l'app est elle-même un knob. Ce qui existe pour le composer : jOSKnob (le bion du labo, embarqué), les gènes de
+l'atelier des peaux (`src/bions/genome.js`), les paliers figés du zoom (`src/bions/zoom.js`), les pads des koins (`src/app/pads.js`).
+💭 Spéculatif : un knob maître = une liste de knobs reliés avec un poids chacun.
