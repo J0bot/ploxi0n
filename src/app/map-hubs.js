@@ -133,7 +133,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
       // ◈ (0.98) les paliers : une autre scène (tes ploxions, le réseau, un neurone) ; la règle du zoom, à droite
       + '<div class="px-map-n" data-map-n hidden></div>'
       + '<nav class="px-map-z" aria-label="le zoom de fractale">' + PALIERS_MAP.map(([k, n]) => '<button type="button" data-map-palier="' + k + '" aria-label="' + n + '"><i></i><span>' + n + '</span></button>').join('')
-        + '<div class="px-map-figes" data-map-figes></div><button type="button" class="px-map-zb" data-map-figer aria-label="figer ce zoom : un palier à toi">✻ fige</button><button type="button" class="px-map-zb" data-map-mode aria-label="zoom libre ou par paliers">libre</button><b class="px-map-niv" data-map-niveau>×1.00</b></nav></div>';
+        + '<div class="px-map-figes" data-map-figes></div><button type="button" class="px-map-zb" data-map-figer aria-label="figer ce zoom : un palier à toi">✻</button><button type="button" class="px-map-zb" data-map-mode aria-label="zoom libre ou par paliers">∿</button><b class="px-map-niv" data-map-niveau>×1.00</b></nav></div>';
     const vue = hote.querySelector('[data-map-v]'), plan = hote.querySelector('[data-map-plan]'), scene = hote.querySelector('[data-map-n]'), carte = hote.querySelector('.px-map');
     const taille = () => { const w = vue.clientWidth || W.innerWidth || 390, h = vue.clientHeight || (W.innerHeight || 800) * 0.7; return Math.round(Math.min(w * 0.74, h * 0.62)); };
     function koinHtml(k) {
@@ -178,8 +178,9 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
       const un = () => { if (!vivant || i >= l.length) { fond = 0; return; } fluxPloxion(l[i++]).finally(() => { fond = W.setTimeout(un, 40); }); }; fond = W.setTimeout(un, 200); };
     function regle() {
       const fz = hote.querySelector('[data-map-figes]'), md = hote.querySelector('[data-map-mode]');
-      if (fz) fz.innerHTML = reglageZoom.figes.map((f, i) => '<button type="button" data-map-fige="' + f.g + '" aria-label="' + esc(f.nom) + '">✻ p' + (i + 1) + '</button>').join('');
-      if (md) { md.textContent = reglageZoom.mode === 'paliers' ? 'paliers' : 'libre'; md.classList.toggle('on', reglageZoom.mode === 'paliers'); }
+      if (fz) fz.innerHTML = reglageZoom.figes.map((f, i) => '<button type="button" data-map-fige="' + f.g + '" aria-label="' + esc(f.nom) + '">' + (i + 1) + '</button>').join('');
+      // (0.99.2) des glyphes (∿ libre, ≡ paliers) : la règle ne mange plus les koins
+      if (md) { md.textContent = reglageZoom.mode === 'paliers' ? '≡' : '∿'; md.setAttribute('aria-label', reglageZoom.mode === 'paliers' ? 'zoom par paliers (toucher : libre)' : 'zoom libre (toucher : par paliers)'); md.classList.toggle('on', reglageZoom.mode === 'paliers'); }
       for (const b of hote.querySelectorAll('[data-map-palier]')) { const k = b.getAttribute('data-map-palier'); b.classList.toggle('on', k === palier); b.disabled = (k === 'ploxion' && !(cible && cible.ploxion)) || (k === 'bion' && !(cible && cible.bion)); } }
     async function zoomer(p, o = {}) {
       const i = PALIERS_MAP.findIndex(x => x[0] === palier), j = PALIERS_MAP.findIndex(x => x[0] === p); if (j < 0) return;
@@ -195,6 +196,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
       const surLaMap = palier === 'hub';
       vue.hidden = !surLaMap; hote.querySelector('[data-map-autres]').hidden = !surLaMap; scene.hidden = surLaMap; hote.querySelector('.px-map-temps').hidden = !surLaMap;
       carte.setAttribute('data-palier', palier);
+      scene.scrollTop = 0; scene.scrollLeft = 0;   // (0.99.2) une scène neuve repart d'en haut à gauche (le réseau se recentre ensuite)
       if (surLaMap) { hote.querySelector('[data-map-ou]').textContent = ici ? nomDe(hubs.get(ici)) : 'la map'; return peindre(); }
       if (palier === 'tout') {
         hote.querySelector('[data-map-ou]').textContent = 'tes ploxions';
@@ -207,7 +209,8 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
         const pos = placerReseau(hubs, ici), xs = [...pos.values()].map(v => v[0]), ys = [...pos.values()].map(v => v[1]), x0 = Math.min(0, ...xs), y0 = Math.min(0, ...ys), PAS = 104;
         scene.innerHTML = '<div class="px-map-rs" data-neurones data-neurones-seuil="30" style="width:' + ((Math.max(0, ...xs) - x0 + 1) * PAS) + 'px;height:' + ((Math.max(0, ...ys) - y0 + 1) * PAS) + 'px">'
           + [...pos.entries()].map(([id, [x, y]]) => { const h = hubs.get(id); return '<button type="button" class="px-map-rc' + (id === ici ? ' px-map-rc-ici' : '') + '" data-neurone data-rs="' + esc(id) + '" style="left:' + ((x - x0) * PAS) + 'px;top:' + ((y - y0) * PAS) + 'px">' + G(h.center || 'ion') + '<small>' + esc(nomDe(h)) + '</small></button>'; }).join('') + '</div>';
-        const ic = scene.querySelector('.px-map-rc-ici'); if (ic) W.setTimeout(() => { try { ic.scrollIntoView({ block: 'center', inline: 'center' }); } catch (e) { /* */ } }, 30);
+        const ic = scene.querySelector('.px-map-rc-ici'), rs = scene.querySelector('.px-map-rs');   // centrer la scène seule (scrollIntoView ferait défiler l'accueil aussi)
+        if (ic && rs) W.setTimeout(() => { scene.scrollLeft = rs.offsetLeft + ic.offsetLeft + ic.offsetWidth / 2 - scene.clientWidth / 2; scene.scrollTop = rs.offsetTop + ic.offsetTop + ic.offsetHeight / 2 - scene.clientHeight / 2; }, 30);
         return;
       }
       if (palier === 'ploxion') {

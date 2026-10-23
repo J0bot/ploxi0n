@@ -102,6 +102,13 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.99.2 (24.10)** — RS-7 sur l'iPhone, son fond galaxie : « stylé mais ça reste pas fixe à la page, et c'est pas assez lisible ».
+Mesuré au faux iPhone : `.px-accueil` (overflow auto) défilait de 6 px en large (les SVG `px-neurones` dépassent) et 66 px en long ; le
+`scrollIntoView` du palier réseau faisait défiler tous les ancêtres. Fix : `html.px-organique .px-accueil:has(.px-org-map)` en colonne flex,
+`overflow: clip`, la map en `flex: 1` ; la scène centrée à la main. Lisible : `.px-org-map::before` (un voile), les étiquettes à 9 px sur deux
+lignes avec halo (`.px-map-tt` en `minmax(0, 1fr)` : une étiquette longue n'élargit plus la grille), la règle du zoom en ronds de 30 px.
+`parcours-lisible.mjs` simule un fond chargé et vérifie que l'accueil ne bouge plus (scrollTop/Left forcés restent à 0).
+
 **0.99.1 (23.10)** — ◉ Proche, l'ultimate Bluetooth (RS-7 : « je te laisse extrapoler et implémenter toi-même ») : tout est dans
 `docs/ULTIMATE-BLUETOOTH.md` (« Ce qui est construit »). ⚠ Le Swift de PloxiProche n'a pas été compilé : vérifier le premier build. À essayer
 à deux iPhones : même salle, démarrer des deux côtés ; l'invitation part du nom le plus petit. Piège payé : `src/app/sans-emoji.js` efface

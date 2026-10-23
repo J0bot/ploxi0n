@@ -1,5 +1,7 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1792717537000,"braindump de RS-7 : toutes les langues, et le mode humain (zéro texte, glyphes et maths)"],
+export const COMMITS = [[1792718350000,"braindump de RS-7 : le drone xerbot (il te suit, mappe en 3D, on l'envoie)"],
+  [1792718291000,"0.99.1 : Proche, l'ultimate Bluetooth (messages, basse et son partagés, un hôte et des répliques)"],
+  [1792717537000,"braindump de RS-7 : toutes les langues, et le mode humain (zéro texte, glyphes et maths)"],
   [1792717389000,"braindump de RS-7 : ultimate Bluetooth (messages, son partagé, un hôte et des répliques)"],
   [1792717342000,"braindump de RS-7 (Zurich) : le mapion autour de moi, et les knobs maîtres"],
   [1792717276000,"0.99 : le zoom libre ou par paliers figés ; l'écriture suit le zoom"],

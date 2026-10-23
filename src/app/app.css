@@ -1343,10 +1343,35 @@ html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail=
 html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="glyphe"] :is(.px-map-k,.px-map-tc,.px-map-rc) .px-g{width:68%;height:68%}
 html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="glyphe"] .px-map-t span{opacity:0}
 html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="texte"] :is(.px-map-k,.px-map-tc,.px-map-rc) .px-g{width:0;height:0;opacity:0}
-html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="texte"] :is(.px-map-k,.px-map-tc,.px-map-rc) small{font-size:10px;line-height:1.15;color:var(--txt);white-space:normal;text-align:center;word-break:break-word;letter-spacing:.06em}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="texte"] :is(.px-map-k,.px-map-tc,.px-map-rc) small{font-size:12px;line-height:1.15;color:var(--txt);white-space:normal;text-align:center;word-break:break-word;letter-spacing:.06em}
 html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="texte"] .px-map-t b{color:var(--bio);text-shadow:0 0 8px var(--glow)}
 html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="texte"] .px-nv-c small{font-size:10.5px;color:var(--txt)}
 /* la règle : ❄ fige ce zoom (un palier à toi), libre / paliers, tes paliers figés, le niveau */
+/* ◈ (0.99.2, RS-7 sur l'iPhone : « ça reste pas fixe à la page ; c'est pas assez lisible ») — l'accueil de l'organique = la map, FIXE : il ne
+   défile plus (les membranes le faisaient déborder : 399 px pour 393, 918 pour 852) ; la map prend toute la hauteur qui reste. Et lisible sur
+   n'importe quel fond : un voile sombre derrière la map, des étiquettes plus grandes, claires, avec un halo ; les voisins moins effacés. */
+html.px-organique .px-accueil:has(.px-org-map){display:flex;flex-direction:column;overflow:hidden;overflow:clip;overscroll-behavior:none;padding-bottom:0}
+html.px-organique .px-accueil:has(.px-org-map)>*{flex:none}
+html.px-organique .px-accueil>.px-org-map{flex:1 1 auto;height:auto;min-height:0;overflow:hidden;margin-bottom:0}
+.px-org-map::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 90% 70% at 50% 45%,rgba(6,5,12,.72),rgba(6,5,12,.42) 70%,rgba(6,5,12,.2))}
+html.px-organique .px-map :is(.px-map-k,.px-map-tc,.px-map-rc) small{font-size:9px;line-height:1.1;letter-spacing:0;color:var(--txt);text-shadow:0 0 3px #000,0 1px 2px #000;
+  white-space:normal;text-align:center;word-break:normal;overflow-wrap:break-word;-webkit-hyphens:auto;hyphens:auto;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+html.px-organique .px-map-k .px-g{width:42%;height:42%}
+html.px-organique .px-map-t b{font-size:13px;text-shadow:0 0 6px #000}
+html.px-organique .px-map-t span,html.px-organique .px-map-pied{color:var(--muted);text-shadow:0 1px 2px #000}
+html.px-organique .px-map-pied{font-size:10.5px}
+html.px-organique .px-map-ou{color:var(--muted)}
+html.px-organique :is(.px-map-droite,.px-map-gauche,.px-map-haut,.px-map-bas){opacity:.72}
+html.px-organique :is(.px-map-hg,.px-map-hd,.px-map-bg,.px-map-bd){opacity:.5}
+html.px-organique .px-map-temps-on .px-map-k:not(.px-map-vu):not(.px-map-k-hub){opacity:.38}
+html.px-organique .px-map-k[data-quand]:not([data-quand=""])::after{font-size:7px;color:var(--muted);text-shadow:0 1px 2px #000}
+/* la réglette du temps : entre les deux koins du bas, plus dessous */
+html.px-koins .px-map-temps,html.px-organique .px-map-temps{padding:4px 74px calc(14px + env(safe-area-inset-bottom,0px))}
+/* la règle du zoom, plus étroite : elle ne mange plus les tuiles */
+.px-map-z .px-map-zb,.px-map-figes button{min-width:0;width:30px;height:30px;min-height:30px;padding:0;border-radius:50%;font:600 14px/1 var(--police);letter-spacing:0;align-self:flex-end;justify-content:center}
+.px-map-figes button{font:600 11px/1 var(--ct);color:var(--acc2)}
+.px-map-n{padding-right:58px}
+html.px-organique .px-map-temps b{min-width:0;color:var(--txt);text-shadow:0 1px 2px #000;white-space:nowrap}
 .px-map-figes{display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-top:6px}
 .px-map-figes button{min-height:26px;padding:0 6px;border-radius:9px;border:1px solid var(--bord2);background:var(--surface);color:var(--acc2);font:600 10px/1 var(--ct)}
 .px-map-z .px-map-zb{justify-content:center;min-height:30px;min-width:34px;padding:0 6px;border-radius:10px;border:1px solid var(--bord);background:var(--surface);color:var(--muted);font:600 10px/1 var(--ct);letter-spacing:.08em}
@@ -1361,7 +1386,7 @@ html.px-organique .px-map-figes button,html.px-organique .px-map-z .px-map-zb{ba
 .px-map.px-zoom-out .px-map-n,.px-map.px-zoom-out .px-map-v{animation:px-recule .32s cubic-bezier(.2,.9,.3,1)}
 html.px-calme .px-map .px-map-n,html.px-calme .px-map .px-map-v{animation:none}
 /* tes ploxions : la grille, en cellules */
-.px-map-tt{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 8px}
+.px-map-tt{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 8px}
 .px-map-tc{position:relative;aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:14px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);padding:4px}
 .px-map-tc .px-g{width:46%;height:46%;fill:none;stroke:var(--acc);stroke-width:4}
 .px-map-tc small{font:500 8px/1.1 var(--mono);color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
