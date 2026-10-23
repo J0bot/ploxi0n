@@ -12,7 +12,7 @@
 //   Créer : « + un hub » : un nom, un glyphe central, des koins (tes ploxions), le côté où il se pose ; le modifier, l'effacer (les tiens).
 // boxion_local « map/xerkions » : la dernière map du labo (hors ligne, elle revient) ; « reglages/map » : { ici } (le hub où tu étais).
 import * as H from '../bions/humain.js';   // (0.99.8) le mode humain : les comptes et le temps en maths
-import { MIN, MAX, PLONGE, RECULE, borner, niveau, detailDe, figer, prochainFige, versScene } from '../bions/zoom.js';
+import { MIN, MAX, PLONGE, RECULE, borner, niveau, detailDe, figer, prochainFige, versScene, grilleAjustee } from '../bions/zoom.js';
 import { glyphe as G, glyphePloxion, nomDepuisEmoji } from './glyphes.js';
 
 export const COTES = ['droite', 'gauche', 'haut', 'bas'];
@@ -205,6 +205,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
         hote.querySelector('[data-map-ou]').textContent = 'tes ploxions';
         const l = tousLes();
         scene.innerHTML = '<div class="px-map-tt" data-neurones="fin">' + l.map(p => { const u = us && us.px && us.px[p.id]; return '<button type="button" class="px-map-tc" data-neurone data-tt="' + esc(p.id) + '" data-quand="' + esc(u ? ilYa(u.lastAt) : '') + '" data-quand-h="' + esc(u && u.lastAt ? H.duree(Date.now() - u.lastAt) : '') + '">' + glyphePloxion(p) + '<small>' + esc(p.nom || p.id) + '</small></button>'; }).join('') + '</div>';
+        ajusterGrille();
         return;
       }
       if (palier === 'reseau') {
@@ -260,8 +261,16 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
     boxion.get('reglages', 'zoom').then(z => { if (z && typeof z === 'object') { reglageZoom = { mode: z.mode === 'paliers' ? 'paliers' : 'libre', figes: Array.isArray(z.figes) ? z.figes : [] }; regle(); } }).catch(() => {});
     const garderZoom = () => boxion.put('reglages', 'zoom', reglageZoom).catch(() => {});
     const scenee = () => (palier === 'hub' ? vue : scene);
+    // (0.99.19) tes ploxions : la grille remplit l'écran ; l'échelle y change le nombre de colonnes (src/bions/zoom.js grilleAjustee)
+    function ajusterGrille() {
+      const tt = palier === 'tout' && scene.querySelector('.px-map-tt'); if (!tt) return;
+      const cs = W.getComputedStyle(scene), w = scene.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), h = scene.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      const g = grilleAjustee(tt.children.length, w, h, echelle, 8);
+      tt.style.setProperty('--tt-c', g.colonnes); tt.style.setProperty('--tt-cel', g.cellule + 'px');
+    }
     function appliquerEchelle(s, ox, oy, anime = false) {
       echelle = borner(s); const el = scenee();
+      if (palier === 'tout') { el.style.transform = ''; el.style.overflow = ''; ajusterGrille(); carte.setAttribute('data-detail', detailDe(echelle)); const ni = hote.querySelector('[data-map-niveau]'); if (ni) ni.textContent = '×' + echelle.toFixed(2); return; }
       if (ox != null) { const r = el.getBoundingClientRect(); el.style.transformOrigin = Math.round(ox - r.left) + 'px ' + Math.round(oy - r.top) + 'px'; }
       el.style.transition = anime ? 'transform .28s cubic-bezier(.2,.9,.3,1)' : 'none';
       el.style.transform = Math.abs(echelle - 1) < 0.01 ? '' : 'scale(' + echelle.toFixed(3) + ')';
@@ -390,7 +399,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
       ici = (params && params.hub) || (r && r.ici) || DEPART; await peindreScene();
       await relire(); if (!vivant) return; if (repli && hubs.has(DEPART)) { repli = false; ici = DEPART; } if (palier === 'hub') peindre(); else if (palier === 'reseau') peindreScene();   // puis le labo, à jour
     })();
-    const surTaille = () => { if (palier === 'hub') peindre(); else if (neurone) neurone.axones(scene.querySelector('.px-nv')); }; W.addEventListener('resize', surTaille);
+    const surTaille = () => { if (palier === 'hub') peindre(); else if (palier === 'tout') ajusterGrille(); else if (neurone) neurone.axones(scene.querySelector('.px-nv')); }; W.addEventListener('resize', surTaille);
     hote.__map = { zoomer, echelle: (x, ox, oy) => appliquerEchelle(x, ox, oy), niveau: () => niveau(iPalier(), echelle), reglage: () => reglageZoom };   // pour les parcours
     return { unmount() { vivant = false; W.clearTimeout(fond); if (roAx) roAx.disconnect(); W.removeEventListener('resize', surTaille); hote.innerHTML = ''; }, aller: (id) => aller(id), ici: () => ici, zoomer, palier: () => palier };
   }

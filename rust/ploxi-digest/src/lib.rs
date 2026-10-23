@@ -116,7 +116,7 @@ pub fn digerer(id: &str, code: &str) -> Digestion {
                 let appel = ponct(k + 1, '(');
                 // window.jOSX, globalThis.jOSX, self.jOSX : un bion aussi (seul un vrai membre d'un objet n'en est pas un)
                 let global = membre && k >= 2 && matches!(ident(k - 2), Some("window" | "globalThis" | "self" | "W" | "top" | "parent"));
-                if nom.starts_with("jOS") && nom.len() > 3 && nom.as_bytes()[3].is_ascii_uppercase() && (!membre || global) {
+                if nom.starts_with("jOS") && nom.len() > 3 && (nom.as_bytes()[3].is_ascii_uppercase() || nom.as_bytes()[3].is_ascii_digit()) && (!membre || global) {
                     plus(&mut d.bions, nom);
                     if (nom == "jOSBoxion" || nom == "jOSStore") && ponct(k + 1, '.') {
                         if let (Some(m), true, Some(cle)) = (ident(k + 2), ponct(k + 3, '('), texte(k + 4)) {

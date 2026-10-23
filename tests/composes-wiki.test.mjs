@@ -112,3 +112,11 @@ test('📖 le ploxion wiki (son iframe /wiki) : le lecteur à la place, un lien 
     await assert.rejects(wiki.lire('/wiki/inconnu'), /hors ligne/);
   } finally { p.fin(); }
 });
+
+test('⧉ (0.99.19) un ploxion qui en délègue un autre (jOSApps.rs.mount) : une dépendance, à charger avant lui', async () => {
+  const { ploxionsDelegues } = await import('../src/shim/apps-a-la-demande.js');
+  const chill = "window.jOSApps['chill'] = { manifest: { id: 'chill' }, mount: function (c, ctx) { return window.jOSApps.rs.mount(c, Object.assign({}, ctx || {}, { hub: 'chill' })); } };";
+  assert.deepEqual(ploxionsComposes(chill, 'chill'), ['rs']);
+  assert.deepEqual(ploxionsDelegues(chill, 'chill'), ['rs']);
+  assert.deepEqual(ploxionsDelegues("jOSApps['bb'].mount(h); jOSApps.monter('cc', h); x = { app: 'dd' }", 'aa'), ['bb'], 'les onglets et monter passent par la demande');
+});

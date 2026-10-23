@@ -2,7 +2,7 @@
 
 *Généré par `npm run digerer` (rust/ploxi-digest) : ne pas éditer à la main. Le sens : docs/DIGESTION.md.*
 
-551 ploxions digérés (10.8 Mo de code) en 0.90 s.
+551 ploxions digérés (10.8 Mo de code) en 1.51 s.
 
 | voie | ploxions | part | couvert par un rendu natif générique (moyenne) |
 |---|---|---|---|
@@ -13,9 +13,9 @@
 
 En tout : un rendu natif générique couvrirait en moyenne **78 %** de chaque ploxion sans travail propre à lui.
 
-**Les bions, par nombre de ploxions qui les composent (les rendre natifs d'abord)** : jOSApps (551) · jOSPorts (245) · jOSBoxion (130) · jOSMobile (100) · jOSXerkionHub (93) · jOSGame (43) · jOSStore (41) · jOSTsoin (38) · jOSOp (37) · jOSSound (33) · jOSFiles (21) · jOSForge (14) · jOSXerPrefs (14) · jOSPorte (13) · jOSEngine (11) · jOSTheme (11) · jOSVeille (11) · jOSZone (11) · jOSCarte (10) · jOSAppareil (9) · jOSChart (9) · jOSCiv (9) · jOSPartage (9) · jOSPulse (8) · jOSQR (8) · jOSWikiLink (8) · jOSKnob (7) · jOSPlug (7) · jOSWindows (7) · jOSApi (6)
+**Les bions, par nombre de ploxions qui les composent (les rendre natifs d'abord)** : jOSApps (551) · jOSPorts (245) · jOSBoxion (130) · jOSMobile (100) · jOSXerkionHub (93) · jOSGame (43) · jOSStore (41) · jOSTsoin (38) · jOSOp (37) · jOSSound (33) · jOSFiles (21) · jOSForge (14) · jOSXerPrefs (14) · jOSPorte (13) · jOS3D (11) · jOSEngine (11) · jOSTheme (11) · jOSVeille (11) · jOSZone (11) · jOSCarte (10) · jOSAppareil (9) · jOSChart (9) · jOSCiv (9) · jOSPartage (9) · jOSPulse (8) · jOSQR (8) · jOSWikiLink (8) · jOSKnob (7) · jOSPlug (7) · jOSWindows (7)
 
-**Couverture** : 5 bions → 137 / 179 ploxions « compose » entièrement natifs ; 10 bions → 147 / 179 ploxions « compose » entièrement natifs ; 20 bions → 160 / 179 ploxions « compose » entièrement natifs ; 40 bions → 168 / 179 ploxions « compose » entièrement natifs 
+**Couverture** : 5 bions → 136 / 179 ploxions « compose » entièrement natifs ; 10 bions → 146 / 179 ploxions « compose » entièrement natifs ; 20 bions → 160 / 179 ploxions « compose » entièrement natifs ; 40 bions → 168 / 179 ploxions « compose » entièrement natifs 
 
 **Les balises qu'un rendu natif doit savoir faire** : div (542) · b (451) · style (416) · button (399) · span (398) · input (263) · a (162) · small (144) · i (103) · canvas (100) · textarea (99) · option (92) · select (90) · label (84) · p (79) · h3 (65) · img (62) · h4 (51) · svg (49) · code (48) · iframe (33) · h2 (30) · li (30) · video (27) · ul (25) · pre (24) · table (23) · td (23) · tr (23) · form (13) · ol (13) · details (11) · summary (11) · audio (7) · h1 (4) · (élément perso) (1)
 

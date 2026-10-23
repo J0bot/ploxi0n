@@ -110,6 +110,25 @@ l'intuition. Le 0.99.17 l'a montré : on croyait le JS lent, c'étaient le pont 
 - `tools/rust-banc.mjs` (JS contre Rust), `tools/faux-iphone/parcours-profil.mjs` (où va le temps, qui lit quoi à travers le pont),
   `npm run rust`.
 
+## Le bilan de santé (0.99.20)
+
+`tools/faux-iphone/parcours-tous.mjs` ouvre les 551 ploxions publics du labo, un par un, dans le faux iPhone, avec leur vrai code et
+leurs vrais bions (`tools/digestion/recolter.mjs`, `recolter-bions.mjs` : 160 bions, en suivant les bions des bions). Pour chacun : a-t-il
+planté au montage, ses erreurs, est-il resté vide, une vignette. En 3 morceaux : `PX_TOUS_DE=0 PX_TOUS_N=190` ; quelques-uns, avec la pile
+des erreurs : `PX_TOUS_IDS=chill,tsoin`.
+
+**530 / 551 sains.** Corrigé dans l'app, parce que ça touchait beaucoup de ploxions d'un coup :
+- `jOS3D` n'était pas reconnu comme un bion (un chiffre après « jOS ») : 11 ploxions sans leur 3D ;
+- `jOSApps.rs.mount(…)` (un ploxion qui en monte un autre) : ni installé comme dépendance, ni chargé avant ;
+- `jOSTsoin` : l'enregistreur du labo (sessions) manquait ;
+- les données publiques du labo (`/px/*.json`) ne partaient pas au labo hors mode connecté.
+
+Le reste :
+- **du côté du labo** : `mesures` (son `jOSLedger` porte le nom d'un autre bion), `iobions` (`describe()` au chargement) ;
+- **ils attendent quelque chose** : 8 ploxions attendent une zone (« ouvre 🫧 zone ») ; notes, calendar, ideas sont des pages du labo
+  (le mode connecté) ;
+- **le réseau de la session de test** : leaflet (cdnjs), quetes et cubionlink (le faux labo ne les connaît pas).
+
 ## L'état (la récolte du 23.10 : les 551 ploxions publics du labo, 10,8 Mo de code, digérés en 0,07 s)
 
 | voie | ploxions | part | couvert par un rendu natif générique |

@@ -105,6 +105,11 @@ export function creerNeurones({ W = globalThis.window } = {}) {
       new W.MutationObserver(() => { const t = theme(); if (t === avant) return; avant = t; for (const g of groupes.values()) g.cle = null; scan(); }).observe(D.documentElement, { attributes: true, attributeFilter: ['class', 'data-px-variante'] });
     }
     W.addEventListener('resize', () => { for (const g of groupes.values()) g.cle = null; prevoir(); });
+    // (0.99.19, RS-7 « What ? » : des membranes restées à l'ancienne place) une mise en page qui bouge SANS changer le DOM ni la taille des
+    // cellules (une transition, une animation, une police chargée, le retour dans l'app) : on remesure ; dessiner() ne refait rien si rien n'a bougé
+    for (const t of ['transitionend', 'animationend']) D.addEventListener(t, (e) => { if (groupes.size && e.target && e.target.nodeType === 1 && !e.target.closest('.px-neurones')) prevoir(); }, true);
+    D.addEventListener('visibilitychange', () => { if (!D.hidden && groupes.size) prevoir(); });
+    if (D.fonts && D.fonts.addEventListener) D.fonts.addEventListener('loadingdone', () => { if (groupes.size) prevoir(); });
     scan();
   }
   return { installer, scanner, tout, groupes: () => groupes.size };

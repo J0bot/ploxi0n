@@ -105,7 +105,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.19';
+const VERSION = '0.99.20';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -246,7 +246,7 @@ async function demarrer() {
   // un ploxion en ouvre un autre (jOSXerPrefs.ouvrir, jOS.openPloxion) : s'il n'est pas installé et qu'il y a du réseau, on l'installe à la volée
   // un ploxion absent : installé (le pack hors ligne d'abord, puis le labo) ; rend vrai s'il est là ensuite
   // ⬡ (0.99.5) les bions d'un code : ceux notés + tous les jOSNom qu'il touche (sans ceux qu'il définit lui-même), 40 au plus
-  const bionsDuCode = (js, notes = []) => { const s = String(js || ''), def = new Set([...s.matchAll(/\bwindow\.(jOS[A-Z][A-Za-z0-9]{0,47})\s*=(?!=)/g)].map(m => m[1])); return [...new Set([...notes, ...(s.match(/\bjOS[A-Z][A-Za-z0-9]{0,47}\b/g) || [])])].filter(b => !def.has(b) || notes.includes(b)).slice(0, 40); };
+  const bionsDuCode = (js, notes = []) => { const s = String(js || ''), def = new Set([...s.matchAll(/\bwindow\.(jOS[A-Z0-9][A-Za-z0-9]{0,47})\s*=(?!=)/g)].map(m => m[1])); return [...new Set([...notes, ...(s.match(/\bjOS[A-Z0-9][A-Za-z0-9]{0,47}\b/g) || [])])].filter(b => !def.has(b) || notes.includes(b)).slice(0, 40); };
   const estBion = (id) => /^jOS[A-Z0-9]/.test(String(id || ''));   // jOSChemin, jOSKnob… : le nom d'un bion
   async function installerAbsent(id) {
     if (routeur.connait(id)) return true;
@@ -294,7 +294,9 @@ async function demarrer() {
   const enTetes = async () => { const c = await boxion.get('compte', 'courant').catch(() => null); return c && c.jeton ? { 'X-Ploxi0n': '1', Authorization: 'Bearer ' + c.jeton } : { 'X-Ploxi0n': '1' }; };
   let modeConnecte = (await boxion.get('reglages', 'mode-connecte')) !== false;
   const fetchOrigine = window.fetch.bind(window), httpRelais = creerHttp(window, enTetes);
-  const relais = { routes: [{ prefixe: '/bother', vers: (p) => SOURCE + '/api/app' + p }], general: () => modeConnecte && navigator.onLine !== false, vers: (p) => SOURCE + p,
+  // (0.99.19, le bilan de santé : quetes lisait /px/quetes.json, la page de l'app) les lectures publiques du labo sous /px (ses données, les
+  // fichiers .json de ses ploxions) partent au labo même hors mode connecté : GET de JSON seulement (le relais rend du texte) ; gardées pour le mode avion
+  const relais = { routes: [{ prefixe: '/bother', vers: (p) => SOURCE + '/api/app' + p }, { prefixe: '/px', get: true, filtre: (p) => /\.json$/i.test(p), vers: (p) => SOURCE + p }], general: () => modeConnecte && navigator.onLine !== false, vers: (p) => SOURCE + p,
     envoyer: (q) => httpRelais.requete(q, fetchOrigine) };
   // jOSBoxion connecté : le boxion fait foi quand on est connecté et en ligne (pourriture-4, les notes… retrouvent leur historique)
   const distant = {
@@ -372,8 +374,11 @@ async function demarrer() {
   // (0.99.3) une seconde fois : les bions bannis par un 429 du labo (notés « absents » 7 jours) reviennent dans les ploxions installés sans eux
   // (0.99.6, RS-7 : « quand j'ouvre l'app ça freeze ») : plus jamais au démarrage ; 25 s après, en douceur (8 ploxions, une pause entre
   // chacun, seulement ceux à qui il manque des bions), et ainsi à chaque lancement tant qu'il en reste
-  if (!(await boxion.get('reglages', 'bions-v3')) && navigator.onLine !== false) {
-    window.setTimeout(() => depot.completerBions({ max: 8, pause: 400 }).then(r => { if (!r.reste) boxion.put('reglages', 'bions-v3', { le: new Date().toISOString(), n: r.length }); }).catch(() => {}), 25000);
+  // (0.99.19, le bilan de santé) une troisième fois : jOS3D n'était pas reconnu comme un bion (un chiffre après « jOS ») et jOSApps.rs.mount pas
+  // comme une dépendance ; tout l'index passe « à revoir » une fois (sans relire aucun code), la réparation fait le reste, 8 par lancement
+  if (!(await boxion.get('reglages', 'bions-v4-revoir'))) { await depot.aRevoir().catch(() => 0); await boxion.put('reglages', 'bions-v4-revoir', { le: new Date().toISOString() }).catch(() => {}); }
+  if (!(await boxion.get('reglages', 'bions-v4')) && navigator.onLine !== false) {
+    window.setTimeout(() => depot.completerBions({ max: 8, pause: 400 }).then(r => { if (!r.reste) boxion.put('reglages', 'bions-v4', { le: new Date().toISOString(), n: r.length }); }).catch(() => {}), 25000);
   }
   const internes = [
     // (0.67) les icônes comme dans le xer (le xerkion), et les ploxions natifs de l'app dans le marketplace (leur portée : natif)
@@ -649,7 +654,8 @@ async function demarrer() {
   // ⊕ (0.99.19, RS-7 : « l'entièreté du truc est trop petite ») la taille de tout : le zoom de page de WebKit sur l'iPhone (la mise en page
   // suit, comme le zoom de Safari) ; ailleurs, le zoom CSS. ⚙ › Apparence › Taille de tout.
   { let avant = null; const poser = (p) => { const z = Math.min(1.6, Math.max(0.8, +p.taille || 1)); if (z === avant) return; avant = z;
-      if (natifLot) PloxiApple.taille({ zoom: z }).catch(() => {}); else document.documentElement.style.zoom = z === 1 ? '' : String(z); };
+      const apres = () => window.dispatchEvent(new Event('resize'));   /* la map, les membranes : tout se remesure */
+      if (natifLot) PloxiApple.taille({ zoom: z }).then(apres, () => {}); else { document.documentElement.style.zoom = z === 1 ? '' : String(z); apres(); } };
     poser(prefs.lire()); prefs.surChangement(poser); }
   const langueApp = installerLangue({ W: window, interne: (id) => !!(routeur.catalogue().find(p => p.id === id) || {}).interne });
   { const choisie = (p) => langueDe(p.langue, navigator.languages || [navigator.language]);

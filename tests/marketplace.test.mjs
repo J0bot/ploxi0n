@@ -185,6 +185,11 @@ test('dépendances 0.8 : les bions TOUCHÉS (non déclarés) aussi, récursiveme
   assert.deepEqual([...r1], [{ id: 'xk', avant: 0, apres: 2 }]); assert.equal(r1.reste, 0);
   assert.equal(demandes.length, n, 'les bions déjà là ne se retéléchargent pas');
   assert.deepEqual([...await d.completerBions({ pause: 0 })], [], 'idempotent : il ne lui manque plus rien');
+  // (0.99.19) installé quand jOS3D n'était pas reconnu : l'index le croit complet ; aRevoir() le remet en file, sans relire de code
+  await boxion.put('ploxions', 'xk', { ...(await boxion.get('ploxions', 'xk')), bions: [] }); await d.completerBions({ pause: 0 });
+  assert.equal((await d.installes()).find(x => x.id === 'xk').manq, 0);
+  assert.ok(await d.aRevoir() >= 1);
+  assert.deepEqual([...await d.completerBions({ pause: 0 })], [{ id: 'xk', avant: 0, apres: 2 }], 'repris après aRevoir');
 });
 
 test('⚙ réglages et HUD composé : éléments, ordre, épinglés, ⚙ toujours sur l\'accueil, mode connecté, verrous', async () => {
@@ -732,4 +737,10 @@ test('↻ (0.99.5) les mises à jour par le CHANGELOG : un ploxion qui n\'a pas 
   assert.deepEqual(vus.filter(u => u.includes('app.js')), ['https://labo.j0bot.ch/px/pomo/app.js']);
   // la fois d'après : plus rien
   vus.length = 0; await d.aJour(); assert.deepEqual(vus, ['https://labo.j0bot.ch/px/changelog.json']);
+});
+
+test('◬ (0.99.19, le bilan de santé : moteur, doomion, monde-os, scan-reel « jOSEngine absent ») un bion dont le nom commence par un chiffre (jOS3D) est un bion', async () => {
+  const { bionsTouches } = await import('../src/marketplace/depot.js');
+  assert.deepEqual(bionsTouches("function create(c) { if (!window.jOS3D) return null; jOS3D.load(); }", 'jOSEngine'), ['jOS3D']);
+  assert.deepEqual(bionsTouches("window.jOS3D = { load() {} }; jOS3D.load()"), [], 'un bion défini par le code lui-même');
 });

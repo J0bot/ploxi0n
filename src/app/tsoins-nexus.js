@@ -1,5 +1,6 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1792729123000,"0.99.18 : les bugs de RS-7 sur l'iPhone"],
+export const COMMITS = [[1792785394000,"0.99.19 : la peau légère par défaut, le changement de peau réparé, la taille de tout, les bibliothèques des ploxions embarquées"],
+  [1792729123000,"0.99.18 : les bugs de RS-7 sur l'iPhone"],
   [1792727900000,"La bionisation : le digesteur trouve les bions déguisés"],
   [1792727658000,"0.99.17 : le pont allégé, le cœur en Rust, le digesteur des ploxions"],
   [1792726655000,"Le pont : l'index en mémoire, la taille par l'index, le flux calculé une fois"],

@@ -15,7 +15,7 @@
 //   les autres moteurs window.jOS*  absents : les ploxions testent déjà leur existence
 // Toute autre route du serveur répond 503 {horsLigne:true} SANS toucher le réseau, et s'inscrit dans le journal 'manques' (ce qu'il faudra
 // réimplémenter) ; une URL externe part sur le réseau (les ploxions « online only »), comptée dans shim.sortants.
-// relais = { routes: [{ prefixe, vers(chemin) → url }], general() → bool, vers(chemin) → url, envoyer({methode, url, headers, corps}) →
+// relais = { routes: [{ prefixe, vers(chemin) → url, get?: GET seulement, filtre?(chemin) → bool }], general() → bool, vers(chemin) → url, envoyer({methode, url, headers, corps}) →
 // {status, texte, entetes} } : les routes nommées (ex. /bother → https://labo.j0bot.ch/api/app/bother) et, en MODE CONNECTÉ (general()),
 // toute autre route du serveur partent sur le réseau ; un GET réussi est gardé (boxion_local « routes ») et resservi hors ligne.
 
@@ -91,12 +91,26 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
     const e = { kind: 'action', ...entry };
     const local = { t: Date.now(), ...e };
     etat.tsoins.push(local);
+    if (enCours && enCours.events.length < 2000) enCours.events.push(local);
     return boxion.append('tsoins', e).then(r => { local.seq = r.seq; return r; });
   }
+  // (0.99.19, le bilan de santé : le ploxion tsoin plantait à l'ouverture) l'enregistreur du labo (_tsoin_recorder) : start / stop / isOn ;
+  // list() rend des SESSIONS { id, label, scope, at, dur, events } (gardées dans boxion_local « tsoin-sessions/liste », 200 au plus) ;
+  // pendant un enregistrement, chaque mark() entre aussi dans la session ; stop() envoie « tsoin:state » { on: false, tsoin } comme le labo
+  let enCours = null;
+  etat.sessions = await boxion.get('tsoin-sessions', 'liste').then(l => (Array.isArray(l) ? l : [])).catch(() => []);
+  const garderSessions = () => boxion.put('tsoin-sessions', 'liste', etat.sessions.slice(0, 200)).catch(() => {});
+  const session = (id) => (enCours && enCours.id === id ? enCours : etat.sessions.find(t => t.id === id || t.seq === id) || null);
+  const etatTsoin = (on, t) => { try { D.dispatchEvent(new W.CustomEvent('tsoin:state', { detail: { on, tsoin: t } })); } catch (e) { /* */ } };
   W.jOSTsoin = Object.assign(W.jOSTsoin || {}, {
+    isOn: () => !!enCours,
+    start(label, scope) { if (enCours) return enCours; enCours = { id: 'ts' + Date.now().toString(36), label: String(label || '').slice(0, 120) || 'tsoin du ' + new Date().toLocaleString('fr-CH'), scope: scope === 'construction' ? 'construction' : 'perso', at: Date.now(), dur: 0, events: [] }; etatTsoin(true, enCours); return enCours; },
+    stop() { if (!enCours) return null; const t = enCours; enCours = null; t.dur = Date.now() - t.at; etat.sessions.unshift(t); garderSessions(); etatTsoin(false, t); return t; },
+    list: () => etat.sessions.slice(), marques: () => etat.tsoins.slice(), get: (id) => session(id),
+    remove(id) { etat.sessions = etat.sessions.filter(t => t.id !== id); garderSessions(); },
+    tag(id, scope) { const t = session(id); if (t) { t.scope = scope === 'construction' ? 'construction' : 'perso'; garderSessions(); } return t; },
+    patch(id, o) { const t = session(id); if (t && o && typeof o === 'object') { Object.assign(t, o, { id: t.id }); garderSessions(); } return t; },
     mark(k, detail, extra) { const e = { k: String(k == null ? '' : k).slice(0, 80), d: detail == null ? '' : String(detail).slice(0, 120) }; if (extra && typeof extra === 'object') for (const kk in extra) if (!(kk in e)) e[kk] = extra[kk]; marquer(e).catch(() => {}); },
-    isOn: () => true, start() {}, stop() { return null; },
-    list: () => etat.tsoins.slice(), get: (id) => etat.tsoins.find(t => t.id === id || t.seq === id) || null,
     badge: (icon) => '<span>' + (icon || '⧗') + '</span>', svg: () => '',
   });
 
@@ -261,7 +275,7 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
     }
     // le relais : les routes nommées (ex. /bother → l'API sans session), puis, en MODE CONNECTÉ, toute route du serveur → labo.j0bot.ch
     // (le jeton de la personne si elle est connectée) ; un GET réussi est gardé dans boxion_local « routes » : le mode avion le resservira
-    const rel = relais && ((relais.routes || []).find(r => p === r.prefixe || p.startsWith(r.prefixe + '/')) || (relais.general && relais.general() ? { vers: relais.vers } : null));
+    const rel = relais && ((relais.routes || []).find(r => (p === r.prefixe || p.startsWith(r.prefixe + '/')) && (!r.get || methode === 'GET') && (!r.filtre || r.filtre(p))) || (relais.general && relais.general() ? { vers: relais.vers } : null));
     const cle = methode + ' ' + p + url.search;
     if (rel) {
       const cible = rel.vers(p) + url.search;

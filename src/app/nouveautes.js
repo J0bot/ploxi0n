@@ -7,6 +7,13 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.20', titre: 'Des ploxions qui s\'ouvrent', points: [
+    '▦ Tes ploxions sur la map remplissent l\'écran : pincer change le nombre de colonnes (plus de petite grille perdue au milieu).',
+    '◬ Les moteurs 3D du labo (moteur, doomion, monde-os, scan-reel…) s\'ouvrent : leur bion jOS3D n\'était jamais installé. Tes ploxions déjà là sont réparés en douceur, quelques-uns à chaque lancement.',
+    '⧗ Le ploxion tsoin s\'ouvre et enregistre pour de vrai (● tsoin, ■ arrêter : tes sessions sont gardées).',
+    '⧉ chill, daron, zbeul (et tout ploxion qui en monte un autre) s\'ouvrent.',
+    '〰 En peau pleine, les membranes suivent leurs cellules (elles restaient parfois à côté).',
+  ] },
   { v: '0.99.19', titre: 'Plus grand, plus léger', points: [
     '◈ La peau légère par défaut : les couleurs de ta peau sans les membranes ondulées, qui faisaient ramer. ⚙ › Apparence › La peau : légère, auto (légère en économie d\'énergie), pleine.',
     '◈ Changer de peau marche pour de vrai (les membranes ne restaient plus vides sur l\'iPhone).',

@@ -22,8 +22,8 @@ export function bionsTouches(js, sauf = '') {
   const s = String(js || '');
   // (0.78) un bion que le code définit LUI-MÊME (window.jOSXerClicker = { … } dans 🎮 Jeu et le Clickion) n'est pas à télécharger : le labo
   // ne le sert pas seul, et son 404 est une page de 3,5 Mo
-  const definis = new Set([...s.matchAll(/\bwindow\.(jOS[A-Z][A-Za-z0-9]{0,47})\s*=(?!=)/g)].map(m => m[1]));
-  return [...new Set(s.match(/\bjOS[A-Z][A-Za-z0-9]{0,47}\b/g) || [])].filter(b => b !== sauf && !FOURNIS.has(b) && !definis.has(b));
+  const definis = new Set([...s.matchAll(/\bwindow\.(jOS[A-Z0-9][A-Za-z0-9]{0,47})\s*=(?!=)/g)].map(m => m[1]));
+  return [...new Set(s.match(/\bjOS[A-Z0-9][A-Za-z0-9]{0,47}\b/g) || [])].filter(b => b !== sauf && !FOURNIS.has(b) && !definis.has(b));
 }
 
 /** (0.51) le code d'un ploxion servi DANS sa page (/px/<id>, sans app.js : spotify, wiki, notes, calendar…) : le dernier
@@ -128,6 +128,8 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
     set surEcrit(f) { surEcrit = typeof f === 'function' ? f : null; },
     source,
     /** complète les bions des ploxions déjà installés (règle « déclarés + touchés », 0.8) : une fois, en ligne */
+    /** (0.99.19) tous les installés « à revoir » (manq = null dans l'index, sans relire leur code) : la réparation les reprendra, 8 par lancement */
+    async aRevoir() { const idx = await lireIndex(); if (!idx) return 0; let n = 0; for (const k of Object.keys(idx)) if (idx[k] && idx[k].manq !== null) { idx[k] = { ...idx[k], manq: null }; n++; } if (n) await ecrireIndex(idx); return n; },
     async completerBions({ max = 8, pause = 300 } = {}) {
       // (0.99.6) seulement les ploxions à qui il MANQUE des bions (l'index le dit), au plus `max` par appel, une pause entre chacun ; rend
       // aussi `reste` (l'app rappelle au prochain lancement tant qu'il en reste). Avant : chaque ploxion relu et réécrit au démarrage.

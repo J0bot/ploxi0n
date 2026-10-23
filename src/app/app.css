@@ -1400,6 +1400,8 @@ html.px-m-organique .px-accueil>.px-sous,html.px-m-organique .px-accueil .px-pla
 .px-map-z button{display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:30px;padding:0 4px;border:0;background:transparent;color:var(--grave)}
 .px-map-z button i{width:10px;height:10px;border-radius:50%;border:2px solid var(--bord2);flex:none}
 .px-map-z button span{font:500 8px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;opacity:0;transition:opacity .2s}
+/* (0.99.19) le nom du palier flotte à gauche de son point : il ne prend plus de place (la règle faisait ~100 px et mangeait la dernière colonne) */
+.px-map-z button{position:relative}.px-map-z button span{position:absolute;right:calc(100% + 2px);top:50%;margin-top:-4px;white-space:nowrap;pointer-events:none;text-shadow:0 0 4px #000,0 1px 2px #000}
 .px-map-z button.on{color:var(--bio)}.px-map-z button.on i{border-color:var(--bio);background:var(--bio);box-shadow:0 0 10px var(--glow)}.px-map-z button.on span{animation:px-palier-nom 1.8s ease forwards}
 @keyframes px-palier-nom{0%,60%{opacity:1}100%{opacity:0}}
 .px-map-temps[hidden]{display:none}
@@ -1457,7 +1459,10 @@ html.px-organique .px-map-figes button,html.px-organique .px-map-z .px-map-zb{ba
 .px-map.px-zoom-out .px-map-n,.px-map.px-zoom-out .px-map-v{animation:px-recule .32s cubic-bezier(.2,.9,.3,1)}
 html.px-calme .px-map .px-map-n,html.px-calme .px-map .px-map-v{animation:none}
 /* tes ploxions : la grille, en cellules */
-.px-map-tt{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 8px}
+.px-map-tt{display:grid;grid-template-columns:repeat(var(--tt-c,4),minmax(0,1fr));gap:8px;--tt-cel:80px}
+/* (0.99.19) les cases suivent leur taille : le glyphe et le nom grandissent avec elles */
+.px-map-tt .px-map-tc{border-radius:clamp(10px,calc(var(--tt-cel) * .16),22px)}
+html .px-map .px-map-tt .px-map-tc small{font-size:clamp(8px,calc(var(--tt-cel) * .12),14px)}
 .px-map-tc{position:relative;aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:14px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);padding:4px}
 .px-map-tc .px-g{width:46%;height:46%;fill:none;stroke:var(--acc);stroke-width:4}
 .px-map-tc small{font:500 8px/1.1 var(--mono);color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

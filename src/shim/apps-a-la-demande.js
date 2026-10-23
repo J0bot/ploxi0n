@@ -87,11 +87,22 @@ export function installerAppsALaDemande({ W = globalThis.window, ensureApp, conn
 export function ploxionsComposes(js, soi = '') {
   const s = String(js || ''), out = new Set(), N = '([a-z0-9][a-z0-9_-]{1,40})';
   for (const re of [new RegExp('\\bapp\\s*:\\s*[\'"]' + N + '[\'"]', 'g'), new RegExp('jOSApps\\s*\\.\\s*(?:monter|ensure)\\(\\s*[\'"]' + N + '[\'"]', 'g'),
-    new RegExp('jOSApps\\s*\\[\\s*[\'"]' + N + '[\'"]\\s*\\](?!\\s*=[^=])', 'g')]) {
+    new RegExp('jOSApps\\s*\\[\\s*[\'"]' + N + '[\'"]\\s*\\](?!\\s*=[^=])', 'g'),
+    // (0.99.19, le bilan de santé : chill, daron, zbeul « reading 'mount' ») jOSApps.rs.mount(…) : un ploxion qui en délègue un autre
+    new RegExp('jOSApps\\s*\\.\\s*' + N + '\\s*\\.\\s*(?:mount|manifest)\\b', 'g')]) {
     for (const m of s.matchAll(re)) out.add(m[1]);
   }
   // ce que le code enregistre lui-même (jOSApps['quests'] = jOSApps['xp']) n'est pas une dépendance
   for (const m of s.matchAll(new RegExp('jOSApps\\s*\\[\\s*[\'"]' + N + '[\'"]\\s*\\]\\s*=(?!=)', 'g'))) out.delete(m[1]);
+  out.delete(soi);
+  return [...out];
+}
+
+/** (0.99.19) les ploxions qu'un code monte DIRECTEMENT (jOSApps.rs.mount(…), jOSApps['rs'].mount(…)) : ils doivent être dans la page avant lui
+ *  (les onglets { app: 'chat' } et jOSApps.monter passent par la demande, plus tard) */
+export function ploxionsDelegues(js, soi = '') {
+  const s = String(js || ''), out = new Set(), N = '([a-z0-9][a-z0-9_-]{1,40})';
+  for (const re of [new RegExp('jOSApps\\s*\\.\\s*' + N + '\\s*\\.\\s*mount\\b', 'g'), new RegExp('jOSApps\\s*\\[\\s*[\'"]' + N + '[\'"]\\s*\\]\\s*\\.\\s*mount\\b', 'g')]) for (const m of s.matchAll(re)) out.add(m[1]);
   out.delete(soi);
   return [...out];
 }

@@ -16,6 +16,7 @@ import { svgXerkion, glypheCategorie } from './xerkion-icone.js';
 import { creerFractale, glisser } from './fractale.js';
 import { lireXerbion, htmlXerbion } from './xerbion.js';
 import { creerBande, placerDansOrdre } from './bande.js';
+import { ploxionsDelegues } from '../shim/apps-a-la-demande.js';
 const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 // le logo (losanges concentriques), transparent : les espaces entre les losanges sont des trous
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
@@ -400,12 +401,23 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     const s = D.createElement('script'); s.dataset.ploxion = id; s.textContent = js + '\n//# sourceURL=ploxi0n/' + id + '.js'; D.head.appendChild(s);
     if (!(W.jOSApps && W.jOSApps[id])) { try { W.eval(js); } catch (e) { /* le ploxion se signalera « pas enregistré » */ } }   // une page qui n'exécute pas les scripts insérés
   }
+  // (0.99.19, le bilan de santé : chill, daron, zbeul montent jOSApps.rs.mount tout de suite) les ploxions qu'un code compose, déjà installés,
+  // entrent dans la page AVANT lui ; seulement ceux du boxion local (aucun réseau), sans boucle (chaine), 3 niveaux au plus
+  async function prechargerComposes(id, js, chaine) {
+    if (!bundleLocal || chaine.size > 3) return;
+    for (const d of ploxionsDelegues(js, id).slice(0, 12)) {
+      if (chaine.has(d) || (W.jOSApps && W.jOSApps[d]) || charges.has(d)) continue;
+      const dj = await bundleLocal(d).catch(() => null); if (!dj) continue;
+      await prechargerComposes(d, dj, new Set([...chaine, d]));
+      try { executer(d, dj); } catch (e) { /* le ploxion composé se signalera lui-même */ }
+    }
+  }
   function charger(id) {
     if (W.jOSApps && W.jOSApps[id]) return Promise.resolve(W.jOSApps[id]);
     if (charges.has(id)) return charges.get(id);
     const p = (async () => {
       const js = bundleLocal ? await bundleLocal(id) : null;
-      if (js) { executer(id, js); if (W.jOSApps && W.jOSApps[id]) return W.jOSApps[id]; throw new Error('le ploxion ' + id + ' ne s\'est pas enregistré'); }
+      if (js) { await prechargerComposes(id, js, new Set([id])); executer(id, js); if (W.jOSApps && W.jOSApps[id]) return W.jOSApps[id]; throw new Error('le ploxion ' + id + ' ne s\'est pas enregistré'); }
       return new Promise((ok, ko) => {
         const css = D.createElement('link'); css.rel = 'stylesheet'; css.href = base + encodeURIComponent(id) + '/app.css'; css.dataset.ploxion = id; D.head.appendChild(css);
         const s = D.createElement('script'); s.src = base + encodeURIComponent(id) + '/app.js'; s.dataset.ploxion = id;
@@ -822,6 +834,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
       try { v.inst = silence.has(id) ? monterEnSilence(W, app, hote, o) : (app.mount(hote, o) || {}); }   // 🤫 (0.78) src/app/silence.js
       finally { if (avant !== null) W.setTimeout(() => { try { W.history.replaceState(W.history.state, '', W.location.pathname + avant + W.location.hash); } catch (er) { /* */ } }, 2000); }
     } catch (er) {
+      try { W.console.error('[ploxi0n] ' + id + ' ne s\'ouvre pas :', (er && er.stack) || er); } catch (e2) { /* */ }   // (0.99.19) la pile, pour l'inspecteur de Safari et le bilan de santé
       hote.innerHTML = '<p class="px-erreur">Ce ploxion n\'a pas pu s\'ouvrir : ' + texte(er.message) + '</p>';
     }
     return true;
