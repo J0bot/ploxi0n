@@ -51,11 +51,42 @@ test('⌖ le ploxion : situer, charger la case (puis le cache), poser son lieu',
   const W = { setInterval: () => 1, clearInterval: () => {}, open: () => {} };
   const a = creerAutour({ W, boxion, http, position: async () => ({ ...ICI, precision: 12 }) });
   await a.pret; await a.situer();
-  assert.ok(demandes.length >= 1 && demandes.every(u => u.startsWith('https://overpass-api.de/api/interpreter?data=')));
+  const osm = () => demandes.filter(u => !u.includes('sharedmobility'));
+  assert.ok(osm().length >= 1 && osm().every(u => u.startsWith('https://overpass-api.de/api/interpreter?data=')));
+  assert.equal(demandes.filter(u => u.includes('sharedmobility')).length, 1, 'à Zurich : les trottinettes de la case (0.99.15)');
   assert.ok(demandes.every(u => !decodeURIComponent(u).includes('47.3722')), 'jamais la position exacte');
   assert.equal(a.etat().lieux.length, 7);
-  const n = demandes.length;
+  const n = osm().length;
   const b = creerAutour({ W, boxion, http, position: async () => ICI }); await b.situer();
-  assert.equal(demandes.length, n, 'la case est en cache (3 jours)');
+  assert.equal(osm().length, n, 'la case est en cache (3 jours)');
   const m = await a.poser('mien', 'le banc du lac'); assert.equal(m.nom, 'le banc du lac'); assert.ok((await boxion.get('reglages', 'autour-miens')).length === 1);
+});
+
+// ---- (0.99.15) la boussole et les trottinettes en direct (sharedmobility.ch) ----
+import { capBoussole, lireVehicules, requeteVehicules, enSuisse, cellule as celluleSm, fleche as flecheSm } from '../src/bions/autour.js';
+
+test('⌖ la boussole : WebKit (ou CoreMotion), sinon alpha absolu ; la flèche devient relative', () => {
+  assert.equal(capBoussole({ webkitCompassHeading: 90 }), 90);
+  assert.equal(capBoussole({ webkitCompassHeading: -1, absolute: true, alpha: 30 }), 330);
+  assert.equal(capBoussole({ alpha: 30 }), null);
+  assert.equal(capBoussole(null), null);
+  assert.equal(flecheSm(0, 90), '←');   // le nord, quand on regarde l'est : à gauche
+  assert.equal(flecheSm(90, 90), '↑');
+});
+
+test('⌖ sharedmobility.ch : lu avec tolérance ; les voitures et ce qui est pris sont laissés ; la case, pas la position', () => {
+  const c = celluleSm(47.3769, 8.5417);
+  assert.equal(requeteVehicules(c), 'https://api.sharedmobility.ch/v1/sharedmobility/identify?Geometry=' + c.lng + ',' + c.lat + '&Tolerance=' + c.rayon + '&offset=0&geometryFormat=esrijson');
+  assert.ok(enSuisse({ lat: 47.37, lng: 8.54 })); assert.ok(!enSuisse({ lat: 48.85, lng: 2.35 }));
+  const l = lireVehicules({ results: [
+    { id: 'a', geometry: { x: 8.54, y: 47.37 }, attributes: { provider_id: 'tier', vehicle_type: ['E-Scooter'], available: true } },
+    { featureId: 'b', geometry: { x: 8.541, y: 47.371 }, attributes: { 'ch.bfe.sharedmobility.provider.id': 'publibike', 'ch.bfe.sharedmobility.vehicle_type': 'E-Bike', station_name: 'Central' } },
+    { id: 'c', geometry: { type: 'Point', coordinates: [8.542, 47.372] }, properties: { provider_name: 'Donkey', vehicle_type: 'Bike' } },
+    { id: 'd', geometry: { x: 8.54, y: 47.37 }, attributes: { provider_id: 'mobility', vehicle_type: ['Car'], available: true } },
+    { id: 'e', geometry: { x: 8.54, y: 47.37 }, attributes: { provider_id: 'tier', vehicle_type: ['E-Scooter'], available: false } },
+    { id: 'f', geometry: {}, attributes: { vehicle_type: ['E-Scooter'] } },
+  ] });
+  assert.deepEqual(l.map(x => [x.id, x.sorte, x.nom]), [['sm-a', 'trottinette', 'trottinette · tier'], ['sm-b', 'vélo électrique', 'Central'], ['sm-c', 'vélo', 'vélo · Donkey']]);
+  assert.ok(l.every(x => x.genre === 'velo' && x.direct));
+  assert.deepEqual(lireVehicules(null), []); assert.deepEqual(lireVehicules({ results: 'x' }), []);
 });

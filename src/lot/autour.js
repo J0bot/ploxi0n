@@ -3,7 +3,9 @@
 // les toilettes en un geste, des propositions selon l'heure et ton vecteur xerion, « suivre » (la liste se refait quand tu marches, la case
 // suivante se charge d'elle-même), et « ＋ poser ici » : mapper soi-même (tes lieux, à toi seul). Toucher un lieu : y aller à pied (Plans).
 // Ne pas nuire : seule la case part sur le réseau (son centre), jamais ta position ; « suivre » s'arrête quand on quitte le ploxion.
-import { CATEGORIES, cellule, requete, lire, trier, proposer, fleche, metres, plansLien, distance } from '../bions/autour.js';
+// (0.99.15) la boussole : les flèches tournent avec toi (deviceorientation, la boussole de CoreMotion via web-natif) ; les trottinettes et les
+// vélos en direct en Suisse (sharedmobility.ch, la même case ; une minute de fraîcheur, gardés en mémoire seulement).
+import { CATEGORIES, cellule, requete, lire, trier, proposer, fleche, metres, plansLien, distance, capBoussole, enSuisse, requeteVehicules, lireVehicules } from '../bions/autour.js';
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 export const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
@@ -11,6 +13,7 @@ const GARDE = 3 * 864e5;
 
 export function creerAutour({ W = globalThis.window, boxion, http, position, ouvrirLien = null, usage = async () => null, vibrer = () => {}, maintenant = () => Date.now() }) {
   let pos = null, lieux = new Map(), miens = [], genres = null, etat = '', suivi = 0, enCours = new Set(), peindre = () => {};
+  let vehicules = [], vehCase = '', vehLe = 0, cap0 = null;
   const pret = boxion.get('reglages', 'autour-miens').then(l => { if (Array.isArray(l)) miens = l.slice(0, 500); }).catch(() => {});
 
   /** une case : le cache (3 jours), sinon Overpass (le miroir si le premier est occupé) */
@@ -33,6 +36,14 @@ export function creerAutour({ W = globalThis.window, boxion, http, position, ouv
       else if (err) etat = (err.message || 'OpenStreetMap ne répond pas') + ' ; réessaie dans un moment';
     } finally { enCours.delete(c.cle); }
   }
+  /** les trottinettes et vélos libres de la case (sharedmobility.ch) : en Suisse seulement, une minute de fraîcheur */
+  async function chargerVehicules() {
+    if (!pos || !enSuisse(pos)) { vehicules = []; return; }
+    const c = cellule(pos.lat, pos.lng); if (c.cle === vehCase && maintenant() - vehLe < 60e3) return;
+    vehCase = c.cle; vehLe = maintenant();
+    try { const r = await http.get(requeteVehicules(c), { headers: { Accept: 'application/json' } }); if (r.status === 200) vehicules = lireVehicules(JSON.parse(r.texte || '{}')); }
+    catch (e) { /* le direct manque : les vélos d'OpenStreetMap restent */ }
+  }
   /** la case de la position, et celles d'à côté si on est près du bord (à moins de ~300 m) */
   function cellules(p) { const vus = new Map(); for (const [a, b] of [[0, 0], [0.003, 0], [-0.003, 0], [0, 0.004], [0, -0.004]]) { const c = cellule(p.lat + a, p.lng + b); vus.set(c.cle, c); } return [...vus.values()]; }
 
@@ -41,6 +52,7 @@ export function creerAutour({ W = globalThis.window, boxion, http, position, ouv
     try { const p = await position(); if (!p || !Number.isFinite(+p.lat)) throw new Error('pas de position');
       const avant = pos; pos = { lat: +p.lat, lng: +p.lng, precision: +p.precision || null };
       if (!avant || distance(avant, pos) > 40) { etat = ''; peindre(); for (const c of cellules(pos)) { await charger(c); peindre(); } }
+      await chargerVehicules();
       etat = etat.startsWith('où') ? '' : etat; peindre(); return pos;
     } catch (e) { etat = 'la position n\'est pas là : ' + (e.message || e) + ' (Réglages iOS › ploxi0n › Position)'; peindre(); return null; }
   }
@@ -54,7 +66,7 @@ export function creerAutour({ W = globalThis.window, boxion, http, position, ouv
     const l = { id: 'mien-' + maintenant().toString(36), genre: 'mien', glyphe: '◉', nom: String(nom || 'mon lieu').slice(0, 60), lat: p.lat, lng: p.lng, le: maintenant(), quoi: genre };
     miens = [...miens, l].slice(-500); await boxion.put('reglages', 'autour-miens', miens).catch(() => {}); vibrer('succes'); peindre(); return l;
   }
-  const tous = () => [...lieux.values(), ...miens];
+  const tous = () => [...lieux.values(), ...vehicules, ...miens];
   const aller = (l) => { const u = plansLien(l); vibrer('fx-arrivee'); if (ouvrirLien) ouvrirLien(u); else if (W.open) W.open(u, '_blank'); };
 
   function mount(hote) {
@@ -64,23 +76,32 @@ export function creerAutour({ W = globalThis.window, boxion, http, position, ouv
       + '<div class="px-au-b"><button type="button" data-au="situer">◎ me situer</button><button type="button" data-au="suivre"></button><button type="button" data-au="poser">＋ poser ici</button></div>'
       + '<p class="px-au-etat" data-au-etat></p>'
       + '<button type="button" class="px-au-wc" data-neurone data-au-wc></button>'
+      + '<button type="button" class="px-au-wc px-au-tr" data-neurone data-au-tr hidden></button>'
       + '<h3 class="px-au-t">◈ à faire autour</h3><div class="px-au-prop" data-au-prop data-neurones="fin"></div>'
       + '<div class="px-au-puces" data-au-puces></div><div class="px-au-liste" data-au-liste data-ecrit></div></div>';
     const $ = (s) => hote.querySelector(s);
-    const ligne = (l, i) => '<button type="button" class="px-au-l" data-au-aller="' + i + '"><span class="px-au-g">' + esc(l.glyphe) + '</span><span class="px-au-n">' + esc(l.nom) + (l.horaires ? '<small>' + esc(l.horaires) + '</small>' : '') + '</span><span class="px-au-d">' + metres(l.d) + ' ' + fleche(l.cap) + '</span></button>';
+    const f = (l) => '<span data-au-f="' + Math.round(l.cap) + '">' + fleche(l.cap, cap0 || 0) + '</span>';   // la flèche : relative à ta direction si la boussole parle
+    const ligne = (l, i) => '<button type="button" class="px-au-l" data-au-aller="' + i + '"><span class="px-au-g">' + esc(l.glyphe) + '</span><span class="px-au-n">' + esc(l.nom) + (l.horaires ? '<small>' + esc(l.horaires) + '</small>' : '') + (l.direct ? '<small>en direct · sharedmobility.ch</small>' : '') + '</span><span class="px-au-d">' + metres(l.d) + ' ' + f(l) + '</span></button>';
+    let tour = 0;
+    const tourner = () => { tour = 0; for (const x of hote.querySelectorAll('[data-au-f]')) x.textContent = fleche(+x.getAttribute('data-au-f'), cap0 || 0); };
+    const boussole = (e) => { const c = capBoussole(e); if (c == null) return; const d = cap0 == null ? 999 : Math.abs(((c - cap0 + 540) % 360) - 180);
+      if (d < 8) return; const premier = cap0 == null; cap0 = c; if (premier) peindre(); else if (!tour) tour = W.requestAnimationFrame(tourner); };
+    W.addEventListener('deviceorientation', boussole);
     peindre = async () => {
       if (!vivant) return;
       $('[data-au="suivre"]').textContent = suivi ? '■ ne plus suivre' : '◉ suivre en marchant'; $('[data-au="suivre"]').classList.toggle('on', !!suivi);
-      $('[data-au-etat]').textContent = etat || (pos ? (lieux.size + ' lieux autour' + (suivi ? ' · je te suis' : '')) : 'touche « me situer »');
+      $('[data-au-etat]').textContent = etat || (pos ? ((lieux.size + vehicules.length) + ' lieux autour' + (suivi ? ' · je te suis' : '') + (cap0 != null ? ' · boussole' : '')) : 'touche « me situer »');
       $('[data-au-puces]').innerHTML = CATEGORIES.map(c => '<button type="button" data-au-genre="' + c[0] + '"' + (genres && genres.includes(c[0]) ? ' class="on"' : '') + '>' + esc(c[1]) + ' ' + esc(c[2]) + '</button>').join('') + '<button type="button" data-au-genre="mien"' + (genres && genres.includes('mien') ? ' class="on"' : '') + '>◉ les miens</button>';
       if (!pos) { $('[data-au-wc]').hidden = true; $('[data-au-prop]').innerHTML = ''; $('[data-au-liste]').innerHTML = ''; return; }
       const wc = trier(tous(), pos, { genres: ['toilettes'], max: 1 })[0], b = $('[data-au-wc]');
-      b.hidden = false; b.innerHTML = wc ? '<b>WC</b> les toilettes les plus proches · ' + metres(wc.d) + ' ' + fleche(wc.cap) : '<b>WC</b> pas de toilettes connues ici';
+      b.hidden = false; b.innerHTML = wc ? '<b>WC</b> les toilettes les plus proches · ' + metres(wc.d) + ' ' + f(wc) : '<b>WC</b> pas de toilettes connues ici';
       b.dataset.id = wc ? wc.id : '';
+      const tr = trier(vehicules, pos, { max: 1 })[0], bt = $('[data-au-tr]');
+      bt.hidden = !tr; bt.dataset.id = tr ? tr.id : ''; if (tr) bt.innerHTML = '<b>⋈</b> ' + esc(tr.sorte) + (tr.fournisseur ? ' · ' + esc(tr.fournisseur) : '') + ' · ' + metres(tr.d) + ' ' + f(tr) + '<small>en direct · sharedmobility.ch</small>';
       const u = await usage().catch(() => null); if (!vivant) return;
       const pr = proposer(tous(), pos, { heure: new Date(maintenant()).getHours(), usage: (u && u.px) || {} });
       vus = trier(tous(), pos, { genres, max: 80 });
-      $('[data-au-prop]').innerHTML = pr.map((l) => '<button type="button" class="px-au-p" data-neurone data-au-id="' + esc(l.id) + '"><span class="px-au-g">' + esc(l.glyphe) + '</span><b>' + esc(l.nom) + '</b><small>' + metres(l.d) + ' ' + fleche(l.cap) + '</small></button>').join('') || '<p class="px-sous">rien encore</p>';
+      $('[data-au-prop]').innerHTML = pr.map((l) => '<button type="button" class="px-au-p" data-neurone data-au-id="' + esc(l.id) + '"><span class="px-au-g">' + esc(l.glyphe) + '</span><b>' + esc(l.nom) + '</b><small>' + metres(l.d) + ' ' + f(l) + '</small></button>').join('') || '<p class="px-sous">rien encore</p>';
       $('[data-au-liste]').innerHTML = vus.map(ligne).join('') || '<p class="px-sous">rien de ce genre dans cette case</p>';
     };
     pret.then(() => peindre());
@@ -88,13 +109,13 @@ export function creerAutour({ W = globalThis.window, boxion, http, position, ouv
       const g = e.target.closest('[data-au-genre]'); if (g) { const k = g.getAttribute('data-au-genre'); genres = genres && genres.includes(k) ? (genres.filter(x => x !== k).length ? genres.filter(x => x !== k) : null) : [...(genres || []), k]; vibrer('selection'); peindre(); return; }
       const al = e.target.closest('[data-au-aller]'); if (al) { const l = vus[+al.getAttribute('data-au-aller')]; if (l) aller(l); return; }
       const id = (e.target.closest('[data-au-id]') || {}).dataset; if (id && id.auId) { const l = tous().find(x => x.id === id.auId); if (l) aller(l); return; }
-      const wc = e.target.closest('[data-au-wc]'); if (wc) { const l = tous().find(x => x.id === wc.dataset.id); if (l) aller(l); return; }
+      const wc = e.target.closest('[data-au-wc],[data-au-tr]'); if (wc) { const l = tous().find(x => x.id === wc.dataset.id); if (l) aller(l); return; }
       const b = e.target.closest('[data-au]'); if (!b) return; const a = b.getAttribute('data-au');
       if (a === 'situer') situer(); else if (a === 'suivre') suivre(!suivi); else if (a === 'poser') poser('mien', '');
     });
     if (!pos) situer();
-    return { unmount() { vivant = false; suivre(false); peindre = () => {}; hote.innerHTML = ''; } };
+    return { unmount() { vivant = false; suivre(false); W.removeEventListener('deviceorientation', boussole); if (tour) W.cancelAnimationFrame(tour); peindre = () => {}; hote.innerHTML = ''; } };
   }
   if (W) { W.jOSApps = W.jOSApps || {}; W.jOSApps.autour = { manifest: { id: 'autour', name: 'Autour', icon: '⌖' }, mount }; }
-  return { mount, pret, situer, suivre, poser, etat: () => ({ pos, lieux: tous(), etat, suivi: !!suivi }), ploxion: { id: 'autour', nom: 'Autour', icone: '⌖', interne: true } };
+  return { mount, pret, situer, suivre, poser, etat: () => ({ pos, lieux: tous(), etat, suivi: !!suivi, cap: cap0, vehicules: vehicules.length }), ploxion: { id: 'autour', nom: 'Autour', icone: '⌖', interne: true } };
 }

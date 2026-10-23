@@ -58,6 +58,15 @@ Et juste avant, sur les zooms : **le wormion et le portion sont de gros knobs co
   autour, les puces, la liste, ＋ poser ici (tes lieux, `reglages/autour-miens`, à toi seul) ; cache 3 jours (`autour/<case>`), un miroir d'Overpass.
 - ⏭ les trottinettes en direct (sharedmobility.ch, GBFS), les events, la boussole (la flèche relative à ta direction), le terrax en 3D.
 
+## Construit (0.99.15) : la boussole et les trottinettes
+
+- La boussole : les flèches d'Autour sont relatives à ta direction dès que l'iPhone donne son cap (la boussole de CoreMotion par web-natif).
+- Les trottinettes et les vélos libres, en direct, en Suisse : sharedmobility.ch (l'open data de l'OFEN, « open use », source citée). L'API
+  REST ouverte `identify`, depuis le centre de la case (comme OpenStreetMap). Le flux GBFS 2.3 demande un e-mail dans l'en-tête : pas utilisé.
+  ⚠ Le format exact de la réponse n'est pas documenté et l'hôte était injoignable depuis la session : la lecture est tolérante (clés courtes ou
+  `ch.bfe.sharedmobility.*`, geometry x/y ou GeoJSON) ; à vérifier sur l'iPhone.
+- ⏭ les events, le terrax en 3D.
+
 ## Questions ouvertes (à RS-7, quand il en aura envie)
 
 - Mapion (le ploxion) et mappion (celui du labo), c'est le même ?

@@ -1,5 +1,5 @@
 // @bion autour — ce qu'il y a autour de moi, en continu : les lieux d'OpenStreetMap (toilettes, fontaines, bars, cafés, restos, art, vues,
-// parcs…), la distance et la direction, des propositions selon l'heure et le vecteur xerion | api: CATEGORIES, cellule, requete, lire, distance, cap, fleche, trier, proposer, plansLien
+// parcs…), la distance et la direction, des propositions selon l'heure et le vecteur xerion | api: CATEGORIES, cellule, requete, lire, distance, cap, fleche, trier, proposer, plansLien, capBoussole, requeteVehicules, lireVehicules
 // (0.99.9, RS-7 23.10 à Zurich : « dès que je sais ma position, ça fait tous les trucs qui sont autour de moi ; au fur et à mesure que je me
 // déplace, ça se met à jour ; des toilettes direct ; fetch tout ce qui existe ; propositions selon mon vecteur xerion » ; docs/MAPION.md).
 // Pur, sans DOM ni réseau : le ploxion « Autour » (src/lot/autour.js) fait les requêtes ; le mappion du labo peut le composer.
@@ -97,3 +97,41 @@ export function proposer(lieux, pos, { heure = new Date().getHours(), usage = {}
 
 /** y aller à pied dans Plans (Apple) */
 export const plansLien = (l) => 'https://maps.apple.com/?daddr=' + l.lat + ',' + l.lng + '&dirflg=w&q=' + encodeURIComponent(l.nom || '');
+
+// ---- (0.99.15) la boussole : les flèches tournent avec toi ----
+/** le cap de l'iPhone (0 = nord) d'un événement deviceorientation : la boussole de WebKit (ou celle de CoreMotion via web-natif), sinon alpha absolu */
+export function capBoussole(e) {
+  if (!e) return null;
+  if (e.webkitCompassHeading != null && Number.isFinite(+e.webkitCompassHeading) && +e.webkitCompassHeading >= 0) return ((+e.webkitCompassHeading % 360) + 360) % 360;
+  if (e.absolute && e.alpha != null && Number.isFinite(+e.alpha)) return ((360 - +e.alpha) % 360 + 360) % 360;
+  return null;
+}
+
+// ---- (0.99.15) les trottinettes et les vélos en direct : sharedmobility.ch (l'open data de l'OFEN, « open use », la source citée) ----
+// L'API REST ouverte (identify : un point lon,lat et un rayon) ; le flux GBFS 2.3 demande un e-mail dans l'en-tête : pas utilisé.
+// Comme pour OpenStreetMap, la requête part du CENTRE de la case, jamais de ta position.
+export const SHAREDMOBILITY = 'https://api.sharedmobility.ch/v1/sharedmobility/identify';
+export const enSuisse = (p) => !!p && p.lat > 45.8 && p.lat < 47.9 && p.lng > 5.9 && p.lng < 10.6;
+export const requeteVehicules = (c, offset = 0) => SHAREDMOBILITY + '?Geometry=' + c.lng + ',' + c.lat + '&Tolerance=' + c.rayon + '&offset=' + offset + '&geometryFormat=esrijson';
+const SORTES = [[/scooter|trotti|kick/i, 'trottinette', '⋈'], [/e-?bike|e-?velo|électrique/i, 'vélo électrique', '⋈'], [/bike|velo|vélo|cargo/i, 'vélo', '⋈']];
+/** la réponse de sharedmobility.ch → des lieux genre « velo » ; lue avec tolérance (clés courtes ou ch.bfe.sharedmobility.*, geometry x/y ou GeoJSON) ;
+ *  les voitures et ce qui n'est pas disponible sont laissés */
+export function lireVehicules(json) {
+  const res = Array.isArray(json) ? json : (json && (json.results || json.features)) || [], out = [], vus = new Set();
+  for (const r of res.slice(0, 1000)) {
+    const a = (r && (r.attributes || r.properties)) || r || {};
+    const v = (k, long) => (a[k] != null ? a[k] : a['ch.bfe.sharedmobility.' + long]);
+    const g = r.geometry || {}, co = Array.isArray(g.coordinates) ? g.coordinates : null;
+    const lng = +(g.x != null ? g.x : co ? co[0] : (a.lon != null ? a.lon : a.lng)), lat = +(g.y != null ? g.y : co ? co[1] : a.lat);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90) continue;
+    const dispo = v('available', 'available'); if (dispo === false || dispo === 'false') continue;
+    const type = [].concat(v('vehicle_type', 'vehicle_type') || []).join(' ');
+    const sorte = SORTES.find(([re]) => re.test(type)); if (!sorte) continue;
+    const id = 'sm-' + String(r.id != null ? r.id : (r.featureId != null ? r.featureId : (a.id != null ? a.id : lat + ',' + lng))).slice(0, 80);
+    if (vus.has(id)) continue; vus.add(id);
+    const fournisseur = String(v('provider_name', 'provider.name') || v('provider_id', 'provider.id') || '').slice(0, 30);
+    const station = v('station_name', 'station.name');
+    out.push({ id, genre: 'velo', glyphe: sorte[2], sorte: sorte[1], nom: String(station || (sorte[1] + (fournisseur ? ' · ' + fournisseur : ''))).slice(0, 60), lat, lng, fournisseur, direct: true });
+  }
+  return out;
+}

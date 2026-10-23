@@ -42,6 +42,11 @@ function laboFaux(url) {
       return r(200, JSON.stringify({ elements: [L(0.0006, 0.0004, { amenity: 'toilets', fee: 'no', name: 'WC de la place' }, 1), L(-0.001, 0.0012, { amenity: 'drinking_water' }, 2), L(0.0011, -0.0008, { amenity: 'cafe', name: 'Café du Grütli', opening_hours: '07:00-19:00' }, 3),
         L(-0.0015, -0.0005, { amenity: 'bar', name: 'Le Bourg' }, 4), L(0.002, 0.002, { tourism: 'artwork', name: 'La fontaine de la Justice' }, 5), L(0.003, -0.002, { leisure: 'park', name: 'Parc de Mon-Repos' }, 6, true),
         L(-0.0007, 0.0021, { amenity: 'restaurant', name: 'Pinte Besson' }, 7), L(0.0025, 0.001, { tourism: 'viewpoint', name: 'Esplanade de la cathédrale' }, 8), L(-0.0022, 0.0016, { amenity: 'bicycle_rental', name: 'PubliBike' }, 9)] }), 'application/json'); }
+  // (0.99.15) sharedmobility.ch (identify, à la geo.admin) : deux trottinettes et un vélo libres, une voiture et une trottinette prise (laissées)
+  if (u.hostname === 'api.sharedmobility.ch') { const V = (id, dl, dg, attributes) => ({ featureId: id, id, layerBodId: 'ch.bfe.sharedmobility', geometry: { x: 6.63 + dg, y: 46.52 + dl }, attributes });
+    return r(200, JSON.stringify({ results: [V('tier:1', 0.0004, -0.0003, { provider_id: 'tier', vehicle_type: ['E-Scooter'], available: true, pickup_type: 'free_floating' }),
+      V('voi:2', -0.0012, 0.0009, { provider_id: 'voi', vehicle_type: ['E-Scooter'], available: true }), V('publibike:3', 0.0009, 0.0011, { provider_id: 'publibike', vehicle_type: ['E-Bike'], available: true, station_name: 'Riponne' }),
+      V('mobility:4', 0.0002, 0.0001, { provider_id: 'mobility', vehicle_type: ['Car'], available: true }), V('tier:5', 0.0001, 0.0001, { provider_id: 'tier', vehicle_type: ['E-Scooter'], available: false })] }), 'application/json'); }
   if (u.hostname !== 'labo.j0bot.ch') throw new Error('Could not connect to the server.');
   if (u.pathname === '/px/changelog.json') return r(200, JSON.stringify({ head: 'faux', par_ploxion: {} }), 'application/json');   // (0.99.6) rien n'a changé
   // (0.82) l'atelier des glyphes du labo : un glyphe dessiné, posé sur l'icône de « social » pour tous

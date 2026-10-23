@@ -1,5 +1,6 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1792724666000,"0.99.13 : le paysage sur les autres écrans"],
+export const COMMITS = [[1792725137000,"0.99.14 : toutes les langues, le début"],
+  [1792724666000,"0.99.13 : le paysage sur les autres écrans"],
   [1792724220000,"0.99.12 : le drone dans XERB0T (MAVLink par mavlink2rest)"],
   [1792723879000,"0.99.11 : le téléphone vivant (le bord respire avec la chaleur, la batterie, le son)"],
   [1792723520000,"0.99.10 : le synthé à plusieurs (Proche), penché (l'inclinaison tourne deux knobs), en arrière-plan"],
