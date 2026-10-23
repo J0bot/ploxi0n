@@ -72,7 +72,8 @@ import { creerRemontee } from './app/remontee-tsoins.js';
 import { creerSysteme } from './lot/systeme.js';
 import { creerKoins } from './app/koins.js';
 import { creerNeurones } from './app/neurones.js';
-import { creerAtelier } from './lot/atelier-peaux.js';   // ◈ (0.96) l'atelier des peaux : la fractale des UI, les knobs
+import { creerAtelier } from './lot/atelier-peaux.js';
+import { creerPasse } from './lot/passe.js';   // ○ (0.97) le passé : le zoom de temps   // ◈ (0.96) l'atelier des peaux : la fractale des UI, les knobs
 import { appliquerCouleurs } from './bions/membrane.js';   // 〰 (0.93) les bords organiques, les neurones
 import { creerMap } from './app/map-hubs.js';
 import { creerAmbiances } from './lot/ambiances.js';
@@ -85,7 +86,7 @@ import { semerKoinIon } from './terrax/koin-ion.js';
 import { svgXerkion } from './app/xerkion-icone.js';
 import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
-import { glyphe as G } from './app/glyphes.js';
+import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
 const VERSION = '0.96.0';
 
@@ -415,6 +416,7 @@ async function demarrer() {
   // ▤ ≈ (0.88) le lot de ploxions de RS-7 : le système (btop) et les ambiances (Blanket), dans l'app, hors ligne
   const natifLot = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
   internes.push(atelier.ploxion);
+  internes.push(creerPasse({ W: window, boxion, vibrer: (x) => vibrer(x), ouvrir: (id) => routeurProxy.ouvrir(id), catalogue: () => (routeur ? routeur.catalogue() : []), glyphe: (p) => glyphePloxion(p) }).ploxion);
   internes.push(creerSysteme({ W: window,
     systeme: natifLot ? () => PloxiApple.systeme() : null,
     appareil: natifLot ? async () => { const { Device } = await import('@capacitor/device'); const i = await Device.getInfo(); return { model: i.model, operatingSystem: i.operatingSystem, osVersion: i.osVersion, memUsed: i.memUsed }; } : null,
@@ -426,7 +428,7 @@ async function demarrer() {
   // ▦ (0.90) la map du xerboxion en carrés : les hubs du labo (/px/xerkions.json) et les tiens, une balade de portail en portail ; en créer
   internes.push(creerMap({ boxion, vibrer: (x) => vibrer(x), enLigne: () => navigator.onLine !== false,
     charger: async () => { const r = await httpRelais.get(SOURCE + '/px/xerkions.json', { headers: { Accept: 'application/json' } }); if (r.status !== 200) throw new Error('map : ' + r.status); const d = JSON.parse(r.texte || '{}'); return Array.isArray(d.items) ? d.items : []; },
-    ploxions: () => (routeur ? routeur.catalogue().filter(p => !p.interne || p.id === 'journal-tsoins') : []), ouvrir: (id) => routeurProxy.ouvrir(id) }).ploxion);
+    ploxions: () => (routeur ? routeur.catalogue().filter(p => !p.interne || p.id === 'journal-tsoins') : []), ouvrir: (id) => routeurProxy.ouvrir(id), usage: () => boxion.get('usage', 'stats') }).ploxion);
   // ⧗ (0.86) les tsoins de l'iPhone remontent à ton boxion (si tu le choisis : ⚙ › Réseau) ; « me demander un tsoin » après une session
   const remontee = creerRemontee({ boxion, distant, signaler: (t) => routeur && routeur.signaler(t),
     proposer: ({ minutes }) => miniDocks.publier({ cle: 'tsoin-session', titre: 'un tsoin de ta session ?', icone: '⧗', sous: minutes + ' min dans l\'app, juste avant ta pause', ouvrir: () => { miniDocks.retirer('tsoin-session'); tsoinNatif.ouvrir({ texte: '' }); },
@@ -497,6 +499,7 @@ async function demarrer() {
     const u = (await boxion.get('usage', 'stats')) || { px: {} };
     const p = u.px[id] = u.px[id] || { opens: 0, seconds: 0, lastAt: 0 };
     p.opens++; p.seconds += sec; p.lastAt = Date.now();
+    boxion.append('passe', { id, sec }).catch(() => {});   // ○ (0.97) le fil du passé : chaque visite, dans l'ordre (src/lot/passe.js)
     // les jours aussi (comme jOSUsage du labo : 60 jours) — xp › Vecteur les montre
     u.days = u.days || {}; const k = jourCle(), d = u.days[k] = u.days[k] || { opens: 0, seconds: 0, px: {} };
     d.opens++; d.seconds += sec; const dp = d.px[id] = d.px[id] || { o: 0, s: 0 }; dp.o++; dp.s += sec;
@@ -594,7 +597,7 @@ async function demarrer() {
   // ◺◿ (0.89) les koins remplacent le dock et le HUD (le carnet de RS-7, docs/KOINS.md) : ⚙ › HUD et dock › Les koins
   const koins = creerKoins({ actif: () => !!prefs.lire().koins, vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
     koins: () => (routeur.connait('xerkion-perso-koin-ion') ? routeur.ouvrir('xerkion-perso-koin-ion') : routeur.signaler('le koin du ion n\'est pas encore semé ici')),
-    temps: () => routeur.faire('basculer'), xers: () => routeur.faire('mes-xers'), carte: () => routeur.faire('map'),   // □ portion : la map (0.90)
+    temps: () => routeurProxy.ouvrir('passe'),   // ○ (0.97) le wormion : se balader dans le temps (le passé) xers: () => routeur.faire('mes-xers'), carte: () => routeur.faire('map'),   // □ portion : la map (0.90)
     tsoin: () => tsoinNatif.ouvrir(), journal: () => routeurProxy.ouvrir('journal-tsoins'), accueil: () => routeur.faire('accueil'),
     quoi: () => { if (window.ploxi0nTuto && window.ploxi0nTuto.cestQuoi) window.ploxi0nTuto.cestQuoi(); },   // ⓘ (0.95) c'est quoi ça ?
     toi: () => routeurProxy.ouvrir('reglages-app'), retour: () => (routeur.courant() ? routeur.retour() : null), minimiser: () => routeur.faire('minimiser'),

@@ -39,6 +39,33 @@ export function voisins(hubs, id) {
   }
   return { ...v, autres: autres.filter(a => !Object.values(v).includes(a)) };
 }
+/** (0.97) LES DIAGONALES (RS-7 23.10 : « y a que gauche droite haut bas, mais en diagonale ? quand on ira à gauche, on aura des ploxions en
+ *  haut et en bas aussi : il faut déjà les voir dans la vue de base ; sur l'écran il n'y a pas 5 hubs, il y en a 9 ») : le coin d'en haut à
+ *  gauche, c'est le gauche de mon haut (sinon le haut de mon gauche) ; jamais un hub déjà à l'écran */
+export const DIAGONALES = { hg: ['haut', 'gauche'], hd: ['haut', 'droite'], bg: ['bas', 'gauche'], bd: ['bas', 'droite'] };
+export function diagonales(hubs, id) {
+  const v = voisins(hubs, id), deja = new Set([id, v.droite, v.gauche, v.haut, v.bas].filter(Boolean)), d = {};
+  for (const [k, [a, b]] of Object.entries(DIAGONALES)) {
+    let x = v[a] ? voisins(hubs, v[a])[b] : null;
+    if (!x || deja.has(x)) x = v[b] ? voisins(hubs, v[b])[a] : null;
+    d[k] = x && !deja.has(x) ? x : null; if (d[k]) deja.add(d[k]);
+  }
+  return d;
+}
+/** (0.97) le temps, en mots : « à l'instant », « il y a 3 h », « il y a 2 sem » */
+export function ilYa(t, maintenant = Date.now()) {
+  if (!t) return ''; const s = Math.max(0, (maintenant - t) / 1000);
+  return s < 90 ? 'à l\'instant' : s < 3600 ? 'il y a ' + Math.round(s / 60) + ' min' : s < 86400 ? 'il y a ' + Math.round(s / 3600) + ' h' : s < 86400 * 13 ? 'il y a ' + Math.round(s / 86400) + ' j' : s < 86400 * 60 ? 'il y a ' + Math.round(s / 604800) + ' sem' : 'il y a ' + Math.round(s / 2592000) + ' mois';
+}
+/** (0.97) les fenêtres du wormion sur la map : [nom, de (jours en arrière), à] */
+export const FENETRES = [['tout le temps', null, null], ['aujourd\'hui', 0, 0], ['hier', 1, 1], ['cette semaine', 0, 6], ['il y a 2 sem', 7, 20], ['ce mois', 0, 30], ['avant', 31, 9999]];
+/** un ploxion a-t-il servi dans la fenêtre ? (usage.days : 60 jours ; au-delà, son dernier usage) */
+export function servi(usage, id, [, de, a], maintenant = Date.now()) {
+  if (de == null) return true; if (!usage || !usage.px || !usage.px[id]) return false;
+  const jour = (n) => { const d = new Date(maintenant - n * 86400000); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  if (usage.days) for (let n = de; n <= Math.min(a, 60); n++) { const j = usage.days[jour(n)]; if (j && j.px && j.px[id]) return true; }
+  const l = usage.px[id].lastAt, age = (maintenant - l) / 86400000; return age >= de && age < a + 1;
+}
 /** un hub perso neuf, posé d'un côté d'un autre (son portail de retour pointe vers lui) */
 export function nouveauHub({ nom, centre = 'ion', koins = [], depuis = null, cote = 'droite', maintenant = Date.now() }) {
   const slug = String(nom || 'hub').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30) || 'hub';
@@ -48,7 +75,7 @@ export function nouveauHub({ nom, centre = 'ion', koins = [], depuis = null, cot
 }
 
 /** charger() → [hubs du labo] (HTTP natif) ; ploxions() → [{ id, nom }] installés ; ouvrir(id) un ploxion */
-export function creerMap({ W = globalThis.window, boxion, charger = null, ploxions = () => [], ouvrir = () => {}, vibrer = () => {}, enLigne = () => true }) {
+export function creerMap({ W = globalThis.window, boxion, charger = null, ploxions = () => [], ouvrir = () => {}, vibrer = () => {}, enLigne = () => true, usage = async () => null }) {
   const D = W.document;
   let labo = [], persos = [], hubs = new Map();
   const lirePersos = () => { try { const l = JSON.parse(W.localStorage.getItem(CLE_STORE) || 'null'); if (Array.isArray(l)) return l; } catch (e) { /* */ } return null; };
@@ -76,15 +103,19 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
   // ---- la balade ----
   function mount(hote, params) {
     let vivant = true, ici = null, pas = [], drag = null, glisse = false, repli = false;   // repli : un hub de secours, faute de la map du labo
+    let us = null, fenetre = FENETRES[0];   // (0.97) le temps : l'usage des ploxions, la fenêtre du wormion
     hote.innerHTML = '<div class="px-map"><div class="px-map-b" data-neurones><button type="button" data-map="pas" data-neurone aria-label="revenir sur tes pas">‹</button><span class="px-map-ou" data-map-ou></span>'
       + '<button type="button" data-map="depart" data-neurone aria-label="le xerboxion">' + G('xerboxion') + '</button><button type="button" data-map="creer" data-neurone aria-label="créer un hub">＋</button></div>'
-      + '<div class="px-map-v" data-map-v><div class="px-map-plan" data-map-plan data-neurones data-neurones-seuil="64"></div></div><div class="px-map-autres" data-map-autres></div></div>';
+      + '<div class="px-map-v" data-map-v><div class="px-map-plan" data-map-plan data-neurones data-neurones-seuil="64"></div></div><div class="px-map-autres" data-map-autres></div>'
+      // ○ (0.97) le wormion sur la map : glisser remonte le temps ; les koins qui ont servi dans la fenêtre s'allument
+      + '<div class="px-map-temps"><span aria-hidden="true">○</span><input type="range" min="0" max="' + (FENETRES.length - 1) + '" step="1" value="0" data-map-temps aria-label="le temps : quand tu les as ouverts"><b data-map-temps-l>tout le temps</b></div></div>';
     const vue = hote.querySelector('[data-map-v]'), plan = hote.querySelector('[data-map-plan]');
     const taille = () => { const w = vue.clientWidth || W.innerWidth || 390, h = vue.clientHeight || (W.innerHeight || 800) * 0.7; return Math.round(Math.min(w * 0.74, h * 0.62)); };
     function koinHtml(k) {
       const hub = String(k.ploxion || '').startsWith('xerkion-') && hubs.has(k.ploxion);
       const g = hub ? G(hubs.get(k.ploxion).center || 'portion') : (nomDepuisEmoji(k.icon) ? G(nomDepuisEmoji(k.icon)) : glyphePloxion({ id: k.ploxion, nom: k.label }));
-      return '<button type="button" class="px-map-k' + (hub ? ' px-map-k-hub' : '') + '" data-neurone data-k="' + esc(k.ploxion || '') + '" title="' + esc(k.label || k.ploxion) + '">' + g + '<small>' + esc(k.label || k.ploxion || '') + '</small></button>';
+      const u = !hub && us && us.px && us.px[k.ploxion], vu = fenetre[1] != null && !hub && servi(us, k.ploxion, fenetre);
+      return '<button type="button" class="px-map-k' + (hub ? ' px-map-k-hub' : '') + (vu ? ' px-map-vu' : '') + '" data-neurone data-quand="' + esc(u ? ilYa(u.lastAt) : '') + '" data-k="' + esc(k.ploxion || '') + '" title="' + esc(k.label || k.ploxion) + '">' + g + '<small>' + esc(k.label || k.ploxion || '') + '</small></button>';
     }
     function carre(id, role) {
       const h = hubs.get(id); if (!h) return '';
@@ -96,6 +127,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
     }
     function peindre() {
       if (!vivant) return;
+      if (us === null) { us = false; usage().then(u => { us = u || false; peindre(); }).catch(() => {}); }   // une fois : quand chaque ploxion a servi
       if (!hubs.has(ici)) { repli = !hubs.has(DEPART); ici = hubs.has(DEPART) ? DEPART : [...hubs.keys()][0] || null; }
       const S = taille(), gap = Math.round(S * 0.08);
       hote.querySelector('[data-map-ou]').textContent = ici ? nomDe(hubs.get(ici)) : 'la map';
@@ -104,7 +136,9 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
       const v = voisins(hubs, ici);
       plan.style.setProperty('--S', S + 'px'); plan.style.setProperty('--P', (S + gap) + 'px');
       plan.style.transition = 'none'; plan.style.transform = 'translate(0,0)';
-      plan.innerHTML = carre(ici, 'ici') + COTES.map(c => (v[c] ? carre(v[c], c) : '')).join('');
+      const dg = diagonales(hubs, ici);   // (0.97) 3 × 3 : les coins aussi
+      plan.classList.toggle('px-map-temps-on', fenetre[1] != null);
+      plan.innerHTML = carre(ici, 'ici') + COTES.map(c => (v[c] ? carre(v[c], c) : '')).join('') + Object.keys(DIAGONALES).map(c => (dg[c] ? carre(dg[c], c) : '')).join('');
       hote.querySelector('[data-map-autres]').innerHTML = v.autres.length ? 'd\'autres portails : ' + v.autres.map(a => '<button type="button" data-aller="' + esc(a) + '">' + G((hubs.get(a) || {}).center || 'ion') + esc(nomDe(hubs.get(a))) + '</button>').join('') : '';
       boxion.put('reglages', 'map', { ici }).catch(() => {});
     }
@@ -114,20 +148,26 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
       if (garder && ici) pas.push(ici);
       vibrer('fx-cran');
       if (cote) {   // le plan glisse jusqu'au voisin, puis la map se recentre
-        const P = taille() * 1.08, d = { droite: [-P, 0], gauche: [P, 0], haut: [0, P], bas: [0, -P] }[cote];
+        const P = taille() * 1.08, d = { droite: [-P, 0], gauche: [P, 0], haut: [0, P], bas: [0, -P], hg: [P, P], hd: [-P, P], bg: [P, -P], bd: [-P, -P] }[cote];
         plan.style.transition = 'transform .22s cubic-bezier(.2,.9,.3,1)'; plan.style.transform = 'translate(' + d[0] + 'px,' + d[1] + 'px)';
         W.setTimeout(() => { ici = id; peindre(); }, 220);
       } else { ici = id; peindre(); }
     }
     // glisser : le voisin du côté opposé au doigt vient au centre ; un toucher sans glisser : le koin ou le carré touché
+    hote.querySelector('[data-map-temps]').addEventListener('input', (e) => {
+      fenetre = FENETRES[+e.target.value] || FENETRES[0]; hote.querySelector('[data-map-temps-l]').textContent = fenetre[0];
+      us = null;   // l'usage relu : il a pu bouger depuis l'ouverture de la map
+      vibrer(+e.target.value ? 'fx-cran' : 'selection'); peindre();
+    });
     vue.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY, dx: 0, dy: 0 }; glisse = false; });
     vue.addEventListener('pointermove', (e) => { if (!drag) return; drag.dx = e.clientX - drag.x; drag.dy = e.clientY - drag.y; if (Math.hypot(drag.dx, drag.dy) > 8) { plan.style.transition = 'none'; plan.style.transform = 'translate(' + drag.dx + 'px,' + drag.dy + 'px)'; } });
     const lacher = () => {
       if (!drag) return; const { dx, dy } = drag; drag = null;
       glisse = Math.hypot(dx, dy) > 8; const S = taille(); if (!glisse) return;
       W.setTimeout(() => { glisse = false; }, 0);   // le clic qui suit ce glisser (même tâche) est avalé, pas le suivant
-      const cote = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'droite' : 'gauche') : (dy < 0 ? 'bas' : 'haut');
-      const cible = voisins(hubs, ici)[cote];
+      const ax = Math.abs(dx), ay = Math.abs(dy), diag = ax > S * 0.18 && ay > S * 0.18 && ax / ay > 0.5 && ax / ay < 2;   // (0.97) en biais : un coin
+      const cote = diag ? (dy < 0 ? 'b' : 'h') + (dx < 0 ? 'd' : 'g') : ax > ay ? (dx < 0 ? 'droite' : 'gauche') : (dy < 0 ? 'bas' : 'haut');
+      const cible = diag ? diagonales(hubs, ici)[cote] : voisins(hubs, ici)[cote];
       if (cible && Math.max(Math.abs(dx), Math.abs(dy)) > S * 0.18) { aller(cible, { cote }); return; }
       if (!cible && Math.max(Math.abs(dx), Math.abs(dy)) > S * 0.18) vibrer('fx-butee');
       plan.style.transition = 'transform .2s'; plan.style.transform = 'translate(0,0)';
@@ -137,7 +177,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
       if (glisse) { glisse = false; return; }
       const c = e.target.closest('[data-c]'); if (!c) return;
       const id = c.getAttribute('data-c');
-      if (id !== ici) { const cote = COTES.find(x => voisins(hubs, ici)[x] === id); aller(id, { cote }); return; }
+      if (id !== ici) { const dg = diagonales(hubs, ici), cote = COTES.find(x => voisins(hubs, ici)[x] === id) || Object.keys(dg).find(x => dg[x] === id); aller(id, { cote }); return; }
       const k = e.target.closest('[data-k]'); if (!k) return;
       const p = k.getAttribute('data-k'); if (!p) return;
       if (p.startsWith('xerkion-') && hubs.has(p)) aller(p); else { vibrer('selection'); ouvrir(p); }
