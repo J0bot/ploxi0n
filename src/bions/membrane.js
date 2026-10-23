@@ -38,6 +38,7 @@ export const VARIANTES = {
   eldritch: { lot: 3, nom: 'eldritch', desc: 'Lovecraft : des tentacules, des ventouses, des yeux de lumière dans la paroi, rien de droit', flou: 3.5, onde: 18, freq: 0.014, epais: 5, paroi: 0.95, ame: 0.2, clair: 0.3, halo: 0.55, gouttes: true, photophores: true, geo: { cils: { densite: 0.03, long: 32, large: 10 }, ventouses: { pas: 22, r: 4 } }, couleurs: { memb: '#1d0048', memb2: '#014116', verre: 0.94 } },
   terminal: { nom: 'terminal', desc: 'le hand terminal de The Expanse : du verre, des arêtes ambre, les coins coupés', flou: 1, onde: 0, freq: 0.02, epais: 1.6, paroi: 0.9, ame: 0.6, clair: 0.5, halo: 0.55, gouttes: false, chanfrein: true },
 };
+import { poserPolice } from './polices.js';
 const NS = 'http://www.w3.org/2000/svg';
 /** la variante active (celle de <html>, sinon nerfs) */
 export const variante = (D) => { const v = D && D.documentElement && D.documentElement.getAttribute('data-px-variante'); return VARIANTES[v] ? v : 'nerfs'; };
@@ -96,4 +97,5 @@ export function appliquerCouleurs(el, v) {
   const p = VARIANTES[v], c = p && p.couleurs, st = el && el.style; if (!st) return;
   for (const [k, css] of [['memb', '--memb'], ['memb2', '--memb2'], ['contour', '--n-contour']]) { if (c && c[k]) st.setProperty(css, c[k]); else st.removeProperty(css); }
   if (c && c.verre != null) st.setProperty('--n-verre', String(c.verre)); else st.removeProperty('--n-verre');
+  poserPolice(el, c && c.police ? c.police : null, '-peau');   // (0.96) une peau qui porte sa police
 }

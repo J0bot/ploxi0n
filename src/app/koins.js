@@ -38,7 +38,7 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
       + '<div class="px-koin-cases px-koin-cases-' + c + '" data-cases="' + c + '" hidden>' + CASES[c].map(([g, k]) => (PADS[g]
         ? '<div class="px-koin-pad px-koin-pad-' + g + '" data-pad="' + g + '" data-neurone role="slider" aria-label="' + NOMS[k] + ' (trackpad)"><span class="px-pad-g">' + G(g) + '</span>' + (g === 'wormion' ? '<i data-pad-a></i>' : '<i data-pad-p></i>') + '<b data-pad-l></b><small data-pad-s></small></div>'
         : '<button type="button" data-koin-a="' + k + '" data-neurone aria-label="' + NOMS[k] + '">' + G(g) + '<small>' + NOMS[k].split(' (')[0] + '</small></button>')).join('') + '</div>').join('')
-      + '<nav class="px-koin-barre" data-neurone hidden>' + BARRE.map(([g, k, t]) => '<button type="button" data-koin-a="' + k + '" aria-label="' + NOMS[k] + '">' + (t || G(g)) + '</button>').join('') + '</nav>'
+      + '<nav class="px-koin-barre" data-neurone hidden>' + BARRE.map(([g, k, t]) => '<button type="button" data-koin-a="' + k + '" data-court="' + ({ koins: 'koin', carte: 'map', quoi: 'quoi ?', minimiser: '▁' }[k] || k) + '" aria-label="' + NOMS[k] + '">' + (t || G(g)) + '</button>').join('') + '</nav>'
       + '<div class="px-koin-voile" hidden></div>';
     D.body.appendChild(racine);
     // toucher : une étape de plus ; glisser vers le haut : les cases

@@ -1,3 +1,5 @@
+/* (0.96) la ChillTekk : notre alphabet (tools/police/chilltekk.py) */
+@font-face{font-family:"ChillTekk";src:url("/fonts/chilltekk.woff2") format("woff2");font-display:swap}
 /* ploxi0n — CHILL-TEKK-7026 (RS-7 12.10 : « chill-tekk-ifier » ; « un violet profond, des bords ronds épais » ; « pas de dégradé » ;
    « pas assez sombre ; rond mais rond CHILL, pas trop ; plus futuriste ; qu'on ait l'impression que l'app a des milliers d'années, une app
    usée »). Le UI d'un endroit chill dans 5000 ans (braindump 11.10 : chill-tekk-<année + 5000>) :
@@ -14,8 +16,9 @@
   --bio:#79d9a2;           /* la veilleuse */
   --txt:#ddd6ea; --muted:#7f7699; --grave:#5f5878;
   --glow:rgba(121,217,162,.28);
-  --police:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,sans-serif;
-  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  /* (0.96) la police : la peau, sinon la préférence (src/bions/polices.js), sinon celle d'avant */
+  --police:var(--px-pol-peau,var(--px-pol,ui-rounded,"SF Pro Rounded",system-ui,-apple-system,sans-serif));
+  --mono:var(--px-mono-peau,var(--px-mono,ui-monospace,"SF Mono",Menlo,monospace));
   /* un arrondi CHILL, un peu inégal : usé par des siècles de pouces */
   --blob1:15px 17px 14px 16px; --blob2:17px 14px 16px 15px; --blob3:14px 16px 15px 17px; --blob4:16px 15px 17px 14px;
   --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .75 0 0 0 0 .7 0 0 0 0 .9 0 0 0 .055 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -1246,3 +1249,26 @@ html.px-organique[data-px-variante="tribal"]{--n-verre:.96}
 .px-at-d,.px-at-m{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 .px-at-d button,.px-at-mp button{min-height:34px;padding:0 10px;border-radius:10px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:500 12px var(--mono)}
 .px-at-mp{display:inline-flex;gap:2px}
+
+/* ✎ (0.96) L'ÉCRITURE : comment tout s'écrit (prefs.ecriture ; RS-7 23.10 : « un mode texte + glyphes, pur glyphes, pur texte, emoji, minimal,
+   xerboxion : tous les modes »). xerboxion, texte + glyphes et emoji passent par les glyphes (prefs.lire) ; ici, ce qu'on cache ou montre. */
+/* rien que des glyphes : plus un mot (les noms restent dans aria-label, et « c'est quoi ça ? » les dit) */
+html.px-e-glyphes .px-tuile>span:last-child,html.px-e-glyphes .px-koin-cases>button small,html.px-e-glyphes .px-map-k small,html.px-e-glyphes .px-ligne-t small,
+html.px-e-glyphes .px-koin-pad b,html.px-e-glyphes .px-koin-pad small,html.px-e-glyphes .px-modes button,html.px-e-glyphes .px-vues button{font-size:0}
+html.px-e-glyphes .px-modes button .px-g,html.px-e-glyphes .px-vues button .px-g{width:22px;height:22px}
+html.px-e-glyphes .px-barre>span{font-size:0}html.px-e-glyphes .px-barre>span .px-g{width:24px;height:24px}
+html.px-e-glyphes .px-tuile .px-ic{transform:scale(1.12)}
+/* rien que des mots : plus un glyphe ; un bouton qui n'avait qu'un glyphe dit son nom */
+html.px-e-texte .px-ic,html.px-e-texte .px-tuile .px-g,html.px-e-texte .px-koin-cases>button .px-g,html.px-e-texte .px-map-k .px-g,html.px-e-texte .px-modes .px-g,
+html.px-e-texte .px-vues .px-g,html.px-e-texte .px-barre>span .px-g,html.px-e-texte .px-koin-pad .px-pad-g{display:none}
+html.px-e-texte .px-tuile{min-height:64px;justify-content:center}
+html.px-e-texte .px-tuile>span:last-child{font:600 14px/1.2 var(--police);color:var(--txt)}
+html.px-e-texte :is(.px-koin-barre,.px-map-b,.px-barre,.px-dock) button[aria-label]:not(:has(span,b,small))>.px-g{display:none}
+html.px-e-texte :is(.px-koin-barre,.px-map-b,.px-barre,.px-dock) button[aria-label]:not(:has(span,b,small))::after{content:attr(aria-label);font:600 9px/1.1 var(--mono);letter-spacing:.04em;text-align:center}
+html.px-e-texte .px-koin-barre button{font-size:0}html.px-e-texte .px-koin-barre button[data-court]::after{content:attr(data-court);font:600 10px/1 var(--mono);letter-spacing:.02em}
+/* minimal : des mots en mono minuscules, pas de cadres ; le calme */
+html.px-e-minimal .px-ic,html.px-e-minimal .px-tuile .px-g,html.px-e-minimal .px-modes .px-g,html.px-e-minimal .px-vues .px-g,html.px-e-minimal .px-plaque{display:none}
+html.px-e-minimal .px-tuile{min-height:40px;align-items:flex-start;justify-content:center;border-left:2px solid var(--bord);padding-left:8px}
+html.px-e-minimal .px-tuile>span:last-child{font:500 12px/1.3 var(--mono);text-transform:lowercase;letter-spacing:.02em;color:var(--muted);text-align:left}
+html.px-e-minimal{--grain:none}
+html.px-e-minimal .px-grille{gap:6px 14px}

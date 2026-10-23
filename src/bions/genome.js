@@ -9,7 +9,7 @@
 //   - muter / croiser : l'évolution (choisir l'enfant qui te parle).
 // Pur (aucun DOM) et déterministe : un hasard à graine (le même chemin redonne les mêmes peaux).
 const C = (x) => Math.max(0, Math.min(1, x));
-/** [clé, nom, min, max, genre] ; genre : '' (continu), 'log', 'entier', 'oui' (≥ 0,5), 'palette' (un indice dans PALETTE) */
+/** [clé, nom, min, max, genre] ; genre : '' (continu), 'log', 'entier', 'oui' (≥ 0,5), 'palette' (un indice dans PALETTE), 'liste' (une police) */
 export const GENES = [
   ['flou', 'le goo', 0.8, 9, ''], ['onde', 'l\'onde', 0, 20, ''], ['freq', 'la vague', 0.005, 0.1, 'log'], ['epais', 'la paroi', 1, 8, ''],
   ['paroi', 'la peau', 0.3, 1, ''], ['ame', 'l\'âme', 0, 1, ''], ['clair', 'la lumière', 0, 1, ''], ['halo', 'le halo', 0, 1, ''],
@@ -17,8 +17,10 @@ export const GENES = [
   ['cils', 'les cils', 0, 1, ''], ['epines', 'les épines', 0, 1, ''], ['vertebres', 'les vertèbres', 0, 1, ''], ['ventouses', 'les ventouses', 0, 1, ''],
   ['coulures', 'les coulures', 0, 1, ''], ['gouttes', 'les gouttes', 0, 1, 'oui'], ['chanfrein', 'les coins coupés', 0, 1, 'oui'],
   ['photophores', 'les photophores', 0, 1, 'oui'], ['scan', 'le balayage', 0, 1, 'oui'], ['verre', 'le verre', 0.4, 1, ''],
-  ['memb', 'la couleur', 0, 1, 'palette'], ['memb2', 'l\'autre couleur', 0, 1, 'palette'],
+  ['memb', 'la couleur', 0, 1, 'palette'], ['memb2', 'l\'autre couleur', 0, 1, 'palette'], ['police', 'la police', 0, 1, 'liste'],
 ];
+/** les polices que le gène « police » parcourt (src/bions/polices.js) */
+export const LISTE_POLICES = ['mixte', 'chilltekk', 'rond', 'mono', 'serif', 'condensee'];
 /** la palette de RS-7 (ses planches chill-tekk_ui) : les couleurs que les gènes de couleur parcourent */
 export const PALETTE = ['#007d28', '#014116', '#004817', '#029402', '#0cdb0c', '#00fe44', '#8bc88b', '#37008a', '#1d0048', '#310573', '#20024d', '#191919', '#3f3e3e', '#4d4d4d', '#5d5d5d', '#b0b0b0', '#d9d9d9', '#f0f0f0', '#a90707', '#ffff00'];
 const SEUIL_POUSSE = 0.08;   // en dessous, rien ne pousse
@@ -37,6 +39,7 @@ export function genomeDe(p = {}, couleurs = {}) {
     const [k, , , , genre] = gene;
     if (genre === 'palette') { g[k] = unitDe((couleurs[k] || (p.couleurs || {})[k])); continue; }
     if (genre === 'oui') { g[k] = p[k] ? 0.75 : 0.25; continue; }
+    if (genre === 'liste') { const i = LISTE_POLICES.indexOf((couleurs.police || (p.couleurs || {}).police) || 'mixte'); g[k] = (Math.max(0, i) + 0.5) / LISTE_POLICES.length; continue; }
     if (k === 'faisceau') { g[k] = versUnit(gene, geo.faisceau || 1); continue; }
     if (k === 'cils') { g[k] = geo.cils ? C(geo.cils.long / 30) : 0; continue; }
     if (k === 'epines') { g[k] = geo.epines ? C(geo.epines.long / 30) : 0; continue; }
@@ -66,14 +69,15 @@ export function versVariante(g, { nom = 'ta peau', lot = 'perso' } = {}) {
   return v;
 }
 /** les couleurs d'un génome : les deux membranes et le verre du dedans */
-export const couleursDe = (g) => ({ memb: PALETTE[indice(g.memb)], memb2: PALETTE[indice(g.memb2)], verre: Math.round(versReel(GENES.find(x => x[0] === 'verre'), C(g.verre)) * 100) / 100 });
+export const couleursDe = (g) => ({ memb: PALETTE[indice(g.memb)], memb2: PALETTE[indice(g.memb2)], verre: Math.round(versReel(GENES.find(x => x[0] === 'verre'), C(g.verre)) * 100) / 100,
+  police: g.police == null ? undefined : LISTE_POLICES[Math.min(LISTE_POLICES.length - 1, Math.floor(C(g.police) * LISTE_POLICES.length))] });
 
 /** un enfant : chaque gène bouge d'au plus « rayon » (les couleurs sautent parfois d'une case) */
 export function muter(g, rayon = 0.2, graine = 1) {
   const h = aleatoire(graine), e = {};
   for (const [k, , , , genre] of GENES) {
     const d = (h() * 2 - 1) * rayon;
-    e[k] = genre === 'palette' ? (h() < rayon ? C(g[k] + (h() * 2 - 1) * rayon * 2) : g[k]) : C((g[k] != null ? g[k] : 0.5) + d);
+    e[k] = genre === 'palette' || genre === 'liste' ? (h() < rayon ? C(g[k] + (h() * 2 - 1) * rayon * 2) : g[k]) : C((g[k] != null ? g[k] : 0.5) + d);
   }
   return e;
 }

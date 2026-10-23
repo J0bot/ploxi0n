@@ -15,7 +15,7 @@ import { PUBLIC } from './liens-publics.js';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /** les préférences qui sont l'interface (un xer les porte) ; les autres restent celles de l'iPhone */
-export const PREFS_XER = ['mode', 'styleIcones', 'glyphes', 'icones', 'contraste', 'dock', 'plaque', 'barreHaut', 'pleinEcran', 'pxChill', 'themeVivant', 'fractale', 'pagesCote', 'gestes', 'grain', 'miniDocks', 'bords', 'telecommande'];
+export const PREFS_XER = ['mode', 'ecriture', 'variante', 'police', 'styleIcones', 'glyphes', 'icones', 'contraste', 'dock', 'plaque', 'barreHaut', 'pleinEcran', 'pxChill', 'themeVivant', 'fractale', 'pagesCote', 'gestes', 'grain', 'miniDocks', 'bords', 'telecommande'];
 const MODES = ['organique', 'chill-tekk', 'xerboxion', 'xerbot'];
 const ACTIONS = new Set(ACTIONS_BORDS.map(a => a[0]));
 const ID = /^[A-Za-z0-9._-]{1,80}$/;

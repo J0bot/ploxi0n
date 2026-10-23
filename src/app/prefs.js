@@ -7,8 +7,14 @@
 //   plaque      la plaque gravée « cycle … » de l'accueil
 //   mode        (0.94) organique (le mode de base : membranes et neurones, src/app/neurones.js) | chill-tekk (le xer d'avant) | xerboxion | xerbot
 //   organiqueVu (0.94) la bascule unique vers l'organique est faite (le xer d'avant est gardé dans « mes xers », src/app/xers.js)
+//   ecriture    (0.96) comment tout s'écrit : xerboxion (forme + glyphe + nom) | texte-glyphes | glyphes (rien que) | texte (rien que) | emoji | minimal
 //   haptique    les retours haptiques (ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs…)
-export const PREFS_DEFAUT = { barreClavier: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'organique', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'xerboxion', fractale: true, pagesCote: true, bande: false, koins: false, activites: true, organiqueVu: true, variante: 'nerfs' };
+export const PREFS_DEFAUT = { barreClavier: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'organique', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'xerboxion', fractale: true, pagesCote: true, bande: false, koins: false, activites: true, organiqueVu: true, variante: 'nerfs', ecriture: 'xerboxion', police: 'mixte' };
+
+/** (0.96) RS-7 23.10 : « un mode texte + glyphes, un mode pur glyphes, pur texte, emoji, minimal, xerboxion : tous les modes » */
+import { POLICES, poserPolice } from '../bions/polices.js';
+export { POLICES };
+export const ECRITURES = [['xerboxion', 'xerboxion'], ['texte-glyphes', 'texte + glyphes'], ['glyphes', 'glyphes'], ['texte', 'texte'], ['emoji', 'emoji'], ['minimal', 'minimal']];
 
 export function creerPrefs({ W = globalThis.window, boxion }) {
   let p = { ...PREFS_DEFAUT };
@@ -36,11 +42,14 @@ export function creerPrefs({ W = globalThis.window, boxion }) {
     h.classList.toggle('px-sans-bords', !p.bords);
     h.classList.toggle('px-telecommande', p.telecommande !== false);
     h.classList.toggle('px-organique', p.mode === 'organique');
+    for (const e of ECRITURES) h.classList.toggle('px-e-' + e[0], (p.ecriture || 'xerboxion') === e[0]);   // (0.96) l'écriture
+    poserPolice(h, p.mode === 'organique' ? (p.police || 'mixte') : null);   // (0.96) la police ; le chill-tekk garde la sienne
     h.setAttribute('data-px-variante', p.variante || 'nerfs');   // (0.95) nerfs | vaisseaux | cables | gelee | terminal (src/bions/membrane.js)   // 〰 (0.94) le xer organique : les membranes, les neurones
   }
   return {
     pret, appliquer,
-    lire: () => ({ ...p, calme: !!p.calme || ios(), calmeIos: ios() }),
+    // (0.96) l'écriture décide des glyphes et du style des icônes (sans toucher à ce que tu avais réglé : revenir à xerboxion le rend)
+    lire: () => { const e = p.ecriture || 'xerboxion'; return { ...p, calme: !!p.calme || ios(), calmeIos: ios(), glyphes: e === 'emoji' ? false : e === 'xerboxion' ? p.glyphes : true, styleIcones: e === 'texte-glyphes' || e === 'glyphes' ? 'glyphe' : p.styleIcones }; },
     async regler(patch) {
       p = { ...p, ...patch };
       // (0.56, RS-7 : « le max 8 ploxions ça devient chiant ») 0 = sans limite ; les cachés sont gelés (src/app/gel.js), leurs vidéos coupées

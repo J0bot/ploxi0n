@@ -4,7 +4,8 @@
 // un accueil court (cinq groupes, une ligne par catégorie avec son état en un mot et ›), chaque catégorie sur sa page (‹ pour revenir),
 // et des sous-pages pour ce qui est long (les gestes des bords ; l'haptique : motifs, événements, signatures). La recherche fouille tout.
 // Les bions : chacun avec sa taille et les ploxions qui l'utilisent ; le couper (plus chargé), le mettre à jour, le retirer s'il ne sert plus.
-import { VARIANTES } from '../bions/membrane.js';   // (0.95) les peaux de l'organique
+import { VARIANTES } from '../bions/membrane.js';
+import { ECRITURES, POLICES } from './prefs.js';   // (0.95) les peaux de l'organique
 import { SUJETS as SUJETS_PUSH } from '../natif/push.js';
 import { ACTIONS_BORDS } from './routeur.js';
 import { testerClavier } from './clavier.js';
@@ -115,6 +116,8 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
             + (pr.actif ? '<div class="l ls"><span>Les sujets</span><div class="seg">' + SUJETS_PUSH.map(([k, n]) => '<button data-push-sujet="' + k + '"' + (pr.sujets.includes(k) ? ' class="on"' : '') + ' title="' + esc(n) + '">' + esc(k) + '</button>').join('') + '</div></div>' : '') + '</div>'; })() : '')
           + (P ? '<div class="bloc">' + bascule('data-pb="activites"', P.activites !== false, 'Activités en direct', 'sur l\'écran verrouillé et la Dynamic Island : ☾ dodo, un vocal, le minuteur des ambiances, ce que tes ploxions suivent') + '</div>' : '')) : '')
         + (P ? section('apparence', 'Apparence', '<div class="bloc">'
+          + seg('police', Object.entries(POLICES).map(([k, v]) => [k, v.nom]), P.police || 'mixte', 'La police', 'la ChillTekk : notre alphabet (O le chaos, I l\'observateur et son œil, A un koin) ; dans l\'organique')
+          + seg('ecriture', ECRITURES, P.ecriture || 'xerboxion', 'L\'écriture', 'comment tout s\'écrit : la forme, le glyphe et le nom (xerboxion) ; un glyphe et le nom ; rien que des glyphes ; rien que des mots ; les emoji ; minimal')
           + seg('vue', [['grille', 'grille'], ['compacte', 'compacte'], ['liste', 'liste'], ['usage', 'usage'], ['recents', 'récents'], ['categories', 'catégories']], R().vueAccueil ? R().vueAccueil() : 'grille', 'Vue de l\'accueil')
           + seg('icones', [['petites', 'petites'], ['normales', 'normales'], ['grandes', 'grandes']], P.icones, 'Taille des icônes')
           + bascule('data-pb="pleinEcran"', !!P.pleinEcran, 'Plein écran complet', 'sans barre d\'état ; la barre du bas s\'efface ; les bords haut et bas vont d\'abord à l\'app (un 2e glissé pour iOS)')

@@ -9,7 +9,7 @@
 // l'espace des UI. ⊖ dézoome (l'écart s'élargit), ⚂ saute ailleurs, ‹ revient sur tes pas. Les knobs tournent la peau gène par gène, et
 // TOUTE l'app change en direct (la peau « perso »). ✓ garder : elle prend un nom, rejoint ⚙ › Apparence, et devient un tsoin.
 // boxion_local « reglages/atelier » = { g, ecart, graine, chemin } ; « reglages/peaux » = [{ id, nom, g, le }].
-import { GENES, PALETTE, genomeDe, versVariante, grille, aleatoire } from '../bions/genome.js';
+import { GENES, PALETTE, LISTE_POLICES, genomeDe, versVariante, grille, aleatoire } from '../bions/genome.js';
 import { VARIANTES, redefinir, appliquerCouleurs } from '../bions/membrane.js';
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -17,6 +17,7 @@ const ECART0 = 0.3;
 const texteGene = ([k, , min, max, genre], u) => {
   if (genre === 'palette') return PALETTE[Math.min(PALETTE.length - 1, Math.floor(u * PALETTE.length))];
   if (genre === 'oui') return u >= 0.5 ? 'oui' : 'non';
+  if (genre === 'liste') return LISTE_POLICES[Math.min(LISTE_POLICES.length - 1, Math.floor(u * LISTE_POLICES.length))];
   const x = genre === 'log' ? min * Math.pow(max / min, u) : min + (max - min) * u;
   return genre === 'entier' ? String(Math.round(x)) : (Math.abs(x) < 1 ? x.toFixed(2) : x.toFixed(1));
 };
@@ -76,7 +77,7 @@ export function creerAtelier({ W = globalThis.window, boxion, prefs = null, vibr
       const K = await knobs().catch(() => null), zone = $('[data-at-k]'); if (!vivant || !zone) return;
       if (!K) { zone.innerHTML = '<small>les knobs (jOSKnob) ne sont pas là</small>'; return; }
       zone.innerHTML = '';
-      panneau = K.panel(zone, GENES.map(gn => ({ key: gn[0], label: gn[1], min: 0, max: 1, step: 0.05, value: etat.g[gn[0]] != null ? etat.g[gn[0]] : 0.5, fmt: (u) => texteGene(gn, u), shape: gn[4] === 'palette' ? 'koin' : 'kion' })),
+      panneau = K.panel(zone, GENES.map(gn => ({ key: gn[0], label: gn[1], min: 0, max: 1, step: 0.05, value: etat.g[gn[0]] != null ? etat.g[gn[0]] : 0.5, fmt: (u) => texteGene(gn, u), shape: gn[4] === 'palette' || gn[4] === 'liste' ? 'koin' : 'kion' })),
         (vals, cle) => { etat.g = { ...etat.g, [cle]: vals[cle] }; vibrer('fx-cran'); W.clearTimeout(attente); attente = W.setTimeout(() => vivre(etat.g), 90); });   // l'app suit, un peu lissé
       // au lâcher : la grille se refait autour de la nouvelle peau
       panneau.el.addEventListener('pointerup', () => { garderEtat(); peindreGrille(); });
