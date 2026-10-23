@@ -42,7 +42,12 @@ import { poserPolice } from './polices.js';
 const NS = 'http://www.w3.org/2000/svg';
 /** la variante active (celle de <html>, sinon nerfs) */
 export const variante = (D) => { const v = D && D.documentElement && D.documentElement.getAttribute('data-px-variante'); return VARIANTES[v] ? v : 'nerfs'; };
-export const idFiltre = (v, couche, fin) => 'px-f-' + v + '-' + couche + (fin ? '-fin' : '');
+// (0.99.19, RS-7 sur l'iPhone : « le changement de peau fonctionne pas » ; les tuiles de l'atelier vides) WebKit ne refait pas le lien d'un
+// filter="url(#id)" quand le <filter> est remplacé sous le MÊME id, et un élément dont le filtre manque n'est pas dessiné du tout. Chaque
+// redéfinition d'une peau prend donc un id NEUF (sa génération) ; les anciens filtres partent plus tard, une fois les membranes redessinées.
+const GEN = Object.create(null);
+export const generation = (v) => GEN[v] || 0;
+export const idFiltre = (v, couche, fin) => 'px-f-' + v + (GEN[v] ? '-g' + GEN[v] : '') + '-' + couche + (fin ? '-fin' : '');
 const n = (x) => Math.round(x * 1000) / 1000;
 
 /** le filtre d'une couche : « mb » la membrane (paroi + âme + halo), « dd » le dedans (la forme rétrécie de la paroi) */
@@ -90,7 +95,14 @@ export function filtres(D, v = 'nerfs') {
 /** (0.96) redéfinir une peau EN DIRECT (les knobs de l'atelier, une peau à toi) : ses nombres changent, ses anciens filtres s'en vont */
 export function redefinir(D, v, p) {
   VARIANTES[v] = p;
-  for (const fin of [false, true]) for (const c of ['mb', 'dd']) { const f = D && D.getElementById && D.getElementById(idFiltre(v, c, fin)); if (f) f.remove(); }
+  const vieux = [false, true].flatMap(fin => ['mb', 'dd'].map(c => idFiltre(v, c, fin)));
+  GEN[v] = (GEN[v] || 0) + 1;
+  if (!D || !D.getElementById) return;
+  // les membranes se redessinent avec les nouveaux filtres (src/app/neurones.js écoute « px-peau ») ; les anciens partent ensuite
+  const Wd = D.defaultView;
+  try { if (Wd && Wd.CustomEvent) D.dispatchEvent(new Wd.CustomEvent('px-peau', { detail: { v } })); } catch (e) { /* */ }
+  const purger = () => { for (const id of vieux) { const f = D.getElementById(id); if (f) f.remove(); } };
+  if (Wd && Wd.setTimeout) Wd.setTimeout(purger, 2500); else purger();
 }
 /** les couleurs d'une peau qui les porte, posées sur un élément (<html> pour toute l'app, une tuile de l'atelier pour elle seule) */
 export function appliquerCouleurs(el, v) {

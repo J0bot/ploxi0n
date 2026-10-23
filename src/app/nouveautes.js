@@ -7,6 +7,13 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.19', titre: 'Plus grand, plus léger', points: [
+    '◈ La peau légère par défaut : les couleurs de ta peau sans les membranes ondulées, qui faisaient ramer. ⚙ › Apparence › La peau : légère, auto (légère en économie d\'énergie), pleine.',
+    '◈ Changer de peau marche pour de vrai (les membranes ne restaient plus vides sur l\'iPhone).',
+    'Aa La taille de tout : grande par défaut, et ⚙ › Apparence › Taille de tout (normale, grande, très grande, énorme).',
+    '⬇ Les bibliothèques des ploxions (three.js, xlsx, pdf-lib, qrcode…) sont dans l\'app : plus besoin du réseau pour qu\'ils s\'ouvrent.',
+    '▭ Les boutons des modes ne débordent plus sur les petits écrans.',
+  ] },
   { v: '0.99.18', titre: 'Des bugs en moins', points: [
     '◈ La map dézoomée montre tout son voisinage, plus de hubs coupés net.',
     '▦ L\'atelier des peaux ne déborde plus à droite ; plus aucune page ne glisse de côté. Les onglets des ploxions du labo ne sont plus tronqués.',

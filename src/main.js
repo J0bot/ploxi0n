@@ -105,7 +105,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.18';
+const VERSION = '0.99.19';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -646,6 +646,11 @@ async function demarrer() {
   }, true);
   installerSansEmoji({ interne: (id) => !!(routeur.catalogue().find(p => p.id === id) || {}).interne, actif: () => prefs.lire().glyphes !== false });
   // ⟡ (0.99.14) la langue de l'app : ⚙ › Apparence › Langue, ou celle de l'iPhone ; les néologismes restent (src/bions/dire.js)
+  // ⊕ (0.99.19, RS-7 : « l'entièreté du truc est trop petite ») la taille de tout : le zoom de page de WebKit sur l'iPhone (la mise en page
+  // suit, comme le zoom de Safari) ; ailleurs, le zoom CSS. ⚙ › Apparence › Taille de tout.
+  { let avant = null; const poser = (p) => { const z = Math.min(1.6, Math.max(0.8, +p.taille || 1)); if (z === avant) return; avant = z;
+      if (natifLot) PloxiApple.taille({ zoom: z }).catch(() => {}); else document.documentElement.style.zoom = z === 1 ? '' : String(z); };
+    poser(prefs.lire()); prefs.surChangement(poser); }
   const langueApp = installerLangue({ W: window, interne: (id) => !!(routeur.catalogue().find(p => p.id === id) || {}).interne });
   { const choisie = (p) => langueDe(p.langue, navigator.languages || [navigator.language]);
     langueApp.appliquer(choisie(prefs.lire())); prefs.surChangement((p) => langueApp.appliquer(choisie(p))); }
@@ -658,6 +663,9 @@ async function demarrer() {
   // 🌀 le thème vivant : il suit le gyroscope et l'accéléromètre (seulement à l'accueil, visible, hors Calme)
   if (!modeSurJs) creerMouvement({ prefs, racine });
   // ◌ (0.99.11) le téléphone vivant : la chaleur, la batterie, le son, au bord de l'écran (RS-7 : « on aura l'impression que le téléphone est vivant »)
+  // (0.99.19) la peau « auto » : légère dès que l'iPhone passe en économie d'énergie (relu toutes les 60 s et au retour dans l'app)
+  if (natifLot) { const economie = () => { if (prefs.lire().peau !== 'auto' || document.hidden) return; PloxiApple.systeme().then((x) => { const e = x && x.economie ? '1' : '0'; if (document.documentElement.getAttribute('data-px-economie') !== e) { document.documentElement.setAttribute('data-px-economie', e); prefs.appliquer(); } }).catch(() => {}); };
+    economie(); setInterval(economie, 60000); document.addEventListener('visibilitychange', economie); prefs.surChangement(economie); }
   if (!modeSurJs) installerTelVivant({ W: window, prefs, systeme: natifLot ? () => PloxiApple.systeme() : null, batterie: natifLot ? () => window.jOSNatif.batterie() : null });
   prefs.surChangement(() => barreHaut.mesurer());
   window.ploxi0nBarreHaut = barreHaut;

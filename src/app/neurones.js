@@ -24,6 +24,8 @@ export function creerNeurones({ W = globalThis.window } = {}) {
   const D = W.document, groupes = new Map();   // conteneur → { svg, cle, mo, ro }
   let prevu = false, scanPrevu = false;
   const actif = () => D.documentElement.classList.contains('px-organique');
+  // (0.99.19) la peau légère : pas de couche SVG, sauf les tuiles de l'atelier (elles montrent les membranes : c'est leur rôle)
+  const actifPour = (c) => actif() && (!D.documentElement.classList.contains('px-leger') || c.hasAttribute('data-neurones-variante'));
   const nombre = (x, d) => { const n = parseFloat(x); return isFinite(n) ? n : d; };
   const r1 = (x) => Math.round(x * 2) / 2;
 
@@ -75,7 +77,7 @@ export function creerNeurones({ W = globalThis.window } = {}) {
   function tout() {
     prevu = false;
     for (const [c, g] of groupes) {
-      if (!c.isConnected || !actif()) { if (g.svg) g.svg.remove(); if (g.mo) g.mo.disconnect(); if (g.ro) g.ro.disconnect(); groupes.delete(c); continue; }
+      if (!c.isConnected || !actifPour(c)) { if (g.svg) g.svg.remove(); if (g.mo) g.mo.disconnect(); if (g.ro) g.ro.disconnect(); groupes.delete(c); continue; }
       try { dessiner(c, g); } catch (e) { /* une cellule partie entre-temps */ }
     }
   }
@@ -84,7 +86,7 @@ export function creerNeurones({ W = globalThis.window } = {}) {
     scanPrevu = false;
     if (!actif()) { if (groupes.size) prevoir(); return; }
     for (const c of D.querySelectorAll('[data-neurones]')) {
-      if (groupes.has(c)) continue;
+      if (groupes.has(c) || !actifPour(c)) continue;
       const g = { svg: null, cle: null, mo: null, ro: null };
       if (W.MutationObserver) { g.mo = new W.MutationObserver(prevoir); g.mo.observe(c, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden', 'data-dir'] }); }
       if (W.ResizeObserver) g.ro = new W.ResizeObserver(prevoir);
@@ -97,8 +99,9 @@ export function creerNeurones({ W = globalThis.window } = {}) {
     if (W.MutationObserver) {
       new W.MutationObserver(scan).observe(D.body, { childList: true, subtree: true });
       // seulement ce qui change les couleurs (le mode, le contraste) ou allume / éteint : <html> change souvent de classe pendant les gestes
-      const theme = () => [...D.documentElement.classList].filter(k => /^px-(organique|m-|contraste|sans-grain)/.test(k)).sort().join(' ') + '|' + variante(D);
+      const theme = () => [...D.documentElement.classList].filter(k => /^px-(organique|leger|m-|contraste|sans-grain)/.test(k)).sort().join(' ') + '|' + variante(D);
       let avant = theme();
+      D.addEventListener('px-peau', () => { for (const g of groupes.values()) g.cle = null; scan(); });   // (0.99.19) une peau redéfinie : ses filtres ont un id neuf
       new W.MutationObserver(() => { const t = theme(); if (t === avant) return; avant = t; for (const g of groupes.values()) g.cle = null; scan(); }).observe(D.documentElement, { attributes: true, attributeFilter: ['class', 'data-px-variante'] });
     }
     W.addEventListener('resize', () => { for (const g of groupes.values()) g.cle = null; prevoir(); });

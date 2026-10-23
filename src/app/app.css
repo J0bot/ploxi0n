@@ -1186,7 +1186,11 @@ html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,
 html.px-organique{--trait:3px}
 :where(html.px-organique [data-neurones]){position:relative}
 html.px-organique [data-neurones]{isolation:isolate}
-html.px-organique :is([data-neurone],.px-neurone){--n-fond:var(--surface);--n-bord:var(--bord2);background-color:transparent!important;border-color:transparent!important;box-shadow:none!important}
+html.px-organique:not(.px-leger) :is([data-neurone],.px-neurone){--n-fond:var(--surface);--n-bord:var(--bord2);background-color:transparent!important;border-color:transparent!important;box-shadow:none!important}
+/* (0.99.19) la peau légère : les mêmes couleurs de peau, en CSS seul (un fond, un bord intérieur) ; aucune couche SVG, aucun filtre */
+html.px-organique.px-leger :is([data-neurone],.px-neurone){background-color:var(--n-fond)!important;border-color:transparent!important;box-shadow:inset 0 0 0 2px var(--n-bord)!important}
+html.px-leger :not([data-neurones-variante])>.px-neurones{display:none}
+html.px-organique.px-leger [data-neurones-variante] :is([data-neurone],.px-neurone){background-color:transparent!important;box-shadow:none!important}
 .px-neurones{position:absolute;z-index:-1;pointer-events:none;overflow:visible}
 html:not(.px-organique) .px-neurones,html:not(.px-organique) .px-neurones-defs{display:none}
 html.px-organique [data-neurone].on,html.px-organique [data-neurone]:active{--n-bord:var(--acc2)}
@@ -1558,3 +1562,9 @@ html:not(.px-organique) .px-tel-vivant{display:none}
      la vraie correction est dans le labo) */
 .px-page{overflow-x:clip}
 .px-hote :is([role=tablist],[class*="tabs"],[class*="onglets"])>:is(button,a,[role=tab]){flex-shrink:0;min-width:max-content}
+/* ⊕ (0.99.19) la taille de tout (le zoom de page) rend l'écran plus étroit : les modes se serrent au lieu de couper « xerbot » */
+.px-modes button{min-width:0;overflow-wrap:anywhere}
+@media (max-width:360px){.px-modes{gap:3px}.px-modes button{letter-spacing:.02em;font-size:9.5px;padding-left:2px;padding-right:2px}}
+/* (0.99.19, RS-7 : « MACHINE » coupé, « AUDIO » sous les boutons) le réseau se fait glisser jusqu'à ce qu'un hub sorte de dessous les
+   contrôles de droite (la règle, ✻, ∿) et de dessous les mini docks */
+.px-map-rs{margin:0 64px 150px 0}

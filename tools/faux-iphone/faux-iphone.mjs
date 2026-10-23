@@ -63,7 +63,7 @@ function laboFaux(url) {
 }
 const boxionFaux = new Map();
 const activitesFaux = [];   // (0.91) les Live Activities lancées
-const procheEnvoyes = [], droneFaux = [];   // (0.99.12) les commandes reçues par le drone simulé   // (0.99.1) ce que Proche a envoyé aux voisins
+const procheEnvoyes = [], droneFaux = [], tailles = [];   /* (0.99.19) les zooms de page demandés */   // (0.99.12) les commandes reçues par le drone simulé   // (0.99.1) ce que Proche a envoyé aux voisins
 const pushFaux = [];   // (0.91) les jetons reçus par le faux labo   // (0.86) le boxion du compte, côté labo
 const wledFaux = { state: { on: true, bri: 128, seg: [{ col: [[255, 80, 0]], fx: 0, pal: 0 }] }, info: { name: 'Ruban du salon', ver: '0.15.0', leds: { count: 60, pwr: 420 } }, effects: ['Solid', 'Blink', 'Breathe'], palettes: ['Default', 'Lava'] };
 
@@ -118,6 +118,7 @@ const natif = {
     activiteMaj: (o) => { const a = activitesFaux.find(x => x.id === o.id); if (!a) throw new Error('activité inconnue'); Object.assign(a, o); return {}; },
     activiteFin: (o) => { const n = activitesFaux.filter(x => !o.id || x.id === o.id).length; for (const x of activitesFaux) if (!o.id || x.id === o.id) x.finie = true; return { n }; },
     // (0.88) le système (btop) : ce que seul iOS sait
+    taille: (o) => { tailles.push(+o.zoom); return { zoom: +o.zoom }; },   // (0.99.19) le zoom de page de WebKit (le parcours simule son effet)
     systeme: () => ({ thermique: 'tiede', economie: false, memoire: 6 * 1073741824, coeurs: 6, depuis: 200000, disqueLibre: 41.5 * 1073741824, disqueTotal: 128 * 1073741824 }),
     reseauChercher: () => ({ services: [{ nom: 'WLED-salon', type: '_wled._tcp.', domaine: 'local.', txt: { mac: 'aabbcc' } }, { nom: 'Maison', type: '_home-assistant._tcp.', domaine: 'local.', txt: { internal_url: 'http://10.0.0.9:8123', location_name: 'Maison' } }] }),
     reseauResoudre: (o) => (o.nom === 'WLED-salon' ? { hote: '10.0.0.7', port: 80 } : { hote: '10.0.0.9', port: 8123 }),
@@ -267,7 +268,7 @@ const etat = await page.evaluate(() => ({
   texte: document.body.innerText.slice(0, 600),
 }));
 let resultatsEtapes = null;
-if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux, procheEnvoyes, pont, droneFaux }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
+if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux, procheEnvoyes, pont, droneFaux, tailles }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
 clearInterval(mouvementMinuteur);
 const resume = { url, mode: web ? 'web' : (opts.includes('--sans-plugions') ? 'ios-sans-plugions' : 'ios'), demarre, dureeBoot, etat,
   appelsNatifs: Object.entries(appels.reduce((a, x) => { const k = x.p + '.' + x.m; a[k] = (a[k] || 0) + 1; return a; }, {})).sort((a, b) => b[1] - a[1]),

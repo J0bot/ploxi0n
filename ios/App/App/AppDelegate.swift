@@ -286,6 +286,7 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
     public let jsName = "PloxiApple"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "meteo", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "taille", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "shazam", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "musiqueChercher", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "musiqueJouer", returnType: CAPPluginReturnPromise),
@@ -409,6 +410,16 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         let image = brut.transformed(by: CGAffineTransform(scaleX: echelle, y: echelle))
         guard let cg = CIContext().createCGImage(image, from: image.extent), let png = UIImage(cgImage: cg).pngData() else { call.reject("qr : rendu"); return }
         call.resolve(["base64": png.base64EncodedString(), "cote": Int(image.extent.width)])
+    }
+
+    // ⊕ (0.99.19, RS-7 : « l'entièreté du truc est trop petite ») le zoom de page de WebKit (iOS 14+) : tout grandit, la mise en page suit
+    @objc func taille(_ call: CAPPluginCall) {
+        let z = min(1.6, max(0.8, call.getDouble("zoom") ?? 1))
+        DispatchQueue.main.async {
+            guard let web = self.bridge?.webView else { call.reject("taille : pas de page"); return }
+            web.pageZoom = CGFloat(z)
+            call.resolve(["zoom": z])
+        }
     }
 
     // ▤ (0.88) le ploxion système (btop) : ce que seul iOS sait — l'état thermique, le mode économie, le disque, la mémoire, les cœurs

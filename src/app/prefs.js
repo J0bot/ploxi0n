@@ -10,7 +10,7 @@
 //   ecriture    (0.96) comment tout s'écrit : xerboxion (forme + glyphe + nom) | texte-glyphes | glyphes (rien que) | texte (rien que) | emoji | minimal
 //               | humain (0.99.8 : zéro texte, des glyphes et des maths ; src/bions/humain.js)
 //   haptique    les retours haptiques (ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs…)
-export const PREFS_DEFAUT = { barreClavier: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'organique', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'xerboxion', fractale: true, pagesCote: true, bande: false, koins: false, activites: true, organiqueVu: true, variante: 'nerfs', ecriture: 'xerboxion', police: 'mixte', langue: 'auto' };
+export const PREFS_DEFAUT = { barreClavier: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'organique', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'xerboxion', fractale: true, pagesCote: true, bande: false, koins: false, activites: true, organiqueVu: true, variante: 'nerfs', ecriture: 'xerboxion', police: 'mixte', langue: 'auto', taille: 1.15, peau: 'legere' };
 
 /** (0.96) RS-7 23.10 : « un mode texte + glyphes, un mode pur glyphes, pur texte, emoji, minimal, xerboxion : tous les modes » */
 import { POLICES, poserPolice } from '../bions/polices.js';
@@ -43,6 +43,8 @@ export function creerPrefs({ W = globalThis.window, boxion }) {
     h.classList.toggle('px-sans-bords', !p.bords);
     h.classList.toggle('px-telecommande', p.telecommande !== false);
     h.classList.toggle('px-organique', p.mode === 'organique');
+    // (0.99.19) la peau légère : les cellules en CSS, sans la couche SVG des membranes (trop lourde sur l'iPhone) ; auto = légère en économie d'énergie
+    h.classList.toggle('px-leger', p.peau === 'pleine' ? false : p.peau === 'auto' ? h.getAttribute('data-px-economie') === '1' : true);
     for (const e of ECRITURES) h.classList.toggle('px-e-' + e[0], (p.ecriture || 'xerboxion') === e[0]);   // (0.96) l'écriture
     poserPolice(h, p.mode === 'organique' ? (p.police || 'mixte') : null);   // (0.96) la police ; le chill-tekk garde la sienne
     h.setAttribute('data-px-variante', p.variante || 'nerfs');   // (0.95) nerfs | vaisseaux | cables | gelee | terminal (src/bions/membrane.js)   // 〰 (0.94) le xer organique : les membranes, les neurones

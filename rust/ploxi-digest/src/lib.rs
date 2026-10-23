@@ -114,7 +114,9 @@ pub fn digerer(id: &str, code: &str) -> Digestion {
             Jeton::Ident(nom) => {
                 let membre = k > 0 && ponct(k - 1, '.');
                 let appel = ponct(k + 1, '(');
-                if nom.starts_with("jOS") && nom.len() > 3 && nom.as_bytes()[3].is_ascii_uppercase() && !membre {
+                // window.jOSX, globalThis.jOSX, self.jOSX : un bion aussi (seul un vrai membre d'un objet n'en est pas un)
+                let global = membre && k >= 2 && matches!(ident(k - 2), Some("window" | "globalThis" | "self" | "W" | "top" | "parent"));
+                if nom.starts_with("jOS") && nom.len() > 3 && nom.as_bytes()[3].is_ascii_uppercase() && (!membre || global) {
                     plus(&mut d.bions, nom);
                     if (nom == "jOSBoxion" || nom == "jOSStore") && ponct(k + 1, '.') {
                         if let (Some(m), true, Some(cle)) = (ident(k + 2), ponct(k + 3, '('), texte(k + 4)) {
@@ -225,6 +227,8 @@ mod tests {
         assert_eq!(d.balises.get("button"), Some(&1));
         assert_eq!(d.voie, "compose");
         assert_eq!(d.cles, vec!["jOSBoxion.save:notes".to_string()]);
+        let wb = digerer("wb", "window.jOSApps.wb = { mount(h) { if (!window.jOSWireshark) h.textContent = 'x'; } }");
+        assert!(wb.bions.contains_key("jOSWireshark"));
         let c = digerer("c", "jOSApps.c = { mount(h) { const g = h.querySelector('canvas').getContext('2d'); requestAnimationFrame(f); } }");
         assert_eq!(c.voie, "dessin");
         let w = digerer("w", "jOSApps.w = { mount(h) { h.innerHTML = '<iframe src=\"https://exemple.ch\"></iframe>'; } }");
