@@ -6,46 +6,80 @@
 // Tourner un knob change le son EN DIRECT, même d'une note tenue. Le son continue quand on change de ploxion ; ‹ le coupe.
 import { PARAMS, GROUPES, PRESETS, normaliser, noteDePad, hasard, freq, ONDES } from '../bions/son.js';
 import { MOTIFS, GAMMES, partition, notesEntre } from '../bions/proche.js';
+import { brancherPanneau } from '../bions/tordre.js';
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const NOMS_GROUPES = { source: '∿ la source', filtre: '◇ le filtre', enveloppe: '△ l\'enveloppe', mouvement: '○ le mouvement', espace: '□ l\'espace', sortie: '◉ la sortie' };
 
-/** le moteur : un graphe Web Audio vivant ; p = les réglages (normalisés), relus à chaque note et à chaque knob */
+/** le moteur : un graphe Web Audio vivant ; p = les réglages (normalisés), relus à chaque note et à chaque knob.
+ *  voix : osc 1 + osc 2 (intervalle, désaccord, vibrato) + sub + bruit → filtre (type, enveloppe, lfo) → ADSR → panoramique (stéréo)
+ *  → bus → saturation → trémolo → [sec | écho (retour) | réverb (taille)] → sortie → (analyse) → les haut-parleurs */
 export function creerMoteur(ctx, lire) {
-  const sortie = ctx.createGain(), bus = ctx.createGain(), sec = ctx.createGain(), mouille = ctx.createGain(), echo = ctx.createDelay(2), retour = ctx.createGain();
+  const sortie = ctx.createGain(), bus = ctx.createGain(), sat = ctx.createWaveShaper ? ctx.createWaveShaper() : ctx.createGain(), trem = ctx.createGain();
+  const sec = ctx.createGain(), mouille = ctx.createGain(), echo = ctx.createDelay(2), retour = ctx.createGain();
+  const verb = ctx.createConvolver ? ctx.createConvolver() : null, verbG = ctx.createGain();
   const analyse = ctx.createAnalyser ? ctx.createAnalyser() : null;
-  bus.connect(sec); sec.connect(sortie); bus.connect(echo); echo.connect(retour); retour.connect(echo); echo.connect(mouille); mouille.connect(sortie);
+  bus.connect(sat); sat.connect(trem);
+  trem.connect(sec); sec.connect(sortie);
+  trem.connect(echo); echo.connect(retour); retour.connect(echo); echo.connect(mouille); mouille.connect(sortie);
+  if (verb) { trem.connect(verb); verb.connect(verbG); verbG.connect(sortie); }
   if (analyse) { analyse.fftSize = 1024; sortie.connect(analyse); }
   sortie.connect(ctx.destination);
-  const lfo = ctx.createOscillator(), lfoG = ctx.createGain(); lfo.connect(lfoG); lfo.start();
-  const voix = new Map(); let n = 0;
+  const lfo = ctx.createOscillator(), lfoG = ctx.createGain(), vibG = ctx.createGain(), tremG = ctx.createGain();
+  lfo.connect(lfoG); lfo.connect(vibG); lfo.connect(tremG); tremG.connect(trem.gain); lfo.start();
+  // le bruit : un tampon blanc de 2 s, partagé
+  let bruitT = null; const bruit = () => { if (!bruitT && ctx.createBuffer) { const n = Math.floor((ctx.sampleRate || 44100) * 2); bruitT = ctx.createBuffer(1, n, ctx.sampleRate || 44100); const d = bruitT.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; } return bruitT; };
+  // la saturation : une courbe douce (tanh), refaite seulement quand le knob bouge
+  let satK = -1; const courbe = (k) => { const n = 1024, c = new Float32Array(n), a = 1 + k * 24; for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1; c[i] = Math.tanh(a * x) / Math.tanh(a); } return c; };
+  // la réverb : une réponse fabriquée (du bruit qui s'éteint en `taille` secondes), refaite quand la taille change
+  let verbT = -1, verbAttente = 0; const reponse = (t) => { if (!ctx.createBuffer) return null; const sr = ctx.sampleRate || 44100, n = Math.floor(sr * t), b = ctx.createBuffer(2, n, sr);
+    for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3); } return b; };
+  const voix = new Map(); let n = 0, derniere = 0, cote = 1;
+  const filtreType = (v) => ['lowpass', 'bandpass', 'highpass'][Math.round(v)] || 'lowpass';
   function appliquer() {
     const p = lire(), t = ctx.currentTime;
     sortie.gain.setTargetAtTime(p.volume * 0.8, t, 0.02); echo.delayTime.setTargetAtTime(p.echo, t, 0.05);
     retour.gain.setTargetAtTime(p.retour, t, 0.03); mouille.gain.setTargetAtTime(p.mix, t, 0.03); sec.gain.setTargetAtTime(1 - p.mix * 0.5, t, 0.03);
+    lfo.type = ONDES[Math.round(p.lfoOnde)] || 'triangle';
     lfo.frequency.setTargetAtTime(p.lfo, t, 0.05); lfoG.gain.setTargetAtTime(p.lfoProf * p.coupure, t, 0.05);
+    vibG.gain.setTargetAtTime(p.vibrato * 40, t, 0.05);   // en cents
+    trem.gain.setTargetAtTime(1 - p.tremolo * 0.5, t, 0.03); tremG.gain.setTargetAtTime(p.tremolo * 0.5, t, 0.03);
+    verbG.gain.setTargetAtTime(p.reverb * 0.9, t, 0.05);
+    if (sat.curve !== undefined && Math.abs(satK - p.saturation) > 0.01) { satK = p.saturation; sat.curve = p.saturation > 0.01 ? courbe(p.saturation) : null; }
+    if (verb && Math.abs(verbT - p.taille) > 0.05) { verbT = p.taille; clearTimeout(verbAttente); verbAttente = setTimeout(() => { try { verb.buffer = reponse(p.taille); } catch (e) { /* */ } }, 120); }
     for (const v of voix.values()) {   // en direct, même une note tenue
-      v.fl.Q.setTargetAtTime(p.resonance, t, 0.02);
+      v.fl.type = filtreType(p.filtre); v.fl.Q.setTargetAtTime(p.resonance, t, 0.02);
       if (!v.lache) v.fl.frequency.setTargetAtTime(p.coupure, t, 0.03);
-      for (const o of v.os) { o.type = ONDES[Math.round(p.onde)] || 'sawtooth'; }
-      v.os[0].detune.setTargetAtTime(p.desaccord, t, 0.02); v.os[1].detune.setTargetAtTime(-p.desaccord, t, 0.02); v.subG.gain.setTargetAtTime(p.sub * 0.6, t, 0.03);
+      v.os[0].type = ONDES[Math.round(p.onde)] || 'sawtooth'; v.os[1].type = ONDES[Math.round(p.onde2)] || 'sawtooth';
+      v.os[0].detune.setTargetAtTime(p.desaccord, t, 0.02); v.os[1].detune.setTargetAtTime(p.intervalle * 100 - p.desaccord, t, 0.02);
+      v.subG.gain.setTargetAtTime(p.sub * 0.6, t, 0.03); if (v.bruitG) v.bruitG.gain.setTargetAtTime(p.bruit * 0.5, t, 0.03);
+      if (v.pan) v.pan.pan.setTargetAtTime(v.cote * p.stereo * 0.8, t, 0.05);
     }
   }
   /** une note qui commence à quand (secondes du contexte) ; rend son id */
   function debut(midi, quand = ctx.currentTime) {
-    const p = lire(), f = freq(midi), t = Math.max(ctx.currentTime, quand), onde = ONDES[Math.round(p.onde)] || 'sawtooth';
+    const p = lire(), f = freq(midi), t = Math.max(ctx.currentTime, quand);
     const os = [ctx.createOscillator(), ctx.createOscillator()], sub = ctx.createOscillator(), subG = ctx.createGain(), fl = ctx.createBiquadFilter(), vca = ctx.createGain(), mixO = ctx.createGain();
-    os.forEach((o, i) => { o.type = onde; o.frequency.value = f; o.detune.value = i ? -p.desaccord : p.desaccord; o.connect(mixO); });
+    os[0].type = ONDES[Math.round(p.onde)] || 'sawtooth'; os[1].type = ONDES[Math.round(p.onde2)] || 'sawtooth';
+    os.forEach((o, i) => {
+      if (p.glisse > 0.005 && derniere) { o.frequency.setValueAtTime(derniere, t); o.frequency.exponentialRampToValueAtTime(f, t + p.glisse); } else o.frequency.value = f;
+      o.detune.value = i ? p.intervalle * 100 - p.desaccord : p.desaccord; vibG.connect(o.detune); o.connect(mixO);
+    });
     sub.type = 'sine'; sub.frequency.value = f / 2; subG.gain.value = p.sub * 0.6; sub.connect(subG); subG.connect(fl);
-    mixO.gain.value = 0.35; mixO.connect(fl);
-    fl.type = 'lowpass'; fl.Q.value = p.resonance; lfoG.connect(fl.frequency);
+    let src = null, bruitG = null;
+    if (p.bruit > 0.01 && bruit() && ctx.createBufferSource) { src = ctx.createBufferSource(); src.buffer = bruit(); src.loop = true; bruitG = ctx.createGain(); bruitG.gain.value = p.bruit * 0.5; src.connect(bruitG); bruitG.connect(fl); }
+    mixO.gain.value = 0.3; mixO.connect(fl);
+    fl.type = filtreType(p.filtre); fl.Q.value = p.resonance; lfoG.connect(fl.frequency);
     const haut = Math.min(18000, p.coupure * (1 + p.enveloppe * 7));
     fl.frequency.setValueAtTime(haut, t); fl.frequency.setTargetAtTime(p.coupure, t + p.attaque, Math.max(0.01, p.declin / 3));
     vca.gain.setValueAtTime(0.0001, t); vca.gain.linearRampToValueAtTime(0.5, t + p.attaque);
     vca.gain.setTargetAtTime(0.5 * Math.max(0.0001, p.maintien), t + p.attaque, Math.max(0.01, p.declin / 3));
-    fl.connect(vca); vca.connect(bus);
-    for (const o of [...os, sub]) o.start(t);
-    const id = ++n; voix.set(id, { os, sub, subG, fl, vca, lache: false, debut: t }); return id;
+    fl.connect(vca);
+    cote = -cote; let pan = null;
+    if (ctx.createStereoPanner) { pan = ctx.createStereoPanner(); pan.pan.value = cote * p.stereo * 0.8; vca.connect(pan); pan.connect(bus); } else vca.connect(bus);
+    for (const o of [...os, sub]) o.start(t); if (src) src.start(t);
+    derniere = f;
+    const id = ++n; voix.set(id, { os, sub, subG, src, bruitG, fl, vca, pan, cote, lache: false, debut: t }); return id;
   }
   /** relâcher (à quand) : la relâche, puis tout s'arrête et se débranche */
   function fin(id, quand = ctx.currentTime) {
@@ -53,8 +87,8 @@ export function creerMoteur(ctx, lire) {
     const p = lire(), t = Math.max(ctx.currentTime, quand, v.debut + 0.005);
     v.vca.gain.cancelScheduledValues(t); v.vca.gain.setTargetAtTime(0.0001, t, Math.max(0.01, p.relache / 4));
     const stop = t + p.relache * 1.6 + 0.05;
-    for (const o of [...v.os, v.sub]) { try { o.stop(stop); } catch (e) { /* déjà */ } }
-    v.os[0].onended = () => { voix.delete(id); try { lfoG.disconnect(v.fl.frequency); } catch (e) { /* */ } try { v.vca.disconnect(); } catch (e) { /* */ } };
+    for (const o of [...v.os, v.sub, ...(v.src ? [v.src] : [])]) { try { o.stop(stop); } catch (e) { /* déjà */ } }
+    v.os[0].onended = () => { voix.delete(id); for (const o of v.os) { try { vibG.disconnect(o.detune); } catch (e) { /* */ } } try { lfoG.disconnect(v.fl.frequency); } catch (e) { /* */ } try { (v.pan || v.vca).disconnect(); } catch (e) { /* */ } };
   }
   function toutCouper() { for (const id of [...voix.keys()]) fin(id); }
   appliquer();
@@ -85,7 +119,11 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
     ordo = W.setInterval(() => {
       if (!boucle) return;
       const pa = partition({ tempo: p.tempo, motif, tonique: 36, gamme, debut: boucle.debut, volume: 1 }), maintenant = Date.now(), de = Math.max(maintenant, jusque), a = maintenant + 220;
-      for (const nt of notesEntre(pa, de, a)) { const q = ctx.currentTime + Math.max(0, (nt.t - maintenant) / 1000), id = mo.debut(nt.midi, q); mo.fin(id, q + Math.min(nt.duree / 1000, Math.max(0.04, p.declin))); }
+      const pas = 60000 / p.tempo / 4;
+      for (const nt of notesEntre(pa, de, a)) {   // le swing retarde les contretemps ; la durée = le gate
+        const k = Math.round((nt.t - boucle.debut) / pas), sw = k % 2 ? p.swing * pas * 0.5 : 0;
+        const q = ctx.currentTime + Math.max(0, (nt.t + sw - maintenant) / 1000), id = mo.debut(nt.midi + p.transpose, q); mo.fin(id, q + Math.max(0.03, pas * p.gate / 1000));
+      }
       jusque = a;
     }, 60);
     peindre(); return true;
@@ -99,17 +137,17 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
   }
 
   function mount(hote) {
-    let vivant = true, panneaux = [], raf = 0;
+    let vivant = true, panneaux = [], raf = 0; const detacher = [];
     const doigts = new Map();
     hote.innerHTML = '<div class="px-page px-synthe" data-neurones="fin"><p class="px-grave">≋ synthé</p>'
       + '<p class="px-sous">Tourne les knobs, touche les pads : le son change en direct. Plusieurs doigts à la fois.</p>'
-      + '<canvas class="px-sy-scope" data-sy-scope height="70" aria-hidden="true"></canvas>'
+      + '<div class="px-sy-jouer"><canvas class="px-sy-scope" data-sy-scope height="70" aria-hidden="true"></canvas>'
       + '<div class="px-sy-pads" data-sy-pads data-neurones="fin" data-instrument></div>'
       + '<div class="px-sy-l"><button type="button" data-sy="boucle"></button><div class="px-sy-seg" data-sy-motifs></div></div>'
-      + '<div class="px-sy-seg" data-sy-gammes></div>'
-      + '<div data-sy-k data-instrument></div>'
+      + '<div class="px-sy-seg" data-sy-gammes></div></div>'   /* (0.99.5) deux colonnes en paysage : jouer à gauche, régler à droite */
+      + '<div class="px-sy-regler"><div data-sy-k data-instrument></div>'
       + '<h3 class="px-sy-t">◈ les sons</h3><div class="px-sy-seg" data-sy-presets></div><div class="px-sy-seg" data-sy-sons data-ecrit></div>'
-      + '<div class="px-sy-garder"><input type="text" maxlength="30" placeholder="le nom de ce son" data-sy-nom><button type="button" data-sy="garder">＋ garder</button></div></div>';
+      + '<div class="px-sy-garder"><input type="text" maxlength="30" placeholder="le nom de ce son" data-sy-nom><button type="button" data-sy="garder">＋ garder</button></div></div></div>';
     const $ = (s) => hote.querySelector(s);
     function peindrePads() {
       $('[data-sy-pads]').innerHTML = Array.from({ length: 16 }, (_, i) => { const idx = (3 - Math.floor(i / 4)) * 4 + (i % 4);   // grave en bas à gauche, aigu en haut à droite
@@ -125,11 +163,13 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
     async function peindreKnobs() {
       const K = await knobs().catch(() => null), zone = $('[data-sy-k]'); if (!vivant || !zone) return;
       if (!K) { zone.innerHTML = '<p class="px-sous">les knobs (jOSKnob) ne sont pas là</p>'; return; }
-      zone.innerHTML = ''; panneaux = [];
+      zone.innerHTML = ''; panneaux = []; detacher.splice(0).forEach(f => f());
       for (const g of GROUPES) {
         const bloc = D.createElement('div'); bloc.className = 'px-sy-g'; bloc.setAttribute('data-neurone', ''); bloc.innerHTML = '<h3 class="px-sy-t">' + esc(NOMS_GROUPES[g] || g) + '</h3>'; zone.appendChild(bloc);
-        const spec = PARAMS.filter(x => x.groupe === g).map(x => ({ key: x.cle, label: x.nom, min: x.min, max: x.max, step: x.pas, value: p[x.cle], fmt: x.fmt, shape: x.forme }));
-        panneaux.push(K.panel(bloc, spec, (vals, cle) => { regler({ [cle]: vals[cle] }, { doux: false }); vibrer('fx-cran'); }));
+        const spec = PARAMS.filter(x => x.groupe === g).map(x => ({ key: x.cle, label: x.nom, min: x.min, max: x.max, step: x.pas, value: p[x.cle], defaut: x.depart, fmt: x.fmt, shape: x.forme }));
+        const surKnob = (vals, cle) => regler({ [cle]: vals[cle] }, { doux: false });
+        const pa = K.panel(bloc, spec, surKnob); panneaux.push(pa);
+        detacher.push(brancherPanneau(pa, spec, surKnob, { vibrer, W }));   // (0.99.5) appuyer, tourner autour, tordre à deux doigts, double toucher = départ
       }
     }
     peindre = (quoi) => {
@@ -158,7 +198,7 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
       const b = e.target.closest('[data-sy-pad]'); if (!b) return; e.preventDefault();
       const mo = moteur(); if (!mo) return;
       try { b.setPointerCapture(e.pointerId); } catch (x) { /* */ }
-      const id = mo.debut(noteDePad(+b.getAttribute('data-sy-pad'), { gamme, tonique: 48 }));
+      const id = mo.debut(noteDePad(+b.getAttribute('data-sy-pad'), { gamme, tonique: 48 + 12 * p.octave + p.transpose }));
       doigts.set(e.pointerId, { id, b }); b.classList.add('on'); vibrer('fx-cran'); reveiller();
     });
     const lacher = (e) => { const d = doigts.get(e.pointerId); if (!d) return; doigts.delete(e.pointerId); d.b.classList.remove('on'); if (m) m.fin(d.id); };
@@ -174,7 +214,7 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
       else if (a === 'garder') { const i = $('[data-sy-nom]'), nom = (i.value || '').trim().slice(0, 30) || ('son ' + (sons.length + 1));
         sons = [...sons.filter(s => s.nom !== nom), { nom, p: { ...p } }].slice(-40); boxion.put('reglages', 'synthe-sons', sons).catch(() => {}); i.value = ''; peindreChoix(); vibrer('succes'); }
     });
-    return { unmount() { vivant = false; W.cancelAnimationFrame && W.cancelAnimationFrame(raf); for (const d of doigts.values()) if (m) m.fin(d.id); peindre = () => {}; hote.innerHTML = ''; },
+    return { unmount() { vivant = false; detacher.forEach(f => f()); W.cancelAnimationFrame && W.cancelAnimationFrame(raf); for (const d of doigts.values()) if (m) m.fin(d.id); peindre = () => {}; hote.innerHTML = ''; },
       joue: () => !!(boucle || (m && m.actives() > 0)) };
   }
 

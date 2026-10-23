@@ -709,3 +709,25 @@ test('⬇ (0.99.3) un 429 du labo : on patiente et on réessaie ; un bion n\'est
   await boxion.del('bions', 'jOSKnob'); await boxion.put('bions-absents', 'jOSKnob', { le: Date.now(), status: 429 }); essais = 10;
   const r2 = await d.installer('p'); assert.ok(r2.bions.includes('jOSKnob'));
 });
+
+test('↻ (0.99.5) les mises à jour par le CHANGELOG : un ploxion qui n\'a pas changé n\'est pas retéléchargé', async () => {
+  const boxion = creerMemoire(); const vus = []; let changelog = { head: 'a1', par_ploxion: { pomo: { dernier: '2026-01-01', n: 3, commits: ['c3'] } } };
+  const bundles = { pomo: "window.jOSApps['pomo'] = { v: 1 };", notes: "window.jOSApps['notes'] = { v: 1 };" };
+  const http = { async get(url) { vus.push(url.replace(/\?.*/, ''));
+    if (url.includes('/px/changelog.json')) return { status: 200, texte: JSON.stringify(changelog), entetes: {} };
+    const m = /\/px\/([a-z]+)\/app\.js/.exec(url); if (m && bundles[m[1]]) return { status: 200, texte: bundles[m[1]], entetes: {} };
+    return { status: 404, texte: '', entetes: {} }; } };
+  const d = creerDepot({ boxion, http });
+  await d.installer('pomo'); await d.installer('notes');
+  vus.length = 0;
+  // installés après leur dernier changement (pomo : 2026-01-01 ; notes : absent du changelog) → rien n'est téléchargé
+  let r = await d.aJour();
+  assert.deepEqual(r.map(x => x.etat), ['a-jour', 'a-jour']); assert.deepEqual(vus, ['https://labo.j0bot.ch/px/changelog.json'], 'une seule requête : ' + vus.join(', '));
+  // pomo change au labo : seul pomo est téléchargé
+  changelog = { head: 'a2', par_ploxion: { pomo: { dernier: '2099-01-01', n: 4, commits: ['c4'] } } }; bundles.pomo = "window.jOSApps['pomo'] = { v: 2 };"; vus.length = 0;
+  r = await d.aJour();
+  assert.deepEqual(r.find(x => x.id === 'pomo').etat, 'mis-a-jour'); assert.deepEqual(r.find(x => x.id === 'notes').etat, 'a-jour');
+  assert.deepEqual(vus.filter(u => u.includes('app.js')), ['https://labo.j0bot.ch/px/pomo/app.js']);
+  // la fois d'après : plus rien
+  vus.length = 0; await d.aJour(); assert.deepEqual(vus, ['https://labo.j0bot.ch/px/changelog.json']);
+});

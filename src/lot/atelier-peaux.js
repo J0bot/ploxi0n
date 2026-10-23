@@ -11,6 +11,7 @@
 // boxion_local « reglages/atelier » = { g, ecart, graine, chemin } ; « reglages/peaux » = [{ id, nom, g, le }].
 import { GENES, PALETTE, LISTE_POLICES, genomeDe, versVariante, grille, aleatoire } from '../bions/genome.js';
 import { VARIANTES, redefinir, appliquerCouleurs } from '../bions/membrane.js';
+import { brancherPanneau } from '../bions/tordre.js';   // (0.99.5) appuyer sur un knob, le tordre avec les doigts
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const ECART0 = 0.3;
@@ -77,8 +78,9 @@ export function creerAtelier({ W = globalThis.window, boxion, prefs = null, vibr
       const K = await knobs().catch(() => null), zone = $('[data-at-k]'); if (!vivant || !zone) return;
       if (!K) { zone.innerHTML = '<small>les knobs (jOSKnob) ne sont pas là</small>'; return; }
       zone.innerHTML = '';
-      panneau = K.panel(zone, GENES.map(gn => ({ key: gn[0], label: gn[1], min: 0, max: 1, step: 0.05, value: etat.g[gn[0]] != null ? etat.g[gn[0]] : 0.5, fmt: (u) => texteGene(gn, u), shape: gn[4] === 'palette' || gn[4] === 'liste' ? 'koin' : 'kion' })),
-        (vals, cle) => { etat.g = { ...etat.g, [cle]: vals[cle] }; vibrer('fx-cran'); W.clearTimeout(attente); attente = W.setTimeout(() => vivre(etat.g), 90); });   // l'app suit, un peu lissé
+      const spec = GENES.map(gn => ({ key: gn[0], label: gn[1], min: 0, max: 1, step: 0.05, value: etat.g[gn[0]] != null ? etat.g[gn[0]] : 0.5, fmt: (u) => texteGene(gn, u), shape: gn[4] === 'palette' || gn[4] === 'liste' ? 'koin' : 'kion' }));
+      const surKnob = (vals, cle) => { etat.g = { ...etat.g, [cle]: vals[cle] }; vibrer('fx-cran'); W.clearTimeout(attente); attente = W.setTimeout(() => vivre(etat.g), 90); };
+      panneau = K.panel(zone, spec, surKnob); brancherPanneau(panneau, spec, surKnob, { vibrer: () => {}, W });   // l'app suit, un peu lissé
       // au lâcher : la grille se refait autour de la nouvelle peau
       panneau.el.addEventListener('pointerup', () => { garderEtat(); peindreGrille(); });
     }

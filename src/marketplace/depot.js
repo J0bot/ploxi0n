@@ -193,10 +193,34 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
      *  une copie gardée en cache par iOS (?maj= et Cache-Control: no-cache), les bions d'une nouvelle version jamais téléchargés (resoudreBions),
      *  les ploxions du pack figés pour toujours (ils suivent le labo dès qu'il en a une version plus récente) ; et 6 à la fois au lieu d'un par un.
      *  Un ploxion servi dans sa page (spotify, wiki : pas d'app.js) se relit dans sa page. → [{ id, etat: a-jour | mis-a-jour | erreur, detail? }] */
-    async aJour({ concurrence = 6, ids = null, progres = null, auto = false } = {}) {
+    /** (0.99.5) le CHANGELOG du labo (/px/changelog.json : par_ploxion { dernier, n, commits }) : une requête pour savoir ce qui a changé */
+    async changelog() {
+      const r = await getPatient(source + '/px/changelog.json', { headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' } });
+      if (r.status !== 200) throw new Error('changelog : HTTP ' + r.status);
+      const d = JSON.parse(r.texte || '{}'); if (!d || typeof d.par_ploxion !== 'object') throw new Error('changelog illisible');
+      return { head: String(d.head || ''), par: d.par_ploxion };
+    },
+    async aJour({ concurrence = 6, ids = null, progres = null, auto = false, forcer = false } = {}) {
       // (0.80) introuvable au labo (son 404 : une page de 3,5 Mo) : l'automatique ne le redemande pas pendant 7 jours ; « vérifier » si
       const introuvables = (await boxion.get(META, 'maj-introuvables').catch(() => null)) || {};
-      const tous = (ids || await liste()).filter(id => !(auto && introuvables[id] && Date.now() - introuvables[id] < 7 * 864e5)), res = [];
+      let tous = (ids || await liste()).filter(id => !(auto && introuvables[id] && Date.now() - introuvables[id] < 7 * 864e5)); const res = [];
+      // (0.99.5, RS-7 : « si dans le changelog il n'a pas changé, ça sert à rien de le mettre à jour ; vraiment checker tous les ploxions, c'est
+      // une erreur de design ») : le changelog d'abord. Un ploxion dont l'entrée n'a pas bougé depuis la dernière fois → à jour, sans rien
+      // télécharger ; absent du changelog → il n'a pas changé ; la première fois : son dernier changement est-il AVANT son installation ?
+      // Seuls ceux qui ont vraiment changé sont téléchargés. Sans changelog (labo en panne) : l'ancienne vérification, ploxion par ploxion.
+      const jr = forcer || !tous.length ? null : await this.changelog().catch(() => null);   /* rien à vérifier : pas même une requête */
+      const marqueDe = (id) => { const x = jr && jr.par[id]; return x ? (x.dernier || '') + '#' + (x.n || 0) + '#' + ((Array.isArray(x.commits) && x.commits[0]) || '') : 'aucun'; };   // un commit de plus change n
+      if (jr) {
+        const aVoir = [];
+        for (const id of tous) {
+          const p = await boxion.get(NS, id); if (!p) continue;
+          const m = marqueDe(id), x = jr.par[id], depuis = String(p.maj || p.installe || '').slice(0, 10);
+          const inchange = p.changelog ? p.changelog === m : (!x || (depuis && x.dernier && String(x.dernier) < depuis));
+          if (inchange) { if (p.changelog !== m) await boxion.put(NS, id, { ...p, changelog: m }); res.push({ id, etat: 'a-jour', detail: 'changelog' }); }
+          else aVoir.push(id);
+        }
+        tous = aVoir;
+      }
       let i = 0, fait = 0;
       const un = async (id) => {
         const p = await boxion.get(NS, id); if (!p) return null;
@@ -204,7 +228,8 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
         try {
           const casse = 'maj=' + Date.now().toString(36);
           let r = await http.get(source + '/px/' + encodeURIComponent(id) + '/app.js?' + casse, { headers: { 'Cache-Control': 'no-cache', ...(p.etag ? { 'If-None-Match': p.etag } : {}) } });
-          if (r.status === 304) return { id, etat: 'a-jour' };
+          const marquer = async () => { if (jr) { const q = await boxion.get(NS, id); if (q) await boxion.put(NS, id, { ...q, changelog: marqueDe(id) }); } };
+          if (r.status === 304) { await marquer(); return { id, etat: 'a-jour' }; }
           if (r.status !== 200 || /^\s*<(!doctype|html)/i.test(r.texte || '')) {
             const pg = await http.get(source + '/px/' + encodeURIComponent(id) + '?' + casse, { headers: { Accept: 'text/html', 'Cache-Control': 'no-cache' } }).catch(() => null);
             const js = pg && pg.status === 200 ? bundleDeLaPage(pg.texte, id) : null;
@@ -213,9 +238,10 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
           }
           if (!valide(r.texte, id)) return pack ? { id, etat: 'a-jour', detail: 'pack' } : { id, etat: 'erreur', detail: 'pas un ploxion' };
           const h = await sha256(r.texte);
-          if (h === p.hash) return { id, etat: 'a-jour' };
+          if (h === p.hash) { await marquer(); return { id, etat: 'a-jour' }; }
           const { bions, manquants } = await resoudreBions(r.texte);
           await boxion.put(NS, id, { ...p, js: r.texte, hash: h, bions: [...new Set([...(p.bions || []), ...bions])], manquants, origine: source, etag: (r.entetes && (r.entetes.etag || r.entetes.ETag)) || null, maj: new Date().toISOString() });
+          await marquer();
           await boxion.append('tsoins', { kind: 'marketplace', action: 'mettre-a-jour', id, hash: h });
           if (surMisAJour) try { surMisAJour(id); } catch (e) { /* */ }   // (0.80) l'app décharge l'ancien code (routeur.oublier)
           return { id, etat: 'mis-a-jour' };

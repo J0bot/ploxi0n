@@ -7,6 +7,13 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.5', titre: 'Tordre les knobs, et le paysage', points: [
+    '◎ Les knobs se tordent avec les doigts : un doigt qui tourne autour, deux doigts qui tordent, un doigt au centre qui glisse ; appuyé, il grossit ; deux touchers le remettent au départ ; chaque cran vibre.',
+    '≋ Le synthé a 33 knobs : deux ondes et leur intervalle, bruit, octave, transposition, glisse, type de filtre, onde du lfo, vibrato, trémolo, saturation, réverb et sa taille, stéréo, swing, durée.',
+    '⟷ Couche ton iPhone : l\'accueil, la map et le synthé se mettent en paysage.',
+    '⬡ Zoome sur un ploxion : son cœur (son propre bion) et tous les bions qu\'il touche ; zoome encore, un bion montre les siens.',
+    '↻ Les mises à jour lisent le changelog du labo : un ploxion qui n\'a pas changé n\'est plus retéléchargé (une seule requête au lieu de tous les ploxions).',
+  ] },
   { v: '0.99.4', titre: 'Le synthé : du son avec des knobs', points: [
     '≋ Synthé : 17 knobs (la source, le filtre, l\'enveloppe, le mouvement, l\'espace, la sortie). Tourne-les : le son change en direct, même d\'une note tenue.',
     '◇ 16 pads dans la gamme (mineur, majeur, phrygien, penta), plusieurs doigts à la fois ; un oscilloscope montre le son.',

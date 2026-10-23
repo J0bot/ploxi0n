@@ -101,7 +101,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.4';
+const VERSION = '0.99.5';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -241,6 +241,8 @@ async function demarrer() {
   window.jOSNatif.lecture = maintenant.api;
   // un ploxion en ouvre un autre (jOSXerPrefs.ouvrir, jOS.openPloxion) : s'il n'est pas installé et qu'il y a du réseau, on l'installe à la volée
   // un ploxion absent : installé (le pack hors ligne d'abord, puis le labo) ; rend vrai s'il est là ensuite
+  // ⬡ (0.99.5) les bions d'un code : ceux notés + tous les jOSNom qu'il touche (sans ceux qu'il définit lui-même), 40 au plus
+  const bionsDuCode = (js, notes = []) => { const s = String(js || ''), def = new Set([...s.matchAll(/\bwindow\.(jOS[A-Z][A-Za-z0-9]{0,47})\s*=(?!=)/g)].map(m => m[1])); return [...new Set([...notes, ...(s.match(/\bjOS[A-Z][A-Za-z0-9]{0,47}\b/g) || [])])].filter(b => !def.has(b) || notes.includes(b)).slice(0, 40); };
   const estBion = (id) => /^jOS[A-Z0-9]/.test(String(id || ''));   // jOSChemin, jOSKnob… : le nom d'un bion
   async function installerAbsent(id) {
     if (routeur.connait(id)) return true;
@@ -461,9 +463,20 @@ async function demarrer() {
     charger: async () => { const r = await httpRelais.get(SOURCE + '/px/xerkions.json', { headers: { Accept: 'application/json' } }); if (r.status !== 200) throw new Error('map : ' + r.status); const d = JSON.parse(r.texte || '{}'); return Array.isArray(d.items) ? d.items : []; },
     ploxions: () => (routeur ? routeur.catalogue().filter(p => !p.interne || p.id === 'journal-tsoins') : []), ouvrir: (id) => routeurProxy.ouvrir(id), usage: () => boxion.get('usage', 'stats'),
     // ◈ (0.98) le zoom de fractale jusqu'aux neurones : un ploxion (son code, ses bions), un bion (son API, qui l'appelle)
-    inspecter: async (id) => { const p = await boxion.get('ploxions', id).catch(() => null), c = routeur ? routeur.catalogue().find(x => x.id === id) : null; return { id, nom: (p && p.nom) || (c && c.nom) || id, code: (p && p.js) || '', bions: (p && p.bions) || [] }; },
+    // (0.99.5, RS-7 : « quand on zoome sur un ploxion, il faut qu'on puisse voir son bion ») : ses bions = ceux notés à l'installation + tous ceux
+    // que son code touche (jOSBoxion, jOSNatif… compris : l'app les fournit, ce sont des bions aussi)
+    inspecter: async (id) => { const p = await boxion.get('ploxions', id).catch(() => null), c = routeur ? routeur.catalogue().find(x => x.id === id) : null, code = (p && p.js) || '';
+      return { id, nom: (p && p.nom) || (c && c.nom) || id, code, bions: bionsDuCode(code, (p && p.bions) || []) }; },
     flux: (i) => { const f = fluxDe({ id: i.id, code: i.code, bions: i.bions, cores: CORES }), d = FLUX_INTERNES[i.id]; if (d) { f.entrees.push(...d.e.map(canal => ({ canal, doc: '', sur: 'core' }))); f.sorties.push(...d.s.map(canal => ({ canal, doc: '', sur: 'core' }))); } return f; },
-    bionInfo: async (nom) => { const x = await boxion.get('bions', nom).catch(() => null), l = await depot.bions().catch(() => []), r = BIONS_LABO[nom] || {}; return { nom, js: (x && x.js) || '', utilisePar: (l.find(b => b.nom === nom) || {}).utilisePar || [], api: r.api || [], role: r.role || '', glyphe: r.glyphe || '' }; },
+    bionInfo: async (nom) => {
+      if (!/^jOS/.test(nom)) {   // (0.99.5) le CŒUR d'un ploxion : son propre code est son bion
+        const p = await boxion.get('ploxions', nom).catch(() => null), c = routeur ? routeur.catalogue().find(x => x.id === nom) : null, js = (p && p.js) || '';
+        const api = [...new Set([...js.matchAll(/\b(manifest|mount|unmount|describe|shareParams|onParams|ready|reprendre|commande|params)\s*[:(]/g)].map(m => m[1]))];
+        return { nom, js, coeur: true, utilisePar: [nom], api, role: (c && c.description) || 'le cœur de ' + ((c && c.nom) || nom) + ' : son code, ce qu\'il enregistre, ce qu\'il touche', glyphe: '', bions: bionsDuCode(js, (p && p.bions) || []) };
+      }
+      const x = await boxion.get('bions', nom).catch(() => null), l = await depot.bions().catch(() => []), r = BIONS_LABO[nom] || {}, js = (x && x.js) || '';
+      return { nom, js, utilisePar: (l.find(b => b.nom === nom) || {}).utilisePar || [], api: r.api || [], role: r.role || '', glyphe: r.glyphe || '', bions: bionsDuCode(js, []).filter(b => b !== nom) };
+    },
     neurone: { html: neuroneHtml, axones: poserAxones, synapses: synapsesEntre }, tous: () => (routeur ? routeur.catalogue().filter(p => p.id !== 'map') : []) }).ploxion);
   // ⧗ (0.86) les tsoins de l'iPhone remontent à ton boxion (si tu le choisis : ⚙ › Réseau) ; « me demander un tsoin » après une session
   const remontee = creerRemontee({ boxion, distant, signaler: (t) => routeur && routeur.signaler(t),

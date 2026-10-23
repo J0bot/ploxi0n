@@ -136,7 +136,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
       + '<nav class="px-map-z" aria-label="le zoom de fractale">' + PALIERS_MAP.map(([k, n]) => '<button type="button" data-map-palier="' + k + '" aria-label="' + n + '"><i></i><span>' + n + '</span></button>').join('')
         + '<div class="px-map-figes" data-map-figes></div><button type="button" class="px-map-zb" data-map-figer aria-label="figer ce zoom : un palier à toi">✻</button><button type="button" class="px-map-zb" data-map-mode aria-label="zoom libre ou par paliers">∿</button><b class="px-map-niv" data-map-niveau>×1.00</b></nav></div>';
     const vue = hote.querySelector('[data-map-v]'), plan = hote.querySelector('[data-map-plan]'), scene = hote.querySelector('[data-map-n]'), carte = hote.querySelector('.px-map');
-    const taille = () => { const w = vue.clientWidth || W.innerWidth || 390, h = vue.clientHeight || (W.innerHeight || 800) * 0.7; return Math.round(Math.min(w * 0.74, h * 0.62)); };
+    const taille = () => { const w = vue.clientWidth || W.innerWidth || 390, h = vue.clientHeight || (W.innerHeight || 800) * 0.7; return Math.round(w > h * 1.2 ? Math.min(w * 0.46, h * 0.84) : Math.min(w * 0.74, h * 0.62)); };   /* (0.99.5) couché : la case prend la hauteur */
     function koinHtml(k) {
       const hub = String(k.ploxion || '').startsWith('xerkion-') && hubs.has(k.ploxion);
       const g = hub ? G(hubs.get(k.ploxion).center || 'portion') : (nomDepuisEmoji(k.icon) ? G(nomDepuisEmoji(k.icon)) : glyphePloxion({ id: k.ploxion, nom: k.label }));
@@ -221,7 +221,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
         const liens = [];
         if (f) for (const [oid, of] of cacheFlux) { if (!of || oid === id) continue; for (const l of synapsesDe(f, of)) liens.push({ ...l, id: oid, nom: of.nom || oid }); }
         scene.innerHTML = neurone ? neurone.html({ genre: 'ploxion', id, titre: p.nom || id, glyphe: glyphePloxion(p), sous: f ? '' : 'son code n\'est pas là (pas installé ?)',
-          entrees: f ? f.entrees : [], sorties: f ? f.sorties : [], bions: (f ? f.bions : []).map(nom => ({ nom, glyphe: G('bion') })), liens, actions: [['ouvrir', '▷ l\'ouvrir'], ['hub', '⊖ la map']] }) : '';
+          entrees: f ? f.entrees : [], sorties: f ? f.sorties : [], bions: [{ nom: id, glyphe: glyphePloxion(p), coeur: true }, ...(f ? f.bions : []).map(nom => ({ nom, glyphe: G('bion') }))],   /* (0.99.5) son cœur d'abord, puis ses bions */ liens, actions: [['ouvrir', '▷ l\'ouvrir'], ['hub', '⊖ la map']] }) : '';
         W.requestAnimationFrame(suivreAxones); remplir();
         return;
       }
@@ -232,7 +232,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
         const lu = flux ? flux({ id: nom, code: b.js || '', bions: [] }) : { entrees: [], sorties: [] };
         const api = (b.api || []).map(a => ({ canal: 'api:' + a, doc: '', sur: 'core' }));
         scene.innerHTML = neurone ? neurone.html({ genre: 'bion', id: nom, titre: nom, glyphe: b.glyphe || G('bion'), sous: b.role || '',
-          entrees: [...(b.utilisePar || []).map(p => ({ canal: 'appel:' + p, doc: 'l\'appelle', sur: 'code' })), ...lu.entrees], sorties: [...api, ...lu.sorties], bions: [],
+          entrees: [...(b.utilisePar || []).map(p => ({ canal: 'appel:' + p, doc: b.coeur ? 'son ploxion' : 'l\'appelle', sur: 'code' })), ...lu.entrees], sorties: [...api, ...lu.sorties], bions: (b.bions || []).map(n => ({ nom: n, glyphe: G('bion') })),   /* (0.99.5) un bion a ses bions : on descend encore */
           liens: (b.utilisePar || []).map(p => ({ id: p, nom: (tousLes().find(x => x.id === p) || {}).nom || p, sens: 'de', canal: 'appel:' + nom })), actions: [['ploxion', '⊖ le ploxion']] }) : '';
         W.requestAnimationFrame(suivreAxones);
       }

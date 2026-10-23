@@ -58,3 +58,35 @@ test('≋ le synthé : régler, garder, la boucle joue la partition au tempo, co
   assert.ok(ctx.journal.demarres.length > 1, 'la boucle a joué : ' + ctx.journal.demarres.length);
   s.couper(); assert.equal(s.etat().boucle, false); assert.equal(tic, null);
 });
+
+// (0.99.5) tordre les knobs avec les doigts
+import { deltaAngle, valeurApres, tordre } from '../src/bions/tordre.js';
+import { JSDOM } from 'jsdom';
+test('◎ tordre : l\'angle le plus court, un tour de 270° = toute la plage, borné, au pas', () => {
+  assert.ok(Math.abs(deltaAngle(3, -3) - (2 * Math.PI - 6)) < 1e-9, 'traverse ±π par le court chemin');
+  assert.equal(deltaAngle(0, Math.PI / 2), Math.PI / 2);
+  assert.equal(valeurApres(0, Math.PI * 1.5, { min: 0, max: 1 }), 1);
+  assert.equal(valeurApres(0.5, -Math.PI * 0.75, { min: 0, max: 1 }), 0);
+  assert.equal(valeurApres(100, Math.PI * 0.15, { min: 60, max: 8000, pas: 10 }), 890);
+  assert.equal(valeurApres(1, 1, { min: 0, max: 1 }), 1, 'borné');
+});
+
+test('◎ tordre : un doigt qui tourne autour du knob le tourne, deux doigts le tordent, deux touchers le remettent au départ', () => {
+  const dom = new JSDOM('<div class="jkn"><div data-k></div></div>'), W = dom.window, el = W.document.querySelector('.jkn');
+  el.querySelector('[data-k]').getBoundingClientRect = () => ({ left: 0, top: 0, width: 64, height: 64 });   // centre (32, 32)
+  let v = 0.5; const crans = [];
+  tordre(el, { W, get: () => v, set: (x) => { v = x; }, min: 0, max: 1, pas: 0.01, defaut: 0.25, vibrer: (k) => crans.push(k) });
+  const pe = (type, id, x, y) => { const e = new W.MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y }); Object.defineProperty(e, 'pointerId', { value: id }); el.dispatchEvent(e); };
+  // un doigt à droite du centre (64, 32) qui tourne d'un quart de tour dans le sens horaire (vers le bas : (32, 64))
+  pe('pointerdown', 1, 64, 32); for (let a = 0; a <= 90; a += 10) pe('pointermove', 1, 32 + 32 * Math.cos(a * Math.PI / 180), 32 + 32 * Math.sin(a * Math.PI / 180)); pe('pointerup', 1, 32, 64);
+  assert.ok(Math.abs(v - (0.5 + 1 / 3)) < 0.02, 'un quart de tour = un tiers de la plage : ' + v);
+  assert.ok(crans.length >= 1, 'ça vibre (au plus un cran toutes les 28 ms)');
+  // deux doigts : l'un fixe (0, 32), l'autre tourne autour de lui d'un quart de tour à rebours
+  v = 0.5; pe('pointerdown', 2, 0, 32); pe('pointerdown', 3, 64, 32);
+  for (let a = 0; a >= -90; a -= 10) pe('pointermove', 3, 64 * Math.cos(a * Math.PI / 180), 32 + 64 * Math.sin(a * Math.PI / 180));
+  pe('pointerup', 3, 0, 0); pe('pointerup', 2, 0, 0);
+  assert.ok(Math.abs(v - (0.5 - 1 / 3)) < 0.02, 'deux doigts : tordu à rebours : ' + v);
+  // deux touchers rapides sans tourner : la valeur de départ
+  pe('pointerdown', 4, 32, 10); pe('pointerup', 4, 32, 10); pe('pointerdown', 5, 32, 10); pe('pointerup', 5, 32, 10);
+  assert.equal(v, 0.25);
+});

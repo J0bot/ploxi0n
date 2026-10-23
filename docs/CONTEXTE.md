@@ -102,6 +102,20 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.99.5 (24.10)** — cinq demandes de RS-7 d'un coup.
+- **Les mises à jour par le changelog** : `depot.changelog()` lit `/px/changelog.json` (par_ploxion : dernier, n, commits ; head). `aJour` : pour
+  chaque installé, une marque `dernier#n#commit` comparée à `p.changelog` ; sans marque : à jour si le dernier changement est avant `p.maj ||
+  p.installe` (ou absent du changelog) ; sinon l'ancienne vérification (ETag / hash) et la marque retenue. Rien à vérifier = aucune requête.
+  `aJour({ forcer: true })` saute le changelog. Le `mtime` du registre est le même pour tous : inutilisable.
+- **Le bion d'un ploxion** : main.js `bionsDuCode(js, notes)` (tous les jOSNom touchés, sans ceux qu'il définit) ; `bionInfo(nom)` d'un id de ploxion =
+  son cœur (son code, ce qu'il enregistre : manifest / mount / describe…, ses bions) ; la map : le cœur en premier (`.px-nv-coeur`), un bion a ses bions.
+- **33 knobs** (`src/bions/son.js`) et le moteur qui va avec (`creerMoteur` : 2 ondes, intervalle, bruit, glisse, type de filtre, vibrato,
+  trémolo, saturation tanh, réverb fabriquée, panoramique ; swing et gate dans la boucle ; octave et transposition sur les pads).
+- **Tordre** (`src/bions/tordre.js`) : posé PAR-DESSUS jOSKnob (capture du pointerdown / pointermove, pas du pointerup) ; `brancherPanneau`.
+- **Le paysage** : @media (orientation: landscape) and (max-height: 520px) en fin d'app.css ; `taille()` de la map couchée ; Info.plist
+  autorisait déjà le paysage. ⏭ les autres écrans (réglages, marketplace, ploxions du labo), les koins couchés.
+- Piège (3 fois cette session) : un `//` en fin de ligne au milieu d'un objet ou d'un one-liner avale la suite ; écrire `/* */` dans le code ajouté.
+
 **0.99.4 (24.10)** — ≋ le synthé (RS-7 : « et qu'on puisse commencer à faire du son avec des knobs »).
 - `src/bions/son.js` : PARAMS (clé, nom, bornes, pas, départ, format, forme kion / koin, groupe), `normaliser`, PRESETS, `noteDePad`, `hasard(graine)`.
 - `src/lot/synthe.js` : `creerMoteur(ctx, lire)` (debut / fin / appliquer en direct sur les notes tenues / toutCouper) ; le ploxion (jOSKnob

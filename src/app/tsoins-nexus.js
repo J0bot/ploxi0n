@@ -1,5 +1,6 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1792719566000,"0.99.3 : les ploxions qui ne s'installaient pas (8 refusés, 140 sans leurs bions)"],
+export const COMMITS = [[1792720067000,"0.99.4 : le synthé, faire du son avec des knobs"],
+  [1792719566000,"0.99.3 : les ploxions qui ne s'installaient pas (8 refusés, 140 sans leurs bions)"],
   [1792718765000,"0.99.2 : la map de l'organique tient en place, et se lit sur n'importe quel fond"],
   [1792718350000,"braindump de RS-7 : le drone xerbot (il te suit, mappe en 3D, on l'envoie)"],
   [1792718291000,"0.99.1 : Proche, l'ultimate Bluetooth (messages, basse et son partagés, un hôte et des répliques)"],
