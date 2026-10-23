@@ -1311,6 +1311,26 @@ html.px-m-organique .px-accueil>.px-sous,html.px-m-organique .px-accueil .px-pla
 @keyframes px-palier-nom{0%,60%{opacity:1}100%{opacity:0}}
 .px-map-temps[hidden]{display:none}
 .px-map-z button:disabled{opacity:.25}
+/* ❄ (0.99) LE ZOOM LIBRE OU PAR PALIERS (src/bions/zoom.js) : l'écriture suit l'échelle (RS-7 23.10 : « selon les niveaux y a que le glyphe,
+   que le texte, ou les deux » ; « que la police ressorte »). De loin le glyphe seul, au milieu les deux, de près le texte en ChillTekk.
+   Les écritures forcées (pur glyphes, pur texte, minimal) gardent la main. */
+.px-map{--ct:"ChillTekk",ui-monospace,monospace}
+html.px-organique .px-map :is(.px-map-k,.px-map-tc,.px-map-rc) small,html.px-organique .px-map-t b,html.px-organique .px-map-ou,html.px-organique .px-nv-c b{font-family:var(--ct)}
+.px-map :is(.px-map-k,.px-map-tc,.px-map-rc) :is(.px-g,small){transition:width .22s ease,height .22s ease,font-size .22s ease,opacity .22s ease}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="glyphe"] :is(.px-map-k,.px-map-tc,.px-map-rc) small{font-size:0;opacity:0}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="glyphe"] :is(.px-map-k,.px-map-tc,.px-map-rc) .px-g{width:68%;height:68%}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="glyphe"] .px-map-t span{opacity:0}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="texte"] :is(.px-map-k,.px-map-tc,.px-map-rc) .px-g{width:0;height:0;opacity:0}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="texte"] :is(.px-map-k,.px-map-tc,.px-map-rc) small{font-size:10px;line-height:1.15;color:var(--txt);white-space:normal;text-align:center;word-break:break-word;letter-spacing:.06em}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="texte"] .px-map-t b{color:var(--bio);text-shadow:0 0 8px var(--glow)}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="texte"] .px-nv-c small{font-size:10.5px;color:var(--txt)}
+/* la règle : ❄ fige ce zoom (un palier à toi), libre / paliers, tes paliers figés, le niveau */
+.px-map-figes{display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-top:6px}
+.px-map-figes button{min-height:26px;padding:0 6px;border-radius:9px;border:1px solid var(--bord2);background:var(--surface);color:var(--acc2);font:600 10px/1 var(--ct)}
+.px-map-z .px-map-zb{justify-content:center;min-height:30px;min-width:34px;padding:0 6px;border-radius:10px;border:1px solid var(--bord);background:var(--surface);color:var(--muted);font:600 10px/1 var(--ct);letter-spacing:.08em}
+.px-map-z .px-map-zb.on{color:var(--bio);border-color:var(--bio);box-shadow:0 0 10px var(--glow)}
+.px-map-niv{align-self:flex-end;font:600 9px/1 var(--ct);color:var(--grave);letter-spacing:.06em;padding:2px 4px}
+html.px-organique .px-map-figes button,html.px-organique .px-map-z .px-map-zb{background:var(--creux)}
 .px-map-n{position:relative;flex:1;min-height:0;overflow:auto;padding:10px 46px 30px 14px;-webkit-overflow-scrolling:touch}
 .px-map-n[hidden]{display:none}
 @keyframes px-plonge{from{transform:scale(.72);opacity:0;filter:blur(3px)}to{transform:none;opacity:1;filter:none}}

@@ -102,6 +102,19 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.99 (23.10)** — RS-7 : « et il faut que la police ressorte, genre selon les niveaux y a que le glyphe, que le texte, ou les deux ; les
+niveaux de zoom ça se balade partout, et on peut freeze des zooms pour faire nos paliers au lieu que ça soit zoom libre ».
+- `src/bions/zoom.js` (pur, `tests/zoom.test.mjs`) : MIN/MAX/PLONGE/RECULE, `niveau(iScene, s)` = l'indice du palier + (s − 1)/2,
+  `versScene(g)` (l'inverse), `detailDe(s)` (glyphe < 0.85 < deux < 1.28 < texte), `figer`, `prochainFige`.
+- `src/app/map-hubs.js` : le pincer est continu (`appliquerEchelle` : scale de la vue ou de la scène, origine sous les doigts ; la carte
+  porte `data-detail`) ; en libre, PLONGE → `plonger` (ce qui est sous les doigts), RECULE → le palier d'avant ; en paliers, au lâcher on saute
+  au palier figé suivant (sans palier figé : les scènes). La règle : `[data-map-figer]` (❄ fige), `[data-map-mode]`, `[data-map-fige]` (p1…),
+  `[data-map-niveau]`. Réglage gardé dans boxion `reglages/zoom` { mode, figes: [{ g, nom }] }. `hote.__map` pour les parcours.
+- `app.css` (bloc ❄ 0.99) : les étiquettes de la map en ChillTekk dans l'organique ; `data-detail` ne joue pas sous les écritures forcées
+  (glyphes, texte, minimal). Faux iPhone : `parcours-zoom.mjs` (0px / 7.5px / 10px aux trois niveaux, le palier figé y ramène).
+- ⏭ « ça se balade partout » : le même bion pour le passé (il a déjà ses paliers au pincer), le neurone, puis les koins en trackpads de zoom.
+  Le pincer n'a jamais touché un vrai iPhone : à sentir (seuils PLONGE 1.55 / RECULE 0.66).
+
 **0.98 (23.10)** — RS-7 : « ouais parfait, on relie tout ; une seule map, tout est fractal ; chaque bion et ploxion, il faut les input et
 output ; ça a été fait dans le xer du labo sur téléphone, copie un peu de là ; le but, c'est de changer tout le UI pour une expérience ultra
 stylée ce soir » (Spotify : plus tard).

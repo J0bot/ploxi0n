@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.0', titre: 'Le zoom libre, ou tes paliers', points: [
+    '◈ Sur la map, pincer agrandit sous tes doigts, en continu ; au-delà, tu plonges dans ce qui est dessous, en deçà tu recules d\'un palier.',
+    '✎ L\'écriture suit le zoom : de loin le glyphe seul, au milieu les deux, de près le texte, en ChillTekk.',
+    '❄ « fige » garde ce zoom comme un palier à toi (p1, p2…, touche pour y revenir). « libre » → « paliers » : le pincer saute d\'un palier figé au suivant au lieu de zoomer librement.',
+  ] },
   { v: '0.98.0', titre: 'Une seule map, tout est fractal', points: [
     '◈ Dans l\'organique, l\'accueil EST la map. Pince pour changer de palier (la règle à droite) : tes ploxions, le réseau des hubs, un hub, un ploxion, un bion.',
     '⇄ Le neurone d\'un ploxion (appui long sur un koin) : ce qui entre, ce qui sort, ses bions dedans, et ses synapses vers les autres ploxions qui partagent un canal. Touche un bion : le sien.',
