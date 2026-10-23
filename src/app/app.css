@@ -1062,15 +1062,15 @@ html.px-organique .px-sy-pad{--n-bord:var(--memb2)}html.px-organique .px-sy-pad.
 html.px-koins .px-dock,html.px-koins .px-mode-ploxion .px-ecran>.px-barre{display:none}
 html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .px-koins-r{position:fixed;inset:auto 0 0 0;height:0;z-index:40;color:var(--txt)}
-.px-koin{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 4px);width:58px;height:58px;padding:0;margin:0;border:0;background:transparent;color:var(--acc);z-index:42;
+.px-koin{position:fixed;bottom:0;width:76px;height:76px;padding:0;margin:0;border:0;background:transparent;color:var(--acc);z-index:42;
   transition:width .26s cubic-bezier(.2,.9,.3,1),height .26s cubic-bezier(.2,.9,.3,1),opacity .2s;-webkit-tap-highlight-color:transparent}
-.px-koin-gauche{left:4px}.px-koin-droite{right:4px}
+.px-koin-gauche{left:0}.px-koin-droite{right:0}   /* (0.99.7) collés au coin : l'arrondi de l'écran les découpe */
 .px-koin svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linejoin:round;opacity:.8}
 .px-koin svg polygon:first-child{fill:var(--surface);stroke:var(--bord2)}
 .px-koin svg .f{fill:var(--bio);stroke:none;opacity:.7}
 .px-koin[data-etape="1"]{width:30vw;height:30vw}.px-koin[data-etape="2"]{width:47vw;height:47vw}
 .px-koin[data-etape="3"]{opacity:0;pointer-events:none}
-.px-koins-r.px-koins-ouverts .px-koin{width:58px;height:58px}
+.px-koins-r.px-koins-ouverts .px-koin{width:76px;height:76px}
 .px-koin-voile{position:fixed;inset:0;z-index:39;background:rgba(7,5,12,.62)}
 .px-koin-cases{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);width:calc(50vw - 17px);display:grid;grid-template-rows:auto auto;gap:8px;z-index:41}
 .px-koin-cases-gauche{left:12px}.px-koin-cases-droite{right:12px}
@@ -1385,7 +1385,7 @@ html.px-organique :is(.px-map-hg,.px-map-hd,.px-map-bg,.px-map-bd){opacity:.5}
 html.px-organique .px-map-temps-on .px-map-k:not(.px-map-vu):not(.px-map-k-hub){opacity:.38}
 html.px-organique .px-map-k[data-quand]:not([data-quand=""])::after{font-size:7px;color:var(--muted);text-shadow:0 1px 2px #000}
 /* la réglette du temps : entre les deux koins du bas, plus dessous */
-html.px-koins .px-map-temps,html.px-organique .px-map-temps{padding:4px 74px calc(14px + env(safe-area-inset-bottom,0px))}
+html.px-koins .px-map-temps,html.px-organique .px-map-temps{padding:4px 82px calc(14px + env(safe-area-inset-bottom,0px))}
 /* la règle du zoom, plus étroite : elle ne mange plus les tuiles */
 .px-map-z .px-map-zb,.px-map-figes button{min-width:0;width:30px;height:30px;min-height:30px;padding:0;border-radius:50%;font:600 14px/1 var(--police);letter-spacing:0;align-self:flex-end;justify-content:center}
 .px-map-figes button{font:600 11px/1 var(--ct);color:var(--acc2)}

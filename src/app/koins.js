@@ -19,9 +19,11 @@ export const ETAPES = 4;   // 0 replié (petit) · 1 moyen · 2 grand · 3 les c
 export const CASES = { gauche: [['trion', 'koins'], ['wormion', 'temps']], droite: [['xer', 'xers'], ['portion', 'carte']] };
 export const BARRE = [['retour', 'retour', '‹'], ['tsoin', 'tsoin', ''], ['wormion', 'temps', ''], ['trion', 'koins', ''], ['portion', 'carte', ''], ['ploxion', 'accueil', ''], ['xeroction', 'toi', ''], ['quoi', 'quoi', 'ⓘ'], ['minimiser', 'minimiser', '▁']];
 const NOMS = { koins: 'le koin du ion', temps: 'le temps (ce que tu avais ouvert)', xers: 'mes xers', carte: 'tout le xerboxion', tsoin: 'noter un tsoin', accueil: 'les ploxions', toi: 'toi (compte, réglages)', retour: 'retour', minimiser: 'minimiser', quoi: 'c\'est quoi ça ? (touche quelque chose)' };
-// un koin de coin : un triangle rectangle (l'angle droit dans le coin de l'écran) et ses triangles emboîtés
+// un koin de coin : un triangle rectangle (l'angle droit dans le coin de l'écran) et ses triangles emboîtés.
+// (0.99.7, RS-7 : « les koins bien collés aux coins de l'écran, ça gobe les coins ») : l'angle droit tombe PILE dans le coin de l'écran ;
+// c'est l'arrondi de l'iPhone qui le découpe (le koin gobe le coin) ; les triangles intérieurs rentrent pour rester dans l'arrondi (~55 px)
 const TRI = (g) => '<svg viewBox="0 0 100 100" aria-hidden="true">' + (g ? '<g transform="translate(100 0) scale(-1 1)">' : '<g>')
-  + '<polygon points="2,98 2,4 96,98"/><polygon points="14,86 14,40 60,86"/><polygon points="24,76 24,60 40,76" class="f"/></g></svg>';
+  + '<polygon points="0,100 0,0 100,100"/><polygon points="26,74 26,42 58,74"/><polygon points="34,66 34,55 45,66" class="f"/></g></svg>';
 
 /** actions = { koins, temps, xers, carte, tsoin, accueil, toi, retour, minimiser, journal } → fonctions ; actif() : l'option est choisie */
 export function creerKoins({ W = globalThis.window, actif = () => false, actions = {}, vibrer = () => {}, calme = () => false }) {

@@ -7,6 +7,9 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.7', titre: 'Les koins gobent les coins', points: [
+    '◺◿ Les koins sont collés aux coins de l\'écran, plus grands : l\'arrondi de l\'iPhone les découpe.',
+  ] },
   { v: '0.99.6', titre: 'L\'app ne gèle plus à l\'ouverture', points: [
     '◇ Avec beaucoup de ploxions installés, l\'app relisait et réécrivait chacun d\'eux en entier au démarrage : elle gelait. Elle se contente maintenant de leur fiche légère.',
     '⬡ La réparation des bions se fait en douceur, quelques ploxions à la fois, et attend quand le labo dit « trop de requêtes ».',
