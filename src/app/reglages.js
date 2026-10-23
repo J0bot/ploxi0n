@@ -12,7 +12,8 @@ import { testerClavier } from './clavier.js';
 import { PLUGIONS } from '../natif/plugions.js';
 import { STYLES, EVENEMENTS, MOTIFS_APP, DENSITES } from '../natif/haptique.js';
 import { BRANCHEMENTS } from '../natif/web-natif.js';
-import { versGlyphe, glyphePloxion } from './glyphes.js';   // ◇ (0.54) des glyphes, plus d'emoji
+import { versGlyphe, glyphePloxion } from './glyphes.js';
+import { LANGUES } from '../bions/dire.js';   // ⟡ (0.99.14) la langue de l'app   // ◇ (0.54) des glyphes, plus d'emoji
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const ko = (n) => n < 1024 ? n + ' o' : n < 1048576 ? Math.round(n / 1024) + ' Ko' : (Math.round(n / 104857.6) / 10) + ' Mo';
@@ -118,6 +119,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
         + (P ? section('apparence', 'Apparence', '<div class="bloc">'
           + seg('police', Object.entries(POLICES).map(([k, v]) => [k, v.nom]), P.police || 'mixte', 'La police', 'la ChillTekk : notre alphabet (O le chaos, I l\'observateur et son œil, A un koin) ; dans l\'organique')
           + seg('ecriture', ECRITURES, P.ecriture || 'xerboxion', 'L\'écriture', 'comment tout s\'écrit : la forme, le glyphe et le nom (xerboxion) ; un glyphe et le nom ; rien que des glyphes ; rien que des mots ; les emoji ; minimal')
+          + seg('langue', [['auto', 'auto (l\'iPhone)'], ...LANGUES], P.langue || 'auto', 'Langue', 'la langue de l\'app ; les mots du xerboxion (ploxion, bion, koin, tsoin…) restent tels quels')
           + seg('vue', [['grille', 'grille'], ['compacte', 'compacte'], ['liste', 'liste'], ['usage', 'usage'], ['recents', 'récents'], ['categories', 'catégories']], R().vueAccueil ? R().vueAccueil() : 'grille', 'Vue de l\'accueil')
           + seg('icones', [['petites', 'petites'], ['normales', 'normales'], ['grandes', 'grandes']], P.icones, 'Taille des icônes')
           + bascule('data-pb="pleinEcran"', !!P.pleinEcran, 'Plein écran complet', 'sans barre d\'état ; la barre du bas s\'efface ; les bords haut et bas vont d\'abord à l\'app (un 2e glissé pour iOS)')

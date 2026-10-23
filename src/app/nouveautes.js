@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.14', titre: 'Toutes les langues (le début)', points: [
+    '⟡ ⚙ › Apparence › Langue : auto (celle de l\'iPhone), français, English, Deutsch, italiano, español. Ça change tout de suite, sans relancer.',
+    '⟡ Traduits d\'abord : l\'accueil et la map, les réglages, le marketplace, Autour, Proche. Les mots du xerboxion (ploxion, bion, koin, tsoin…) restent tels quels.',
+  ] },
   { v: '0.99.13', titre: 'Couché, partout', points: [
     '⟷ L\'iPhone couché : les réglages et le marketplace gardent la recherche dans une colonne à gauche, le reste à droite (les réglages sur deux colonnes).',
     '⟷ Les ambiances, le système, Proche, inviter, l\'atelier des peaux se rangent en colonnes au lieu de défiler.',

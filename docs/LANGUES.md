@@ -47,6 +47,19 @@ La 7e écriture `humain` (prefs.ECRITURES) : tout ce que fait « glyphes », plu
 `fenetre` → ∀t / Δt ∈ [7, 20] d, `flux` → →3 · 2→, `rien` → ∅) posé en `data-h` (la map, le neurone) et affiché par le CSS (`html.px-e-humain`).
 Les phrases (`.px-sous`), les noms des hubs et des koins disparaissent ; « c'est quoi ça ? » dit les mots. ⏭ les autres écrans, le guide.
 
+## Construit (0.99.14) : toutes les langues, le début
+
+- `src/bions/dire.js` : la phrase française **est** la clé (comme gettext) ; un nombre passe par `{n}` ; « a · b » se traduit morceau par morceau ;
+  les glyphes autour des mots restent ; une phrase inconnue reste en français. `langueDe` : le réglage, sinon la première langue de l'iPhone
+  connue, sinon le français. `NEOLOGISMES` : jamais traduits (un test le vérifie sur chaque ligne).
+- `src/app/langues.js` : une ligne = `[fr, en, de, it, es]` (l'allemand de Suisse : Velo, Glace, gross). D'abord ce que tout le monde voit :
+  l'accueil et la map, les réglages, le marketplace, Autour, Proche.
+- `src/app/langue.js` : posé sur l'interface de l'app comme le filtre sans-emoji (textes, placeholder, aria-label, title), jamais sur les
+  ploxions du labo ni sur ce que les gens écrivent ; le français d'origine est gardé, la langue change à chaud ; en français, rien ne tourne.
+- ⚙ › Apparence › Langue (auto par défaut : un iPhone en allemand voit l'app en allemand ; on peut forcer le français).
+- ⏭ les autres écrans (le guide, les nouveautés, les feuilles), et les demandes de permission d'iOS : des `InfoPlist.strings` par langue,
+  ajoutés au projet par fastlane.
+
 ## Questions ouvertes (à RS-7, quand il en aura envie)
 
 - « Que ça fonctionne avec toutes les langues » : toute l'app, ou les messages de l'ultimate Bluetooth (des gens de langues différentes
