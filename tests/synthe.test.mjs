@@ -90,3 +90,33 @@ test('◎ tordre : un doigt qui tourne autour du knob le tourne, deux doigts le 
   pe('pointerdown', 4, 32, 10); pe('pointerup', 4, 32, 10); pe('pointerdown', 5, 32, 10); pe('pointerup', 5, 32, 10);
   assert.equal(v, 0.25);
 });
+
+// (0.99.10) jouer à plusieurs (Proche), pencher l'iPhone
+import { creerProche } from '../src/lot/proche.js';
+import { PAIRES, valeurInclinee } from '../src/lot/synthe.js';
+test('≋ pencher : la bonne échelle (log pour la coupure), bornée ; deux knobs bougent', async () => {
+  assert.equal(valeurInclinee('coupure', 0), 60); assert.equal(valeurInclinee('coupure', 1), 8000);
+  assert.ok(Math.abs(valeurInclinee('coupure', 0.5) - Math.sqrt(60 * 8000)) < 1, 'au milieu : la moyenne géométrique');
+  assert.equal(valeurInclinee('resonance', 2), 20); assert.equal(valeurInclinee('inconnu', 0.5), null);
+  const W = { setInterval: () => 1, clearInterval: () => {}, setTimeout: (f) => setTimeout(f, 0), clearTimeout: () => {}, addEventListener: () => {}, removeEventListener: () => {} };
+  const s = creerSynthe({ W, boxion: creerMemoire(), Contexte: null }); await s.pret;
+  assert.equal(s.pencher(true), true); assert.deepEqual(s.etat().paire, PAIRES[0]);
+  s.surPenche({ gamma: 45, beta: 10 }); assert.equal(s.reglages().coupure, 8000); assert.equal(s.reglages().resonance, 0.1);
+  s.surPenche({ gamma: -45, beta: 80 }); assert.equal(s.reglages().coupure, 60); assert.equal(s.reglages().resonance, 20);
+});
+
+test('≋ jouer à plusieurs : le son du synthé part dans la basse de Proche ; un knob tordu repart ; les autres reçoivent ses réglages', async () => {
+  const sent = [];
+  const tuyau = { demarrer: async ({ nom }) => ({ moi: nom + '·a1' }), arreter: async () => {}, envoyer: async (t) => { sent.push(JSON.parse(t)); return { envoyes: 1 }; }, pairs: async () => [], surPair: () => {}, surMessage: () => {} };
+  const W = { setInterval: () => 1, clearInterval: () => {}, setTimeout: (f, ms) => setTimeout(f, Math.min(ms || 0, 5)), clearTimeout: (t) => clearTimeout(t) };
+  const proche = creerProche({ W, boxion: creerMemoire(), tuyau, Contexte: null });
+  const s = creerSynthe({ W, boxion: creerMemoire(), Contexte: null, proche }); await s.pret;
+  assert.equal(s.partager(true), false, 'Proche éteint : rien ne part');
+  await proche.demarrer({ nom: 'RS-7', salle: 'zurich' });
+  assert.equal(s.partager(true), true); assert.equal(s.etat().partage, true);
+  const b = proche.etat().basse; assert.equal(b.son.coupure, s.reglages().coupure); assert.equal(b.tempo, s.reglages().tempo);
+  s.regler({ coupure: 333 }); await new Promise(r => setTimeout(r, 30));
+  assert.equal(proche.etat().basse.son.coupure, 330, 'le knob tordu repart (au pas de 10 Hz)');
+  assert.ok(sent.some(x => x.g === 'basse' && x.d && x.d.son && x.d.son.coupure === 330), 'et part sur le réseau');
+  s.partager(false); assert.equal(proche.etat().basse, null);
+});

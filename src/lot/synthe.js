@@ -14,7 +14,7 @@ const NOMS_GROUPES = { source: '∿ la source', filtre: '◇ le filtre', envelop
 /** le moteur : un graphe Web Audio vivant ; p = les réglages (normalisés), relus à chaque note et à chaque knob.
  *  voix : osc 1 + osc 2 (intervalle, désaccord, vibrato) + sub + bruit → filtre (type, enveloppe, lfo) → ADSR → panoramique (stéréo)
  *  → bus → saturation → trémolo → [sec | écho (retour) | réverb (taille)] → sortie → (analyse) → les haut-parleurs */
-export function creerMoteur(ctx, lire) {
+export function creerMoteur(ctx, lire, { vers = null } = {}) {   /* vers : où va le son (un <audio> pour l'arrière-plan) ; sinon les haut-parleurs */
   const sortie = ctx.createGain(), bus = ctx.createGain(), sat = ctx.createWaveShaper ? ctx.createWaveShaper() : ctx.createGain(), trem = ctx.createGain();
   const sec = ctx.createGain(), mouille = ctx.createGain(), echo = ctx.createDelay(2), retour = ctx.createGain();
   const verb = ctx.createConvolver ? ctx.createConvolver() : null, verbG = ctx.createGain();
@@ -24,7 +24,7 @@ export function creerMoteur(ctx, lire) {
   trem.connect(echo); echo.connect(retour); retour.connect(echo); echo.connect(mouille); mouille.connect(sortie);
   if (verb) { trem.connect(verb); verb.connect(verbG); verbG.connect(sortie); }
   if (analyse) { analyse.fftSize = 1024; sortie.connect(analyse); }
-  sortie.connect(ctx.destination);
+  sortie.connect(vers || ctx.destination);
   const lfo = ctx.createOscillator(), lfoG = ctx.createGain(), vibG = ctx.createGain(), tremG = ctx.createGain();
   lfo.connect(lfoG); lfo.connect(vibG); lfo.connect(tremG); tremG.connect(trem.gain); lfo.start();
   // le bruit : un tampon blanc de 2 s, partagé
@@ -96,8 +96,18 @@ export function creerMoteur(ctx, lire) {
     fermer() { toutCouper(); try { lfo.stop(); } catch (e) { /* */ } } };
 }
 
-export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, Contexte = W && (W.AudioContext || W.webkitAudioContext) }) {
+// (0.99.10) l'inclinaison de l'iPhone tourne deux knobs (gauche-droite, avant-arrière) ; ces paires-là, au choix
+export const PAIRES = [['coupure', 'resonance'], ['lfo', 'lfoProf'], ['echo', 'retour'], ['vibrato', 'tremolo'], ['saturation', 'reverb'], ['desaccord', 'sub']];
+const LOG = new Set(['coupure', 'lfo', 'attaque', 'declin', 'relache', 'echo', 'taille']);
+/** une inclinaison (u ∈ [0, 1]) → la valeur d'un knob (les fréquences et les temps en échelle logarithmique, comme l'oreille) */
+export function valeurInclinee(cle, u) {
+  const x = PARAMS.find(q => q.cle === cle); if (!x) return null; u = Math.max(0, Math.min(1, u));
+  const v = LOG.has(cle) && x.min > 0 ? x.min * Math.pow(x.max / x.min, u) : x.min + (x.max - x.min) * u; return Math.round(v * 1e6) / 1e6;
+}
+
+export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, Contexte = W && (W.AudioContext || W.webkitAudioContext), proche = null }) {
   const D = W.document;
+  let sortieAudio = null, partage = false, partageAttente = 0, penche = null, paire = 0, pencheRaf = 0, pencheDer = null;
   let p = normaliser(PRESETS['basse tekk']), sons = [], gamme = 'mineur', motif = 'tekk', ctx = null, m = null, boucle = null, ordo = 0, jusque = 0, garde = 0, peindre = () => {};
   const pret = Promise.all([boxion.get('reglages', 'synthe').catch(() => null), boxion.get('reglages', 'synthe-sons').catch(() => null)]).then(([r, s]) => {
     if (r && typeof r === 'object') { p = normaliser(r.p || r); if (GAMMES[r.gamme]) gamme = r.gamme; if (MOTIFS[r.motif]) motif = r.motif; }
@@ -108,10 +118,38 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
     if (!ctx && Contexte) { try { ctx = new Contexte(); } catch (e) { ctx = null; } }
     if (!ctx) return null;
     if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(() => {});
-    if (!m) m = creerMoteur(ctx, () => p);
+    if (!m) {   // (0.99.10) par un <audio> : iOS le joue en arrière-plan (écran verrouillé), le routeur voit qu'il joue
+      let vers = null;
+      if (ctx.createMediaStreamDestination && D && D.createElement) {
+        try { const dest = ctx.createMediaStreamDestination(); const au = D.createElement('audio'); au.setAttribute('playsinline', ''); au.srcObject = dest.stream; au.style.display = 'none'; (D.body || D.documentElement).appendChild(au);
+          const pl = au.play(); if (pl && pl.catch) pl.catch(() => {}); vers = dest; sortieAudio = au;
+          if (W.navigator && W.navigator.mediaSession && W.MediaMetadata) W.navigator.mediaSession.metadata = new W.MediaMetadata({ title: 'Synthé', artist: 'ploxi0n' }); } catch (e) { vers = null; }
+      }
+      m = creerMoteur(ctx, () => p, { vers });
+    }
     return m;
   }
-  function regler(nouveaux, { doux = true } = {}) { p = normaliser({ ...p, ...nouveaux }); if (m) m.appliquer(); garder(); if (doux) peindre('knobs'); }
+  function regler(nouveaux, { doux = true } = {}) {
+    p = normaliser({ ...p, ...nouveaux }); if (m) m.appliquer(); garder(); if (doux) peindre('knobs');
+    if (partage) { W.clearTimeout(partageAttente); partageAttente = W.setTimeout(envoyerProche, 200); }   // tordre un knob : tout le monde l'entend
+  }
+  // ---- (0.99.10) jouer à plusieurs : le son du synthé part dans Proche (la basse partagée porte ses 33 réglages) ----
+  const tonique = () => Math.max(24, Math.min(52, 36 + p.transpose + 12 * p.octave));
+  function envoyerProche() { if (!partage || !proche) return; const r = proche.hebergerBasse({ tempo: p.tempo, motif, gamme, tonique: tonique(), volume: p.volume, son: { ...p } }); if (!r) { partage = false; peindre(); } }
+  function partager(oui) {
+    if (!oui) { if (partage && proche) proche.arreterBasse(); partage = false; peindre(); return true; }
+    if (!proche || !proche.etat().actif) return false;   // Proche d'abord : la salle, les autres
+    arreterBoucle(); partage = true; envoyerProche(); peindre(); return true;
+  }
+  // ---- (0.99.10) pencher l'iPhone : deux knobs ----
+  function surPenche(ev) { pencheDer = ev; if (!pencheRaf) pencheRaf = (W.requestAnimationFrame || ((f) => W.setTimeout(f, 33)))(() => { pencheRaf = 0; const e = pencheDer; if (!e || !penche) return;
+    const [kx, ky] = PAIRES[paire], ux = ((+e.gamma || 0) + 45) / 90, uy = ((+e.beta || 0) - 10) / 70;
+    regler({ [kx]: valeurInclinee(kx, ux), [ky]: valeurInclinee(ky, uy) }); }); }
+  function pencher(oui) {
+    if (oui && !penche) { penche = true; W.addEventListener('deviceorientation', surPenche); vibrer('selection'); }
+    else if (!oui && penche) { penche = null; W.removeEventListener('deviceorientation', surPenche); }
+    peindre(); return !!penche;
+  }
   // ---- la boucle : la partition de la basse de Proche, jouée par ce son-ci ----
   function lancerBoucle() {
     const mo = moteur(); if (!mo) return false;
@@ -144,6 +182,7 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
       + '<div class="px-sy-jouer"><canvas class="px-sy-scope" data-sy-scope height="70" aria-hidden="true"></canvas>'
       + '<div class="px-sy-pads" data-sy-pads data-neurones="fin" data-instrument></div>'
       + '<div class="px-sy-l"><button type="button" data-sy="boucle"></button><div class="px-sy-seg" data-sy-motifs></div></div>'
+      + '<div class="px-sy-seg px-sy-plus"><button type="button" data-sy="pencher"></button><button type="button" data-sy="paire"></button><button type="button" data-sy="proche"></button></div><p class="px-sy-msg" data-sy-msg hidden></p>'
       + '<div class="px-sy-seg" data-sy-gammes></div></div>'   /* (0.99.5) deux colonnes en paysage : jouer à gauche, régler à droite */
       + '<div class="px-sy-regler"><div data-sy-k data-instrument></div>'
       + '<h3 class="px-sy-t">◈ les sons</h3><div class="px-sy-seg" data-sy-presets></div><div class="px-sy-seg" data-sy-sons data-ecrit></div>'
@@ -155,6 +194,10 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
     }
     function peindreChoix() {
       const b = $('[data-sy="boucle"]'); b.textContent = boucle ? '■ la boucle' : '▷ la boucle'; b.classList.toggle('on', !!boucle);
+      const pe = $('[data-sy="pencher"]'), pa2 = $('[data-sy="paire"]'), pr = $('[data-sy="proche"]'), nom = (k) => (PARAMS.find(q => q.cle === k) || {}).nom || k;
+      pe.textContent = penche ? '⟲ penché' : '⟲ pencher'; pe.classList.toggle('on', !!penche);
+      pa2.textContent = nom(PAIRES[paire][0]) + ' × ' + nom(PAIRES[paire][1]);
+      pr.textContent = partage ? '◉ partagé dans Proche' : '◉ dans Proche'; pr.classList.toggle('on', partage);
       $('[data-sy-motifs]').innerHTML = Object.keys(MOTIFS).map(k => '<button type="button" data-sy-motif="' + k + '"' + (k === motif ? ' class="on"' : '') + '>' + k + '</button>').join('');
       $('[data-sy-gammes]').innerHTML = Object.keys(GAMMES).map(k => '<button type="button" data-sy-gamme="' + k + '"' + (k === gamme ? ' class="on"' : '') + '>' + k + '</button>').join('');
       $('[data-sy-presets]').innerHTML = Object.keys(PRESETS).map(k => '<button type="button" data-sy-preset="' + esc(k) + '">' + esc(k) + '</button>').join('') + '<button type="button" data-sy="hasard">⁂ hasard</button>';
@@ -210,16 +253,19 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
       const so = e.target.closest('[data-sy-son]'); if (so) { const s = sons[+so.getAttribute('data-sy-son')]; if (s) { regler(s.p); vibrer('fx-arrivee'); } return; }
       const b = e.target.closest('[data-sy]'); if (!b) return; const a = b.getAttribute('data-sy');
       if (a === 'boucle') { if (boucle) arreterBoucle(); else if (lancerBoucle()) reveiller(); vibrer('selection'); }
+      else if (a === 'pencher') pencher(!penche);
+      else if (a === 'paire') { paire = (paire + 1) % PAIRES.length; vibrer('selection'); peindreChoix(); }
+      else if (a === 'proche') { moteur(); const ok = partager(!partage), msg = $('[data-sy-msg]'); msg.hidden = ok; if (!ok) msg.textContent = 'Démarre Proche d\'abord (◉ proche : ton nom, la salle) : ceux de la salle entendront ce son, et chaque knob tordu.'; vibrer(ok ? 'fx-arrivee' : 'erreur'); }
       else if (a === 'hasard') { regler(hasard(Date.now() % 100000)); vibrer('fx-arrivee'); }
       else if (a === 'garder') { const i = $('[data-sy-nom]'), nom = (i.value || '').trim().slice(0, 30) || ('son ' + (sons.length + 1));
         sons = [...sons.filter(s => s.nom !== nom), { nom, p: { ...p } }].slice(-40); boxion.put('reglages', 'synthe-sons', sons).catch(() => {}); i.value = ''; peindreChoix(); vibrer('succes'); }
     });
-    return { unmount() { vivant = false; detacher.forEach(f => f()); W.cancelAnimationFrame && W.cancelAnimationFrame(raf); for (const d of doigts.values()) if (m) m.fin(d.id); peindre = () => {}; hote.innerHTML = ''; },
-      joue: () => !!(boucle || (m && m.actives() > 0)) };
+    return { unmount() { vivant = false; pencher(false); detacher.forEach(f => f()); W.cancelAnimationFrame && W.cancelAnimationFrame(raf); for (const d of doigts.values()) if (m) m.fin(d.id); peindre = () => {}; hote.innerHTML = ''; },
+      joue: () => !!(boucle || partage || (m && m.actives() > 0)) };
   }
 
-  const api = { regler, lancerBoucle, arreterBoucle, reglages: () => ({ ...p }), choisir: (o = {}) => { if (GAMMES[o.gamme]) gamme = o.gamme; if (MOTIFS[o.motif]) motif = o.motif; garder(); },
-    moteur, etat: () => ({ p: { ...p }, gamme, motif, boucle: !!boucle, sons: sons.map(s => s.nom) }),
+  const api = { regler, lancerBoucle, arreterBoucle, partager, pencher, surPenche: (e) => { pencheDer = e; if (penche) { const [kx, ky] = PAIRES[paire]; regler({ [kx]: valeurInclinee(kx, ((+e.gamma || 0) + 45) / 90), [ky]: valeurInclinee(ky, ((+e.beta || 0) - 10) / 70) }); } }, reglages: () => ({ ...p }), choisir: (o = {}) => { if (GAMMES[o.gamme]) gamme = o.gamme; if (MOTIFS[o.motif]) motif = o.motif; garder(); },
+    moteur, etat: () => ({ p: { ...p }, gamme, motif, boucle: !!boucle, sons: sons.map(s => s.nom), partage, penche: !!penche, paire: PAIRES[paire] }),
     couper() { arreterBoucle(); if (m) m.toutCouper(); } };
   if (W) { W.jOSApps = W.jOSApps || {}; W.jOSApps.synthe = { manifest: { id: 'synthe', name: 'Synthé', icon: '≋' }, mount }; }
   return { mount, pret, ...api, ploxion: { id: 'synthe', nom: 'Synthé', icone: '≋', interne: true } };

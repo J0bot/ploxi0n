@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.10', titre: 'Le synthé à plusieurs, et penché', points: [
+    '◉ « dans Proche » : ton son part chez tous ceux de la salle ; chaque knob que tu tords, ils l\'entendent.',
+    '⟲ « pencher » : incline l\'iPhone, deux knobs tournent (coupure × résonance, ou une autre paire au toucher).',
+    '≋ Le synthé continue écran verrouillé.',
+  ] },
   { v: '0.99.9', titre: 'Autour de toi', points: [
     '⌖ Autour : ce qu\'il y a autour de toi, du plus proche au plus loin (OpenStreetMap) : cafés, bars, restos, eau, art, points de vue, parcs, vélos…',
     'WC Les toilettes les plus proches, en un geste. Touche un lieu : Plans t\'y emmène à pied.',

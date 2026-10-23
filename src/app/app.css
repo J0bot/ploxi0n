@@ -1055,6 +1055,8 @@ html.px-organique .px-sy-pad{--n-bord:var(--memb2)}html.px-organique .px-sy-pad.
 .px-sy-g .jkn-panel{display:flex;flex-wrap:wrap;gap:4px 8px;justify-content:space-around}
 .px-sy-t{font:600 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--grave);margin:12px 0 6px}
 .px-sy-g .px-sy-t{margin:2px 0 4px}
+.px-sy-plus button{font-size:10px}
+.px-sy-msg{font:500 12px/1.4 var(--police);color:var(--acc2);margin:4px 0}.px-sy-msg[hidden]{display:none}
 .px-sy-garder{display:grid;grid-template-columns:1fr auto;gap:6px;margin:6px 0 20px}
 .px-sy-garder input{min-width:0;min-height:40px;padding:0 12px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--creux,var(--surface));color:var(--txt);font:15px var(--police)}
 

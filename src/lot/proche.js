@@ -8,6 +8,8 @@
 // Ne pas nuire : rien n'est annoncé avant « démarrer » ; aucun son ne part chez quelqu'un sans son « rejoindre » ; ce qui vient d'à côté est
 // lu comme suspect (paquets bornés, textes échappés, adresses https seulement). La session tient quand on change de ploxion ; ‹ ne la coupe pas.
 import { paquet, lire, ecart, meilleurEcart, partition, notesEntre, freq, positionA, nomDe, GLYPHES_MSG, MOTIFS } from '../bions/proche.js';
+import { normaliser } from '../bions/son.js';   // (0.99.10) la basse peut porter le son du synthé (ses 33 réglages)
+import { creerMoteur } from './synthe.js';
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const httpsSeul = (u) => { try { const x = new URL(String(u)); return x.protocol === 'https:' ? x.href : null; } catch (e) { return null; } };
@@ -15,7 +17,7 @@ const httpsSeul = (u) => { try { const x = new URL(String(u)); return x.protocol
 export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () => {}, Contexte = W && (W.AudioContext || W.webkitAudioContext), maintenant = () => Date.now() }) {
   const e = { nom: '', salle: 'xerboxion', actif: false, moi: null, pairs: new Map(), messages: [],
     basse: null, basseHote: null, son: null, sonHote: null, ecoute: { basse: false, son: false }, erreur: '' };
-  let hote = null, ping = 0, annonce = 0, calage = 0, ordo = 0, ctx = null, audio = null, jusque = 0, peindre = () => {};
+  let moteurSon = null, hote = null, ping = 0, annonce = 0, calage = 0, ordo = 0, ctx = null, audio = null, jusque = 0, peindre = () => {};
   const pret = boxion.get('reglages', 'proche').then(v => { if (v && typeof v === 'object') { e.nom = String(v.nom || ''); e.salle = String(v.salle || 'xerboxion'); } }).catch(() => {});
 
   // ---- l'horloge : l'heure de l'hôte, vue d'ici ----
@@ -36,7 +38,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     if (m.g === 'basse') {
       if (m.d == null) { if (e.basseHote === de) { e.basse = null; e.basseHote = null; couperBasse(); peindre(); } return; }
       if (hote === 'basse') return;   // on joue déjà la nôtre
-      const neuf = !e.basse || e.basseHote !== de; e.basse = partition(m.d); e.basseHote = de; if (neuf) { vibrer('fx-arrivee'); peindre(); } return; }
+      const neuf = !e.basse || e.basseHote !== de; e.basse = { ...partition(m.d), son: m.d.son && typeof m.d.son === 'object' ? normaliser(m.d.son) : null }; e.basseHote = de; if (neuf) { vibrer('fx-arrivee'); peindre(); } return; }
     if (m.g === 'son') {
       if (m.d == null) { if (e.sonHote === de) { e.son = null; e.sonHote = null; couperSon(); peindre(); } return; }
       if (hote === 'son') return;
@@ -86,7 +88,8 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     if (!e.actif) return null;
     if (hote === 'son') arreterSon();
     const garder = hote === 'basse' && e.basse;   // changer le tempo ou le motif garde le début : tout le monde reste calé
-    e.basse = partition({ ...(garder ? e.basse : {}), ...o, debut: garder ? e.basse.debut : maintenant() + 600 });
+    const son = o.son ? normaliser(o.son) : (garder ? e.basse.son : null) || null;   /* (0.99.10) le son du synthé, partagé */
+    e.basse = { ...partition({ ...(garder ? e.basse : {}), ...o, debut: garder ? e.basse.debut : maintenant() + 600 }), son };
     hote = 'basse'; e.basseHote = e.moi; annoncer(); relancerAnnonce(); jouerBasse(); peindre(); return e.basse;
   }
   function arreterBasse() { if (hote !== 'basse') return; hote = null; envoyer('basse', null); W.clearInterval(annonce); e.basse = null; e.basseHote = null; couperBasse(); peindre(); }
@@ -121,11 +124,17 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     ordo = W.setInterval(() => {
       const ici = hote === 'basse' || e.ecoute.basse; if (!e.basse || !ici) return;
       const tH = heureDe(e.basseHote), de = Math.max(tH, jusque), a = tH + 250;
-      for (const n of notesEntre(e.basse, de, a)) note(c, c.currentTime + Math.max(0, (n.t - tH) / 1000), freq(n.midi), n.duree / 1000, e.basse.volume);
+      // (0.99.10) le son du synthé s'il est partagé (le même moteur, les mêmes 33 réglages, chez tout le monde) ; sinon la petite basse
+      if (e.basse.son && !moteurSon) moteurSon = creerMoteur(c, () => (e.basse && e.basse.son) || normaliser({}));
+      for (const n of notesEntre(e.basse, de, a)) {
+        const q = c.currentTime + Math.max(0, (n.t - tH) / 1000);
+        if (e.basse.son && moteurSon) { const id = moteurSon.debut(n.midi, q); moteurSon.fin(id, q + Math.max(0.03, (60 / e.basse.tempo / 4) * (e.basse.son.gate || 0.6))); }
+        else note(c, q, freq(n.midi), n.duree / 1000, e.basse.volume);
+      }
       jusque = a;
     }, 60);
   }
-  function couperBasse() { W.clearInterval(ordo); ordo = 0; jusque = 0; }
+  function couperBasse() { W.clearInterval(ordo); ordo = 0; jusque = 0; if (moteurSon) moteurSon.toutCouper(); }
 
   // ---- le son joué ici : chacun sa copie, recalée toutes les 250 ms (au-delà de 80 ms de dérive) ----
   function jouerSon() {

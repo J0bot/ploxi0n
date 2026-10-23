@@ -102,7 +102,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.9';
+const VERSION = '0.99.10';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -457,9 +457,10 @@ async function demarrer() {
     ploxions: () => ({ vivants: routeur ? routeur.vivants() : [], endormis: routeur && routeur.endormis ? routeur.endormis() : [] }),
     ouvrir: (id) => routeurProxy.ouvrir(id) }).ploxion);
   // ◉ (0.99.1) Proche, l'ultimate Bluetooth : les téléphones autour, sans internet (MultipeerConnectivity sur l'iPhone, un BroadcastChannel ailleurs)
-  internes.push(creerProche({ W: window, boxion, vibrer: (x) => vibrer(x), tuyau: creerTuyauProche({ W: window, plugin: natifLot ? PloxiProche : null }) }).ploxion);
+  const proche = creerProche({ W: window, boxion, vibrer: (x) => vibrer(x), tuyau: creerTuyauProche({ W: window, plugin: natifLot ? PloxiProche : null }) });
+  internes.push(proche.ploxion);
   // ≋ (0.99.4) le synthé : des jOSKnob, des pads, une boucle (RS-7 : « qu'on puisse commencer à faire du son avec des knobs »)
-  internes.push(creerSynthe({ W: window, boxion, vibrer: (x) => vibrer(x) }).ploxion);
+  internes.push(creerSynthe({ W: window, boxion, vibrer: (x) => vibrer(x), proche }).ploxion);   // (0.99.10) jouer à plusieurs : le son part dans Proche
   // ⌖ (0.99.9) Autour : les lieux d'OpenStreetMap autour de toi, en continu (RS-7 à Zurich : « des toilettes direct ; propositions selon mon vecteur xerion »)
   internes.push(creerAutour({ W: window, boxion, vibrer: (x) => vibrer(x), http: { get: (u, o) => httpRelais.get(u, o) }, position: () => window.jOSNatif.position(),
     ouvrirLien: (u) => (window.jOSNatif && window.jOSNatif.ouvrirLien ? window.jOSNatif.ouvrirLien(u) : window.open(u, '_blank')), usage: () => boxion.get('usage', 'stats') }).ploxion);
