@@ -7,6 +7,12 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.9', titre: 'Autour de toi', points: [
+    '⌖ Autour : ce qu\'il y a autour de toi, du plus proche au plus loin (OpenStreetMap) : cafés, bars, restos, eau, art, points de vue, parcs, vélos…',
+    'WC Les toilettes les plus proches, en un geste. Touche un lieu : Plans t\'y emmène à pied.',
+    '◉ « Suivre en marchant » : la liste se refait quand tu bouges. ◈ Des propositions selon l\'heure et tes ploxions. ＋ « Poser ici » : tes lieux à toi.',
+    '◇ Ta position ne part pas : seulement le centre d\'une case d\'un kilomètre.',
+  ] },
   { v: '0.99.8', titre: 'Le mode humain', points: [
     '⊙ ⚙ › Apparence › L\'écriture › humain : zéro texte. Des glyphes, et des maths : 8◇ · 4⊡ (koins · portails), Δt −2 d (il y a deux jours), ∀t (tout le temps), →3 · 2→ (entrées · sorties), ∅ (rien). Lisible dans toutes les langues.',
   ] },

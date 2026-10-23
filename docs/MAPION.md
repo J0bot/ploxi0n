@@ -48,6 +48,16 @@ Et juste avant, sur les zooms : **le wormion et le portion sont de gros knobs co
   palier 3D en dessous.
 - **Mapper soi-même** : poser une ancre (déjà là), y attacher un scan Object Capture (le maillon qui manque).
 
+## Construit (0.99.9) : « Autour »
+
+- `src/bions/autour.js` (pur, composable par le mappion du labo) : 13 catégories (toilettes, eau, cafés, manger, bars, la nuit, glaces, courses,
+  art, points de vue, culture, parcs, vélos et trottinettes), la case (≈ 1 km, la requête part de son CENTRE : ta position ne quitte pas l'iPhone),
+  `requete` (Overpass), `lire` (vérifié), `distance`, `cap`, `fleche`, `trier`, `proposer` (l'heure, le vecteur xerion = le temps passé dans
+  tes ploxions, la distance ; jamais deux fois le même genre), `plansLien` (à pied).
+- `src/lot/autour.js` : me situer, suivre en marchant (20 s ; la case suivante se charge près du bord), les toilettes en un geste, ◈ à faire
+  autour, les puces, la liste, ＋ poser ici (tes lieux, `reglages/autour-miens`, à toi seul) ; cache 3 jours (`autour/<case>`), un miroir d'Overpass.
+- ⏭ les trottinettes en direct (sharedmobility.ch, GBFS), les events, la boussole (la flèche relative à ta direction), le terrax en 3D.
+
 ## Questions ouvertes (à RS-7, quand il en aura envie)
 
 - Mapion (le ploxion) et mappion (celui du labo), c'est le même ?

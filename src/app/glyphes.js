@@ -135,7 +135,7 @@ const MOTS = [
   [/fichier|files|documents?|pdf|explorateur|dossier|archive/i, 'dossier'],
   [/code|forge|atelier|xerminal|ssh|terminal|console|shell|\bop\b/i, 'terminal'],
   [/jeu|game|doom|arcade|puzzle/i, 'manette'],
-  [/^proche$|ultimate.?bluetooth/i, 'proche'], [/bluetooth/i, 'bluetooth'], [/wifi|r[eé]seau|connexion/i, 'wifi'],
+  [/^proche$|ultimate.?bluetooth/i, 'proche'], [/^autour$/i, 'lieu'], [/bluetooth/i, 'bluetooth'], [/wifi|r[eé]seau|connexion/i, 'wifi'],
   [/sant[eé]|endo|\bflo\b|coeur|c[oœ]ur|sport|forme/i, 'coeur'],
   [/s[eé]curit[eé]|verrou|mot de passe|password|cl[eé]/i, 'verrou'],
   [/photo|cam[eé]ra|image|galerie/i, 'photo'],

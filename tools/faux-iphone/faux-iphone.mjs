@@ -37,7 +37,13 @@ const sousBundle = (id) => `window.jOSApps=window.jOSApps||{};window.jOSApps[${J
 function laboFaux(url) {
   const r = (status, data, type = 'text/html') => ({ status, data, headers: { 'Content-Type': type }, url });
   const u = new URL(url);
+  // (0.99.9) OpenStreetMap (Overpass) autour de la position simulée (46.52, 6.63) : de quoi remplir « Autour »
+    if (u.hostname === 'overpass-api.de') { const L = (dl, dg, tags, id, way) => (way ? { type: 'way', id, center: { lat: 46.52 + dl, lon: 6.63 + dg }, tags } : { type: 'node', id, lat: 46.52 + dl, lon: 6.63 + dg, tags });
+      return r(200, JSON.stringify({ elements: [L(0.0006, 0.0004, { amenity: 'toilets', fee: 'no', name: 'WC de la place' }, 1), L(-0.001, 0.0012, { amenity: 'drinking_water' }, 2), L(0.0011, -0.0008, { amenity: 'cafe', name: 'Café du Grütli', opening_hours: '07:00-19:00' }, 3),
+        L(-0.0015, -0.0005, { amenity: 'bar', name: 'Le Bourg' }, 4), L(0.002, 0.002, { tourism: 'artwork', name: 'La fontaine de la Justice' }, 5), L(0.003, -0.002, { leisure: 'park', name: 'Parc de Mon-Repos' }, 6, true),
+        L(-0.0007, 0.0021, { amenity: 'restaurant', name: 'Pinte Besson' }, 7), L(0.0025, 0.001, { tourism: 'viewpoint', name: 'Esplanade de la cathédrale' }, 8), L(-0.0022, 0.0016, { amenity: 'bicycle_rental', name: 'PubliBike' }, 9)] }), 'application/json'); }
   if (u.hostname !== 'labo.j0bot.ch') throw new Error('Could not connect to the server.');
+  if (u.pathname === '/px/changelog.json') return r(200, JSON.stringify({ head: 'faux', par_ploxion: {} }), 'application/json');   // (0.99.6) rien n'a changé
   // (0.82) l'atelier des glyphes du labo : un glyphe dessiné, posé sur l'icône de « social » pour tous
   if (u.pathname === '/px/icones.json') return r(200, JSON.stringify({ ok: true, tous: { social: { glyphe: 'dessine-rs7', pal: 2 } }, mien: {}, glyphes: [{ nom: 'dessine-rs7', corps: '<polygon points="50,8 92,92 8,92"/><circle cx="50" cy="64" r="11" class="f"/><script>alert(1)</script>' }], avis: {}, admin: false }), 'application/json');
   if (u.pathname === '/px/xerkions.json') return r(200, readFileSync(path.join(DONNEES, 'xerkions.labo.json'), 'utf8'), 'application/json');   // (0.90) la map : les hubs du labo

@@ -1058,6 +1058,26 @@ html.px-organique .px-sy-pad{--n-bord:var(--memb2)}html.px-organique .px-sy-pad.
 .px-sy-garder{display:grid;grid-template-columns:1fr auto;gap:6px;margin:6px 0 20px}
 .px-sy-garder input{min-width:0;min-height:40px;padding:0 12px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--creux,var(--surface));color:var(--txt);font:15px var(--police)}
 
+/* ⌖ (0.99.9) Autour (src/lot/autour.js) : les toilettes en un geste, les propositions, les puces, la liste du plus proche au plus loin */
+.px-autour button{min-height:40px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:600 12px var(--mono);letter-spacing:.04em}
+.px-autour button.on{color:var(--bio);border-color:var(--bio);box-shadow:0 0 10px var(--glow)}
+.px-au-b{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:10px 0 4px}
+.px-au-etat{font:500 11px var(--mono);color:var(--muted);margin:4px 0 8px}
+.px-au-wc{display:block;width:100%;min-height:56px!important;text-align:left;padding:0 14px;font:600 14px var(--police)!important;border-color:var(--acc2)!important}
+.px-au-wc b{display:inline-block;min-width:34px;font:700 15px var(--mono);color:var(--bio)}
+.px-au-wc[hidden]{display:none}
+.px-au-t{font:600 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--grave);margin:14px 0 6px}
+.px-au-prop{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px}
+.px-au-p{display:flex!important;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 10px;min-height:68px;text-align:left}
+.px-au-p b{font:600 12px/1.2 var(--police);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.px-au-p small{font:500 10px var(--mono);color:var(--muted)}
+.px-au-g{font:700 14px var(--mono);color:var(--acc);min-width:26px;display:inline-block}
+.px-au-puces{display:flex;gap:4px;overflow-x:auto;margin:14px -4px 6px;padding:0 4px 4px;-webkit-overflow-scrolling:touch}
+.px-au-puces button{flex:none;min-height:34px;padding:0 10px;font-size:11px}
+.px-au-liste{display:grid;gap:4px}
+.px-au-l{display:grid!important;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;padding:6px 10px;text-align:left}
+.px-au-n{min-width:0;font:500 13px/1.25 var(--police);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.px-au-n small{display:block;font:400 10px var(--mono);color:var(--grave);overflow:hidden;text-overflow:ellipsis}
+.px-au-d{font:600 11px var(--mono);color:var(--bio);white-space:nowrap}
+
 /* ◺◿ (0.89) les koins remplacent le dock et le HUD (src/app/koins.js, le carnet de RS-7 : docs/KOINS.md) ; (0.92) en chill-tekk */
 html.px-koins .px-dock,html.px-koins .px-mode-ploxion .px-ecran>.px-barre{display:none}
 html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}

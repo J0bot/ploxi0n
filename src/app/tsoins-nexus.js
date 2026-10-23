@@ -1,5 +1,6 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1792722169000,"0.99.7 : les koins collés aux coins de l'écran (ils gobent les coins)"],
+export const COMMITS = [[1792722996000,"0.99.8 : le mode humain (zéro texte, des glyphes et des maths)"],
+  [1792722169000,"0.99.7 : les koins collés aux coins de l'écran (ils gobent les coins)"],
   [1792722021000,"0.99.6 : l'app ne gèle plus à l'ouverture (496 Mo → 7 Mo à travers le pont natif)"],
   [1792720804000,"0.99.5 : mises à jour par le changelog, le bion d'un ploxion, 33 knobs à tordre, le paysage"],
   [1792720067000,"0.99.4 : le synthé, faire du son avec des knobs"],
