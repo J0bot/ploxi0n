@@ -126,7 +126,9 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
           if (W.navigator && W.navigator.mediaSession && W.MediaMetadata) W.navigator.mediaSession.metadata = new W.MediaMetadata({ title: 'Synthé', artist: 'ploxi0n' }); } catch (e) { vers = null; }
       }
       m = creerMoteur(ctx, () => p, { vers });
+      if (m.analyse) { W.__pxSon = W.__pxSon || new Set(); W.__pxSon.add(m.analyse); }   /* (0.99.11) le téléphone vivant bat avec ce son */
     }
+    if (W.__pxSonReveil) W.__pxSonReveil();   // une note part : le bord écoute
     return m;
   }
   function regler(nouveaux, { doux = true } = {}) {

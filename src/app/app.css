@@ -1507,3 +1507,13 @@ html:not(.px-organique) .px-nv-ax-e{stroke:var(--acc2)}html:not(.px-organique) .
   .px-sy-regler{max-height:calc(100vh - 70px);overflow:auto;-webkit-overflow-scrolling:touch;padding-bottom:60px}
   .px-sy-g{margin:6px 0}
 }
+
+/* ◌ (0.99.11) le téléphone vivant (src/app/tel-vivant.js) : un bord qui respire ; --tv-periode (la chaleur), --tv-intensite (la batterie),
+   --tv-son (le son qui joue), data-teinte (bio · chaud · charge · faible) ; une couche fixe, jamais un toucher */
+.px-tel-vivant{position:fixed;inset:0;z-index:38;pointer-events:none;--tv-rgb:124,255,155;
+  box-shadow:inset 0 0 calc(22px + 46px * var(--tv-son,0)) calc(1px + 7px * var(--tv-son,0)) rgba(var(--tv-rgb),calc(.12 + .38 * var(--tv-intensite,1)));
+  animation:px-tv-souffle var(--tv-periode,6s) ease-in-out infinite;transition:box-shadow .12s linear}
+.px-tel-vivant[hidden]{display:none}
+.px-tel-vivant[data-teinte="chaud"]{--tv-rgb:255,140,90}.px-tel-vivant[data-teinte="charge"]{--tv-rgb:150,180,255}.px-tel-vivant[data-teinte="faible"]{--tv-rgb:200,120,170}
+@keyframes px-tv-souffle{0%,100%{opacity:.35}50%{opacity:1}}
+html:not(.px-organique) .px-tel-vivant{display:none}

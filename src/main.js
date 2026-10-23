@@ -63,7 +63,8 @@ import { PloxiApple, PloxiProche } from './natif/plugins-app.js';
 import { creerTuyauProche } from './natif/proche-natif.js';   // ◉ (0.99.1) l'ultimate Bluetooth
 import { creerProche } from './lot/proche.js';
 import { creerSynthe } from './lot/synthe.js';
-import { creerAutour } from './lot/autour.js';   // ⌖ (0.99.9) ce qu'il y a autour de moi   // ≋ (0.99.4) faire du son avec des knobs
+import { creerAutour } from './lot/autour.js';
+import { installerTelVivant } from './app/tel-vivant.js';   // ◌ (0.99.11)   // ⌖ (0.99.9) ce qu'il y a autour de moi   // ≋ (0.99.4) faire du son avec des knobs
 import { creerTerrax } from './terrax/terrax.js';
 import { creerArNatif, brancherLiensAR } from './natif/ar-natif.js';
 import { creerReseauLocal } from './xerbot/reseau.js';
@@ -102,7 +103,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.10';
+const VERSION = '0.99.11';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -635,6 +636,8 @@ async function demarrer() {
   if (!modeSurJs) barreHaut.installer(document.body);
   // 🌀 le thème vivant : il suit le gyroscope et l'accéléromètre (seulement à l'accueil, visible, hors Calme)
   if (!modeSurJs) creerMouvement({ prefs, racine });
+  // ◌ (0.99.11) le téléphone vivant : la chaleur, la batterie, le son, au bord de l'écran (RS-7 : « on aura l'impression que le téléphone est vivant »)
+  if (!modeSurJs) installerTelVivant({ W: window, prefs, systeme: natifLot ? () => PloxiApple.systeme() : null, batterie: natifLot ? () => window.jOSNatif.batterie() : null });
   prefs.surChangement(() => barreHaut.mesurer());
   window.ploxi0nBarreHaut = barreHaut;
   const rafraichir = () => { if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); };
