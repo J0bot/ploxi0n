@@ -265,6 +265,7 @@ contrepartie native (FOURNIS + src/natif/<bion>.js). Un ploxion qui « charge à
 |---|---|---|
 | ✅ 0.1 | Tsoins locaux (jOSTsoin), Noter un tsoin par Raccourcis (0.5) | |
 | ✅ 0.86 | Les tsoins de l'iPhone **remontent au boxion** (`src/app/remontee-tsoins.js` : au choix rien / tes tsoins / tout le journal / un tampon ; jOSBoxion « tsoins-iphone », une clé par jour et par appareil, relue puis fusionnée ; ⚙ › Réseau) | faux iPhone : parcours-remontee-tsoins |
+| 💭 | **La signature GPG de RS-7 sur tous les ploxions** (RS-7 23.10 : « il faut savoir qui le fait ; pour l'instant on ne fait pas, ce sera dans le futur ») : le bion jOSGpg est déjà dans le pack | |
 | 💭 | Le **tsoin engine** sur le phone : détecter les patterns d'usage → proposer une automatisation (deux koins → un koin) | sans LLM |
 | 💭 | La **vidéo faite de tsoins** : le processus « fais ton app » rejoué depuis ses tsoins | plan-suite 8 |
 

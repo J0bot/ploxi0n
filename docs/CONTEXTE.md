@@ -115,6 +115,8 @@ prendre tous les morceaux et de tout assembler » ; « tout ça, c'est du lore :
 - ◺◿ koins : toujours en organique (`main.js` actif), le réglage d'avant ailleurs ; ⚙ › HUD : le dock caché en organique.
 - ⏭ les paliers de la map (cubion, spherion, kion, tsoin) ; le jeu (débloquer en jouant au clickion / le mode créatif xerboxion) ; le
   téléphone vivant (les gènes branchés sur la RAM, la température, le son) ; la route des tsoins côté labo (docs/TSOINS.md) ; l'ASSEMBLAGE.
+- 💭 (RS-7 23.10, « pas maintenant, dans le futur ») la SIGNATURE GPG de RS-7 sur tous les ploxions : savoir qui fait quoi (le bion jOSGpg
+  est déjà dans le pack : public/bions/jOSGpg.js).
 
 **0.96 (23.10)** — RS-7 : « on garde tout, il faut pouvoir choisir entre toutes ces possibilités ; mes préférées : xéno et cyberpunk ; il faut
 découvrir la fractale des UI, avoir des knobs pour modifier le UI selon un générateur fractal, c'est des formules au final le UI ; dans
