@@ -62,6 +62,7 @@ import { SOCIAUX, surveillerSocial, invitationDuLien, sessionSocial, supprimerCo
 import { PloxiApple, PloxiProche } from './natif/plugins-app.js';
 import { creerTuyauProche } from './natif/proche-natif.js';   // ◉ (0.99.1) l'ultimate Bluetooth
 import { creerProche } from './lot/proche.js';
+import { creerSynthe } from './lot/synthe.js';   // ≋ (0.99.4) faire du son avec des knobs
 import { creerTerrax } from './terrax/terrax.js';
 import { creerArNatif, brancherLiensAR } from './natif/ar-natif.js';
 import { creerReseauLocal } from './xerbot/reseau.js';
@@ -83,7 +84,7 @@ import { CORES, BIONS_LABO } from './app/registre-labo.js';
 const FLUX_INTERNES = {
   'journal-tsoins': { e: ['tsoin:journal'], s: ['tsoin:journal', 'boxion:tsoins-iphone'] }, passe: { e: ['tsoin:journal', 'boxion:passe', 'boxion:xer', 'boxion:usage'], s: [] },
   map: { e: ['reseau:labo.j0bot.ch', 'boxion:xerkions-persos', 'boxion:usage'], s: ['boxion:xerkions-persos'] }, systeme: { e: ['natif:systeme', 'natif:batterie', 'natif:reseau', 'route:/favicon.ico'], s: [] },
-  ambiances: { e: [], s: ['natif:audio', 'natif:activite'] }, proche: { e: ['natif:proche'], s: ['natif:proche', 'natif:audio'] }, 'atelier-peaux': { e: ['boxion:peaux', 'boxion:atelier'], s: ['boxion:peaux', 'tsoin:journal'] },
+  ambiances: { e: [], s: ['natif:audio', 'natif:activite'] }, proche: { e: ['natif:proche'], s: ['natif:proche', 'natif:audio'] }, synthe: { e: ['boxion:reglages'], s: ['natif:audio', 'boxion:reglages'] }, 'atelier-peaux': { e: ['boxion:peaux', 'boxion:atelier'], s: ['boxion:peaux', 'tsoin:journal'] },
   reglages: { e: ['boxion:reglages'], s: ['boxion:reglages', 'boxion:xer'] }, marketplace: { e: ['reseau:labo.j0bot.ch'], s: ['boxion:ploxions'] },
 };   // ◈ (0.96) l'atelier des peaux : la fractale des UI, les knobs
 import { appliquerCouleurs } from './bions/membrane.js';   // 〰 (0.93) les bords organiques, les neurones
@@ -100,7 +101,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.3';
+const VERSION = '0.99.4';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -452,6 +453,8 @@ async function demarrer() {
     ouvrir: (id) => routeurProxy.ouvrir(id) }).ploxion);
   // ◉ (0.99.1) Proche, l'ultimate Bluetooth : les téléphones autour, sans internet (MultipeerConnectivity sur l'iPhone, un BroadcastChannel ailleurs)
   internes.push(creerProche({ W: window, boxion, vibrer: (x) => vibrer(x), tuyau: creerTuyauProche({ W: window, plugin: natifLot ? PloxiProche : null }) }).ploxion);
+  // ≋ (0.99.4) le synthé : des jOSKnob, des pads, une boucle (RS-7 : « qu'on puisse commencer à faire du son avec des knobs »)
+  internes.push(creerSynthe({ W: window, boxion, vibrer: (x) => vibrer(x) }).ploxion);
   internes.push(creerAmbiances({ W: window, boxion, vibrer: (x) => vibrer(x), activite: { debut: (o) => activites.debut('ambiances', { genre: 'minuteur', ploxion: 'ambiances', glyphe: 'ambiances', ...o }), fin: () => activites.fin('ambiances') } }).ploxion);
   // ▦ (0.90) la map du xerboxion en carrés : les hubs du labo (/px/xerkions.json) et les tiens, une balade de portail en portail ; en créer
   internes.push(creerMap({ boxion, vibrer: (x) => vibrer(x), enLigne: () => navigator.onLine !== false,

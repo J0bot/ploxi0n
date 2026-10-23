@@ -673,6 +673,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     if (e.pointerType === 'mouse' || prefs().clicDroit === false) return;
     const t = e.target; if (!t.closest || !t.closest('.px-hote') || t.closest('input,textarea,select,[contenteditable]:not([contenteditable=false])')) return;
     if (toucherRapide && toucherRapide(t)) return;   // ◈ (0.78) le cœur d'un clicker : chaque toucher compte, jamais un clic droit
+    if (t.closest('[data-instrument]')) return;   // ≋ (0.99.4) un instrument (les pads, les knobs du synthé) : tenir une note n'est pas un clic droit, et le toucher suivant n'est pas avalé
     const x0 = e.clientX, y0 = e.clientY;
     droit = { x0, y0, t: W.setTimeout(() => {
       droit = null;

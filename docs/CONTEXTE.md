@@ -102,6 +102,16 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.99.4 (24.10)** — ≋ le synthé (RS-7 : « et qu'on puisse commencer à faire du son avec des knobs »).
+- `src/bions/son.js` : PARAMS (clé, nom, bornes, pas, départ, format, forme kion / koin, groupe), `normaliser`, PRESETS, `noteDePad`, `hasard(graine)`.
+- `src/lot/synthe.js` : `creerMoteur(ctx, lire)` (debut / fin / appliquer en direct sur les notes tenues / toutCouper) ; le ploxion (jOSKnob
+  chargé comme dans l'atelier des peaux, un panneau par groupe ; pads en pointer events, capture ; boucle = partition de Proche ; AudioContext
+  créé au premier toucher, iOS l'exige). Tests : `tests/synthe.test.mjs` (un faux Web Audio). Faux iPhone : `parcours-synthe.mjs`.
+- Piège trouvé : le routeur fait de tout appui de 500 ms un clic droit (`contextmenu`) et AVALE le toucher suivant (800 ms) ; tenir un pad
+  > 500 ms faisait ignorer le preset touché juste après. `[data-instrument]` l'exclut (pads, knobs) ; à poser sur tout instrument.
+- ⏭ le synthé dans Proche (jouer à plusieurs, la partition du pad partagée), le son en arrière-plan (MediaStreamDestination → <audio>,
+  comme les ambiances), un séquenceur pas à pas, les capteurs comme knobs (le gyroscope sur la coupure).
+
 **0.99.3 (24.10)** — RS-7 : « y a des ploxions qui s'installent pas » (capture : « jOSChemin — le serveur refuse jOSChemin (HTTP 40…) »).
 - Audit : un script Node installe chaque ploxion du registre du labo avec `creerDepot` (fetch de Node : `NODE_USE_ENV_PROXY=1
   NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt`, sinon 0 ploxion). Avant : 488 / 496, 140 sans leurs bions. Après : 496 / 496, 0 manquant.

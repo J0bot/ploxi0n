@@ -510,6 +510,13 @@ test('appui long dans un ploxion = clic droit (contextmenu), jamais sur un champ
     assert.equal(recus.length, 1, 'pas sur un champ');
     z.dispatchEvent(new W.MouseEvent('pointerdown', { bubbles: true, clientX: 40, clientY: 50 })); z.dispatchEvent(new W.MouseEvent('pointerup', { bubbles: true })); await attendre(560);
     assert.equal(recus.length, 1, 'un appui court reste un clic');
+    // ≋ (0.99.4) un instrument : tenir une note (un pad du synthé) n'est pas un clic droit, et le toucher suivant n'est pas avalé
+    const pad = W.document.createElement('div'); pad.setAttribute('data-instrument', ''); pad.innerHTML = '<b class="pad">♪</b>'; racine.querySelector('.px-hote').appendChild(pad);
+    pad.addEventListener('contextmenu', () => recus.push(['pad']));
+    pad.firstChild.dispatchEvent(new W.MouseEvent('pointerdown', { bubbles: true, clientX: 40, clientY: 120 })); await attendre(560);
+    assert.equal(recus.length, 1, 'pas de clic droit sur un instrument');
+    let clic = 0; z.addEventListener('click', () => clic++); z.dispatchEvent(new W.MouseEvent('click', { bubbles: true }));
+    assert.equal(clic, 1, 'le toucher suivant passe');
   } finally { p.fin(); }
 });
 

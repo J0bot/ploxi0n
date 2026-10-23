@@ -7,6 +7,12 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.4', titre: 'Le synthé : du son avec des knobs', points: [
+    '≋ Synthé : 17 knobs (la source, le filtre, l\'enveloppe, le mouvement, l\'espace, la sortie). Tourne-les : le son change en direct, même d\'une note tenue.',
+    '◇ 16 pads dans la gamme (mineur, majeur, phrygien, penta), plusieurs doigts à la fois ; un oscilloscope montre le son.',
+    '▷ La boucle : les motifs de la basse de Proche (pulse, roule, tekk, marche, dub), au tempo du knob.',
+    '◈ Des sons tout prêts (basse tekk, nappe, acide, cloche, brume), ⁂ hasard, et « ＋ garder » pour les tiens.',
+  ] },
   { v: '0.99.3', titre: 'Les ploxions qui ne s\'installaient pas', points: [
     '⬇ Musique, Agora, Calendrier, Le chemin, RAM, YouTube Music, Installer, le système des RS s\'installent enfin : l\'app ne savait pas lire leur page.',
     '⬡ Quand le labo dit « trop de requêtes », l\'app patiente et réessaie au lieu d\'oublier le bion pendant 7 jours. Au prochain lancement, les ploxions installés récupèrent les bions qui leur manquaient.',
