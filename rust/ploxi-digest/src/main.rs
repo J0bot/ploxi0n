@@ -12,18 +12,22 @@ fn main() {
     fichiers.sort();
     let t0 = std::time::Instant::now();
     let morceaux: Vec<Vec<std::path::PathBuf>> = fichiers.chunks(fichiers.len().div_ceil(8).max(1)).map(|c| c.to_vec()).collect();
-    let mut tous: Vec<Digestion> = std::thread::scope(|s| {
+    let mut paires: Vec<(Digestion, Vec<ploxi_digest::lexeur::Jeton>)> = std::thread::scope(|s| {
         let h: Vec<_> = morceaux.iter().map(|m| s.spawn(move || m.iter().filter_map(|p| {
             let code = std::fs::read(p).ok()?;
             let id = p.file_stem()?.to_string_lossy().into_owned();
-            Some(digerer(&id, &String::from_utf8_lossy(&code)))
+            let code = String::from_utf8_lossy(&code);
+            Some((digerer(&id, &code), ploxi_digest::lexeur::jetons(&code)))
         }).collect::<Vec<_>>())).collect();
         h.into_iter().flat_map(|x| x.join().unwrap()).collect()
     });
-    tous.sort_by(|a, b| a.id.cmp(&b.id));
+    paires.sort_by(|a, b| a.0.id.cmp(&b.0.id));
+    let bz = ploxi_digest::bionisation::bioniser(&paires.iter().map(|(d, j)| (d.id.clone(), j.clone())).collect::<Vec<_>>());
+    let tous: Vec<Digestion> = paires.into_iter().map(|x| x.0).collect();
     let duree = t0.elapsed();
     std::fs::write(sortie, serde_json::to_string_pretty(&tous).unwrap()).expect("écrire");
-    let md = resume(&tous, duree);
+    std::fs::write(std::path::Path::new(sortie).with_file_name("bionisation.json"), serde_json::to_string_pretty(&bz).unwrap()).expect("écrire");
+    let md = resume(&tous, duree) + &resume_bionisation(&tous, &bz);
     if let Some(r) = a.get(3) { std::fs::write(r, &md).expect("écrire le résumé"); } else { print!("{md}"); }
 }
 
@@ -73,5 +77,29 @@ fn resume(t: &[Digestion], duree: std::time::Duration) -> String {
     let _ = writeln!(s, "**Du son** : {son} ploxions · **de la vidéo** : {} · **pas d'enregistrement jOSApps** : {}\n", t.iter().filter(|d| d.video > 0).count(), t.iter().filter(|d| !d.enregistre).count());
     let web: Vec<String> = voies.get("web").map(|l| l.iter().map(|d| d.id.clone()).collect()).unwrap_or_default();
     let _ = writeln!(s, "**Restent web** ({}) : {}\n", web.len(), web.join(", "));
+    s
+}
+
+fn resume_bionisation(t: &[Digestion], bz: &ploxi_digest::bionisation::Bionisation) -> String {
+    let mut s = String::new();
+    let purs = t.iter().filter(|d| d.pur).count();
+    let _ = writeln!(s, "## La bionisation : que des bions\n");
+    let _ = writeln!(s, "**{purs} / {} ploxions** sont déjà faits que de bions. **{:.0} %** du code de tous les ploxions est une fonction copiée telle quelle d'un autre ploxion ({} jetons en tout).\n",
+        t.len(), bz.part_dupliquee * 100.0, bz.jetons_total);
+    let mut reste: BTreeMap<String, usize> = BTreeMap::new();
+    for d in t { for r in &d.reste { let k = r.split(" → ").nth(1).unwrap_or(r).to_string(); *reste.entry(k).or_default() += 1; } }
+    let mut rv: Vec<_> = reste.into_iter().collect(); rv.sort_by(|a, b| b.1.cmp(&a.1));
+    let _ = writeln!(s, "**Ce qui manque pour qu'ils soient purs** (nombre de ploxions) : {}\n", rv.iter().map(|(k, c)| format!("{k} ({c})")).collect::<Vec<_>>().join(" · "));
+    let _ = writeln!(s, "### Les plus répandues : des familles de fonctions recopiées (toutes variantes réunies) → un bion chacune\n\n| fonction | ploxions | variantes | jetons |\n|---|---|---|---|");
+    for f in bz.familles.iter().take(25) { let _ = writeln!(s, "| `{}` | {} | {} | {} |", f.nom, f.ploxions, f.variantes, f.jetons_max); }
+    let _ = writeln!(s, "\n### Les plus grosses : du code recopié en bloc (un moteur entier → un bion, ou un cubion)\n\n| fonction | jetons | ploxions | copie | viennent avec | aussi nommée | exemples |\n|---|---|---|---|---|---|---|");
+    for f in bz.fonctions.iter().take(25) {
+        let _ = writeln!(s, "| `{}` | {} | {} | {} | {} | {} | {} |", f.nom, f.jetons, f.ploxions, if f.exacte { "telle quelle" } else { "renommée" }, f.avec, f.alias.join(", "), f.exemples.join(", "));
+    }
+    let _ = writeln!(s, "\n### Les bions d'interface : des gabarits HTML répétés (la même ossature de balises et de classes)\n\n| ossature | ploxions | exemples |\n|---|---|---|");
+    for g in bz.gabarits.iter().take(30) {
+        let o: String = g.nom.chars().take(110).collect();
+        let _ = writeln!(s, "| `{}{}` | {} | {} |", o, if g.nom.chars().count() > 110 { "…" } else { "" }, g.ploxions, g.exemples.join(", "));
+    }
     s
 }

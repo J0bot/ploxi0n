@@ -9,6 +9,7 @@
 //! - `dom`     : il fabrique son interface en HTML → un rendu natif du sous-ensemble de DOM et de CSS qu'il utilise (ce que mesure le digesteur) ;
 //! - `web`     : il embarque le web (iframe) ou fabrique du code (eval) → il reste dans une vue web, dans une coquille native.
 
+pub mod bionisation;
 pub mod lexeur;
 
 use lexeur::{Jeton, jetons};
@@ -53,6 +54,9 @@ pub struct Digestion {
     pub raisons: Vec<String>,
     /// 0 à 100 : la part de ce ploxion qu'un rendu natif générique couvrirait sans travail propre à lui
     pub natif_pct: u8,
+    /// (bionisation) ce qui n'est PAS un bion dans ce ploxion, et le bion qui le prendrait ; vide = le ploxion est fait que de bions
+    pub reste: Vec<String>,
+    pub pur: bool,
 }
 
 fn plus(m: &mut BTreeMap<String, u32>, k: &str) {
@@ -196,6 +200,18 @@ pub fn classer(d: &mut Digestion) {
     d.natif_pct = pct.clamp(0, 100) as u8;
     d.voie = voie.into();
     d.raisons = r;
+    // la bionisation : ce qui reste à confier à des bions
+    let mut reste = Vec::new();
+    if fabrique + balises > 0 { reste.push(format!("son interface ({fabrique} fabrications de DOM, {balises} balises) → des bions d'interface")); }
+    let stock: Vec<&String> = d.stockage.keys().collect();
+    if !stock.is_empty() { reste.push(format!("{} → jOSBoxion", stock.iter().map(|x| x.as_str()).collect::<Vec<_>>().join(", "))); }
+    if !d.reseau.is_empty() { reste.push(format!("{} → un bion réseau (jOSPorts, ou un bion de service)", d.reseau.keys().cloned().collect::<Vec<_>>().join(", "))); }
+    if dessine > 0 { reste.push("son dessin (canvas / WebGL) → un bion de scène".into()); }
+    if d.son > 0 { reste.push("son son (Web Audio) → un bion de son".into()); }
+    if !d.natif.is_empty() { reste.push(format!("{} → jOSNatif", d.natif.keys().cloned().collect::<Vec<_>>().join(", "))); }
+    if d.iframe > 0 || d.dynamique > 0 { reste.push("le web embarqué / le code fabriqué → reste web".into()); }
+    d.pur = reste.is_empty();
+    d.reste = reste;
 }
 
 #[cfg(test)]

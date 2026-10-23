@@ -49,36 +49,53 @@ Résumé dans la section « L'état » plus bas.
   API du DOM, quel CSS (flex, grid, absolute, transform…).
 - **web** : il embarque le web (iframe) ou fabrique du code à la volée (eval). Il reste dans une vue web, dans une coquille native.
 
-## La forme proposée (*proposé*, pas décidé)
+## La direction de RS-7 : que des bions
 
-Un ploxion = son JS (la logique) + ce qu'il touche (le DOM, le canvas, les bions, le stockage). La digestion automatique ne réécrit pas le
-JS. Elle remplace **tout ce que le JS touche** par du natif :
+> « Des fois il faut rebâtir certaines choses, quand il y a assez de bions pour que le ploxion soit uniquement fait de bions et pas d'autre
+> chose. C'est là le challenge : que les ploxions soient faits que de bions. » « Il faut que l'entièreté du projet devienne de plus en plus
+> optimisée, pour que ça tourne partout ultra smooth. »
 
-1. **Le cœur natif** : le stockage, le bus, les bions de service (boxion, ports, tsoins) en Rust. Ils vivent dans le même processus que le
-   JS, sans pont JSON. C'est le palier 1 de docs/RUST.md : le cœur boxion-rt pour `aarch64-apple-ios`. La bibliothèque iOS du cœur se
-   compile déjà ici (`rust/ploxi-coeur`, 6 Mo, sans Mac).
-2. **Le JS dans JavaScriptCore** : le moteur JS d'iOS, embarqué, sans vue web. ⚠ Sans JIT : iOS ne l'autorise qu'aux vues web. Le JS des
-   ploxions ira plus lentement, mais il ne pèse presque rien (point 1 de la mesure).
-3. **Le rendu natif** : un DOM et un CSS en Rust (Stylo pour le CSS, Taffy pour flex et grid, Parley pour le texte, Vello / wgpu pour
-   dessiner, Metal sur l'iPhone), avec un canvas 2D natif pour la voie « dessin ». Composer, ne pas rebâtir :
-   - **Servo** (crates.io, 0.1 LTS en 2026) est un vrai moteur, mais iOS n'est pas dans ses plateformes ;
-   - **Blitz** (DioxusLabs : Stylo + Taffy + Parley + Vello) est taillé pour ça, mais encore pré-alpha.
-   Il faut l'un des deux, ou leurs briques.
-4. **Le digesteur dans l'app** : à l'installation, il décide de la voie de chaque ploxion. Un ploxion dont tout ce qu'il touche existe en
-   natif tourne en natif ; sinon il reste dans la vue web, avec la liste de ce qui lui manque. La part native grandit à chaque brique, pour
-   tous les ploxions d'un coup.
+Ça tranche la question. **Natif = chaque bion a sa version native (Rust).** Un ploxion fait **uniquement** de bions tourne donc en natif
+d'office, partout (iPhone, Android, labo, boxion-rt), sans moteur HTML à bâtir. Le chemin :
 
-## Le désaccord à trancher (challenge, pas flagornerie)
+1. **Mesurer la pureté** : ce qui, dans chaque ploxion, n'est pas un bion. C'est le digesteur (section « La bionisation » de
+   docs/DIGESTION-ETAT.md).
+2. **Extraire les bions déguisés** : le code recopié d'un ploxion à l'autre est déjà un bion qui s'ignore. Le digesteur les trouve tout
+   seul, même recopiés en changeant les noms. Chacun devient un bion du labo, une seule fois.
+3. **Rebâtir les ploxions** pour qu'ils composent ces bions. C'est une réécriture automatique quand c'est mécanique : la définition locale
+   remplacée par le bion. À la main, ou par des agents vérifiés, quand c'est une interface.
+4. **Un ploxion pur = une définition** (des données qui disent quels bions, câblés comment), comme les bions déclaratifs que boxion-rt a
+   déjà en Rust (`sdk::block`, `sdk::house`, `sdk::port` : « depuis une seule Def const, il génère… »). Composer ceux-là, ne pas les
+   rebâtir. La définition se rend en natif sur l'iPhone, dans la vue web ailleurs : le même ploxion, deux rendus.
+5. **Les bions natifs d'abord, ceux qui libèrent le plus de ploxions** : jOSPorts (104), jOSBoxion (78), jOSMobile (23)…
 
-- **« Natif = plus opti » n'est pas automatique pour la voie « dom ».** WebKit est un moteur de rendu C++ très optimisé, accéléré par le
-  GPU. Un moteur Rust jeune ne le battra pas tout de suite sur le rendu. Le gain sûr est ailleurs :
-  - plus de pont (le stockage dans le même processus) ;
-  - la maîtrise totale (Bevy, Metal, l'arrière-plan) ;
-  - une seule pile Rust partout (labo, boxion-rt, iPhone, Android).
-- **C'est un chantier de plusieurs mois**, par paliers livrables : le cœur natif, puis la voie « compose », puis « dessin », puis « dom ».
-- **L'autre chemin** : la traduction ploxion par ploxion (des agents qui réécrivent chaque ploxion en Rust, vérifiés par des parcours
-  comparés au faux iPhone). Il est automatique lui aussi, mais coûteux pour chaque ploxion, et un ploxion traduit ne suit plus son original
-  du labo. Le moteur natif, lui, garde les ploxions du labo tels quels.
+Les quatre voies (compose, dessin, dom, web) restent la mesure de la distance qui sépare chaque ploxion de la pureté.
+
+### Les premiers bions à extraire (la récolte du 23.10)
+
+| bion à créer | ce qu'il remplace | ploxions |
+|---|---|---|
+| échapper le HTML (`esc`, `escA`, `esc2`, `e2`, `escq`…) | 21 variantes de la même ligne | **254** |
+| ouvrir un autre ploxion (`openPx`, `openApp`, `openPlx`) | des variantes de jOSMobile.open | ~35 |
+| le jeton CSRF (`csrf`) | la même fonction | 25 |
+| un message bref (`toast`, `flash`, `note`, `say`) | | ~30 |
+| `byId` et ses alias (`tabById`, `blocById`…) | | 14 |
+| **un cubion** : le moteur de la machine à tsoins (`Machine` et 249 fonctions) | recopié en bloc | 3 (machine-a-tsoins, tsoin-4d, ultimate-tsoin) |
+| `mergeInto` | le même code dans excel, powerpoint, word | 3 |
+
+9 % de tout le code des ploxions est une fonction copiée telle quelle d'un autre ploxion. Ce n'est que le **début** de la bionisation :
+- **le reste à confier à des bions** :
+  - l'interface (547 ploxions) : les bions d'interface, à tirer des gabarits répétés ;
+  - localStorage (328) → jOSBoxion ;
+  - le réseau (216) → jOSPorts ou un bion de service ;
+  - le dessin (86) → un bion de scène ;
+  - le son (34) → un bion de son ;
+- **4 ploxions sur 551** sont déjà faits que de bions.
+
+### « Ultra smooth partout » : la règle
+
+Mesurer, puis corriger ce que la mesure montre (`parcours-profil.mjs`, `parcours-lourd.mjs`, `rust-banc.mjs`, le digesteur), jamais à
+l'intuition. Le 0.99.17 l'a montré : on croyait le JS lent, c'étaient le pont et les relectures. Chaque version garde ces mesures au vert.
 
 ## Construit (0.99.17)
 
@@ -87,6 +104,9 @@ JS. Elle remplace **tout ce que le JS touche** par du natif :
   11ᵉ chiffre près) dans `npm test`. Elle a déjà trouvé un vrai bug JS : un `null` du réseau faisait planter `lireVehicules`.
 - `rust/ploxi-digest` : le digesteur (un lexeur JS, les relevés, la voie, la part native). Il digère tous les ploxions du labo en quelques
   centièmes de seconde.
+- La bionisation (`rust/ploxi-digest/src/bionisation.rs`), sur tous les ploxions à la fois, en 0,5 s : les fonctions recopiées d'un ploxion
+  à l'autre (même renommées), regroupées en familles et en moteurs entiers ; les gabarits HTML répétés ; le reste de chaque ploxion
+  (`reste`, `pur`). Sorties : `build/digestion/bionisation.json` et la section « La bionisation » de docs/DIGESTION-ETAT.md.
 - `tools/rust-banc.mjs` (JS contre Rust), `tools/faux-iphone/parcours-profil.mjs` (où va le temps, qui lit quoi à travers le pont),
   `npm run rust`.
 
@@ -115,7 +135,8 @@ régénérés par `npm run digerer`.
 
 ## Questions à RS-7
 
-- Le moteur natif (la forme proposée, des mois, garde les ploxions du labo intacts) ou la traduction ploxion par ploxion (des agents,
-  coûteux, des ploxions qui divergent) ? Ou les deux : le moteur pour la masse, la traduction pour les ploxions phares (le clicker, le synthé…) ?
-- Servo (complet, sans iOS) ou les briques de Blitz (taillées pour, jeunes) ?
+- Extraire les premiers bions dans le labo (esc, ouvrir un ploxion, csrf, toast), puis réécrire automatiquement les ploxions qui les
+  recopient : c'est un autre dépôt (my_website2), donc rien n'y sera poussé sans ton accord. D'abord un essai à blanc, qui montre les
+  changements sans rien écrire ?
+- La forme d'un ploxion pur : une définition comme les `Def const` de boxion-rt (en Rust), ou un JSON que le labo, l'app et boxion-rt lisent ?
 - La voie « web » (les iframes : youtube, code, files…) : elle reste web, d'accord ?
