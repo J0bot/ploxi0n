@@ -1,5 +1,7 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1792715500000,"en cours (0.97) : le zoom de temps (le passé) et le zoom de fractale (la map en 3 × 3)"],
+export const COMMITS = [[1792715935000,"feuille de route : la signature GPG de RS-7 sur les ploxions, pour plus tard"],
+  [1792715922000,"0.97 : le zoom de temps (le passé, ses portées, les tsoins de xer) et le zoom de fractale (la map 3 × 3) ; la ChillTekk"],
+  [1792715500000,"en cours (0.97) : le zoom de temps (le passé) et le zoom de fractale (la map en 3 × 3)"],
   [1792715147000,"en cours (0.97) : la police ChillTekk (notre alphabet), l'écriture (six manières)"],
   [1792714695000,"0.96 : l'atelier des peaux, la fractale des UI ; le lot 3 (gothique, evangelion, eldritch)"],
   [1792714015000,"0.95 : seize peaux de l'organique, le guide"],

@@ -73,7 +73,17 @@ import { creerSysteme } from './lot/systeme.js';
 import { creerKoins } from './app/koins.js';
 import { creerNeurones } from './app/neurones.js';
 import { creerAtelier } from './lot/atelier-peaux.js';
-import { creerPasse } from './lot/passe.js';   // ○ (0.97) le passé : le zoom de temps   // ◈ (0.96) l'atelier des peaux : la fractale des UI, les knobs
+import { creerPasse } from './lot/passe.js';   // ○ (0.97) le passé : le zoom de temps
+import { fluxDe, synapsesEntre } from './bions/flux.js';   // ⇄ (0.98) les entrées et les sorties
+import { neuroneHtml, poserAxones } from './app/neurone-vue.js';
+import { CORES, BIONS_LABO } from './app/registre-labo.js';
+// ⇄ (0.98) les ploxions de l'app n'ont pas de bundle à lire : leurs canaux, déclarés (ils se relient ainsi aux autres par les synapses)
+const FLUX_INTERNES = {
+  'journal-tsoins': { e: ['tsoin:journal'], s: ['tsoin:journal', 'boxion:tsoins-iphone'] }, passe: { e: ['tsoin:journal', 'boxion:passe', 'boxion:xer', 'boxion:usage'], s: [] },
+  map: { e: ['reseau:labo.j0bot.ch', 'boxion:xerkions-persos', 'boxion:usage'], s: ['boxion:xerkions-persos'] }, systeme: { e: ['natif:systeme', 'natif:batterie', 'natif:reseau', 'route:/favicon.ico'], s: [] },
+  ambiances: { e: [], s: ['natif:audio', 'natif:activite'] }, 'atelier-peaux': { e: ['boxion:peaux', 'boxion:atelier'], s: ['boxion:peaux', 'tsoin:journal'] },
+  reglages: { e: ['boxion:reglages'], s: ['boxion:reglages', 'boxion:xer'] }, marketplace: { e: ['reseau:labo.j0bot.ch'], s: ['boxion:ploxions'] },
+};   // ◈ (0.96) l'atelier des peaux : la fractale des UI, les knobs
 import { appliquerCouleurs } from './bions/membrane.js';   // 〰 (0.93) les bords organiques, les neurones
 import { creerMap } from './app/map-hubs.js';
 import { creerAmbiances } from './lot/ambiances.js';
@@ -88,7 +98,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.97.0';
+const VERSION = '0.98.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -436,7 +446,12 @@ async function demarrer() {
   // ▦ (0.90) la map du xerboxion en carrés : les hubs du labo (/px/xerkions.json) et les tiens, une balade de portail en portail ; en créer
   internes.push(creerMap({ boxion, vibrer: (x) => vibrer(x), enLigne: () => navigator.onLine !== false,
     charger: async () => { const r = await httpRelais.get(SOURCE + '/px/xerkions.json', { headers: { Accept: 'application/json' } }); if (r.status !== 200) throw new Error('map : ' + r.status); const d = JSON.parse(r.texte || '{}'); return Array.isArray(d.items) ? d.items : []; },
-    ploxions: () => (routeur ? routeur.catalogue().filter(p => !p.interne || p.id === 'journal-tsoins') : []), ouvrir: (id) => routeurProxy.ouvrir(id), usage: () => boxion.get('usage', 'stats') }).ploxion);
+    ploxions: () => (routeur ? routeur.catalogue().filter(p => !p.interne || p.id === 'journal-tsoins') : []), ouvrir: (id) => routeurProxy.ouvrir(id), usage: () => boxion.get('usage', 'stats'),
+    // ◈ (0.98) le zoom de fractale jusqu'aux neurones : un ploxion (son code, ses bions), un bion (son API, qui l'appelle)
+    inspecter: async (id) => { const p = await boxion.get('ploxions', id).catch(() => null), c = routeur ? routeur.catalogue().find(x => x.id === id) : null; return { id, nom: (p && p.nom) || (c && c.nom) || id, code: (p && p.js) || '', bions: (p && p.bions) || [] }; },
+    flux: (i) => { const f = fluxDe({ id: i.id, code: i.code, bions: i.bions, cores: CORES }), d = FLUX_INTERNES[i.id]; if (d) { f.entrees.push(...d.e.map(canal => ({ canal, doc: '', sur: 'core' }))); f.sorties.push(...d.s.map(canal => ({ canal, doc: '', sur: 'core' }))); } return f; },
+    bionInfo: async (nom) => { const x = await boxion.get('bions', nom).catch(() => null), l = await depot.bions().catch(() => []), r = BIONS_LABO[nom] || {}; return { nom, js: (x && x.js) || '', utilisePar: (l.find(b => b.nom === nom) || {}).utilisePar || [], api: r.api || [], role: r.role || '', glyphe: r.glyphe || '' }; },
+    neurone: { html: neuroneHtml, axones: poserAxones, synapses: synapsesEntre }, tous: () => (routeur ? routeur.catalogue().filter(p => p.id !== 'map') : []) }).ploxion);
   // ⧗ (0.86) les tsoins de l'iPhone remontent à ton boxion (si tu le choisis : ⚙ › Réseau) ; « me demander un tsoin » après une session
   const remontee = creerRemontee({ boxion, distant, signaler: (t) => routeur && routeur.signaler(t),
     proposer: ({ minutes }) => miniDocks.publier({ cle: 'tsoin-session', titre: 'un tsoin de ta session ?', icone: '⧗', sous: minutes + ' min dans l\'app, juste avant ta pause', ouvrir: () => { miniDocks.retirer('tsoin-session'); tsoinNatif.ouvrir({ texte: '' }); },

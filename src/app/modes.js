@@ -87,10 +87,19 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
       });
     }, 0);
   }
+  // ◈ (0.98, RS-7 23.10 : « une seule map, tout est fractal ») : dans l'organique, l'accueil EST la map (ses paliers : tes ploxions, le réseau,
+  // un hub, un ploxion, un bion). Une seule map, montée une fois et gardée : l'accueil, redessiné souvent, la reprend telle quelle
+  let hoteMap = null;
+  function monterMap() {
+    const place = D.querySelector('.px-accueil [data-org-map]'); if (!place) return;
+    if (!hoteMap) { hoteMap = D.createElement('div'); hoteMap.className = 'px-org-map-h'; try { W.jOSApps.map.mount(hoteMap, {}); } catch (e) { hoteMap = null; return; } }
+    if (hoteMap.parentNode !== place) place.appendChild(hoteMap);
+  }
   function panneau() {
     const m = mode();
     if (m === 'xerboxion') sonder();
-    return puces() + (m === 'xerboxion' ? panneauXerboxion() : m === 'xerbot' ? panneauXerbot() : '');
+    if (m === 'organique') W.setTimeout(monterMap, 0);
+    return puces() + (m === 'xerboxion' ? panneauXerboxion() : m === 'xerbot' ? panneauXerbot() : m === 'organique' ? '<div class="px-mode-p px-org-map" data-org-map></div>' : '');
   }
   function rafraichir() { const p = D.querySelector('.px-accueil .px-mode-p.px-xerbot'); if (p) p.outerHTML = panneauXerbot(); }
   // le résumé du contrôleur : la liste au premier affichage, puis chaque changement d'état

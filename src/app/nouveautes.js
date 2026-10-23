@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.98.0', titre: 'Une seule map, tout est fractal', points: [
+    '◈ Dans l\'organique, l\'accueil EST la map. Pince pour changer de palier (la règle à droite) : tes ploxions, le réseau des hubs, un hub, un ploxion, un bion.',
+    '⇄ Le neurone d\'un ploxion (appui long sur un koin) : ce qui entre, ce qui sort, ses bions dedans, et ses synapses vers les autres ploxions qui partagent un canal. Touche un bion : le sien.',
+  ] },
   { v: '0.97.0', titre: 'Le zoom de temps, le zoom de fractale', points: [
     '○ Le passé (le wormion des koins) : tout ce que tu as fait, à l\'envers. Pince pour zoomer dans le temps : les heures, les jours, les semaines, les mois. Touche un ploxion pour y revenir. Et ton xer qui change : « revenir à cet instant ».',
     '⎇ Les portées : les miens, le nexus (les commits), les ultra (les paliers d\'existence, depuis la 0.10), le xerboxion.',

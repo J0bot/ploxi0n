@@ -75,7 +75,25 @@ export function nouveauHub({ nom, centre = 'ion', koins = [], depuis = null, cot
 }
 
 /** charger() → [hubs du labo] (HTTP natif) ; ploxions() → [{ id, nom }] installés ; ouvrir(id) un ploxion */
-export function creerMap({ W = globalThis.window, boxion, charger = null, ploxions = () => [], ouvrir = () => {}, vibrer = () => {}, enLigne = () => true, usage = async () => null }) {
+/** (0.98) LES PALIERS DU ZOOM DE FRACTALE (RS-7 23.10 : « une seule map, tout est fractal » ; « des paliers de zoom ») : du plus loin au plus
+ *  près — tes ploxions, le réseau des hubs, un hub (3 × 3), un ploxion (son neurone : entrées, sorties, bions), un bion (le sien) */
+export const PALIERS_MAP = [['tout', 'tes ploxions'], ['reseau', 'le réseau'], ['hub', 'le hub'], ['ploxion', 'le ploxion'], ['bion', 'le bion']];
+/** le réseau : chaque hub à sa case, depuis « ici », portail par portail (droite x+1, haut y−1…) ; 80 hubs au plus */
+export function placerReseau(hubs, ici, max = 80) {
+  const pos = new Map(), pris = new Set(), file = [ici];
+  if (!hubs.has(ici)) return pos;
+  pos.set(ici, [0, 0]); pris.add('0,0');
+  const D = { droite: [1, 0], gauche: [-1, 0], haut: [0, -1], bas: [0, 1] };
+  while (file.length && pos.size < max) {
+    const id = file.shift(), [x, y] = pos.get(id), v = voisins(hubs, id);
+    for (const c of COTES) { const n = v[c]; if (!n || pos.has(n)) continue; const k = (x + D[c][0]) + ',' + (y + D[c][1]); if (pris.has(k)) continue; pos.set(n, [x + D[c][0], y + D[c][1]]); pris.add(k); file.push(n); }
+  }
+  return pos;
+}
+
+export function creerMap({ W = globalThis.window, boxion, charger = null, ploxions = () => [], ouvrir = () => {}, vibrer = () => {}, enLigne = () => true, usage = async () => null,
+  inspecter = async () => null, bionInfo = async () => null, flux = null, neurone = null, tous = null }) {
+  const tousLes = () => (tous ? tous() : ploxions());   // (0.98) tes ploxions : tous, ceux de l'app aussi
   const D = W.document;
   let labo = [], persos = [], hubs = new Map();
   const lirePersos = () => { try { const l = JSON.parse(W.localStorage.getItem(CLE_STORE) || 'null'); if (Array.isArray(l)) return l; } catch (e) { /* */ } return null; };
@@ -104,12 +122,16 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
   function mount(hote, params) {
     let vivant = true, ici = null, pas = [], drag = null, glisse = false, repli = false;   // repli : un hub de secours, faute de la map du labo
     let us = null, fenetre = FENETRES[0];   // (0.97) le temps : l'usage des ploxions, la fenêtre du wormion
+    let palier = (params && params.palier) || 'hub', cible = null, pince = null, appui = 0;   // (0.98) le zoom de fractale
     hote.innerHTML = '<div class="px-map"><div class="px-map-b" data-neurones><button type="button" data-map="pas" data-neurone aria-label="revenir sur tes pas">‹</button><span class="px-map-ou" data-map-ou></span>'
       + '<button type="button" data-map="depart" data-neurone aria-label="le xerboxion">' + G('xerboxion') + '</button><button type="button" data-map="creer" data-neurone aria-label="créer un hub">＋</button></div>'
       + '<div class="px-map-v" data-map-v><div class="px-map-plan" data-map-plan data-neurones data-neurones-seuil="64"></div></div><div class="px-map-autres" data-map-autres></div>'
       // ○ (0.97) le wormion sur la map : glisser remonte le temps ; les koins qui ont servi dans la fenêtre s'allument
-      + '<div class="px-map-temps"><span aria-hidden="true">○</span><input type="range" min="0" max="' + (FENETRES.length - 1) + '" step="1" value="0" data-map-temps aria-label="le temps : quand tu les as ouverts"><b data-map-temps-l>tout le temps</b></div></div>';
-    const vue = hote.querySelector('[data-map-v]'), plan = hote.querySelector('[data-map-plan]');
+      + '<div class="px-map-temps"><span aria-hidden="true">○</span><input type="range" min="0" max="' + (FENETRES.length - 1) + '" step="1" value="0" data-map-temps aria-label="le temps : quand tu les as ouverts"><b data-map-temps-l>tout le temps</b></div>'
+      // ◈ (0.98) les paliers : une autre scène (tes ploxions, le réseau, un neurone) ; la règle du zoom, à droite
+      + '<div class="px-map-n" data-map-n hidden></div>'
+      + '<nav class="px-map-z" aria-label="le zoom de fractale">' + PALIERS_MAP.map(([k, n]) => '<button type="button" data-map-palier="' + k + '" aria-label="' + n + '"><i></i><span>' + n + '</span></button>').join('') + '</nav></div>';
+    const vue = hote.querySelector('[data-map-v]'), plan = hote.querySelector('[data-map-plan]'), scene = hote.querySelector('[data-map-n]'), carte = hote.querySelector('.px-map');
     const taille = () => { const w = vue.clientWidth || W.innerWidth || 390, h = vue.clientHeight || (W.innerHeight || 800) * 0.7; return Math.round(Math.min(w * 0.74, h * 0.62)); };
     function koinHtml(k) {
       const hub = String(k.ploxion || '').startsWith('xerkion-') && hubs.has(k.ploxion);
@@ -142,6 +164,97 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
       hote.querySelector('[data-map-autres]').innerHTML = v.autres.length ? 'd\'autres portails : ' + v.autres.map(a => '<button type="button" data-aller="' + esc(a) + '">' + G((hubs.get(a) || {}).center || 'ion') + esc(nomDe(hubs.get(a))) + '</button>').join('') : '';
       boxion.put('reglages', 'map', { ici }).catch(() => {});
     }
+    // ---- (0.98) les paliers : le zoom de fractale ----
+    const cacheFlux = new Map();
+    async function fluxPloxion(id) {
+      if (cacheFlux.has(id)) return cacheFlux.get(id);
+      const i = await inspecter(id).catch(() => null); const f = i && flux ? flux(i) : null; if (f) f.nom = i.nom; cacheFlux.set(id, f); return f;
+    }
+    // en fond, le flux des autres ploxions (pour les synapses) : un à la fois, sans gêner
+    let fond = 0; const remplir = () => { if (!vivant || fond) return; const l = tousLes().map(p => p.id).filter(id => !cacheFlux.has(id)).slice(0, 60); let i = 0;
+      const un = () => { if (!vivant || i >= l.length) { fond = 0; return; } fluxPloxion(l[i++]).finally(() => { fond = W.setTimeout(un, 40); }); }; fond = W.setTimeout(un, 200); };
+    function regle() { for (const b of hote.querySelectorAll('[data-map-palier]')) { const k = b.getAttribute('data-map-palier'); b.classList.toggle('on', k === palier); b.disabled = (k === 'ploxion' && !(cible && cible.ploxion)) || (k === 'bion' && !(cible && cible.bion)); } }
+    async function zoomer(p, o = {}) {
+      const i = PALIERS_MAP.findIndex(x => x[0] === palier), j = PALIERS_MAP.findIndex(x => x[0] === p); if (j < 0) return;
+      if (o.ploxion) cible = { ...(cible || {}), ploxion: o.ploxion, bion: null }; if (o.bion) cible = { ...(cible || {}), bion: o.bion }; if (o.hub && hubs.has(o.hub)) { if (ici && o.hub !== ici) pas.push(ici); ici = o.hub; }
+      if ((p === 'ploxion' && !(cible && cible.ploxion)) || (p === 'bion' && !(cible && cible.bion))) return vibrer('fx-butee');
+      palier = p; vibrer(j > i ? 'fx-arrivee' : 'fx-cran');
+      carte.classList.remove('px-zoom-in', 'px-zoom-out'); void carte.offsetWidth; carte.classList.add(j > i ? 'px-zoom-in' : 'px-zoom-out');   // la scène plonge ou recule
+      await peindreScene();
+    }
+    async function peindreScene() {
+      regle();
+      const surLaMap = palier === 'hub';
+      vue.hidden = !surLaMap; hote.querySelector('[data-map-autres]').hidden = !surLaMap; scene.hidden = surLaMap; hote.querySelector('.px-map-temps').hidden = !surLaMap;
+      carte.setAttribute('data-palier', palier);
+      if (surLaMap) { hote.querySelector('[data-map-ou]').textContent = ici ? nomDe(hubs.get(ici)) : 'la map'; return peindre(); }
+      if (palier === 'tout') {
+        hote.querySelector('[data-map-ou]').textContent = 'tes ploxions';
+        const l = tousLes();
+        scene.innerHTML = '<div class="px-map-tt" data-neurones="fin">' + l.map(p => { const u = us && us.px && us.px[p.id]; return '<button type="button" class="px-map-tc" data-neurone data-tt="' + esc(p.id) + '" data-quand="' + esc(u ? ilYa(u.lastAt) : '') + '">' + glyphePloxion(p) + '<small>' + esc(p.nom || p.id) + '</small></button>'; }).join('') + '</div>';
+        return;
+      }
+      if (palier === 'reseau') {
+        hote.querySelector('[data-map-ou]').textContent = 'le réseau · ' + hubs.size + ' hubs';
+        const pos = placerReseau(hubs, ici), xs = [...pos.values()].map(v => v[0]), ys = [...pos.values()].map(v => v[1]), x0 = Math.min(0, ...xs), y0 = Math.min(0, ...ys), PAS = 104;
+        scene.innerHTML = '<div class="px-map-rs" data-neurones data-neurones-seuil="30" style="width:' + ((Math.max(0, ...xs) - x0 + 1) * PAS) + 'px;height:' + ((Math.max(0, ...ys) - y0 + 1) * PAS) + 'px">'
+          + [...pos.entries()].map(([id, [x, y]]) => { const h = hubs.get(id); return '<button type="button" class="px-map-rc' + (id === ici ? ' px-map-rc-ici' : '') + '" data-neurone data-rs="' + esc(id) + '" style="left:' + ((x - x0) * PAS) + 'px;top:' + ((y - y0) * PAS) + 'px">' + G(h.center || 'ion') + '<small>' + esc(nomDe(h)) + '</small></button>'; }).join('') + '</div>';
+        const ic = scene.querySelector('.px-map-rc-ici'); if (ic) W.setTimeout(() => { try { ic.scrollIntoView({ block: 'center', inline: 'center' }); } catch (e) { /* */ } }, 30);
+        return;
+      }
+      if (palier === 'ploxion') {
+        const id = cible.ploxion; scene.innerHTML = '<p class="px-sous">…</p>';
+        const f = await fluxPloxion(id), p = tousLes().find(x => x.id === id) || { id, nom: id }; if (!vivant || palier !== 'ploxion') return;
+        hote.querySelector('[data-map-ou]').textContent = p.nom || id;
+        const liens = [];
+        if (f) for (const [oid, of] of cacheFlux) { if (!of || oid === id) continue; for (const l of synapsesDe(f, of)) liens.push({ ...l, id: oid, nom: of.nom || oid }); }
+        scene.innerHTML = neurone ? neurone.html({ genre: 'ploxion', id, titre: p.nom || id, glyphe: glyphePloxion(p), sous: f ? '' : 'son code n\'est pas là (pas installé ?)',
+          entrees: f ? f.entrees : [], sorties: f ? f.sorties : [], bions: (f ? f.bions : []).map(nom => ({ nom, glyphe: G('bion') })), liens, actions: [['ouvrir', '▶ l\'ouvrir'], ['hub', '⊖ la map']] }) : '';
+        W.requestAnimationFrame(suivreAxones); remplir();
+        return;
+      }
+      if (palier === 'bion') {
+        const nom = cible.bion; scene.innerHTML = '<p class="px-sous">…</p>';
+        const b = await bionInfo(nom).catch(() => null) || { nom }; if (!vivant || palier !== 'bion') return;
+        hote.querySelector('[data-map-ou]').textContent = nom;
+        const lu = flux ? flux({ id: nom, code: b.js || '', bions: [] }) : { entrees: [], sorties: [] };
+        const api = (b.api || []).map(a => ({ canal: 'api:' + a, doc: '', sur: 'core' }));
+        scene.innerHTML = neurone ? neurone.html({ genre: 'bion', id: nom, titre: nom, glyphe: b.glyphe || G('bion'), sous: b.role || '',
+          entrees: [...(b.utilisePar || []).map(p => ({ canal: 'appel:' + p, doc: 'l\'appelle', sur: 'code' })), ...lu.entrees], sorties: [...api, ...lu.sorties], bions: [],
+          liens: (b.utilisePar || []).map(p => ({ id: p, nom: (tousLes().find(x => x.id === p) || {}).nom || p, sens: 'de', canal: 'appel:' + nom })), actions: [['ploxion', '⊖ le ploxion']] }) : '';
+        W.requestAnimationFrame(suivreAxones);
+      }
+    }
+    const roAx = W.ResizeObserver && neurone ? new W.ResizeObserver(() => { const n = scene.querySelector('.px-nv'); if (n) neurone.axones(n); }) : null;
+    const suivreAxones = () => { const n = scene.querySelector('.px-nv'); if (!n || !neurone) return; neurone.axones(n); if (roAx) { roAx.disconnect(); roAx.observe(n); } if (D.fonts && D.fonts.ready) D.fonts.ready.then(() => neurone.axones(n)).catch(() => {}); };
+    const synapsesDe = (a, b) => [...(neurone ? neurone.synapses(a, b).map(l => ({ ...l, sens: 'vers' })) : []), ...(neurone ? neurone.synapses(b, a).map(l => ({ ...l, sens: 'de' })) : [])];
+    // les gestes des paliers : la règle, toucher dans la scène, pincer (écarter = plonger, resserrer = reculer), l'appui long sur un koin
+    hote.addEventListener('click', (e) => {
+      const z = e.target.closest('[data-map-palier]'); if (z) { e.stopPropagation(); zoomer(z.getAttribute('data-map-palier')); return; }
+      const t = e.target.closest('[data-tt]'); if (t) { vibrer('selection'); ouvrir(t.getAttribute('data-tt')); return; }
+      const r = e.target.closest('[data-rs]'); if (r) { zoomer('hub', { hub: r.getAttribute('data-rs') }); return; }
+      const bi = e.target.closest('[data-nv-bion]'); if (bi) { zoomer('bion', { bion: bi.getAttribute('data-nv-bion') }); return; }
+      const ve = e.target.closest('[data-nv-vers]'); if (ve) { zoomer('ploxion', { ploxion: ve.getAttribute('data-nv-vers') }); return; }
+      const ac = e.target.closest('[data-nv-action]'); if (ac) { const a = ac.getAttribute('data-nv-action'); if (a === 'ouvrir' && cible) { vibrer('fx-arrivee'); ouvrir(cible.ploxion); } else zoomer(a); }
+    }, true);
+    const sous = (x, y, sel) => { const el = D.elementFromPoint ? D.elementFromPoint(x, y) : null; return el && el.closest(sel); };
+    hote.addEventListener('touchstart', (e) => { if (e.touches.length === 2) { const [a, b] = e.touches; pince = { d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 }; drag = null; } }, { passive: true });
+    hote.addEventListener('touchmove', (e) => {
+      if (!pince || e.touches.length !== 2) return; const [a, b] = e.touches, d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), i = PALIERS_MAP.findIndex(x => x[0] === palier);
+      if (d > pince.d * 1.35) {   // plonger : dans ce qui est sous les doigts
+        pince.d = d; const k = sous(pince.x, pince.y, '[data-k],[data-tt],[data-rs],[data-nv-bion]');
+        if (palier === 'hub' && k && k.hasAttribute('data-k')) zoomer('ploxion', { ploxion: k.getAttribute('data-k') });
+        else if (palier === 'tout' && k && k.hasAttribute('data-tt')) zoomer('ploxion', { ploxion: k.getAttribute('data-tt') });
+        else if (palier === 'reseau') zoomer('hub', k && k.hasAttribute('data-rs') ? { hub: k.getAttribute('data-rs') } : {});
+        else if (palier === 'ploxion' && k && k.hasAttribute('data-nv-bion')) zoomer('bion', { bion: k.getAttribute('data-nv-bion') });
+        else if (i < 2) zoomer(PALIERS_MAP[i + 1][0]);
+      } else if (d < pince.d / 1.35) { pince.d = d; if (i > 0) zoomer(PALIERS_MAP[i - 1][0]); }   // reculer d'un palier
+    }, { passive: true });
+    hote.addEventListener('touchend', () => { pince = null; }, { passive: true });
+    vue.addEventListener('pointerdown', (e) => { const k = e.target.closest('[data-k]'); W.clearTimeout(appui); if (!k || k.classList.contains('px-map-k-hub')) return;
+      appui = W.setTimeout(() => { appui = -1; drag = null; vibrer('appui'); zoomer('ploxion', { ploxion: k.getAttribute('data-k') }); }, 480); });   // l'appui long : son neurone
+    vue.addEventListener('pointermove', (e) => { if (appui > 0 && drag && Math.hypot(drag.dx, drag.dy) > 8) { W.clearTimeout(appui); appui = 0; } });
+    vue.addEventListener('pointerup', () => { if (appui > 0) { W.clearTimeout(appui); appui = 0; } });
     function aller(id, { cote = null, garder = true } = {}) {
       if (!hubs.has(id) || id === ici) return;
       repli = false;
@@ -174,6 +287,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
     };
     vue.addEventListener('pointerup', lacher); vue.addEventListener('pointercancel', lacher);
     vue.addEventListener('click', (e) => {
+      if (appui === -1) { appui = 0; return; }   // l'appui long a déjà zoomé
       if (glisse) { glisse = false; return; }
       const c = e.target.closest('[data-c]'); if (!c) return;
       const id = c.getAttribute('data-c');
@@ -225,11 +339,11 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
     (async () => {
       await relire({ reseau: false });
       const r = await boxion.get('reglages', 'map').catch(() => null);
-      ici = (params && params.hub) || (r && r.ici) || DEPART; peindre();
-      await relire(); if (!vivant) return; if (repli && hubs.has(DEPART)) { repli = false; ici = DEPART; } peindre();   // puis le labo, à jour
+      ici = (params && params.hub) || (r && r.ici) || DEPART; await peindreScene();
+      await relire(); if (!vivant) return; if (repli && hubs.has(DEPART)) { repli = false; ici = DEPART; } if (palier === 'hub') peindre(); else if (palier === 'reseau') peindreScene();   // puis le labo, à jour
     })();
-    const surTaille = () => peindre(); W.addEventListener('resize', surTaille);
-    return { unmount() { vivant = false; W.removeEventListener('resize', surTaille); hote.innerHTML = ''; }, aller: (id) => aller(id), ici: () => ici };
+    const surTaille = () => { if (palier === 'hub') peindre(); else if (neurone) neurone.axones(scene.querySelector('.px-nv')); }; W.addEventListener('resize', surTaille);
+    return { unmount() { vivant = false; W.clearTimeout(fond); if (roAx) roAx.disconnect(); W.removeEventListener('resize', surTaille); hote.innerHTML = ''; }, aller: (id) => aller(id), ici: () => ici, zoomer, palier: () => palier };
   }
   W.jOSApps = W.jOSApps || {};
   W.jOSApps.map = { manifest: { id: 'map', name: 'La map', icon: '▦' }, mount };

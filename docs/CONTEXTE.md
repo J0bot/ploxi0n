@@ -102,6 +102,20 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.98 (23.10)** — RS-7 : « ouais parfait, on relie tout ; une seule map, tout est fractal ; chaque bion et ploxion, il faut les input et
+output ; ça a été fait dans le xer du labo sur téléphone, copie un peu de là ; le but, c'est de changer tout le UI pour une expérience ultra
+stylée ce soir » (Spotify : plus tard).
+- `src/app/registre-labo.js` : un instantané du labo (boxion-rt `web-marketplace/registry.json` + les `core.json`) : les PORTS des 11 cores
+  (contrat `docs/CORE-UI-BINDING-v0.md` du labo : ports.in / ports.out) et le rôle + l'API des 21 bions. À rafraîchir quand le labo bouge.
+- `src/bions/flux.js` : `lireCode(js)` (jOSPorts.emit/on, jOSBoxion, fetch, jOSNatif, jOSTsoin), `fluxDe({ id, code, bions, cores })`,
+  `synapsesEntre(a, b)` (le bus avec jokers, le même rangement), `court(canal)`. main.js `FLUX_INTERNES` : les canaux déclarés des ploxions de l'app.
+- `src/app/neurone-vue.js` : `neuroneHtml(n)` (entrées en haut, soma + bions, sorties en bas, synapses), `poserAxones` (mesuré par
+  offsetLeft/Top : juste pendant la plongée animée).
+- `map-hubs.js` : PALIERS_MAP (tout, reseau, hub, ploxion, bion), `placerReseau` ; la règle (`.px-map-z`), pincer (plonger dans ce qui est
+  sous les doigts, reculer), l'appui long sur un koin → son neurone ; options `inspecter`, `bionInfo`, `flux`, `neurone`, `tous`.
+- `modes.js` : l'organique monte LA map une fois dans l'accueil (`monterMap`, gardée entre les redessins) ; la grille d'avant = le palier « tes ploxions ».
+- Faux iPhone : `parcours-fractale.mjs`.
+
 **0.97 (23.10)** — RS-7 : « le but de tout mon système, c'est trouver des apps et ouvrir des ploxions selon le temps » ; « un zoom de temps, un
 zoom de fractale » ; « le wormion, se balader dans le temps ; le portion, entre les ploxions » ; « les tsoins du nexus, c'est les commits » ;
 « le passé, c'est aussi comment les ploxions et le xer ont évolué ; retourner au moment où l'app venait de se lancer » ; « c'est le moment de
