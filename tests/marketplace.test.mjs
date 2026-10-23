@@ -178,11 +178,13 @@ test('dépendances 0.8 : les bions TOUCHÉS (non déclarés) aussi, récursiveme
   const b = await d.bundle('xk');
   assert.ok(b.indexOf('window.jOSStore') < b.indexOf('window.jOSXerkion=') && b.indexOf('window.jOSXerkion=') < b.indexOf('jOSApps'));
   // un ploxion installé à l'ancienne (sans ses bions touchés) est complété
-  await boxion.put('ploxions', 'xk', { ...(await boxion.get('ploxions', 'xk')), bions: [] });
+  const { manquants, ...ancien } = await boxion.get('ploxions', 'xk');
+  await boxion.put('ploxions', 'xk', { ...ancien, bions: [] }); await boxion.del('marketplace', 'installes-index');   // l'index d'avant ne le connaissait pas
   const n = demandes.length;
-  assert.deepEqual(await d.completerBions(), [{ id: 'xk', avant: 0, apres: 2 }]);
+  const r1 = await d.completerBions({ pause: 0 });
+  assert.deepEqual([...r1], [{ id: 'xk', avant: 0, apres: 2 }]); assert.equal(r1.reste, 0);
   assert.equal(demandes.length, n, 'les bions déjà là ne se retéléchargent pas');
-  assert.deepEqual(await d.completerBions(), [], 'idempotent');
+  assert.deepEqual([...await d.completerBions({ pause: 0 })], [], 'idempotent : il ne lui manque plus rien');
 });
 
 test('⚙ réglages et HUD composé : éléments, ordre, épinglés, ⚙ toujours sur l\'accueil, mode connecté, verrous', async () => {

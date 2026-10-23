@@ -150,6 +150,9 @@ const natif = {
   // (0.81) le labo simulé pour les ploxions composés (le vrai ultimate-social, ses onglets) et le wiki (le vrai article « xerboxion »)
   CapacitorHttp: { get: (o) => laboFaux(o.url),
     request: (o) => { const u = new URL(o.url); const j = (status, data) => ({ status, data: JSON.stringify(data), headers: { 'Content-Type': 'application/json' }, url: o.url });
+    // (0.99.6) le changelog du labo (rien n'a changé) et un labo qui limite le débit des bions (429) : pour mesurer le démarrage chargé
+    if (u.hostname === 'labo.j0bot.ch' && u.pathname === '/px/changelog.json') return j(200, { head: 'faux', par_ploxion: {} });
+    if (u.hostname === 'labo.j0bot.ch' && u.pathname.startsWith('/px/bion-app/')) return { status: 429, headers: { 'retry-after': '1' }, data: 'Too Many Requests', url: o.url };
     // (0.83) le labo : la règle d'encadrement (HEAD : il accepte l'app depuis le 19.10) et le passe à usage unique (seulement avec un jeton)
     if (u.hostname === 'labo.j0bot.ch' && o.method === 'HEAD') return { status: 200, data: '', headers: { 'content-security-policy': "frame-ancestors 'self' https://*.j0bot.ch capacitor://localhost" }, url: o.url };
     if (u.hostname === 'labo.j0bot.ch' && u.pathname === '/api/app/passe' && o.method === 'POST') return /^Bearer .+/.test((o.headers || {}).Authorization || '') ? j(200, { passe: 'faux-passe-0123456789abcdef', expire: new Date(Date.now() + 60e3).toISOString() }) : j(401, { message: 'Unauthenticated.' });
@@ -186,7 +189,9 @@ const natif = {
   CapacitorCookies: {}, WebView: { getServerBasePath: () => ({ path: '' }) }, Console: { log: () => ({}) },
 };
 
-function repondre({ pluginId, methodName, options, callbackId }) {
+const pont = { octets: 0, appels: 0, depuis: Date.now() };   // (0.99.6) ce qui traverse le pont natif (sur l'iPhone : sérialisé sur le fil principal)
+function repondre(d) { const r = repondre0(d); try { const n = JSON.stringify(d.options || {}).length + JSON.stringify((r && r.data) || {}).length; pont.octets += n; pont.appels++; const o = d.options || {}, k = d.pluginId + '.' + d.methodName + ' ' + String(o.statement || '').replace(/\s+/g, ' ').slice(0, 60) + ' ' + JSON.stringify((o.values || []).slice(0, 2)).slice(0, 50); pont.par = pont.par || {}; pont.par[k] = (pont.par[k] || 0) + n; pont.t = pont.t || []; if (n > 200000) pont.t.push([Date.now() - pont.depuis, k.slice(0, 120), n]); } catch (e) { /* */ } return r; }
+function repondre0({ pluginId, methodName, options, callbackId }) {
   appels.push({ t: Date.now(), p: pluginId, m: methodName, o: options });
   if (methodName === 'addListener') { auditeurs.push({ plugin: pluginId, evenement: options.eventName, callbackId }); return { garder: true }; }
   if (methodName === 'removeListener' || methodName === 'removeAllListeners') return { success: true, data: {} };
@@ -245,7 +250,7 @@ const etat = await page.evaluate(() => ({
   texte: document.body.innerText.slice(0, 600),
 }));
 let resultatsEtapes = null;
-if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux, procheEnvoyes }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
+if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux, procheEnvoyes, pont }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
 clearInterval(mouvementMinuteur);
 const resume = { url, mode: web ? 'web' : (opts.includes('--sans-plugions') ? 'ios-sans-plugions' : 'ios'), demarre, dureeBoot, etat,
   appelsNatifs: Object.entries(appels.reduce((a, x) => { const k = x.p + '.' + x.m; a[k] = (a[k] || 0) + 1; return a; }, {})).sort((a, b) => b[1] - a[1]),

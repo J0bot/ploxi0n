@@ -71,6 +71,17 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
     }
   }
   const vraimentAbsent = (st) => st === 404 || st === 410;
+  // (0.99.6) l'entrée d'index d'un ploxion (léger : jamais son code) ; majIndex la pose ou la retire SANS relire les autres
+  const entreeIndex = (p) => ({ nom: p.nom, icone: p.icone, origine: p.origine, hash: p.hash, etag: p.etag || null, taille: (p.js || '').length, installe: p.installe, maj: p.maj || null, bions: Array.isArray(p.bions) ? p.bions.slice(0, 40) : [],
+    manq: Array.isArray(p.manquants) ? p.manquants.length : null,   /* null = on ne sait pas : la réparation le regarde */ composes: p.js ? ploxionsComposes(p.js, p.id).slice(0, 20) : [] });
+  async function majIndex(id, p) {
+    const idx = await boxion.get(META, 'installes-index').catch(() => null); if (!idx) return;   // pas d'index : il se fera à la demande
+    if (p) idx[id] = entreeIndex({ id, ...p }); else delete idx[id];
+    await boxion.put(META, 'installes-index', idx).catch(() => {});
+  }
+  // (0.99.6) le labo dit 429 malgré la patience : plus aucun bion demandé pendant une minute (au lieu de marteler, et de ralentir tout le reste)
+  let sature = 0; const echecs = new Set();
+  let reconstruction = null;   // (0.99.6) la reconstruction de l'index en cours, partagée
   const valide = (js, id) => typeof js === 'string' && js.length > 0 && js.length < 8e6 && /jOSApps/.test(js) && js.includes(id);
 
   // les bions d'un code, RÉCURSIVEMENT (les bions d'un bion), dépendances d'abord ; servis seuls par le labo (/px/bion-app/<jOSNom>.js).
@@ -87,12 +98,13 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       // (0.51) un bion que le labo ne sert pas répond par une page HTML de 3,5 Mo (Stremio : jOSCineJournal, jOSParesseux, jOSXxx → ~10 Mo
       // par installation, en données mobiles) : noté absent, il n'est pas redemandé pendant 7 jours
       const absent = x ? null : await boxion.get('bions-absents', b).catch(() => null);
-      if (!x && !(absent && vraimentAbsent(absent.status) && Date.now() - (+absent.le || 0) < 7 * 864e5)) {   // un ancien « absent » sur un 429 ne compte plus
+      if (!x && !(absent && vraimentAbsent(absent.status) && Date.now() - (+absent.le || 0) < 7 * 864e5) && Date.now() >= sature && !echecs.has(b)) {   // un ancien « absent » sur un 429 ne compte plus
         signaler(b);
         try {
           const rb = await getPatient(source + '/px/bion-app/' + b + '.js', { headers: { Accept: 'application/javascript' } });
           if (rb.status === 200 && rb.texte.includes(b) && !/^\s*<(!doctype|html)/i.test(rb.texte)) { x = { js: rb.texte, hash: await sha256(rb.texte), le: new Date().toISOString() }; await boxion.put('bions', b, x); }
           else if (vraimentAbsent(rb.status) || rb.status === 200) await boxion.put('bions-absents', b, { le: Date.now(), status: rb.status }).catch(() => {});
+          else { echecs.add(b); if (rb.status === 429) sature = Date.now() + 60000; }
         } catch (e) { /* hors ligne : manquant (pas noté absent : on réessaiera) */ }
       }
       if (!x) { if (declares.has(b)) manquants.push(b); return; }
@@ -106,14 +118,22 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
   return {
     source,
     /** complète les bions des ploxions déjà installés (règle « déclarés + touchés », 0.8) : une fois, en ligne */
-    async completerBions() {
-      const res = [];
-      for (const id of await liste()) {
-        const p = await boxion.get(NS, id); if (!p) continue;
+    async completerBions({ max = 8, pause = 300 } = {}) {
+      // (0.99.6) seulement les ploxions à qui il MANQUE des bions (l'index le dit), au plus `max` par appel, une pause entre chacun ; rend
+      // aussi `reste` (l'app rappelle au prochain lancement tant qu'il en reste). Avant : chaque ploxion relu et réécrit au démarrage.
+      const l = await this.installes(), res = [];
+      const aFaire = l.filter(x => x.manq > 0 || x.manq == null);
+      for (const x of aFaire.slice(0, max)) {
+        if (Date.now() < sature) break;
+        const p = await boxion.get(NS, x.id); if (!p) continue;
         const { bions, manquants } = await resoudreBions(p.js);
-        if (bions.join() !== (p.bions || []).join()) { await boxion.put(NS, id, { ...p, bions, manquants }); res.push({ id, avant: (p.bions || []).length, apres: bions.length }); }
+        const doc = { ...p, bions, manquants };
+        if (bions.join() !== (p.bions || []).join() || manquants.join() !== (p.manquants || []).join()) { await boxion.put(NS, x.id, doc); res.push({ id: x.id, avant: (p.bions || []).length, apres: bions.length }); }
+        await majIndex(x.id, doc);
+        if (pause) await dormir(pause);
       }
-      return res;
+      const reste = (await this.installes()).filter(x => x.manq > 0 || x.manq == null).length;
+      return Object.assign(res, { reste });
     },
     async catalogue({ reseau = true } = {}) {
       if (reseau) {
@@ -144,13 +164,23 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
     packLocal: () => packLocal.slice(),
     // (12.10, RS-7 : « c'est ultra lent à ouvrir ») installes() relisait CHAQUE ploxion EN ENTIER (son bundle : jusqu'à 2 Mo) pour son nom et
     // son icône, deux fois par lancement : un index léger (META « installes ») suffit ; reconstruit une fois s'il manque ou s'il diverge
+    // (0.99.6, RS-7 : « quand j'ouvre l'app ça freeze ») : sur l'iPhone, lire ou écrire un ploxion = son bundle (jusqu'à 2 Mo) à travers le pont
+    // natif, sérialisé sur le fil principal. Mesuré au faux iPhone (120 ploxions de 600 Ko) : 496 Mo en 35 s au démarrage. Désormais l'index
+    // porte tout ce qu'il faut (dates, bions, manquants, composés) et se tient à jour ENTRÉE PAR ENTRÉE ; seuls les ploxions absents de
+    // l'index sont relus, une fois.
     async installes() {
       const ids = await liste(), idx = (await boxion.get(META, 'installes-index').catch(() => null)) || {};
-      if (ids.every(id => idx[id] && idx[id].bions)) return ids.map(id => ({ id, ...idx[id] }));   // (0.60) l'index porte aussi les bions (la face du dessus du cube)
-      const out = [], neuf = {};
-      for (const id of ids) { const p = await boxion.get(NS, id); if (!p) continue; neuf[id] = { nom: p.nom, icone: p.icone, origine: p.origine, hash: p.hash, installe: p.installe, maj: p.maj || null, bions: Array.isArray(p.bions) ? p.bions.slice(0, 40) : [] }; out.push({ id, ...neuf[id] }); }
-      await boxion.put(META, 'installes-index', neuf).catch(() => {});
-      return out;
+      const manque = ids.filter(id => !(idx[id] && idx[id].bions));
+      if (!manque.length) return ids.map(id => ({ id, ...idx[id] }));   // (0.60) l'index porte aussi les bions (la face du dessus du cube)
+      // une seule reconstruction à la fois : au démarrage, cinq appels simultanés relisaient chacun tous les ploxions (le gel de RS-7)
+      if (!reconstruction) reconstruction = (async () => {
+        for (const id of manque) { const p = await boxion.get(NS, id); if (p) idx[id] = entreeIndex(p); }
+        for (const k of Object.keys(idx)) if (!ids.includes(k)) delete idx[k];
+        await boxion.put(META, 'installes-index', idx).catch(() => {});
+      })().finally(() => { reconstruction = null; });
+      await reconstruction;
+      const fini = (await boxion.get(META, 'installes-index').catch(() => null)) || idx;
+      return ids.filter(id => fini[id]).map(id => ({ id, ...fini[id] }));
     },
     async installer(id, meta = {}, progres = null) {
       if (progres) progres({ etape: 'ploxion', nom: id, fait: 0, connus: 1 });
@@ -166,7 +196,7 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       if (progres) progres({ etape: 'recu', nom: id, octets: r.texte.length, fait: 0, connus: 1 });
       const { bions, manquants } = await resoudreBions(r.texte, progres);
       const doc = { id, nom: meta.nom || id, icone: meta.icone || '▣', js: r.texte, hash: await sha256(r.texte), etag: (r.entetes && (r.entetes.etag || r.entetes.ETag)) || null, origine: source, installe: new Date().toISOString(), bions, manquants };
-      await boxion.put(NS, id, doc); await boxion.del(META, 'installes-index').catch(() => {});
+      await boxion.put(NS, id, doc); await majIndex(id, doc);
       await garderListe([...(await liste()), id]);
       await boxion.append('tsoins', { kind: 'marketplace', action: 'installer', id, hash: doc.hash });
       const composes = ploxionsComposes(r.texte, id);
@@ -184,7 +214,8 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
         if (bj && bj.includes(b)) { await boxion.put('bions', b, { js: bj, hash: await sha256(bj), le: new Date().toISOString() }); bions.push(b); }
       }
       // (0.78) « labo » : embarqué pour le premier lancement, mais tenu à jour depuis le labo (↻ tout mettre à jour) ; sinon, figé avec l'app
-      await boxion.put(NS, id, { id, nom: p.nom, icone: p.icone, js, hash: await sha256(js), etag: null, origine: p.labo ? source : 'pack', installe: new Date().toISOString(), bions }); await boxion.del(META, 'installes-index').catch(() => {});
+      const docL = { id, nom: p.nom, icone: p.icone, js, hash: await sha256(js), etag: null, origine: p.labo ? source : 'pack', installe: new Date().toISOString(), bions };
+      await boxion.put(NS, id, docL); await majIndex(id, docL);
       await garderListe([...(await liste()), id]);
       await boxion.append('tsoins', { kind: 'marketplace', action: 'installer', id, origine: 'pack' });
       return { id };
@@ -210,25 +241,27 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       // Seuls ceux qui ont vraiment changé sont téléchargés. Sans changelog (labo en panne) : l'ancienne vérification, ploxion par ploxion.
       const jr = forcer || !tous.length ? null : await this.changelog().catch(() => null);   /* rien à vérifier : pas même une requête */
       const marqueDe = (id) => { const x = jr && jr.par[id]; return x ? (x.dernier || '') + '#' + (x.n || 0) + '#' + ((Array.isArray(x.commits) && x.commits[0]) || '') : 'aucun'; };   // un commit de plus change n
+      const marques = jr ? ((await boxion.get(META, 'changelog-marques').catch(() => null)) || {}) : null;   /* (0.99.6) un petit document, pas les ploxions */
       if (jr) {
-        const aVoir = [];
+        const aVoir = [], idx = new Map((await this.installes()).map(x => [x.id, x]));
         for (const id of tous) {
-          const p = await boxion.get(NS, id); if (!p) continue;
-          const m = marqueDe(id), x = jr.par[id], depuis = String(p.maj || p.installe || '').slice(0, 10);
-          const inchange = p.changelog ? p.changelog === m : (!x || (depuis && x.dernier && String(x.dernier) < depuis));
-          if (inchange) { if (p.changelog !== m) await boxion.put(NS, id, { ...p, changelog: m }); res.push({ id, etat: 'a-jour', detail: 'changelog' }); }
+          const e = idx.get(id); if (!e) continue;
+          const m = marqueDe(id), x = jr.par[id], depuis = String(e.maj || e.installe || '').slice(0, 10);
+          const inchange = marques[id] ? marques[id] === m : (!x || (depuis && x.dernier && String(x.dernier) < depuis));
+          if (inchange) { marques[id] = m; res.push({ id, etat: 'a-jour', detail: 'changelog' }); }
           else aVoir.push(id);
         }
         tous = aVoir;
       }
       let i = 0, fait = 0;
+      const idxMaj = new Map((await this.installes()).map(x => [x.id, x]));
       const un = async (id) => {
-        const p = await boxion.get(NS, id); if (!p) return null;
+        const p = idxMaj.get(id) || await boxion.get(NS, id); if (!p) return null;   /* (0.99.6) l'index (empreinte, ETag, origine) : le ploxion n'est lu que s'il a changé */
         const pack = p.origine === 'pack';
         try {
           const casse = 'maj=' + Date.now().toString(36);
           let r = await http.get(source + '/px/' + encodeURIComponent(id) + '/app.js?' + casse, { headers: { 'Cache-Control': 'no-cache', ...(p.etag ? { 'If-None-Match': p.etag } : {}) } });
-          const marquer = async () => { if (jr) { const q = await boxion.get(NS, id); if (q) await boxion.put(NS, id, { ...q, changelog: marqueDe(id) }); } };
+          const marquer = async () => { if (marques) marques[id] = marqueDe(id); };
           if (r.status === 304) { await marquer(); return { id, etat: 'a-jour' }; }
           if (r.status !== 200 || /^\s*<(!doctype|html)/i.test(r.texte || '')) {
             const pg = await http.get(source + '/px/' + encodeURIComponent(id) + '?' + casse, { headers: { Accept: 'text/html', 'Cache-Control': 'no-cache' } }).catch(() => null);
@@ -240,7 +273,9 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
           const h = await sha256(r.texte);
           if (h === p.hash) { await marquer(); return { id, etat: 'a-jour' }; }
           const { bions, manquants } = await resoudreBions(r.texte);
-          await boxion.put(NS, id, { ...p, js: r.texte, hash: h, bions: [...new Set([...(p.bions || []), ...bions])], manquants, origine: source, etag: (r.entetes && (r.entetes.etag || r.entetes.ETag)) || null, maj: new Date().toISOString() });
+          const ancien = (await boxion.get(NS, id)) || {};
+          const nouveau = { ...ancien, js: r.texte, hash: h, bions: [...new Set([...(ancien.bions || []), ...bions])], manquants, origine: source, etag: (r.entetes && (r.entetes.etag || r.entetes.ETag)) || null, maj: new Date().toISOString() };
+          await boxion.put(NS, id, nouveau); await majIndex(id, nouveau);
           await marquer();
           await boxion.append('tsoins', { kind: 'marketplace', action: 'mettre-a-jour', id, hash: h });
           if (surMisAJour) try { surMisAJour(id); } catch (e) { /* */ }   // (0.80) l'app décharge l'ancien code (routeur.oublier)
@@ -249,7 +284,7 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       };
       const ouvrier = async () => { while (i < tous.length) { const id = tous[i++]; const x = await un(id); fait++; if (x) res.push(x); if (progres) try { progres({ fait, total: tous.length, id }); } catch (e) { /* */ } } };
       await Promise.all(Array.from({ length: Math.max(1, Math.min(concurrence, tous.length)) }, ouvrier));
-      if (res.some(x => x.etat === 'mis-a-jour')) await boxion.del(META, 'installes-index').catch(() => {});
+      if (marques) await boxion.put(META, 'changelog-marques', marques).catch(() => {});
       for (const x of res) { if (x.etat === 'erreur' && /^HTTP 404$|pas un ploxion/.test(x.detail || '')) introuvables[x.id] = Date.now(); else delete introuvables[x.id]; }
       await boxion.put(META, 'maj-introuvables', introuvables).catch(() => {});
       return res;
@@ -258,14 +293,13 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
     async dependances() {
       const ids = await liste(), ici = new Set(ids), c = await this.catalogue({ reseau: false }).catch(() => ({ items: [] })), labo = new Set((c.items || []).map(x => x.id));
       const pack = new Set(packLocal.map(x => x.id)), out = new Map();
-      for (const id of ids) {
-        const p = await boxion.get(NS, id); if (!p || !p.js) continue;
-        for (const d of ploxionsComposes(p.js, id)) if (!ici.has(d) && (labo.has(d) || pack.has(d))) { if (!out.has(d)) out.set(d, []); out.get(d).push(id); }
+      for (const e of await this.installes()) {   /* (0.99.6) l'index, pas les bundles */
+        for (const d of e.composes || []) if (!ici.has(d) && (labo.has(d) || pack.has(d))) { if (!out.has(d)) out.set(d, []); out.get(d).push(e.id); }
       }
       return [...out].map(([id, pour]) => ({ id, pour }));
     },
     async retirer(id) {
-      await boxion.del(NS, id); await boxion.del(META, 'installes-index').catch(() => {});
+      await boxion.del(NS, id); await majIndex(id, null);
       await garderListe((await liste()).filter(x => x !== id));
       await boxion.append('tsoins', { kind: 'marketplace', action: 'retirer', id });
     },
@@ -282,7 +316,7 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
     /** les bions installés : taille, quels ploxions les utilisent, coupés ou non */
     async bions() {
       const coupes = new Set((await boxion.get('reglages', 'bions-coupes')) || []), par = new Map();
-      for (const id of await liste()) { const p = await boxion.get(NS, id); for (const b of (p && p.bions) || []) { if (!par.has(b)) par.set(b, []); par.get(b).push(id); } }
+      for (const e of await this.installes()) for (const b of e.bions || []) { if (!par.has(b)) par.set(b, []); par.get(b).push(e.id); }   /* (0.99.6) l'index, pas les bundles */
       const out = [];
       for (const { key } of await boxion.list('bions')) {
         const x = await boxion.get('bions', key); if (!x) continue;
@@ -316,12 +350,12 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
     },
     /** LE GESTIONNAIRE (RS-7 12.10 : « voir les ploxions installés, la place qu'ils prennent et les dépendances ») : par ploxion, son bundle,
      *  ses bions (partagés avec combien d'autres), ce qu'on libérerait en le retirant (le bundle + les bions qui ne servent qu'à lui) */
-    async inventaire() {
+    async inventaire({ tailles = false } = {}) {   /* tailles : relire le bundle de ceux dont l'index ne connaît pas la taille (le gestionnaire, à la demande) */
       const bs = await this.bions(), parNom = new Map(bs.map(b => [b.nom, b])), out = [];
-      for (const id of await liste()) {
-        const p = await boxion.get(NS, id); if (!p) continue;
+      for (const p of await this.installes()) {   /* (0.99.6) l'index : le bundle n'est plus relu (dossier.js l'appelle à chaque lancement) */
+        const id = p.id;
         const deps = (p.bions || []).map(n => { const b = parNom.get(n); return { nom: n, octets: b ? b.octets : 0, partage: b ? b.utilisePar.length : 1, coupe: !!(b && b.coupe) }; });
-        const bundle = (p.js || '').length, seuls = deps.filter(d => d.partage <= 1).reduce((a, d) => a + d.octets, 0);
+        const bundle = p.taille != null ? p.taille : (tailles ? await this.taille(id) : 0), seuls = deps.filter(d => d.partage <= 1).reduce((a, d) => a + d.octets, 0);
         out.push({ id, nom: p.nom, icone: p.icone, origine: p.origine, installe: p.installe, maj: p.maj || null, bundle, liberable: bundle + seuls, total: bundle + deps.reduce((a, d) => a + d.octets, 0), deps });
       }
       const bions = bs.reduce((a, b) => a + b.octets, 0), bundles = out.reduce((a, x) => a + x.bundle, 0);

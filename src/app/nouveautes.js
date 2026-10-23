@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.6', titre: 'L\'app ne gèle plus à l\'ouverture', points: [
+    '◇ Avec beaucoup de ploxions installés, l\'app relisait et réécrivait chacun d\'eux en entier au démarrage : elle gelait. Elle se contente maintenant de leur fiche légère.',
+    '⬡ La réparation des bions se fait en douceur, quelques ploxions à la fois, et attend quand le labo dit « trop de requêtes ».',
+  ] },
   { v: '0.99.5', titre: 'Tordre les knobs, et le paysage', points: [
     '◎ Les knobs se tordent avec les doigts : un doigt qui tourne autour, deux doigts qui tordent, un doigt au centre qui glisse ; appuyé, il grossit ; deux touchers le remettent au départ ; chaque cran vibre.',
     '≋ Le synthé a 33 knobs : deux ondes et leur intervalle, bruit, octave, transposition, glisse, type de filtre, onde du lfo, vibrato, trémolo, saturation, réverb et sa taille, stéréo, swing, durée.',

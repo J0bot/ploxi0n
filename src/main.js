@@ -101,7 +101,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.5';
+const VERSION = '0.99.6';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -366,8 +366,10 @@ async function demarrer() {
   boot(50, deja.length + ' ploxions de base');
   // 0.8 : les bions TOUCHÉS (pas seulement déclarés) ; les ploxions installés avant sont complétés une fois, en ligne, sans bloquer le démarrage
   // (0.99.3) une seconde fois : les bions bannis par un 429 du labo (notés « absents » 7 jours) reviennent dans les ploxions installés sans eux
+  // (0.99.6, RS-7 : « quand j'ouvre l'app ça freeze ») : plus jamais au démarrage ; 25 s après, en douceur (8 ploxions, une pause entre
+  // chacun, seulement ceux à qui il manque des bions), et ainsi à chaque lancement tant qu'il en reste
   if (!(await boxion.get('reglages', 'bions-v3')) && navigator.onLine !== false) {
-    depot.completerBions().then(r => { boxion.put('reglages', 'bions-v3', { le: new Date().toISOString(), r }); }).catch(() => {});
+    window.setTimeout(() => depot.completerBions({ max: 8, pause: 400 }).then(r => { if (!r.reste) boxion.put('reglages', 'bions-v3', { le: new Date().toISOString(), n: r.length }); }).catch(() => {}), 25000);
   }
   const internes = [
     // (0.67) les icônes comme dans le xer (le xerkion), et les ploxions natifs de l'app dans le marketplace (leur portée : natif)

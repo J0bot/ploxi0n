@@ -102,6 +102,20 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.99.6 (24.10)** — ⚠ RS-7 : « avec le build actuel, quand j'ouvre l'app ça freeze, je peux rien faire ».
+- La cause : sur l'iPhone, lire ou écrire un ploxion dans boxion_local fait passer son bundle (jusqu'à 2 Mo) par le pont natif, sérialisé sur
+  le fil principal. Le faux iPhone compte maintenant ces octets (`pont` dans les parcours) : 120 ploxions de 600 Ko → 496 Mo en 35 s.
+  Coupables : `installes()` reconstruit 3 à 4 fois EN PARALLÈLE (pas de verrou), `inventaire()` appelé à chaque lancement par
+  `src/natif/dossier.js`, `completerBions` (bions-v3 de la 0.99.3 : tout relu, tout réécrit), `aJour` 0.99.5 (chaque ploxion réécrit pour sa
+  marque de changelog), `bions()` et `dependances()` (tout relu).
+- Le remède (src/marketplace/depot.js) : l'index porte taille, ETag, manquants (`manq`), composés ; `majIndex(id, doc)` entrée par entrée
+  (plus jamais `del installes-index`) ; une seule reconstruction partagée ; `bions()`, `dependances()`, `inventaire()` (sans `tailles: true`),
+  `aJour` (ancien chemin compris) depuis l'index ; marques du changelog dans `marketplace/changelog-marques` ; `completerBions({ max, pause })`
+  ne prend que les `manq > 0` (ou inconnus), rend `reste` ; main.js le lance 25 s après, à chaque lancement tant qu'il en reste ; pause d'une
+  minute sur 429, échecs mémorisés pour la session. Après : 7 Mo avec un index à jour.
+- Règle : ne JAMAIS parcourir les ploxions installés en lisant leurs documents ; passer par `depot.installes()`. `parcours-lourd.mjs`
+  (PX_LOURD_N, PX_LOURD_KO, PX_LOURD_INDEX, PX_LOURD_ANCIEN) le vérifie.
+
 **0.99.5 (24.10)** — cinq demandes de RS-7 d'un coup.
 - **Les mises à jour par le changelog** : `depot.changelog()` lit `/px/changelog.json` (par_ploxion : dernier, n, commits ; head). `aJour` : pour
   chaque installé, une marque `dernier#n#commit` comparée à `p.changelog` ; sans marque : à jour si le dernier changement est avant `p.maj ||
