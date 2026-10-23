@@ -62,6 +62,7 @@ export const GLYPHES = {
   nfc: P('M30 30a28 28 0 0 1 0 40M44 22a40 40 0 0 1 0 56M58 14a52 52 0 0 1 0 72') + C(20, 50, 5, 1),
   wifi: P('M14 40a52 52 0 0 1 72 0M26 54a34 34 0 0 1 48 0M38 68a16 16 0 0 1 24 0') + C(50, 80, 5, 1),
   bluetooth: P('M30 32l40 36-20 18V14l20 18-40 36'),
+  proche: C(24, 50, 7, 1) + C(76, 50, 7, 1) + P('M38 36a20 20 0 0 1 0 28M62 36a20 20 0 0 0 0 28M46 26a34 34 0 0 1 0 48M54 26a34 34 0 0 0 0 48'),   // ◉ (0.99.1) deux téléphones, leurs ondes qui se rejoignent
   maison: P('M14 50 50 18l36 32M24 42v42h52V42') + R(42, 60, 16, 24),
   widgets: R(16, 16, 30, 30, 6) + R(54, 16, 30, 30, 6) + R(16, 54, 30, 30, 6) + R(54, 54, 30, 30, 6),
   notifs: P('M28 66V44a22 22 0 0 1 44 0v22l8 8H20zM42 82a8 8 0 0 0 16 0'),
@@ -134,7 +135,7 @@ const MOTS = [
   [/fichier|files|documents?|pdf|explorateur|dossier|archive/i, 'dossier'],
   [/code|forge|atelier|xerminal|ssh|terminal|console|shell|\bop\b/i, 'terminal'],
   [/jeu|game|doom|arcade|puzzle/i, 'manette'],
-  [/bluetooth/i, 'bluetooth'], [/wifi|r[eé]seau|connexion/i, 'wifi'],
+  [/^proche$|ultimate.?bluetooth/i, 'proche'], [/bluetooth/i, 'bluetooth'], [/wifi|r[eé]seau|connexion/i, 'wifi'],
   [/sant[eé]|endo|\bflo\b|coeur|c[oœ]ur|sport|forme/i, 'coeur'],
   [/s[eé]curit[eé]|verrou|mot de passe|password|cl[eé]/i, 'verrou'],
   [/photo|cam[eé]ra|image|galerie/i, 'photo'],

@@ -102,6 +102,11 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.99.1 (23.10)** — ◉ Proche, l'ultimate Bluetooth (RS-7 : « je te laisse extrapoler et implémenter toi-même ») : tout est dans
+`docs/ULTIMATE-BLUETOOTH.md` (« Ce qui est construit »). ⚠ Le Swift de PloxiProche n'a pas été compilé : vérifier le premier build. À essayer
+à deux iPhones : même salle, démarrer des deux côtés ; l'invitation part du nom le plus petit. Piège payé : `src/app/sans-emoji.js` efface
+les signes pictographiques (♡ ▶ ◼ ❄…) dans les ploxions internes (tester avec `/\p{Extended_Pictographic}/u`) ; `[data-ecrit]` les garde.
+
 **0.99 (23.10)** — RS-7 : « et il faut que la police ressorte, genre selon les niveaux y a que le glyphe, que le texte, ou les deux ; les
 niveaux de zoom ça se balade partout, et on peut freeze des zooms pour faire nos paliers au lieu que ça soit zoom libre ».
 - `src/bions/zoom.js` (pur, `tests/zoom.test.mjs`) : MIN/MAX/PLONGE/RECULE, `niveau(iScene, s)` = l'indice du palier + (s − 1)/2,

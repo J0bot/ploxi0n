@@ -52,6 +52,7 @@ function laboFaux(url) {
 }
 const boxionFaux = new Map();
 const activitesFaux = [];   // (0.91) les Live Activities lancées
+const procheEnvoyes = [];   // (0.99.1) ce que Proche a envoyé aux voisins
 const pushFaux = [];   // (0.91) les jetons reçus par le faux labo   // (0.86) le boxion du compte, côté labo
 const wledFaux = { state: { on: true, bri: 128, seg: [{ col: [[255, 80, 0]], fx: 0, pal: 0 }] }, info: { name: 'Ruban du salon', ver: '0.15.0', leds: { count: 60, pwr: 420 } }, effects: ['Solid', 'Blink', 'Breathe'], palettes: ['Default', 'Lava'] };
 
@@ -127,6 +128,15 @@ const natif = {
   PloxiAR: { disponible: () => ({ ar: true, lidar: true, piece: true, chambre: false, objet: true, pieces: '/var/mobile/Documents/terrax/pieces', objets: '/var/mobile/Documents/terrax/objets' }), ouvrir: () => ({ ok: true }), fermer: () => ({ ok: true }),
     capturerObjet: () => ({ nom: 'objet-2026-10-15-121500.usdz', chemin: '/var/mobile/Documents/terrax/objets/objet-2026-10-15-121500.usdz' }),
     scannerPiece: () => ({ nom: 'piece-2026-10-15-120000.usdz', chemin: '/var/mobile/Documents/terrax/pieces/piece-2026-10-15-120000.usdz' }) },
+  // ◉ (0.99.1) l'ultimate Bluetooth : un voisin simulé, « Tom », 3 s d'avance d'horloge ; il répond aux pings et accuse les messages
+  PloxiProche: { demarrer: (o) => { setTimeout(() => emettre('PloxiProche', 'pair', { id: 'Tom·b2c3', etat: 'connecte' }), 300); return { moi: o.nom, salle: o.salle }; },
+    arreter: () => { setTimeout(() => emettre('PloxiProche', 'pair', { id: 'Tom·b2c3', etat: 'perdu' }), 50); return {}; },
+    envoyer: (o) => { procheEnvoyes.push(o); let m = null; try { m = JSON.parse(o.donnees); } catch (e) { throw new Error('paquet illisible'); }
+      const rep = (g, d, ms) => setTimeout(() => emettre('PloxiProche', 'message', { de: 'Tom·b2c3', donnees: JSON.stringify({ v: 1, g, d, t: Date.now() + 3000 }) }), ms);
+      if (m.g === 'ping') rep('pong', { t0: m.d.t0, t1: Date.now() + 3000 + 6, t2: Date.now() + 3000 + 6 }, 12);
+      if (m.g === 'msg') rep('msg', { texte: '✓ ' + m.d.texte }, 250);
+      return { envoyes: 1 }; },
+    pairs: () => ({ pairs: ['Tom·b2c3'] }) },
   PloxiLecteur: { moteurs: () => ({ apple: true, vlc: false }), ouvrir: (o) => ({ moteur: /\.mkv/.test(o.url) ? 'vlc' : 'apple' }), fermer: () => ({}) },
   PloxiVocal: { commencer: () => ({ chemin: '/tmp/vocal.m4a' }), arreter: () => ({ chemin: '/tmp/vocal.m4a', duree: 2, base64: '', type: 'audio/mp4' }), transcrire: (o) => ({ texte: 'ouvre le ploxion horloge', langue: o.langue, surLeTelephone: true }) },
   Share: { share: () => ({ activityType: 'com.apple.UIKit.activity.CopyToPasteboard' }), canShare: () => ({ value: true }) },
@@ -235,7 +245,7 @@ const etat = await page.evaluate(() => ({
   texte: document.body.innerText.slice(0, 600),
 }));
 let resultatsEtapes = null;
-if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
+if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux, procheEnvoyes }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
 clearInterval(mouvementMinuteur);
 const resume = { url, mode: web ? 'web' : (opts.includes('--sans-plugions') ? 'ios-sans-plugions' : 'ios'), demarre, dureeBoot, etat,
   appelsNatifs: Object.entries(appels.reduce((a, x) => { const k = x.p + '.' + x.m; a[k] = (a[k] || 0) + 1; return a; }, {})).sort((a, b) => b[1] - a[1]),

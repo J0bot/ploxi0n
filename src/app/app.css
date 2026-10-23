@@ -1017,6 +1017,28 @@ html.px-calme .px-vx-t{transition:none}html.px-calme .px-vx-eclair{animation:non
 .px-amb-b{display:grid;gap:12px;margin-top:8px}.px-amb-b label{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .px-amb-b>button{background:var(--surface);border:var(--trait) solid var(--bord);border-radius:var(--blob2);color:var(--txt);min-height:42px;font:500 12px var(--mono);letter-spacing:.14em;text-transform:uppercase}
 
+/* ◉ (0.99.1) Proche, l'ultimate Bluetooth (src/lot/proche.js) : qui est là, le fil des messages, la basse et le son partagés */
+.px-proche input[type=text],.px-proche input[type=url]{min-width:0;min-height:42px;padding:0 12px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--creux,var(--surface));color:var(--txt);font:15px var(--police)}
+.px-proche button{min-height:42px;padding:0 14px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:600 12px var(--mono);letter-spacing:.08em}
+.px-proche button:disabled,.px-proche input:disabled{opacity:.4}
+.px-pr-id{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin:12px 0 6px}
+.px-pr-id button.on,.px-pr-seg button.on{color:var(--bio);border-color:var(--bio);box-shadow:0 0 10px var(--glow)}
+.px-pr-err{color:#e08a9a;font:500 12px var(--mono);margin:4px 0}.px-pr-err[hidden]{display:none}
+.px-pr-pairs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
+.px-pr-pair{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:var(--trait) solid var(--bord);background:var(--surface);font:600 12px var(--mono);color:var(--muted)}
+.px-pr-pair.on{color:var(--txt);border-color:var(--bio)}.px-pr-pair small{font:500 9px var(--mono);color:var(--grave)}
+.px-pr-t{font:600 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--grave);margin:18px 0 6px}
+.px-pr-fil{max-height:30vh;overflow:auto;padding:8px 12px;border-radius:var(--blob1,16px);border:var(--trait) solid var(--bord);background:var(--surface);-webkit-overflow-scrolling:touch}
+.px-pr-m{margin:4px 0;font:14px/1.35 var(--police);color:var(--txt);word-break:break-word}.px-pr-m b{font:600 10px var(--mono);letter-spacing:.08em;color:var(--acc2);margin-right:4px}
+.px-pr-m.moi b{color:var(--bio)}
+.px-pr-glyphes{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin:6px 0}.px-pr-glyphes button{padding:0;font:18px/1 var(--police);min-height:38px}
+.px-pr-envoi{display:grid;grid-template-columns:1fr auto;gap:6px}
+.px-pr-b{width:100%;margin:4px 0}.px-pr-go{color:var(--bio);border-color:var(--bio);box-shadow:0 0 12px var(--glow)}
+.px-pr-l{font:500 12px/1.4 var(--mono);color:var(--txt);margin:4px 0 8px}
+.px-pr-r{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px;font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:6px 0}
+.px-pr-r input{accent-color:var(--acc)}
+.px-pr-seg{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}.px-pr-seg button{flex:1;min-height:36px;padding:0 8px;font-size:11px}
+
 /* ◺◿ (0.89) les koins remplacent le dock et le HUD (src/app/koins.js, le carnet de RS-7 : docs/KOINS.md) ; (0.92) en chill-tekk */
 html.px-koins .px-dock,html.px-koins .px-mode-ploxion .px-ecran>.px-barre{display:none}
 html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}

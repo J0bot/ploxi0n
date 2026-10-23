@@ -18,6 +18,7 @@ import MediaPlayer
 import AVKit
 import QuickLook
 import CoreImage   // (0.76) le QR code du partage en personne (CIQRCodeGenerator)
+import MultipeerConnectivity   // (0.99.1) l'ultimate Bluetooth : les téléphones proches (PloxiProche)
 // l'AR native (0.73) : PloxiAR plus bas. Interrupteur de secours : PLOXI0N_AR=0 (fastlane) la retire du build.
 #if !PLOXI0N_SANS_AR
 import ARKit
@@ -1998,11 +1999,132 @@ final class ObjetVC: UIViewController {
 }
 #endif
 
+// ◉ L'ULTIMATE BLUETOOTH (0.99.1, RS-7 23.10 : « envoyer des messages en Bluetooth, partager du son ou une basse, un téléphone qui host le son
+// et tous les autres qui répliquent » ; docs/ULTIMATE-BLUETOOTH.md). MultipeerConnectivity : le Bluetooth et le Wi-Fi direct ensemble,
+// sans internet, chiffré. Le service « ploxi-proche » (Info.plist : NSBonjourServices _ploxi-proche._tcp et ._udp). On ne transporte que
+// de petits paquets de texte (une partition, un rendez-vous, un message) : le son est joué par chaque téléphone (src/bions/proche.js).
+//   demarrer({ nom, salle })   annonce et cherche dans la salle ; nom = un identifiant unique (« RS-7·a3f2 », fait par la page)
+//   arreter()                  se tait et quitte la session
+//   envoyer({ donnees, a? })   à tous les connectés, ou à ceux de « a » (des noms)
+//   pairs()                    { pairs: [noms connectés] }
+//   événements : « pair » { id, etat: connexion | connecte | perdu } · « message » { de, donnees }
+// Pour éviter la double invitation : seul celui dont le nom est le plus petit invite l'autre.
+@objc(PloxiProche)
+public class PloxiProche: CAPPlugin, CAPBridgedPlugin, MCSessionDelegate, MCNearbyServiceAdvertiserDelegate, MCNearbyServiceBrowserDelegate {
+    public let identifier = "PloxiProche"
+    public let jsName = "PloxiProche"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "demarrer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "arreter", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "envoyer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "pairs", returnType: CAPPluginReturnPromise),
+    ]
+    private let service = "ploxi-proche"
+    private var moi: MCPeerID?
+    private var lien: MCSession?
+    private var annonce: MCNearbyServiceAdvertiser?
+    private var cherche: MCNearbyServiceBrowser?
+    private var salle = ""
+
+    @objc func demarrer(_ call: CAPPluginCall) {
+        // MCPeerID lève une exception (l'app tombe) sur un nom vide ou de plus de 63 octets
+        var nom = (call.getString("nom") ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        while nom.utf8.count > 60 { nom.removeLast() }
+        if nom.isEmpty { nom = "ploxion" }
+        let s = String((call.getString("salle") ?? "xerboxion").prefix(40))
+        DispatchQueue.main.async {
+            self.toutArreter()
+            let p = MCPeerID(displayName: nom)
+            let se = MCSession(peer: p, securityIdentity: nil, encryptionPreference: .required)
+            se.delegate = self
+            let an = MCNearbyServiceAdvertiser(peer: p, discoveryInfo: ["salle": s], serviceType: self.service)
+            an.delegate = self
+            let ch = MCNearbyServiceBrowser(peer: p, serviceType: self.service)
+            ch.delegate = self
+            self.moi = p; self.lien = se; self.annonce = an; self.cherche = ch; self.salle = s
+            an.startAdvertisingPeer()
+            ch.startBrowsingForPeers()
+            call.resolve(["moi": nom, "salle": s])
+        }
+    }
+
+    @objc func arreter(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { self.toutArreter(); call.resolve() }
+    }
+
+    private func toutArreter() {
+        annonce?.stopAdvertisingPeer(); cherche?.stopBrowsingForPeers(); lien?.disconnect()
+        annonce = nil; cherche = nil; lien = nil; moi = nil
+    }
+
+    @objc func envoyer(_ call: CAPPluginCall) {
+        guard let texte = call.getString("donnees"), let data = texte.data(using: .utf8) else { call.reject("donnees manquantes"); return }
+        guard data.count <= 16000 else { call.reject("paquet trop gros"); return }
+        DispatchQueue.main.async {
+            guard let se = self.lien else { call.resolve(["envoyes": 0]); return }
+            let noms = call.getArray("a", String.self) ?? []
+            let cibles = noms.isEmpty ? se.connectedPeers : se.connectedPeers.filter { noms.contains($0.displayName) }
+            if cibles.isEmpty { call.resolve(["envoyes": 0]); return }
+            do {
+                try se.send(data, toPeers: cibles, with: .reliable)
+                call.resolve(["envoyes": cibles.count])
+            } catch { call.reject("envoi impossible : \(error.localizedDescription)") }
+        }
+    }
+
+    @objc func pairs(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { call.resolve(["pairs": (self.lien?.connectedPeers ?? []).map { $0.displayName }]) }
+    }
+
+    // ---- la session ----
+    public func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
+        let etat: String
+        switch state {
+        case .connected: etat = "connecte"
+        case .connecting: etat = "connexion"
+        default: etat = "perdu"
+        }
+        notifyListeners("pair", data: ["id": peerID.displayName, "etat": etat])
+    }
+    public func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
+        guard data.count <= 16000, let texte = String(data: data, encoding: .utf8) else { return }
+        notifyListeners("message", data: ["de": peerID.displayName, "donnees": texte])
+    }
+    public func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {}
+    public func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {}
+    public func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {}
+
+    // ---- l'annonce : on accepte ceux de la même salle ----
+    public func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
+        DispatchQueue.main.async {
+            let s = context.flatMap { String(data: $0, encoding: .utf8) } ?? ""
+            guard let se = self.lien, s == self.salle else { invitationHandler(false, nil); return }
+            invitationHandler(true, se)
+        }
+    }
+    public func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
+        notifyListeners("pair", data: ["id": "", "etat": "erreur", "message": error.localizedDescription])
+    }
+
+    // ---- la recherche : on invite ceux de la même salle (seulement si notre nom est le plus petit) ----
+    public func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
+        DispatchQueue.main.async {
+            guard let p = self.moi, let se = self.lien, info?["salle"] == self.salle, p.displayName < peerID.displayName else { return }
+            browser.invitePeer(peerID, to: se, withContext: self.salle.data(using: .utf8), timeout: 20)
+        }
+    }
+    public func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {}
+    public func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
+        notifyListeners("pair", data: ["id": "", "etat": "erreur", "message": error.localizedDescription])
+    }
+}
+
 class PloxionVC: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(PloxiVocal())
         bridge?.registerPluginInstance(PloxiApple())
         bridge?.registerPluginInstance(PloxiLecteur())
+        bridge?.registerPluginInstance(PloxiProche())
         #if !PLOXI0N_SANS_AR
         bridge?.registerPluginInstance(PloxiAR())
         #endif

@@ -112,9 +112,11 @@
 		<true/>
 	</dict>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>ploxi0n trouve et pilote les appareils de ton réseau : Home Assistant, WLED, ESPHome, Tasmota, tes Raspberry Pi et tes boxions.</string>
+	<string>ploxi0n trouve et pilote les appareils de ton réseau : Home Assistant, WLED, ESPHome, Tasmota, tes Raspberry Pi et tes boxions. Et, quand tu le démarres dans Proche, les téléphones autour de toi pour partager des messages et du son.</string>
 	<key>NSBonjourServices</key>
 	<array>
+		<string>_ploxi-proche._tcp</string>
+		<string>_ploxi-proche._udp</string>
 		<string>_home-assistant._tcp</string>
 		<string>_wled._tcp</string>
 		<string>_esphomelib._tcp</string>

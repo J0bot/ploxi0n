@@ -1,5 +1,9 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1792716678000,"0.98 : une seule map, tout est fractal ; les entrées et les sorties de chaque ploxion et bion"],
+export const COMMITS = [[1792717537000,"braindump de RS-7 : toutes les langues, et le mode humain (zéro texte, glyphes et maths)"],
+  [1792717389000,"braindump de RS-7 : ultimate Bluetooth (messages, son partagé, un hôte et des répliques)"],
+  [1792717342000,"braindump de RS-7 (Zurich) : le mapion autour de moi, et les knobs maîtres"],
+  [1792717276000,"0.99 : le zoom libre ou par paliers figés ; l'écriture suit le zoom"],
+  [1792716678000,"0.98 : une seule map, tout est fractal ; les entrées et les sorties de chaque ploxion et bion"],
   [1792715935000,"feuille de route : la signature GPG de RS-7 sur les ploxions, pour plus tard"],
   [1792715922000,"0.97 : le zoom de temps (le passé, ses portées, les tsoins de xer) et le zoom de fractale (la map 3 × 3) ; la ChillTekk"],
   [1792715500000,"en cours (0.97) : le zoom de temps (le passé) et le zoom de fractale (la map en 3 × 3)"],

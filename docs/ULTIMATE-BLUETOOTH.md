@@ -32,7 +32,36 @@
 - **Le calage** : à quelques dizaines de millisecondes près, ça s'entend en écho dans une même pièce. Il faudra mesurer le décalage de chaque
   téléphone et le compenser.
 
-## Une forme possible (proposition, pas décidée)
+## Ce qui est construit (0.99.1, « je te laisse extrapoler et implémenter toi-même »)
+
+- **PloxiProche** (`ios/App/App/AppDelegate.swift`, MultipeerConnectivity, chiffré) : `demarrer({ nom, salle })`, `arreter()`, `envoyer({ donnees, a? })`,
+  `pairs()` ; événements `pair` et `message`. Tout le monde annonce et cherche le service `ploxi-proche` ; seuls ceux de la même **salle** se
+  connectent ; celui dont le nom est le plus petit invite (pas de double invitation). Les paquets sont du texte, 16 Ko au plus.
+  Info.plist : `_ploxi-proche._tcp` et `._udp` dans NSBonjourServices. **⚠ Pas compilé ici** (pas de Mac) : relu ligne par ligne, signatures des
+  délégués d'après le SDK ; le premier build le confirmera.
+- **Le tuyau** (`src/natif/proche-natif.js`) : le plugin sur l'iPhone (par `surPromesse`), un BroadcastChannel ailleurs (deux onglets = deux
+  téléphones). Le nom d'un pair : 50 octets au plus + un suffixe unique (MCPeerID tombe au-delà de 63 octets ou sur un nom vide).
+- **Le bion pur** (`src/bions/proche.js`) : `paquet` / `lire` (ce qui vient d'à côté est suspect), l'horloge à la NTP (`ecart`, `meilleurEcart` :
+  la médiane des 3 allers-retours les plus courts), la basse (`partition`, `MOTIFS` pulse / roule / tekk / marche / dub, `GAMMES`,
+  `notesEntre` : les notes d'une fenêtre, en boucle depuis le début de l'hôte), `positionA` (le son partagé).
+- **Le ploxion Proche** (`src/lot/proche.js`) : démarrer (nom, salle) ; qui est là et son aller-retour ; ≡ les messages et les glyphes d'un
+  geste ; ∿ héberger une basse (tempo, motif, grave / bas / milieu ; changer garde le début, tout le monde reste calé), la rejoindre (un
+  ordonnanceur Web Audio à 250 ms d'avance, une scie + une sous-octave, un filtre qui claque) ; ▷ héberger un son (https seulement), pause
+  pour tous, le rejoindre (chacun sa copie, recalée au-delà de 80 ms). L'hôte réannonce toutes les 3 s (les retardataires) ; ping toutes les 4 s.
+- Ne pas nuire : rien n'est annoncé avant « démarrer », rien ne joue chez quelqu'un sans son « rejoindre », textes échappés, https seulement.
+- Tests : `tests/proche.test.mjs` (deux téléphones simulés, 5 s d'écart d'horloge). Faux iPhone : `parcours-proche.mjs` (un voisin « Tom »
+  simulé dans `faux-iphone.mjs`, 3 s d'avance : il répond aux pings et aux messages, puis héberge une basse).
+- Au passage : le filtre « sans emoji » de l'app (`src/app/sans-emoji.js`) effaçait les signes « pictographiques » (♡ ♫ ▶ ◼ ✉ ❄) des
+  ploxions internes ; `[data-ecrit]` garde ce que les gens s'écrivent, et l'interface utilise des signes qui passent (∿ ▷ ■ ✻).
+
+## La suite (⏭)
+
+- Le son en arrière-plan, écran verrouillé (passer par un `<audio>` comme les ambiances), et la basse sur les vibrations (le haptique).
+- Envoyer un fichier son de l'hôte aux autres (MultipeerConnectivity `sendResource`), pour un son partagé sans internet.
+- Mesurer et compenser la latence de sortie de chaque téléphone (Bluetooth casque : +150 ms).
+- Les messages de proche en proche (relayés par les autres, au-delà de la portée).
+
+## Une forme possible (proposition d'avant, gardée pour mémoire)
 
 - Un plugin natif minimal **PloxiProche** (Swift, MultipeerConnectivity : annoncer, chercher, envoyer des octets, recevoir), exposé en
   `jOSNatif.proche`, et un bion **proche** côté JS : des pairs, des messages, une horloge partagée.
