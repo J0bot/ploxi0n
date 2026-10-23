@@ -94,7 +94,7 @@ export function placerReseau(hubs, ici, max = 80) {
 }
 
 export function creerMap({ W = globalThis.window, boxion, charger = null, ploxions = () => [], ouvrir = () => {}, vibrer = () => {}, enLigne = () => true, usage = async () => null,
-  inspecter = async () => null, bionInfo = async () => null, flux = null, neurone = null, tous = null }) {
+  inspecter = async () => null, bionInfo = async () => null, flux = null, neurone = null, tous = null, fluxGarde = null }) {
   const tousLes = () => (tous ? tous() : ploxions());   // (0.98) tes ploxions : tous, ceux de l'app aussi
   const D = W.document;
   let labo = [], persos = [], hubs = new Map();
@@ -173,6 +173,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
     const cacheFlux = new Map();
     async function fluxPloxion(id) {
       if (cacheFlux.has(id)) return cacheFlux.get(id);
+      if (fluxGarde) { const f = await fluxGarde(id).catch(() => null); cacheFlux.set(id, f); return f; }   /* (0.99.17) calculé une fois par version, gardé */
       const i = await inspecter(id).catch(() => null); const f = i && flux ? flux(i) : null; if (f) f.nom = i.nom; cacheFlux.set(id, f); return f;
     }
     // en fond, le flux des autres ploxions (pour les synapses) : un à la fois, sans gêner

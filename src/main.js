@@ -468,6 +468,14 @@ async function demarrer() {
   internes.push(creerAutour({ W: window, boxion, vibrer: (x) => vibrer(x), http: { get: (u, o) => httpRelais.get(u, o) }, position: () => window.jOSNatif.position(),
     ouvrirLien: (u) => (window.jOSNatif && window.jOSNatif.ouvrirLien ? window.jOSNatif.ouvrirLien(u) : window.open(u, '_blank')), usage: () => boxion.get('usage', 'stats') }).ploxion);
   internes.push(creerAmbiances({ W: window, boxion, vibrer: (x) => vibrer(x), activite: { debut: (o) => activites.debut('ambiances', { genre: 'minuteur', ploxion: 'ambiances', glyphe: 'ambiances', ...o }), fin: () => activites.fin('ambiances') } }).ploxion);
+  // ◈ (0.98) un ploxion vu de près : son code, ses bions ; son flux (entrées, sorties) ; (0.99.17) le flux gardé par version (memoFlux)
+  const inspecteur = async (id) => { const p = await boxion.get('ploxions', id).catch(() => null), c = routeur ? routeur.catalogue().find(x => x.id === id) : null, code = (p && p.js) || '';
+    return { id, nom: (p && p.nom) || (c && c.nom) || id, code, bions: bionsDuCode(code, (p && p.bions) || []) }; };
+  const fluxCalcule = (i) => { const f = fluxDe({ id: i.id, code: i.code, bions: i.bions, cores: CORES }), d = FLUX_INTERNES[i.id]; if (d) { f.entrees.push(...d.e.map(canal => ({ canal, doc: '', sur: 'core' }))); f.sorties.push(...d.s.map(canal => ({ canal, doc: '', sur: 'core' }))); } return f; };
+  const memoFlux = new Map();
+  const cleFlux = (p) => String(p.hash || '') + '|' + String(p.maj || p.installe || '');
+  depot.surEcrit = (id, p) => { const code = p.js || '', f = fluxCalcule({ id, code, bions: bionsDuCode(code, p.bions || []) }); f.nom = p.nom || id;
+    const rec = { h: cleFlux(p), f: JSON.parse(JSON.stringify(f)) }; memoFlux.set(id, rec); boxion.put('flux', id, rec).catch(() => {}); };
   // ▦ (0.90) la map du xerboxion en carrés : les hubs du labo (/px/xerkions.json) et les tiens, une balade de portail en portail ; en créer
   internes.push(creerMap({ boxion, vibrer: (x) => vibrer(x), enLigne: () => navigator.onLine !== false,
     charger: async () => { const r = await httpRelais.get(SOURCE + '/px/xerkions.json', { headers: { Accept: 'application/json' } }); if (r.status !== 200) throw new Error('map : ' + r.status); const d = JSON.parse(r.texte || '{}'); return Array.isArray(d.items) ? d.items : []; },
@@ -475,9 +483,8 @@ async function demarrer() {
     // ◈ (0.98) le zoom de fractale jusqu'aux neurones : un ploxion (son code, ses bions), un bion (son API, qui l'appelle)
     // (0.99.5, RS-7 : « quand on zoome sur un ploxion, il faut qu'on puisse voir son bion ») : ses bions = ceux notés à l'installation + tous ceux
     // que son code touche (jOSBoxion, jOSNatif… compris : l'app les fournit, ce sont des bions aussi)
-    inspecter: async (id) => { const p = await boxion.get('ploxions', id).catch(() => null), c = routeur ? routeur.catalogue().find(x => x.id === id) : null, code = (p && p.js) || '';
-      return { id, nom: (p && p.nom) || (c && c.nom) || id, code, bions: bionsDuCode(code, (p && p.bions) || []) }; },
-    flux: (i) => { const f = fluxDe({ id: i.id, code: i.code, bions: i.bions, cores: CORES }), d = FLUX_INTERNES[i.id]; if (d) { f.entrees.push(...d.e.map(canal => ({ canal, doc: '', sur: 'core' }))); f.sorties.push(...d.s.map(canal => ({ canal, doc: '', sur: 'core' }))); } return f; },
+    inspecter: inspecteur,
+    flux: fluxCalcule,
     bionInfo: async (nom) => {
       if (!/^jOS/.test(nom)) {   // (0.99.5) le CŒUR d'un ploxion : son propre code est son bion
         const p = await boxion.get('ploxions', nom).catch(() => null), c = routeur ? routeur.catalogue().find(x => x.id === nom) : null, js = (p && p.js) || '';
@@ -487,7 +494,15 @@ async function demarrer() {
       const x = await boxion.get('bions', nom).catch(() => null), l = await depot.bions().catch(() => []), r = BIONS_LABO[nom] || {}, js = (x && x.js) || '';
       return { nom, js, utilisePar: (l.find(b => b.nom === nom) || {}).utilisePar || [], api: r.api || [], role: r.role || '', glyphe: r.glyphe || '', bions: bionsDuCode(js, []).filter(b => b !== nom) };
     },
-    neurone: { html: neuroneHtml, axones: poserAxones, synapses: synapsesEntre }, tous: () => (routeur ? routeur.catalogue().filter(p => p.id !== 'map') : []) }).ploxion);
+    neurone: { html: neuroneHtml, axones: poserAxones, synapses: synapsesEntre }, tous: () => (routeur ? routeur.catalogue().filter(p => p.id !== 'map') : []),
+    // (0.99.17) le flux d'un ploxion (ses entrées, ses sorties) ne change qu'avec sa version : calculé UNE fois, gardé (mémoire + boxion « flux »).
+    // Mesuré au faux iPhone (120 ploxions de 600 Ko) : la map relisait en fond le code entier de 60 ploxions à chaque retour à l'accueil.
+    fluxGarde: async (id) => {
+      const e = (await depot.installes().catch(() => [])).find(x => x.id === id), h = e ? cleFlux(e) : 'interne|' + VERSION;
+      const m = memoFlux.get(id); if (m && m.h === h) return m.f;
+      const g = await boxion.get('flux', id).catch(() => null); if (g && g.h === h) { memoFlux.set(id, g); return g.f; }
+      const i = await inspecteur(id), f = fluxCalcule(i); f.nom = i.nom; const rec = { h, f: JSON.parse(JSON.stringify(f)) }; memoFlux.set(id, rec); boxion.put('flux', id, rec).catch(() => {}); return rec.f;
+    } }).ploxion);
   // ⧗ (0.86) les tsoins de l'iPhone remontent à ton boxion (si tu le choisis : ⚙ › Réseau) ; « me demander un tsoin » après une session
   const remontee = creerRemontee({ boxion, distant, signaler: (t) => routeur && routeur.signaler(t),
     proposer: ({ minutes }) => miniDocks.publier({ cle: 'tsoin-session', titre: 'un tsoin de ta session ?', icone: '⧗', sous: minutes + ' min dans l\'app, juste avant ta pause', ouvrir: () => { miniDocks.retirer('tsoin-session'); tsoinNatif.ouvrir({ texte: '' }); },

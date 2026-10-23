@@ -56,8 +56,13 @@ async function sha256(texte) {
 
 export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLocal = [], lireLocal = null, lireBionLocal = null, estAdmin = () => false, surMisAJour = null, surInstalle = null }) {
   const NS = 'ploxions', META = 'marketplace';
-  async function liste() { const l = await boxion.get(META, 'installes'); return Array.isArray(l) ? l : []; }
-  async function garderListe(l) { await boxion.put(META, 'installes', [...new Set(l)]); }
+  // (0.99.17) la liste et l'index en MÉMOIRE, relus une fois par lancement : mesuré au faux iPhone (120 ploxions), l'index (273 Ko) traversait
+  // le pont natif plus de 30 fois pendant un tour de l'app. Le dépôt est le seul à les écrire ; installes() les recoupe de toute façon.
+  let memoListe = null, memoIndex = null;
+  async function liste() { if (memoListe) return memoListe.slice(); const l = await boxion.get(META, 'installes'); memoListe = Array.isArray(l) ? l : []; return memoListe.slice(); }
+  async function garderListe(l) { memoListe = [...new Set(l)]; await boxion.put(META, 'installes', memoListe.slice()); }
+  async function lireIndex() { if (memoIndex) return memoIndex; const i = await boxion.get(META, 'installes-index').catch(() => null); if (i && !memoIndex) memoIndex = i; return memoIndex; }
+  async function ecrireIndex(i) { memoIndex = i; await boxion.put(META, 'installes-index', i).catch(() => {}); }
   // (0.99.3) PATIENT : le labo répond 429 (trop de requêtes) quand on installe ou met à jour en rafale (6 à la fois) ; avant, un bion qui
   // recevait 429 était noté ABSENT pendant 7 jours (56 bions valides bannis, 140 ploxions installés sans leurs bions). On réessaie (Retry-After,
   // sinon 0,7 s · 1,4 s · 2,8 s) ; seul un vrai 404 / 410 veut dire « n'existe pas ».
@@ -74,10 +79,14 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
   // (0.99.6) l'entrée d'index d'un ploxion (léger : jamais son code) ; majIndex la pose ou la retire SANS relire les autres
   const entreeIndex = (p) => ({ nom: p.nom, icone: p.icone, origine: p.origine, hash: p.hash, etag: p.etag || null, taille: (p.js || '').length, installe: p.installe, maj: p.maj || null, bions: Array.isArray(p.bions) ? p.bions.slice(0, 40) : [],
     manq: Array.isArray(p.manquants) ? p.manquants.length : null,   /* null = on ne sait pas : la réparation le regarde */ composes: p.js ? ploxionsComposes(p.js, p.id).slice(0, 20) : [] });
+  // (0.99.17) surEcrit(id, doc) : appelé quand un ploxion entier est en mémoire (installé, mis à jour, réparé, relu pour l'index) ; l'app y
+  // calcule ce qui dépend du code (son flux pour la map) une fois, au lieu de le relire plus tard à travers le pont
+  let surEcrit = null; const ecrit = (id, p) => { if (surEcrit && p && typeof p.js === 'string') { try { surEcrit(id, p); } catch (e) { /* */ } } };
   async function majIndex(id, p) {
-    const idx = await boxion.get(META, 'installes-index').catch(() => null); if (!idx) return;   // pas d'index : il se fera à la demande
+    ecrit(id, p);
+    const idx = await lireIndex(); if (!idx) return;   // pas d'index : il se fera à la demande
     if (p) idx[id] = entreeIndex({ id, ...p }); else delete idx[id];
-    await boxion.put(META, 'installes-index', idx).catch(() => {});
+    await ecrireIndex(idx);
   }
   // (0.99.6) le labo dit 429 malgré la patience : plus aucun bion demandé pendant une minute (au lieu de marteler, et de ralentir tout le reste)
   let sature = 0; const echecs = new Set();
@@ -116,6 +125,7 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
   }
 
   return {
+    set surEcrit(f) { surEcrit = typeof f === 'function' ? f : null; },
     source,
     /** complète les bions des ploxions déjà installés (règle « déclarés + touchés », 0.8) : une fois, en ligne */
     async completerBions({ max = 8, pause = 300 } = {}) {
@@ -169,17 +179,17 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
     // porte tout ce qu'il faut (dates, bions, manquants, composés) et se tient à jour ENTRÉE PAR ENTRÉE ; seuls les ploxions absents de
     // l'index sont relus, une fois.
     async installes() {
-      const ids = await liste(), idx = (await boxion.get(META, 'installes-index').catch(() => null)) || {};
+      const ids = await liste(), idx = (await lireIndex()) || {};
       const manque = ids.filter(id => !(idx[id] && idx[id].bions));
       if (!manque.length) return ids.map(id => ({ id, ...idx[id] }));   // (0.60) l'index porte aussi les bions (la face du dessus du cube)
       // une seule reconstruction à la fois : au démarrage, cinq appels simultanés relisaient chacun tous les ploxions (le gel de RS-7)
       if (!reconstruction) reconstruction = (async () => {
-        for (const id of manque) { const p = await boxion.get(NS, id); if (p) idx[id] = entreeIndex(p); }
+        for (const id of manque) { const p = await boxion.get(NS, id); if (p) { idx[id] = entreeIndex(p); ecrit(id, p); } }
         for (const k of Object.keys(idx)) if (!ids.includes(k)) delete idx[k];
-        await boxion.put(META, 'installes-index', idx).catch(() => {});
+        await ecrireIndex(idx);
       })().finally(() => { reconstruction = null; });
       await reconstruction;
-      const fini = (await boxion.get(META, 'installes-index').catch(() => null)) || idx;
+      const fini = (await lireIndex()) || idx;
       return ids.filter(id => fini[id]).map(id => ({ id, ...fini[id] }));
     },
     async installer(id, meta = {}, progres = null) {
@@ -362,7 +372,9 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       return { ploxions: out.sort((a, b) => b.liberable - a.liberable), bions: bs, totaux: { bundles, bions, tout: bundles + bions, orphelins: bs.filter(b => !b.utilisePar.length) } };
     },
     /** la taille d'un ploxion installé (son bundle seul) */
-    async taille(id) { const p = await boxion.get(NS, id); return p ? (p.js || '').length : 0; },
+    async taille(id) {   // (0.99.17) l'index porte la taille : le ploxion entier (jusqu'à 2 Mo) ne traverse plus le pont pour un nombre
+      const e = ((await lireIndex()) || {})[id]; if (e && Number.isFinite(e.taille)) return e.taille;
+      const p = await boxion.get(NS, id); return p ? (p.js || '').length : 0; },
     // les plus utilisés : les heures passées, tout le Nexus (labo : /px/marketplace/populaires.json), en cache pour le mode avion
     async populaires({ reseau = true } = {}) {
       if (!reseau) { const d = await boxion.get(META, 'populaires'); return d ? { ...d, horsLigne: true } : { ploxions: [], zero: [], horsLigne: true }; }

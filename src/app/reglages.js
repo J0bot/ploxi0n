@@ -64,7 +64,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
       const e = compte.etat(), c = hud.config(), verrous = R().verrous(), cat = R().catalogue().filter(p => !p.interne), P = prefs ? prefs.lire() : null;
       const [nRoutes, installes, bions, u] = await Promise.all([boxion.list('routes').then(l => l.length).catch(() => 0), depot.installes().catch(() => []), depot.bions ? depot.bions().catch(() => []) : [], boxion.get('usage', 'stats').catch(() => null)]);
       const usage = (u && u.px) || {};
-      const tailles = {}; for (const p of installes) tailles[p.id] = depot.taille ? await depot.taille(p.id) : 0;
+      const tailles = {}; for (const p of installes) tailles[p.id] = Number.isFinite(p.taille) ? p.taille : (depot.taille ? await depot.taille(p.id) : 0);
       const wn = W.ploxi0nWebNatif ? W.ploxi0nWebNatif.etat() : { natif: false, faits: [], erreurs: {} }, sp = sante ? await sante.partage().catch(() => ({})) : null;
       // l'état de chaque catégorie, en quelques mots (la ligne de l'accueil des réglages)
       const etats = {
