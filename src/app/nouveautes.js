@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.17', titre: 'Plus léger, et le début du Rust', points: [
+    '⚡ Avec beaucoup de ploxions : les réglages et la map ne relisent plus le code entier de chaque ploxion. Pendant un tour de l\'app, plus aucun ploxion n\'est relu à travers le pont natif.',
+    '🦀 Le cœur de l\'app en Rust commence (la basse partagée, Autour, les langues), prouvé identique au JS, et le digesteur des ploxions : la route vers « tout natif ».',
+  ] },
   { v: '0.99.16', titre: 'Le pas à pas', points: [
     '⊞ Synthé › « à moi » : 16 pas, 8 notes de la gamme. Touche une case : la note est posée (et tu l\'entends). ▷ la boucle la joue, la colonne qui joue s\'allume.',
     '⇣ partir du motif, ⁂ hasard, ∅ effacer. Gardé pour la prochaine fois ; « dans Proche », toute la salle joue ton pas à pas.',

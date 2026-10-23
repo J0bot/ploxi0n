@@ -26,7 +26,7 @@ const NS_LS = 'localStorage';
 const NS_BOX = (ns) => 'box:' + ns;
 // (0.39, RS-7 : « ça reste bloqué » au lancement) /marketplace et /bions sont des fichiers DE L'APP : avant, en mode connecté, ils partaient
 // sur labo.j0bot.ch — sans délai, sur un réseau faible, le démarrage attendait pour toujours
-const ASSETS = /^\/(ploxions|assets|vendor|icons|fonts|img|data|marketplace|bions)\//;
+const ASSETS = /^\/(ploxions|assets|vendor|icons|fonts|img|data|marketplace|bions|coeur)\//;   // (0.99.17) coeur : le cœur Rust (WASM)
 
 export async function installerShim({ boxion, fenetre = globalThis.window, routeur = null, journalSortant = null, relais = null, distant = null } = {}) {
   if (!boxion) throw new Error('shim jOS : boxion_local manquant');

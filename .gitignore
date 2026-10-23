@@ -6,3 +6,4 @@ ios/App/App/public/
 ios/App/Pods/
 tools/.registre-cache.json
 build/
+rust/target/

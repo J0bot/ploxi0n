@@ -1,6 +1,6 @@
 {
   "name": "ploxi0n",
-  "version": "0.99.16",
+  "version": "0.99.17",
   "private": true,
   "type": "module",
   "description": "ploxi0n v1 : les ploxions du xerboxion sur iOS, 100 % hors ligne (Capacitor + boxion_local)",
@@ -13,6 +13,8 @@
     "extraire": "node tools/extraire-ploxions.mjs",
     "audit": "node tools/audit-ploxions.mjs",
     "test": "node --test tests/*.test.mjs",
+    "rust": "node tools/rust.mjs",
+    "digerer": "node tools/digestion/recolter.mjs && rust/target/release/digerer build/digestion/ploxions build/digestion/digestion.json docs/DIGESTION-ETAT.md",
     "faux-iphone": "node tools/faux-iphone/faux-iphone.mjs http://localhost:4173/ build/faux-iphone --script tools/faux-iphone/parcours-app.mjs",
     "sync": "npx cap sync ios",
     "postinstall": "node tools/spm-capacitor8.mjs"

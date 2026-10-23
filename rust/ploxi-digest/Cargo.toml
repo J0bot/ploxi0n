@@ -1,0 +1,17 @@
+[package]
+name = "ploxi-digest"
+version = "0.1.0"
+edition = "2024"
+description = "La digestion des ploxions : lire le code JS d'un ploxion (sans l'exécuter) et dire de quoi il est fait, et par quelle voie il devient natif"
+publish = false
+
+[lib]
+crate-type = ["rlib"]
+
+[[bin]]
+name = "digerer"
+path = "src/main.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

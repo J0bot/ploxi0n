@@ -119,7 +119,8 @@ const SORTES = [[/scooter|trotti|kick/i, 'trottinette', '⋈'], [/e-?bike|e-?vel
 export function lireVehicules(json) {
   const res = Array.isArray(json) ? json : (json && (json.results || json.features)) || [], out = [], vus = new Set();
   for (const r of res.slice(0, 1000)) {
-    const a = (r && (r.attributes || r.properties)) || r || {};
+    if (!r || typeof r !== 'object') continue;   // (0.99.17, trouvé par le golden Rust) un null du réseau faisait tout planter
+    const a = r.attributes || r.properties || r;
     const v = (k, long) => (a[k] != null ? a[k] : a['ch.bfe.sharedmobility.' + long]);
     const g = r.geometry || {}, co = Array.isArray(g.coordinates) ? g.coordinates : null;
     const lng = +(g.x != null ? g.x : co ? co[0] : (a.lon != null ? a.lon : a.lng)), lat = +(g.y != null ? g.y : co ? co[1] : a.lat);

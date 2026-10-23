@@ -2,7 +2,17 @@
 
 > « Enfait tu fais du js, mais pour plus tard je veux du rust uniquement, avec du bevy ou autre truc. »
 
-C'est une **décision de RS-7**, pas encore un chantier. Ce qui suit est le chemin proposé ; rien n'est commencé dans ploxi0n.
+C'est une **décision de RS-7**. Le 23.10, elle se précise : « le plus de truc en Rust possible ; prendre tous les ploxions et les rendre
+natifs le plus possible : une digestion automatique » (**docs/DIGESTION.md**).
+
+**Commencé (0.99.17)** : `rust/` (un workspace) avec `ploxi-coeur` (les bions purs en Rust, une seule porte pour le WASM et pour iOS,
+prouvés égaux au JS par `tools/rust-golden.mjs`) et `ploxi-digest` (le digesteur des ploxions). `npm run rust` construit et vérifie tout.
+
+**Mesuré (0.99.17)** :
+- le JS de l'app ne pèse presque rien ; le coût vient du pont natif et du rendu web ;
+- le Rust en WASM dans la vue web est **plus lent** que le JS (la porte coûte plus que le travail) ;
+- le Rust gagne donc en natif, sans vue web. L'ordre des paliers ci-dessous en sort renforcé : d'abord le cœur natif (plus de pont),
+  puis le rendu natif.
 
 ## Ce qui existe déjà en Rust (composer, ne pas rebâtir)
 
@@ -40,7 +50,7 @@ puis migrent un par un quand un ploxion gagne vraiment à être en Rust (un jeu,
 
 ## Les contraintes d'ici (sessions dans le cloud)
 
-- **Pas de Mac** : le Rust pour iOS (`aarch64-apple-ios`) ne se compile pas ici, pas plus que le Swift. Le WASM, si (`cargo` est là). Les
+- **Pas de Mac** : le Swift ne se compile pas ici. **Le Rust pour iOS, si** (0.99.17) : `cargo rustc --target aarch64-apple-ios --crate-type staticlib` donne la bibliothèque statique sans le SDK d'Apple ; seule l'édition des liens se fait dans Xcode (la CI). Le WASM, si (`cargo` est là). Les
   paliers 2 et 3 en WASM peuvent avancer et être testés ici ; les paliers 1 et 3 natif se vérifient sur TestFlight (Codemagic, `docs/TESTFLIGHT.md`).
 - Le faux iPhone (`tools/faux-iphone/`) teste le pont Capacitor : il ne verra pas un binaire natif.
 - La taille : un Bevy en WASM pèse plusieurs Mo, contre ~170 Ko pour le clicker JS. Il faut ne garder que les plugins de Bevy utiles,
