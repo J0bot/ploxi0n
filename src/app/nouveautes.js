@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.96.0', titre: 'L\'atelier des peaux : la fractale des UI', points: [
+    '◈ L\'atelier des peaux (⚙ › Apparence) : neuf peaux autour de la tienne ; touche celle qui te parle, tu zoomes dedans ; ⊖ dézoome, hasard saute ailleurs. Les knobs tournent la peau gène par gène, et toute l\'app suit. ✓ garder : elle est à toi.',
+    '〰 Un troisième lot de peaux : gothique, evangelion, eldritch.',
+  ] },
   { v: '0.95.0', titre: 'Seize peaux, un guide', points: [
     '〰 L\'organique a seize peaux : nerfs, vaisseaux, câbles, gelée, terminal ; et les aliens : xéno (Giger), cyberpunk, cyberglysm, tribal tekkno, mycélium, abysses, portail, cristal… ⚙ › Apparence › L\'organique : essaie-les en direct.',
     '🧭 Un nouveau guide : quatre gestes, sur la vraie interface. Et ⓘ « c\'est quoi ça ? » dans la barre des koins : touche n\'importe quoi, l\'app te dit ce que c\'est.',

@@ -1,4 +1,4 @@
-// @bion excroissances — ce qui pousse sur les cellules et les synapses : cils, ventouses, épines, vertèbres, faisceaux (de la géométrie pure, sans DOM) | api: faisceau, vertebres, cils, ventouses, epines, coulures, formeSvg
+// @bion excroissances — ce qui pousse sur les cellules et les synapses : cils, ventouses, épines, vertèbres, faisceaux (de la géométrie pure, sans DOM) | api: faisceau, vertebres, cils, ventouses, epines, coulures, ogives, rayures, formeSvg
 // (0.95, le deuxième lot de peaux. RS-7 22.10 : « j'aime bien l'organisation de câble et la texture de gelée, mais donne-moi d'autres trucs
 // bien plus alien »). Une forme = { t: 'rect' | 'poly' | 'rond', … } dans les coordonnées des cellules ; neurones.js les pose dans la membrane,
 // où le goo les fond dans la paroi (un cil sort du mur, une vertèbre gonfle le tube). Tout est FIXE : un hasard tiré des positions (le même
@@ -58,9 +58,25 @@ export function coulures(q, { n = 3, long = 16, large = 6 } = {}) {
   }
   return out;
 }
+/** les ogives : une arche brisée sur le haut d'une cellule (la cathédrale) */
+export function ogives(q, { haut = 22 } = {}) {
+  if (q.w < 50) return [];
+  const h = Math.min(haut, q.w * 0.22), l = Math.min(q.w * 0.5, 120);
+  return [{ t: 'poly', pts: [[q.x + q.w / 2 - l / 2, q.y + 4], [q.x + q.w / 2 - l * 0.18, q.y - h * 0.55], [q.x + q.w / 2, q.y - h], [q.x + q.w / 2 + l * 0.18, q.y - h * 0.55], [q.x + q.w / 2 + l / 2, q.y + 4]] }];
+}
+/** les bandes d'alerte d'une liaison : des parallélogrammes en biais, une couleur à eux (NERV) */
+export function rayures(p, { pas = 8, couleur = '#ffff00' } = {}) {
+  const horiz = p.w > p.h, long = horiz ? p.w : p.h, out = [];
+  for (let s = 2; s + pas / 2 < long; s += pas) {
+    const a = s, b = s + pas / 2;
+    out.push({ t: 'poly', couleur, pts: horiz ? [[p.x + a, p.y + p.h], [p.x + b, p.y + p.h], [p.x + b + p.h * 0.6, p.y], [p.x + a + p.h * 0.6, p.y]]
+      : [[p.x, p.y + a], [p.x, p.y + b], [p.x + p.w, p.y + b + p.w * 0.6], [p.x + p.w, p.y + a + p.w * 0.6]] });
+  }
+  return out;
+}
 /** une forme → du SVG (décalée de x0, y0) */
 export function formeSvg(f, x0, y0, couleur) {
-  const r1 = (x) => Math.round(x * 2) / 2;
+  const r1 = (x) => Math.round(x * 2) / 2; couleur = f.couleur || couleur;
   if (f.t === 'rond') return '<circle cx="' + r1(f.cx - x0) + '" cy="' + r1(f.cy - y0) + '" r="' + r1(f.r) + '" fill="' + couleur + '"/>';
   if (f.t === 'poly') return '<polygon points="' + f.pts.map(([x, y]) => r1(x - x0) + ',' + r1(y - y0)).join(' ') + '" fill="' + couleur + '"/>';
   return '<rect x="' + r1(f.x - x0) + '" y="' + r1(f.y - y0) + '" width="' + r1(f.w) + '" height="' + r1(f.h) + '" rx="' + r1(Math.min(f.w, f.h) / 2) + '" fill="' + couleur + '"/>';

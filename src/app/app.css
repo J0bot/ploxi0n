@@ -1146,7 +1146,7 @@ html.px-organique{
   --memb:#007d28; --memb2:#37008a;
 }
 html.px-organique :is([data-neurone],.px-neurone){--n-fond:var(--surface);--n-bord:var(--memb)}
-html.px-organique .px-neurones-dd{opacity:.8}   /* (0.95) le dedans en verre : le fond passe à travers */
+html.px-organique .px-neurones-dd{opacity:var(--n-verre,.8)}   /* (0.95) le dedans en verre : le fond passe à travers */
 html.px-organique :is([data-neurone],.px-neurone):is(.on,:active){--n-bord:var(--memb2)}
 /* le vert et le violet alternent, comme sur les planches (les membranes passent de l'un à l'autre dans les tubes) */
 html.px-organique .px-koin-cases>button{--n-bord:var(--memb2)}
@@ -1194,37 +1194,55 @@ html.px-organique .px-modes .px-neurone.on,html.px-organique .px-vues .px-neuron
 /* (0.95) LES CINQ PEAUX DE L'ORGANIQUE (src/bions/membrane.js ; ⚙ › Apparence › L'organique) : la forme est dans les filtres, ici le verre
    du dedans et la teinte des membranes. RS-7 : « donne-moi plusieurs versions en même temps, je veux pouvoir comparer ». */
 html.px-organique[data-px-variante="vaisseaux"]{--memb:#029402;--memb2:#310573}
-html.px-organique[data-px-variante="vaisseaux"] .px-neurones-dd{opacity:.7}
+html.px-organique[data-px-variante="vaisseaux"]{--n-verre:.7}
 html.px-organique[data-px-variante="cables"]{--memb:#0cdb0c;--memb2:#37008a}
-html.px-organique[data-px-variante="cables"] .px-neurones-dd{opacity:.88}
+html.px-organique[data-px-variante="cables"]{--n-verre:.88}
 html.px-organique[data-px-variante="gelee"]{--memb:#007d28;--memb2:#37008a}
-html.px-organique[data-px-variante="gelee"] .px-neurones-dd{opacity:.95}
+html.px-organique[data-px-variante="gelee"]{--n-verre:.95}
 /* le hand terminal de The Expanse, dans SES couleurs : le verre (#222222 translucide), les arêtes vert pâle #8bc88b, les coins coupés */
 html.px-organique[data-px-variante="terminal"]{--memb:#8bc88b;--memb2:#b0b0b0;--acc:#8bc88b;--acc2:#029402}
-html.px-organique[data-px-variante="terminal"] .px-neurones-dd{opacity:.5}
+html.px-organique[data-px-variante="terminal"]{--n-verre:.5}
 /* (0.95) LE DEUXIÈME LOT, plus alien (câbles × gelée) — toujours la seule palette de RS-7 */
 .px-f-photo{flood-color:var(--bio)}
 html.px-organique[data-px-variante="cablegel"]{--memb:#0cdb0c;--memb2:#37008a}
-html.px-organique[data-px-variante="cablegel"] .px-neurones-dd{opacity:.95}
+html.px-organique[data-px-variante="cablegel"]{--n-verre:.95}
 html.px-organique[data-px-variante="faisceaux"]{--memb:#00fe44;--memb2:#310573}
-html.px-organique[data-px-variante="faisceaux"] .px-neurones-dd{opacity:.92}
+html.px-organique[data-px-variante="faisceaux"]{--n-verre:.92}
 html.px-organique[data-px-variante="mycelium"]{--memb:#8bc88b;--memb2:#029402}
-html.px-organique[data-px-variante="mycelium"] .px-neurones-dd{opacity:.9}
+html.px-organique[data-px-variante="mycelium"]{--n-verre:.9}
 html.px-organique[data-px-variante="xeno"]{--memb:#37008a;--memb2:#4d4d4d;--surface:#191919;--surface2:#222222}
-html.px-organique[data-px-variante="xeno"] .px-neurones-dd{opacity:.97}
+html.px-organique[data-px-variante="xeno"]{--n-verre:.97}
 html.px-organique[data-px-variante="abysses"]{--memb:#310573;--memb2:#20024d;--bio:#0cdb0c}
-html.px-organique[data-px-variante="abysses"] .px-neurones-dd{opacity:.85}
+html.px-organique[data-px-variante="abysses"]{--n-verre:.85}
 html.px-organique[data-px-variante="cristal"]{--memb:#d9d9d9;--memb2:#8bc88b}
-html.px-organique[data-px-variante="cristal"] .px-neurones-dd{opacity:.55}
+html.px-organique[data-px-variante="cristal"]{--n-verre:.55}
 .px-f-contour{flood-color:var(--n-contour,#191919)}
 .px-f-glitch1{flood-color:var(--memb2)}.px-f-glitch2{flood-color:#00fe44}
 html.px-organique[data-px-variante="portail"]{--memb:#0cdb0c;--memb2:#00fe44;--surface:#014116;--surface2:#004817}
-html.px-organique[data-px-variante="portail"] .px-neurones-dd{opacity:.9}
+html.px-organique[data-px-variante="portail"]{--n-verre:.9}
 html.px-organique[data-px-variante="melange"]{--memb:#007d28;--memb2:#37008a;--bio:#00fe44}
-html.px-organique[data-px-variante="melange"] .px-neurones-dd{opacity:.93}
+html.px-organique[data-px-variante="melange"]{--n-verre:.93}
 html.px-organique[data-px-variante="cyberpunk"]{--memb:#00fe44;--memb2:#37008a;--n-contour:#ffff00;--surface:#191919;--surface2:#222222}
-html.px-organique[data-px-variante="cyberpunk"] .px-neurones-dd{opacity:.9}
+html.px-organique[data-px-variante="cyberpunk"]{--n-verre:.9}
 html.px-organique[data-px-variante="cyberglysm"]{--memb:#0cdb0c;--memb2:#37008a}
-html.px-organique[data-px-variante="cyberglysm"] .px-neurones-dd{opacity:.92}
+html.px-organique[data-px-variante="cyberglysm"]{--n-verre:.92}
 html.px-organique[data-px-variante="tribal"]{--memb:#007d28;--memb2:#014116;--n-contour:#191919;--surface:#191919}
-html.px-organique[data-px-variante="tribal"] .px-neurones-dd{opacity:.96}
+html.px-organique[data-px-variante="tribal"]{--n-verre:.96}
+
+/* ◈ (0.96) L'ATELIER DES PEAUX (src/lot/atelier-peaux.js) : la grille fractale (3 × 3 petits xers, chacun sa peau), les knobs (jOSKnob) */
+.px-atelier .px-at-g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0}
+.px-at-t{position:relative;aspect-ratio:1/1;padding:9px;border:0;background:transparent;display:grid;grid-template:auto 1fr 1fr/1fr 1fr;gap:7px;border-radius:14px}
+.px-at-t>i{display:block;border-radius:9px;min-height:14px}
+.px-at-t>.px-at-barre{grid-column:1/3;height:12px;min-height:0}
+.px-at-t>i:nth-child(odd){--n-bord:var(--memb2)}
+.px-at-t.px-at-ici{outline:1px dashed var(--grave);outline-offset:2px}
+.px-at-z{margin:2px 0 8px;font:500 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--grave)}
+.px-at-b{display:flex;gap:8px;margin-bottom:14px}.px-at-b button{flex:1;min-height:44px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:600 16px var(--police)}
+.px-at-b button.p{flex:2;color:var(--bio)}
+.px-at-k .jkn-panel{justify-content:space-between;gap:8px 4px}
+.px-at-k .jkn svg path{fill:var(--surface);stroke:var(--memb)}
+.px-at-k .jkn svg circle[fill^="rgba"]{fill:var(--bord2)}
+.px-at-k .jkn__val{color:var(--acc)}.px-at-k .jkn__lab{color:var(--muted)}
+.px-at-d,.px-at-m{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.px-at-d button,.px-at-mp button{min-height:34px;padding:0 10px;border-radius:10px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:500 12px var(--mono)}
+.px-at-mp{display:inline-flex;gap:2px}

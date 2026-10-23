@@ -126,6 +126,9 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
           + bascule('data-pb="glyphes"', P.glyphes !== false, 'Les glyphes du xerboxion', 'des glyphes au trait pour les icônes et l\'interface ; coupé : les emoji du labo') + seg('styleIcones', [['xerboxion', 'xerboxion'], ['glyphe', 'glyphe seul']], P.styleIcones || 'xerboxion', 'Style des icônes', 'xerboxion : la forme dit le type (losange, xerkion, cubion…) et le glyphe est au centre ; glyphe seul : le glyphe en grand. Chaque app peut avoir le sien (appui long › son icône)') + bascule('data-pb="pxChill"', P.pxChill !== false, 'Chill-tekk pour tous les ploxions', 'leurs couleurs, polices, boutons et champs suivent ceux de l\'app (les variables du xer, --xr-*) ; coupé : chacun garde son style du labo')
           + seg('variante', Object.entries(VARIANTES).filter(([, v]) => !v.lot).map(([k, v]) => [k, v.nom]), P.variante || 'nerfs', 'L\'organique · lot 1', 'les peaux du xer organique : compare-les en direct')
           + seg('variante', Object.entries(VARIANTES).filter(([, v]) => v.lot === 2).map(([k, v]) => [k, v.nom]), P.variante || 'nerfs', 'L\'organique · lot 2 (alien)', 'câbles × gelée, puis Giger, Rick et Morty, cyberpunk, cyberglysm, tribal tekkno…')
+          + seg('variante', Object.entries(VARIANTES).filter(([, v]) => v.lot === 3).map(([k, v]) => [k, v.nom]), P.variante || 'nerfs', 'L\'organique · lot 3 (d\'autres DA)', 'gothique, evangelion, eldritch…')
+          + (Object.values(VARIANTES).some(v => v.lot === 'tiennes' || v.lot === 'perso') ? seg('variante', Object.entries(VARIANTES).filter(([, v]) => v.lot === 'tiennes' || v.lot === 'perso').map(([k, v]) => [k, v.nom]), P.variante || 'nerfs', 'Tes peaux', 'celles que tu as trouvées dans l\'atelier') : '')
+          + '<div class="l"><span>◈ L\'atelier des peaux<small>la fractale des UI : zoome dans les peaux, tourne les knobs, trouve la tienne</small></span><button data-a="atelier">ouvrir</button></div>'
           + bascule('data-pb="grain"', P.grain, 'Patine', 'le grain usé des plaques')
           + bascule('data-pb="contraste"', P.contraste === 'fort', 'Contraste fort', 'textes et bords plus clairs')
           + bascule('data-pb="calme"', P.calme, 'Calme', 'plus aucune animation, même aux gestes')
@@ -314,6 +317,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
         else if (a === 'nouveautes') { if (W.ploxi0nNouveautes) W.ploxi0nNouveautes.tout(); }
         else if (a === 'barre-haut') { if (W.ploxi0nBarreHaut) W.ploxi0nBarreHaut.composer(); }
         else if (a === 'tuto') { if (W.ploxi0nTuto) W.ploxi0nTuto.montrer(); }
+        else if (a === 'atelier') { R().ouvrir('atelier-peaux'); }
         else if (a === 'quoi') { if (W.ploxi0nTuto && W.ploxi0nTuto.cestQuoi) W.ploxi0nTuto.cestQuoi(); }
         else if (a === 'astuces') { if (W.ploxi0nTuto && W.ploxi0nTuto.remettreAstuces) { await W.ploxi0nTuto.remettreAstuces(); b.textContent = 'c\'est fait'; } }
         else if (a === 'widgets') { if (W.ploxi0nWidgets) { await W.ploxi0nWidgets.publier(); await new Promise(r => W.setTimeout(r, 700)); } await peindre(); msg('✓ republié : regarde tes widgets (iOS peut prendre quelques secondes)'); }

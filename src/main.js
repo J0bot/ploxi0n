@@ -71,7 +71,9 @@ import { creerMisesAJour } from './marketplace/mises-a-jour.js';
 import { creerRemontee } from './app/remontee-tsoins.js';
 import { creerSysteme } from './lot/systeme.js';
 import { creerKoins } from './app/koins.js';
-import { creerNeurones } from './app/neurones.js';   // 〰 (0.93) les bords organiques, les neurones
+import { creerNeurones } from './app/neurones.js';
+import { creerAtelier } from './lot/atelier-peaux.js';   // ◈ (0.96) l'atelier des peaux : la fractale des UI, les knobs
+import { appliquerCouleurs } from './bions/membrane.js';   // 〰 (0.93) les bords organiques, les neurones
 import { creerMap } from './app/map-hubs.js';
 import { creerAmbiances } from './lot/ambiances.js';
 import { installerAppsALaDemande } from './shim/apps-a-la-demande.js';
@@ -85,7 +87,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G } from './app/glyphes.js';
 
-const VERSION = '0.95.0';
+const VERSION = '0.96.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -144,6 +146,12 @@ async function demarrer() {
   try { const { Preferences } = await import('@capacitor/preferences'); const l = +((await sous3sPre(Preferences.get({ key: 'ploxi0n.espace-libre' }))).value || 0), v = (await sous3sPre(Preferences.get({ key: 'ploxi0n.caches-vides' }))).value;
     if (l) bootLog('espace libre : ' + (l / 1e9).toFixed(1) + ' Go' + (l < 1.5e9 ? ' ⚠ presque plein' : '') + (v ? ' · caches vidés (' + v + ')' : '')); } catch (e) { /* */ }
   const prefs = creerPrefs({ boxion }); await prefs.pret; prefs.appliquer();   // l'apparence avant le premier dessin
+  // ◈ (0.96) tes peaux (l'atelier) rejoignent les variantes AVANT le premier dessin ; une peau qui porte ses couleurs les pose sur <html>
+  const atelier = creerAtelier({ W: window, boxion, prefs, vibrer: (x) => { try { window.jOSNatif && window.jOSNatif.haptique && window.jOSNatif.haptique(x); } catch (e) { /* */ } } });
+  await atelier.charger().catch(() => {});
+  // les couleurs suivent la peau AFFICHÉE (<html data-px-variante>), d'où qu'elle vienne : les réglages, l'atelier, un parcours
+  const couleursPeau = () => appliquerCouleurs(document.documentElement, document.documentElement.getAttribute('data-px-variante'));
+  couleursPeau(); new MutationObserver(couleursPeau).observe(document.documentElement, { attributes: true, attributeFilter: ['data-px-variante'] });
   creerNeurones().installer();   // 〰 (0.93) data-neurones / data-neurone : les cellules collées comme des neurones (html.px-organique)
   boot(16, 'réglages · apparence');
   // 🖼 le fond d'écran (photo ou motif gravé), avant le premier dessin aussi
@@ -406,6 +414,7 @@ async function demarrer() {
   internes.push(tsoinNatif.ploxion);
   // ▤ ≈ (0.88) le lot de ploxions de RS-7 : le système (btop) et les ambiances (Blanket), dans l'app, hors ligne
   const natifLot = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  internes.push(atelier.ploxion);
   internes.push(creerSysteme({ W: window,
     systeme: natifLot ? () => PloxiApple.systeme() : null,
     appareil: natifLot ? async () => { const { Device } = await import('@capacitor/device'); const i = await Device.getInfo(); return { model: i.model, operatingSystem: i.operatingSystem, osVersion: i.osVersion, memUsed: i.memUsed }; } : null,

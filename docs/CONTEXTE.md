@@ -102,6 +102,21 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.96 (23.10)** — RS-7 : « on garde tout, il faut pouvoir choisir entre toutes ces possibilités ; mes préférées : xéno et cyberpunk ; il faut
+découvrir la fractale des UI, avoir des knobs pour modifier le UI selon un générateur fractal, c'est des formules au final le UI ; dans
+organique, le but c'est de trouver le UI qui est parfait pour toi ; tout le monde a une vision différente ; des UI pour tous les types de DA ».
+- `src/bions/genome.js` : GENES (23 gènes, 0..1 : le goo, l'onde, la paroi… les excroissances, deux couleurs de la PALETTE de RS-7) ;
+  `genomeDe(variante)`, `versVariante(g)`, `muter`, `croiser`, `grille(g, ecart, graine)` (3 × 3 le long de deux directions tirées : la fractale).
+- `src/lot/atelier-peaux.js` (ploxion interne « atelier-peaux ») : la grille (chaque tuile = un petit xer, `data-neurones-variante="_at<i>"`),
+  toucher = zoomer (l'écart × 0,5), ⊖ dézoomer (× 2), hasard, ‹ revenir ; les knobs = **jOSKnob du labo** (RS-7 : « on a déjà les jOSKnob » —
+  composé, pas refait ; embarqué dans `public/bions/jOSKnob.js` tel que le labo le sert : ça complète aussi beats, spiderion-sim, bras, noyau,
+  qfractale, forge-flow) ; la peau « perso » suit en direct ; ✓ garder → `reglages/peaux`, un tsoin « peau ».
+- `membrane.js` : `redefinir` (en direct), `appliquerCouleurs` (une peau qui porte ses couleurs ; main.js les suit sur `data-px-variante`) ;
+  le dedans en `--n-verre`. `neurones.js` : une peau par groupe, ce qui pousse seulement sur les cellules ≥ 56 px.
+- Lot 3 : gothique (ogives), evangelion (bandes d'alerte), eldritch. Faux iPhone : `parcours-atelier.mjs`, `parcours-variantes.mjs` (PX_VARIANTES).
+- ⏭ RS-7 : « bientôt réactif au son ; le téléphone vivant : la RAM, la température, le stockage, le calcul, dans les membranes, sans avoir
+  besoin de lire l'info » → brancher des gènes sur des signaux (le rapide sur ce qui ne coûte rien : le halo, la respiration ; le lent sur la forme).
+
 **0.95 en cours (22.10, poussé : `b27eaa6`)** — le guide (`src/app/guide.js` : 4 étapes sur la vraie interface, les astuces une fois,
 « ⓘ c'est quoi ça ? ») ; l'organique translucide (nerfs, vaisseaux, câbles) ; tous les ploxions (--xr-*) et le HUD (barre, dock, modes, vues)
 en membranes ; les bions `src/bions/synapses.js` et `src/bions/membrane.js` ; CINQ PEAUX à comparer (nerfs, vaisseaux, câbles, gelée,

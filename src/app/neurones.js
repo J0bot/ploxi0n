@@ -15,7 +15,7 @@
 //   data-neurones-cellules="button" (0.95) les cellules par un sélecteur (sans marquer chaque élément) : elles reçoivent la classe px-neurone
 import { synapses, koinsDe, SEUIL } from '../bions/synapses.js';
 import { VARIANTES, filtres, idFiltre, variante } from '../bions/membrane.js';
-import { faisceau, vertebres, cils, ventouses, epines, coulures, formeSvg } from '../bions/excroissances.js';
+import { faisceau, vertebres, cils, ventouses, epines, coulures, ogives, rayures, formeSvg } from '../bions/excroissances.js';
 export { VARIANTES };
 export { synapses, koinsDe, SEUIL };
 const NS = 'http://www.w3.org/2000/svg';
@@ -40,8 +40,8 @@ export function creerNeurones({ W = globalThis.window } = {}) {
       cs.push({ x: r1((r.left - cr.left) / s + c.scrollLeft - c.clientLeft), y: r1((r.top - cr.top) / s + c.scrollTop - c.clientTop), w: r1(r.width / s), h: r1(r.height / s),
         rx: Math.min(nombre(st.borderTopLeftRadius, 12), Math.min(r.width, r.height) / s / 2), fond: st.getPropertyValue('--n-fond').trim() || '#0f0b18', bord: st.getPropertyValue('--n-bord').trim() || '#3a3050' });
     }
-    const v = variante(D), pv = VARIANTES[v];
-    const cle = JSON.stringify([v, fin, seuil, cs]);
+    const vg = c.getAttribute('data-neurones-variante'), v = vg && VARIANTES[vg] ? vg : variante(D), pv = VARIANTES[v];   // (0.96) une tuile de l'atelier : sa propre peau
+    const cle = JSON.stringify([v, pv, fin, seuil, cs]);
     if (cle === g.cle) return; g.cle = cle;
     if (!cs.length) { if (g.svg) g.svg.innerHTML = ''; return; }
     if (!g.svg || !g.svg.isConnected) { g.svg = D.createElementNS(NS, 'svg'); g.svg.setAttribute('class', 'px-neurones'); g.svg.setAttribute('aria-hidden', 'true'); c.insertBefore(g.svg, c.firstChild); }
@@ -53,7 +53,9 @@ export function creerNeurones({ W = globalThis.window } = {}) {
     const ponts = synapses(cs, { seuil, autres: fin ? 0.2 : 0.5 }).flatMap(p => faisceau(p, geo.faisceau || 1));
     const pousses = [
       ...(geo.vertebres ? ponts.flatMap(p => vertebres(p, geo.vertebres)) : []),
-      ...(fin ? [] : cs.flatMap(q => [...(geo.cils ? cils(q, geo.cils) : []).map(f => [f, q]), ...(geo.ventouses ? ventouses(q, geo.ventouses) : []).map(f => [f, q]), ...(geo.epines ? epines(q, geo.epines) : []).map(f => [f, q]), ...(geo.coulures ? coulures(q, geo.coulures) : []).map(f => [f, q])])),
+      ...(geo.rayures ? ponts.flatMap(p => rayures(p, geo.rayures)) : []),
+      // ce qui pousse sur les cellules : seulement les assez grandes (une épine sur un bouton de 40 px, c'est du bruit)
+      ...(fin ? [] : cs.filter(q => Math.min(q.w, q.h) >= 56).flatMap(q => [...(geo.cils ? cils(q, geo.cils) : []).map(f => [f, q]), ...(geo.ventouses ? ventouses(q, geo.ventouses) : []).map(f => [f, q]), ...(geo.epines ? epines(q, geo.epines) : []).map(f => [f, q]), ...(geo.coulures ? coulures(q, geo.coulures) : []).map(f => [f, q]), ...(geo.ogives ? ogives(q, geo.ogives) : []).map(f => [f, q])])),
     ];
     // (0.95) le terminal : les coins coupés en biais (un octogone), comme le verre du hand terminal et les vieux koins de RS-7
     const cellule = (q, f) => {

@@ -1,4 +1,4 @@
-// @bion membrane — la peau des neurones : les filtres SVG (goo, onde, paroi translucide, âme claire, halo), une recette par variante | api: VARIANTES, filtres, idFiltre, variante
+// @bion membrane — la peau des neurones : les filtres SVG (goo, onde, paroi translucide, âme claire, halo), une recette par variante | api: VARIANTES, filtres, idFiltre, variante, redefinir, appliquerCouleurs
 // (0.95, RS-7 : « fais-en des bions » ; « donne-moi plusieurs versions en même temps, je veux pouvoir comparer et te dire laquelle se rapproche
 // le plus de ce qu'il y a dans mon cerveau »). Une variante = des nombres, pas du code : en ajouter une, c'est une ligne. Composé par
 // src/app/neurones.js ; <html data-px-variante="…"> choisit (prefs.variante, ⚙ › Apparence › Organique).
@@ -7,6 +7,7 @@
 //   chanfrein  les coins coupés en biais (le terminal) au lieu d'arrondis      photophores  des points de lumière (--bio) piqués dans la paroi
 //   contour  un trait autour (--n-contour, noir par défaut), en px : le cartoon (Rick et Morty), le néon double (cyberpunk)
 //   scan  le halo en lignes de balayage      glitch  l'amplitude des bandes décalées + le dédoublement vert / violet (cyberglysm)
+//   couleurs  { memb, memb2, verre, contour } : une peau qui porte ses couleurs (le lot 3, les tiennes) ; sinon celles du CSS
 //   geo  ce qui pousse : { faisceau: n, vertebres, cils, ventouses, epines } (src/bions/excroissances.js)      lot  2 = le deuxième lot à comparer
 export const VARIANTES = {
   nerfs: { nom: 'nerfs', desc: 'paroi translucide, une lumière au milieu', flou: 5, onde: 10, freq: 0.016, epais: 4, paroi: 0.62, ame: 0.5, clair: 0.55, halo: 0.4, gouttes: true },
@@ -30,6 +31,11 @@ export const VARIANTES = {
   cyberpunk: { lot: 2, nom: 'cyberpunk', desc: 'coins coupés, double trait néon (vert, jaune), des fibres, le halo en lignes de balayage', flou: 1.2, onde: 0, freq: 0.02, epais: 2.5, paroi: 1, ame: 0.9, clair: 0.75, halo: 0.8, gouttes: false, chanfrein: true, contour: 1.5, scan: true, geo: { faisceau: 2 } },
   cyberglysm: { lot: 2, nom: 'cyberglysm', desc: 'l\'organique qui bugge : tranché en bandes décalées, dédoublé vert / violet', flou: 2.5, onde: 3, freq: 0.02, epais: 3.5, paroi: 1, ame: 0.8, clair: 0.6, halo: 0.6, gouttes: true, glitch: 14 },
   tribal: { lot: 2, nom: 'tribal tekkno', desc: 'des lames épaisses, de longues épines, un gros contour noir : un tatouage tribal sur une machine', flou: 2, onde: 9, freq: 0.01, epais: 6, paroi: 1, ame: 0.3, clair: 0.3, halo: 0.45, gouttes: false, contour: 3.5, geo: { epines: { long: 28, large: 11 }, cils: { densite: 0.025, long: 26, large: 12 } } },
+  // ---- LE TROISIÈME LOT : d'autres DA (RS-7 23.10 : « un aspect alternatif, genre gothique, alien, evangelion : il faut des UI pour tous
+  // les types de DA »). Leurs couleurs voyagent avec elles (couleurs : appliquerCouleurs), toujours dans la palette de RS-7
+  gothique: { lot: 3, nom: 'gothique', desc: 'la cathédrale : des ogives, des épines de fer, des filigranes, le sang', flou: 1.6, onde: 3, freq: 0.03, epais: 4, paroi: 1, ame: 0.25, clair: 0.2, halo: 0.35, gouttes: false, contour: 2, geo: { ogives: { haut: 22 }, epines: { long: 18, large: 7 }, cils: { densite: 0.035, long: 12, large: 4 } }, couleurs: { memb: '#4d4d4d', memb2: '#a90707', verre: 0.97, contour: '#191919' } },
+  evangelion: { lot: 3, nom: 'evangelion', desc: 'NERV, l\'EVA-01 : violet et vert, les coins coupés, des bandes d\'alerte sur les liaisons, le balayage', flou: 1.1, onde: 0, freq: 0.02, epais: 2.5, paroi: 1, ame: 0.85, clair: 0.6, halo: 0.6, gouttes: false, chanfrein: true, scan: true, contour: 1.2, geo: { rayures: { pas: 8, couleur: '#ffff00' }, faisceau: 2 }, couleurs: { memb: '#37008a', memb2: '#0cdb0c', verre: 0.92, contour: '#ffff00' } },
+  eldritch: { lot: 3, nom: 'eldritch', desc: 'Lovecraft : des tentacules, des ventouses, des yeux de lumière dans la paroi, rien de droit', flou: 3.5, onde: 18, freq: 0.014, epais: 5, paroi: 0.95, ame: 0.2, clair: 0.3, halo: 0.55, gouttes: true, photophores: true, geo: { cils: { densite: 0.03, long: 32, large: 10 }, ventouses: { pas: 22, r: 4 } }, couleurs: { memb: '#1d0048', memb2: '#014116', verre: 0.94 } },
   terminal: { nom: 'terminal', desc: 'le hand terminal de The Expanse : du verre, des arêtes ambre, les coins coupés', flou: 1, onde: 0, freq: 0.02, epais: 1.6, paroi: 0.9, ame: 0.6, clair: 0.5, halo: 0.55, gouttes: false, chanfrein: true },
 };
 const NS = 'http://www.w3.org/2000/svg';
@@ -78,4 +84,16 @@ export function filtres(D, v = 'nerfs') {
   }
   s.querySelector('defs').insertAdjacentHTML('beforeend', filtre(idFiltre(v, 'mb', false), p, 'mb') + filtre(idFiltre(v, 'dd', false), p, 'dd')
     + filtre(idFiltre(v, 'mb', true), finDe(p), 'mb') + filtre(idFiltre(v, 'dd', true), finDe(p), 'dd'));
+}
+
+/** (0.96) redéfinir une peau EN DIRECT (les knobs de l'atelier, une peau à toi) : ses nombres changent, ses anciens filtres s'en vont */
+export function redefinir(D, v, p) {
+  VARIANTES[v] = p;
+  for (const fin of [false, true]) for (const c of ['mb', 'dd']) { const f = D && D.getElementById && D.getElementById(idFiltre(v, c, fin)); if (f) f.remove(); }
+}
+/** les couleurs d'une peau qui les porte, posées sur un élément (<html> pour toute l'app, une tuile de l'atelier pour elle seule) */
+export function appliquerCouleurs(el, v) {
+  const p = VARIANTES[v], c = p && p.couleurs, st = el && el.style; if (!st) return;
+  for (const [k, css] of [['memb', '--memb'], ['memb2', '--memb2'], ['contour', '--n-contour']]) { if (c && c[k]) st.setProperty(css, c[k]); else st.removeProperty(css); }
+  if (c && c.verre != null) st.setProperty('--n-verre', String(c.verre)); else st.removeProperty('--n-verre');
 }
