@@ -1506,6 +1506,31 @@ html:not(.px-organique) .px-nv-ax-e{stroke:var(--acc2)}html:not(.px-organique) .
   .px-sy-pads{width:min(100%,calc(100vh - 175px));margin:4px auto 6px;gap:6px}
   .px-sy-regler{max-height:calc(100vh - 70px);overflow:auto;-webkit-overflow-scrolling:touch;padding-bottom:60px}
   .px-sy-g{margin:6px 0}
+  /* ⟷ (0.99.13) les autres écrans. Les réglages et le marketplace : la tête (titre, recherche, vues) devient une colonne collée à gauche
+     (la télécommande en bas mangeait 111 px sur 393) ; les catégories des réglages sur deux colonnes */
+  html .px-hote>.rg{display:grid;grid-template-columns:minmax(170px,24%) minmax(0,1fr);column-gap:16px;max-width:none;min-height:0;padding-bottom:40px}
+  html .px-hote>.rg>.rg-tete{grid-column:1;grid-row:1;position:sticky;top:0;bottom:auto;align-self:start;margin:0;padding:10px 0;border:0;background:none}
+  html .px-hote>.rg>.rg-tete .rg-fil{margin-bottom:10px}
+  html .px-hote>.rg>div[data-c]{grid-column:2;grid-row:1;padding-bottom:0}
+  html .px-hote>.rg [data-accueil]{columns:2;column-gap:16px}
+  html .px-hote>.rg [data-accueil] h3{break-after:avoid;margin-top:14px}
+  html .px-hote>.rg [data-accueil] .bloc{break-inside:avoid}
+  html .px-hote>.mk{display:grid;grid-template-columns:minmax(170px,24%) minmax(0,1fr);column-gap:8px;min-height:0;padding:0 0 40px}
+  html .px-hote>.mk>.mk-top{grid-column:1;grid-row:1;position:sticky;top:0;bottom:auto;align-self:start;border:0;background:none;padding:10px 0 10px 4px}
+  html .px-hote>.mk>.mk-top .mk-vues{flex-direction:column;overflow:visible}
+  html .px-hote>.mk>.mk-top .mk-vues button{text-align:left}
+  html .px-hote>.mk>div[data-c]{grid-column:2;grid-row:1;min-width:0}
+  html .px-hote>.mk .mk-sec{top:0}
+  /* les écrans en liste : deux ou trois colonnes */
+  .px-ambiances>div:has(>.px-amb-l){display:grid;grid-template-columns:1fr 1fr;column-gap:12px}
+  .px-btop>div:has(>.px-btop-p){display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start}
+  .px-pr-glyphes{grid-template-columns:repeat(12,1fr)}
+  .px-inviter{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;align-items:start}
+  .px-inviter>.px-grave{grid-column:1/-1}
+  /* l'atelier des peaux : la grille 3 × 3 à gauche, collée ; les knobs et le reste à droite */
+  .px-atelier{display:grid;grid-template-columns:minmax(0,40%) minmax(0,1fr);column-gap:16px;align-items:start}
+  .px-atelier>*{grid-column:2}
+  .px-atelier>.px-at-g{grid-column:1;grid-row:1/span 12;position:sticky;top:0;margin:4px 0;width:min(100%,calc((100vh - 24px) * .92));gap:6px}
 }
 
 /* ◌ (0.99.11) le téléphone vivant (src/app/tel-vivant.js) : un bord qui respire ; --tv-periode (la chaleur), --tv-intensite (la batterie),
