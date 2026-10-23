@@ -1,5 +1,6 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1792723520000,"0.99.10 : le synthé à plusieurs (Proche), penché (l'inclinaison tourne deux knobs), en arrière-plan"],
+export const COMMITS = [[1792723879000,"0.99.11 : le téléphone vivant (le bord respire avec la chaleur, la batterie, le son)"],
+  [1792723520000,"0.99.10 : le synthé à plusieurs (Proche), penché (l'inclinaison tourne deux knobs), en arrière-plan"],
   [1792723315000,"0.99.9 : Autour, ce qu'il y a autour de toi (OpenStreetMap, en continu)"],
   [1792722996000,"0.99.8 : le mode humain (zéro texte, des glyphes et des maths)"],
   [1792722169000,"0.99.7 : les koins collés aux coins de l'écran (ils gobent les coins)"],

@@ -19,7 +19,7 @@ const slug = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-
 export const NUS = { svc: '6e400001-b5a3-f393-e0a9-e50e24dcca9e', rx: '6e400002-b5a3-f393-e0a9-e50e24dcca9e', tx: '6e400003-b5a3-f393-e0a9-e50e24dcca9e' };
 export const HM10 = { svc: '0000ffe0-0000-1000-8000-00805f9b34fb', rx: '0000ffe1-0000-1000-8000-00805f9b34fb', tx: '0000ffe1-0000-1000-8000-00805f9b34fb' };
 const DOMAINES = { light: 'lumières', switch: 'prises et interrupteurs', fan: 'ventilateurs', cover: 'volets et portes', climate: 'chauffage, clim', lock: 'serrures', media_player: 'son et écrans', scene: 'scènes', script: 'scripts', button: 'boutons', input_button: 'boutons', input_boolean: 'interrupteurs', automation: 'automatismes', siren: 'sirènes', humidifier: 'humidificateurs', binary_sensor: 'détecteurs', sensor: 'capteurs', weather: 'météo', person: 'personnes', device_tracker: 'où sont les appareils', sun: 'le soleil', uart: 'la ligne série', bus: 'le bus' };
-const LIBELLES = { basculer: '⏻', ouvrir: '▲ ouvrir', fermer: '▼ fermer', stop: '■', plus: '+', moins: '−', lancer: '▶ lancer', appuyer: '● appuyer', verrouiller: '🔒 verrouiller', deverrouiller: '🔓 ouvrir', lecture: '⏯' };
+const LIBELLES = { revenir: '⌂ revenir (RTL)', atterrir: '↓ atterrir', basculer: '⏻', ouvrir: '▲ ouvrir', fermer: '▼ fermer', stop: '■', plus: '+', moins: '−', lancer: '▶ lancer', appuyer: '● appuyer', verrouiller: '🔒 verrouiller', deverrouiller: '🔓 ouvrir', lecture: '⏯' };
 
 /** l'id d'un device xerbot v1 pour une entité (null : pas sur le bus) */
 export function idBus(a, e) {

@@ -58,7 +58,7 @@ function laboFaux(url) {
 }
 const boxionFaux = new Map();
 const activitesFaux = [];   // (0.91) les Live Activities lancées
-const procheEnvoyes = [];   // (0.99.1) ce que Proche a envoyé aux voisins
+const procheEnvoyes = [], droneFaux = [];   // (0.99.12) les commandes reçues par le drone simulé   // (0.99.1) ce que Proche a envoyé aux voisins
 const pushFaux = [];   // (0.91) les jetons reçus par le faux labo   // (0.86) le boxion du compte, côté labo
 const wledFaux = { state: { on: true, bri: 128, seg: [{ col: [[255, 80, 0]], fx: 0, pal: 0 }] }, info: { name: 'Ruban du salon', ver: '0.15.0', leds: { count: 60, pwr: 420 } }, effects: ['Solid', 'Blink', 'Breathe'], palettes: ['Default', 'Lava'] };
 
@@ -167,6 +167,12 @@ const natif = {
       if (u.pathname === '/json') return j(200, wledFaux);
       if (u.pathname === '/presets.json') return j(200, { 0: {}, 1: { n: 'Soirée' } });
       if (u.pathname === '/json/state' && o.method === 'POST') { const c = typeof o.data === 'string' ? JSON.parse(o.data) : o.data; if (c.on === 't') st.on = !st.on; else Object.assign(st, c); return j(200, { success: true }); } }
+    // (0.99.12) un drone simulé : mavlink2rest (10.0.0.42:8088) ; les commandes reçues sont gardées
+    if (u.hostname === '10.0.0.42' && u.port === '8088') {
+      const M = { HEARTBEAT: { custom_mode: 5, base_mode: { bits: 209 } }, SYS_STATUS: { battery_remaining: 73, voltage_battery: 15840 }, GLOBAL_POSITION_INT: { lat: 465200000, lon: 66300000, relative_alt: 12400 }, VFR_HUD: { groundspeed: 3.2 }, GPS_RAW_INT: { fix_type: 3, satellites_visible: 14 } };
+      if (u.pathname === '/mavlink' && o.method === 'POST') { droneFaux.push(typeof o.data === 'string' ? JSON.parse(o.data) : o.data); return j(200, {}); }
+      if (u.pathname === '/mavlink/vehicles') return j(200, [1]);
+      const m = /messages\/(\w+)$/.exec(u.pathname); if (m && M[m[1]]) return j(200, { message: M[m[1]], status: {} }); return j(404, {}); }
     if (u.hostname === '10.0.0.9' && u.port === '8123') { if ((o.headers || {}).Authorization !== 'Bearer bon') return j(401, {}); if (u.pathname === '/api/states') return j(200, [{ entity_id: 'light.salon', state: 'on', attributes: { friendly_name: 'Salon', brightness: 200, supported_color_modes: ['brightness'] } }, { entity_id: 'sensor.temp', state: '21.5', attributes: { unit_of_measurement: '°C', friendly_name: 'Température' } }]); return j(200, []); }
     // (0.91) le push : le labo garde le jeton du compte (seulement avec un jeton de compte)
     if (u.hostname === 'labo.j0bot.ch' && u.pathname === '/api/app/push') { if (!/^Bearer .+/.test((o.headers || {}).Authorization || '')) return j(401, { message: 'Unauthenticated.' });
@@ -256,7 +262,7 @@ const etat = await page.evaluate(() => ({
   texte: document.body.innerText.slice(0, 600),
 }));
 let resultatsEtapes = null;
-if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux, procheEnvoyes, pont }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
+if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux, procheEnvoyes, pont, droneFaux }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
 clearInterval(mouvementMinuteur);
 const resume = { url, mode: web ? 'web' : (opts.includes('--sans-plugions') ? 'ios-sans-plugions' : 'ios'), demarre, dureeBoot, etat,
   appelsNatifs: Object.entries(appels.reduce((a, x) => { const k = x.p + '.' + x.m; a[k] = (a[k] || 0) + 1; return a; }, {})).sort((a, b) => b[1] - a[1]),

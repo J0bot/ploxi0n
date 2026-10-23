@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.12', titre: 'Le drone dans XERB0T', points: [
+    '◬ XERB0T › ＋ ajouter › « drone (MAVLink · mavlink2rest) » : son état (armé, mode, batterie, GPS, position, altitude, vitesse).',
+    '⌂ « revenir » et ↓ « atterrir » seulement, toujours avec « sûr ? ». Pas de décollage depuis l\'app : le premier palier, c\'est la sécurité.',
+  ] },
   { v: '0.99.11', titre: 'Le téléphone vivant', points: [
     '◌ Dans l\'organique, le bord de l\'écran respire : plus vite quand l\'iPhone chauffe, plus pâle quand la batterie baisse, bleuté en charge ; il bat avec le son du synthé. Il dort en économie d\'énergie.',
     '⚙ › Apparence › « Le téléphone vivant » pour l\'éteindre.',

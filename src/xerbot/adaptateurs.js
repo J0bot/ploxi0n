@@ -21,6 +21,7 @@ export const TYPES = {
   pi: { nom: 'Raspberry Pi (Glances)', glyphe: '▦', port: 61208 },
   boxion: { nom: 'boxion (boxion-rt)', glyphe: '⬡', port: 8730, jeton: true },
   http: { nom: 'ESP · Arduino · Pi (HTTP JSON)', glyphe: '⌁', port: 80 },
+  drone: { nom: 'drone (MAVLink · mavlink2rest)', glyphe: '◬', port: 8088 },   // (0.99.12) docs/DRONE.md
 };
 
 export const hex = (c) => (Array.isArray(c) && c.length >= 3 ? '#' + c.slice(0, 3).map(x => Math.max(0, Math.min(255, Math.round(+x || 0))).toString(16).padStart(2, '0')).join('') : null);
@@ -229,11 +230,54 @@ const http = {
   async sonder() { return true; },
 };
 
-export const ADAPTATEURS = { ha, wled, esphome, tasmota, pi, boxion, http };
+// ---------------- (0.99.12) un DRONE : MAVLink par mavlink2rest (ArduPilot, PX4, BlueOS ; docs/DRONE.md) ----------------
+// RS-7 (23.10) : « un drone qui te suit et mappe tout en 3D ; l'envoyer à des endroits ; il a la 5G et le GPS ; c'est un xerbot ». Palier 1 :
+// le drone DANS le contrôleur : son état (batterie, GPS, position, altitude, vitesse, mode, armé) et deux commandes de SÉCURITÉ seulement,
+// confirmées : revenir (RTL) et atterrir. Ne pas nuire : pas d'armement, de décollage ni de « va là » depuis le téléphone avant l'autorisation
+// de l'OFAC et un vrai essai (au simulateur d'ArduPilot d'abord, SITL). mavlink2rest : GET /mavlink/vehicles/<sys>/components/<comp>/messages/<NOM>.
+const MAV_MODES_COPTER = { 0: 'stabilize', 2: 'alt hold', 3: 'auto', 4: 'guided', 5: 'loiter', 6: 'rtl', 9: 'land', 16: 'pos hold', 17: 'brake', 23: 'follow' };
+export function entitesDrone(m) {   // m = { HEARTBEAT, SYS_STATUS, GLOBAL_POSITION_INT, VFR_HUD, GPS_RAW_INT } (les messages, ou null)
+  const E = (id, nom, valeur, unite = '', extra = {}) => ({ id, nom, domaine: 'sensor', etat: String(valeur), on: null, bri: null, couleur: null, valeur, unite, actions: [], sensible: false, options: {}, ...extra });
+  const l = [], hb = m.HEARTBEAT, st = m.SYS_STATUS, gp = m.GLOBAL_POSITION_INT, hud = m.VFR_HUD, gps = m.GPS_RAW_INT;
+  if (hb) { const arme = !!((+((hb.base_mode && hb.base_mode.bits) ?? hb.base_mode) || 0) & 128); l.push(E('arme', 'armé', arme ? 'oui' : 'non', '', { domaine: 'binary_sensor', on: arme }));
+    l.push(E('mode', 'mode', MAV_MODES_COPTER[+hb.custom_mode] || ('mode ' + hb.custom_mode))); }
+  if (st && st.battery_remaining != null && +st.battery_remaining >= 0) l.push(E('batterie', 'batterie', +st.battery_remaining, '%'));
+  if (st && st.voltage_battery != null && +st.voltage_battery > 0 && +st.voltage_battery < 65535) l.push(E('tension', 'tension', Math.round(+st.voltage_battery / 10) / 100, 'V'));
+  if (gps) l.push(E('gps', 'GPS', (['pas de GPS', 'pas de fix', '2D', '3D', 'DGPS', 'RTK float', 'RTK fixe', 'statique', 'PPP']   /* GPS_FIX_TYPE de MAVLink, 0 à 8 */[+gps.fix_type] || '?') + ' · ' + (+gps.satellites_visible || 0) + ' sat.'));
+  if (gp) { l.push(E('position', 'position', (+gp.lat / 1e7).toFixed(5) + ', ' + (+gp.lon / 1e7).toFixed(5), '', { options: { lat: +gp.lat / 1e7, lng: +gp.lon / 1e7 } }));
+    l.push(E('altitude', 'altitude', Math.round(+gp.relative_alt / 100) / 10, 'm')); }
+  if (hud) l.push(E('vitesse', 'vitesse', Math.round(+hud.groundspeed * 10) / 10, 'm/s'));
+  l.push(E('securite', 'sécurité', '', '', { domaine: 'button', actions: ['revenir', 'atterrir'], sensible: true, valeur: null }));
+  return l;
+}
+const MAV_CMD = { revenir: 'MAV_CMD_NAV_RETURN_TO_LAUNCH', atterrir: 'MAV_CMD_NAV_LAND' };
+export function commandeDrone(action, sys = 1, comp = 1) {
+  const c = MAV_CMD[action]; if (!c) throw new Error('le drone ne prend d\'ici que « revenir » et « atterrir » (ne pas nuire : le reste attend l\'autorisation)');
+  return { header: { system_id: 255, component_id: 240, sequence: 0 },
+    message: { type: 'COMMAND_LONG', param1: 0, param2: 0, param3: 0, param4: 0, param5: 0, param6: 0, param7: 0, command: { type: c }, target_system: sys, target_component: comp, confirmation: 0 } };
+}
+const drone = {
+  async lire(ctx, a) {
+    const b = base(a) + ((a.options && a.options.prefixe) || ''), sys = (a.options && a.options.sys) || 1, comp = (a.options && a.options.comp) || 1, m = {};
+    for (const n of ['HEARTBEAT', 'SYS_STATUS', 'GLOBAL_POSITION_INT', 'VFR_HUD', 'GPS_RAW_INT']) {
+      try { const r = await ctx.req({ url: b + '/mavlink/vehicles/' + sys + '/components/' + comp + '/messages/' + n, delai: 2500, essais: 1 }); if (r.status === 200 && r.json) m[n] = r.json.message || r.json; } catch (e) { /* ce message n'arrive pas */ }
+    }
+    if (!m.HEARTBEAT) throw new Error('le drone ne répond pas (mavlink2rest, port 8088 ; ou BlueOS : /mavlink2rest)');
+    const l = entitesDrone(m), bat = l.find(x => x.id === 'batterie'), mode = l.find(x => x.id === 'mode');
+    return { en_ligne: true, resume: 'drone ' + sys + (mode ? ' · ' + mode.valeur : '') + (bat ? ' · ' + bat.valeur + ' %' : ''), entites: l };
+  },
+  async agir(ctx, a, e, action) {
+    const b = base(a) + ((a.options && a.options.prefixe) || '');
+    ok(await ctx.req({ methode: 'POST', url: b + '/mavlink', corps: commandeDrone(action, (a.options && a.options.sys) || 1, (a.options && a.options.comp) || 1), essais: 1 }), 'drone');
+  },
+  async sonder(ctx, url) { for (const p of ['', '/mavlink2rest']) { try { const r = await ctx.req({ url: url + p + '/mavlink/vehicles', delai: 2500, essais: 1 }); if (r.status === 200 && r.json) return true; } catch (e) { /* */ } } return false; },
+};
+
+export const ADAPTATEURS = { ha, wled, esphome, tasmota, pi, boxion, http, drone };
 
 /** qu'est-ce qui répond à cette adresse ? (les ports par défaut de chaque famille ; le premier qui se reconnaît) */
 export async function sonder(ctx, adresse) {
-  const essais = [['wled', 80], ['tasmota', 80], ['esphome', 80], ['ha', 8123], ['boxion', 8730], ['pi', 61208]];
+  const essais = [['wled', 80], ['tasmota', 80], ['esphome', 80], ['ha', 8123], ['boxion', 8730], ['pi', 61208], ['drone', 8088]];
   const a0 = normaliser(adresse); if (!a0) throw new Error('adresse invalide');
   const aPort = /:\d+$/.test(new URL(a0).host);
   // toutes les familles en même temps (un appareil éteint ne coûte qu'un délai), la première de la liste qui se reconnaît l'emporte

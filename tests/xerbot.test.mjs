@@ -155,3 +155,28 @@ test('⏻ Tasmota, un jeton faux, une adresse muette', async () => {
   await assert.rejects(ADAPTATEURS.ha.lire(ctx, { type: 'ha', adresse: '192.168.1.10' }), /refuse ce jeton/);
   assert.deepEqual(await sonder({ ...ctx, flux: async () => ({ lignes: [] }) }, '10.9.9.9'), { type: 'http', adresse: 'http://10.9.9.9' }, 'rien ne répond : HTTP générique');
 });
+
+// (0.99.12) le drone : MAVLink par mavlink2rest ; l'état, et seulement « revenir » et « atterrir » (ne pas nuire)
+test('◬ le drone : ses messages MAVLink deviennent des entités ; deux commandes de sécurité, confirmées ; rien d\'autre', async () => {
+  const { ADAPTATEURS, entitesDrone, commandeDrone, TYPES } = await import('../src/xerbot/adaptateurs.js');
+  assert.equal(TYPES.drone.port, 8088);
+  const msgs = { HEARTBEAT: { custom_mode: 5, base_mode: { bits: 209 } }, SYS_STATUS: { battery_remaining: 73, voltage_battery: 15840 }, GLOBAL_POSITION_INT: { lat: 473722000, lon: 85392000, relative_alt: 12400 },
+    VFR_HUD: { groundspeed: 3.27 }, GPS_RAW_INT: { fix_type: 3, satellites_visible: 14 } };
+  const posts = [];
+  const ctx = { req: async (o) => { if (o.methode === 'POST') { posts.push(o); return { status: 200, json: {} }; }
+    const m = /messages\/(\w+)$/.exec(o.url); if (m) return msgs[m[1]] ? { status: 200, json: { message: msgs[m[1]], status: {} } } : { status: 404 };
+    if (/\/mavlink\/vehicles$/.test(o.url)) return { status: 200, json: [1] }; return { status: 404 }; } };
+  const a = { id: 'd1', type: 'drone', adresse: '10.0.0.42' };
+  const r = await ADAPTATEURS.drone.lire(ctx, a);
+  const v = Object.fromEntries(r.entites.map(e => [e.id, e.valeur]));
+  assert.equal(v.arme, 'oui'); assert.equal(v.mode, 'loiter'); assert.equal(v.batterie, 73); assert.equal(v.tension, 15.84);
+  assert.equal(v.position, '47.37220, 8.53920'); assert.equal(v.altitude, 12.4); assert.equal(v.vitesse, 3.3); assert.equal(v.gps, '3D · 14 sat.');
+  assert.match(r.resume, /loiter · 73 %/);
+  const sec = r.entites.find(e => e.id === 'securite'); assert.deepEqual(sec.actions, ['revenir', 'atterrir']); assert.equal(sec.sensible, true, 'confirmé, et jamais par le bus');
+  await ADAPTATEURS.drone.agir(ctx, a, sec, 'revenir');
+  assert.equal(posts[0].url, 'http://10.0.0.42:8088/mavlink'); assert.equal(posts[0].corps.message.command.type, 'MAV_CMD_NAV_RETURN_TO_LAUNCH');
+  assert.throws(() => commandeDrone('decoller'), /revenir.*atterrir/); assert.throws(() => commandeDrone('armer'));
+  assert.equal(await ADAPTATEURS.drone.sonder(ctx, 'http://10.0.0.42:8088'), true);
+  await assert.rejects(() => ADAPTATEURS.drone.lire({ req: async () => ({ status: 404 }) }, a), /ne répond pas/);
+  assert.ok(entitesDrone({}).length === 1, 'sans message : la sécurité seule');
+});

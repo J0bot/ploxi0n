@@ -57,6 +57,15 @@ gens autour), et un chemin par paliers qui tourne à chaque étape.*
 4. **Les zones** : la carte officielle des zones lue avant de décoller ; un vol refusé dans une zone interdite (ne pas nuire, et ne pas se faire coincer).
 5. 💭 **L'envoyer, aller chercher** : seulement avec une autorisation de vol hors de vue. La 5G sert là.
 
+## Construit (0.99.12) : le palier 1, à moitié exprès
+
+- La famille **drone (MAVLink · mavlink2rest)** dans XERB0T (`src/xerbot/adaptateurs.js`) : on l'ajoute à la main (l'adresse du Pi du drone,
+  port 8088 ; « chercher » l'essaie aussi). mavlink2rest (de Blue Robotics, open source) tourne sur le Pi et traduit MAVLink en HTTP ; il marche
+  avec ArduPilot, PX4 et le simulateur SITL (on peut tout tester sans drone).
+- Ce qu'on voit : armé, mode (les modes d'ArduCopter), batterie, tension, GPS (fix, satellites), position, altitude, vitesse.
+- Ce qu'on fait : **revenir** (RTL) et **atterrir**, toujours avec « sûr ? », jamais depuis le bus. Pas de décollage ni de « va là » :
+  avant ça, les zones et ta réponse aux questions ci-dessous. Le drone n'est jamais atteignable par le bus du labo (sensible).
+
 ## Questions ouvertes (à RS-7, quand il en aura envie)
 
 - Tu as déjà un drone ? Lequel (DJI, ou un drone ouvert ArduPilot / PX4) ?
