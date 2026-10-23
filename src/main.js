@@ -88,7 +88,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.96.0';
+const VERSION = '0.97.0';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -152,6 +152,12 @@ async function demarrer() {
   await atelier.charger().catch(() => {});
   // les couleurs suivent la peau AFFICHÉE (<html data-px-variante>), d'où qu'elle vienne : les réglages, l'atelier, un parcours
   const couleursPeau = () => appliquerCouleurs(document.documentElement, document.documentElement.getAttribute('data-px-variante'));
+  // § (0.97) LES TSOINS DE XER : l'état de l'interface, à chaque changement (le premier = le lancement) — le passé › les miens › « revenir »
+  const CLES_XER = ['mode', 'variante', 'police', 'ecriture', 'themeVivant', 'grain', 'glyphes', 'styleIcones', 'icones', 'contraste', 'fractale', 'pagesCote', 'bande'];
+  let xerAvant = null, xerT = 0;
+  const xerEtat = () => { const p = prefs.lire(), o = {}; for (const k of CLES_XER) if (k in p) o[k] = p[k]; return o; };
+  boxion.lire('xer', { limite: 1 }).then((l) => { if (!l.length) boxion.append('xer', { etat: xerEtat(), debut: true }).catch(() => {}); xerAvant = JSON.stringify(xerEtat()); }).catch(() => {});
+  prefs.surChangement(() => { clearTimeout(xerT); xerT = setTimeout(() => { const e = xerEtat(), j = JSON.stringify(e); if (xerAvant !== null && j !== xerAvant) { xerAvant = j; boxion.append('xer', { etat: e }).catch(() => {}); } }, 1500); });
   couleursPeau(); new MutationObserver(couleursPeau).observe(document.documentElement, { attributes: true, attributeFilter: ['data-px-variante'] });
   creerNeurones().installer();   // 〰 (0.93) data-neurones / data-neurone : les cellules collées comme des neurones (html.px-organique)
   boot(16, 'réglages · apparence');
@@ -416,7 +422,9 @@ async function demarrer() {
   // ▤ ≈ (0.88) le lot de ploxions de RS-7 : le système (btop) et les ambiances (Blanket), dans l'app, hors ligne
   const natifLot = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
   internes.push(atelier.ploxion);
-  internes.push(creerPasse({ W: window, boxion, vibrer: (x) => vibrer(x), ouvrir: (id) => routeurProxy.ouvrir(id), catalogue: () => (routeur ? routeur.catalogue() : []), glyphe: (p) => glyphePloxion(p) }).ploxion);
+  internes.push(creerPasse({ W: window, boxion, vibrer: (x) => vibrer(x), ouvrir: (id) => routeurProxy.ouvrir(id), catalogue: () => (routeur ? routeur.catalogue() : []), glyphe: (p) => glyphePloxion(p),
+    revenir: (etat) => prefs.regler(etat),   // § revenir à un instant du xer
+    xerboxion: async () => { const r = await httpRelais.requete({ methode: 'GET', url: SOURCE + '/api/app/tsoins?portee=xerboxion', headers: { Accept: 'application/json' } }, fetchOrigine); if (r.status !== 200) return []; const d = JSON.parse(r.texte || '{}'); return Array.isArray(d.tsoins) ? d.tsoins : []; } }).ploxion);
   internes.push(creerSysteme({ W: window,
     systeme: natifLot ? () => PloxiApple.systeme() : null,
     appareil: natifLot ? async () => { const { Device } = await import('@capacitor/device'); const i = await Device.getInfo(); return { model: i.model, operatingSystem: i.operatingSystem, osVersion: i.osVersion, memUsed: i.memUsed }; } : null,
@@ -595,7 +603,9 @@ async function demarrer() {
   installerAppsALaDemande({ W: window, connu: (id) => routeur.connait(id) || depot.packLocal().some(p => p.id === id) || catalogueIds.has(id) || (!catalogueIds.size && navigator.onLine !== false),
     ensureApp: async (id) => { if (!routeur.connait(id) && !(await installerSilencieux(id))) throw new Error('ploxion « ' + id + ' » : introuvable au labo'); return routeur.chargerApp(id); } });
   // ◺◿ (0.89) les koins remplacent le dock et le HUD (le carnet de RS-7, docs/KOINS.md) : ⚙ › HUD et dock › Les koins
-  const koins = creerKoins({ actif: () => !!prefs.lire().koins, vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
+  // ◺◿ (0.97, RS-7 : « pourquoi besoin d'un dock quand on a des koins » — « mais la suppression du dock, c'est pour le mode organique ») :
+  // en organique, les koins toujours (plus de dock) ; ailleurs, le réglage d'avant
+  const koins = creerKoins({ actif: () => prefs.lire().mode === 'organique' || !!prefs.lire().koins, vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
     koins: () => (routeur.connait('xerkion-perso-koin-ion') ? routeur.ouvrir('xerkion-perso-koin-ion') : routeur.signaler('le koin du ion n\'est pas encore semé ici')),
     temps: () => routeurProxy.ouvrir('passe'),   // ○ (0.97) le wormion : se balader dans le temps (le passé) xers: () => routeur.faire('mes-xers'), carte: () => routeur.faire('map'),   // □ portion : la map (0.90)
     tsoin: () => tsoinNatif.ouvrir(), journal: () => routeurProxy.ouvrir('journal-tsoins'), accueil: () => routeur.faire('accueil'),

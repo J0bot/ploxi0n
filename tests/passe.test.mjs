@@ -32,3 +32,15 @@ test('▦ la map en 3 × 3 : les coins ; le temps sur les koins', () => {
   assert.equal(servi(usage, 'jeu', FENETRES.find(f => f[0] === 'aujourd\'hui'), t), false);
   assert.equal(servi(usage, 'jeu', FENETRES[0], t), true, 'tout le temps');
 });
+
+test('○ les portées : le nexus = les commits ; les ultra = les paliers d\'existence (les versions, depuis la 0.10) ; les miens = le xer aussi', async () => {
+  const { creerPasse } = await import('../src/lot/passe.js');
+  const logs = { passe: [{ t: 3, entry: { id: 'map', sec: 4 } }], tsoins: [{ t: 2, entry: { kind: 'marketplace', action: 'installer', id: 'jeu' } }], xer: [{ t: 1, entry: { etat: { mode: 'chill-tekk' }, debut: true } }] };
+  const boxion = { lire: async (n) => logs[n] || [] };
+  const W = { document: {}, jOSApps: {} };
+  const p = creerPasse({ W, boxion });
+  const nexus = await p.evenements('nexus'); assert.ok(nexus.length > 50 && nexus.every(e => e.genre === 'commit'));
+  const ultra = await p.evenements('ultra'); assert.ok(ultra.some(e => e.k === '0.10'), 'le tout début'); assert.ok(ultra.every(e => /^0\.\d+/.test(e.k)));
+  const moi = await p.evenements('moi'); assert.deepEqual(moi.map(e => e.genre), ['ploxion', 'evolution', 'xer']);
+  assert.equal(moi[2].debut, true);
+});

@@ -102,6 +102,20 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.97 (23.10)** — RS-7 : « le but de tout mon système, c'est trouver des apps et ouvrir des ploxions selon le temps » ; « un zoom de temps, un
+zoom de fractale » ; « le wormion, se balader dans le temps ; le portion, entre les ploxions » ; « les tsoins du nexus, c'est les commits » ;
+« le passé, c'est aussi comment les ploxions et le xer ont évolué ; retourner au moment où l'app venait de se lancer » ; « c'est le moment de
+prendre tous les morceaux et de tout assembler » ; « tout ça, c'est du lore : le clickion, protagonistes, le xerboxion, le nexus, pourriture-4 ».
+- ○ `src/lot/passe.js` (ploxion « passe », le wormion des koins y mène) : `grouper(evs, palier)`, PALIERS, PORTEES ; journaux `passe` (main.js
+  `surUsage` : { id, sec }) et `xer` (main.js : l'état d'interface à chaque changement, le premier `debut`) ; `revenir(etat)` = prefs.regler.
+- ⎇ `tools/tsoins-nexus.mjs` → `src/app/tsoins-nexus.js` (COMMITS, PALIERS_EXISTENCE) : **à relancer à chaque version**.
+- ▦ `map-hubs.js` : `diagonales` (3 × 3), `ilYa`, `FENETRES`, `servi(usage, id, fenetre)` ; `creerMap({ usage })`.
+- ✎ `tools/police/chilltekk.py` (fonttools + skia-pathops, un venv à part) → `public/fonts/chilltekk.woff2` ; `src/bions/polices.js` ; le gène
+  « police » ; `prefs.ecriture` (xerboxion, texte-glyphes, glyphes, texte, emoji, minimal ; CSS `px-e-*`).
+- ◺◿ koins : toujours en organique (`main.js` actif), le réglage d'avant ailleurs ; ⚙ › HUD : le dock caché en organique.
+- ⏭ les paliers de la map (cubion, spherion, kion, tsoin) ; le jeu (débloquer en jouant au clickion / le mode créatif xerboxion) ; le
+  téléphone vivant (les gènes branchés sur la RAM, la température, le son) ; la route des tsoins côté labo (docs/TSOINS.md) ; l'ASSEMBLAGE.
+
 **0.96 (23.10)** — RS-7 : « on garde tout, il faut pouvoir choisir entre toutes ces possibilités ; mes préférées : xéno et cyberpunk ; il faut
 découvrir la fractale des UI, avoir des knobs pour modifier le UI selon un générateur fractal, c'est des formules au final le UI ; dans
 organique, le but c'est de trouver le UI qui est parfait pour toi ; tout le monde a une vision différente ; des UI pour tous les types de DA ».

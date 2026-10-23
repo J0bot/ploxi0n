@@ -7,6 +7,13 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.97.0', titre: 'Le zoom de temps, le zoom de fractale', points: [
+    '○ Le passé (le wormion des koins) : tout ce que tu as fait, à l\'envers. Pince pour zoomer dans le temps : les heures, les jours, les semaines, les mois. Touche un ploxion pour y revenir. Et ton xer qui change : « revenir à cet instant ».',
+    '⎇ Les portées : les miens, le nexus (les commits), les ultra (les paliers d\'existence, depuis la 0.10), le xerboxion.',
+    '▦ La map en 3 × 3 : les coins aussi, un glisser en biais y va. Chaque koin dit quand il a servi ; la réglette du wormion allume ce que tu as ouvert il y a deux semaines.',
+    '✎ La police ChillTekk, notre alphabet : O le chaos, I l\'observateur et son œil, A un koin. Et l\'écriture : xerboxion, texte + glyphes, glyphes, texte, emoji, minimal.',
+    '◺◿ Dans l\'organique, plus de dock : les koins.',
+  ] },
   { v: '0.96.0', titre: 'L\'atelier des peaux : la fractale des UI', points: [
     '◈ L\'atelier des peaux (⚙ › Apparence) : neuf peaux autour de la tienne ; touche celle qui te parle, tu zoomes dedans ; ⊖ dézoome, hasard saute ailleurs. Les knobs tournent la peau gène par gène, et toute l\'app suit. ✓ garder : elle est à toi.',
     '〰 Un troisième lot de peaux : gothique, evangelion, eldritch.',
