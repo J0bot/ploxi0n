@@ -3,19 +3,20 @@
 // (0.98, RS-7 23.10 : « chaque bion et ploxion, il faut les input et output » ; ses planches : la terminaison verte face au récepteur violet,
 // la synapse). Le zoom de fractale y descend : la map (un hub) → un ploxion (son neurone) → un bion (le sien). Compose src/bions/flux.js.
 import { court } from '../bions/flux.js';
+import * as H from '../bions/humain.js';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const NS = 'http://www.w3.org/2000/svg';
 
 /** n = { genre: 'ploxion' | 'bion', id, titre, glyphe (html), sous, entrees: [{ canal, doc, sur }], sorties, bions: [{ nom, glyphe }], liens: [{ id, nom, sens: 'vers' | 'de', canal }], actions: [[cle, texte]] } */
 export function neuroneHtml(n) {
   const canal = (c, sens) => '<div class="px-nv-c px-nv-' + sens + (c.sur === 'core' ? ' px-nv-core' : '') + '" data-neurone data-nv-canal="' + esc(c.canal) + '"><b>' + esc(court(c.canal)) + '</b>' + (c.doc ? '<small>' + esc(c.doc) + '</small>' : '') + '</div>';
-  const vide = (t) => '<p class="px-nv-vide">' + t + '</p>';
+  const vide = (t) => '<p class="px-nv-vide" data-h="' + H.rien + '">' + t + '</p>';
   return '<div class="px-nv" data-nv="' + esc(n.genre + ':' + n.id) + '">'
-    + '<p class="px-nv-g">' + (n.genre === 'bion' ? '◎ un bion' : '◇ un ploxion') + ' · entrées ' + n.entrees.length + ' · sorties ' + n.sorties.length + '</p>'
+    + '<p class="px-nv-g" data-h="' + (n.genre === 'bion' ? '◎ ' : '◇ ') + H.flux(n.entrees.length, n.sorties.length) + '">' + (n.genre === 'bion' ? '◎ un bion' : '◇ un ploxion') + ' · entrées ' + n.entrees.length + ' · sorties ' + n.sorties.length + '</p>'
     + '<div class="px-nv-e" data-neurones="fin">' + (n.entrees.length ? n.entrees.map(c => canal(c, 'e')).join('') : vide('rien n\'entre (qu\'on voie)')) + '</div>'
     + '<div class="px-nv-soma" data-neurones><div class="px-nv-noyau" data-neurone><span class="px-nv-gl">' + (n.glyphe || '') + '</span><b>' + esc(n.titre) + '</b>' + (n.sous ? '<small>' + esc(n.sous) + '</small>' : '')
     + (n.bions && n.bions.length ? '<div class="px-nv-b" data-neurones="fin">' + n.bions.slice(0, 40).map(b => '<button type="button" class="px-nv-o' + (b.coeur ? ' px-nv-coeur' : '') + '" data-neurone data-nv-bion="' + esc(b.nom) + '" aria-label="' + (b.coeur ? 'son cœur, ' : 'le bion ') + esc(b.nom) + '">' + (b.glyphe || '◎') + '<i>' + (b.coeur ? '◎ cœur' : esc(b.nom.replace(/^jOS/, ''))) + '</i></button>').join('') + '</div>' : '')
-    + '<div class="px-nv-a">' + (n.actions || []).map(([k, t]) => '<button type="button" data-nv-action="' + esc(k) + '">' + esc(t) + '</button>').join('') + '</div></div></div>'
+    + '<div class="px-nv-a">' + (n.actions || []).map(([k, t]) => '<button type="button" data-nv-action="' + esc(k) + '" data-h="' + esc(String(t).split(' ')[0]) + '" aria-label="' + esc(t) + '">' + esc(t) + '</button>').join('') + '</div></div></div>'
     + '<div class="px-nv-s" data-neurones="fin">' + (n.sorties.length ? n.sorties.map(c => canal(c, 's')).join('') : vide('rien ne sort (qu\'on voie)')) + '</div>'
     + (n.liens && n.liens.length ? '<p class="px-nv-g">synapses</p><div class="px-nv-l" data-neurones="fin">' + n.liens.slice(0, 30).map(l => '<button type="button" class="px-nv-lien" data-neurone data-nv-vers="' + esc(l.id) + '"><b>' + (l.sens === 'vers' ? '→ ' : '← ') + esc(l.nom) + '</b><small>' + esc(court(l.canal)) + '</small></button>').join('') + '</div>' : '')
     + '<svg class="px-nv-ax" aria-hidden="true"></svg></div>';

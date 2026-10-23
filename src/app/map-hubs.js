@@ -11,6 +11,7 @@
 //   Un portail est aussi vu depuis l'autre bout : un hub perso posé à droite du Xerboxion apparaît à droite du Xerboxion (le retour est calculé).
 //   Créer : « + un hub » : un nom, un glyphe central, des koins (tes ploxions), le côté où il se pose ; le modifier, l'effacer (les tiens).
 // boxion_local « map/xerkions » : la dernière map du labo (hors ligne, elle revient) ; « reglages/map » : { ici } (le hub où tu étais).
+import * as H from '../bions/humain.js';   // (0.99.8) le mode humain : les comptes et le temps en maths
 import { MIN, MAX, PLONGE, RECULE, borner, niveau, detailDe, figer, prochainFige, versScene } from '../bions/zoom.js';
 import { glyphe as G, glyphePloxion, nomDepuisEmoji } from './glyphes.js';
 
@@ -130,7 +131,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
       + '<button type="button" data-map="depart" data-neurone aria-label="le xerboxion">' + G('xerboxion') + '</button><button type="button" data-map="creer" data-neurone aria-label="créer un hub">＋</button></div>'
       + '<div class="px-map-v" data-map-v><div class="px-map-plan" data-map-plan data-neurones data-neurones-seuil="64"></div></div><div class="px-map-autres" data-map-autres></div>'
       // ○ (0.97) le wormion sur la map : glisser remonte le temps ; les koins qui ont servi dans la fenêtre s'allument
-      + '<div class="px-map-temps"><span aria-hidden="true">○</span><input type="range" min="0" max="' + (FENETRES.length - 1) + '" step="1" value="0" data-map-temps aria-label="le temps : quand tu les as ouverts"><b data-map-temps-l>tout le temps</b></div>'
+      + '<div class="px-map-temps"><span aria-hidden="true">○</span><input type="range" min="0" max="' + (FENETRES.length - 1) + '" step="1" value="0" data-map-temps aria-label="le temps : quand tu les as ouverts"><b data-map-temps-l data-h="∀t">tout le temps</b></div>'
       // ◈ (0.98) les paliers : une autre scène (tes ploxions, le réseau, un neurone) ; la règle du zoom, à droite
       + '<div class="px-map-n" data-map-n hidden></div>'
       + '<nav class="px-map-z" aria-label="le zoom de fractale">' + PALIERS_MAP.map(([k, n]) => '<button type="button" data-map-palier="' + k + '" aria-label="' + n + '"><i></i><span>' + n + '</span></button>').join('')
@@ -141,7 +142,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
       const hub = String(k.ploxion || '').startsWith('xerkion-') && hubs.has(k.ploxion);
       const g = hub ? G(hubs.get(k.ploxion).center || 'portion') : (nomDepuisEmoji(k.icon) ? G(nomDepuisEmoji(k.icon)) : glyphePloxion({ id: k.ploxion, nom: k.label }));
       const u = !hub && us && us.px && us.px[k.ploxion], vu = fenetre[1] != null && !hub && servi(us, k.ploxion, fenetre);
-      return '<button type="button" class="px-map-k' + (hub ? ' px-map-k-hub' : '') + (vu ? ' px-map-vu' : '') + '" data-neurone data-quand="' + esc(u ? ilYa(u.lastAt) : '') + '" data-k="' + esc(k.ploxion || '') + '" title="' + esc(k.label || k.ploxion) + '">' + g + '<small>' + esc(k.label || k.ploxion || '') + '</small></button>';
+      return '<button type="button" class="px-map-k' + (hub ? ' px-map-k-hub' : '') + (vu ? ' px-map-vu' : '') + '" data-neurone data-quand="' + esc(u ? ilYa(u.lastAt) : '') + '" data-quand-h="' + esc(u && u.lastAt ? H.duree(Date.now() - u.lastAt) : '') + '" data-k="' + esc(k.ploxion || '') + '" title="' + esc(k.label || k.ploxion) + '">' + g + '<small>' + esc(k.label || k.ploxion || '') + '</small></button>';
     }
     function carre(id, role) {
       const h = hubs.get(id); if (!h) return '';
@@ -149,7 +150,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
       return '<div class="px-map-c px-map-' + role + '" data-neurone data-c="' + esc(id) + '"><div class="px-map-t"><b>' + esc(nomDe(h)) + '</b><span>' + esc(h.essence || '') + (h.perso ? ' · à toi' : '') + '</span>'
         + (role === 'ici' && h.perso ? '<button type="button" data-map="modifier" aria-label="modifier">✎</button>' : '') + '</div>'
         + '<div class="px-map-g" data-neurones="fin">' + ks.slice(0, 12).map(koinHtml).join('') + '<div class="px-map-centre" data-neurone>' + G(h.center || 'ion') + '</div></div>'
-        + '<div class="px-map-pied">' + n + ' koin' + (n > 1 ? 's' : '') + (n > 12 ? ' (+' + (n - 12) + ')' : '') + ' · ' + (h.portals || []).filter(Boolean).length + ' portail' + ((h.portals || []).filter(Boolean).length > 1 ? 's' : '') + '</div></div>';
+        + '<div class="px-map-pied" data-h="' + esc(H.compte(n, '◇') + ' · ' + H.compte((h.portals || []).filter(Boolean).length, '⊡')) + '">' + n + ' koin' + (n > 1 ? 's' : '') + (n > 12 ? ' (+' + (n - 12) + ')' : '') + ' · ' + (h.portals || []).filter(Boolean).length + ' portail' + ((h.portals || []).filter(Boolean).length > 1 ? 's' : '') + '</div></div>';
     }
     function peindre() {
       if (!vivant) return;
@@ -202,7 +203,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
       if (palier === 'tout') {
         hote.querySelector('[data-map-ou]').textContent = 'tes ploxions';
         const l = tousLes();
-        scene.innerHTML = '<div class="px-map-tt" data-neurones="fin">' + l.map(p => { const u = us && us.px && us.px[p.id]; return '<button type="button" class="px-map-tc" data-neurone data-tt="' + esc(p.id) + '" data-quand="' + esc(u ? ilYa(u.lastAt) : '') + '">' + glyphePloxion(p) + '<small>' + esc(p.nom || p.id) + '</small></button>'; }).join('') + '</div>';
+        scene.innerHTML = '<div class="px-map-tt" data-neurones="fin">' + l.map(p => { const u = us && us.px && us.px[p.id]; return '<button type="button" class="px-map-tc" data-neurone data-tt="' + esc(p.id) + '" data-quand="' + esc(u ? ilYa(u.lastAt) : '') + '" data-quand-h="' + esc(u && u.lastAt ? H.duree(Date.now() - u.lastAt) : '') + '">' + glyphePloxion(p) + '<small>' + esc(p.nom || p.id) + '</small></button>'; }).join('') + '</div>';
         return;
       }
       if (palier === 'reseau') {
@@ -313,7 +314,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
     }
     // glisser : le voisin du côté opposé au doigt vient au centre ; un toucher sans glisser : le koin ou le carré touché
     hote.querySelector('[data-map-temps]').addEventListener('input', (e) => {
-      fenetre = FENETRES[+e.target.value] || FENETRES[0]; hote.querySelector('[data-map-temps-l]').textContent = fenetre[0];
+      fenetre = FENETRES[+e.target.value] || FENETRES[0]; const tl = hote.querySelector('[data-map-temps-l]'); tl.textContent = fenetre[0]; tl.setAttribute('data-h', H.fenetre(fenetre[1], fenetre[2]));
       us = null;   // l'usage relu : il a pu bouger depuis l'ouverture de la map
       vibrer(+e.target.value ? 'fx-cran' : 'selection'); peindre();
     });

@@ -41,6 +41,12 @@
 **Toutes les langues** : un bion `dire(cle)` (un dictionnaire, le français comme base, la langue lue sur l'iPhone), migré écran par écran
 en commençant par ce que tout le monde voit (le guide, le HUD, la map). Les néologismes restent tels quels.
 
+## Construit (0.99.8)
+
+La 7e écriture `humain` (prefs.ECRITURES) : tout ce que fait « glyphes », plus `src/bions/humain.js` (`compte` → 8◇, `duree` → Δt −2 d,
+`fenetre` → ∀t / Δt ∈ [7, 20] d, `flux` → →3 · 2→, `rien` → ∅) posé en `data-h` (la map, le neurone) et affiché par le CSS (`html.px-e-humain`).
+Les phrases (`.px-sous`), les noms des hubs et des koins disparaissent ; « c'est quoi ça ? » dit les mots. ⏭ les autres écrans, le guide.
+
 ## Questions ouvertes (à RS-7, quand il en aura envie)
 
 - « Que ça fonctionne avec toutes les langues » : toute l'app, ou les messages de l'ultimate Bluetooth (des gens de langues différentes

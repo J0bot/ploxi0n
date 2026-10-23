@@ -1307,6 +1307,24 @@ html.px-e-texte .px-tuile>span:last-child{font:600 14px/1.2 var(--police);color:
 html.px-e-texte :is(.px-koin-barre,.px-map-b,.px-barre,.px-dock) button[aria-label]:not(:has(span,b,small))>.px-g{display:none}
 html.px-e-texte :is(.px-koin-barre,.px-map-b,.px-barre,.px-dock) button[aria-label]:not(:has(span,b,small))::after{content:attr(aria-label);font:600 9px/1.1 var(--mono);letter-spacing:.04em;text-align:center}
 html.px-e-texte .px-koin-barre button{font-size:0}html.px-e-texte .px-koin-barre button[data-court]::after{content:attr(data-court);font:600 10px/1 var(--mono);letter-spacing:.02em}
+/* ⊙ (0.99.8, RS-7 : « un mode humain, où y a zéro texte, que des glyphes human readable et des fonctions mathématiques ») — l'écriture
+   « humain » : tout ce que fait « glyphes » (plus un mot sur les tuiles, les koins, la map), et ce qui restait de texte devient des maths
+   (src/bions/humain.js : 8◇ · 4⊡, Δt −2 d, ∀t, →3 · 2→, ∅) ou disparaît (les phrases d'explication, les noms). « c'est quoi ça ? » dit les mots. */
+html.px-e-humain .px-tuile>span:last-child,html.px-e-humain .px-koin-cases>button small,html.px-e-humain .px-map-k small,html.px-e-humain .px-ligne-t small,
+html.px-e-humain .px-koin-pad b,html.px-e-humain .px-koin-pad small,html.px-e-humain .px-modes button,html.px-e-humain .px-vues button,
+html.px-e-humain .px-map-tc small,html.px-e-humain .px-map-rc small,html.px-e-humain .px-nv-o i,html.px-e-humain .px-map-z button span{font-size:0}
+/* plus forts que l'organique et le zoom (qui donnent une taille aux étiquettes) */
+html.px-e-humain .px-map :is(.px-map-k,.px-map-tc,.px-map-rc) small,html.px-e-humain .px-nv-noyau>b,html.px-e-humain .px-nv-noyau>small{display:none!important}
+html.px-e-humain .px-map-t b{font-size:0!important}
+html.px-e-humain [data-nv-action][data-h]{font-size:0}html.px-e-humain [data-nv-action][data-h]::after{content:attr(data-h);font-size:18px}
+html.px-e-humain .px-modes button .px-g,html.px-e-humain .px-vues button .px-g{width:22px;height:22px}
+html.px-e-humain .px-barre>span{font-size:0}html.px-e-humain .px-barre>span .px-g{width:24px;height:24px}
+html.px-e-humain .px-sous,html.px-e-humain .px-map-t span,html.px-e-humain .px-map-ou,html.px-e-humain .px-map-autres{display:none}
+html.px-e-humain .px-map-t b::before{content:"◇";font-size:16px!important}
+html.px-e-humain :is(.px-map-pied,.px-map-temps b,.px-nv-g,.px-nv-vide)[data-h]{font-size:0}
+html.px-e-humain :is(.px-map-pied,.px-map-temps b,.px-nv-g,.px-nv-vide)[data-h]::after{content:attr(data-h);font:600 12px/1.2 var(--mono);letter-spacing:.06em;color:var(--txt)}
+html.px-e-humain :is(.px-map-k,.px-map-tc)[data-quand-h]:not([data-quand-h=""])::after{content:attr(data-quand-h)}
+html.px-e-humain .px-map-k[data-quand]:not([data-quand=""]) small{display:none}
 /* minimal : des mots en mono minuscules, pas de cadres ; le calme */
 html.px-e-minimal .px-ic,html.px-e-minimal .px-tuile .px-g,html.px-e-minimal .px-modes .px-g,html.px-e-minimal .px-vues .px-g,html.px-e-minimal .px-plaque{display:none}
 html.px-e-minimal .px-tuile{min-height:40px;align-items:flex-start;justify-content:center;border-left:2px solid var(--bord);padding-left:8px}
@@ -1358,13 +1376,13 @@ html.px-m-organique .px-accueil>.px-sous,html.px-m-organique .px-accueil .px-pla
 .px-map{--ct:"ChillTekk",ui-monospace,monospace}
 html.px-organique .px-map :is(.px-map-k,.px-map-tc,.px-map-rc) small,html.px-organique .px-map-t b,html.px-organique .px-map-ou,html.px-organique .px-nv-c b{font-family:var(--ct)}
 .px-map :is(.px-map-k,.px-map-tc,.px-map-rc) :is(.px-g,small){transition:width .22s ease,height .22s ease,font-size .22s ease,opacity .22s ease}
-html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="glyphe"] :is(.px-map-k,.px-map-tc,.px-map-rc) small{font-size:0;opacity:0}
-html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="glyphe"] :is(.px-map-k,.px-map-tc,.px-map-rc) .px-g{width:68%;height:68%}
-html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="glyphe"] .px-map-t span{opacity:0}
-html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="texte"] :is(.px-map-k,.px-map-tc,.px-map-rc) .px-g{width:0;height:0;opacity:0}
-html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="texte"] :is(.px-map-k,.px-map-tc,.px-map-rc) small{font-size:12px;line-height:1.15;color:var(--txt);white-space:normal;text-align:center;word-break:break-word;letter-spacing:.06em}
-html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="texte"] .px-map-t b{color:var(--bio);text-shadow:0 0 8px var(--glow)}
-html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal) .px-map[data-detail="texte"] .px-nv-c small{font-size:10.5px;color:var(--txt)}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal):not(.px-e-humain) .px-map[data-detail="glyphe"] :is(.px-map-k,.px-map-tc,.px-map-rc) small{font-size:0;opacity:0}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal):not(.px-e-humain) .px-map[data-detail="glyphe"] :is(.px-map-k,.px-map-tc,.px-map-rc) .px-g{width:68%;height:68%}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal):not(.px-e-humain) .px-map[data-detail="glyphe"] .px-map-t span{opacity:0}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal):not(.px-e-humain) .px-map[data-detail="texte"] :is(.px-map-k,.px-map-tc,.px-map-rc) .px-g{width:0;height:0;opacity:0}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal):not(.px-e-humain) .px-map[data-detail="texte"] :is(.px-map-k,.px-map-tc,.px-map-rc) small{font-size:12px;line-height:1.15;color:var(--txt);white-space:normal;text-align:center;word-break:break-word;letter-spacing:.06em}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal):not(.px-e-humain) .px-map[data-detail="texte"] .px-map-t b{color:var(--bio);text-shadow:0 0 8px var(--glow)}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal):not(.px-e-humain) .px-map[data-detail="texte"] .px-nv-c small{font-size:10.5px;color:var(--txt)}
 /* la règle : ❄ fige ce zoom (un palier à toi), libre / paliers, tes paliers figés, le niveau */
 /* ◈ (0.99.2, RS-7 sur l'iPhone : « ça reste pas fixe à la page ; c'est pas assez lisible ») — l'accueil de l'organique = la map, FIXE : il ne
    défile plus (les membranes le faisaient déborder : 399 px pour 393, 918 pour 852) ; la map prend toute la hauteur qui reste. Et lisible sur

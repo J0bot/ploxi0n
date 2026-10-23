@@ -7,6 +7,9 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.8', titre: 'Le mode humain', points: [
+    '⊙ ⚙ › Apparence › L\'écriture › humain : zéro texte. Des glyphes, et des maths : 8◇ · 4⊡ (koins · portails), Δt −2 d (il y a deux jours), ∀t (tout le temps), →3 · 2→ (entrées · sorties), ∅ (rien). Lisible dans toutes les langues.',
+  ] },
   { v: '0.99.7', titre: 'Les koins gobent les coins', points: [
     '◺◿ Les koins sont collés aux coins de l\'écran, plus grands : l\'arrondi de l\'iPhone les découpe.',
   ] },
