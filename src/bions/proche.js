@@ -1,5 +1,5 @@
 // @bion proche — l'ultimate Bluetooth, sa part pure : les paquets entre téléphones proches, l'horloge partagée (un hôte, des répliques),
-// la partition de la basse, la position d'un son partagé | api: paquet, lire, ecart, meilleurEcart, partition, notesEntre, freq, positionA, nomDe, GLYPHES_MSG
+// la partition de la basse, la position d'un son partagé | api: paquet, lire, ecart, meilleurEcart, partition, pasValides, notesEntre, freq, positionA, nomDe, GLYPHES_MSG
 // (0.99.1, RS-7 23.10 : « ultimate Bluetooth : envoyer des messages en Bluetooth, partager du son ou une basse, un téléphone qui host le son et
 // tous les autres qui répliquent, plein de gens avec le même son » ; « je te laisse extrapoler et implémenter toi-même »). docs/ULTIMATE-BLUETOOTH.md.
 // Un iPhone n'est jamais une enceinte Bluetooth : on n'envoie pas le SON, on envoie la PARTITION (la basse : tempo, motif, tonique) ou le
@@ -51,14 +51,22 @@ export const MOTIFS = {
   marche: [0, null, 2, null, 4, null, 2, null, 0, null, 2, null, 4, null, 6, null],
   dub: [0, null, null, null, null, null, 0, null, '+0', null, null, null, 4, null, null, null],
 };
-/** une partition = { tempo, motif, tonique (midi), gamme, debut (heure de l'HÔTE, ms) } → nettoyée et bornée */
-export function partition({ tempo = 120, motif = 'pulse', tonique = 36, gamme = 'mineur', debut = 0, volume = 0.8 } = {}) {
-  return { tempo: Math.max(50, Math.min(200, Math.round(+tempo) || 120)), motif: MOTIFS[motif] ? motif : 'pulse', tonique: Math.max(24, Math.min(52, Math.round(+tonique) || 36)),
+/** (0.99.16) un pas à pas à soi : 16 cases, chacune null ou un degré de la gamme (0 à 14 ; '+n' = l'octave du dessus) ; sinon null.
+ *  Ce qui vient d'à côté est vérifié case par case. */
+export function pasValides(x) {
+  if (!Array.isArray(x) || x.length !== 16) return null;
+  const out = x.map(v => (v == null ? null : (typeof v === 'string' && /^\+\d{1,2}$/.test(v) && +v.slice(1) <= 14) ? v : (Number.isInteger(v) && v >= 0 && v <= 14 ? v : undefined)));
+  return out.includes(undefined) ? null : out;
+}
+/** une partition = { tempo, motif, tonique (midi), gamme, debut (heure de l'HÔTE, ms) } → nettoyée et bornée ; motif 'mien' + pas = le pas à pas */
+export function partition({ tempo = 120, motif = 'pulse', tonique = 36, gamme = 'mineur', debut = 0, volume = 0.8, pas = null } = {}) {
+  const mien = motif === 'mien' ? pasValides(pas) : null;
+  return { tempo: Math.max(50, Math.min(200, Math.round(+tempo) || 120)), motif: mien ? 'mien' : (MOTIFS[motif] ? motif : 'pulse'), pas: mien, tonique: Math.max(24, Math.min(52, Math.round(+tonique) || 36)),
     gamme: GAMMES[gamme] ? gamme : 'mineur', debut: +debut || 0, volume: Math.max(0, Math.min(1, +volume || 0)) };
 }
 export const freq = (midi) => 440 * Math.pow(2, (midi - 69) / 12);
 const noteDu = (p, pas) => {
-  const x = MOTIFS[p.motif][pas]; if (x == null) return null;
+  const x = (p.pas || MOTIFS[p.motif])[pas]; if (x == null) return null;
   const haut = typeof x === 'string' && x[0] === '+', deg = haut ? +x.slice(1) : +x, g = GAMMES[p.gamme];
   return p.tonique + (haut ? 12 : 0) + g[deg % g.length] + 12 * Math.floor(deg / g.length);
 };

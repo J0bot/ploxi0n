@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.16', titre: 'Le pas à pas', points: [
+    '⊞ Synthé › « à moi » : 16 pas, 8 notes de la gamme. Touche une case : la note est posée (et tu l\'entends). ▷ la boucle la joue, la colonne qui joue s\'allume.',
+    '⇣ partir du motif, ⁂ hasard, ∅ effacer. Gardé pour la prochaine fois ; « dans Proche », toute la salle joue ton pas à pas.',
+  ] },
   { v: '0.99.15', titre: 'Autour : la boussole et les trottinettes', points: [
     '⌖ Les flèches tournent avec toi : tiens l\'iPhone devant toi, la flèche montre où aller.',
     '⋈ En Suisse, les trottinettes et les vélos libres en direct (sharedmobility.ch) : la plus proche en un geste, sous les toilettes.',

@@ -5,7 +5,7 @@
 //   16 pads dans la gamme (plusieurs doigts à la fois), une boucle au tempo, un oscilloscope qui montre le son ; tes sons gardés.
 // Tourner un knob change le son EN DIRECT, même d'une note tenue. Le son continue quand on change de ploxion ; ‹ le coupe.
 import { PARAMS, GROUPES, PRESETS, normaliser, noteDePad, hasard, freq, ONDES } from '../bions/son.js';
-import { MOTIFS, GAMMES, partition, notesEntre } from '../bions/proche.js';
+import { MOTIFS, GAMMES, partition, notesEntre, pasValides } from '../bions/proche.js';
 import { brancherPanneau } from '../bions/tordre.js';
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -108,12 +108,13 @@ export function valeurInclinee(cle, u) {
 export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, Contexte = W && (W.AudioContext || W.webkitAudioContext), proche = null }) {
   const D = W.document;
   let sortieAudio = null, partage = false, partageAttente = 0, penche = null, paire = 0, pencheRaf = 0, pencheDer = null;
+  let pas = MOTIFS.tekk.slice();   // (0.99.16) le pas à pas : 16 cases, un degré de la gamme ou rien (motif 'mien')
   let p = normaliser(PRESETS['basse tekk']), sons = [], gamme = 'mineur', motif = 'tekk', ctx = null, m = null, boucle = null, ordo = 0, jusque = 0, garde = 0, peindre = () => {};
   const pret = Promise.all([boxion.get('reglages', 'synthe').catch(() => null), boxion.get('reglages', 'synthe-sons').catch(() => null)]).then(([r, s]) => {
-    if (r && typeof r === 'object') { p = normaliser(r.p || r); if (GAMMES[r.gamme]) gamme = r.gamme; if (MOTIFS[r.motif]) motif = r.motif; }
+    if (r && typeof r === 'object') { p = normaliser(r.p || r); if (GAMMES[r.gamme]) gamme = r.gamme; const pv = pasValides(r.pas); if (pv) pas = pv; if (MOTIFS[r.motif] || (r.motif === 'mien' && pv)) motif = r.motif; }
     if (Array.isArray(s)) sons = s.filter(x => x && x.nom).slice(0, 40).map(x => ({ nom: String(x.nom).slice(0, 30), p: normaliser(x.p) }));
   });
-  const garder = () => { W.clearTimeout(garde); garde = W.setTimeout(() => boxion.put('reglages', 'synthe', { p, gamme, motif }).catch(() => {}), 400); };
+  const garder = () => { W.clearTimeout(garde); garde = W.setTimeout(() => boxion.put('reglages', 'synthe', { p, gamme, motif, pas }).catch(() => {}), 400); };
   function moteur() {   // créé au premier geste (iOS n'ouvre le son qu'après un toucher)
     if (!ctx && Contexte) { try { ctx = new Contexte(); } catch (e) { ctx = null; } }
     if (!ctx) return null;
@@ -137,7 +138,7 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
   }
   // ---- (0.99.10) jouer à plusieurs : le son du synthé part dans Proche (la basse partagée porte ses 33 réglages) ----
   const tonique = () => Math.max(24, Math.min(52, 36 + p.transpose + 12 * p.octave));
-  function envoyerProche() { if (!partage || !proche) return; const r = proche.hebergerBasse({ tempo: p.tempo, motif, gamme, tonique: tonique(), volume: p.volume, son: { ...p } }); if (!r) { partage = false; peindre(); } }
+  function envoyerProche() { if (!partage || !proche) return; const r = proche.hebergerBasse({ tempo: p.tempo, motif, pas, gamme, tonique: tonique(), volume: p.volume, son: { ...p } }); if (!r) { partage = false; peindre(); } }
   function partager(oui) {
     if (!oui) { if (partage && proche) proche.arreterBasse(); partage = false; peindre(); return true; }
     if (!proche || !proche.etat().actif) return false;   // Proche d'abord : la salle, les autres
@@ -158,11 +159,11 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
     boucle = { debut: Date.now() + 120 }; jusque = 0; W.clearInterval(ordo);
     ordo = W.setInterval(() => {
       if (!boucle) return;
-      const pa = partition({ tempo: p.tempo, motif, tonique: 36, gamme, debut: boucle.debut, volume: 1 }), maintenant = Date.now(), de = Math.max(maintenant, jusque), a = maintenant + 220;
-      const pas = 60000 / p.tempo / 4;
+      const pa = partition({ tempo: p.tempo, motif, pas, tonique: 36, gamme, debut: boucle.debut, volume: 1 }), maintenant = Date.now(), de = Math.max(maintenant, jusque), a = maintenant + 220;
+      const unPas = 60000 / p.tempo / 4;
       for (const nt of notesEntre(pa, de, a)) {   // le swing retarde les contretemps ; la durée = le gate
-        const k = Math.round((nt.t - boucle.debut) / pas), sw = k % 2 ? p.swing * pas * 0.5 : 0;
-        const q = ctx.currentTime + Math.max(0, (nt.t + sw - maintenant) / 1000), id = mo.debut(nt.midi + p.transpose, q); mo.fin(id, q + Math.max(0.03, pas * p.gate / 1000));
+        const k = Math.round((nt.t - boucle.debut) / unPas), sw = k % 2 ? p.swing * unPas * 0.5 : 0;
+        const q = ctx.currentTime + Math.max(0, (nt.t + sw - maintenant) / 1000), id = mo.debut(nt.midi + p.transpose, q); mo.fin(id, q + Math.max(0.03, unPas * p.gate / 1000));
       }
       jusque = a;
     }, 60);
@@ -184,6 +185,7 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
       + '<div class="px-sy-jouer"><canvas class="px-sy-scope" data-sy-scope height="70" aria-hidden="true"></canvas>'
       + '<div class="px-sy-pads" data-sy-pads data-neurones="fin" data-instrument></div>'
       + '<div class="px-sy-l"><button type="button" data-sy="boucle"></button><div class="px-sy-seg" data-sy-motifs></div></div>'
+      + '<div class="px-sy-seq" data-sy-seq data-instrument hidden></div>'   /* (0.99.16) le pas à pas : 16 pas × 8 degrés de la gamme */
       + '<div class="px-sy-seg px-sy-plus"><button type="button" data-sy="pencher"></button><button type="button" data-sy="paire"></button><button type="button" data-sy="proche"></button></div><p class="px-sy-msg" data-sy-msg hidden></p>'
       + '<div class="px-sy-seg" data-sy-gammes></div></div>'   /* (0.99.5) deux colonnes en paysage : jouer à gauche, régler à droite */
       + '<div class="px-sy-regler"><div data-sy-k data-instrument></div>'
@@ -200,11 +202,29 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
       pe.textContent = penche ? '⟲ penché' : '⟲ pencher'; pe.classList.toggle('on', !!penche);
       pa2.textContent = nom(PAIRES[paire][0]) + ' × ' + nom(PAIRES[paire][1]);
       pr.textContent = partage ? '◉ partagé dans Proche' : '◉ dans Proche'; pr.classList.toggle('on', partage);
-      $('[data-sy-motifs]').innerHTML = Object.keys(MOTIFS).map(k => '<button type="button" data-sy-motif="' + k + '"' + (k === motif ? ' class="on"' : '') + '>' + k + '</button>').join('');
+      $('[data-sy-motifs]').innerHTML = Object.keys(MOTIFS).map(k => '<button type="button" data-sy-motif="' + k + '"' + (k === motif ? ' class="on"' : '') + '>' + k + '</button>').join('')
+        + '<button type="button" data-sy-motif="mien"' + (motif === 'mien' ? ' class="on"' : '') + '>⊞ à moi</button>';
+      peindreSeq();
       $('[data-sy-gammes]').innerHTML = Object.keys(GAMMES).map(k => '<button type="button" data-sy-gamme="' + k + '"' + (k === gamme ? ' class="on"' : '') + '>' + k + '</button>').join('');
       $('[data-sy-presets]').innerHTML = Object.keys(PRESETS).map(k => '<button type="button" data-sy-preset="' + esc(k) + '">' + esc(k) + '</button>').join('') + '<button type="button" data-sy="hasard">⁂ hasard</button>';
       $('[data-sy-sons]').innerHTML = sons.map((s, i) => '<button type="button" data-sy-son="' + i + '">' + esc(s.nom) + '</button>').join('');
     }
+    // le pas à pas : une colonne par pas (16), une ligne par degré (le grave en bas) ; une note par pas ; toucher = poser / enlever
+    let ici = -1;
+    function peindreSeq() {
+      const z = $('[data-sy-seq]'); z.hidden = motif !== 'mien'; if (z.hidden) return;
+      let h = '<div class="px-sy-grille">';
+      for (let d = 7; d >= 0; d--) for (let k = 0; k < 16; k++) h += '<button type="button" class="px-sy-c' + (pas[k] === d ? ' on' : '') + (k % 4 === 0 ? ' px-sy-temps' : '') + '" data-sy-c="' + k + ':' + d + '" data-k="' + k + '" aria-label="pas ' + (k + 1) + ', degré ' + (d + 1) + '"></button>';
+      z.innerHTML = h + '</div><div class="px-sy-seg"><button type="button" data-sy="seq-motif">⇣ partir du motif</button><button type="button" data-sy="seq-hasard">⁂ hasard</button><button type="button" data-sy="seq-vider">∅ effacer</button></div>';
+      ici = -1;
+    }
+    function teteDeLecture() {   // la colonne qui joue (dans la boucle d'affichage, seulement quand elle change)
+      const z = $('[data-sy-seq]'); if (!z || z.hidden || !boucle) return;
+      const k = Math.floor((Date.now() - boucle.debut) / (60000 / p.tempo / 4)); const c = ((k % 16) + 16) % 16; if (k < 0 || c === ici) return;
+      for (const x of z.querySelectorAll('.ici')) x.classList.remove('ici');
+      for (const x of z.querySelectorAll('[data-k="' + c + '"]')) x.classList.add('ici'); ici = c;
+    }
+    const seqChange = () => { garder(); if (partage) envoyerProche(); };
     async function peindreKnobs() {
       const K = await knobs().catch(() => null), zone = $('[data-sy-k]'); if (!vivant || !zone) return;
       if (!K) { zone.innerHTML = '<p class="px-sous">les knobs (jOSKnob) ne sont pas là</p>'; return; }
@@ -231,7 +251,7 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
       const H = cv.height, L = cv.width, st = W.getComputedStyle ? W.getComputedStyle(cv) : null;
       c2.clearRect(0, 0, L, H); c2.lineWidth = 3; c2.strokeStyle = (st && st.color) || '#7cff9b'; c2.beginPath();
       for (let i = 0; i < tampon.length; i++) { const x = i / (tampon.length - 1) * L, y = tampon[i] / 255 * H; if (i) c2.lineTo(x, y); else c2.moveTo(x, y); }
-      c2.stroke();
+      c2.stroke(); teteDeLecture();
       if (m.voix() > 0 || boucle) raf = W.requestAnimationFrame(dessiner);
     }
     const reveiller = () => { if (!raf && W.requestAnimationFrame) raf = W.requestAnimationFrame(dessiner); };
@@ -249,7 +269,12 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
     const lacher = (e) => { const d = doigts.get(e.pointerId); if (!d) return; doigts.delete(e.pointerId); d.b.classList.remove('on'); if (m) m.fin(d.id); };
     pads.addEventListener('pointerup', lacher); pads.addEventListener('pointercancel', lacher); pads.addEventListener('lostpointercapture', lacher);
     hote.addEventListener('click', (e) => {
-      const mo = e.target.closest('[data-sy-motif]'); if (mo) { motif = mo.getAttribute('data-sy-motif'); garder(); peindreChoix(); vibrer('selection'); return; }
+      const mo = e.target.closest('[data-sy-motif]'); if (mo) { motif = mo.getAttribute('data-sy-motif'); garder(); if (partage) envoyerProche(); peindreChoix(); vibrer('selection'); return; }
+      const ce = e.target.closest('[data-sy-c]'); if (ce) { const [k, d] = ce.getAttribute('data-sy-c').split(':').map(Number); pas[k] = pas[k] === d ? null : d; pas = pas.slice();
+        for (const x of hote.querySelectorAll('[data-sy-c^="' + k + ':"]')) x.classList.toggle('on', x === ce && pas[k] === d);
+        vibrer('fx-cran'); seqChange();
+        if (pas[k] != null) { const mo2 = moteur(); if (mo2) { const g = GAMMES[gamme], q = ctx.currentTime, id = mo2.debut(36 + p.transpose + g[d % g.length] + 12 * Math.floor(d / g.length), q); mo2.fin(id, q + 0.18); reveiller(); } }   /* on entend la note posée */
+        return; }
       const ga = e.target.closest('[data-sy-gamme]'); if (ga) { gamme = ga.getAttribute('data-sy-gamme'); garder(); peindreChoix(); vibrer('selection'); return; }
       const pr = e.target.closest('[data-sy-preset]'); if (pr) { regler(PRESETS[pr.getAttribute('data-sy-preset')] || {}); vibrer('fx-arrivee'); return; }
       const so = e.target.closest('[data-sy-son]'); if (so) { const s = sons[+so.getAttribute('data-sy-son')]; if (s) { regler(s.p); vibrer('fx-arrivee'); } return; }
@@ -259,6 +284,10 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
       else if (a === 'paire') { paire = (paire + 1) % PAIRES.length; vibrer('selection'); peindreChoix(); }
       else if (a === 'proche') { moteur(); const ok = partager(!partage), msg = $('[data-sy-msg]'); msg.hidden = ok; if (!ok) msg.textContent = 'Démarre Proche d\'abord (◉ proche : ton nom, la salle) : ceux de la salle entendront ce son, et chaque knob tordu.'; vibrer(ok ? 'fx-arrivee' : 'erreur'); }
       else if (a === 'hasard') { regler(hasard(Date.now() % 100000)); vibrer('fx-arrivee'); }
+      else if (a === 'seq-motif') { pas = (MOTIFS[motif] || MOTIFS.tekk).map(x => (typeof x === 'string' ? Math.min(7, +x.slice(1) + GAMMES[gamme].length) : x));   /* '+n' : l'octave du dessus (un degré de plus que la gamme) */ peindreSeq(); seqChange(); vibrer('selection'); }
+      else if (a === 'seq-vider') { pas = Array(16).fill(null); peindreSeq(); seqChange(); vibrer('selection'); }
+      else if (a === 'seq-hasard') { let g = (Date.now() % 100000) || 1; const r = () => ((g = (g * 16807) % 2147483647) / 2147483647);
+        pas = Array.from({ length: 16 }, (_, k) => (k % 4 === 0 || r() < 0.35 ? (k % 8 === 0 ? 0 : Math.floor(r() * 8)) : null)); peindreSeq(); seqChange(); vibrer('fx-arrivee'); }
       else if (a === 'garder') { const i = $('[data-sy-nom]'), nom = (i.value || '').trim().slice(0, 30) || ('son ' + (sons.length + 1));
         sons = [...sons.filter(s => s.nom !== nom), { nom, p: { ...p } }].slice(-40); boxion.put('reglages', 'synthe-sons', sons).catch(() => {}); i.value = ''; peindreChoix(); vibrer('succes'); }
     });
@@ -266,8 +295,8 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
       joue: () => !!(boucle || partage || (m && m.actives() > 0)) };
   }
 
-  const api = { regler, lancerBoucle, arreterBoucle, partager, pencher, surPenche: (e) => { pencheDer = e; if (penche) { const [kx, ky] = PAIRES[paire]; regler({ [kx]: valeurInclinee(kx, ((+e.gamma || 0) + 45) / 90), [ky]: valeurInclinee(ky, ((+e.beta || 0) - 10) / 70) }); } }, reglages: () => ({ ...p }), choisir: (o = {}) => { if (GAMMES[o.gamme]) gamme = o.gamme; if (MOTIFS[o.motif]) motif = o.motif; garder(); },
-    moteur, etat: () => ({ p: { ...p }, gamme, motif, boucle: !!boucle, sons: sons.map(s => s.nom), partage, penche: !!penche, paire: PAIRES[paire] }),
+  const api = { regler, lancerBoucle, arreterBoucle, partager, pencher, surPenche: (e) => { pencheDer = e; if (penche) { const [kx, ky] = PAIRES[paire]; regler({ [kx]: valeurInclinee(kx, ((+e.gamma || 0) + 45) / 90), [ky]: valeurInclinee(ky, ((+e.beta || 0) - 10) / 70) }); } }, reglages: () => ({ ...p }), choisir: (o = {}) => { if (GAMMES[o.gamme]) gamme = o.gamme; const pv = pasValides(o.pas); if (pv) pas = pv; if (MOTIFS[o.motif] || (o.motif === 'mien' && pas)) motif = o.motif; garder(); },
+    moteur, etat: () => ({ p: { ...p }, gamme, motif, pas: pas.slice(), boucle: !!boucle, sons: sons.map(s => s.nom), partage, penche: !!penche, paire: PAIRES[paire] }),
     couper() { arreterBoucle(); if (m) m.toutCouper(); } };
   if (W) { W.jOSApps = W.jOSApps || {}; W.jOSApps.synthe = { manifest: { id: 'synthe', name: 'Synthé', icon: '≋' }, mount }; }
   return { mount, pret, ...api, ploxion: { id: 'synthe', nom: 'Synthé', icone: '≋', interne: true } };

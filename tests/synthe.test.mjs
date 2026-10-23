@@ -120,3 +120,33 @@ test('≋ jouer à plusieurs : le son du synthé part dans la basse de Proche ; 
   assert.ok(sent.some(x => x.g === 'basse' && x.d && x.d.son && x.d.son.coupure === 330), 'et part sur le réseau');
   s.partager(false); assert.equal(proche.etat().basse, null);
 });
+
+// ---- (0.99.16) le pas à pas : 16 pas × un degré de la gamme ; il passe par la partition de Proche ----
+import { pasValides, partition, notesEntre, GAMMES } from '../src/bions/proche.js';
+test('⊞ le pas à pas : vérifié case par case ; la partition le joue ; un motif nommé l\'oublie', () => {
+  const pas = [0, null, 2, null, 4, null, '+0', null, null, null, null, null, 7, null, null, null];
+  assert.deepEqual(pasValides(pas), pas);
+  assert.equal(pasValides(pas.slice(0, 15)), null); assert.equal(pasValides([...pas.slice(0, 15), 15]), null); assert.equal(pasValides([...pas.slice(0, 15), '+99']), null); assert.equal(pasValides([...pas.slice(0, 15), 1.5]), null);
+  const pa = partition({ tempo: 120, motif: 'mien', pas, tonique: 36, gamme: 'mineur', debut: 0 });
+  assert.equal(pa.motif, 'mien'); assert.deepEqual(pa.pas, pas);
+  const g = GAMMES.mineur, n = notesEntre(pa, 0, 2000);   // un tour = 16 pas de 125 ms
+  assert.deepEqual(n.map(x => x.midi), [36, 36 + g[2], 36 + g[4], 48, 36 + g[7 % g.length] + 12 * Math.floor(7 / g.length)]);
+  assert.deepEqual(n.map(x => x.t), [0, 250, 500, 750, 1500]);
+  assert.equal(partition({ motif: 'mien', pas: 'n\'importe' }).motif, 'pulse');
+  assert.equal(partition({ motif: 'tekk', pas }).pas, null);
+});
+
+test('⊞ le synthé garde ton pas à pas, et l\'envoie dans la basse de Proche', async () => {
+  const tuyau = { demarrer: async ({ nom }) => ({ moi: nom + '·a1' }), arreter: async () => {}, envoyer: async () => ({ envoyes: 1 }), pairs: async () => [], surPair: () => {}, surMessage: () => {} };
+  const W = { setInterval: () => 1, clearInterval: () => {}, setTimeout: (f, ms) => setTimeout(f, Math.min(ms || 0, 5)), clearTimeout: (t) => clearTimeout(t) };
+  const boxion = creerMemoire(), proche = creerProche({ W, boxion: creerMemoire(), tuyau, Contexte: null });
+  const s = creerSynthe({ W, boxion, Contexte: null, proche }); await s.pret;
+  const pas = [0, null, null, 3, null, null, 5, null, 0, null, null, 3, null, null, 6, null];
+  s.choisir({ motif: 'mien', pas }); assert.equal(s.etat().motif, 'mien'); assert.deepEqual(s.etat().pas, pas);
+  await new Promise(r => setTimeout(r, 30));
+  assert.deepEqual((await boxion.get('reglages', 'synthe')).pas, pas);
+  await proche.demarrer({ nom: 'RS-7', salle: 'zurich' }); s.partager(true);
+  assert.equal(proche.etat().basse.motif, 'mien'); assert.deepEqual(proche.etat().basse.pas, pas);
+  const t = creerSynthe({ W, boxion, Contexte: null }); await t.pret;
+  assert.equal(t.etat().motif, 'mien'); assert.deepEqual(t.etat().pas, pas, 'relu au lancement suivant');
+});

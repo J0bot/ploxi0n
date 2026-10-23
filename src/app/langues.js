@@ -171,6 +171,13 @@ export const LIGNES = [
   ['je te suis', 'following you', 'ich folge dir', 'ti seguo', 'te sigo'],
   ['ne plus suivre', 'stop following', 'nicht mehr folgen', 'smetti di seguire', 'dejar de seguir'],
   ['pas de toilettes connues ici', 'no known toilets here', 'hier keine bekannten Toiletten', 'nessun bagno noto qui', 'no hay baños conocidos aquí'],
+  // ---- le synthé ----
+  ['la boucle', 'the loop', 'die Schleife', 'il loop', 'el bucle'],
+  ['partir du motif', 'start from the pattern', 'vom Muster ausgehen', 'parti dal motivo', 'partir del patrón'],
+  ['hasard', 'random', 'Zufall', 'caso', 'azar'],
+  ['effacer', 'clear', 'löschen', 'cancella', 'borrar'],
+  ['pencher', 'tilt', 'neigen', 'inclina', 'inclinar'],
+  ['dans Proche', 'in Nearby', 'in der Nähe', 'in Vicino', 'en Cerca'],
   // ---- Proche ----
   ['proche', 'nearby', 'in der Nähe', 'vicino', 'cerca'],
   ['les téléphones autour de toi, sans internet : des messages, une basse, un son, partagés. Chacun joue le son lui-même, calé sur l\'hôte.',
