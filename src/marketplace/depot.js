@@ -31,7 +31,14 @@ export function bionsTouches(js, sauf = '') {
 export function bundleDeLaPage(html, id) {
   const h = String(html || ''); const fin = h.indexOf('<div id="pxhost"'); if (fin < 0) return null;
   const avant = h.slice(0, fin), re = /<script\b[^>]*>([\s\S]*?)<\/script>/gi; let m, code = null, debut = -1;
-  const enregistre = new RegExp('jOSApps\\s*\\[\\s*[\'"]' + id.replace(/[^a-z0-9_-]/gi, '') + '[\'"]\\s*\\]\\s*=');
+  // (0.99.3) trois façons d'enregistrer, vues au labo : jOSApps['musique'] = … ; jOSApps[ID] = … avec ID = 'musique' (musique, chemin, agora, rs,
+  // ram, youtube-music, download) ; jOSApps.calendar = … (calendar). Sans les deux dernières, ces ploxions « refusaient » de s'installer.
+  const nid = id.replace(/[^a-z0-9_-]/gi, ''), q = '[\'"`]';
+  const directe = new RegExp('jOSApps\\s*\\[\\s*' + q + nid + q + '\\s*\\]\\s*=(?!=)');
+  const pointee = /^[a-z_$][a-z0-9_$]*$/i.test(nid) ? new RegExp('jOSApps\\s*\\.\\s*' + nid + '\\s*=(?!=)') : null;
+  // jOSApps[ID] = … : ID posé ailleurs dans le script (var ID = 'x' ; var W = window, ID = 'x')
+  const parNom = (c) => { for (const x of c.matchAll(/jOSApps\s*\[\s*([A-Za-z_$][\w$]*)\s*\]\s*=(?!=)/g)) if (new RegExp('(?:^|[^.\\w$])' + x[1].replace(/\$/g, '\\$') + '\\s*=\\s*' + q + nid + q).test(c)) return true; return false; };
+  const enregistre = { test: (c) => directe.test(c) || !!(pointee && pointee.test(c)) || parNom(c) };
   while ((m = re.exec(avant))) if (enregistre.test(m[1])) { code = m[1]; debut = m.index; }
   if (!code) return null;
   const tete = avant.slice(0, debut), i = tete.toLowerCase().lastIndexOf('<style');   // le <style> collé juste avant ce script (pas ceux de la page)
@@ -51,6 +58,19 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
   const NS = 'ploxions', META = 'marketplace';
   async function liste() { const l = await boxion.get(META, 'installes'); return Array.isArray(l) ? l : []; }
   async function garderListe(l) { await boxion.put(META, 'installes', [...new Set(l)]); }
+  // (0.99.3) PATIENT : le labo répond 429 (trop de requêtes) quand on installe ou met à jour en rafale (6 à la fois) ; avant, un bion qui
+  // recevait 429 était noté ABSENT pendant 7 jours (56 bions valides bannis, 140 ploxions installés sans leurs bions). On réessaie (Retry-After,
+  // sinon 0,7 s · 1,4 s · 2,8 s) ; seul un vrai 404 / 410 veut dire « n'existe pas ».
+  const dormir = (ms) => new Promise(r => setTimeout(r, ms));
+  async function getPatient(url, o) {
+    for (let i = 0; ; i++) {
+      const r = await http.get(url, o);
+      if (!(r && (r.status === 429 || r.status >= 500)) || i >= 3) return r;
+      const e = r.entetes || {}, ra = +(e['retry-after'] || e['Retry-After'] || 0);
+      await dormir(Math.min(8000, ra > 0 ? ra * 1000 : 700 * 2 ** i));
+    }
+  }
+  const vraimentAbsent = (st) => st === 404 || st === 410;
   const valide = (js, id) => typeof js === 'string' && js.length > 0 && js.length < 8e6 && /jOSApps/.test(js) && js.includes(id);
 
   // les bions d'un code, RÉCURSIVEMENT (les bions d'un bion), dépendances d'abord ; servis seuls par le labo (/px/bion-app/<jOSNom>.js).
@@ -67,12 +87,12 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
       // (0.51) un bion que le labo ne sert pas répond par une page HTML de 3,5 Mo (Stremio : jOSCineJournal, jOSParesseux, jOSXxx → ~10 Mo
       // par installation, en données mobiles) : noté absent, il n'est pas redemandé pendant 7 jours
       const absent = x ? null : await boxion.get('bions-absents', b).catch(() => null);
-      if (!x && !(absent && Date.now() - (+absent.le || 0) < 7 * 864e5)) {
+      if (!x && !(absent && vraimentAbsent(absent.status) && Date.now() - (+absent.le || 0) < 7 * 864e5)) {   // un ancien « absent » sur un 429 ne compte plus
         signaler(b);
         try {
-          const rb = await http.get(source + '/px/bion-app/' + b + '.js', { headers: { Accept: 'application/javascript' } });
+          const rb = await getPatient(source + '/px/bion-app/' + b + '.js', { headers: { Accept: 'application/javascript' } });
           if (rb.status === 200 && rb.texte.includes(b) && !/^\s*<(!doctype|html)/i.test(rb.texte)) { x = { js: rb.texte, hash: await sha256(rb.texte), le: new Date().toISOString() }; await boxion.put('bions', b, x); }
-          else await boxion.put('bions-absents', b, { le: Date.now(), status: rb.status }).catch(() => {});
+          else if (vraimentAbsent(rb.status) || rb.status === 200) await boxion.put('bions-absents', b, { le: Date.now(), status: rb.status }).catch(() => {});
         } catch (e) { /* hors ligne : manquant (pas noté absent : on réessaiera) */ }
       }
       if (!x) { if (declares.has(b)) manquants.push(b); return; }
@@ -134,12 +154,12 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
     },
     async installer(id, meta = {}, progres = null) {
       if (progres) progres({ etape: 'ploxion', nom: id, fait: 0, connus: 1 });
-      let r = await http.get(source + '/px/' + encodeURIComponent(id) + '/app.js', { headers: { Accept: 'application/javascript' } });
+      let r = await getPatient(source + '/px/' + encodeURIComponent(id) + '/app.js', { headers: { Accept: 'application/javascript' } });
       // (0.51) pas d'app.js (le 404 du labo est une page HTML de 3,5 Mo) : le code est dans la page du ploxion → on l'en extrait
       if (r.status !== 200 || /^\s*<(!doctype|html)/i.test(r.texte || '')) {
-        const pg = await http.get(source + '/px/' + encodeURIComponent(id), { headers: { Accept: 'text/html' } }).catch(() => null);
+        const pg = await getPatient(source + '/px/' + encodeURIComponent(id), { headers: { Accept: 'text/html' } }).catch(() => null);
         const js = pg && pg.status === 200 ? bundleDeLaPage(pg.texte, id) : null;
-        if (!js) throw new Error(r.status === 200 ? `${id} : ce n'est pas un ploxion installable (pas d'enregistrement jOSApps)` : `le serveur refuse ${id} (HTTP ${r.status})`);
+        if (!js) throw new Error(r.status === 200 || (pg && pg.status === 200) ? `${id} : ce n'est pas un ploxion installable (pas d'enregistrement jOSApps)` : `le serveur refuse ${id} (HTTP ${(pg && pg.status) || r.status})`);
         r = { status: 200, texte: js, entetes: {} };
       }
       if (!valide(r.texte, id)) throw new Error(`${id} : ce n'est pas un ploxion installable (pas d'enregistrement jOSApps)`);

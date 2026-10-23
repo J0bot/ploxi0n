@@ -100,7 +100,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.2';
+const VERSION = '0.99.3';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -240,8 +240,10 @@ async function demarrer() {
   window.jOSNatif.lecture = maintenant.api;
   // un ploxion en ouvre un autre (jOSXerPrefs.ouvrir, jOS.openPloxion) : s'il n'est pas installé et qu'il y a du réseau, on l'installe à la volée
   // un ploxion absent : installé (le pack hors ligne d'abord, puis le labo) ; rend vrai s'il est là ensuite
+  const estBion = (id) => /^jOS[A-Z0-9]/.test(String(id || ''));   // jOSChemin, jOSKnob… : le nom d'un bion
   async function installerAbsent(id) {
     if (routeur.connait(id)) return true;
+    if (estBion(id)) return false;
     try {
       if (depot.packLocal().some(p => p.id === id)) { await depot.installerLocal(id); await majAccueil(); }   // (0.52) le pack hors ligne d'abord (Pomodoro → Minuteur, sans réseau)
       else { const c = await depot.catalogue({ reseau: false }); const m = (c.items || []).find(x => x.id === id) || {}; await installerAvecBarre({ depot, id, meta: { nom: m.nom, icone: m.icone }, vibrer: (x) => vibrer(x) }); await majAccueil(); }   // ⬇ la barre (un xerkion, un lien…)
@@ -271,6 +273,9 @@ async function demarrer() {
   }
   const routeurProxy = {
     async ouvrir(id, params) {
+      // (0.99.3) un BION n'est pas un ploxion (« le chemin » ouvre ses étapes jOSChemin, jOSForge… par jOS.openPloxion) : on ne l'installe pas
+      // (« le serveur refuse jOSChemin »), on descend dans son neurone, le palier « bion » de la map
+      if (estBion(id) && !routeur.connait(id)) return routeur.ouvrir('map', { palier: 'bion', bion: id });
       if (!routeur.connait(id) && !(await installerAbsent(id))) return false;
       return routeur.ouvrir(id, params);
     },
@@ -357,8 +362,9 @@ async function demarrer() {
   await boxion.put('reglages', 'base-installes', deja);
   boot(50, deja.length + ' ploxions de base');
   // 0.8 : les bions TOUCHÉS (pas seulement déclarés) ; les ploxions installés avant sont complétés une fois, en ligne, sans bloquer le démarrage
-  if (!(await boxion.get('reglages', 'bions-v2')) && navigator.onLine !== false) {
-    depot.completerBions().then(r => { boxion.put('reglages', 'bions-v2', { le: new Date().toISOString(), r }); }).catch(() => {});
+  // (0.99.3) une seconde fois : les bions bannis par un 429 du labo (notés « absents » 7 jours) reviennent dans les ploxions installés sans eux
+  if (!(await boxion.get('reglages', 'bions-v3')) && navigator.onLine !== false) {
+    depot.completerBions().then(r => { boxion.put('reglages', 'bions-v3', { le: new Date().toISOString(), r }); }).catch(() => {});
   }
   const internes = [
     // (0.67) les icônes comme dans le xer (le xerkion), et les ploxions natifs de l'app dans le marketplace (leur portée : natif)

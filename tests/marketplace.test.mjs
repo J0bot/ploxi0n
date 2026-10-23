@@ -672,3 +672,33 @@ test('(0.67) la portée d\'un ploxion : natif, partout, partiel, nexus, web exte
   assert.equal(porteeDe({ compat: { classe: 'C' } }), 'externe');
   assert.equal(porteeDe({}), 'inconnu');
 });
+
+// (0.99.3) RS-7 sur l'iPhone : « y a des ploxions qui s'installent pas » ; l'audit des 496 ploxions du labo : 8 refusés, 140 sans leurs bions
+test('⬇ (0.99.3) les trois façons d\'enregistrer une app dans sa page : [\'id\'], [ID] avec ID posé, .id', async () => {
+  const { bundleDeLaPage } = await import('../src/marketplace/depot.js');
+  const page = (s) => '<html><script>var x = 1;</script><script>' + s + '</script><div id="pxhost"></div></html>';
+  assert.ok(bundleDeLaPage(page("window.jOSApps['notes'] = { mount: m };"), 'notes'));
+  assert.ok(bundleDeLaPage(page("var W = window, D = document, ID = 'chemin'; window.jOSApps[ID] = { mount: m };"), 'chemin'));
+  assert.ok(bundleDeLaPage(page("const ID = \"musique\";\nwindow.jOSApps[ID] = { mount: m };"), 'musique'));
+  assert.ok(bundleDeLaPage(page("jOSApps.calendar = { mount: m };"), 'calendar'));
+  assert.equal(bundleDeLaPage(page("var ID = 'autre'; window.jOSApps[ID] = {};"), 'chemin'), null, 'l\'ID d\'un autre ploxion');
+  assert.equal(bundleDeLaPage(page("if (jOSApps[ID] === x) {} var ID = 'chemin';"), 'chemin'), null, 'une comparaison n\'est pas un enregistrement');
+});
+
+test('⬇ (0.99.3) un 429 du labo : on patiente et on réessaie ; un bion n\'est noté absent que sur un vrai 404', async () => {
+  const boxion = creerMemoire(); let essais = 0; const vus = [];
+  const http = { async get(url) { vus.push(url);
+    if (url.endsWith('/px/p/app.js')) return { status: 200, texte: "window.jOSApps['p'] = { mount(){ jOSKnob.create(); jOSRien.x(); } }; /* bions: jOSKnob jOSRien */", entetes: {} };
+    if (url.endsWith('/bion-app/jOSKnob.js')) { essais++; return essais < 3 ? { status: 429, texte: 'Too Many Requests', entetes: { 'retry-after': '0' } } : { status: 200, texte: 'window.jOSKnob = {}; /* jOSKnob */', entetes: {} }; }
+    if (url.endsWith('/bion-app/jOSRien.js')) return { status: 404, texte: '<html>404</html>', entetes: {} };
+    return { status: 404, texte: '', entetes: {} }; } };
+  const d = creerDepot({ boxion, http });
+  const r = await d.installer('p');
+  assert.ok(r.bions.includes('jOSKnob'), 'jOSKnob arrive après deux 429 : ' + JSON.stringify(r));
+  assert.equal(essais, 3);
+  assert.equal(await boxion.get('bions-absents', 'jOSKnob'), null, 'jamais noté absent');
+  assert.equal((await boxion.get('bions-absents', 'jOSRien')).status, 404);
+  // un ancien « absent » sur un 429 (avant la 0.99.3) ne bloque plus
+  await boxion.del('bions', 'jOSKnob'); await boxion.put('bions-absents', 'jOSKnob', { le: Date.now(), status: 429 }); essais = 10;
+  const r2 = await d.installer('p'); assert.ok(r2.bions.includes('jOSKnob'));
+});

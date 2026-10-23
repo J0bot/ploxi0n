@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.3', titre: 'Les ploxions qui ne s\'installaient pas', points: [
+    '⬇ Musique, Agora, Calendrier, Le chemin, RAM, YouTube Music, Installer, le système des RS s\'installent enfin : l\'app ne savait pas lire leur page.',
+    '⬡ Quand le labo dit « trop de requêtes », l\'app patiente et réessaie au lieu d\'oublier le bion pendant 7 jours. Au prochain lancement, les ploxions installés récupèrent les bions qui leur manquaient.',
+    '◎ Ouvrir un bion (les étapes du Chemin : jOSChemin, jOSForge…) montre son neurone sur la map, au lieu d\'une installation ratée.',
+  ] },
   { v: '0.99.2', titre: 'La map tient en place, et se lit', points: [
     '◈ L\'accueil de l\'organique ne glisse plus de côté ni en bas : la map est fixe, elle prend tout l\'écran.',
     '◇ Plus lisible sur ton fond : un voile sombre derrière la map, des noms plus grands et plus clairs (sur deux lignes), les hubs voisins moins effacés.',

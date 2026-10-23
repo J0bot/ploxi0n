@@ -102,6 +102,16 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.99.3 (24.10)** — RS-7 : « y a des ploxions qui s'installent pas » (capture : « jOSChemin — le serveur refuse jOSChemin (HTTP 40…) »).
+- Audit : un script Node installe chaque ploxion du registre du labo avec `creerDepot` (fetch de Node : `NODE_USE_ENV_PROXY=1
+  NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt`, sinon 0 ploxion). Avant : 488 / 496, 140 sans leurs bions. Après : 496 / 496, 0 manquant.
+- `bundleDeLaPage` : `jOSApps['id'] =`, `jOSApps[ID] =` (ID posé dans le script, même en liste : `var W = window, ID = 'chemin'`), `jOSApps.id =`.
+- `getPatient` (depot.js) pour app.js, la page et les bions : 429 / 5xx → réessai (Retry-After, sinon 0,7 / 1,4 / 2,8 s). « bions-absents »
+  seulement sur 404 / 410 (ou une page HTML servie en 200) ; un ancien absent sur un autre statut est ignoré. `reglages/bions-v3` : completerBions une fois.
+- Un id `jOS[A-Z0-9]…` est un bion : `routeurProxy.ouvrir` ouvre la map au palier « bion » ; `installerAbsent` refuse. La map lit ses
+  paramètres dans `o.params` (le routeur) comme à plat (l'accueil). Faux iPhone : `parcours-bion-ouvert.mjs`.
+- Piège payé deux fois cette session : un `// commentaire` ajouté en fin de ligne d'un one-liner avale la fin du code (node --check).
+
 **0.99.2 (24.10)** — RS-7 sur l'iPhone, son fond galaxie : « stylé mais ça reste pas fixe à la page, et c'est pas assez lisible ».
 Mesuré au faux iPhone : `.px-accueil` (overflow auto) défilait de 6 px en large (les SVG `px-neurones` dépassent) et 66 px en long ; le
 `scrollIntoView` du palier réseau faisait défiler tous les ancêtres. Fix : `html.px-organique .px-accueil:has(.px-org-map)` en colonne flex,

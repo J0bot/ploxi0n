@@ -121,9 +121,10 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
 
   // ---- la balade ----
   function mount(hote, params) {
+    if (params && params.params && typeof params.params === 'object') params = { ...params, ...params.params };   // (0.99.3) ouverte par le routeur : ses paramètres sont dans o.params
     let vivant = true, ici = null, pas = [], drag = null, glisse = false, repli = false;   // repli : un hub de secours, faute de la map du labo
     let us = null, fenetre = FENETRES[0];   // (0.97) le temps : l'usage des ploxions, la fenêtre du wormion
-    let palier = (params && params.palier) || 'hub', cible = null, pince = null, appui = 0;   // (0.98) le zoom de fractale
+    let palier = (params && params.palier) || 'hub', cible = params && (params.bion || params.ploxion) ? { ploxion: params.ploxion || null, bion: params.bion || null } : null, pince = null, appui = 0;   // (0.98) le zoom de fractale ; (0.99.3) ouvert sur un bion ou un ploxion
     let echelle = 1, reglageZoom = { mode: 'libre', figes: [] }, raf = 0;   // (0.99) le zoom libre ou par paliers figés
     hote.innerHTML = '<div class="px-map" data-detail="deux"><div class="px-map-b" data-neurones><button type="button" data-map="pas" data-neurone aria-label="revenir sur tes pas">‹</button><span class="px-map-ou" data-map-ou></span>'
       + '<button type="button" data-map="depart" data-neurone aria-label="le xerboxion">' + G('xerboxion') + '</button><button type="button" data-map="creer" data-neurone aria-label="créer un hub">＋</button></div>'
