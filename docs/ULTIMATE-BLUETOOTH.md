@@ -54,6 +54,39 @@
 - Au passage : le filtre « sans emoji » de l'app (`src/app/sans-emoji.js`) effaçait les signes « pictographiques » (♡ ♫ ▶ ◼ ✉ ❄) des
   ploxions internes ; `[data-ecrit]` garde ce que les gens s'écrivent, et l'interface utilise des signes qui passent (∿ ▷ ■ ✻).
 
+## Le maillage, comme bitchat (0.99.21, RS-7 : « ça doit être comme bitchat mesh pour le truc Bluetooth »)
+
+`src/bions/maille.js` (pur ; testé dans `tests/maille.test.mjs`, des téléphones en ligne A–B–C–D qui n'entendent que leurs voisins) :
+
+- **Le maillage** : chaque téléphone relaie ce qu'il reçoit à ses autres voisins, après un petit délai au hasard (10 à 150 ms). Un
+  compteur de sauts (7 au plus, comme bitchat) l'arrête. Le multi-sauts porte bien au-delà de la portée d'un seul téléphone.
+- **Le dédoublonnage** : chaque paquet a un id de 8 octets ; deux filtres de Bloom qui tournent (4 Ko chacun) se souviennent de ceux vus.
+  Pas de tempête : chacun reçoit un paquet une fois par voisin, au plus.
+- **Stocker et relayer** : les paquets des 12 dernières heures (150 au plus) sont gardés. Quand un voisin arrive, chacun envoie la liste de
+  ce qu'il a vu (`sync`, un saut seulement) ; l'autre lui envoie ce qui manque. Un message attend ainsi quelqu'un qui n'était pas là.
+- **Pas de compte** : une identité = une paire de clés ECDH P-256, gardée sur le téléphone ; son **empreinte** = les 8 premiers octets du
+  SHA-256 de la clé publique. Le nom est libre, c'est l'empreinte qui fait foi (affichée : « nom#a3f2 »). Une annonce (`ann`) porte la clé
+  publique ; elle est vérifiée (la clé doit redonner l'empreinte) et relayée : tout le maillage connaît la clé de chacun.
+- **Les messages privés** : chiffrés de bout en bout (ECDH → HKDF-SHA256 → AES-GCM 256, l'en-tête du paquet lié au chiffré : un relais
+  ne peut ni lire ni détourner) ; un **accusé** (✓✓) revient par le maillage. Vers un voisin direct, le paquet ne va qu'à lui.
+  ⚠ Pas de confidentialité persistante : bitchat utilise le protocole Noise, ici une clé par paire de téléphones.
+- **Les salons** `#nom` : ouverts, ou fermés par un mot de passe (PBKDF2-SHA256, 100 000 tours → AES-GCM). Sans le mot de passe, on voit
+  qu'il y a un message, pas ce qu'il dit. Ceux qui n'ont pas rejoint un salon le relaient sans le voir.
+- **Le rembourrage** : ce qui est chiffré est complété jusqu'à 256, 512, 1024… octets (la taille ne trahit pas le message).
+- **Bloquer** une empreinte (on relaie quand même : le maillage tient) ; **tout effacer** d'un geste (trois touchers sur « ◉ proche » :
+  une nouvelle identité, plus aucun message, salon ni cache) ; l'anti-déluge (40 paquets par empreinte et par 10 s).
+- **Les commandes** : `/j #salon [mot de passe]` · `/m @nom texte` · `/w` (qui est là, à combien de sauts) · `/bloquer @nom` ·
+  `/debloquer @nom` · `/quitter` · `/effacer` (aussi en anglais : /join /msg /who /block /clear).
+- **Un son du synthé** peut voyager avec un message (♫), même dans un salon fermé ou en privé : « ▷ dans le synthé » le charge chez l'autre.
+
+Le tuyau reste MultipeerConnectivity (le Bluetooth et le Wi-Fi direct ensemble). Une session tient 8 appareils : 7 voisins directs au plus
+(`PloxiProche`, Swift), le maillage porte au-delà. La basse et le son partagés restent d'un hôte à ses voisins directs (l'horloge).
+Les anciennes Proche (0.99.1 à 0.99.20, un seul saut) sont encore lues.
+
+**Ce que bitchat fait et qu'on ne fait pas encore** : le Bluetooth Low Energy en arrière-plan (bitchat annonce et relaie même l'app
+fermée ; MultipeerConnectivity s'arrête quand l'app passe en arrière-plan) ; le protocole Noise (confidentialité persistante) ; les
+favoris (garder les messages pour quelqu'un plus longtemps) ; le pont vers Nostr quand il y a internet.
+
 ## La suite (⏭)
 
 - Le son en arrière-plan, écran verrouillé (passer par un `<audio>` comme les ambiances), et la basse sur les vibrations (le haptique).

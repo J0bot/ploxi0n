@@ -744,3 +744,18 @@ test('◬ (0.99.19, le bilan de santé : moteur, doomion, monde-os, scan-reel «
   assert.deepEqual(bionsTouches("function create(c) { if (!window.jOS3D) return null; jOS3D.load(); }", 'jOSEngine'), ['jOS3D']);
   assert.deepEqual(bionsTouches("window.jOS3D = { load() {} }; jOS3D.load()"), [], 'un bion défini par le code lui-même');
 });
+
+test('⧉ (0.99.21) un bion déjà vivant dans la page (l\'app, le pack, un autre ploxion) n\'est ni relu ni relancé', async () => {
+  const s = serveur(), boxion = creerMemoire();
+  s.js.xk = BUNDLE('xk') + '\nif (window.jOSXerkion) jOSXerkion.ouvrir();';
+  const BIONS = { jOSXerkion: 'window.jOSXerkion={ouvrir(){ if (window.jOSStore) jOSStore.get(); }};', jOSStore: 'window.jOSStore={get(){}};' };
+  const get = s.http.get; s.http.get = async (url, o) => { const m = url.match(/\/px\/bion-app\/(\w+)\.js$/); if (m) return BIONS[m[1]] ? { status: 200, texte: BIONS[m[1]], entetes: {} } : { status: 404, texte: '', entetes: {} }; return get(url, o); };
+  const d = creerDepot({ boxion, http: s.http }); await d.installer('xk');
+  const lus = []; const g0 = boxion.get.bind(boxion); boxion.get = (ns, k) => { if (ns === 'bions') lus.push(k); return g0(ns, k); };
+  const deja = new Set(), b = await d.bundle('xk', { deja, present: (n) => n === 'jOSStore' });
+  assert.ok(!b.includes('window.jOSStore={'), 'jOSStore est déjà là'); assert.ok(b.includes('window.jOSXerkion='));
+  assert.deepEqual(lus, ['jOSXerkion'], 'seul le bion qui manque traverse le pont');
+  assert.ok(deja.has('jOSStore') && deja.has('jOSXerkion'));
+  lus.length = 0; const b2 = await d.bundle('xk', { deja, present: () => false });
+  assert.ok(!b2.includes('window.jOSXerkion=') && !lus.length, 'un second ploxion qui compose les mêmes bions : rien n\'est relu');
+});

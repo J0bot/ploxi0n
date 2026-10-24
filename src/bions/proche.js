@@ -1,5 +1,5 @@
 // @bion proche — l'ultimate Bluetooth, sa part pure : les paquets entre téléphones proches, l'horloge partagée (un hôte, des répliques),
-// la partition de la basse, la position d'un son partagé | api: paquet, lire, ecart, meilleurEcart, partition, pasValides, notesEntre, freq, positionA, nomDe, GLYPHES_MSG
+// la partition de la basse, la position d'un son partagé | api: paquet, lire, ecart, meilleurEcart, partition, pasValides, notesEntre, kicksEntre, freq, positionA, nomDe, GLYPHES_MSG
 // (0.99.1, RS-7 23.10 : « ultimate Bluetooth : envoyer des messages en Bluetooth, partager du son ou une basse, un téléphone qui host le son et
 // tous les autres qui répliquent, plein de gens avec le même son » ; « je te laisse extrapoler et implémenter toi-même »). docs/ULTIMATE-BLUETOOTH.md.
 // Un iPhone n'est jamais une enceinte Bluetooth : on n'envoie pas le SON, on envoie la PARTITION (la basse : tempo, motif, tonique) ou le
@@ -42,7 +42,7 @@ export function meilleurEcart(mesures) {
 }
 
 // ---- LA BASSE : une partition, pas du son. Un motif = 16 pas (des doubles croches) ; chaque pas : un degré de la gamme, ou rien ----
-export const GAMMES = { mineur: [0, 2, 3, 5, 7, 8, 10], majeur: [0, 2, 4, 5, 7, 9, 11], phrygien: [0, 1, 3, 5, 7, 8, 10], penta: [0, 3, 5, 7, 10] };
+export const GAMMES = { mineur: [0, 2, 3, 5, 7, 8, 10], majeur: [0, 2, 4, 5, 7, 9, 11], phrygien: [0, 1, 3, 5, 7, 8, 10], penta: [0, 3, 5, 7, 10], harmonique: [0, 2, 3, 5, 7, 8, 11] };   // (0.99.21) le mineur harmonique : la couleur psy
 // null = silence ; un nombre = un degré (0 = la tonique) ; '+' devant = l'octave du dessus
 export const MOTIFS = {
   pulse: [0, null, null, null, 0, null, null, null, 0, null, null, null, 0, null, null, null],
@@ -50,7 +50,19 @@ export const MOTIFS = {
   tekk: [0, null, null, 0, null, null, 0, null, null, 0, null, null, 4, null, 3, null],
   marche: [0, null, 2, null, 4, null, 2, null, 0, null, 2, null, 4, null, 6, null],
   dub: [0, null, null, null, null, null, 0, null, '+0', null, null, null, 4, null, null, null],
+  // (0.99.21, RS-7 : « un max de psy : psytrance, tribe, acidcore, mentalcore ») le kick sur les temps (le knob kick), la basse entre
+  psy: [null, 0, 0, 0, null, 0, 0, 0, null, 0, 0, 0, null, 0, 0, 1],   // la basse qui roule : trois doubles croches après chaque kick
+  tribe: [0, null, 0, 0, null, 0, null, 0, 0, null, 0, 0, null, '+0', null, 4],   // la tribe (freetekno) : syncopée, qui tape
+  acide: [0, '+0', 0, 3, null, 0, 4, '+0', 0, null, 1, 0, '+0', 3, 0, 1],   // la ligne 303 de l'acidcore : des sauts d'octave, des glisses
+  mental: [0, 0, '+0', 0, 0, 0, '+0', 0, 0, 0, '+0', 0, 3, 0, '+1', 0],   // le mentalcore : rien ne s'arrête
 };
+/** (0.99.21) les temps d'un kick (tous les `chaque` pas : 4 = sur chaque noire) entre de et a (heures de l'hôte, ms) */
+export function kicksEntre(p, de, a, chaque = 4) {
+  const pas = 60000 / p.tempo / 4, out = [];
+  if (!(a > de)) return out;
+  for (let k = Math.max(0, Math.ceil((de - p.debut) / pas - 1e-9)), t = p.debut + k * pas; t < a && out.length < 64; k++, t = p.debut + k * pas) if (k % chaque === 0) out.push(t);
+  return out;
+}
 /** (0.99.16) un pas à pas à soi : 16 cases, chacune null ou un degré de la gamme (0 à 14 ; '+n' = l'octave du dessus) ; sinon null.
  *  Ce qui vient d'à côté est vérifié case par case. */
 export function pasValides(x) {
@@ -61,7 +73,7 @@ export function pasValides(x) {
 /** une partition = { tempo, motif, tonique (midi), gamme, debut (heure de l'HÔTE, ms) } → nettoyée et bornée ; motif 'mien' + pas = le pas à pas */
 export function partition({ tempo = 120, motif = 'pulse', tonique = 36, gamme = 'mineur', debut = 0, volume = 0.8, pas = null } = {}) {
   const mien = motif === 'mien' ? pasValides(pas) : null;
-  return { tempo: Math.max(50, Math.min(200, Math.round(+tempo) || 120)), motif: mien ? 'mien' : (MOTIFS[motif] ? motif : 'pulse'), pas: mien, tonique: Math.max(24, Math.min(52, Math.round(+tonique) || 36)),
+  return { tempo: Math.max(50, Math.min(240, Math.round(+tempo) || 120)), motif: mien ? 'mien' : (MOTIFS[motif] ? motif : 'pulse'), pas: mien, tonique: Math.max(24, Math.min(52, Math.round(+tonique) || 36)),
     gamme: GAMMES[gamme] ? gamme : 'mineur', debut: +debut || 0, volume: Math.max(0, Math.min(1, +volume || 0)) };
 }
 export const freq = (midi) => 440 * Math.pow(2, (midi - 69) / 12);

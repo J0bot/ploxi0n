@@ -317,11 +317,13 @@ export function creerDepot({ boxion, http, source = SOURCE, compat = {}, packLoc
     },
     /** le bundle d'un ploxion, précédé de ses bions ; deja = les bions DÉJÀ exécutés dans la page (un seul chargement par bion pour toute l'app,
      *  RS-7 : « un seul bion pour tout ») — ils sont sautés et ceux ajoutés ici y sont notés */
-    async bundle(id, { deja = null } = {}) {
+    // (0.99.21, RS-7 : « tous les bions sont partagés entre les ploxions, pas besoin d'installer ou d'instancier ceux qui sont déjà là ») :
+    // present(nom) → le bion vit déjà dans la page (l'app, le pack, un autre ploxion qui le définit) : ni relu à travers le pont, ni relancé
+    async bundle(id, { deja = null, present = null } = {}) {
       const p = await boxion.get(NS, id); if (!p) return null;
       const coupes = new Set((await boxion.get('reglages', 'bions-coupes')) || []);
       let avant = '';
-      for (const b of p.bions || []) { if (coupes.has(b) || FOURNIS.has(b) || (deja && deja.has(b))) continue; if (deja) deja.add(b); const x = await boxion.get('bions', b); if (x && x.js) avant += '\n;/* bion ' + b + ' */\n' + x.js + '\n;'; }   // chaque bion se garde lui-même d'une double définition
+      for (const b of p.bions || []) { if (coupes.has(b) || FOURNIS.has(b) || (deja && deja.has(b))) continue; if (present && present(b)) { if (deja) deja.add(b); continue; } if (deja) deja.add(b); const x = await boxion.get('bions', b); if (x && x.js) avant += '\n;/* bion ' + b + ' */\n' + x.js + '\n;'; }   // chaque bion se garde lui-même d'une double définition
       return avant + '\n' + p.js;
     },
     // ---- GÉRER LES BIONS (RS-7 12.10 : « on doit pouvoir manager les bions ») ----

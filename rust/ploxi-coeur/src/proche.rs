@@ -11,6 +11,7 @@ pub const GAMMES: &[(&str, &[i32])] = &[
     ("majeur", &[0, 2, 4, 5, 7, 9, 11]),
     ("phrygien", &[0, 1, 3, 5, 7, 8, 10]),
     ("penta", &[0, 3, 5, 7, 10]),
+    ("harmonique", &[0, 2, 3, 5, 7, 8, 11]),
 ];
 
 /// un pas : rien, un degré, ou un degré à l'octave du dessus (« +n » en JS)
@@ -31,6 +32,11 @@ pub const MOTIFS: &[(&str, [Pas; 16])] = &[
     ("tekk", [d(0), R, R, d(0), R, R, d(0), R, R, d(0), R, R, d(4), R, d(3), R]),
     ("marche", [d(0), R, d(2), R, d(4), R, d(2), R, d(0), R, d(2), R, d(4), R, d(6), R]),
     ("dub", [d(0), R, R, R, R, R, d(0), R, Pas::Haut(0), R, R, R, d(4), R, R, R]),
+    // (0.99.21) un max de psy : psytrance, tribe, acidcore, mentalcore
+    ("psy", [R, d(0), d(0), d(0), R, d(0), d(0), d(0), R, d(0), d(0), d(0), R, d(0), d(0), d(1)]),
+    ("tribe", [d(0), R, d(0), d(0), R, d(0), R, d(0), d(0), R, d(0), d(0), R, Pas::Haut(0), R, d(4)]),
+    ("acide", [d(0), Pas::Haut(0), d(0), d(3), R, d(0), d(4), Pas::Haut(0), d(0), R, d(1), d(0), Pas::Haut(0), d(3), d(0), d(1)]),
+    ("mental", [d(0), d(0), Pas::Haut(0), d(0), d(0), d(0), Pas::Haut(0), d(0), d(0), d(0), Pas::Haut(0), d(0), d(3), d(0), Pas::Haut(1), d(0)]),
 ];
 
 pub fn gamme(nom: &str) -> Option<&'static [i32]> {
@@ -109,7 +115,7 @@ fn rond_ou(v: Option<&Value>, defaut: f64) -> f64 {
 
 /// partition : nettoyée et bornée (la même que src/bions/proche.js)
 pub fn partition(o: &Value) -> Partition {
-    let tempo = rond_ou(champ(o, "tempo"), 120.0).clamp(50.0, 200.0);
+    let tempo = rond_ou(champ(o, "tempo"), 120.0).clamp(50.0, 240.0);
     let motif_brut = champ(o, "motif").and_then(|v| v.as_str()).unwrap_or(if champ(o, "motif").is_none() { "pulse" } else { "" });
     let mien = if motif_brut == "mien" { pas_valides(champ(o, "pas")) } else { None };
     let motif_nom = if mien.is_some() {
@@ -181,6 +187,25 @@ pub fn notes_entre(p: &Partition, de: f64, a: f64) -> Vec<Note> {
     while t < a && out.len() < 256 {
         if let Some(m) = p.note_du((k as i64 % 16) as usize) {
             out.push(Note { t, midi: m, duree: pas * 0.9 });
+        }
+        k += 1.0;
+        t = p.debut + k * pas;
+    }
+    out
+}
+
+/// (0.99.21) les temps d'un kick (tous les `chaque` pas) entre de et a ; 64 au plus
+pub fn kicks_entre(p: &Partition, de: f64, a: f64, chaque: i64) -> Vec<f64> {
+    let pas = 60000.0 / p.tempo / 4.0;
+    let mut out = Vec::new();
+    if !(a > de) {
+        return out;
+    }
+    let mut k = (((de - p.debut) / pas - 1e-9).ceil()).max(0.0);
+    let mut t = p.debut + k * pas;
+    while t < a && out.len() < 64 {
+        if (k as i64) % chaque.max(1) == 0 {
+            out.push(t);
         }
         k += 1.0;
         t = p.debut + k * pas;

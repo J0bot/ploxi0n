@@ -2109,7 +2109,8 @@ public class PloxiProche: CAPPlugin, CAPBridgedPlugin, MCSessionDelegate, MCNear
     public func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
         DispatchQueue.main.async {
             let s = context.flatMap { String(data: $0, encoding: .utf8) } ?? ""
-            guard let se = self.lien, s == self.salle else { invitationHandler(false, nil); return }
+            // (0.99.21) le maillage : 7 voisins directs au plus (une MCSession tient 8 appareils, soi compris) ; au-delà, les autres relaient
+            guard let se = self.lien, s == self.salle, se.connectedPeers.count < 7 else { invitationHandler(false, nil); return }
             invitationHandler(true, se)
         }
     }
@@ -2120,7 +2121,7 @@ public class PloxiProche: CAPPlugin, CAPBridgedPlugin, MCSessionDelegate, MCNear
     // ---- la recherche : on invite ceux de la même salle (seulement si notre nom est le plus petit) ----
     public func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
         DispatchQueue.main.async {
-            guard let p = self.moi, let se = self.lien, info?["salle"] == self.salle, p.displayName < peerID.displayName else { return }
+            guard let p = self.moi, let se = self.lien, info?["salle"] == self.salle, p.displayName < peerID.displayName, se.connectedPeers.count < 7 else { return }
             browser.invitePeer(peerID, to: se, withContext: self.salle.data(using: .utf8), timeout: 20)
         }
     }

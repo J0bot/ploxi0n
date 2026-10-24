@@ -83,6 +83,8 @@ html,body,#ploxi0n{overflow-x:clip;max-width:100vw}
 .px-barre .px-compte{padding:0 11px}
 .px-verrou{font-size:1rem;background:var(--surface2);border:var(--trait) solid transparent;border-radius:12px;min-width:38px;min-height:38px}
 .px-hote{flex:1;min-height:0;position:relative;overflow:auto}
+/* (0.99.21) la police choisie habille le xer ; un ploxion du labo garde la sienne (⚙ › Apparence › « La police aussi dans les ploxions ») */
+html:not(.px-police-partout) .px-hote-labo{font-family:-apple-system,system-ui,"SF Pro Text","Helvetica Neue",sans-serif;--police:-apple-system,system-ui,sans-serif;--mono:ui-monospace,"SF Mono",Menlo,monospace}
 .px-erreur{color:#d993ad;padding:16px}
 .px-erreur-boot{padding:calc(env(safe-area-inset-top,0px) + 40px) 22px 22px;font:15px/1.5 var(--police,system-ui)}.px-erreur-boot p{margin:0 0 14px}.px-erreur-boot button{min-height:46px;padding:0 20px;border-radius:14px;border:2px solid #d993ad;background:none;color:#f1d6e0;font:600 15px var(--police,system-ui)}
 
@@ -1038,6 +1040,15 @@ html.px-calme .px-vx-t{transition:none}html.px-calme .px-vx-eclair{animation:non
 .px-pr-r{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px;font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:6px 0}
 .px-pr-r input{accent-color:var(--acc)}
 .px-pr-seg{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}.px-pr-seg button{flex:1;min-height:36px;padding:0 8px;font-size:11px}
+/* 〰 (0.99.21) le maillage : les pairs lointains, les salons, l'empreinte, les infos */
+.px-pr-loin{border-style:dashed}.px-pr-pair.bloque{opacity:.4;text-decoration:line-through}
+.px-pr-qui{display:flex;flex-wrap:wrap;gap:4px;width:100%;margin-top:4px}.px-pr-qui button{min-height:34px;padding:0 10px;font:600 11px var(--mono)}
+.px-pr-salons{display:flex;gap:4px;overflow-x:auto;margin:0 0 6px;-webkit-overflow-scrolling:touch}.px-pr-salons button{flex:none;min-height:34px;padding:0 12px;font:600 11px var(--mono);border-radius:999px}
+.px-pr-salons button.on{color:var(--bio);border-color:var(--bio);box-shadow:0 0 10px var(--glow)}
+.px-pr-moi{font:500 11px/1.4 var(--mono);color:var(--muted);margin:6px 0 0}.px-pr-moi b{color:var(--txt);letter-spacing:.08em}
+.px-pr-info{font:500 11px/1.4 var(--mono);color:var(--acc2);margin:6px 0}.px-pr-info[hidden]{display:none}
+.px-pr-sonb{min-height:30px;padding:0 10px;margin-left:4px;font:600 11px var(--mono);color:var(--bio);border-color:var(--bio)}
+.px-pr-m.ferme i{color:var(--muted)}.px-pr-m small{font:500 9px var(--mono);color:var(--grave)}
 
 /* ≋ (0.99.4) le synthé (src/lot/synthe.js) : l'oscilloscope, 16 pads, la boucle, les knobs par groupe (jOSKnob), les sons */
 .px-synthe{color:var(--bio)}
@@ -1057,6 +1068,8 @@ html.px-organique .px-sy-pad{--n-bord:var(--memb2)}html.px-organique .px-sy-pad.
 .px-synthe button.on{color:var(--bio);border-color:var(--bio);box-shadow:0 0 10px var(--glow)}
 .px-sy-l{display:grid;grid-template-columns:auto 1fr;gap:6px;align-items:start}
 .px-sy-seg{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}.px-sy-seg button{flex:1 1 auto}
+/* (0.99.21) les styles psy : le nom, et le tempo en petit */
+.px-sy-psy button{display:flex;flex-direction:column;align-items:center;gap:1px;min-height:46px;color:var(--bio);border-color:var(--bio)}.px-sy-psy small{font:500 9px var(--mono);color:var(--grave)}
 .px-sy-g{margin:10px 0;padding:8px 10px;border-radius:var(--blob2,16px);border:var(--trait) solid var(--bord);background:var(--surface)}
 .px-sy-g .jkn-panel{display:flex;flex-wrap:wrap;gap:4px 8px;justify-content:space-around}
 .px-sy-t{font:600 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--grave);margin:12px 0 6px}

@@ -147,6 +147,10 @@ const natif = {
       const rep = (g, d, ms) => setTimeout(() => emettre('PloxiProche', 'message', { de: 'Tom·b2c3', donnees: JSON.stringify({ v: 1, g, d, t: Date.now() + 3000 }) }), ms);
       if (m.g === 'ping') rep('pong', { t0: m.d.t0, t1: Date.now() + 3000 + 6, t2: Date.now() + 3000 + 6 }, 12);
       if (m.g === 'msg') rep('msg', { texte: '✓ ' + m.d.texte }, 250);
+      // 〰 (0.99.21) le maillage : Tom répond sur le même salon, et relaie Léa, qui est deux sauts plus loin
+      if (m.m === 1 && m.k === 'pub' && m.d && typeof m.d.x === 'string') {
+        const pm = (o, n, h, x, ms) => setTimeout(() => emettre('PloxiProche', 'message', { de: 'Tom·b2c3', donnees: JSON.stringify({ m: 1, i: [...Array(16)].map(() => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join(''), o, n, h, t: Date.now(), k: 'pub', s: m.s || '#', d: { x } }) }), ms);
+        pm('70a1b2c3d4e5f607', 'Tom', 7, '✓ ' + m.d.x, 250); pm('1ea0000000000002', 'Léa', 5, 'je suis deux sauts plus loin, Tom me relaie', 450); }
       return { envoyes: 1 }; },
     pairs: () => ({ pairs: ['Tom·b2c3'] }) },
   PloxiLecteur: { moteurs: () => ({ apple: true, vlc: false }), ouvrir: (o) => ({ moteur: /\.mkv/.test(o.url) ? 'vlc' : 'apple' }), fermer: () => ({}) },

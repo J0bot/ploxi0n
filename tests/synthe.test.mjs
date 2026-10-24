@@ -150,3 +150,53 @@ test('⊞ le synthé garde ton pas à pas, et l\'envoie dans la basse de Proche'
   const t = creerSynthe({ W, boxion, Contexte: null }); await t.pret;
   assert.equal(t.etat().motif, 'mien'); assert.deepEqual(t.etat().pas, pas, 'relu au lancement suivant');
 });
+
+// ---- (0.99.21) un max de psy : psytrance, tribe, acidcore, mentalcore ; le kick ; partager un son ----
+import { STYLES, sonPartage, codeDuSon, lireCodeSon } from '../src/bions/son.js';
+import { kicksEntre, MOTIFS } from '../src/bions/proche.js';
+test('≋ psy : quatre styles (son, motif, gamme, tempo) ; le kick sur chaque temps ; un code de son qui fait l\'aller-retour', async () => {
+  for (const k of ['psytrance', 'tribe', 'acidcore', 'mentalcore']) {
+    assert.ok(PRESETS[k] && STYLES[k], k); assert.ok(MOTIFS[STYLES[k].motif], k + ' : son motif'); assert.ok(GAMMES[STYLES[k].gamme], k + ' : sa gamme');
+    const n = normaliser(PRESETS[k]); assert.ok(n.kick > 0.5, k + ' : un kick'); assert.equal(n.tempo, PRESETS[k].tempo, k + ' : le tempo tient (240 au plus)');
+  }
+  assert.ok(PRESETS.psytrance.tempo >= 140 && PRESETS.mentalcore.tempo >= 200);
+  assert.deepEqual(MOTIFS.psy.filter((x, i) => i % 4 === 0), [null, null, null, null], 'psytrance : la basse se tait sur le kick');
+  const pa = partition({ tempo: 120, motif: 'psy', debut: 0 });   // un temps = 500 ms
+  assert.deepEqual(kicksEntre(pa, 0, 2000), [0, 500, 1000, 1500]); assert.deepEqual(kicksEntre(pa, 600, 1100), [1000]);
+  // le moteur a son kick : un sinus de plus, seulement si le knob est monté
+  const ctx = fauxContexte(); let p = normaliser({ kick: 0 }); const mo = creerMoteur(ctx, () => p);
+  const avant = ctx.journal.demarres.length; mo.kick(0); assert.equal(ctx.journal.demarres.length, avant);
+  p = normaliser({ kick: 1 }); mo.kick(0); assert.equal(ctx.journal.demarres.length, avant + 1);
+  // le synthé : choisir un style pose son motif et sa gamme
+  const W = { setInterval: () => 1, clearInterval: () => {}, setTimeout: (f) => setTimeout(f, 0), clearTimeout: () => {} };
+  const s = creerSynthe({ W, boxion: creerMemoire(), Contexte: null }); await s.pret;
+  assert.ok(s.style('mentalcore')); assert.equal(s.etat().motif, 'mental'); assert.equal(s.etat().gamme, 'harmonique'); assert.equal(s.reglages().tempo, 220);
+  // le code : court (seulement ce qui change), et ce qui revient est vérifié
+  const code = codeDuSon(s.etatSon('ma mental'));
+  assert.match(code, /^ploxi-son:[A-Za-z0-9_-]+$/); assert.ok(code.length < 600, 'court : ' + code.length);
+  const r = sonPartage(lireCodeSon('regarde ça : ' + code + ' !'), { motifs: MOTIFS, gammes: GAMMES, pasValides });
+  assert.equal(r.nom, 'ma mental'); assert.equal(r.p.tempo, 220); assert.equal(r.motif, 'mental');
+  assert.equal(lireCodeSon('ploxi-son:@@@'), null); assert.equal(sonPartage({ p: 'x' }), null);
+  assert.equal(sonPartage({ nom: 'x', p: { tempo: 9999, coupure: -5 }, motif: 'virus', gamme: 'virus' }, { motifs: MOTIFS }).p.tempo, 240, 'borné');
+  // charger un son venu d'ailleurs : joué, gardé dans tes sons
+  const s2 = creerSynthe({ W, boxion: creerMemoire(), Contexte: null }); await s2.pret;
+  assert.ok(s2.charger(lireCodeSon(code))); assert.equal(s2.reglages().tempo, 220); assert.ok(s2.etat().sons.includes('ma mental')); assert.equal(s2.etat().motif, 'mental');
+});
+
+test('〰 ♫ un son partagé dans le maillage : il voyage avec le message, l\'autre le charge dans son synthé', async () => {
+  const tuyaux = new Map();
+  const fab = (nom) => { const pair = new Set(), msg = new Set(); const t = { demarrer() { tuyaux.set(nom, t); queueMicrotask(() => { for (const [id, x] of tuyaux) if (id !== nom) { x._pair({ id: nom, etat: 'connecte' }); t._pair({ id, etat: 'connecte' }); } }); return Promise.resolve({ moi: nom }); },
+    arreter() { tuyaux.delete(nom); return Promise.resolve(); }, envoyer(d, a) { for (const [id, x] of tuyaux) if (id !== nom && (!a || a.includes(id))) setTimeout(() => x._msg({ de: nom, donnees: d }), 1); return Promise.resolve({ envoyes: 1 }); },
+    pairs: () => Promise.resolve([]), surPair: (f) => pair.add(f), surMessage: (f) => msg.add(f), _pair: (e) => { for (const f of pair) f(e); }, _msg: (e) => { for (const f of msg) f(e); } }; return t; };
+  const Wf = () => ({ setInterval: () => 0, clearInterval: () => {}, setTimeout: (f) => setTimeout(f, 0), clearTimeout: () => {} });
+  const A = creerProche({ W: Wf(), boxion: creerMemoire(), tuyau: fab('A'), Contexte: null }), B = creerProche({ W: Wf(), boxion: creerMemoire(), tuyau: fab('B'), Contexte: null });
+  const sA = creerSynthe({ W: Wf(), boxion: creerMemoire(), Contexte: null, proche: A }); await sA.pret;
+  await A.demarrer({ nom: 'RS-7' }); await B.demarrer({ nom: 'Tom' }); await new Promise(r => setTimeout(r, 60));
+  sA.style('acidcore');
+  assert.ok(A.partagerSon(sA.etatSon('acide du lac')));
+  await new Promise(r => setTimeout(r, 60));
+  const m = B.etat().messages.at(-1); assert.match(m.texte, /^♫ acide du lac · acide · 190 bpm/); assert.ok(m.son);
+  const sB = creerSynthe({ W: Wf(), boxion: creerMemoire(), Contexte: null }); await sB.pret;
+  assert.ok(sB.charger(m.son)); assert.equal(sB.reglages().tempo, 190); assert.equal(sB.etat().motif, 'acide');
+  await A.arreter(); await B.arreter();
+});

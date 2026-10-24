@@ -34,6 +34,10 @@ pub fn appeler(nom: &str, d: &Value) -> Result<Value, String> {
             let p = proche::partition(champ(d, "p").unwrap_or(&Value::Null));
             json!(proche::notes_entre(&p, nombre(champ(d, "de")), nombre(champ(d, "a"))))
         }
+        "proche.kicksEntre" => {
+            let p = proche::partition(champ(d, "p").unwrap_or(&Value::Null));
+            json!(proche::kicks_entre(&p, nombre(champ(d, "de")), nombre(champ(d, "a")), 4))
+        }
         "proche.ecart" => json!(proche::ecart(nombre(champ(d, "t0")), nombre(champ(d, "t1")), nombre(champ(d, "t2")), nombre(champ(d, "t3")))),
         "proche.meilleurEcart" => proche::meilleur_ecart(d),
         "autour.cellule" => {

@@ -77,6 +77,7 @@ export const LIGNES = [
   ['très grande', 'very large', 'sehr gross', 'molto grande', 'muy grande'],
   ['énorme', 'huge', 'riesig', 'enorme', 'enorme'],
   ['La peau', 'The skin', 'Die Haut', 'La pelle', 'La piel'],
+  ['La police aussi dans les ploxions', 'The font inside ploxions too', 'Die Schrift auch in den Ploxions', 'Il carattere anche nei ploxion', 'La fuente también en los ploxions'],
   ['légère', 'light', 'leicht', 'leggera', 'ligera'],
   ['pleine', 'full', 'voll', 'piena', 'completa'],
   ['L\'écriture', 'The writing', 'Die Schreibweise', 'La scrittura', 'La escritura'],

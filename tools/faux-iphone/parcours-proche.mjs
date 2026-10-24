@@ -26,6 +26,12 @@ export default async function ({ page, ecrire, emettre, procheEnvoyes }) {
   await page.evaluate(() => document.querySelector('.px-proche [data-pr="basse-rejoindre"]').click()); await page.waitForTimeout(400);
   r.rejoint = await page.evaluate(() => document.querySelector('.px-proche [data-pr-basse]').innerText.split('\n')[0]);
   await ecrire('05-basse-rejointe');
-  r.envoyes = procheEnvoyes.map(o => { try { return JSON.parse(o.donnees).g; } catch (e) { return '?'; } }).reduce((a, g) => ({ ...a, [g]: (a[g] || 0) + 1 }), {});
+  // 〰 (0.99.21) le maillage : Léa (deux sauts) est dans le fil, et dans la liste ; un salon par /j
+  r.maille = await page.evaluate(() => ({ fil: [...document.querySelectorAll('.px-proche .px-pr-m')].map(x => x.textContent), loin: [...document.querySelectorAll('.px-proche .px-pr-loin')].map(x => x.textContent), empreinte: (document.querySelector('.px-proche [data-pr-moi] b') || {}).textContent || null }));
+  await page.evaluate(() => { const h = document.querySelector('.px-proche'); h.querySelector('[data-pr-msg]').value = '/j #lac'; h.querySelector('[data-pr="envoyer"]').click(); });
+  await page.waitForTimeout(500);
+  r.salons = await page.evaluate(() => [...document.querySelectorAll('.px-proche [data-pr-salon]')].map(x => x.textContent + (x.classList.contains('on') ? ' (ouvert)' : '')));
+  await ecrire('06-le-maillage');
+  r.envoyes = procheEnvoyes.map(o => { try { return (JSON.parse(o.donnees).g || 'maille:' + JSON.parse(o.donnees).k); } catch (e) { return '?'; } }).reduce((a, g) => ({ ...a, [g]: (a[g] || 0) + 1 }), {});
   return r;
 }

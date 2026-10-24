@@ -7,6 +7,14 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.21', titre: 'Le maillage, et un max de psy', points: [
+    { t: '〰 Proche devient un maillage, comme bitchat : les messages sautent de téléphone en téléphone (jusqu\'à 7 sauts), attendent ceux qui arrivent après ; des salons # (avec un mot de passe si tu veux) ; les messages privés chiffrés de bout en bout, avec l\'accusé ✓✓ ; /j #salon, /m @nom, /w ; trois touchers sur « ◉ proche » effacent tout.', essayer: 'proche' },
+    { t: '≋ Le synthé : psytrance, tribe, acidcore, mentalcore (le son, le motif, la gamme, le tempo jusqu\'à 240) et un kick sur les temps.', essayer: 'synthe' },
+    '↗ Partager un son : dans Proche (il voyage avec le message, l\'autre le joue d\'un toucher), ou par un code à coller.',
+    'Aa Ta police habille le xer ; les ploxions du labo gardent la leur (⚙ › Apparence pour la mettre partout).',
+    '🫧 Finances, stock, contacts, tâches… s\'ouvrent tout de suite : une zone « chez moi » quand tu n\'en as pas.',
+    '⧉ Un bion déjà là n\'est plus jamais relu ni relancé quand un autre ploxion le compose.',
+  ] },
   { v: '0.99.20', titre: 'Des ploxions qui s\'ouvrent', points: [
     '▦ Tes ploxions sur la map remplissent l\'écran : pincer change le nombre de colonnes (plus de petite grille perdue au milieu).',
     '◬ Les moteurs 3D du labo (moteur, doomion, monde-os, scan-reel…) s\'ouvrent : leur bion jOS3D n\'était jamais installé. Tes ploxions déjà là sont réparés en douceur, quelques-uns à chaque lancement.',

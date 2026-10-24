@@ -26,7 +26,7 @@ test('◉ l\'horloge : le décalage à la NTP, les mesures rapides disent vrai',
 
 test('◉ la basse : une partition bornée, des notes en boucle depuis le début de l\'hôte', () => {
   const p = partition({ tempo: 500, motif: 'nimporte', tonique: 3, debut: 10000 });
-  assert.equal(p.tempo, 200); assert.equal(p.motif, 'pulse'); assert.equal(p.tonique, 24);
+  assert.equal(p.tempo, 240); assert.equal(p.motif, 'pulse'); assert.equal(p.tonique, 24);
   const q = partition({ tempo: 120, motif: 'pulse', tonique: 36, debut: 0 });   // un pas = 125 ms ; pulse : une note tous les 4 pas
   const n = notesEntre(q, 0, 2000);
   assert.deepEqual(n.map(x => x.t), [0, 500, 1000, 1500]); assert.ok(n.every(x => x.midi === 36));
@@ -101,4 +101,39 @@ test('◉ le tuyau ailleurs que sur l\'iPhone : deux onglets par un BroadcastCha
   assert.ok(vus.some(e => e.etat === 'connecte' && e.id === b.moi()));
   await a.envoyer('bonjour'); await attendre(40); assert.equal(recus[0].donnees, 'bonjour'); assert.equal(recus[0].de, a.moi());
   await b.arreter(); await attendre(40); assert.ok(vus.some(e => e.etat === 'perdu')); await a.arreter();
+});
+
+test('〰 (0.99.21) Proche en maillage : A–B–C en ligne ; /j #salon, /m @nom (chiffré, ✓✓), /w, le fil d\'avant pour ceux qui arrivent, tout effacer', async () => {
+  // un air où chacun n'entend que ses voisins
+  const tuyaux = new Map(), liens = new Set(['A|B', 'B|A', 'B|C', 'C|B']);
+  const fab = (nom) => { const pair = new Set(), msg = new Set();
+    const t = { demarrer() { tuyaux.set(nom, t); queueMicrotask(() => { for (const [id, x] of tuyaux) if (id !== nom && liens.has(nom + '|' + id)) { x._pair({ id: nom, etat: 'connecte' }); t._pair({ id, etat: 'connecte' }); } }); return Promise.resolve({ moi: nom }); },
+      arreter() { tuyaux.delete(nom); return Promise.resolve(); },
+      envoyer(donnees, a) { for (const [id, x] of tuyaux) if (id !== nom && liens.has(nom + '|' + id) && (!a || a.includes(id))) setTimeout(() => x._msg({ de: nom, donnees }), 2); return Promise.resolve({ envoyes: 1 }); },
+      pairs: () => Promise.resolve([]), surPair: (f) => pair.add(f), surMessage: (f) => msg.add(f), _pair: (e) => { for (const f of pair) f(e); }, _msg: (e) => { for (const f of msg) f(e); } };
+    return t; };
+  const P = {}; for (const n of ['A', 'B', 'C']) P[n] = creerProche({ W: Wfaux(), boxion: creerMemoire(), tuyau: fab(n), Contexte: null });
+  await P.A.demarrer({ nom: 'RS-7' }); await P.B.demarrer({ nom: 'Tom' });
+  assert.ok(P.A.envoyerMessage('avant que Léa arrive')); await attendre(60);
+  await P.C.demarrer({ nom: 'Léa' }); await attendre(200);
+  assert.equal(P.C.etat().messages.at(-1).texte, 'avant que Léa arrive', 'gardé par Tom, livré à Léa quand elle arrive');
+  assert.equal(P.C.etat().messages.at(-1).sauts, 1);
+  const rs7 = P.C.etat().maille.pairs.find(p => p.nom === 'RS-7'); assert.ok(rs7 && rs7.sauts === 1 && rs7.cle, 'Léa voit RS-7 à un saut');
+  // un salon, que A et C rejoignent ; B relaie sans le voir
+  P.A.envoyerMessage('/j #lac'); P.C.envoyerMessage('/j #lac'); await attendre(30);
+  assert.equal(P.A.etat().salon, '#lac');
+  P.A.envoyerMessage('baignade 18 h'); await attendre(80);
+  assert.equal(P.C.fil('#lac').at(-1).texte, 'baignade 18 h'); assert.equal(P.B.fil('#lac').length, 0);
+  // /m @Léa : chiffré, et l'accusé revient
+  P.A.envoyerMessage('/m @Léa le code : 4417'); await attendre(250);
+  const fpC = P.C.etat().maille.moi.fp, fpA = P.A.etat().maille.moi.fp;
+  assert.equal(P.A.etat().salon, '@' + fpC);
+  assert.equal(P.C.fil('@' + fpA).at(-1).texte, 'le code : 4417');
+  assert.equal(P.A.fil('@' + fpC).at(-1).etat, 'recu');
+  assert.equal(P.A.envoyerMessage('/m @Personne x'), false); assert.match(P.A.etat().info, /Personne/);
+  P.A.envoyerMessage('/w'); assert.match(P.A.etat().info, /Tom#[0-9a-f]{4} \(direct\)/); assert.match(P.A.etat().info, /Léa#[0-9a-f]{4} \(1 saut\)/);
+  // tout effacer
+  await P.A.effacerTout();
+  assert.notEqual(P.A.etat().maille.moi.fp, fpA); assert.equal(P.A.etat().messages.length, 0); assert.equal(P.A.etat().salon, '#');
+  for (const p of Object.values(P)) await p.arreter();
 });

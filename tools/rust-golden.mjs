@@ -53,6 +53,7 @@ export async function golden(cheminWasm = path.join(RACINE, 'public/coeur/ploxi_
     verifier('proche.pasValides', jsonPropre(P.pasValides(pas)), C.appel('proche.pasValides', jsonPropre(pas)));
     const de = pj.debut + entre(-2000, 20000), a = de + entre(0, 4000);
     verifier('proche.notesEntre', P.notesEntre(pj, de, a), C.appel('proche.notesEntre', { p: jsonPropre(o), de, a }));
+    verifier('proche.kicksEntre', P.kicksEntre(pj, de, a), C.appel('proche.kicksEntre', { p: jsonPropre(o), de, a }));
     const t = [entre(0, 1e6), entre(0, 1e6), entre(0, 1e6), entre(0, 1e6)].sort((x, y) => x - y);
     verifier('proche.ecart', P.ecart(...t), C.appel('proche.ecart', { t0: t[0], t1: t[1], t2: t[2], t3: t[3] }));
     const ms = Array.from({ length: Math.floor(entre(0, 7)) }, () => ({ decalage: entre(-500, 500), allerRetour: entre(0, 300) }));

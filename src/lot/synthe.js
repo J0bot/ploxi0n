@@ -4,8 +4,8 @@
 //   deux oscillateurs désaccordés + un sub → un filtre passe-bas (son enveloppe, un lfo) → l'enveloppe du volume → l'écho → la sortie ;
 //   16 pads dans la gamme (plusieurs doigts à la fois), une boucle au tempo, un oscilloscope qui montre le son ; tes sons gardés.
 // Tourner un knob change le son EN DIRECT, même d'une note tenue. Le son continue quand on change de ploxion ; ‹ le coupe.
-import { PARAMS, GROUPES, PRESETS, normaliser, noteDePad, hasard, freq, ONDES } from '../bions/son.js';
-import { MOTIFS, GAMMES, partition, notesEntre, pasValides } from '../bions/proche.js';
+import { PARAMS, GROUPES, PRESETS, STYLES, normaliser, noteDePad, hasard, freq, ONDES, sonPartage, codeDuSon, lireCodeSon } from '../bions/son.js';
+import { MOTIFS, GAMMES, partition, notesEntre, kicksEntre, pasValides } from '../bions/proche.js';
 import { brancherPanneau } from '../bions/tordre.js';
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -91,8 +91,16 @@ export function creerMoteur(ctx, lire, { vers = null } = {}) {   /* vers : où v
     v.os[0].onended = () => { voix.delete(id); for (const o of v.os) { try { vibG.disconnect(o.detune); } catch (e) { /* */ } } try { lfoG.disconnect(v.fl.frequency); } catch (e) { /* */ } try { (v.pan || v.vca).disconnect(); } catch (e) { /* */ } };
   }
   function toutCouper() { for (const id of [...voix.keys()]) fin(id); }
+  /** (0.99.21) le kick : un sinus qui tombe de 150 à 42 Hz, un clic au début ; sec (ni écho ni réverb), saturé avec le reste du son */
+  function kick(quand = ctx.currentTime) {
+    const p = lire(); if (!(p.kick > 0.01)) return;
+    const t = Math.max(ctx.currentTime, quand), o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(1.1 * p.kick, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.38);
+    o.connect(g); g.connect(sat); o.start(t); o.stop(t + 0.42); o.onended = () => { try { g.disconnect(); } catch (e) { /* */ } };
+  }
   appliquer();
-  return { debut, fin, appliquer, toutCouper, analyse, actives: () => [...voix.values()].filter(v => !v.lache).length, voix: () => voix.size,
+  return { debut, fin, appliquer, toutCouper, kick, analyse, actives: () => [...voix.values()].filter(v => !v.lache).length, voix: () => voix.size,
     fermer() { toutCouper(); try { lfo.stop(); } catch (e) { /* */ } } };
 }
 
@@ -115,6 +123,18 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
     if (Array.isArray(s)) sons = s.filter(x => x && x.nom).slice(0, 40).map(x => ({ nom: String(x.nom).slice(0, 30), p: normaliser(x.p) }));
   });
   const garder = () => { W.clearTimeout(garde); garde = W.setTimeout(() => boxion.put('reglages', 'synthe', { p, gamme, motif, pas }).catch(() => {}), 400); };
+  // ---- (0.99.21) les styles psy, et partager un son (le maillage de Proche, ou un code à copier-coller) ----
+  const etatSon = (nom) => ({ nom: String(nom || 'mon son').slice(0, 30), p: { ...p }, motif, gamme, pas: motif === 'mien' ? pas.slice() : null });
+  /** un style (psytrance, tribe…) : son son, son motif, sa gamme, son tempo */
+  function style(k) { if (!PRESETS[k]) return false; const st = STYLES[k]; if (st) { motif = st.motif; gamme = st.gamme; } regler({ ...normaliser({}), ...PRESETS[k] }); peindre(); if (partage) envoyerProche(); return true; }
+  /** un son venu d'ailleurs (le maillage, un code) : vérifié, joué, gardé dans « tes sons » */
+  function charger(brut) {
+    const s = sonPartage(brut, { motifs: MOTIFS, gammes: GAMMES, pasValides }); if (!s) return false;
+    if (s.motif) motif = s.motif; if (s.gamme) gamme = s.gamme; if (s.pas) pas = s.pas;
+    sons = [...sons.filter(x => x.nom !== s.nom), { nom: s.nom, p: s.p }].slice(-40); boxion.put('reglages', 'synthe-sons', sons).catch(() => {});
+    regler(s.p, { doux: false }); garder(); peindre(); return true;
+  }
+  if (W && W.addEventListener) W.addEventListener('px-synthe-charger', (ev) => { pret.then(() => charger(ev && ev.detail)); });
   function moteur() {   // créé au premier geste (iOS n'ouvre le son qu'après un toucher)
     if (!ctx && Contexte) { try { ctx = new Contexte(); } catch (e) { ctx = null; } }
     if (!ctx) return null;
@@ -165,6 +185,7 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
         const k = Math.round((nt.t - boucle.debut) / unPas), sw = k % 2 ? p.swing * unPas * 0.5 : 0;
         const q = ctx.currentTime + Math.max(0, (nt.t + sw - maintenant) / 1000), id = mo.debut(nt.midi + p.transpose, q); mo.fin(id, q + Math.max(0.03, unPas * p.gate / 1000));
       }
+      if (p.kick > 0.01) for (const tk of kicksEntre(pa, de, a)) mo.kick(ctx.currentTime + Math.max(0, (tk - maintenant) / 1000));   // (0.99.21) le kick, sur chaque temps
       jusque = a;
     }, 60);
     peindre(); return true;
@@ -189,7 +210,10 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
       + '<div class="px-sy-seg px-sy-plus"><button type="button" data-sy="pencher"></button><button type="button" data-sy="paire"></button><button type="button" data-sy="proche"></button></div><p class="px-sy-msg" data-sy-msg hidden></p>'
       + '<div class="px-sy-seg" data-sy-gammes></div></div>'   /* (0.99.5) deux colonnes en paysage : jouer à gauche, régler à droite */
       + '<div class="px-sy-regler"><div data-sy-k data-instrument></div>'
+      + '<h3 class="px-sy-t">◈ psy</h3><div class="px-sy-seg px-sy-psy" data-sy-styles></div>'
       + '<h3 class="px-sy-t">◈ les sons</h3><div class="px-sy-seg" data-sy-presets></div><div class="px-sy-seg" data-sy-sons data-ecrit></div>'
+      + '<h3 class="px-sy-t">↗ partager ce son</h3><div class="px-sy-seg"><button type="button" data-sy="partager-maille">≈ dans Proche</button><button type="button" data-sy="partager-code">⧉ copier son code</button></div>'
+      + '<div class="px-sy-garder"><input type="text" placeholder="coller un code ploxi-son:…" data-sy-code><button type="button" data-sy="importer">⇣ jouer</button></div>'
       + '<div class="px-sy-garder"><input type="text" maxlength="30" placeholder="le nom de ce son" data-sy-nom><button type="button" data-sy="garder">＋ garder</button></div></div></div>';
     const $ = (s) => hote.querySelector(s);
     function peindrePads() {
@@ -206,7 +230,8 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
         + '<button type="button" data-sy-motif="mien"' + (motif === 'mien' ? ' class="on"' : '') + '>⊞ à moi</button>';
       peindreSeq();
       $('[data-sy-gammes]').innerHTML = Object.keys(GAMMES).map(k => '<button type="button" data-sy-gamme="' + k + '"' + (k === gamme ? ' class="on"' : '') + '>' + k + '</button>').join('');
-      $('[data-sy-presets]').innerHTML = Object.keys(PRESETS).map(k => '<button type="button" data-sy-preset="' + esc(k) + '">' + esc(k) + '</button>').join('') + '<button type="button" data-sy="hasard">⁂ hasard</button>';
+      $('[data-sy-styles]').innerHTML = Object.keys(STYLES).map(k => '<button type="button" data-sy-preset="' + esc(k) + '">' + esc(k) + '<small>' + Math.round(PRESETS[k].tempo) + '</small></button>').join('');
+      $('[data-sy-presets]').innerHTML = Object.keys(PRESETS).filter(k => !STYLES[k]).map(k => '<button type="button" data-sy-preset="' + esc(k) + '">' + esc(k) + '</button>').join('') + '<button type="button" data-sy="hasard">⁂ hasard</button>';
       $('[data-sy-sons]').innerHTML = sons.map((s, i) => '<button type="button" data-sy-son="' + i + '">' + esc(s.nom) + '</button>').join('');
     }
     // le pas à pas : une colonne par pas (16), une ligne par degré (le grave en bas) ; une note par pas ; toucher = poser / enlever
@@ -276,7 +301,7 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
         if (pas[k] != null) { const mo2 = moteur(); if (mo2) { const g = GAMMES[gamme], q = ctx.currentTime, id = mo2.debut(36 + p.transpose + g[d % g.length] + 12 * Math.floor(d / g.length), q); mo2.fin(id, q + 0.18); reveiller(); } }   /* on entend la note posée */
         return; }
       const ga = e.target.closest('[data-sy-gamme]'); if (ga) { gamme = ga.getAttribute('data-sy-gamme'); garder(); peindreChoix(); vibrer('selection'); return; }
-      const pr = e.target.closest('[data-sy-preset]'); if (pr) { regler(PRESETS[pr.getAttribute('data-sy-preset')] || {}); vibrer('fx-arrivee'); return; }
+      const pr = e.target.closest('[data-sy-preset]'); if (pr) { style(pr.getAttribute('data-sy-preset')); vibrer('fx-arrivee'); return; }
       const so = e.target.closest('[data-sy-son]'); if (so) { const s = sons[+so.getAttribute('data-sy-son')]; if (s) { regler(s.p); vibrer('fx-arrivee'); } return; }
       const b = e.target.closest('[data-sy]'); if (!b) return; const a = b.getAttribute('data-sy');
       if (a === 'boucle') { if (boucle) arreterBoucle(); else if (lancerBoucle()) reveiller(); vibrer('selection'); }
@@ -288,6 +313,15 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
       else if (a === 'seq-vider') { pas = Array(16).fill(null); peindreSeq(); seqChange(); vibrer('selection'); }
       else if (a === 'seq-hasard') { let g = (Date.now() % 100000) || 1; const r = () => ((g = (g * 16807) % 2147483647) / 2147483647);
         pas = Array.from({ length: 16 }, (_, k) => (k % 4 === 0 || r() < 0.35 ? (k % 8 === 0 ? 0 : Math.floor(r() * 8)) : null)); peindreSeq(); seqChange(); vibrer('fx-arrivee'); }
+      else if (a === 'partager-maille' || a === 'partager-code' || a === 'importer') {
+        const msg = $('[data-sy-msg]'), dire = (t) => { msg.hidden = false; msg.textContent = t; }, nom = ($('[data-sy-nom]').value || '').trim() || (sons.find(s => JSON.stringify(s.p) === JSON.stringify(p)) || {}).nom || 'mon son';
+        if (a === 'partager-maille') { if (proche && proche.partagerSon && proche.etat().actif && proche.partagerSon(etatSon(nom))) { dire('≈ parti dans le maillage (' + proche.etat().salon + ')'); vibrer('succes'); } else dire('Démarre Proche d\'abord (◉ proche) : le son part dans le salon ouvert, de téléphone en téléphone.'); }
+        else if (a === 'partager-code') { const code = codeDuSon(etatSon(nom)); const nv = W.navigator || {};
+          const fini = () => { dire('⧉ code copié : colle-le à quelqu\'un (un message, Proche…) ; il le colle ici'); vibrer('succes'); };
+          if (nv.clipboard && nv.clipboard.writeText) nv.clipboard.writeText(code).then(fini, () => dire(code)); else dire(code);
+          if (nv.share) nv.share({ title: 'Un son du synthé ploxi0n', text: code }).catch(() => {}); }
+        else { const i = $('[data-sy-code]'); if (charger(lireCodeSon(i.value))) { i.value = ''; dire('⇣ son chargé, et gardé dans tes sons'); vibrer('fx-arrivee'); } else dire('pas un code de son (il commence par « ploxi-son: »)'); }
+      }
       else if (a === 'garder') { const i = $('[data-sy-nom]'), nom = (i.value || '').trim().slice(0, 30) || ('son ' + (sons.length + 1));
         sons = [...sons.filter(s => s.nom !== nom), { nom, p: { ...p } }].slice(-40); boxion.put('reglages', 'synthe-sons', sons).catch(() => {}); i.value = ''; peindreChoix(); vibrer('succes'); }
     });
@@ -295,7 +329,7 @@ export function creerSynthe({ W = globalThis.window, boxion, vibrer = () => {}, 
       joue: () => !!(boucle || partage || (m && m.actives() > 0)) };
   }
 
-  const api = { regler, lancerBoucle, arreterBoucle, partager, pencher, surPenche: (e) => { pencheDer = e; if (penche) { const [kx, ky] = PAIRES[paire]; regler({ [kx]: valeurInclinee(kx, ((+e.gamma || 0) + 45) / 90), [ky]: valeurInclinee(ky, ((+e.beta || 0) - 10) / 70) }); } }, reglages: () => ({ ...p }), choisir: (o = {}) => { if (GAMMES[o.gamme]) gamme = o.gamme; const pv = pasValides(o.pas); if (pv) pas = pv; if (MOTIFS[o.motif] || (o.motif === 'mien' && pas)) motif = o.motif; garder(); },
+  const api = { regler, lancerBoucle, arreterBoucle, partager, pencher, style, charger, etatSon, surPenche: (e) => { pencheDer = e; if (penche) { const [kx, ky] = PAIRES[paire]; regler({ [kx]: valeurInclinee(kx, ((+e.gamma || 0) + 45) / 90), [ky]: valeurInclinee(ky, ((+e.beta || 0) - 10) / 70) }); } }, reglages: () => ({ ...p }), choisir: (o = {}) => { if (GAMMES[o.gamme]) gamme = o.gamme; const pv = pasValides(o.pas); if (pv) pas = pv; if (MOTIFS[o.motif] || (o.motif === 'mien' && pas)) motif = o.motif; garder(); },
     moteur, etat: () => ({ p: { ...p }, gamme, motif, pas: pas.slice(), boucle: !!boucle, sons: sons.map(s => s.nom), partage, penche: !!penche, paire: PAIRES[paire] }),
     couper() { arreterBoucle(); if (m) m.toutCouper(); } };
   if (W) { W.jOSApps = W.jOSApps || {}; W.jOSApps.synthe = { manifest: { id: 'synthe', name: 'Synthé', icon: '≋' }, mount }; }

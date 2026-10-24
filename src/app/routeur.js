@@ -815,7 +815,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     // la place : au-delà de MAX_VIVANTS, le plus anciennement vu s'endort pour de bon
     while (vivants.size >= maxVivants()) { const vieux = [...vivants.values()].sort((a, b) => a.vu - b.vu)[0]; tuer(vieux.id); }
     if (!muet) vibrer('ouvrir', id);
-    const hote = D.createElement('div'); hote.className = 'px-hote'; hote.dataset.ploxion = id; scene.appendChild(hote);
+    const hote = D.createElement('div'); hote.className = 'px-hote' + (p && p.interne ? '' : ' px-hote-labo'); hote.dataset.ploxion = id; scene.appendChild(hote);   // (0.99.21) un ploxion du labo : il garde sa police
     const v = { id, inst: {}, hote, debut: 0, vu: Date.now(), params: params || null };
     ordreBande = placerDansOrdre(ordreBande, id, depuis, !!prefs().bande);
     vivants.set(id, v); montrer(v);
