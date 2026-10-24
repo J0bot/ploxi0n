@@ -10,6 +10,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { execFileSync } from 'node:child_process';
+import { creerMaille } from '../../src/bions/maille.js';   // (0.99.22) Tom et Léa : de vrais maillages, avec de vraies clés
 const require = createRequire(import.meta.url);
 const { chromium } = (() => { for (const p of ['playwright', '/opt/node-tools/node_modules/playwright']) { try { return require(p); } catch (e) { /* suivant */ } } throw new Error('Playwright introuvable : npm i -g playwright'); })();
 
@@ -141,16 +142,15 @@ const natif = {
     capturerObjet: () => ({ nom: 'objet-2026-10-15-121500.usdz', chemin: '/var/mobile/Documents/terrax/objets/objet-2026-10-15-121500.usdz' }),
     scannerPiece: () => ({ nom: 'piece-2026-10-15-120000.usdz', chemin: '/var/mobile/Documents/terrax/pieces/piece-2026-10-15-120000.usdz' }) },
   // ◉ (0.99.1) l'ultimate Bluetooth : un voisin simulé, « Tom », 3 s d'avance d'horloge ; il répond aux pings et accuse les messages
-  PloxiProche: { demarrer: (o) => { setTimeout(() => emettre('PloxiProche', 'pair', { id: 'Tom·b2c3', etat: 'connecte' }), 300); return { moi: o.nom, salle: o.salle }; },
-    arreter: () => { setTimeout(() => emettre('PloxiProche', 'pair', { id: 'Tom·b2c3', etat: 'perdu' }), 50); return {}; },
+  // 〰 (0.99.22) Tom (un voisin direct) et Léa (deux sauts plus loin, seulement voisine de Tom) font tourner le VRAI maillage (src/bions/maille.js) :
+  // Tom répond « ✓ » sur le même salon, Léa dit bonjour, relayée par Tom ; tous deux partagent leur position avec moi (chiffrée pour moi)
+  PloxiProche: { demarrer: (o) => { setTimeout(() => emettre('PloxiProche', 'pair', { id: 'Tom·b2c3', etat: 'connecte' }), 300); voisinsFaux().then(() => { tom.voisin('app', 'connecte'); }); return { moi: o.nom, salle: o.salle }; },
+    arreter: () => { setTimeout(() => emettre('PloxiProche', 'pair', { id: 'Tom·b2c3', etat: 'perdu' }), 50); if (tom) tom.voisin('app', 'perdu'); return {}; },
     envoyer: (o) => { procheEnvoyes.push(o); let m = null; try { m = JSON.parse(o.donnees); } catch (e) { throw new Error('paquet illisible'); }
       const rep = (g, d, ms) => setTimeout(() => emettre('PloxiProche', 'message', { de: 'Tom·b2c3', donnees: JSON.stringify({ v: 1, g, d, t: Date.now() + 3000 }) }), ms);
       if (m.g === 'ping') rep('pong', { t0: m.d.t0, t1: Date.now() + 3000 + 6, t2: Date.now() + 3000 + 6 }, 12);
       if (m.g === 'msg') rep('msg', { texte: '✓ ' + m.d.texte }, 250);
-      // 〰 (0.99.21) le maillage : Tom répond sur le même salon, et relaie Léa, qui est deux sauts plus loin
-      if (m.m === 1 && m.k === 'pub' && m.d && typeof m.d.x === 'string') {
-        const pm = (o, n, h, x, ms) => setTimeout(() => emettre('PloxiProche', 'message', { de: 'Tom·b2c3', donnees: JSON.stringify({ m: 1, i: [...Array(16)].map(() => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join(''), o, n, h, t: Date.now(), k: 'pub', s: m.s || '#', d: { x } }) }), ms);
-        pm('70a1b2c3d4e5f607', 'Tom', 7, '✓ ' + m.d.x, 250); pm('1ea0000000000002', 'Léa', 5, 'je suis deux sauts plus loin, Tom me relaie', 450); }
+      if (m.m === 1 && tom && (!o.a || o.a.includes('Tom·b2c3'))) setTimeout(() => tom.recevoir('app', o.donnees), 5);
       return { envoyes: 1 }; },
     pairs: () => ({ pairs: ['Tom·b2c3'] }) },
   PloxiLecteur: { moteurs: () => ({ apple: true, vlc: false }), ouvrir: (o) => ({ moteur: /\.mkv/.test(o.url) ? 'vlc' : 'apple' }), fermer: () => ({}) },
@@ -210,6 +210,30 @@ const natif = {
     throw new Error('Could not connect to the server.'); } },
   CapacitorCookies: {}, WebView: { getServerBasePath: () => ({ path: '' }) }, Console: { log: () => ({}) },
 };
+
+// 〰 (0.99.22) les voisins du maillage : Tom (lié à l'app et à Léa) et Léa (liée à Tom seulement)
+let tom = null, lea = null, voisinsPrets = null;
+function voisinsFaux() {
+  if (voisinsPrets) return voisinsPrets;
+  const subtle = globalThis.crypto.subtle, alea = (n) => globalThis.crypto.getRandomValues(new Uint8Array(n)), sans = () => () => {};
+  tom = creerMaille({ subtle, alea, nom: 'Tom', attente: (ms, f) => setTimeout(f, 5), repeter: sans,
+    envoyer: (texte, vers) => { if (!vers || vers.includes('app')) setTimeout(() => emettre('PloxiProche', 'message', { de: 'Tom·b2c3', donnees: texte }), 5); if (!vers || vers.includes('lea')) setTimeout(() => lea.recevoir('tom', texte), 5); } });
+  lea = creerMaille({ subtle, alea, nom: 'Léa', attente: (ms, f) => setTimeout(f, 5), repeter: sans, envoyer: (texte) => setTimeout(() => tom.recevoir('lea', texte), 5) });
+  const repondu = new Set();
+  voisinsPrets = (async () => {
+    await tom.demarrer(); await lea.demarrer(); tom.voisin('lea', 'connecte'); lea.voisin('tom', 'connecte');
+    tom.surChange((q) => { if (q !== 'messages') return; for (const s of tom.salons()) for (const m of tom.fil(s.salon)) if (!m.moi && m.texte && m.nom !== 'Léa' && !repondu.has(m.id)) { repondu.add(m.id); setTimeout(() => tom.dire('✓ ' + m.texte, s.salon), 200); } });
+    // dès que l'app s'est annoncée : Léa dit bonjour (deux sauts) ; les deux partagent leur position avec elle, toutes les 2 s
+    let bonjour = false;
+    setInterval(() => {
+      const app = tom.pairs().find(p => p.direct && p.nom !== 'Léa' && p.cle); if (!app) return;
+      if (!bonjour) { bonjour = true; lea.dire('je suis deux sauts plus loin, Tom me relaie'); }
+      tom.partagerPosition({ lat: 46.52085, lng: 6.63095, precision: 6 }, { a: [app.fp] });   // ~110 m au nord-est
+      if (lea.pairs().some(p => p.fp === app.fp && p.cle)) lea.partagerPosition({ lat: 46.51840, lng: 6.62760, precision: 25 }, { a: [app.fp] });   // ~300 m au sud-ouest
+    }, 2000).unref();   // ne retient pas la fin du faux iPhone
+  })();
+  return voisinsPrets;
+}
 
 const pont = { octets: 0, appels: 0, depuis: Date.now() };   // (0.99.6) ce qui traverse le pont natif (sur l'iPhone : sérialisé sur le fil principal)
 function repondre(d) { const r = repondre0(d); try { const n = JSON.stringify(d.options || {}).length + JSON.stringify((r && r.data) || {}).length; pont.octets += n; pont.appels++; const o = d.options || {}, k = d.pluginId + '.' + d.methodName + ' ' + String(o.statement || '').replace(/\s+/g, ' ').slice(0, 60) + ' ' + JSON.stringify((o.values || []).slice(0, 2)).slice(0, 50); pont.par = pont.par || {}; pont.par[k] = (pont.par[k] || 0) + n; pont.t = pont.t || []; if (n > 200000) pont.t.push([Date.now() - pont.depuis, k.slice(0, 120), n]); } catch (e) { /* */ } return r; }

@@ -14,11 +14,13 @@ import { paquet, lire, ecart, meilleurEcart, partition, notesEntre, kicksEntre, 
 import { normaliser } from '../bions/son.js';   // (0.99.10) la basse peut porter le son du synthé (ses 33 réglages)
 import { creerMoteur } from './synthe.js';
 import { creerMaille, commande, PUBLIC } from '../bions/maille.js';
+import { relatif, echelle, aiguille, tourner, fraicheur, tuilesAutour, ATTRIBUTION } from '../bions/potes.js';
+import { capBoussole, metres, fleche } from '../bions/autour.js';
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const httpsSeul = (u) => { try { const x = new URL(String(u)); return x.protocol === 'https:' ? x.href : null; } catch (e) { return null; } };
 
-export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () => {}, Contexte = W && (W.AudioContext || W.webkitAudioContext), maintenant = () => Date.now() }) {
+export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () => {}, Contexte = W && (W.AudioContext || W.webkitAudioContext), maintenant = () => Date.now(), position = null, ouvrirLien = null }) {
   const e = { nom: '', salle: 'xerboxion', actif: false, moi: null, pairs: new Map(), messages: [],
     basse: null, basseHote: null, son: null, sonHote: null, ecoute: { basse: false, son: false }, erreur: '', salon: PUBLIC, info: '' };
   let moteurSon = null, hote = null, ping = 0, annonce = 0, calage = 0, ordo = 0, ctx = null, audio = null, jusque = 0, peindre = () => {};
@@ -30,7 +32,53 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     envoyer: (texte, vers) => { tuyau.envoyer(texte, vers || undefined).catch(() => {}); },
     attente: (ms, f) => W.setTimeout(f, ms), repeter: (ms, f) => { const x = W.setInterval(f, ms); return () => W.clearInterval(x); },
     magasin: { lire: (k) => boxion.get('reglages', 'proche-' + k), ecrire: (k, v) => boxion.put('reglages', 'proche-' + k, v) } }) : null;
-  if (maille) maille.surChange((q) => { if (q === 'messages') { const m = maille.fil(e.salon).at(-1); if (m && !m.moi) vibrer('selection'); } peindre(q === 'messages' || q === 'pairs' ? q : undefined); });
+  if (maille) maille.surChange((q) => {
+    if (q === 'mention') { vibrer('fx-arrivee'); return; }   // (0.99.22) « @ton nom »
+    if (q === 'positions') { peindre('potes'); return; }
+    if (q === 'messages') { const m = maille.fil(e.salon).at(-1); if (m && !m.moi) vibrer('selection'); if (e.salon[0] === '@' && vue) maille.lire(e.salon); }
+    peindre(q === 'messages' || q === 'pairs' ? q : undefined);
+  });
+  let vue = false;   // la page est à l'écran (les « lu » ne partent que si la conversation est vraiment ouverte)
+
+  // ---- ⌖ (0.99.22) LES POTES : partager sa position (chiffrée pour ses potes ✦, ou un salon fermé), le radar, la boussole, la carte ----
+  // Ne pas nuire : rien ne part sans « partager » ; jamais dans un salon ouvert ; ça s'arrête tout seul (1 h, 4 h) ; « ■ arrêter » efface la
+  // position chez les autres ; le bandeau le dit tant que ça dure ; rien n'est gardé sur le disque.
+  const P = { partage: null, moi: null, cap: null, cible: null, carte: true, devant: false, duree: 4, erreur: '', dernier: null, envoye: 0 };
+  let minuteurPartage = 0, minuteurMoi = 0;
+  async function maPosition() {
+    if (!position) { P.erreur = 'pas de position ici'; return null; }
+    try { const p = await position(); if (!p || !Number.isFinite(+p.lat)) throw new Error('pas de position'); P.moi = { lat: +p.lat, lng: +p.lng, precision: +p.precision || 0 }; P.erreur = ''; return P.moi; }
+    catch (x) { P.erreur = 'la position ne vient pas : ' + ((x && x.message) || x) + ' (Réglages iOS › ploxi0n › Position)'; return null; }
+  }
+  const potesAvecCle = () => (maille ? maille.favoris().filter(f => f.cle).map(f => f.fp) : []);
+  const salonFerme = () => (maille && e.salon[0] === '#' && (maille.salons().find(s => s.salon === e.salon) || {}).ferme ? e.salon : null);
+  async function envoyerPosition(force = false) {
+    if (!P.partage || !maille) return;
+    if (maintenant() > P.partage.jusqua) { arreterPartage(); return; }
+    const p = await maPosition(); if (!p) { peindre('potes'); return; }
+    const bouge = !P.dernier || relatif(P.dernier, p).d > 8;
+    if (force || bouge || maintenant() - P.envoye > 60000) {
+      P.partage.a = [...new Set([...P.partage.a, ...(P.partage.potes ? potesAvecCle() : [])])];   // un pote ✦ qui s'est annoncé entre-temps
+      await maille.partagerPosition({ ...p, cap: P.cap }, { a: P.partage.a, salon: P.partage.salon }); P.dernier = p; P.envoye = maintenant();
+    }
+    peindre('potes');
+  }
+  /** avec : 'potes' (✦, chiffrée pour chacun) ou 'salon' (le salon fermé ouvert) ; heures : 1, 4, ou 0 = jusqu'à ce que j'arrête (12 h au plus) */
+  function partagerPosition(avec = 'potes', heures = P.duree) {
+    if (!maille || !e.actif) { e.info = 'démarre Proche d\'abord'; peindre(); return false; }
+    const salon = avec === 'salon' ? salonFerme() : null, a = avec === 'potes' ? potesAvecCle() : [];
+    if (avec === 'salon' && !salon) { e.info = 'un salon FERMÉ d\'abord (/j #soiree un-mot-de-passe) : ta position n\'est jamais partagée dans un salon ouvert'; peindre(); return false; }
+    if (avec === 'potes' && !a.length) { e.info = 'aucun pote ✦ allumé pour l\'instant : ✦ quelqu\'un dans la liste (ou /fav @nom), il recevra ta position dès qu\'il s\'annonce'; }
+    P.partage = { a, salon, potes: avec === 'potes', jusqua: maintenant() + (heures ? heures : 12) * 3600e3, heures };
+    W.clearInterval(minuteurPartage); minuteurPartage = W.setInterval(() => envoyerPosition(false), 15000);
+    vibrer('fx-arrivee'); envoyerPosition(true); peindre(); return true;
+  }
+  function arreterPartage() {
+    if (!P.partage) return; const { a, salon } = P.partage; P.partage = null; W.clearInterval(minuteurPartage); minuteurPartage = 0;
+    if (maille) maille.partagerPosition({ fin: true }, { a, salon }); P.dernier = null; peindre();
+  }
+  // le cap de l'iPhone (la boussole) : seulement quand la page est là
+  let derCap = 0; const surCap = (ev) => { const c = capBoussole(ev); if (c == null) return; P.cap = c; const t = maintenant(); if (t - derCap > 180) { derCap = t; peindre('potes'); } };
 
   // ---- l'horloge : l'heure de l'hôte, vue d'ici ----
   const decalage = (id) => { const p = e.pairs.get(id); return p && p.ecart ? p.ecart.decalage : 0; };
@@ -86,6 +134,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
   async function arreter() {
     if (hote === 'basse') arreterBasse(); if (hote === 'son') arreterSon();
     W.clearInterval(ping); couperBasse(); couperSon(); e.ecoute = { basse: false, son: false };
+    arreterPartage();
     if (maille) maille.arreter();
     await tuyau.arreter(); e.actif = false; e.pairs.clear(); e.basse = e.son = e.basseHote = e.sonHote = null; peindre();
   }
@@ -103,6 +152,9 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     if (c.genre === 'bloques') { e.info = 'bloqués : ' + (maille.pairs().filter(p => p.bloque).map(p => p.nom).join(', ') || 'personne'); peindre(); return true; }
     if (c.genre === 'debloquer') { maille.debloquer(c.a); e.info = c.a + ' débloqué'; peindre(); return true; }
     if (c.genre === 'effacer') { effacerTout(); return true; }
+    if (c.genre === 'favori') { const fp = maille.favori(c.a, c.oui); e.info = fp ? (c.oui ? '✦ ' + c.a + ' est un pote : il voit ta position quand tu la partages avec tes potes' : c.a + ' n\'est plus un pote') : 'personne de ce nom'; peindre(); return !!fp; }
+    if (c.genre === 'favoris') { e.info = 'tes potes ✦ : ' + (maille.favoris().map(f => f.nom + (f.la ? '' : ' (pas là)')).join(', ') || 'personne'); peindre(); return true; }
+    if (c.genre === 'code') { const fp = maille.trouver(c.a); if (!fp) { e.info = 'personne de ce nom'; peindre(); return false; } maille.codeSecurite(fp).then(code => { e.info = code ? 'le code avec ' + c.a + ' : ' + code + ' — le même chez lui ? alors personne ne s\'est glissé entre vous' : 'pas encore sa clé'; peindre(); }); return true; }
     e.info = c.texte; peindre(); return false;
   }
   /** (0.99.21) partager un son du synthé dans le maillage (le salon ou la conversation ouverts) */
@@ -112,10 +164,10 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     if (e.salon[0] === '@') maille.prive(e.salon.slice(1), texte, { son }); else maille.dire(texte, e.salon, { son });
     return true;
   }
-  async function effacerTout() { if (!maille) return; e.messages = []; boxion.put('reglages', 'proche-messages', []).catch(() => {}); await maille.effacerTout(); e.salon = PUBLIC; e.info = 'tout effacé : une nouvelle empreinte, plus aucun message'; vibrer('fx-butee'); peindre(); }
+  async function effacerTout() { if (!maille) return; arreterPartage(); e.messages = []; boxion.put('reglages', 'proche-messages', []).catch(() => {}); await maille.effacerTout(); e.salon = PUBLIC; e.info = 'tout effacé : une nouvelle empreinte, plus aucun message'; vibrer('fx-butee'); peindre(); }
   /** le fil affiché : le maillage, et sur le public les messages des Proche d'avant (un seul saut) */
   const fil = (salon = e.salon) => {
-    const l = maille ? maille.fil(salon).map(m => ({ id: m.id, de: m.de, nom: m.nom, texte: m.texte, t: m.t, moi: !!m.moi, sauts: m.sauts, etat: m.etat, ferme: m.ferme, prive: m.prive, son: m.son || null })) : [];
+    const l = maille ? maille.fil(salon).map(m => ({ id: m.id, de: m.de, nom: m.nom, texte: m.texte, t: m.t, moi: !!m.moi, sauts: m.sauts, etat: m.etat, ferme: m.ferme, prive: m.prive, son: m.son || null, mention: !!m.mention })) : [];
     return salon === PUBLIC ? [...e.messages.map(m => ({ ...m, nom: nomDe(m.de) })), ...l].sort((a, b) => a.t - b.t) : l;
   };
 
@@ -203,16 +255,72 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     // 〰 le maillage : qui est là, à combien de sauts ; ✉ lui écrire en privé, ⊘ le bloquer
     const loin = () => (maille ? maille.pairs().filter(p => !p.direct).map(p => '<span class="px-pr-pair px-pr-loin' + (p.bloque ? ' bloque' : '') + '" data-neurone>○ ' + esc(p.nom || '?') + '<small>#' + p.fp.slice(0, 4) + ' · ' + p.sauts + ' saut' + (p.sauts > 1 ? 's' : '') + '</small></span>').join('') : '');
     const pairsHtml = () => ((e.pairs.size || (maille && maille.pairs().length)) ? directs() + loin()
-      + (maille ? '<div class="px-pr-qui">' + maille.pairs().map(p => '<button type="button" data-pr-mp="' + p.fp + '"' + (p.cle ? '' : ' disabled') + '>✉ ' + esc(p.nom || p.fp.slice(0, 4)) + '</button><button type="button" data-pr-bloq="' + p.fp + '" aria-label="' + (p.bloque ? 'débloquer' : 'bloquer') + '">' + (p.bloque ? '↺' : '⊘') + '</button>').join('') + '</div>' : '')
+      + (maille ? '<div class="px-pr-qui">' + maille.pairs().map(p => '<button type="button" data-pr-fav="' + p.fp + '" aria-label="pote">' + (p.favori ? '✦' : '✧') + '</button><button type="button" data-pr-mp="' + p.fp + '"' + (p.cle ? '' : ' disabled') + '>@' + esc(p.nom || p.fp.slice(0, 4)) + (p.verifie ? ' ✓' : '') + '</button><button type="button" data-pr-bloq="' + p.fp + '" aria-label="' + (p.bloque ? 'débloquer' : 'bloquer') + '">' + (p.bloque ? '↺' : '⊘') + '</button>').join('') + '</div>' : '')
       : '<p class="px-sous">' + (e.actif ? 'personne autour pour l\'instant, dans la salle « ' + esc(e.salle) + ' » ; les autres ouvrent Proche, même salle, et démarrent' : 'éteint : personne ne te voit') + '</p>');
     const qui = (m) => (m.moi ? 'toi' : (m.nom || nomDe(m.de)) + (m.de && /^[0-9a-f]{16}$/.test(m.de) ? '#' + m.de.slice(0, 4) : ''));
-    const messagesHtml = () => fil().slice(-60).map(m => '<p class="px-pr-m' + (m.moi ? ' moi' : '') + (m.texte == null ? ' ferme' : '') + '"><b>' + esc(qui(m)) + '</b> '
+    const messagesHtml = () => fil().slice(-60).map(m => '<p class="px-pr-m' + (m.moi ? ' moi' : '') + (m.texte == null ? ' ferme' : '') + (m.mention ? ' mention' : '') + '"><b>' + esc(qui(m)) + '</b> '
       + (m.texte == null ? '<i>◈ message fermé (pas le bon mot de passe, ou pas pour toi)</i>' : esc(m.texte))
       + (m.son && m.id ? ' <button type="button" class="px-pr-sonb" data-pr-son="' + esc(m.id) + '">▷ dans le synthé</button>' : '')
-      + (m.sauts ? ' <small class="px-pr-sauts">↝' + m.sauts + '</small>' : '') + (m.moi && m.prive ? ' <small>' + (m.etat === 'recu' ? '✓✓' : '✓') + '</small>' : '') + '</p>').join('') || '<p class="px-sous">aucun message' + (e.salon === PUBLIC ? '' : ' ici') + '</p>';
+      + (m.sauts ? ' <small class="px-pr-sauts">↝' + m.sauts + '</small>' : '') + (m.moi && m.prive ? ' <small>' + (m.etat === 'lu' ? '◉ lu' : m.etat === 'recu' ? '✓✓' : '✓') + '</small>' : '') + '</p>').join('') || '<p class="px-sous">aucun message' + (e.salon === PUBLIC ? '' : ' ici') + '</p>';
     const salonsHtml = () => (maille ? [...maille.salons().map(s => [s.salon, s.salon === PUBLIC ? '# tout le monde' : s.salon + (s.ferme ? ' ◈' : '')]), ...maille.conversations().map(c => [c.salon, '@' + (c.nom || c.fp.slice(0, 4))])]
       .map(([k, n]) => '<button type="button" data-pr-salon="' + esc(k) + '"' + (k === e.salon ? ' class="on"' : '') + '>' + esc(n) + '</button>').join('') : '');
     const moiHtml = () => { const m = maille && maille.moi(); return m ? 'ton empreinte : <b>' + m.fp.match(/.{4}/g).join(' ') + '</b> <small>(c\'est elle qui dit qui tu es, pas ton nom)</small>' : ''; };
+    // ---- ⌖ (0.99.22) les potes ----
+    const hhmm = (t) => new Date(t).toTimeString().slice(0, 5);
+    const enLigne = () => !W.navigator || W.navigator.onLine !== false;
+    const ctlHtml = () => {
+      if (!maille) return '';
+      if (P.partage) return '<p class="px-pr-partage">⌖ tu partages ta position avec ' + (P.partage.salon ? esc(P.partage.salon) : 'tes potes ✦ (' + P.partage.a.length + ')') + (P.partage.heures ? ' · jusqu\'à ' + hhmm(P.partage.jusqua) : ' · jusqu\'à ce que tu arrêtes') + '</p><button type="button" class="px-pr-b" data-pr-pos-stop>■ arrêter de partager (ta position s\'efface chez eux)</button>';
+      return '<div class="px-pr-seg"><button type="button" data-pr-pos-partager="potes"' + (e.actif ? '' : ' disabled') + '>⌖ partager avec mes potes ✦</button>' + (salonFerme() ? '<button type="button" data-pr-pos-partager="salon">⌖ dans ' + esc(e.salon) + '</button>' : '') + '</div>'
+        + '<div class="px-pr-seg px-pr-duree">' + [[1, '1 h'], [4, '4 h'], [0, 'jusqu\'à ce que j\'arrête']].map(([v, n]) => '<button type="button" data-pr-pos-duree="' + v + '"' + (P.duree === v ? ' class="on"' : '') + '>' + n + '</button>').join('') + '</div>';
+    };
+    const lesPotes = () => (maille && P.moi ? maille.positions().map(x => ({ ...x, r: relatif(P.moi, x) })).sort((a, b) => a.r.d - b.r.d) : []);
+    let cleTuiles = '';
+    function peindreRadar() {
+      const zone = $('[data-pr-radar]'); if (!zone) return;
+      const l = lesPotes(), n = maille ? maille.positions().length : 0;
+      $('[data-pr-pos-ctl]').innerHTML = ctlHtml();
+      const etat = $('[data-pr-pos-etat]'); etat.textContent = P.erreur || (!n ? (e.actif ? 'personne ne partage sa position avec toi pour l\'instant ; ✦ tes potes, et demande-leur de partager' : '') : !P.moi ? n + ' pote' + (n > 1 ? 's' : '') + ' partage' + (n > 1 ? 'nt' : '') + ' sa position ; la tienne arrive…' : '');
+      const b = $('[data-pr-boussole]'), cible = P.cible && l.find(x => x.fp === P.cible);
+      zone.hidden = !l.length || !!cible; b.hidden = !cible;
+      $('[data-pr-potes-l]').innerHTML = cible ? '' : l.map(x => { const f = fraicheur(x.t, maintenant()); return '<button type="button" class="px-pr-pote' + (f.vieux ? ' vieux' : '') + '" data-pr-pote="' + x.fp + '"><b>' + esc(x.nom || x.fp.slice(0, 4)) + '</b> ' + metres(x.r.d) + ' <i>' + fleche(x.r.cap, P.cap || 0) + '</i><small>' + f.texte + (x.precision ? ' · ± ' + Math.round(x.precision) + ' m' : '') + (x.salon ? ' · ' + esc(x.salon) : '') + (x.sauts ? ' · ↝' + x.sauts : '') + '</small></button>'; }).join('');
+      if (cible) { peindreBoussole(cible); return; }
+      if (!l.length) return;
+      $('[data-pr-carte]').classList.toggle('on', P.carte); $('[data-pr-devant]').textContent = P.devant ? '↑ devant en haut' : 'N nord en haut'; $('[data-pr-devant]').classList.toggle('on', P.devant);
+      const disque = $('[data-pr-disque]'), S = Math.max(200, Math.min(520, disque.clientWidth || zone.clientWidth || 320)), c = S / 2, R = c - 16, cap0 = P.devant && P.cap != null ? P.cap : 0;
+      const ech = echelle([...l.map(x => x.r.d), P.moi.precision || 0]), mpp = ech / R;
+      // la carte : les tuiles (dans le repère nord en haut), tournées d'un bloc ; refaites seulement si la vue change
+      const tu = $('[data-pr-tuiles]'), carte = P.carte && enLigne(), D2 = Math.ceil(S * 1.42), k = carte ? [S, ech, P.moi.lat.toFixed(4), P.moi.lng.toFixed(4)].join('|') : '';
+      if (k !== cleTuiles) { cleTuiles = k; tu.innerHTML = carte ? tuilesAutour(P.moi.lat, P.moi.lng, mpp, D2, D2).map(t => '<img alt="" draggable="false" onerror="this.style.display=\'none\'" src="' + t.url + '" style="left:' + t.gauche + 'px;top:' + t.haut + 'px;width:' + t.cote + 'px;height:' + t.cote + 'px">').join('') : ''; }
+      tu.style.cssText = 'width:' + D2 + 'px;height:' + D2 + 'px;left:' + Math.round((S - D2) / 2) + 'px;top:' + Math.round((S - D2) / 2) + 'px;transform:rotate(' + (-cap0) + 'deg)';
+      $('[data-pr-attrib]').hidden = !carte;
+      disque.style.height = S + 'px';
+      const pt = (x, y) => { const q = tourner(x, y, cap0); let px = q.x / mpp, py = q.y / mpp; const d = Math.hypot(px, py); if (d > R) { px *= R / d; py *= R / d; } return [Math.round((c + px) * 10) / 10, Math.round((c - py) * 10) / 10, d > R]; };
+      let svg = '<svg viewBox="0 0 ' + S + ' ' + S + '" width="' + S + '" height="' + S + '" aria-hidden="true">';
+      for (let k2 = 1; k2 <= 4; k2++) svg += '<circle class="anneau" cx="' + c + '" cy="' + c + '" r="' + (R * k2 / 4) + '"/>';
+      svg += '<text class="ech" x="' + (c + 4) + '" y="' + (c - R + 12) + '">' + metres(ech) + '</text><text class="ech" x="' + (c + 4) + '" y="' + (c - R / 2 + 12) + '">' + metres(ech / 2) + '</text>';
+      const [nx, ny] = pt(0, (R + 10) * mpp); svg += '<text class="nord" x="' + nx + '" y="' + (ny + 4) + '" text-anchor="middle">N</text>';
+      if (P.cap != null) { const [hx, hy] = pt(Math.sin(P.cap * Math.PI / 180) * R * 0.3 * mpp, Math.cos(P.cap * Math.PI / 180) * R * 0.3 * mpp); svg += '<line class="regard" x1="' + c + '" y1="' + c + '" x2="' + hx + '" y2="' + hy + '"/>'; }
+      if (P.moi.precision && P.moi.precision / mpp > 6) svg += '<circle class="flou" cx="' + c + '" cy="' + c + '" r="' + Math.min(R, P.moi.precision / mpp) + '"/>';
+      svg += '<circle class="moi" cx="' + c + '" cy="' + c + '" r="6"/>';
+      for (const x of l) {
+        const [px, py, bord] = pt(x.r.x, x.r.y), f = fraicheur(x.t, maintenant());
+        svg += '<g class="pote' + (f.vieux ? ' vieux' : '') + (bord ? ' bord' : '') + '" data-pr-pote="' + x.fp + '">' + (x.precision && x.precision / mpp > 8 && !bord ? '<circle class="flou" cx="' + px + '" cy="' + py + '" r="' + Math.min(R, x.precision / mpp) + '"/>' : '')
+          + '<circle cx="' + px + '" cy="' + py + '" r="' + (bord ? 6 : 9) + '"/><text x="' + px + '" y="' + (py - 13) + '" text-anchor="middle">' + esc((x.nom || '?').slice(0, 12)) + (bord ? ' ' + metres(x.r.d) : '') + '</text></g>';
+      }
+      $('[data-pr-radar-svg]').innerHTML = svg + '</svg>';
+    }
+    let tuY = false;
+    function peindreBoussole(x) {
+      const a = aiguille(x.r.cap, P.cap), f = fraicheur(x.t, maintenant()), pres = x.r.d < Math.max(15, x.precision || 0);
+      if (pres && !tuY) { tuY = true; vibrer('succes'); } if (!pres) tuY = false;
+      $('[data-pr-boussole]').innerHTML = '<svg viewBox="-100 -100 200 200" class="px-pr-bsvg" aria-hidden="true"><circle class="anneau" r="92"/>'
+        + (P.cap != null ? '<text class="nord" x="' + Math.round(-78 * Math.sin(P.cap * Math.PI / 180)) + '" y="' + Math.round(-78 * Math.cos(P.cap * Math.PI / 180) + 4) + '" text-anchor="middle">N</text>' : '')   /* le nord, debout, là où il est */
+        + '<g transform="rotate(' + Math.round(a) + ')"><path class="aiguille" d="M0,-74 L24,14 L0,0 L-24,14 Z"/></g><circle class="moi" r="5"/></svg>'
+        + '<p class="px-pr-bd">' + (pres ? 'tu y es' : metres(x.r.d)) + '</p><p class="px-pr-bn"><b>' + esc(x.nom || '?') + '</b> · ' + f.texte + (x.precision ? ' · ± ' + Math.round(x.precision) + ' m' : '') + '</p>'
+        + (P.cap == null ? '<p class="px-sous">pas de boussole : la flèche suppose que tu regardes le nord</p>' : '')
+        + '<div class="px-pr-seg"><button type="button" data-pr-boussole-fermer>‹ le radar</button>' + (enLigne() ? '<button type="button" data-pr-plans="' + x.lat + ',' + x.lng + '">à pied (Plans)</button>' : '') + '</div>';
+    }
     const basseHtml = () => {
       if (hote === 'basse') return '<p class="px-pr-l">tu héberges la basse · ' + e.basse.tempo + ' bpm · tout le monde se cale sur toi</p>'
         + '<label class="px-pr-r">tempo <input type="range" min="60" max="180" step="1" value="' + e.basse.tempo + '" data-pr-tempo></label>'
@@ -234,9 +342,12 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       + '<div class="px-pr-id" data-neurone><input type="text" maxlength="24" placeholder="ton nom" data-pr-nom><input type="text" maxlength="40" placeholder="la salle" data-pr-salle><button type="button" data-pr="allumer"></button></div>'
       + '<p class="px-pr-err" data-pr-err hidden></p><div class="px-pr-pairs" data-pr-pairs></div>'
       + '<p class="px-pr-moi" data-pr-moi></p>'
-      + '<h3 class="px-pr-t">≡ messages</h3><div class="px-pr-salons" data-pr-salons></div><div class="px-pr-fil" data-pr-fil data-neurone data-ecrit></div>'
+      + '<h3 class="px-pr-t">≡ messages</h3><div class="px-pr-salons" data-pr-salons></div><p class="px-pr-dm" data-pr-dm hidden></p><div class="px-pr-fil" data-pr-fil data-neurone data-ecrit></div>'
       + '<div class="px-pr-glyphes" data-ecrit>' + GLYPHES_MSG.map(g => '<button type="button" data-pr-glyphe="' + esc(g) + '">' + esc(g) + '</button>').join('') + '</div>'
       + '<div class="px-pr-envoi"><input type="text" maxlength="1000" placeholder="un message · /j #salon · /m @nom · /w" data-pr-msg><button type="button" data-pr="envoyer">→</button></div><p class="px-pr-info" data-pr-info hidden></p>'
+      + '<h3 class="px-pr-t">⌖ mes potes</h3><div class="px-pr-potes" data-neurone><div data-pr-pos-ctl></div><p class="px-sous" data-pr-pos-etat></p>'
+      + '<div data-pr-radar hidden><div class="px-pr-radar" data-pr-disque><div class="px-pr-tuiles" data-pr-tuiles></div><div data-pr-radar-svg></div></div><div class="px-pr-rbtn"><button type="button" data-pr-carte>◫ carte</button><button type="button" data-pr-devant></button><small class="px-pr-attrib" data-pr-attrib hidden>' + ATTRIBUTION + '</small></div></div>'
+      + '<div class="px-pr-boussole" data-pr-boussole hidden></div><div class="px-pr-potes-l" data-pr-potes-l></div></div>'
       + '<h3 class="px-pr-t">∿ la basse</h3><div data-pr-basse data-neurone></div><h3 class="px-pr-t">▷ le son</h3><div data-pr-son data-neurone></div></div>';
     const $ = (s) => hoteEl.querySelector(s);
     pret.then(() => { if (!vivant) return; $('[data-pr-nom]').value = e.nom; $('[data-pr-salle]').value = e.salle; });
@@ -244,7 +355,11 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       if (!vivant) return;
       if (!quoi || quoi === 'pairs') $('[data-pr-pairs]').innerHTML = pairsHtml();
       if (!quoi || quoi === 'messages') { const f = $('[data-pr-fil]'); f.innerHTML = messagesHtml(); f.scrollTop = f.scrollHeight; $('[data-pr-salons]').innerHTML = salonsHtml(); }
+      if (!quoi || quoi === 'potes') peindreRadar();
       if (quoi) return;
+      const dm = $('[data-pr-dm]'); if (dm) { if (maille && e.salon[0] === '@') { const fp = e.salon.slice(1), pr = maille.pairs().find(x => x.fp === fp) || maille.favoris().find(x => x.fp === fp) || {};
+        dm.hidden = false; dm.innerHTML = '◈ <span data-pr-code>…</span> ' + (pr.verifie ? '<b>✓ vérifié</b>' : '<button type="button" data-pr-verif="' + fp + '">✓ c\'est le même code</button>') + ' <button type="button" data-pr-fav="' + fp + '">' + (pr.favori || maille.favoris().some(x => x.fp === fp) ? '✦' : '✧') + '</button>';
+        maille.codeSecurite(fp).then(cd => { const x = $('[data-pr-code]'); if (x) x.textContent = cd ? 'le code avec lui : ' + cd + ' (compare-le en vrai)' : 'pas encore sa clé'; }); maille.lire(e.salon); } else dm.hidden = true; }
       const b = $('[data-pr="allumer"]'); b.textContent = e.actif ? '■ éteindre' : '◉ démarrer'; b.classList.toggle('on', e.actif);
       for (const s of ['[data-pr-nom]', '[data-pr-salle]']) $(s).disabled = e.actif;
       const er = $('[data-pr-err]'); er.hidden = !e.erreur; er.textContent = e.erreur;
@@ -254,12 +369,29 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       for (const x of hoteEl.querySelectorAll('[data-pr-glyphe],[data-pr="envoyer"],[data-pr-msg]')) x.disabled = !e.actif;
     };
     peindre();
+    vue = true; W.addEventListener('deviceorientation', surCap);
+    boxion.get('reglages', 'proche-carte').then(v => { if (typeof v === 'boolean') { P.carte = v; peindre('potes'); } }).catch(() => {});
+    // ma position pour le radar : toutes les 10 s, seulement si quelqu'un partage la sienne avec moi (ou si je partage)
+    const rafraichir = () => { if (!vivant) return; if (maille && (maille.positions().length || P.partage)) maPosition().then(() => peindre('potes')); };
+    rafraichir(); W.clearInterval(minuteurMoi); minuteurMoi = W.setInterval(rafraichir, 10000);
+    const desabo = maille ? maille.surChange((q) => { if (q === 'positions' && !P.moi) rafraichir(); }) : () => {};
     let touchers = [];
     hoteEl.addEventListener('click', (ev) => {
       // trois touchers sur le titre en moins d'une seconde : tout effacer (comme bitchat)
       if (ev.target.closest('[data-pr-titre]')) { const t = Date.now(); touchers = [...touchers.filter(x => t - x < 1000), t]; if (touchers.length >= 3) { touchers = []; effacerTout(); } return; }
       // ♫ un son reçu : il part dans le synthé (gardé dans « tes sons »), et le synthé s'ouvre
       const so = ev.target.closest('[data-pr-son]'); if (so) { const m = fil().find(x => x.id === so.getAttribute('data-pr-son')); if (m && m.son) { try { W.dispatchEvent(new W.CustomEvent('px-synthe-charger', { detail: { ...m.son, nom: m.son.nom || ('de ' + (m.nom || '?')) } })); } catch (x) { /* */ } vibrer('fx-arrivee'); if (W.ploxi0n && W.ploxi0n.routeur) W.ploxi0n.routeur.ouvrir('synthe'); } return; }
+      // ⌖ les potes
+      const pp = ev.target.closest('[data-pr-pos-partager]'); if (pp) { partagerPosition(pp.getAttribute('data-pr-pos-partager'), P.duree); return; }
+      const du = ev.target.closest('[data-pr-pos-duree]'); if (du) { P.duree = +du.getAttribute('data-pr-pos-duree'); vibrer('selection'); peindre('potes'); return; }
+      if (ev.target.closest('[data-pr-pos-stop]')) { arreterPartage(); vibrer('selection'); return; }
+      const po = ev.target.closest('[data-pr-pote]'); if (po) { P.cible = po.getAttribute('data-pr-pote'); vibrer('fx-arrivee'); try { const DO = W.DeviceOrientationEvent; if (DO && DO.requestPermission) DO.requestPermission().catch(() => {}); } catch (x) { /* */ } peindre('potes'); return; }
+      if (ev.target.closest('[data-pr-boussole-fermer]')) { P.cible = null; peindre('potes'); return; }
+      if (ev.target.closest('[data-pr-carte]')) { P.carte = !P.carte; boxion.put('reglages', 'proche-carte', P.carte).catch(() => {}); peindre('potes'); return; }
+      if (ev.target.closest('[data-pr-devant]')) { P.devant = !P.devant; peindre('potes'); return; }
+      const pl = ev.target.closest('[data-pr-plans]'); if (pl) { const u = 'https://maps.apple.com/?daddr=' + pl.getAttribute('data-pr-plans') + '&dirflg=w'; if (ouvrirLien) ouvrirLien(u); else if (W.open) W.open(u, '_blank', 'noopener'); return; }
+      const fa = ev.target.closest('[data-pr-fav]'); if (fa && maille) { const fp = fa.getAttribute('data-pr-fav'), est = maille.favoris().some(x => x.fp === fp); maille.favori(fp, !est); vibrer('selection'); if (!est && P.partage && P.partage.potes) envoyerPosition(true); peindre(); return; }
+      const ve = ev.target.closest('[data-pr-verif]'); if (ve && maille) { maille.verifier(ve.getAttribute('data-pr-verif')); vibrer('succes'); peindre(); return; }
       const sa = ev.target.closest('[data-pr-salon]'); if (sa) { e.salon = sa.getAttribute('data-pr-salon'); e.info = ''; vibrer('selection'); peindre(); return; }
       const mp = ev.target.closest('[data-pr-mp]'); if (mp) { e.salon = '@' + mp.getAttribute('data-pr-mp'); vibrer('selection'); peindre(); const i = $('[data-pr-msg]'); if (i) i.focus(); return; }
       const bq = ev.target.closest('[data-pr-bloq]'); if (bq && maille) { const fp = bq.getAttribute('data-pr-bloq'); if (maille.pairs().find(p => p.fp === fp && p.bloque)) maille.debloquer(fp); else maille.bloquer(fp); vibrer('selection'); peindre(); return; }
@@ -279,10 +411,10 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     });
     hoteEl.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && ev.target.matches('[data-pr-msg]')) { if (envoyerMessage(ev.target.value)) ev.target.value = ''; } });
     hoteEl.addEventListener('change', (ev) => { if (ev.target.matches('[data-pr-tempo]')) hebergerBasse({ tempo: +ev.target.value }); });
-    return { unmount() { vivant = false; peindre = () => {}; hoteEl.innerHTML = ''; }, joue: () => !!(hote || e.ecoute.basse || e.ecoute.son) };
+    return { unmount() { vivant = false; vue = false; W.removeEventListener('deviceorientation', surCap); W.clearInterval(minuteurMoi); desabo(); peindre = () => {}; hoteEl.innerHTML = ''; }, joue: () => !!(hote || e.ecoute.basse || e.ecoute.son || P.partage) };
   }
 
-  const api = { demarrer, arreter, envoyerMessage, effacerTout, partagerSon, fil, voir: (salon) => { e.salon = salon || PUBLIC; peindre(); }, maille: () => maille, hebergerBasse, arreterBasse, hebergerSon, pauseSon, arreterSon, rejoindre, quitter, heureDe,
+  const api = { demarrer, arreter, envoyerMessage, effacerTout, partagerSon, partagerPosition, arreterPartage, potes: () => ({ partage: P.partage, moi: P.moi, cap: P.cap, positions: maille ? maille.positions() : [] }), fil, voir: (salon) => { e.salon = salon || PUBLIC; peindre(); }, maille: () => maille, hebergerBasse, arreterBasse, hebergerSon, pauseSon, arreterSon, rejoindre, quitter, heureDe,
     etat: () => ({ actif: e.actif, moi: e.moi, salle: e.salle, hote, pairs: [...e.pairs].map(([id, p]) => ({ id, etat: p.etat, ecart: p.ecart })), messages: fil(), salon: e.salon, info: e.info, maille: maille ? { moi: maille.moi(), pairs: maille.pairs(), salons: maille.salons(), conversations: maille.conversations() } : null, basse: e.basse, basseHote: e.basseHote, son: e.son, sonHote: e.sonHote, ecoute: { ...e.ecoute }, erreur: e.erreur }) };
   if (W) { W.jOSApps = W.jOSApps || {}; W.jOSApps.proche = { manifest: { id: 'proche', name: 'Proche', icon: '◉' }, mount }; }
   return { mount, pret, ...api, ploxion: { id: 'proche', nom: 'Proche', icone: '◉', interne: true } };

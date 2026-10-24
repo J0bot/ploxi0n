@@ -1,4 +1,4 @@
-// @bion maille — le maillage façon bitchat : des messages qui sautent de téléphone en téléphone, sans internet ni serveur ni compte | api: creerMaille, creerVus, commande, remplir, vider, lireMaille, TTL_MAX, PUBLIC
+// @bion maille — le maillage façon bitchat : des messages qui sautent de téléphone en téléphone, sans internet ni serveur ni compte | api: creerMaille, creerVus, commande, remplir, vider, lireMaille, TTL_MAX, PUBLIC (et du maillage : favori, lire, codeSecurite, verifier, partagerPosition, positions)
 // (0.99.21, RS-7 24.10 : « ça doit être comme bitchat mesh pour le truc Bluetooth »). Ce que bitchat fait, et ce qu'on en garde :
 //   - le MAILLAGE : chaque téléphone relaie ce qu'il reçoit à ses autres voisins ; un compteur de sauts (7 au plus) l'arrête ; un petit
 //     délai au hasard avant de relayer (moins de collisions, et on devine moins qui a écrit le premier) ;
@@ -13,14 +13,22 @@
 //   - le REMBOURRAGE : ce qui est chiffré est complété jusqu'à 256, 512, 1024… octets (la taille ne trahit pas le message) ;
 //   - BLOQUER une empreinte (ses messages ne s'affichent plus ; on relaie quand même : le maillage tient) ; TOUT EFFACER d'un geste
 //     (l'identité, les messages, les salons : bitchat, trois touchers sur le logo) ; les commandes /j /m /w /bloquer /effacer.
+// (0.99.22, RS-7 : « améliore le bitchat ; en soirée, savoir où sont tes potes, une boussole pour les retrouver sans connexion ») :
+//   - les FAVORIS (★, comme bitchat) : ce qui leur est adressé est gardé 72 h pour eux (ils le reçoivent en revenant) ;
+//   - « LU » : l'accusé de lecture d'un message privé (✓ envoyé, ✓✓ reçu, ◉ lu), seulement quand la conversation est ouverte ;
+//   - le CODE DE SÉCURITÉ d'une paire (30 chiffres, le même chez les deux) : le comparer en vrai prouve qu'aucun relais ne s'est glissé au
+//     milieu ; « vérifié » est gardé ;
+//   - les MENTIONS : « @ton nom » dans un salon te fait vibrer ;
+//   - la POSITION : chiffrée pour chaque pote (sa clé) ou pour un salon fermé (sa clé de mot de passe), jamais en clair ; relayée comme le
+//     reste ; « fin » l'efface chez les autres ; rien n'est gardé en cache (une vieille position ne sert à rien).
 // Le tuyau (src/natif/proche-natif.js) : MultipeerConnectivity, le Bluetooth et le Wi-Fi direct ensemble ; 7 voisins directs au plus,
 // le maillage porte au-delà. Pur, sans DOM : la cryptographie (subtle), le hasard, l'heure, l'envoi et l'attente sont donnés.
 
 export const TTL_MAX = 7, PUBLIC = '#', TAILLE_MAX = 16000;
-const GENRES = new Set(['ann', 'pub', 'mp', 'ack', 'sync']);
+const GENRES = new Set(['ann', 'pub', 'mp', 'ack', 'sync', 'pos']);
 const HEX16 = /^[0-9a-f]{16}$/;
 const SALON = /^#[\p{L}\p{N}_-]{0,32}$/u;
-const GARDE = 12 * 3600e3, CACHE_MAX = 150, MESSAGES_MAX = 400;
+const GARDE = 12 * 3600e3, CACHE_MAX = 150, MESSAGES_MAX = 400, GARDE_FAVORI = 72 * 3600e3, FAVORIS_MAX = 100, POSITION_VIVE = 15 * 60e3;
 const enc = new TextEncoder(), dec = new TextDecoder();
 
 // ---- le filtre de Bloom : « déjà vu ? » en 4 Ko, deux filtres qui tournent (le vieux oublie) ----
@@ -67,7 +75,10 @@ export function commande(texte) {
   if (['block', 'bloquer'].includes(mot)) return arg ? { genre: 'bloquer', a: arg.replace(/^@/, '') } : { genre: 'bloques' };
   if (['unblock', 'debloquer', 'débloquer'].includes(mot)) return { genre: 'debloquer', a: arg.replace(/^@/, '') };
   if (['clear', 'effacer'].includes(mot)) return { genre: 'effacer' };
-  return { genre: 'erreur', texte: 'commandes : /j #salon · /m @nom texte · /w · /bloquer @nom · /debloquer @nom · /quitter · /effacer' };
+  if (['fav', 'favori', 'pote'].includes(mot)) return arg ? { genre: 'favori', a: arg.replace(/^@/, ''), oui: true } : { genre: 'favoris' };
+  if (['unfav', 'defavori', 'plus-pote'].includes(mot)) return { genre: 'favori', a: arg.replace(/^@/, ''), oui: false };
+  if (['code', 'verifier', 'vérifier', 'verify'].includes(mot)) return arg ? { genre: 'code', a: arg.replace(/^@/, '') } : { genre: 'erreur', texte: '/code @nom : le code de sécurité à comparer' };
+  return { genre: 'erreur', texte: 'commandes : /j #salon · /m @nom texte · /w · /fav @nom · /code @nom · /bloquer @nom · /debloquer @nom · /quitter · /effacer' };
 }
 
 // ---- le paquet du maillage : { m: 1, i, o, n, h, t, k, s?, a?, d } en texte ; ce qui vient d'à côté est suspect ----
@@ -95,10 +106,11 @@ const hex = (u8) => [...u8].map(x => x.toString(16).padStart(2, '0')).join('');
  *     effacerTout, fil(salon), salons(), pairs(), moi(), surChange(f) }
  */
 export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoyer, attente = (ms, f) => setTimeout(f, ms), repeter = (ms, f) => { const x = setInterval(f, ms); return () => clearInterval(x); }, magasin = null, nom = '' }) {
-  const vus = creerVus(), voisins = new Set(), cache = [], pairs = new Map(), clesPartagees = new Map(), clesSalons = new Map(), debits = new Map();
+  const vus = creerVus(), voisins = new Set(), cache = [], cacheFav = [], pairs = new Map(), clesPartagees = new Map(), clesSalons = new Map(), debits = new Map(), positions = new Map();
   let id = null, messages = [], salons = [PUBLIC], bloques = new Set(), auditeurs = new Set(), monNom = String(nom || '').slice(0, 24);
+  let favoris = new Map(), verifies = new Set();   // (0.99.22) empreinte → nom ; les paires dont le code a été comparé
   const changer = (quoi) => { for (const f of auditeurs) { try { f(quoi); } catch (e) { /* */ } } };
-  const garder = () => { if (magasin) magasin.ecrire('maille', { messages: messages.slice(-MESSAGES_MAX), salons, bloques: [...bloques] }).catch(() => {}); };
+  const garder = () => { if (magasin) magasin.ecrire('maille', { messages: messages.slice(-MESSAGES_MAX), salons, bloques: [...bloques], favoris: [...favoris], verifies: [...verifies] }).catch(() => {}); };
   const nouvelId = () => hex(alea(8));
 
   // ---- l'identité ----
@@ -144,12 +156,19 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
 
   // ---- l'envoi, le relais, le cache ----
   function cacher(i, texte, p) {
-    const t = maintenant(); while (cache.length && (cache.length >= CACHE_MAX || t - cache[0].t > GARDE)) cache.shift();
-    cache.push({ i, texte, t, k: p.k });
+    if (p.k === 'pos' || p.k === 'sync') return;   // une vieille position ne sert à rien
+    const t = maintenant();
+    if (p.a && favoris.has(p.a)) {   // (0.99.22) pour un favori : 72 h, à part (le déluge des autres ne le chasse pas)
+      while (cacheFav.length && (cacheFav.length >= FAVORIS_MAX || t - cacheFav[0].t > GARDE_FAVORI)) cacheFav.shift();
+      cacheFav.push({ i, texte, t, k: p.k, garde: GARDE_FAVORI }); return;
+    }
+    while (cache.length && (cache.length >= CACHE_MAX || t - cache[0].t > GARDE)) cache.shift();
+    cache.push({ i, texte, t, k: p.k, garde: GARDE });
   }
+  const recents = () => [...cache, ...cacheFav].map(c => c.i).slice(-160);
   function emettre(p, vers) {
     const texte = ecrire(p); if (texte.length > TAILLE_MAX) throw new Error('maille : paquet trop gros');
-    vus.ajouter(p.i); if (p.k !== 'sync') cacher(p.i, texte, p);
+    vus.ajouter(p.i); cacher(p.i, texte, p);
     const l = vers || [...voisins]; if (l.length) envoyer(texte, vers || null); return p;
   }
   const paquetDe = (k, extra) => ({ i: nouvelId(), o: id.fp, n: monNom, h: TTL_MAX, t: maintenant(), k, ...extra });
@@ -170,16 +189,17 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
     const sauve = magasin ? await magasin.lire('maille').catch(() => null) : null, jwk = magasin ? await magasin.lire('maille-identite').catch(() => null) : null;
     id = await identite(jwk);
     if (magasin && (!jwk || jwk.d !== id.jwk.d)) await magasin.ecrire('maille-identite', id.jwk).catch(() => {});
-    if (sauve) { messages = Array.isArray(sauve.messages) ? sauve.messages.slice(-MESSAGES_MAX) : []; salons = Array.isArray(sauve.salons) && sauve.salons.length ? [...new Set([PUBLIC, ...sauve.salons.filter(s => SALON.test(s))])] : [PUBLIC]; bloques = new Set(Array.isArray(sauve.bloques) ? sauve.bloques.filter(x => HEX16.test(x)) : []); }
+    if (sauve) { messages = Array.isArray(sauve.messages) ? sauve.messages.slice(-MESSAGES_MAX) : []; salons = Array.isArray(sauve.salons) && sauve.salons.length ? [...new Set([PUBLIC, ...sauve.salons.filter(s => SALON.test(s))])] : [PUBLIC]; bloques = new Set(Array.isArray(sauve.bloques) ? sauve.bloques.filter(x => HEX16.test(x)) : []);
+      favoris = new Map(Array.isArray(sauve.favoris) ? sauve.favoris.filter(x => Array.isArray(x) && HEX16.test(x[0])).map(([f, n]) => [f, String(n || '').slice(0, 24)]) : []); verifies = new Set(Array.isArray(sauve.verifies) ? sauve.verifies.filter(x => HEX16.test(x)) : []); }
     finAnnonce(); finAnnonce = repeter(60000, () => annoncer());   // les pairs lointains apprennent notre clé, et qu'on est là
-    for (const v of voisins) { annoncer([v]); emettre(paquetDe('sync', { h: 0, d: { ids: cache.map(c => c.i).slice(-100) } }), [v]); }   // des voisins arrivés avant l'identité
+    for (const v of voisins) { annoncer([v]); emettre(paquetDe('sync', { h: 0, d: { ids: recents() } }), [v]); }   // des voisins arrivés avant l'identité
     changer('tout'); return { fp: id.fp };
   }
   function arreter() { finAnnonce(); finAnnonce = () => {}; voisins.clear(); }
 
   /** un voisin direct arrive ou part (le tuyau) : on s'annonce, on échange ce qu'on a vu (stocker et relayer) */
   function voisin(v, etat) {
-    if (etat === 'connecte') { if (voisins.has(v)) return; voisins.add(v); if (!id) return; annoncer([v]); emettre(paquetDe('sync', { h: 0, d: { ids: cache.map(c => c.i).slice(-100) } }), [v]); changer('pairs'); }
+    if (etat === 'connecte') { if (voisins.has(v)) return; voisins.add(v); if (!id) return; annoncer([v]); emettre(paquetDe('sync', { h: 0, d: { ids: recents() } }), [v]); changer('pairs'); }
     else if (etat === 'perdu') { if (voisins.delete(v)) { for (const [fp, p] of pairs) if (p.voisin === v) p.voisin = null; changer('pairs'); } }
   }
 
@@ -189,7 +209,7 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
     if (!id) return true;
     if (p.k === 'sync') {   // d'un voisin seulement : on lui envoie ce qu'il n'a pas vu
       const ses = new Set(Array.isArray(p.d && p.d.ids) ? p.d.ids.filter(x => HEX16.test(x)).slice(0, 200) : []), t = maintenant();
-      for (const c of cache) if (!ses.has(c.i) && t - c.t < GARDE) { let q = null; try { q = JSON.parse(c.texte); } catch (e) { continue; } envoyer(ecrire({ ...q, h: Math.max(0, q.h - 1) }), [de]); }
+      for (const c of [...cache, ...cacheFav]) if (!ses.has(c.i) && t - c.t < c.garde) { let q = null; try { q = JSON.parse(c.texte); } catch (e) { continue; } envoyer(ecrire({ ...q, h: Math.max(0, q.h - 1) }), [de]); }
       return true;
     }
     if (vus.a(p.i)) return true;
@@ -202,7 +222,7 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
     pr.nom = p.n || pr.nom; pr.vu = maintenant(); pr.sauts = sauts; if (sauts === 0) pr.voisin = de; pairs.set(p.o, pr);
     if (avant !== pr.nom + '|' + pr.sauts && p.k !== 'ann') changer('pairs');   // un pair nouveau, ou qui s'est rapproché
     traiter(p, sauts).catch(() => {});
-    if (!(p.k === 'mp' && p.a === id.fp) && !(p.k === 'ack' && p.a === id.fp)) relayer(p, de);
+    if (!(p.a && p.a === id.fp)) relayer(p, de);   // ce qui m'est adressé s'arrête chez moi
     return true;
   }
   async function traiter(p, sauts) {
@@ -218,7 +238,9 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
       if (bloque) return;
       let texte = typeof p.d.x === 'string' ? p.d.x : null, ferme = false, son = p.d.son;
       if (texte == null && p.d.c) { ferme = true; const k = clesSalons.get(salon); const o = k ? await dechiffrer(k, p.d, p) : null; texte = o && typeof o.x === 'string' ? o.x : null; son = o && o.son; }
-      poser({ id: p.i, salon, de: p.o, nom: p.n, texte: texte == null ? null : texte.slice(0, 1000), ferme, son: texte != null && son && typeof son === 'object' ? son : null, t: maintenant(), sauts });
+      const mention = texte != null && !!monNom && new RegExp('@' + monNom.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\p{L}\\p{N}_-])', 'iu').test(texte);   // (0.99.22) « @ton nom » (pas « @tonnom2 »)
+      poser({ id: p.i, salon, de: p.o, nom: p.n, texte: texte == null ? null : texte.slice(0, 1000), ferme, son: texte != null && son && typeof son === 'object' ? son : null, mention, t: maintenant(), sauts });
+      if (mention) changer('mention');
       return;
     }
     if (p.k === 'mp' && p.a === id.fp) {
@@ -230,7 +252,18 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
       return;
     }
     if (p.k === 'ack' && p.a === id.fp && p.d && HEX16.test(p.d.r)) {
-      const m = messages.find(x => x.id === p.d.r && x.moi); if (m && m.etat !== 'recu') { m.etat = 'recu'; garder(); changer('messages'); }
+      const m = messages.find(x => x.id === p.d.r && x.moi), e = p.d.l === 1 ? 'lu' : 'recu';
+      if (m && m.etat !== e && m.etat !== 'lu') { m.etat = e; garder(); changer('messages'); }
+      return;
+    }
+    if (p.k === 'pos') {   // (0.99.22) une position : pour moi (sa clé), ou pour un salon fermé que j'ai rejoint
+      if (bloque) return;
+      const k = p.a === id.fp ? await clePour(p.o) : (p.s && clesSalons.get(p.s)) || null; if (!k) return;
+      const o = await dechiffrer(k, p.d, p); if (!o) return;
+      if (o.fin) { if (positions.delete(p.o)) changer('positions'); return; }
+      const lat = +o.lat, lng = +o.lng; if (!(Math.abs(lat) <= 90 && Math.abs(lng) <= 180)) return;
+      positions.set(p.o, { fp: p.o, nom: p.n, lat, lng, precision: Math.max(0, Math.min(5000, +o.precision || 0)), cap: Number.isFinite(+o.cap) ? +o.cap : null, t: maintenant(), sauts, salon: p.a === id.fp ? null : p.s });
+      changer('positions');
     }
   }
 
@@ -264,21 +297,50 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
   function trouver(x) { const s = String(x || '').toLowerCase(); if (HEX16.test(s)) return s; for (const [fp, p] of pairs) if ((p.nom || '').toLowerCase() === s || fp.startsWith(s)) return fp; return null; }
   function bloquer(x) { const fp = trouver(x); if (!fp || fp === (id && id.fp)) return null; bloques.add(fp); garder(); changer('pairs'); return fp; }
   function debloquer(x) { const fp = trouver(x); if (fp && bloques.delete(fp)) { garder(); changer('pairs'); } return fp; }
-  /** tout effacer, d'un geste : une nouvelle identité, plus aucun message, salon, bloqué, ni rien en cache */
+  // ---- (0.99.22) les favoris, « lu », le code de sécurité, la position ----
+  function favori(x, oui = true) { const fp = trouver(x); if (!fp || fp === (id && id.fp)) return null; if (oui) favoris.set(fp, nomPair(fp) || favoris.get(fp) || ''); else favoris.delete(fp); garder(); changer('pairs'); return fp; }
+  /** la conversation est ouverte : ses messages reçus deviennent « lus », l'accusé part (une fois chacun) */
+  function lire(salon) {
+    if (!id || !salon || salon[0] !== '@') return 0; const fp = salon.slice(1); let n = 0;
+    for (const m of messages) if (m.salon === salon && !m.moi && !m.lu && m.texte != null) { m.lu = true; n++; emettre(paquetDe('ack', { a: fp, d: { r: m.id, l: 1 } })); }
+    if (n) garder(); return n;
+  }
+  /** 30 chiffres, les mêmes chez les deux : les comparer en vrai prouve que personne ne s'est glissé entre vous */
+  async function codeSecurite(x) {
+    const fp = trouver(x), pr = fp && pairs.get(fp); if (!id || !pr || !pr.cle) return null;
+    const [a, b] = [hex(id.brute), hex(pr.cle)].sort(), h = new Uint8Array(await subtle.digest('SHA-256', enc.encode('ploxi-code-v1|' + a + '|' + b)));
+    const v = new DataView(h.buffer); return Array.from({ length: 6 }, (_, i) => String(v.getUint32(i * 4) % 100000).padStart(5, '0')).join(' ');
+  }
+  function verifier(x, oui = true) { const fp = trouver(x); if (!fp) return null; if (oui) verifies.add(fp); else verifies.delete(fp); garder(); changer('pairs'); return fp; }
+  /** partager sa position : pour des potes (leurs empreintes ; chiffrée pour chacun) et/ou un salon FERMÉ (jamais un salon ouvert) ; pos.fin = arrêter */
+  async function partagerPosition(pos, { a = [], salon = null } = {}) {
+    if (!id || !pos) return 0;
+    const charge = pos.fin ? { fin: 1 } : { lat: Math.round(+pos.lat * 1e5) / 1e5, lng: Math.round(+pos.lng * 1e5) / 1e5, precision: Math.round(+pos.precision || 0), cap: Number.isFinite(+pos.cap) ? Math.round(+pos.cap) : null, t: maintenant() };
+    if (!pos.fin && !(Math.abs(charge.lat) <= 90 && Math.abs(charge.lng) <= 180)) return 0;
+    let n = 0;
+    for (const fp of new Set(a)) { const k = HEX16.test(fp) ? await clePour(fp) : null; if (!k) continue; const p = paquetDe('pos', { a: fp }); p.d = await chiffrer(k, charge, p); const pr = pairs.get(fp); emettre(p, pr && pr.voisin && voisins.has(pr.voisin) ? [pr.voisin] : null); n++; }
+    const ks = salon && clesSalons.get(salon); if (ks) { const p = paquetDe('pos', { s: salon }); p.d = await chiffrer(ks, charge, p); emettre(p); n++; }
+    return n;
+  }
+
+  /** tout effacer, d'un geste : une nouvelle identité, plus aucun message, salon, bloqué, favori, position, ni rien en cache */
   async function effacerTout() {
-    messages = []; salons = [PUBLIC]; bloques = new Set(); pairs.clear(); clesPartagees.clear(); clesSalons.clear(); cache.length = 0;
+    messages = []; salons = [PUBLIC]; bloques = new Set(); favoris = new Map(); verifies = new Set(); pairs.clear(); clesPartagees.clear(); clesSalons.clear(); cache.length = 0; cacheFav.length = 0; positions.clear();
     id = await identite(null);
-    if (magasin) { await magasin.ecrire('maille-identite', id.jwk).catch(() => {}); await magasin.ecrire('maille', { messages: [], salons: [PUBLIC], bloques: [] }).catch(() => {}); }
+    if (magasin) { await magasin.ecrire('maille-identite', id.jwk).catch(() => {}); await magasin.ecrire('maille', { messages: [], salons: [PUBLIC], bloques: [], favoris: [], verifies: [] }).catch(() => {}); }
     if (voisins.size) annoncer();
     changer('tout'); return id.fp;
   }
 
   return {
     demarrer, arreter, voisin, recevoir, dire, prive, rejoindre, quitter, bloquer, debloquer, effacerTout, trouver,
+    favori, lire, codeSecurite, verifier, partagerPosition,
+    favoris: () => [...favoris].map(([fp, n]) => { const p = pairs.get(fp); return { fp, nom: (p && p.nom) || n, la: !!(p && maintenant() - p.vu < 5 * 60e3), sauts: p ? p.sauts : null, cle: !!(p && p.cle), verifie: verifies.has(fp) }; }),
+    positions: () => [...positions.values()].filter(x => maintenant() - x.t < POSITION_VIVE).sort((a, b) => b.t - a.t),
     fil: (salon = PUBLIC) => messages.filter(m => m.salon === salon),
     salons: () => salons.map(s => ({ salon: s, ferme: clesSalons.has(s) })),
     conversations: () => [...new Set(messages.filter(m => m.salon[0] === '@').map(m => m.salon))].map(s => ({ salon: s, fp: s.slice(1), nom: nomPair(s.slice(1)) })),
-    pairs: () => [...pairs].filter(([, p]) => maintenant() - p.vu < 5 * 60e3).map(([fp, p]) => ({ fp, nom: p.nom, sauts: p.sauts, direct: !!(p.voisin && voisins.has(p.voisin)), cle: !!p.cle, bloque: bloques.has(fp) })).sort((a, b) => a.sauts - b.sauts),
+    pairs: () => [...pairs].filter(([, p]) => maintenant() - p.vu < 5 * 60e3).map(([fp, p]) => ({ fp, nom: p.nom, sauts: p.sauts, direct: !!(p.voisin && voisins.has(p.voisin)), cle: !!p.cle, bloque: bloques.has(fp), favori: favoris.has(fp), verifie: verifies.has(fp) })).sort((a, b) => a.sauts - b.sauts),
     voisins: () => [...voisins], moi: () => (id ? { fp: id.fp, nom: monNom } : null), nommer: (n) => { monNom = String(n || '').slice(0, 24); },
     surChange(f) { auditeurs.add(f); return () => auditeurs.delete(f); },
   };

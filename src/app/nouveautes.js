@@ -7,6 +7,12 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.22', titre: 'Retrouver tes potes', points: [
+    { t: '⌖ Proche › mes potes : partage ta position avec tes potes ✦ ou dans un salon fermé (chiffrée, 1 h, 4 h ou jusqu\'à ce que tu arrêtes). Le radar les montre autour de toi, même sans connexion ; touche un pote : une boussole te mène à lui. Avec du réseau, la carte s\'affiche dessous.', essayer: 'proche' },
+    '✦ Les potes (/fav @nom) : ce qui leur est envoyé les attend 72 h dans le maillage.',
+    '◉ Les messages privés disent quand ils sont lus ; le code de sécurité d\'une conversation se compare en vrai (/code @nom).',
+    '@ Quelqu\'un écrit @ton nom dans un salon : ça vibre.',
+  ] },
   { v: '0.99.21', titre: 'Le maillage, et un max de psy', points: [
     { t: '〰 Proche devient un maillage, comme bitchat : les messages sautent de téléphone en téléphone (jusqu\'à 7 sauts), attendent ceux qui arrivent après ; des salons # (avec un mot de passe si tu veux) ; les messages privés chiffrés de bout en bout, avec l\'accusé ✓✓ ; /j #salon, /m @nom, /w ; trois touchers sur « ◉ proche » effacent tout.', essayer: 'proche' },
     { t: '≋ Le synthé : psytrance, tribe, acidcore, mentalcore (le son, le motif, la gamme, le tempo jusqu\'à 240) et un kick sur les temps.', essayer: 'synthe' },

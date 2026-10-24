@@ -1047,6 +1047,27 @@ html.px-calme .px-vx-t{transition:none}html.px-calme .px-vx-eclair{animation:non
 .px-pr-salons button.on{color:var(--bio);border-color:var(--bio);box-shadow:0 0 10px var(--glow)}
 .px-pr-moi{font:500 11px/1.4 var(--mono);color:var(--muted);margin:6px 0 0}.px-pr-moi b{color:var(--txt);letter-spacing:.08em}
 .px-pr-info{font:500 11px/1.4 var(--mono);color:var(--acc2);margin:6px 0}.px-pr-info[hidden]{display:none}
+/* ⌖ (0.99.22) les potes : le radar (la carte dessous quand il y a du réseau), la liste, la boussole */
+.px-pr-potes{padding:10px;border-radius:var(--blob1,16px);border:var(--trait) solid var(--bord);background:var(--surface)}
+.px-pr-partage{font:600 12px/1.4 var(--mono);color:var(--bio);margin:2px 0 6px}
+.px-pr-radar{position:relative;width:100%;max-width:520px;margin:8px auto;border-radius:50%;overflow:hidden;background:radial-gradient(circle,var(--creux) 0,var(--bg) 75%);touch-action:manipulation}
+[data-pr-radar][hidden],.px-pr-boussole[hidden]{display:none}
+.px-pr-tuiles{position:absolute;transform-origin:50% 50%;opacity:.75;pointer-events:none}.px-pr-tuiles img{position:absolute;max-width:none;image-rendering:auto}
+.px-pr-radar [data-pr-radar-svg]{position:absolute;inset:0}.px-pr-radar svg{display:block;overflow:visible}
+.px-pr-radar .anneau{fill:none;stroke:var(--bord2);stroke-width:1;opacity:.7}.px-pr-radar .ech{font:500 9px var(--mono);fill:var(--grave)}
+.px-pr-radar .nord,.px-pr-bsvg .nord{font:700 12px var(--mono);fill:var(--acc2)}.px-pr-radar .regard{stroke:var(--bio);stroke-width:3;stroke-linecap:round;opacity:.6}
+.px-pr-radar .moi,.px-pr-bsvg .moi{fill:var(--bio);stroke:var(--bg);stroke-width:2}.px-pr-radar .flou{fill:var(--bio);opacity:.08}
+.px-pr-radar .pote{cursor:pointer}.px-pr-radar .pote circle:not(.flou){fill:var(--acc);stroke:var(--bg);stroke-width:2}.px-pr-radar .pote text{font:700 11px var(--mono);fill:var(--txt);paint-order:stroke;stroke:var(--bg);stroke-width:3px}
+.px-pr-radar .pote.vieux{opacity:.45}.px-pr-radar .pote.bord circle:not(.flou){fill:var(--acc2)}
+.px-pr-rbtn{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;margin:4px 0 2px}.px-pr-rbtn button{min-height:30px;padding:0 8px;font:600 10px var(--mono);border-radius:999px;background:var(--surface)}.px-pr-rbtn button.on{color:var(--bio);border-color:var(--bio)}
+.px-pr-attrib{width:100%;text-align:center;font:500 8px var(--mono);color:var(--muted)}.px-pr-attrib[hidden]{display:none}
+.px-pr-potes-l{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.px-pr-pote{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;text-align:left;min-height:44px;padding:6px 12px;font:600 13px var(--mono)}.px-pr-pote i{font-style:normal;color:var(--bio);font-size:16px}.px-pr-pote small{width:100%;font:500 10px var(--mono);color:var(--muted)}.px-pr-pote.vieux{opacity:.55}
+.px-pr-boussole{text-align:center}.px-pr-bsvg{width:min(70vw,280px);height:auto;display:block;margin:6px auto}.px-pr-bsvg .anneau{fill:none;stroke:var(--bord2);stroke-width:2}
+.px-pr-bsvg .aiguille{fill:var(--bio);filter:drop-shadow(0 0 6px var(--glow));transition:transform .2s}
+.px-pr-bd{font:700 2.2rem/1 var(--mono);color:var(--txt);margin:4px 0}.px-pr-bn{font:500 12px var(--mono);color:var(--muted);margin:4px 0 8px}
+.px-pr-dm{font:500 11px/1.5 var(--mono);color:var(--muted);margin:0 0 6px}.px-pr-dm[hidden]{display:none}.px-pr-dm button{min-height:28px;padding:0 8px;font:600 10px var(--mono)}.px-pr-dm b{color:var(--bio)}
+.px-pr-m.mention{border-left:3px solid var(--bio);padding-left:6px}
 .px-pr-sonb{min-height:30px;padding:0 10px;margin-left:4px;font:600 11px var(--mono);color:var(--bio);border-color:var(--bio)}
 .px-pr-m.ferme i{color:var(--muted)}.px-pr-m small{font:500 9px var(--mono);color:var(--grave)}
 

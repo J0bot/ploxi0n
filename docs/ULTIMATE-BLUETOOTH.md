@@ -83,9 +83,38 @@ Le tuyau reste MultipeerConnectivity (le Bluetooth et le Wi-Fi direct ensemble).
 (`PloxiProche`, Swift), le maillage porte au-delà. La basse et le son partagés restent d'un hôte à ses voisins directs (l'horloge).
 Les anciennes Proche (0.99.1 à 0.99.20, un seul saut) sont encore lues.
 
+### La suite du maillage (0.99.22, RS-7 : « améliore le bitchat »)
+
+- **Les potes ✦** (les favoris de bitchat) : `/fav @nom` ou ✧ dans la liste. Ce qui leur est adressé est gardé 72 h à part (le déluge des
+  autres ne le chasse pas) : ils le reçoivent en revenant dans le maillage.
+- **« Lu »** : ✓ envoyé, ✓✓ reçu, ◉ lu (l'accusé de lecture ne part que quand la conversation est vraiment ouverte à l'écran).
+- **Le code de sécurité** d'une paire : 30 chiffres en 6 groupes, les mêmes chez les deux (SHA-256 des deux clés publiques). Le comparer
+  en vrai prouve que personne ne s'est glissé entre vous ; « ✓ c'est le même code » le garde (✓ à côté du nom). `/code @nom`.
+- **Les mentions** : `@ton nom` dans un salon te fait vibrer et le message est marqué (pas `@ton nom2`).
+
+## Les potes : où ils sont, une boussole, une carte (0.99.22)
+
+> RS-7 : « il faut avoir une map, genre si t'es en soirée tu peux savoir où sont tes potes, et t'as une boussole pour les retrouver s'il
+> n'y a pas de connexion, ou soit une map directement ».
+
+- **Partager sa position** (Proche › ⌖ mes potes) : avec ses potes ✦ (chiffrée pour chacun, avec sa clé), ou dans un salon **fermé**
+  (`/j #soiree un-mot-de-passe` : chiffrée avec la clé du salon). Jamais dans un salon ouvert, jamais en clair. Pour 1 h, 4 h, ou jusqu'à
+  ce que tu arrêtes (12 h au plus). Toutes les 15 s si tu as bougé de plus de 8 m, sinon chaque minute. « ■ arrêter » efface ta position
+  chez les autres ; le bandeau le dit tant que ça dure. Le paquet `pos` du maillage, relayé comme le reste, jamais gardé en cache.
+- **Sans connexion** : le GPS marche sans réseau, le maillage aussi. Le **radar** te met au centre, tes potes à l'échelle (des anneaux de
+  25 m à 50 km, choisis pour que tout le monde tienne), la précision de chacun en halo, nord en haut ou **devant en haut** (la boussole de
+  l'iPhone). Toucher un pote ouvre la **boussole** : une flèche qui tourne avec l'iPhone vers lui, la distance en grand, depuis quand on
+  sait, ± la précision, « tu y es » (et une vibration) quand tu arrives.
+- **Avec connexion** : la **carte** sous le radar (les tuiles sombres de CARTO, OpenStreetMap), à la même échelle, qui tourne avec lui ;
+  « à pied (Plans) » vers le pote.
+- `src/bions/potes.js` (pur : `relatif`, `echelle`, `aiguille`, `tourner`, `fraicheur`, les tuiles web mercator `tuile`, `zoomPour`,
+  `tuilesAutour`), tests/potes.test.mjs ; le faux iPhone fait tourner le **vrai** maillage pour Tom (voisin direct) et Léa (deux sauts,
+  relayée par Tom), avec de vraies clés : `parcours-potes.mjs` (le radar, la boussole quand on regarde l'est, devant en haut, partager
+  chiffré, le code de sécurité).
+
 **Ce que bitchat fait et qu'on ne fait pas encore** : le Bluetooth Low Energy en arrière-plan (bitchat annonce et relaie même l'app
-fermée ; MultipeerConnectivity s'arrête quand l'app passe en arrière-plan) ; le protocole Noise (confidentialité persistante) ; les
-favoris (garder les messages pour quelqu'un plus longtemps) ; le pont vers Nostr quand il y a internet.
+fermée ; MultipeerConnectivity s'arrête quand l'app passe en arrière-plan : le partage de position aussi) ; le protocole Noise
+(confidentialité persistante) ; le pont vers Nostr quand il y a internet.
 
 ## La suite (⏭)
 

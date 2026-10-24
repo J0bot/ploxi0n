@@ -137,3 +137,26 @@ test('〰 (0.99.21) Proche en maillage : A–B–C en ligne ; /j #salon, /m @nom
   assert.notEqual(P.A.etat().maille.moi.fp, fpA); assert.equal(P.A.etat().messages.length, 0); assert.equal(P.A.etat().salon, '#');
   for (const p of Object.values(P)) await p.arreter();
 });
+
+test('⌖ (0.99.22) Proche : partager sa position avec ses potes ★ (chiffrée), dans un salon fermé seulement, et « arrêter » l\'efface chez eux', async () => {
+  const tuyaux = new Map();
+  const fab = (nom) => { const pair = new Set(), msg = new Set(); const t = { demarrer() { tuyaux.set(nom, t); queueMicrotask(() => { for (const [id, x] of tuyaux) if (id !== nom) { x._pair({ id: nom, etat: 'connecte' }); t._pair({ id, etat: 'connecte' }); } }); return Promise.resolve({ moi: nom }); },
+    arreter() { tuyaux.delete(nom); return Promise.resolve(); }, envoyer(d, a) { for (const [id, x] of tuyaux) if (id !== nom && (!a || a.includes(id))) setTimeout(() => x._msg({ de: nom, donnees: d }), 1); return Promise.resolve({ envoyes: 1 }); },
+    pairs: () => Promise.resolve([]), surPair: (f) => pair.add(f), surMessage: (f) => msg.add(f), _pair: (e) => { for (const f of pair) f(e); }, _msg: (e) => { for (const f of msg) f(e); } }; return t; };
+  const W = () => ({ setInterval: () => 0, clearInterval: () => {}, setTimeout: (f) => setTimeout(f, 0), clearTimeout: () => {} });
+  const A = creerProche({ W: W(), boxion: creerMemoire(), tuyau: fab('A'), Contexte: null, position: async () => ({ lat: 46.5201, lng: 6.6301, precision: 6 }) });
+  const B = creerProche({ W: W(), boxion: creerMemoire(), tuyau: fab('B'), Contexte: null, position: async () => ({ lat: 46.52, lng: 6.63, precision: 9 }) });
+  await A.demarrer({ nom: 'RS-7' }); await B.demarrer({ nom: 'Tom' }); await attendre(80);
+  assert.equal(A.partagerPosition('salon'), false, 'pas de salon fermé ouvert : refusé'); assert.match(A.etat().info, /FERMÉ/);
+  A.envoyerMessage('/fav @Tom'); assert.match(A.etat().info, /✦ Tom/);
+  assert.ok(A.partagerPosition('potes', 1)); await attendre(120);
+  const p = B.potes().positions; assert.equal(p.length, 1); assert.equal(p[0].nom, 'RS-7'); assert.equal(p[0].lat, 46.5201);
+  assert.ok(A.potes().partage.jusqua - Date.now() > 3500e3, 'une heure');
+  A.arreterPartage(); await attendre(120);
+  assert.equal(B.potes().positions.length, 0, 'arrêter efface la position chez eux');
+  // dans un salon fermé : ceux qui ont le mot de passe
+  A.envoyerMessage('/j #soiree disco'); B.envoyerMessage('/j #soiree disco'); await attendre(400);
+  assert.ok(A.partagerPosition('salon', 4)); await attendre(200);
+  assert.equal(B.potes().positions[0].salon, '#soiree');
+  await A.arreter(); await B.arreter();
+});

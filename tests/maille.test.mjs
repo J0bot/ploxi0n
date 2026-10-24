@@ -121,3 +121,45 @@ test('〰 l\'identité et les messages tiennent au redémarrage (le magasin)', a
   const R2 = reseau(['A'], [], { magasins: { A: magasin } }); await allumer(R2, []);
   assert.equal(R2.T.A.moi().fp, fp); assert.equal(R2.T.A.fil()[0].texte, 'seul'); assert.ok(R2.T.A.salons().some(s => s.salon === '#lac'));
 });
+
+test('★ (0.99.22) favoris gardés 72 h, « lu », le code de sécurité (le même des deux côtés), les mentions', async () => {
+  const L = [['A', 'B']], R = reseau(['A', 'B', 'C'], L); await allumer(R, L);
+  assert.deepEqual(commande('/fav @Tom'), { genre: 'favori', a: 'Tom', oui: true }); assert.equal(commande('/code @Tom').genre, 'code');
+  const fpB = R.T.B.moi().fp, fpA = R.T.A.moi().fp;
+  assert.equal(R.T.A.favori('B'), fpB); assert.ok(R.T.A.pairs().find(p => p.fp === fpB).favori); assert.equal(R.T.A.favoris()[0].nom, 'B');
+  // lu : B ouvre la conversation, l'accusé de lecture revient
+  await R.T.A.prive(fpB, 'tu es où ?'); await attendre(80);
+  assert.equal(R.T.A.fil('@' + fpB)[0].etat, 'recu');
+  assert.equal(R.T.B.lire('@' + fpA), 1); await attendre(60);
+  assert.equal(R.T.A.fil('@' + fpB)[0].etat, 'lu'); assert.equal(R.T.B.lire('@' + fpA), 0, 'une fois');
+  // le code de sécurité : le même chez les deux, 6 groupes de 5 chiffres
+  const ca = await R.T.A.codeSecurite(fpB), cb = await R.T.B.codeSecurite(fpA);
+  assert.match(ca, /^(\d{5} ){5}\d{5}$/); assert.equal(ca, cb);
+  R.T.A.verifier(fpB); assert.ok(R.T.A.favoris()[0].verifie);
+  // les mentions
+  let mention = 0; R.T.B.surChange(q => { if (q === 'mention') mention++; });
+  await R.T.A.dire('@Bob tu viens ?'); await attendre(60); assert.ok(!R.T.B.fil().at(-1).mention, '@Bob n\'est pas @B');
+  await R.T.A.dire('hé @B viens'); await attendre(60);
+  assert.ok(R.T.B.fil().at(-1).mention); assert.equal(mention, 1);
+});
+
+test('⌖ (0.99.22) la position : chiffrée pour un pote ou un salon fermé, relayée, jamais lisible ailleurs ; « fin » l\'efface', async () => {
+  const L = [['A', 'B'], ['B', 'C']], R = reseau(['A', 'B', 'C'], L);
+  const espion = []; const r0 = R.T.B.recevoir; R.T.B.recevoir = (de, t) => { espion.push(t); return r0(de, t); };
+  await allumer(R, L);
+  const fpC = R.T.C.moi().fp, fpA = R.T.A.moi().fp;
+  assert.equal(await R.T.A.partagerPosition({ lat: 46.5199971, lng: 6.6312345, precision: 8, cap: 90 }, { a: [fpC] }), 1);
+  await attendre(120);
+  const pc = R.T.C.positions(); assert.equal(pc.length, 1);
+  assert.deepEqual([pc[0].fp, pc[0].lat, pc[0].lng, pc[0].precision, pc[0].cap, pc[0].sauts], [fpA, 46.52, 6.63123, 8, 90, 1]);
+  assert.equal(R.T.B.positions().length, 0, 'le relais ne la lit pas'); assert.ok(espion.every(t => !t.includes('46.5')), 'rien en clair');
+  // un salon ouvert : refusé ; un salon fermé : ceux qui ont le mot de passe
+  await R.T.A.rejoindre('#fete'); assert.equal(await R.T.A.partagerPosition({ lat: 1, lng: 2 }, { salon: '#fete' }), 0, 'jamais dans un salon ouvert');
+  await R.T.A.rejoindre('#soiree', 'disco'); await R.T.C.rejoindre('#soiree', 'disco'); await R.T.B.rejoindre('#soiree', 'autre');
+  await R.T.A.partagerPosition({ lat: 46.6, lng: 6.7 }, { salon: '#soiree' }); await attendre(300);
+  assert.equal(R.T.C.positions()[0].lat, 46.6); assert.equal(R.T.C.positions()[0].salon, '#soiree'); assert.equal(R.T.B.positions().length, 0);
+  // fin
+  await R.T.A.partagerPosition({ fin: true }, { a: [fpC] }); await attendre(120);
+  assert.equal(R.T.C.positions().length, 0);
+  assert.equal(await R.T.A.partagerPosition({ lat: 999, lng: 0 }, { a: [fpC] }), 0, 'une position impossible ne part pas');
+});
