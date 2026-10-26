@@ -77,7 +77,7 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>ploxi0n utilise le micro quand un ploxion enregistre ou écoute, seulement à ta demande.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>ploxi0n utilise ta position quand un ploxion en a besoin (carte, lieux) ; elle reste sur ton téléphone.</string>
+	<string>ploxi0n utilise ta position quand un ploxion en a besoin (carte, lieux, retrouver tes potes) ; elle reste sur ton téléphone, sauf si tu la partages avec eux.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>ploxi0n lit les capteurs de mouvement pour les ploxions qui s'en servent (pas, inclinaison, boussole).</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
@@ -112,7 +112,7 @@
 		<true/>
 	</dict>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>ploxi0n trouve et pilote les appareils de ton réseau : Home Assistant, WLED, ESPHome, Tasmota, tes Raspberry Pi et tes boxions. Et, quand tu le démarres dans Proche, les téléphones autour de toi pour partager des messages et du son.</string>
+	<string>ploxi0n trouve et pilote les appareils de ton réseau : Home Assistant, WLED, ESPHome, Tasmota, tes Raspberry Pi et tes boxions. Et, quand tu le démarres dans Proche, les téléphones autour de toi pour partager des messages, du son et où sont tes potes.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_ploxi-proche._tcp</string>

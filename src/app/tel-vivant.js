@@ -11,8 +11,8 @@ export function installerTelVivant({ W = globalThis.window, prefs, systeme = nul
     if (!voulu() || D.hidden) { if (el) el.hidden = true; return; }
     if (!el) { el = D.createElement('div'); el.className = 'px-tel-vivant'; el.setAttribute('aria-hidden', 'true'); D.body.appendChild(el); }
     const s = systeme ? await systeme().catch(() => null) : null, b = batterie ? await batterie().catch(() => null) : null;
-    const e = etatVivant({ thermique: s && s.thermique, economie: !!(s && s.economie), batterie: b && b.niveau, enCharge: !!(b && b.enCharge), calme: !!prefs.lire().calme });
-    el.hidden = !e.actif; el.dataset.teinte = e.teinte;
+    const e = etatVivant({ thermique: s && s.thermique, economie: !!(s && s.economie), batterie: b && b.niveau, enCharge: !!(b && b.enCharge), calme: !!prefs.lire().calme, disqueLibre: s && s.disqueLibre });
+    el.hidden = !e.actif; el.dataset.teinte = e.teinte; el.classList.toggle('px-tv-irregulier', !!e.irregulier);
     el.style.setProperty('--tv-periode', e.periode + 's'); el.style.setProperty('--tv-intensite', String(e.intensite));
     sonder();
   }

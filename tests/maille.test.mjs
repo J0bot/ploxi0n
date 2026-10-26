@@ -72,6 +72,7 @@ test('〰 les messages privés : chiffrés de bout en bout ; B et C relaient san
   await allumer(R, L);
   const fpD = R.T.D.moi().fp;
   assert.equal(R.T.A.trouver('D'), fpD, 'un nom → son empreinte');
+  for (const n of ['B', 'C']) { const fp = R.T[n].moi().fp; assert.equal(R.T.A.trouver(fp.slice(0, 6)), fp, 'un début d\'empreinte'); assert.equal(R.T.A.trouver(fp.slice(0, 3)), null, 'trois lettres ne suffisent pas'); }
   const id = await R.T.A.prive(fpD, 'le code du casier : 4417');
   assert.ok(id); await attendre(200);
   const conv = R.T.D.fil('@' + R.T.A.moi().fp);

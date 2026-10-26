@@ -7,6 +7,13 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.23', titre: 'Tout vérifié', points: [
+    '✓ Le marketplace dit, pour chaque ploxion du labo, s\'il s\'ouvre sur l\'iPhone (testé un par un, avec ses vrais bions), ou ce qu\'il attend.',
+    'Aa L\'app parle anglais, allemand, italien et espagnol sur tous ses écrans (Proche, le synthé, l\'atelier, le système, le passé, tes xers…), et les demandes d\'autorisation d\'iOS aussi.',
+    '◉ VoiceOver sait dire chaque bouton (les glyphes de Proche : « envoyer : cœur »).',
+    '◌ Le bord vivant devient orange et étouffe quand l\'iPhone n\'a presque plus de place (sous 1,5 Go).',
+    '≈ Proche peut passer par le Bluetooth basse consommation, comme bitchat (une option de build, pour l\'instant) : les messages traversent même Wi-Fi coupé.',
+  ] },
   { v: '0.99.22', titre: 'Retrouver tes potes', points: [
     { t: '⌖ Proche › mes potes : partage ta position avec tes potes ✦ ou dans un salon fermé (chiffrée, 1 h, 4 h ou jusqu\'à ce que tu arrêtes). Le radar les montre autour de toi, même sans connexion ; touche un pote : une boussole te mène à lui. Avec du réseau, la carte s\'affiche dessous.', essayer: 'proche' },
     '✦ Les potes (/fav @nom) : ce qui leur est envoyé les attend 72 h dans le maillage.',

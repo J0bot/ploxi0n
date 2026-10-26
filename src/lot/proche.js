@@ -10,7 +10,7 @@
 // effacer (trois touchers sur « ◉ proche »), les commandes /j /m /w. La basse et le son restent d'un hôte à ses voisins directs (l'horloge).
 // Ne pas nuire : rien n'est annoncé avant « démarrer » ; aucun son ne part chez quelqu'un sans son « rejoindre » ; ce qui vient d'à côté est
 // lu comme suspect (paquets bornés, textes échappés, adresses https seulement). La session tient quand on change de ploxion ; ‹ ne la coupe pas.
-import { paquet, lire, ecart, meilleurEcart, partition, notesEntre, kicksEntre, freq, positionA, nomDe, GLYPHES_MSG, MOTIFS } from '../bions/proche.js';
+import { paquet, lire, ecart, meilleurEcart, partition, notesEntre, kicksEntre, freq, positionA, nomDe, GLYPHES_MSG, NOMS_GLYPHES, MOTIFS } from '../bions/proche.js';
 import { normaliser } from '../bions/son.js';   // (0.99.10) la basse peut porter le son du synthé (ses 33 réglages)
 import { creerMoteur } from './synthe.js';
 import { creerMaille, commande, PUBLIC } from '../bions/maille.js';
@@ -335,7 +335,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       if (hote === 'son') return '<p class="px-pr-l">tu héberges : ' + esc(e.son.url.replace(/^https:\/\//, '').slice(0, 60)) + '</p><div class="px-pr-seg"><button type="button" data-pr="son-pause">' + (e.son.joue ? '‖ pause pour tous' : '▷ relancer pour tous') + '</button><button type="button" data-pr="son-stop">■ arrêter</button></div>';
       if (e.son) return e.ecoute.son ? '<p class="px-pr-l">▷ tu joues le son de ' + esc(nomDe(e.sonHote)) + '</p><button type="button" class="px-pr-b" data-pr="son-quitter">■ le quitter</button>'
         : '<button type="button" class="px-pr-b px-pr-go" data-pr="son-rejoindre">▷ rejoindre le son de ' + esc(nomDe(e.sonHote)) + '</button><p class="px-sous">' + esc(e.son.url.replace(/^https:\/\//, '').slice(0, 60)) + '</p>';
-      return '<div class="px-pr-envoi"><input type="url" inputmode="url" placeholder="https://… un son (mp3, m4a)" data-pr-url' + (e.actif ? '' : ' disabled') + '><button type="button" data-pr="son-heberger"' + (e.actif ? '' : ' disabled') + '>▷</button></div>';
+      return '<div class="px-pr-envoi"><input type="url" inputmode="url" placeholder="https://… un son (mp3, m4a)" data-pr-url' + (e.actif ? '' : ' disabled') + '><button type="button" data-pr="son-heberger" aria-label="héberger ce son"' + (e.actif ? '' : ' disabled') + '>▷</button></div>';
     };
     hoteEl.innerHTML = '<div class="px-page px-proche" data-neurones="fin"><p class="px-grave" data-pr-titre>◉ proche</p>'
       + '<p class="px-sous">les téléphones autour de toi, sans internet : un maillage, comme bitchat. Chaque téléphone relaie les messages des autres (jusqu\'à 7 sauts), les garde pour ceux qui arrivent après ; les messages privés sont chiffrés de bout en bout. Et une basse, un son, partagés. Trois touchers sur « ◉ proche » : tout effacer.</p>'
@@ -343,8 +343,8 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       + '<p class="px-pr-err" data-pr-err hidden></p><div class="px-pr-pairs" data-pr-pairs></div>'
       + '<p class="px-pr-moi" data-pr-moi></p>'
       + '<h3 class="px-pr-t">≡ messages</h3><div class="px-pr-salons" data-pr-salons></div><p class="px-pr-dm" data-pr-dm hidden></p><div class="px-pr-fil" data-pr-fil data-neurone data-ecrit></div>'
-      + '<div class="px-pr-glyphes" data-ecrit>' + GLYPHES_MSG.map(g => '<button type="button" data-pr-glyphe="' + esc(g) + '">' + esc(g) + '</button>').join('') + '</div>'
-      + '<div class="px-pr-envoi"><input type="text" maxlength="1000" placeholder="un message · /j #salon · /m @nom · /w" data-pr-msg><button type="button" data-pr="envoyer">→</button></div><p class="px-pr-info" data-pr-info hidden></p>'
+      + '<div class="px-pr-glyphes" data-ecrit>' + GLYPHES_MSG.map(g => '<button type="button" data-pr-glyphe="' + esc(g) + '" aria-label="envoyer : ' + esc(NOMS_GLYPHES[g] || g) + '">' + esc(g) + '</button>').join('') + '</div>'
+      + '<div class="px-pr-envoi"><input type="text" maxlength="1000" placeholder="un message · /j #salon · /m @nom · /w" data-pr-msg><button type="button" data-pr="envoyer" aria-label="envoyer">→</button></div><p class="px-pr-info" data-pr-info hidden></p>'
       + '<h3 class="px-pr-t">⌖ mes potes</h3><div class="px-pr-potes" data-neurone><div data-pr-pos-ctl></div><p class="px-sous" data-pr-pos-etat></p>'
       + '<div data-pr-radar hidden><div class="px-pr-radar" data-pr-disque><div class="px-pr-tuiles" data-pr-tuiles></div><div data-pr-radar-svg></div></div><div class="px-pr-rbtn"><button type="button" data-pr-carte>◫ carte</button><button type="button" data-pr-devant></button><small class="px-pr-attrib" data-pr-attrib hidden>' + ATTRIBUTION + '</small></div></div>'
       + '<div class="px-pr-boussole" data-pr-boussole hidden></div><div class="px-pr-potes-l" data-pr-potes-l></div></div>'

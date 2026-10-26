@@ -1,0 +1,30 @@
+// ♿ (0.99.23, la feuille de route : « VoiceOver et police plus grande ») : sur chaque écran de l'app, ce que VoiceOver ne saurait pas dire —
+// un bouton, un lien ou un champ sans nom (ni texte, ni aria-label, ni title, ni étiquette), ou dont le seul « nom » est un signe (◉ ○ ⌖ ∿ :
+// VoiceOver lit « cercle noir »). Rend, par écran, le nombre d'éléments et les fautifs (leur HTML coupé), pour les corriger à la source.
+export default async function ({ page, ecrire }) {
+  await page.waitForSelector('[data-nv]', { timeout: 4000 }).then(() => page.evaluate(() => document.querySelector('[data-nv]').click())).catch(() => {});
+  await page.waitForTimeout(800);
+  const audit = () => page.evaluate(() => {
+    const visible = (e) => { const r = e.getBoundingClientRect(); const s = getComputedStyle(e); return r.width > 2 && r.height > 2 && s.visibility !== 'hidden' && s.display !== 'none' && !e.closest('[aria-hidden="true"],[hidden]'); };
+    const nom = (e) => {
+      const a = e.getAttribute('aria-label'); if (a && a.trim()) return a.trim();
+      const lb = e.getAttribute('aria-labelledby'); if (lb) { const t = lb.split(/\s+/).map(i => (document.getElementById(i) || {}).textContent || '').join(' ').trim(); if (t) return t; }
+      if (e.matches('input,select,textarea')) { if (e.id) { const l = document.querySelector('label[for="' + CSS.escape(e.id) + '"]'); if (l && l.textContent.trim()) return l.textContent.trim(); } const l2 = e.closest('label'); if (l2 && l2.textContent.trim()) return l2.textContent.trim(); return (e.getAttribute('placeholder') || e.getAttribute('title') || '').trim(); }
+      const t = (e.innerText || e.textContent || '').trim() || [...e.querySelectorAll('img[alt],svg[aria-label]')].map(x => x.getAttribute('alt') || x.getAttribute('aria-label')).join(' ').trim();
+      return t || (e.getAttribute('title') || '').trim();
+    };
+    const l = [...document.querySelectorAll('button,a[href],[role=button],input:not([type=hidden]),select,textarea')].filter(visible);
+    const sans = [], signes = [];
+    for (const e of l) { const n = nom(e); if (!n) sans.push(e.outerHTML.slice(0, 140)); else if (!/[\p{L}\p{N}]/u.test(n)) signes.push(n + ' ← ' + e.outerHTML.slice(0, 110)); }
+    return { elements: l.length, sansNom: sans.length, seulementUnSigne: signes.length, exemples: [...sans.slice(0, 6), ...signes.slice(0, 8)] };
+  });
+  const r = {};
+  r.accueil = await audit();
+  for (const id of ['reglages-app', 'marketplace', 'proche', 'synthe', 'autour', 'atelier-peaux', 'systeme', 'ambiances', 'passe']) {
+    await page.evaluate((i) => window.ploxi0n.routeur.ouvrir(i), id).catch(() => {}); await page.waitForTimeout(1000);
+    r[id] = await audit();
+    await page.evaluate(() => window.ploxi0n.routeur.faire('accueil')).catch(() => {}); await page.waitForTimeout(400);
+  }
+  r.total = Object.values(r).reduce((a, x) => ({ elements: a.elements + x.elements, sansNom: a.sansNom + x.sansNom, seulementUnSigne: a.seulementUnSigne + x.seulementUnSigne }), { elements: 0, sansNom: 0, seulementUnSigne: 0 });
+  return r;
+}

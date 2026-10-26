@@ -101,3 +101,5 @@ export function positionA(r, tHote) {
 
 // les messages d'un geste (le mode humain : des glyphes lisibles par tout le monde, dans toutes les langues)
 export const GLYPHES_MSG = ['◉', '○', '△', '♡', '→', '←', '?', '!', '✓', '✕', '♫', '∞'];
+/** (0.99.23) ce que VoiceOver dit de chacun (sinon « cercle noir ») */
+export const NOMS_GLYPHES = { '◉': 'cercle plein', '○': 'cercle', '△': 'triangle', '♡': 'cœur', '→': 'flèche vers la droite', '←': 'flèche vers la gauche', '?': 'point d\'interrogation', '!': 'point d\'exclamation', '✓': 'oui', '✕': 'non', '♫': 'musique', '∞': 'infini' };

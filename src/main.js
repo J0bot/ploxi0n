@@ -61,7 +61,7 @@ import { creerChercherLocal } from './app/chercher-local.js';
 import { creerVueXers } from './app/vue-xers.js';
 import { creerApercus } from './natif/apercus.js';
 import { SOCIAUX, surveillerSocial, invitationDuLien, sessionSocial, supprimerCompteSocial } from './natif/social-apple.js';
-import { PloxiApple, PloxiProche } from './natif/plugins-app.js';
+import { PloxiApple, PloxiProche, PloxiBLE } from './natif/plugins-app.js';
 import { creerTuyauProche } from './natif/proche-natif.js';   // ◉ (0.99.1) l'ultimate Bluetooth
 import { creerProche } from './lot/proche.js';
 import { creerSynthe } from './lot/synthe.js';
@@ -105,7 +105,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.22';
+const VERSION = '0.99.23';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -465,7 +465,7 @@ async function demarrer() {
     ploxions: () => ({ vivants: routeur ? routeur.vivants() : [], endormis: routeur && routeur.endormis ? routeur.endormis() : [] }),
     ouvrir: (id) => routeurProxy.ouvrir(id) }).ploxion);
   // ◉ (0.99.1) Proche, l'ultimate Bluetooth : les téléphones autour, sans internet (MultipeerConnectivity sur l'iPhone, un BroadcastChannel ailleurs)
-  const proche = creerProche({ W: window, boxion, vibrer: (x) => vibrer(x), tuyau: creerTuyauProche({ W: window, plugin: natifLot ? PloxiProche : null }), position: () => window.jOSNatif.position(), ouvrirLien: (u) => window.jOSNatif.ouvrirLien(u) });
+  const proche = creerProche({ W: window, boxion, vibrer: (x) => vibrer(x), tuyau: creerTuyauProche({ W: window, plugin: natifLot ? PloxiProche : null, ble: natifLot ? PloxiBLE : null }), position: () => window.jOSNatif.position(), ouvrirLien: (u) => window.jOSNatif.ouvrirLien(u) });
   internes.push(proche.ploxion);
   // ≋ (0.99.4) le synthé : des jOSKnob, des pads, une boucle (RS-7 : « qu'on puisse commencer à faire du son avec des knobs »)
   internes.push(creerSynthe({ W: window, boxion, vibrer: (x) => vibrer(x), proche }).ploxion);   // (0.99.10) jouer à plusieurs : le son part dans Proche

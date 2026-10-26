@@ -238,7 +238,7 @@ function voisinsFaux() {
 const pont = { octets: 0, appels: 0, depuis: Date.now() };   // (0.99.6) ce qui traverse le pont natif (sur l'iPhone : sérialisé sur le fil principal)
 function repondre(d) { const r = repondre0(d); try { const n = JSON.stringify(d.options || {}).length + JSON.stringify((r && r.data) || {}).length; pont.octets += n; pont.appels++; const o = d.options || {}, k = d.pluginId + '.' + d.methodName + ' ' + String(o.statement || '').replace(/\s+/g, ' ').slice(0, 60) + ' ' + JSON.stringify((o.values || []).slice(0, 2)).slice(0, 50); pont.par = pont.par || {}; pont.par[k] = (pont.par[k] || 0) + n; pont.t = pont.t || []; if (n > 200000) pont.t.push([Date.now() - pont.depuis, k.slice(0, 120), n]); } catch (e) { /* */ } return r; }
 function repondre0({ pluginId, methodName, options, callbackId }) {
-  appels.push({ t: Date.now(), p: pluginId, m: methodName, o: options });
+  { let gros = 0; try { gros = JSON.stringify(options || {}).length; } catch (e) { /* */ } appels.push({ t: Date.now(), p: pluginId, m: methodName, o: gros > 20000 ? { gros } : options }); }   // (0.99.23) un ploxion installé (son code entier) n'est pas gardé : le bilan de 551 ploxions tombait à court de mémoire
   if (methodName === 'addListener') { auditeurs.push({ plugin: pluginId, evenement: options.eventName, callbackId }); return { garder: true }; }
   if (methodName === 'removeListener' || methodName === 'removeAllListeners') return { success: true, data: {} };
   if (!plugins[pluginId]) return { success: false, error: { message: `"${pluginId}" plugin is not implemented on ios`, code: 'UNIMPLEMENTED' } };

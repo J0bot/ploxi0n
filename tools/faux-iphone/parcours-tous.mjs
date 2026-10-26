@@ -14,7 +14,7 @@ export default async function ({ page }) {
   const bions = Object.fromEntries(readdirSync('build/digestion/bions').filter(f => f.endsWith('.js')).map(f => [f.slice(0, -3), readFileSync('build/digestion/bions/' + f, 'utf8')]));
   mkdirSync('build/digestion/vignettes', { recursive: true });
   await page.evaluate(async (bions) => { const b = window.ploxi0n.boxion; for (const [n, js] of Object.entries(bions)) await b.put('bions', n, { js, hash: 'r', le: new Date().toISOString() }); }, bions);
-  const aInstaller = CIBLES ? tousIds : ids;   // ciblé : tout est installé (les ploxions composés), seuls les cibles sont ouverts
+  const aInstaller = tousIds;   // tout est installé (les ploxions composés : chill monte rs), seuls ceux du morceau ou les cibles sont ouverts
   for (let i = 0; i < aInstaller.length; i += 40) {
     // les bions d'un ploxion et ceux que ces bions touchent (jOSEngine → jOS3D), comme l'app à l'installation (depot.js : visiter)
     const fermeture = (l) => { const vus = new Set(), file = [...l]; while (file.length) { const b = file.shift(); if (vus.has(b)) continue; vus.add(b); if (bions[b]) file.push(...bionsTouches(bions[b], b)); } return [...vus]; };

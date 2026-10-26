@@ -4,7 +4,9 @@ import assert from 'node:assert/strict';
 import { etatVivant, niveauSon } from '../src/bions/vivant.js';
 
 test('◌ l\'état de l\'iPhone devient un souffle', () => {
-  assert.deepEqual(etatVivant({}), { actif: true, periode: 6, intensite: 1, teinte: 'bio' });
+  assert.deepEqual(etatVivant({}), { actif: true, periode: 6, intensite: 1, teinte: 'bio', irregulier: false });
+  assert.deepEqual([etatVivant({ disqueLibre: 626e6 }).teinte, etatVivant({ disqueLibre: 626e6 }).irregulier], ['plein', true], '(0.99.23) le disque presque plein : il étouffe');
+  assert.equal(etatVivant({ disqueLibre: 626e6, thermique: 'chaud' }).teinte, 'chaud', 'la chaleur d\'abord'); assert.equal(etatVivant({ disqueLibre: 50e9 }).teinte, 'bio');
   assert.equal(etatVivant({ thermique: 'chaud' }).periode, 2.4); assert.equal(etatVivant({ thermique: 'critique' }).teinte, 'chaud');
   assert.ok(etatVivant({ thermique: 'tiede' }).periode < etatVivant({ thermique: 'nominal' }).periode);
   assert.equal(etatVivant({ batterie: 0.1 }).teinte, 'faible'); assert.ok(etatVivant({ batterie: 0.1 }).intensite < 0.5);

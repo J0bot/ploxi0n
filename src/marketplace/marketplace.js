@@ -21,6 +21,10 @@ export const VUES = [['vitrine', '▦', 'vitrine'], ['grille', '⊞', 'grille'],
 
 function badge(c) {
   if (!c) return '<span class="mk-b mk-q" title="pas encore mesuré par le banc">?</span>';
+  // (0.99.23) le bilan du faux iPhone (tools/digestion/compat-iphone.mjs) : ouvert pour de vrai, avec ses vrais bions
+  if (c.ip === 'ok') return '<span class="mk-b mk-ok" title="ouvert dans le faux iPhone avec ses vrais bions' + (c.ipd ? ', le ' + esc(c.ipd) : '') + '">✓ testé sur l\'iPhone</span>';
+  if (c.ip === 'attend') return '<span class="mk-b mk-mi" title="testé' + (c.ipd ? ' le ' + esc(c.ipd) : '') + '">◐ ' + esc(c.ipr || 'attend quelque chose') + '</span>';
+  if (c.ip === 'casse') return '<span class="mk-b mk-q" title="testé' + (c.ipd ? ' le ' + esc(c.ipd) : '') + '">⚠ ' + esc(c.ipr || 'ne s\'ouvre pas encore') + '</span>';
   if (c.verdict === 'pret' && c.complet === 'oui') return '<span class="mk-b mk-ok" title="monte, se démonte proprement, aucun réseau">✓ hors ligne</span>';
   if (c.verdict === 'pret') return '<span class="mk-b mk-mi" title="certains bions manquent encore dans ploxi0n">◐ partiel</span>';
   if (c.classe === 'B' || c.classe === 'C') return '<span class="mk-b mk-web" title="appelle le serveur ou un service en ligne">🌐 en ligne</span>';

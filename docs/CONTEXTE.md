@@ -4,6 +4,31 @@
 
 *(13.10) Lire aussi `docs/VISION-ORIGINELLE.md` : la vision d'origine de RS-7 (la map des apps, le cube, les modes, le mesh).*
 
+## 0. La dernière session (24–26.10 : 0.99.19 → 0.99.23) — à lire d'abord
+
+Le détail est dans la feuille de route (une entrée par version). L'essentiel pour reprendre :
+- **Le bilan de santé** : `tools/faux-iphone/parcours-tous.mjs` ouvre les 551 ploxions publics du labo avec leur vrai code et leurs vrais
+  bions (`tools/digestion/recolter.mjs`, `recolter-bions.mjs` ; le réseau de Node passe par `NODE_USE_ENV_PROXY=1
+  NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt`). En 3 morceaux (`PX_TOUS_DE`, `PX_TOUS_N`), l'un après l'autre (la mémoire), ou ciblé
+  (`PX_TOUS_IDS=a,b` : la pile des erreurs). Il reprend où il s'est arrêté. `tools/digestion/compat-iphone.mjs` le verse dans
+  `public/marketplace/compat.json` (ip = ok | attend | casse) : le badge du marketplace.
+- **Proche = un maillage façon bitchat** (`src/bions/maille.js`, docs/ULTIMATE-BLUETOOTH.md) : multi-sauts, Bloom, stocker-relayer, ECDH +
+  AES-GCM, salons fermés, potes ✦, « lu », code de sécurité, positions chiffrées ; **les potes** (`src/bions/potes.js`) : radar hors ligne,
+  boussole, carte CARTO. Le faux iPhone fait tourner le VRAI maillage pour Tom et Léa (`parcours-potes.mjs`).
+- **La peau légère par défaut** (`html.px-leger`, aucune couche SVG) ; **la taille de tout** (`PloxiApple.taille` → `pageZoom`, grande
+  par défaut) ; **la police** n'habille que le xer (`.px-hote-labo`) ; **une zone « chez moi »** par défaut (le plugion jOSZone).
+- **Le synthé psy** (psytrance, tribe, acidcore, mentalcore, le kick) et le partage des sons (maillage, code `ploxi-son:`). Le cœur Rust
+  suit le bion proche (`npm run rust` : la preuve compare 7 218 cas).
+- **Les autorisations d'iOS en 5 langues** : `tools/ios/infoplist-langues.mjs` → `ios/App/App/*.lproj/InfoPlist.strings` ; fastlane
+  `ajouter_langues` (gem xcodeproj, rattrapé : jamais un build cassé), testé ici sur une copie du projet.
+
+Pièges nouveaux :
+- le filtre sans-emoji efface tout `\p{Extended_Pictographic}` : ★ ✉ ♫ 〰 ⚑ disparaissent de l'interface (✦ ✧ @ ≈ passent) ;
+- `jOS3D` (un chiffre après « jOS ») : les regex de bions doivent accepter `jOS[A-Z0-9]` ;
+- un ploxion qui en monte un autre (`jOSApps.rs.mount`) : `ploxionsDelegues` + `prechargerComposes` dans le routeur ;
+- le faux iPhone ne garde plus les options de plus de 20 Ko dans `appels` (le bilan tombait à court de mémoire) ;
+- `npm test` qui ne finit pas = un test qui échoue avant `p.fin()` (la page reste ouverte) : lancer le fichier seul avec `timeout`.
+
 ## 1. Où en est tout
 
 | Dépôt | Branche | État |

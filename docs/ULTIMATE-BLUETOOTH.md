@@ -116,6 +116,23 @@ Les anciennes Proche (0.99.1 à 0.99.20, un seul saut) sont encore lues.
 fermée ; MultipeerConnectivity s'arrête quand l'app passe en arrière-plan : le partage de position aussi) ; le protocole Noise
 (confidentialité persistante) ; le pont vers Nostr quand il y a internet.
 
+## Le Bluetooth basse consommation, comme bitchat (0.99.23, option `PLOXI0N_BLE`)
+
+Multipeer (Wi-Fi pair-à-pair + Bluetooth, géré par Apple) reste le tuyau par défaut. bitchat, lui, parle en BLE pur : ça marche quand le Wi-Fi est
+coupé, et iOS laisse un périphérique BLE annoncer en arrière-plan. Donc, derrière une option de build :
+
+- **Swift** (`ios/App/App/AppDelegate.swift`, `#if PLOXI0N_BLE`) : `PloxiBLE`, à la fois central (il cherche le service `8F3A1C2E-…8C10`) et périphérique
+  (il l'annonce, une caractéristique `…8C11` en écriture et en notification). Méthodes `demarrer`, `arreter`, `envoyer` ; événements `pair` et `message`
+  (octets en base64). Les voisins s'appellent `p:<uuid>` (ceux que je vois) et `c:<uuid>` (ceux qui m'écrivent). Une file d'attente quand le canal est plein.
+- **Les morceaux** (`src/bions/fragments.js`) : un paquet du maillage (jusqu'à 16 Ko) → des morceaux de 180 octets, en-tête `[0xB1][id u32][rang][total][0]` ;
+  recollés dans n'importe quel ordre, oubliés au bout de 30 s, tout borné (tests/fragments.test.mjs).
+- **Le tuyau mixte** (`src/natif/proche-natif.js`) : le maillage (`src/bions/maille.js`) ne voit qu'une liste de voisins ; chacun est Multipeer ou BLE.
+  Si `PloxiBLE` n'existe pas (l'option éteinte) ou refuse de démarrer, rien ne change.
+- **L'activer** : le workflow « iOS » (entrée `ble`, ou la variable de dépôt `PLOXI0N_BLE=1`), ou la variable `PLOXI0N_BLE=1` sur Codemagic.
+  fastlane `ajouter_ble` ajoute la condition de compilation `PLOXI0N_BLE` et le mode d'arrière-plan `bluetooth-peripheral` dans Info.plist.
+- **Pas encore vérifié** : le Swift n'est pas compilé ici (pas de Mac). Premier build avec l'option : à lire ligne par ligne si ça casse ; puis deux iPhones,
+  le Wi-Fi coupé, Proche.
+
 ## La suite (⏭)
 
 - Le son en arrière-plan, écran verrouillé (passer par un `<audio>` comme les ambiances), et la basse sur les vibrations (le haptique).

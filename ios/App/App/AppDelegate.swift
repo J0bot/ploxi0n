@@ -19,6 +19,9 @@ import AVKit
 import QuickLook
 import CoreImage   // (0.76) le QR code du partage en personne (CIQRCodeGenerator)
 import MultipeerConnectivity   // (0.99.1) l'ultimate Bluetooth : les téléphones proches (PloxiProche)
+#if PLOXI0N_BLE
+import CoreBluetooth   // (0.99.24) le maillage en Bluetooth basse consommation, comme bitchat (PloxiBLE), option de build
+#endif
 // l'AR native (0.73) : PloxiAR plus bas. Interrupteur de secours : PLOXI0N_AR=0 (fastlane) la retire du build.
 #if !PLOXI0N_SANS_AR
 import ARKit
@@ -2131,12 +2134,135 @@ public class PloxiProche: CAPPlugin, CAPBridgedPlugin, MCSessionDelegate, MCNear
     }
 }
 
+#if PLOXI0N_BLE
+// 〰 (0.99.24, RS-7 : « ça doit être comme bitchat ») LE MAILLAGE EN BLUETOOTH BASSE CONSOMMATION, en arrière-plan aussi (les modes
+// bluetooth-central et bluetooth-peripheral, que fastlane ajoute avec l'option PLOXI0N_BLE). Chaque iPhone est à la fois PÉRIPHÉRIQUE (il
+// annonce un service, une caractéristique : on lui écrit, il notifie) et CENTRAL (il cherche ce service, se connecte, s'abonne). Il ne porte
+// que des OCTETS (des morceaux de 180 octets au plus) : le découpage, le recollage et tout le maillage sont en JS (src/bions/fragments.js,
+// src/bions/maille.js). Les octets passent en base64 par le pont. Un voisin = l'identifiant que CoreBluetooth lui donne (« p:… » quand on
+// est son central, « c:… » quand il est le nôtre) : un même téléphone peut apparaître deux fois ; le maillage dédoublonne les paquets.
+public class PloxiBLE: CAPPlugin, CAPBridgedPlugin, CBCentralManagerDelegate, CBPeripheralManagerDelegate, CBPeripheralDelegate {
+    public let identifier = "PloxiBLE"
+    public let jsName = "PloxiBLE"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "demarrer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "arreter", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "envoyer", returnType: CAPPluginReturnPromise),
+    ]
+    private let service = CBUUID(string: "8F3A1C2E-5B7D-4E9A-9C1F-0D2B4A6E8C10")
+    private let carac = CBUUID(string: "8F3A1C2E-5B7D-4E9A-9C1F-0D2B4A6E8C11")
+    private let file = DispatchQueue(label: "ploxi.ble")
+    private var central: CBCentralManager?
+    private var periph: CBPeripheralManager?
+    private var maCarac: CBMutableCharacteristic?
+    private var peripheriques: [UUID: CBPeripheral] = [:]     // nous sommes leur central
+    private var ecrire: [UUID: CBCharacteristic] = [:]
+    private var abonnes: [UUID: CBCentral] = [:]              // nous sommes leur périphérique
+    private var enAttente: [(Data, [CBCentral])] = []         // ce que la file de notification n'a pas pris (peripheralManagerIsReady)
+
+    @objc func demarrer(_ call: CAPPluginCall) {
+        file.async {
+            if self.central == nil { self.central = CBCentralManager(delegate: self, queue: self.file) }
+            if self.periph == nil { self.periph = CBPeripheralManager(delegate: self, queue: self.file) }
+            call.resolve(["morceau": 180])
+        }
+    }
+
+    @objc func arreter(_ call: CAPPluginCall) {
+        file.async {
+            self.central?.stopScan()
+            for p in self.peripheriques.values { self.central?.cancelPeripheralConnection(p) }
+            self.periph?.stopAdvertising(); self.periph?.removeAllServices()
+            self.peripheriques.removeAll(); self.ecrire.removeAll(); self.abonnes.removeAll(); self.enAttente.removeAll()
+            self.central = nil; self.periph = nil; self.maCarac = nil
+            call.resolve()
+        }
+    }
+
+    @objc func envoyer(_ call: CAPPluginCall) {
+        guard let b64 = call.getString("donnees"), let data = Data(base64Encoded: b64), data.count <= 512 else { call.reject("morceau illisible ou trop gros"); return }
+        let a = call.getArray("a", String.self) ?? []
+        file.async {
+            var n = 0
+            for (id, p) in self.peripheriques {
+                guard let c = self.ecrire[id], a.isEmpty || a.contains("p:" + id.uuidString) else { continue }
+                p.writeValue(data, for: c, type: .withoutResponse); n += 1
+            }
+            if let mc = self.maCarac, let pm = self.periph {
+                let cibles = self.abonnes.filter { a.isEmpty || a.contains("c:" + $0.key.uuidString) }.map { $0.value }
+                if !cibles.isEmpty { if !pm.updateValue(data, for: mc, onSubscribedCentrals: cibles) { self.enAttente.append((data, cibles)) }; n += cibles.count }
+            }
+            call.resolve(["envoyes": n])
+        }
+    }
+
+    private func pair(_ id: String, _ etat: String) { notifyListeners("pair", data: ["id": id, "etat": etat]) }
+
+    // ---- central : chercher le service, se connecter, s'abonner ----
+    public func centralManagerDidUpdateState(_ c: CBCentralManager) {
+        if c.state == .poweredOn { c.scanForPeripherals(withServices: [service], options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]) }
+        else if c.state == .unauthorized { notifyListeners("pair", data: ["id": "", "etat": "erreur", "message": "Bluetooth refusé (Réglages › ploxi0n)"]) }
+    }
+    public func centralManager(_ c: CBCentralManager, didDiscover p: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
+        guard peripheriques[p.identifier] == nil, peripheriques.count < 8 else { return }
+        peripheriques[p.identifier] = p; p.delegate = self; c.connect(p, options: nil)
+    }
+    public func centralManager(_ c: CBCentralManager, didConnect p: CBPeripheral) { p.discoverServices([service]) }
+    public func centralManager(_ c: CBCentralManager, didFailToConnect p: CBPeripheral, error: Error?) { peripheriques[p.identifier] = nil }
+    public func centralManager(_ c: CBCentralManager, didDisconnectPeripheral p: CBPeripheral, error: Error?) {
+        peripheriques[p.identifier] = nil; ecrire[p.identifier] = nil; pair("p:" + p.identifier.uuidString, "perdu")
+    }
+    public func peripheral(_ p: CBPeripheral, didDiscoverServices error: Error?) {
+        for s in p.services ?? [] where s.uuid == service { p.discoverCharacteristics([carac], for: s) }
+    }
+    public func peripheral(_ p: CBPeripheral, didDiscoverCharacteristicsFor s: CBService, error: Error?) {
+        for c in s.characteristics ?? [] where c.uuid == carac {
+            ecrire[p.identifier] = c; p.setNotifyValue(true, for: c); pair("p:" + p.identifier.uuidString, "connecte")
+        }
+    }
+    public func peripheral(_ p: CBPeripheral, didUpdateValueFor c: CBCharacteristic, error: Error?) {
+        guard let v = c.value, !v.isEmpty else { return }
+        notifyListeners("message", data: ["de": "p:" + p.identifier.uuidString, "donnees": v.base64EncodedString()])
+    }
+
+    // ---- périphérique : annoncer le service, recevoir les écritures, notifier les abonnés ----
+    public func peripheralManagerDidUpdateState(_ pm: CBPeripheralManager) {
+        guard pm.state == .poweredOn, maCarac == nil else { return }
+        let c = CBMutableCharacteristic(type: carac, properties: [.notify, .write, .writeWithoutResponse], value: nil, permissions: [.writeable])
+        let s = CBMutableService(type: service, primary: true)
+        s.characteristics = [c]; maCarac = c
+        pm.add(s)
+        pm.startAdvertising([CBAdvertisementDataServiceUUIDsKey: [service]])
+    }
+    public func peripheralManager(_ pm: CBPeripheralManager, central: CBCentral, didSubscribeTo c: CBCharacteristic) {
+        abonnes[central.identifier] = central; pair("c:" + central.identifier.uuidString, "connecte")
+    }
+    public func peripheralManager(_ pm: CBPeripheralManager, central: CBCentral, didUnsubscribeFrom c: CBCharacteristic) {
+        abonnes[central.identifier] = nil; pair("c:" + central.identifier.uuidString, "perdu")
+    }
+    public func peripheralManager(_ pm: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
+        for r in requests { if let v = r.value, !v.isEmpty { notifyListeners("message", data: ["de": "c:" + r.central.identifier.uuidString, "donnees": v.base64EncodedString()]) } }
+        if let r = requests.first { pm.respond(to: r, withResult: .success) }
+    }
+    public func peripheralManagerIsReady(toUpdateSubscribers pm: CBPeripheralManager) {
+        guard let mc = maCarac else { return }
+        while let premier = enAttente.first {
+            if !pm.updateValue(premier.0, for: mc, onSubscribedCentrals: premier.1) { return }
+            enAttente.removeFirst()
+        }
+    }
+}
+#endif
+
 class PloxionVC: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(PloxiVocal())
         bridge?.registerPluginInstance(PloxiApple())
         bridge?.registerPluginInstance(PloxiLecteur())
         bridge?.registerPluginInstance(PloxiProche())
+        #if PLOXI0N_BLE
+        bridge?.registerPluginInstance(PloxiBLE())   // (0.99.24) le maillage en Bluetooth basse consommation
+        #endif
         #if !PLOXI0N_SANS_AR
         bridge?.registerPluginInstance(PloxiAR())
         #endif

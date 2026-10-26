@@ -294,7 +294,13 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
   }
   function quitter(salon) { if (salon === PUBLIC) return; salons = salons.filter(s => s !== salon); clesSalons.delete(salon); garder(); changer('salons'); }
   /** une empreinte (16 hex) ou un nom (le premier pair qui le porte) → l'empreinte */
-  function trouver(x) { const s = String(x || '').toLowerCase(); if (HEX16.test(s)) return s; for (const [fp, p] of pairs) if ((p.nom || '').toLowerCase() === s || fp.startsWith(s)) return fp; return null; }
+  /* un nom exact d'abord ; un début d'empreinte seulement s'il fait 4 caractères hex au moins (« d » n'est pas « d63e… ») */
+  function trouver(x) {
+    const s = String(x || '').toLowerCase(); if (HEX16.test(s)) return s; if (!s) return null;
+    for (const [fp, p] of pairs) if ((p.nom || '').toLowerCase() === s) return fp;
+    if (/^[0-9a-f]{4,}$/.test(s)) for (const fp of pairs.keys()) if (fp.startsWith(s)) return fp;
+    return null;
+  }
   function bloquer(x) { const fp = trouver(x); if (!fp || fp === (id && id.fp)) return null; bloques.add(fp); garder(); changer('pairs'); return fp; }
   function debloquer(x) { const fp = trouver(x); if (fp && bloques.delete(fp)) { garder(); changer('pairs'); } return fp; }
   // ---- (0.99.22) les favoris, « lu », le code de sécurité, la position ----
