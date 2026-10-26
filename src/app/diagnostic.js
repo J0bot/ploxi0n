@@ -16,8 +16,11 @@ export const dernierDiagnostic = () => dernier;
 export function diagnostic(W = globalThis.window) {
   const D = W.document, L = [], Wd = W.innerWidth, Hd = W.innerHeight;
   L.push('écran ' + Wd + '×' + Hd + ' · ' + (W.ploxi0n && W.ploxi0n.version ? 'ploxi0n ' + W.ploxi0n.version : '') + ' · ' + new Date().toISOString());
+  // (0.99.25, RS-7 : toute la page décalée de côté) la vue de l'iPhone elle-même : décalée, zoomée ?
+  const vv = W.visualViewport; L.push('la vue : défilée ' + Math.round(W.scrollX || 0) + ',' + Math.round(W.scrollY || 0) + (vv ? ' · visible ×' + (+vv.scale).toFixed(2) + ' décalée ' + Math.round(vv.offsetLeft) + ',' + Math.round(vv.offsetTop) + ' ' + Math.round(vv.width) + '×' + Math.round(vv.height) : ''));
   const tous = [...D.querySelectorAll('body *')];
-  const flottants = [], troisD = [], larges = [];
+  const flottants = [], troisD = [], larges = [], rouges = [];
+  const rouge = (t) => { const m = String(t || '').match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/g); return !!(m && m.some(x => { const [r, g, b, a = 1] = x.match(/[\d.]+/g).map(Number); return r > 140 && g < 90 && b < 90 && a > 0.15; })); };
   for (const e of tous) {
     const cs = W.getComputedStyle(e); if (cs.display === 'none' || cs.visibility === 'hidden') continue;
     const r = e.getBoundingClientRect();
@@ -27,12 +30,16 @@ export function diagnostic(W = globalThis.window) {
     if (t.startsWith('matrix3d') || cs.transformStyle === 'preserve-3d' || (cs.perspective && cs.perspective !== 'none'))
       troisD.push(sig(e) + ' · ' + boite(r) + ' · ' + proprio(e) + ' · ' + (t.startsWith('matrix3d') ? 'incliné' : cs.transformStyle === 'preserve-3d' ? 'preserve-3d' : 'perspective'));
     if (r.right > Wd + 1 && r.width > 0 && cs.position !== 'fixed') larges.push(sig(e) + ' · ' + boite(r) + ' · ' + proprio(e));
+    // (0.99.25, RS-7 : un rond rouge flou sur l'accueil) ce qui peint du rouge, en grand (fond, ombre, filtre, remplissage SVG)
+    if (r.width >= 40 && r.height >= 40 && r.bottom > 0 && r.top < Hd && (rouge(cs.backgroundColor) || rouge(cs.backgroundImage) || rouge(cs.boxShadow) || rouge(cs.filter) || rouge(cs.fill) || rouge(cs.floodColor) || rouge(cs.stopColor) || rouge(cs.color) && r.width > 120))
+      rouges.push(sig(e) + ' · ' + boite(r) + ' · ' + proprio(e));
   }
   L.push('', 'CE QUI FLOTTE (' + flottants.length + ')', ...flottants.slice(0, 40));
   L.push('', 'CE QUI EST EN 3D (' + troisD.length + ')', ...troisD.slice(0, 20));
   // une inclinaison restée collée (la fractale, le cube, un zoom) se voit aussi sur une page cachée : par son style posé
-  const colles = tous.filter(e => /rotate|perspective|translateZ|matrix3d|scale\(/.test((e.style && e.style.transform) || '')).map(e => sig(e) + ' · ' + proprio(e) + ' · ' + e.style.transform.slice(0, 90));
+  const colles = tous.filter(e => { const t = (e.style && e.style.transform) || ''; return /rotate|perspective|translateZ|matrix3d|scale\(/.test(t) || (/translate/.test(t) && !/translate\(0(px)?, ?0(px)?\)/.test(t)); }).map(e => sig(e) + ' · ' + proprio(e) + ' · ' + e.style.transform.slice(0, 90));
   L.push('', 'LES TRANSFORMATIONS POSÉES (' + colles.length + ')', ...colles.slice(0, 20));
   L.push('', 'CE QUI DÉBORDE À DROITE (' + larges.length + ')', ...larges.slice(0, 10));
+  L.push('', 'CE QUI PEINT DU ROUGE (' + rouges.length + ')', ...rouges.slice(0, 15));
   return L.join('\n');
 }

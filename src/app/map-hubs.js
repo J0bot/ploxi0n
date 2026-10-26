@@ -126,7 +126,8 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
     let vivant = true, ici = null, pas = [], drag = null, glisse = false, repli = false;   // repli : un hub de secours, faute de la map du labo
     let us = null, fenetre = FENETRES[0];   // (0.97) le temps : l'usage des ploxions, la fenêtre du wormion
     let palier = (params && params.palier) || 'hub', cible = params && (params.bion || params.ploxion) ? { ploxion: params.ploxion || null, bion: params.bion || null } : null, pince = null, appui = 0;   // (0.98) le zoom de fractale ; (0.99.3) ouvert sur un bion ou un ploxion
-    let echelle = 1, reglageZoom = { mode: 'libre', figes: [] }, raf = 0;   // (0.99) le zoom libre ou par paliers figés
+    let echelle = 1, reglageZoom = { mode: 'libre', figes: [] }, raf = 0;
+    let tx = 0, ty = 0;   /* (0.99.25) la scène : translate(tx, ty) scale(echelle), ancrée en haut à gauche (voir appliquerEchelle) */   // (0.99) le zoom libre ou par paliers figés
     hote.innerHTML = '<div class="px-map" data-detail="deux"><div class="px-map-b" data-neurones><button type="button" data-map="pas" data-neurone aria-label="revenir sur tes pas">‹</button><span class="px-map-ou" data-map-ou></span>'
       + '<button type="button" data-map="depart" data-neurone aria-label="le xerboxion">' + G('xerboxion') + '</button><button type="button" data-map="creer" data-neurone aria-label="créer un hub">＋</button></div>'
       + '<div class="px-map-v" data-map-v><div class="px-map-plan" data-map-plan data-neurones data-neurones-seuil="64"></div></div><div class="px-map-autres" data-map-autres></div>'
@@ -190,7 +191,7 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
       if (o.ploxion) cible = { ...(cible || {}), ploxion: o.ploxion, bion: null }; if (o.bion) cible = { ...(cible || {}), bion: o.bion }; if (o.hub && hubs.has(o.hub)) { if (ici && o.hub !== ici) pas.push(ici); ici = o.hub; }
       if ((p === 'ploxion' && !(cible && cible.ploxion)) || (p === 'bion' && !(cible && cible.bion))) return vibrer('fx-butee');
       palier = p; vibrer(j > i ? 'fx-arrivee' : 'fx-cran');
-      for (const el of [vue, scene]) { el.style.transform = ''; el.style.transition = 'none'; } echelle = 1; carte.setAttribute('data-detail', 'deux');
+      for (const el of [vue, scene]) { el.style.transform = ''; el.style.transition = 'none'; } echelle = 1; tx = 0; ty = 0; carte.setAttribute('data-detail', 'deux');
       carte.classList.remove('px-zoom-in', 'px-zoom-out'); void carte.offsetWidth; carte.classList.add(j > i ? 'px-zoom-in' : 'px-zoom-out');   // la scène plonge ou recule
       await peindreScene();
     }
@@ -268,15 +269,40 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
       const g = grilleAjustee(tt.children.length, w, h, echelle, 8);
       tt.style.setProperty('--tt-c', g.colonnes); tt.style.setProperty('--tt-cel', g.cellule + 'px');
     }
-    function appliquerEchelle(s, ox, oy, anime = false) {
-      echelle = borner(s); const el = scenee();
-      if (palier === 'tout') { el.style.transform = ''; el.style.overflow = ''; ajusterGrille(); carte.setAttribute('data-detail', detailDe(echelle)); const ni = hote.querySelector('[data-map-niveau]'); if (ni) ni.textContent = '×' + echelle.toFixed(2); return; }
-      if (ox != null) { const r = el.getBoundingClientRect(); el.style.transformOrigin = Math.round(ox - r.left) + 'px ' + Math.round(oy - r.top) + 'px'; }
+    // (0.99.25, RS-7 26.10 : « c'est pas stable les mouvements, soit trop grand soit trop petit, à cause du zoom ça part en couilles ») :
+    // avant, le point d'ancrage (transform-origin) était recalculé à CHAQUE mouvement des doigts depuis la scène déjà agrandie : ce qui était
+    // sous les doigts filait ailleurs, et chaque nouveau pincement sautait. Maintenant : translate(tx, ty) scale(s) depuis le coin, et l'ancre
+    // d'un pincement est prise une fois, au début, dans la scène NON transformée : le point sous les doigts y reste, les doigts peuvent glisser.
+    function poserEchelle(el, anime) {
+      const neutre = Math.abs(echelle - 1) < 0.01 && Math.abs(tx) < 0.5 && Math.abs(ty) < 0.5;
+      el.style.transformOrigin = '0 0';
       el.style.transition = anime ? 'transform .28s cubic-bezier(.2,.9,.3,1)' : 'none';
-      el.style.transform = Math.abs(echelle - 1) < 0.01 ? '' : 'scale(' + echelle.toFixed(3) + ')';
+      el.style.transform = neutre ? '' : 'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px) scale(' + echelle.toFixed(3) + ')';
       el.style.overflow = echelle < 0.99 ? 'visible' : '';   /* (0.99.18, RS-7 : la map coupée net au dézoom) la vue réduite ne coupe plus ses voisins : seul le cadre de la map coupe, en plein */
       carte.setAttribute('data-detail', detailDe(echelle));
       const ni = hote.querySelector('[data-map-niveau]'); if (ni) ni.textContent = '×' + echelle.toFixed(2);
+    }
+    /** l'ancre d'un pincement : l'échelle et la translation de départ, et le coin de la scène non transformée (à l'écran) */
+    function ancre(x, y) { const r = scenee().getBoundingClientRect(); return { s0: echelle, tx0: tx, ty0: ty, bx: r.left - tx, by: r.top - ty, x0: x, y0: y }; }
+    /** zoomer à s en gardant sous (x, y) le point de la scène qui était sous (a.x0, a.y0) au début du geste */
+    function zoomAutour(s, a, x, y) {
+      echelle = borner(s); const k = echelle / a.s0;
+      tx = (x - a.bx) - (a.x0 - a.bx - a.tx0) * k; ty = (y - a.by) - (a.y0 - a.by - a.ty0) * k;
+      poserEchelle(scenee(), false);
+    }
+    /** au lâcher : dézoomée, la scène revient au centre ; zoomée, elle couvre toujours sa place (jamais de bord vide) */
+    function recadrer() {
+      if (palier === 'tout') return; const el = scenee(), w = el.clientWidth, h = el.clientHeight;
+      if (echelle <= 1) { tx = w * (1 - echelle) / 2; ty = h * (1 - echelle) / 2; }
+      else { tx = Math.max(w * (1 - echelle), Math.min(0, tx)); ty = Math.max(h * (1 - echelle), Math.min(0, ty)); }
+      poserEchelle(el, true);
+    }
+    function appliquerEchelle(s, ox, oy, anime = false) {
+      const el = scenee();
+      if (palier === 'tout') { echelle = borner(s); el.style.transform = ''; el.style.overflow = ''; ajusterGrille(); carte.setAttribute('data-detail', detailDe(echelle)); const ni = hote.querySelector('[data-map-niveau]'); if (ni) ni.textContent = '×' + echelle.toFixed(2); return; }
+      if (ox != null) { zoomAutour(s, ancre(ox, oy), ox, oy); return; }
+      echelle = borner(s); tx = el.clientWidth * (1 - echelle) / 2; ty = el.clientHeight * (1 - echelle) / 2;   // sans point : autour du centre
+      poserEchelle(el, anime);
     }
     const iPalier = () => PALIERS_MAP.findIndex(x => x[0] === palier);
     async function plonger(x, y) {
@@ -293,20 +319,23 @@ export function creerMap({ W = globalThis.window, boxion, charger = null, ploxio
       const { i, s } = versScene(g, PALIERS_MAP.length); if (i !== iPalier()) await zoomer(PALIERS_MAP[i][0]);
       if (PALIERS_MAP[iPalier()][0] === PALIERS_MAP[i][0]) appliquerEchelle(s, null, null, true);
     }
-    hote.addEventListener('touchstart', (e) => { if (e.touches.length === 2) { const [a, b] = e.touches; pince = { d0: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), s0: echelle, x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2, bouge: false, g0: niveau(iPalier(), echelle) }; drag = null; } }, { passive: true });
+    hote.addEventListener('touchstart', (e) => { if (e.touches.length === 2) { const [a, b] = e.touches, x = (a.clientX + b.clientX) / 2, y = (a.clientY + b.clientY) / 2; pince = { d0: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), s0: echelle, x, y, a: ancre(x, y), bouge: false, g0: niveau(iPalier(), echelle) }; drag = null; W.clearTimeout(appui); appui = 0;   /* (0.99.25) l'appui long d'un koin sous un doigt ne part plus au milieu d'un pincement */ plan.style.transition = 'none'; plan.style.transform = 'translate(0,0)'; } }, { passive: true });
     hote.addEventListener('touchmove', (e) => {
+      if (pince && e.touches.length === 2 && e.cancelable) e.preventDefault();   // (0.99.25) iOS ne zoome ni ne fait défiler la page en même temps
       if (!pince || e.touches.length !== 2 || pince.passe) return; const [a, b] = e.touches, d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), s = borner(pince.s0 * d / pince.d0);
-      pince.bouge = true; W.cancelAnimationFrame(raf); raf = W.requestAnimationFrame(() => appliquerEchelle(s, pince && pince.x, pince && pince.y));
+      const mx = (a.clientX + b.clientX) / 2, my = (a.clientY + b.clientY) / 2, p0 = pince;
+      pince.bouge = true; W.cancelAnimationFrame(raf); raf = W.requestAnimationFrame(() => { if (pince === p0 && !p0.passe && palier !== 'tout') zoomAutour(s, p0.a, mx, my); else if (palier === 'tout') appliquerEchelle(s); });
       if (reglageZoom.mode !== 'libre') return;   // par paliers : on décide au lâcher
       if (s >= PLONGE) { pince.passe = true; plonger(pince.x, pince.y).then(ok => { if (ok) appliquerEchelle(0.8, null, null); W.setTimeout(() => appliquerEchelle(1, null, null, true), 30); }); }
       else if (s <= RECULE && iPalier() > 0) { pince.passe = true; zoomer(PALIERS_MAP[iPalier() - 1][0]).then(() => { appliquerEchelle(1.25, null, null); W.setTimeout(() => appliquerEchelle(1, null, null, true), 30); }); }
-    }, { passive: true });
-    hote.addEventListener('touchend', () => {
-      const p = pince; pince = null; if (!p || !p.bouge || p.passe) return;
+    }, { passive: false });
+    hote.addEventListener('touchend', (e) => {
+      if (pince && e.touches && e.touches.length >= 2) return;   // un doigt de trois levé : le pincement continue
+      const p = pince; pince = null; W.cancelAnimationFrame(raf); if (!p || !p.bouge || p.passe) return;
       if (reglageZoom.mode === 'paliers') {   // sauter au palier figé suivant, dans le sens du geste (sans palier figé : les scènes, à l'échelle 1)
         const sens = echelle > p.s0 ? 1 : -1, l = reglageZoom.figes.length ? reglageZoom.figes : PALIERS_MAP.map((_, i) => ({ g: i })), f = prochainFige(l, p.g0, sens);
         if (f) allerNiveau(f.g).then(() => vibrer('fx-cran')); else { appliquerEchelle(p.s0, null, null, true); vibrer('fx-butee'); }
-      }
+      } else recadrer();   // (0.99.25) libre : dézoomée, elle revient au centre ; zoomée, jamais de bord vide
     }, { passive: true });
     vue.addEventListener('pointerdown', (e) => { const k = e.target.closest('[data-k]'); W.clearTimeout(appui); if (!k || k.classList.contains('px-map-k-hub')) return;
       appui = W.setTimeout(() => { appui = -1; drag = null; vibrer('appui'); zoomer('ploxion', { ploxion: k.getAttribute('data-k') }); }, 480); });   // l'appui long : son neurone
