@@ -63,6 +63,7 @@ export const GLYPHES = {
   wifi: P('M14 40a52 52 0 0 1 72 0M26 54a34 34 0 0 1 48 0M38 68a16 16 0 0 1 24 0') + C(50, 80, 5, 1),
   bluetooth: P('M30 32l40 36-20 18V14l20 18-40 36'),
   proche: C(24, 50, 7, 1) + C(76, 50, 7, 1) + P('M38 36a20 20 0 0 1 0 28M62 36a20 20 0 0 0 0 28M46 26a34 34 0 0 1 0 48M54 26a34 34 0 0 0 0 48'),   // ◉ (0.99.1) deux téléphones, leurs ondes qui se rejoignent
+  vague: P('M10 50q10-18 20 0t20 0t20 0t20 0'),   /* 〰 (0.99.23) le maillage, le xer organique : le filtre sans-emoji l'effaçait */
   maison: P('M14 50 50 18l36 32M24 42v42h52V42') + R(42, 60, 16, 24),
   widgets: R(16, 16, 30, 30, 6) + R(54, 16, 30, 30, 6) + R(16, 54, 30, 30, 6) + R(54, 54, 30, 30, 6),
   notifs: P('M28 66V44a22 22 0 0 1 44 0v22l8 8H20zM42 82a8 8 0 0 0 16 0'),
@@ -100,7 +101,7 @@ export const GLYPHES = {
 const DEPUIS_EMOJI = { '🔎': 'chercher', '⚙': 'reglages', '⚙️': 'reglages', '🎙': 'vocal', '🎙️': 'vocal', '⧗': 'tsoin', '👤': 'compte', '📶': 'reseau', '📴': 'horsligne',
   '✎': 'editer', '▁': 'minimiser', '⧉': 'basculer', '✕': 'fermer', '🔒': 'verrou', '🔓': 'deverrou', '▶': 'lecture', '⏸': 'pause', '⏭': 'suivant', '⏮': 'precedent',
   '▦': 'grille', '▪': 'compacte', '☰': 'liste', '⏱': 'usage', '↺': 'recents', '◫': 'categories', '📁': 'dossier', '▤': 'minidocks', '♫': 'musique', '🎞': 'video',
-  '🥼': 'cape', '❤': 'coeur', '❤️': 'coeur', '🔦': 'lampe', '◉': 'nfc', 'ᛒ': 'bluetooth', '🏠': 'maison', '🔔': 'notifs', '📲': 'iphone', '🎨': 'palette', '🫧': 'haptique',
+  '🥼': 'cape', '❤': 'coeur', '❤️': 'coeur', '🔦': 'lampe', '◉': 'nfc', 'ᛒ': 'bluetooth', '🏠': 'maison', '〰': 'vague', '🔔': 'notifs', '📲': 'iphone', '🎨': 'palette', '🫧': 'haptique',
   '🧭': 'navigation', '🧩': 'dock', '▣': 'portion', '⬡': 'xerboxion', '💾': 'donnees', '◇': 'chilltekk', '🤖': 'xerbot', '🌐': 'globe', '🛍': 'marche', '🧪': 'flacon',
   '📦': 'boite', '📷': 'photo', '📍': 'lieu', '↗': 'partager', '⚡': 'bion', '🔌': 'bion', '⏻': 'allumer', '↻': 'relire', '✓': 'valider', '＋': 'plus', '+': 'plus', '−': 'moins', '🗯': 'bulle', '■': 'stop', '📳': 'haptique', '📋': 'liste', '🔔': 'notifs', '🔋': 'reseau', '📡': 'wifi', '🗣': 'vocal',
   '🧲': 'navigation', '🔐': 'verrou', '🎵': 'musique', '📚': 'livre', '📖': 'livre', '🎮': 'manette', '💬': 'bulle', '🗂': 'dossier', '📄': 'dossier', '🖥': 'terminal', '⌨': 'clavier', '🎧': 'musique', '🎬': 'video', '🕐': 'horloge', '⏲': 'horloge', '🗺': 'globe', '🔑': 'verrou', '☁': 'spherion', '🌸': 'coeur', '⌚': 'horloge', '📱': 'iphone', '🏃': 'coeur', '☾': 'horloge' };
