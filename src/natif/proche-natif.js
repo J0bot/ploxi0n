@@ -6,7 +6,7 @@
 // Rien ne part tant que la personne n'a pas démarré (ne pas nuire : on n'annonce pas son téléphone sans qu'elle le veuille).
 import { surPromesse } from './plugin-sur.js';
 import { decouper, creerRecolleur } from '../bions/fragments.js';
-// 〰 (0.99.24, RS-7 : « comme bitchat ») sur l'iPhone, un second tuyau s'ajoute s'il est compilé (PLOXI0N_BLE) : PloxiBLE, le Bluetooth basse
+// 〰 (0.99.23, RS-7 : « comme bitchat ») sur l'iPhone, un second tuyau s'ajoute s'il est compilé (PLOXI0N_BLE) : PloxiBLE, le Bluetooth basse
 // consommation, qui marche aussi app en arrière-plan. Ses voisins s'appellent « p:… » ou « c:… » ; ses paquets voyagent en morceaux de 180
 // octets (src/bions/fragments.js), en base64 sur le pont. Les deux tuyaux portent les mêmes paquets ; le maillage dédoublonne.
 const b64 = (u8) => { let s = ''; for (const x of u8) s += String.fromCharCode(x); return btoa(s); };

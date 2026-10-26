@@ -1,5 +1,9 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1792811793000,"0.99.22 : retrouver ses potes (radar hors ligne, boussole, carte) ; le maillage++ (potes, lu, code de sécurité, mentions)"],
+export const COMMITS = [[1793028117000,"feuille de route : le faux iPhone sur tous les ploxions du labo, coché (0.99.23)"],
+  [1793015367000,"0.99.23 : compat.json complet — 551 ploxions testés sur le faux iPhone (543 ok, 6 attendent, 2 cassent)"],
+  [1793015310000,"0.99.23 : 〰 a son glyphe (le filtre sans-emoji l'effaçait) ; feuille de route : supprimer son compte coché"],
+  [1793015222000,"0.99.23 : tout vérifié — compat iPhone au marketplace, langues, VoiceOver, disque plein, BLE en option"],
+  [1792811793000,"0.99.22 : retrouver ses potes (radar hors ligne, boussole, carte) ; le maillage++ (potes, lu, code de sécurité, mentions)"],
   [1792804054000,"0.99.21 : Proche devient un maillage comme bitchat ; un max de psy dans le synthé, et le partage des sons"],
   [1792792404000,"0.99.20 : le bilan de santé des 551 ploxions du labo, et ce qu'il a trouvé"],
   [1792785394000,"0.99.19 : la peau légère par défaut, le changement de peau réparé, la taille de tout, les bibliothèques des ploxions embarquées"],

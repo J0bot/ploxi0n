@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.24', titre: 'Le banc des nouveaux bions', points: [
+    '◇ Le banc iPhone › « ▶ les nouveaux bions, tout » : le maillage chiffré, les morceaux du Bluetooth, les potes (GPS, boussole, carte), Proche en vrai (15 s, avec un 2e iPhone à côté), le synthé, le cœur Rust, le bord vivant, les langues, le marketplace. Puis « copier » : le log, sans aucune position.',
+    '! Une erreur du banc se voit enfin (son signe était effacé).',
+  ] },
   { v: '0.99.23', titre: 'Tout vérifié', points: [
     '✓ Le marketplace dit, pour chaque ploxion du labo, s\'il s\'ouvre sur l\'iPhone (testé un par un, avec ses vrais bions), ou ce qu\'il attend.',
     'Aa L\'app parle anglais, allemand, italien et espagnol sur tous ses écrans (Proche, le synthé, l\'atelier, le système, le passé, tes xers…), et les demandes d\'autorisation d\'iOS aussi.',

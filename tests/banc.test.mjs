@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { page, attendre } from './aide.mjs';
 import { enregistrerBanc } from '../src/banc/banc.js';
 import { sondes } from '../src/banc/sondes.js';
+import { sondesBions } from '../src/banc/sondes-bions.js';
 
 test('banc : les sondes auto aboutissent sans réseau, le rapport est gardé, rien ne reste', async () => {
   const p = await page({ avion: true, ploxions: [] });
@@ -23,7 +24,7 @@ test('banc : les sondes auto aboutissent sans réseau, le rapport est gardé, ri
     }
     assert.equal(r.resultats.find(y => y.id === 'sto-boxion').etat, 'ok', 'boxion_local marche');
     assert.equal(r.resultats.find(y => y.id === 'cal-wasm').etat, 'ok', 'WebAssembly marche');
-    assert.ok(r.resultats.filter(y => y.etat === 'pas essayé').every(y => sondes(p.w).find(s => s.id === y.id).quand === 'toucher'), 'seules les sondes « toucher » attendent');
+    assert.ok(r.resultats.filter(y => y.etat === 'pas essayé').every(y => [...sondes(p.w), ...sondesBions(p.w)].find(s => s.id === y.id).quand === 'toucher'), 'seules les sondes « toucher » attendent');
     assert.deepEqual(p.tentatives, [], 'aucune requête sortante');
     assert.equal((await p.boxion.lire('tsoins', { kind: 'banc' })).length, 1, 'un tsoin « banc »');
     inst.unmount();

@@ -105,7 +105,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.23';
+const VERSION = '0.99.24';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 function garderViewport() {
@@ -380,11 +380,15 @@ async function demarrer() {
   if (!(await boxion.get('reglages', 'bions-v4')) && navigator.onLine !== false) {
     window.setTimeout(() => depot.completerBions({ max: 8, pause: 400 }).then(r => { if (!r.reste) boxion.put('reglages', 'bions-v4', { le: new Date().toISOString(), n: r.length }); }).catch(() => {}), 25000);
   }
+  let tuyauProche = null;   // (0.99.24) le tuyau de Proche, partagé avec le banc (sa sonde « Proche en vrai »)
   const internes = [
     // (0.67) les icônes comme dans le xer (le xerkion), et les ploxions natifs de l'app dans le marketplace (leur portée : natif)
     enregistrerMarketplace({ depot, vibrer, icone: (x) => svgXerkion(x, { seul: prefs.lire().styleIcones === 'glyphe' }), internes: () => (routeur ? routeur.catalogue().filter(p => p.interne) : []), surChangement: () => majAccueil(), usage: () => boxion.get('usage', 'stats'), prefs: { lire: () => boxion.get('reglages', 'marketplace'), ecrire: (v) => boxion.put('reglages', 'marketplace', v) } }),
     enregistrerXerEnLigne({}),
-    enregistrerBanc({ boxion, version: VERSION }),
+    enregistrerBanc({ boxion, version: VERSION, extras: {   // (0.99.24) les sondes des nouveaux bions : la radio, le vrai état de l'iPhone, le GPS
+      tuyau: () => tuyauProche,
+      systeme: () => (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() ? PloxiApple.systeme() : null),
+      position: () => window.jOSNatif.position() } }),
     enregistrerTrackpad({}),   // ◇ (0.60) les essais du trackpad haptique
   ];
   let raccourcis = null;
@@ -465,7 +469,8 @@ async function demarrer() {
     ploxions: () => ({ vivants: routeur ? routeur.vivants() : [], endormis: routeur && routeur.endormis ? routeur.endormis() : [] }),
     ouvrir: (id) => routeurProxy.ouvrir(id) }).ploxion);
   // ◉ (0.99.1) Proche, l'ultimate Bluetooth : les téléphones autour, sans internet (MultipeerConnectivity sur l'iPhone, un BroadcastChannel ailleurs)
-  const proche = creerProche({ W: window, boxion, vibrer: (x) => vibrer(x), tuyau: creerTuyauProche({ W: window, plugin: natifLot ? PloxiProche : null, ble: natifLot ? PloxiBLE : null }), position: () => window.jOSNatif.position(), ouvrirLien: (u) => window.jOSNatif.ouvrirLien(u) });
+  tuyauProche = creerTuyauProche({ W: window, plugin: natifLot ? PloxiProche : null, ble: natifLot ? PloxiBLE : null });
+  const proche = creerProche({ W: window, boxion, vibrer: (x) => vibrer(x), tuyau: tuyauProche, position: () => window.jOSNatif.position(), ouvrirLien: (u) => window.jOSNatif.ouvrirLien(u) });
   internes.push(proche.ploxion);
   // ≋ (0.99.4) le synthé : des jOSKnob, des pads, une boucle (RS-7 : « qu'on puisse commencer à faire du son avec des knobs »)
   internes.push(creerSynthe({ W: window, boxion, vibrer: (x) => vibrer(x), proche }).ploxion);   // (0.99.10) jouer à plusieurs : le son part dans Proche
