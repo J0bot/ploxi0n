@@ -75,7 +75,7 @@ avant la 0.46. Toutes les lignes ⚠ ci-dessous sont à **revérifier sur l'iPho
 | 💭 | Le mode **xeroction** (voir ce qu'on a fait : la frise des tsoins, le Nexus) ; XERB0T : les gestes de la blouse = ordres au robot (labo-cape EXTRAPOLATION) | |
 | ⏭ | **Construire la 0.50 et tout revérifier sur l'iPhone** (les ⚠) : `tools/faux-iphone` dit que c'est branché, seul le téléphone dit que ça marche | |
 | ✅ 0.52 · 0.84 | **Supprimer son compte DANS l'app** (règle App Store 5.1.1(v)) : ⚙ › Compte › « supprimer… » (le compte labo, la page où la suppression se termine) et le compte du social (api.j0bot.ch, tout de suite) | |
-| ⏭ | Le faux iPhone sur les ploxions du réseau (quand xerboxion.org est joignable depuis l'environnement) : tous les ploxions publics, chemin iPhone | |
+| ✅ 0.99.23 | Le faux iPhone sur les ploxions du réseau : les 551 ploxions du labo, chemin iPhone, un par un (543 s'ouvrent, 6 attendent le réseau ou le mode connecté, 2 cassés côté labo) → `compat.json` | |
 | 💭 | Encore plus de natif : Contacts, Calendrier/Rappels (EventKit), Live Activities, contrôles du Centre de contrôle, Apple Pay ? | nouveaux plugins |
 
 ## 0. Le 12.10 au soir (0.29 → 0.33) et la direction
