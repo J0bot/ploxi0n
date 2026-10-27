@@ -1,5 +1,7 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1793031758000,"0.99.24 : le banc des nouveaux bions — tout essayer sur l'iPhone, puis copier le log"],
+export const COMMITS = [[1793057256000,"faux iPhone : parcours-benchmark.mjs (le ploxion benchmark du labo : les épreuves, les workers, l'appareil, comparer, envoyer, quitter en pleine mesure)"],
+  [1793052917000,"0.99.25 : la map tient sous les doigts — pincement stable, la page ne glisse plus de côté"],
+  [1793031758000,"0.99.24 : le banc des nouveaux bions — tout essayer sur l'iPhone, puis copier le log"],
   [1793028117000,"feuille de route : le faux iPhone sur tous les ploxions du labo, coché (0.99.23)"],
   [1793015367000,"0.99.23 : compat.json complet — 551 ploxions testés sur le faux iPhone (543 ok, 6 attendent, 2 cassent)"],
   [1793015310000,"0.99.23 : 〰 a son glyphe (le filtre sans-emoji l'effaçait) ; feuille de route : supprimer son compte coché"],

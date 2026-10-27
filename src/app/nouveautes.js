@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.26', titre: 'Le bord droit revient', points: [
+    '⇆ Le bord droit répond de nouveau (l\'app suivante, l\'accueil en bas, chercher en haut) : avec la taille « grande », il était posé hors de l\'écran, comme ▤ et la fin du dock.',
+    '▭ Les pages ne glissent plus de côté (les réglages, les menus décalés à gauche) : la taille de tout agrandit la page comme une vraie page mobile.',
+  ] },
   { v: '0.99.25', titre: 'La map tient sous les doigts', points: [
     '◎ Pincer la map : ce qui est sous tes doigts y reste (avant, le zoom partait ailleurs, trop grand ou trop petit). Lâché, dézoomé, elle revient au centre ; zoomé, jamais de bord vide.',
     '▭ La page ne glisse plus de côté (l\'en-tête et la map décalés à gauche) ; un appui long sur un koin ne part plus au milieu d\'un pincement.',

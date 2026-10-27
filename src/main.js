@@ -105,12 +105,22 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.25';
+const VERSION = '0.99.26';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
+// (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
+// comme n'importe quelle page mobile (voir zoomViewport plus bas)
+let zoomPage = 1;
+const largeurEcran = () => { const s = window.screen || {}, a = s.width || window.innerWidth, b = s.height || window.innerHeight; return window.matchMedia && window.matchMedia('(orientation: landscape)').matches ? Math.max(a, b) : Math.min(a, b); };
+const viewportVoulu = () => (zoomPage === 1 ? 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover'
+  : 'width=' + Math.round(largeurEcran() / zoomPage) + ', initial-scale=' + zoomPage + ', minimum-scale=' + zoomPage + ', maximum-scale=' + zoomPage + ', user-scalable=no, viewport-fit=cover');
+function zoomViewport(z) {
+  zoomPage = z; const v = viewportVoulu();
+  for (const m of document.querySelectorAll('meta[name="viewport"]')) if (m.getAttribute('content') !== v) m.setAttribute('content', v);
+}
 function garderViewport() {
-  const BON = 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover';
-  const fixer = () => { for (const m of document.querySelectorAll('meta[name="viewport"]')) if (m.getAttribute('content') !== BON) m.setAttribute('content', BON); };
+  const fixer = () => { const BON = viewportVoulu(); for (const m of document.querySelectorAll('meta[name="viewport"]')) if (m.getAttribute('content') !== BON) m.setAttribute('content', BON); };
+  window.addEventListener('orientationchange', () => setTimeout(fixer, 50));   // la largeur de mise en page suit l'orientation
   try { new MutationObserver(fixer).observe(document.head, { childList: true, subtree: true, attributes: true, attributeFilter: ['content'] }); } catch (e) { /* */ }
   fixer();
   // (0.99.25, RS-7 : une capture où TOUTE la page est décalée de 140 px à gauche, en-tête compris) rien dans l'app ne défile de côté : si la
@@ -660,11 +670,16 @@ async function demarrer() {
   }, true);
   installerSansEmoji({ interne: (id) => !!(routeur.catalogue().find(p => p.id === id) || {}).interne, actif: () => prefs.lire().glyphes !== false });
   // ⟡ (0.99.14) la langue de l'app : ⚙ › Apparence › Langue, ou celle de l'iPhone ; les néologismes restent (src/bions/dire.js)
-  // ⊕ (0.99.19, RS-7 : « l'entièreté du truc est trop petite ») la taille de tout : le zoom de page de WebKit sur l'iPhone (la mise en page
-  // suit, comme le zoom de Safari) ; ailleurs, le zoom CSS. ⚙ › Apparence › Taille de tout.
+  // ⊕ (0.99.19, RS-7 : « l'entièreté du truc est trop petite ») la taille de tout. ⚙ › Apparence › Taille de tout.
+  // (0.99.26, RS-7 27.10 : « aucune action avec le bord droit ne fonctionne, les menus se perdent ») le zoom de page de WebKit (pageZoom ×1,15,
+  // la taille « grande » par défaut) posait ce qui est fixé à droite 393 × 0,15 ≈ 59 pt AU-DELÀ de l'écran — le bord droit, ▤, la fin du dock —
+  // et la vue glissait de côté d'autant. Maintenant : la balise viewport (mise en page à largeur / z, agrandie ×z), sur l'iPhone et partout
+  // où elle compte ; le zoom natif est remis à 1. Le zoom CSS ne reste que pour un navigateur de bureau (il ignore la balise).
   { let avant = null; const poser = (p) => { const z = Math.min(1.6, Math.max(0.8, +p.taille || 1)); if (z === avant) return; avant = z;
       const apres = () => window.dispatchEvent(new Event('resize'));   /* la map, les membranes : tout se remesure */
-      if (natifLot) PloxiApple.taille({ zoom: z }).then(apres, () => {}); else { document.documentElement.style.zoom = z === 1 ? '' : String(z); apres(); } };
+      const mobile = natifLot || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+      if (natifLot) PloxiApple.taille({ zoom: 1 }).catch(() => {});   // un ancien zoom natif (avant 0.99.26) ne reste jamais
+      if (mobile) { document.documentElement.style.zoom = ''; zoomViewport(z); window.setTimeout(apres, 60); } else { document.documentElement.style.zoom = z === 1 ? '' : String(z); apres(); } };
     poser(prefs.lire()); prefs.surChangement(poser); }
   const langueApp = installerLangue({ W: window, interne: (id) => !!(routeur.catalogue().find(p => p.id === id) || {}).interne });
   { const choisie = (p) => langueDe(p.langue, navigator.languages || [navigator.language]);
