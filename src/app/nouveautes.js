@@ -10,6 +10,7 @@ export const NOUVEAUTES = [
   { v: '0.99.26', titre: 'Le bord droit revient', points: [
     '⇆ Le bord droit répond de nouveau (l\'app suivante, l\'accueil en bas, chercher en haut) : avec la taille « grande », il était posé hors de l\'écran, comme ▤ et la fin du dock.',
     '▭ Les pages ne glissent plus de côté (les réglages, les menus décalés à gauche) : la taille de tout agrandit la page comme une vraie page mobile.',
+    '◎ Le koin de droite revient (il était hors de l\'écran, comme le bord droit) ; le wormion, la portion, la map et le synthé vibrent à chaque cran (leur cran n\'existait pas dans le moteur haptique).',
   ] },
   { v: '0.99.25', titre: 'La map tient sous les doigts', points: [
     '◎ Pincer la map : ce qui est sous tes doigts y reste (avant, le zoom partait ailleurs, trop grand ou trop petit). Lâché, dézoomé, elle revient au centre ; zoomé, jamais de bord vide.',

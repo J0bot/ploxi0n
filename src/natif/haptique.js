@@ -29,14 +29,17 @@ export const EVENEMENTS = [['ouvrir', 'ouvrir un ploxion'], ['reprendre', 'repre
   ['fx-jauge', 'la jauge (la pression monte)', 'fractale', 'ouvrir, jeter'], ['fx-recharge', 'la jauge se recharge', 'fractale', 'ouvrir, jeter'],
   ['fx-freefall-on', 'freefall : on lâche tout', 'fractale', 'freefall'], ['fx-freefall-off', 'freefall : on se pose', 'fractale', 'freefall'],
   ['fx-carte-xer', 'la carte du xerboxion s\'ouvre', 'fractale', 'la carte du xerboxion'], ['fx-zoom', 'zoomer (chaque cran)', 'fractale', 'la carte du xerboxion'],
-  ['fx-case', 'passer une case', 'fractale', 'la carte du xerboxion'], ['fx-koin', 'entrer dans un koin', 'fractale', 'la carte du xerboxion']];
+  ['fx-case', 'passer une case', 'fractale', 'la carte du xerboxion'], ['fx-koin', 'entrer dans un koin', 'fractale', 'la carte du xerboxion'],
+  // (0.99.26, RS-7 : « les haptics du wormion et des portions fonctionnent pas ») fx-cran était appelé partout (le temps, la portion, la map, le synthé,
+  // le passé, l'atelier) mais n'existait pas ici : aucun style, aucun motif, rien ne vibrait
+  ['fx-cran', 'un cran (le temps, la portion, la map, le synthé)', 'fractale', 'les koins']];
 /** la classe de chaque événement (un événement absent, un style, un motif = acte) */
 export const CLASSES = {
   ouvrir: 'acte', reprendre: 'acte', revenir: 'acte', minimiser: 'acte', bord: 'acte', 'bord-seuil': 'marque', portion: 'acte', appui: 'acte', page: 'tic', vue: 'marque', interrupteur: 'marque',
   'fx-apercu': 'acte', 'fx-tension': 'tic', 'fx-engage': 'marque', 'fx-degage': 'marque', 'fx-fractale': 'acte', 'fx-slider': 'acte', 'fx-cube': 'acte', 'fx-carte': 'tic', 'fx-defile': 'tic',
   'fx-face': 'tic', 'fx-pose': 'marque', 'fx-butee': 'marque', 'fx-dessus': 'marque', 'fx-dessus-ferme': 'marque', 'fx-ouvrir': 'acte', 'fx-revenir': 'acte', 'fx-jet-arme': 'marque',
   'fx-refus': 'marque', 'fx-ferme': 'acte', 'fx-recharge': 'tic', 'fx-jauge': 'tic', 'fx-freefall-on': 'acte', 'fx-freefall-off': 'acte', 'fx-arrivee': 'acte', 'fx-carte-xer': 'acte',
-  'fx-case': 'tic', 'fx-koin': 'marque', 'fx-zoom': 'tic',
+  'fx-case': 'tic', 'fx-koin': 'marque', 'fx-zoom': 'tic', 'fx-cran': 'tic',
 };
 /** les motifs de l'app : jamais supprimés, pas dans « Tes motifs », mais proposés partout (un motif à toi du même nom passe devant) */
 export const MOTIFS_APP = {
@@ -52,7 +55,7 @@ const DEFAUT = {
     'fx-apercu': 'leger', 'fx-tension': 'selection', 'fx-engage': 'moyen', 'fx-degage': 'selection', 'fx-fractale': 'moyen', 'fx-slider': 'motif:fx-slider', 'fx-cube': 'motif:fx-cube',
     'fx-carte': 'selection', 'fx-defile': 'selection', 'fx-face': 'moyen', 'fx-pose': 'leger', 'fx-butee': 'moyen', 'fx-dessus': 'motif:fx-dessus', 'fx-dessus-ferme': 'selection',
     'fx-ouvrir': 'leger', 'fx-revenir': 'selection', 'fx-jet-arme': 'moyen', 'fx-refus': 'motif:fx-refus', 'fx-ferme': 'motif:fx-ferme', 'fx-recharge': 'selection', 'fx-jauge': 'selection',
-    'fx-freefall-on': 'motif:fx-freefall-on', 'fx-freefall-off': 'motif:fx-freefall-off', 'fx-arrivee': 'leger', 'fx-carte-xer': 'motif:fx-carte-xer', 'fx-case': 'selection', 'fx-koin': 'leger', 'fx-zoom': 'selection' },
+    'fx-freefall-on': 'motif:fx-freefall-on', 'fx-freefall-off': 'motif:fx-freefall-off', 'fx-arrivee': 'leger', 'fx-carte-xer': 'motif:fx-carte-xer', 'fx-case': 'selection', 'fx-koin': 'leger', 'fx-zoom': 'selection', 'fx-cran': 'selection' },
   densite: 'pleine',
 };
 const STYLE = new Set(STYLES.map(s => s[0]));

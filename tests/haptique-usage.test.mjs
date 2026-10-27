@@ -21,7 +21,7 @@ async function banc({ boxion = creerMemoire(), natif, actif = () => true, attend
 
 test('les événements de la fractale : groupe, classe, défaut ; les anciens ont leur classe', async () => {
   const fx = EVENEMENTS.filter(e => e[2] === 'fractale').map(e => e[0]);
-  assert.equal(fx.length, 28);
+  assert.equal(fx.length, 29);   // (0.99.26) + fx-cran
   assert.ok(fx.every(k => k.startsWith('fx-')), 'le groupe fractale = les fx-*');
   assert.ok(EVENEMENTS.filter(e => e[2] === 'fractale').every(e => typeof e[3] === 'string' && e[3]), 'chacun a sa famille');
   for (const k of fx) assert.ok(['tic', 'marque', 'acte'].includes(CLASSES[k]), k);
@@ -225,4 +225,19 @@ test('navigator.vibrate des ploxions passe par jOSNatif.vibrer (le débit, le mo
   installerWebNatif({ W, prefs: () => ({ haptique: true }), charger: { haptics: async () => ({ Haptics: { impact: async (o) => directs.push(o) } }) } });
   W.navigator.vibrate([10, 20, 30, 5, 80]); await new Promise(r => setTimeout(r, 200));
   assert.deepEqual(vib, ['leger', 'moyen', 'fort']); assert.deepEqual(directs, []);
+});
+
+test('(0.99.26) chaque nom passé à vibrer(…) dans l\'app existe : un événement, un style ou un motif de l\'app (fx-cran manquait : le wormion, la portion muets)', async () => {
+  const { EVENEMENTS, STYLES, MOTIFS_APP } = await import('../src/natif/haptique.js');
+  const { readdirSync, readFileSync, statSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const { h } = await banc();
+  const connus = new Set([...EVENEMENTS.map(e => e[0]), ...STYLES.map(s => s[0]), ...Object.keys(MOTIFS_APP), ...Object.keys(h.config().motifs || {}), 'aucun']);
+  const inconnus = [];
+  const parcourir = (d) => { for (const f of readdirSync(d)) { const p = join(d, f); if (statSync(p).isDirectory()) parcourir(p); else if (f.endsWith('.js')) {
+    for (const m of readFileSync(p, 'utf8').matchAll(/\bvibrer\(\s*([^,)]*)/g)) for (const l of m[1].matchAll(/(?<![=!]==\s*|\w\()'([a-z][a-z0-9:-]*)'/g)) {   /* les valeurs, pas les comparaisons (etat === 'slider') */
+      const n = l[1].replace(/^motif:/, ''); if (!connus.has(n)) inconnus.push(l[1] + ' (' + p + ')');
+    } } } };
+  parcourir(new URL('../src', import.meta.url).pathname);
+  assert.deepEqual(inconnus, []);
 });
