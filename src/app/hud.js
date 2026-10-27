@@ -38,8 +38,9 @@ export function creerHud({ W = globalThis.window, compte, boxion = null, trouver
   }
   function bouton(compact) {
     const e = compte.etat();
-    if (!e.connecte) return '<button class="px-compte" data-compte>' + (compact ? G('compte') : G('compte') + ' Se connecter') + '</button>';
-    return '<button class="px-compte on" data-compte title="' + esc(e.nom) + ' · ' + esc(e.palier) + '"><span class="g">' + esc(e.glyphe || '·') + '</span>' + (compact ? '' : esc(String(e.nom || '').slice(0, 14))) + '</button>';
+    // (0.99.27) le nom dans un <span class="n"> : à l'étroit (la taille de tout, un iPhone SE), il se coupe en « … » au lieu de pousser le dock hors de l'écran
+    if (!e.connecte) return '<button class="px-compte" data-compte aria-label="se connecter">' + (compact ? G('compte') : G('compte') + '<span class="n">Se connecter</span>') + '</button>';
+    return '<button class="px-compte on" data-compte title="' + esc(e.nom) + ' · ' + esc(e.palier) + '"><span class="g">' + esc(e.glyphe || '·') + '</span>' + (compact ? '' : '<span class="n">' + esc(String(e.nom || '').slice(0, 14)) + '</span>') + '</button>';
   }
   const morceaux = {
     compte: bouton,

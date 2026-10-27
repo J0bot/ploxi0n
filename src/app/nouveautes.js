@@ -7,6 +7,12 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.27', titre: 'Rien ne sort de l\'écran', points: [
+    '▭ Tout l\'écran vérifié, à chaque taille, sur un iPhone SE, 15 et Pro Max, couché aussi : plus rien ne déborde ni ne se cache sous l\'encoche ou la barre d\'accueil.',
+    '◈ Le dock ne déborde plus : ton nom se raccourcit (…) au lieu de pousser les boutons hors de l\'écran.',
+    '▤ Une feuille plus haute que l\'écran (le tuto, en grand) défile au lieu de sortir par le haut ; les barres du bas des réglages et du marketplace laissent la place de la barre d\'accueil.',
+    '↻ Couché, les ploxions, le dock et les mini docks évitent l\'encoche ; le synthé ne garde plus ses motifs sous le bord.',
+  ] },
   { v: '0.99.26', titre: 'Le bord droit revient', points: [
     '⇆ Le bord droit répond de nouveau (l\'app suivante, l\'accueil en bas, chercher en haut) : avec la taille « grande », il était posé hors de l\'écran, comme ▤ et la fin du dock.',
     '▭ Les pages ne glissent plus de côté (les réglages, les menus décalés à gauche) : la taille de tout agrandit la page comme une vraie page mobile.',

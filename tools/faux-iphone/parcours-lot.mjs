@@ -1,6 +1,7 @@
 // ▤ ≈ (0.88) le lot de ploxions sur le chemin iPhone : le système (PloxiApple.systeme, Device.getInfo, la batterie) et les ambiances (Web Audio
 // → un <audio> qui joue : le routeur ne l'endort pas)
 export default async function ({ page, ecrire, appels }) {
+  for (let i = 0; i < 3; i++) { await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => /^(ok|plus tard|passer)$/i.test(x.textContent.trim())); if (b) b.click(); }); await page.waitForTimeout(250); }   // (0.99.27) les feuilles du lancement (nouveautés) couvraient les boutons
   await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => /passer/i.test(x.textContent)); if (b) b.click(); });
   await page.waitForTimeout(600);
   await page.evaluate(() => window.ploxi0n.routeur.ouvrir('systeme')); await page.waitForTimeout(2600);

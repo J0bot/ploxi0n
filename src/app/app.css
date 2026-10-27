@@ -92,6 +92,8 @@ html:not(.px-police-partout) .px-hote-labo{font-family:-apple-system,system-ui,"
 .px-feuille,.px-voile{position:fixed;inset:0;z-index:50;background:rgba(3,2,6,.78);display:flex;align-items:flex-end}
 .px-feuille>div,.px-tiroir{width:100%;box-sizing:border-box;background:var(--surface) var(--grain);border:var(--trait) solid var(--bord2);border-bottom:0;border-radius:22px 22px 0 0;
   padding:12px 18px calc(22px + env(safe-area-inset-bottom,0px))}
+/* (0.99.27) une feuille plus haute que l'écran (le tuto à ×1,45, un iPhone SE) sortait par le haut, hors d'atteinte : elle s'arrête sous l'encoche et défile */
+.px-feuille>div,.px-tiroir{max-height:calc(100% - env(safe-area-inset-top,0px) - 14px);overflow-y:auto;overflow-x:hidden;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .px-feuille>div::before,.px-tiroir::before{content:"";display:block;width:38px;height:4px;border-radius:2px;background:var(--bord2);margin:0 auto 16px}
 .px-feuille h2{margin:0 0 6px;font-size:1.1rem}.px-feuille p{color:var(--muted);margin:0 0 14px;line-height:1.45}
 .px-feuille button,.px-tiroir button{width:100%;min-height:50px;padding:0 16px;border-radius:13px;font:600 15px var(--police);margin:5px 0;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);text-align:left;transition:transform .1s;box-shadow:inset 0 0 0 1px var(--filet)}
@@ -118,7 +120,7 @@ html:not(.px-police-partout) .px-hote-labo{font-family:-apple-system,system-ui,"
 .px-mode-accueil .px-ecran{flex:1}
 .px-mode-accueil .px-scene{display:none}
 .px-scene{flex:1;min-height:0;position:relative}
-.px-scene>.px-hote{position:absolute;inset:0;overflow:auto}
+.px-scene>.px-hote{position:absolute;inset:0;overflow:auto;padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}   /* (0.99.27) en paysage, l'encoche est sur le côté : le ploxion ne passe plus dessous */
 .px-scene>.px-hote[hidden]{display:none}
 .px-mini{min-width:38px;min-height:38px;border-radius:12px;border:var(--trait) solid transparent;background:var(--surface2);color:var(--muted);font:600 14px var(--mono);padding:0 8px;display:inline-flex;align-items:center;gap:3px}
 .px-mini b{font:600 10px var(--mono);color:var(--bio)}
@@ -142,10 +144,12 @@ html:not(.px-police-partout) .px-hote-labo{font-family:-apple-system,system-ui,"
 
 /* ---- le DOCK en bas (RS-7 12.10 : « la barre boxion avec les épinglés en bas ») : compte, épinglés, ⚙, au pouce ---- */
 .px-accueil{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
-.px-dock{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);z-index:30;margin:0;padding:7px;border-radius:22px;
+.px-dock{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 10px);z-index:30;margin:0;padding:7px;border-radius:22px;
   background:rgba(15,11,24,.94) var(--grain);border:var(--trait) solid var(--bord2);box-shadow:inset 0 0 0 1px var(--filet),0 12px 30px -10px rgba(0,0,0,.8)}
 .px-dock .px-h-b{min-width:48px;min-height:48px;border-radius:14px;font-size:1.45rem}
 .px-dock .px-compte{min-height:48px;border-radius:14px}
+/* (0.99.27, « que rien ne sorte de l'écran ») le compte se rétrécit (son nom en « … ») plutôt que de pousser le dock au-delà du bord */
+.px-compte{min-width:0;flex:0 1 auto}.px-compte .n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.px-hud-c>.px-h-b,.px-hud-c>.px-h-ic{flex:none}
 .px-dock [data-reglages]{font-size:1.2rem}
 .px-mode-ploxion .px-dock{display:none}
 .px-bord{bottom:calc(env(safe-area-inset-bottom,0px) + 90px)}
@@ -215,6 +219,8 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]
 .px-telecommande .mk-sec{top:0}
 .px-telecommande .rg{display:flex;flex-direction:column-reverse}
 .px-telecommande .rg-tete{top:auto;bottom:0;border-bottom:0;border-top:1px solid var(--bord)}
+/* (0.99.27) sans la barre du ploxion (les koins la remplacent), ces barres touchent le bas de l'écran : elles laissent la place de l'indicateur d'accueil */
+html.px-koins.px-telecommande .rg-tete,html.px-koins.px-telecommande .mk-top{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
 .px-telecommande .px-bulle{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
 .px-telecommande .mk{padding:0;min-height:100%;box-sizing:border-box}
 .px-telecommande .mk>div[data-c]{flex:1}
@@ -467,7 +473,7 @@ html.px-m-xerbot .px-accueil>.px-vues,html.px-m-xerbot .px-accueil>.px-pages,htm
 .px-xb-bus{display:flex;gap:6px;margin:6px 0}.px-xb-bus input{flex:1;min-width:0;padding:9px 12px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--creux);color:inherit;font:16px var(--police)}
 /* ▤ (0.51) LES MINI DOCKS : tout ce qui vit en arrière-plan (ploxions minimisés, la musique, la blouse, la Santé, la vidéo à reprendre,
    le vocal, le tsoin pas fini), empilé au-dessus du dock ; ▤ ouvre la page de tous. Seulement sur l'accueil ; --px-md = leur hauteur. */
-.px-md{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 92px);z-index:29;display:flex;flex-direction:column-reverse;gap:6px}
+.px-md{position:fixed;left:calc(16px + env(safe-area-inset-left,0px));right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 92px);z-index:29;display:flex;flex-direction:column-reverse;gap:6px}
 .px-md[hidden],#ploxi0n:not(.px-mode-accueil) ~ .px-md{display:none}
 .px-sans-dock .px-md{bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}
 .px-md-c{display:flex;align-items:center;gap:9px;height:52px;box-sizing:border-box;padding:5px 6px 5px 5px;border-radius:17px;border:var(--trait) solid var(--bord);background:var(--surface) var(--grain);
@@ -731,7 +737,7 @@ html.px-px-chill body{
 .px-th-deux{margin:10px 2px 0;font:12px var(--police);color:var(--muted)}.px-th-deux b{color:var(--txt);font-weight:600}
 .px-th-tenir{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .px-th-tenir li{display:flex;align-items:center;gap:10px;padding:7px 8px 7px 10px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2)}
-.px-th-tenir li b{flex:none;width:92px;font:600 11px var(--mono);color:var(--bio)}.px-th-tenir li span{flex:1;font:12.5px var(--police);color:var(--txt)}
+.px-th-tenir li b{flex:none;width:92px;font:600 11px var(--mono);color:var(--bio)}.px-th-tenir li span{flex:1;min-width:0;overflow-wrap:anywhere;font:12.5px var(--police);color:var(--txt)}
 .px-th-ici ol{margin:0 0 8px;padding-left:22px;font:13.5px/1.45 var(--police);color:var(--txt)}
 .px-th-ici textarea{width:100%;box-sizing:border-box}
 .px-th-actions{display:flex;gap:8px;flex-wrap:wrap}.px-th-actions button{width:auto;flex:1;min-height:36px;margin:0}
@@ -1609,3 +1615,6 @@ html:not(.px-organique) .px-tel-vivant{display:none}
 /* (0.99.19, RS-7 : « MACHINE » coupé, « AUDIO » sous les boutons) le réseau se fait glisser jusqu'à ce qu'un hub sorte de dessous les
    contrôles de droite (la règle, ✻, ∿) et de dessous les mini docks */
 .px-map-rs{margin:0 64px 150px 0}
+/* (0.99.27, « que rien ne sorte de l'écran ») un écran bas (l'iPhone couché) : la zone de jeu du synthé, plus haute que lui, ne colle plus en haut
+   (son bas, les motifs, restait sous le bord) ; elle défile avec la page */
+@media (max-height:520px){.px-sy-jouer{position:static}}

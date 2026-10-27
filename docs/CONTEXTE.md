@@ -28,6 +28,13 @@ Pièges nouveaux :
 - un ploxion qui en monte un autre (`jOSApps.rs.mount`) : `ploxionsDelegues` + `prechargerComposes` dans le routeur ;
 - le faux iPhone ne garde plus les options de plus de 20 Ko dans `appels` (le bilan tombait à court de mémoire) ;
 - `npm test` qui ne finit pas = un test qui échoue avant `p.fin()` (la page reste ouverte) : lancer le fichier seul avec `timeout`.
+- (0.99.26) **jamais `WKWebView.pageZoom`** : il posait tout ce qui est fixé à droite hors de l'écran (le bord droit, le koin droit, ▤) et la
+  vue glissait de côté. La taille de tout = la balise viewport (`zoomViewport` dans `src/main.js`) ; le faux iPhone (Chromium mobile)
+  l'applique comme l'iPhone, il voit donc enfin ce zoom ;
+- (0.99.26) un nom passé à `vibrer('…')` doit exister dans `src/natif/haptique.js` (`fx-cran` manquait : le wormion, la portion muets) ;
+  `tests/haptique-usage.test.mjs` le vérifie ;
+- (0.99.27) **avant une version qui touche la mise en page : `parcours-ecran.mjs`** (l'audit de l'écran, toutes tailles, largeurs, couché,
+  encoche ; `PX_ECRAN_RAPIDE=1` pour une seule configuration). Il doit rendre 0 défaut.
 
 ## 1. Où en est tout
 
