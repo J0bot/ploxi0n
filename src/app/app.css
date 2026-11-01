@@ -1071,6 +1071,14 @@ html.px-calme .px-vx-t{transition:none}html.px-calme .px-vx-eclair{animation:non
 .px-pr-pote{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;text-align:left;min-height:44px;padding:6px 12px;font:600 13px var(--mono)}.px-pr-pote i{font-style:normal;color:var(--bio);font-size:16px}.px-pr-pote small{width:100%;font:500 10px var(--mono);color:var(--muted)}.px-pr-pote.vieux{opacity:.55}
 .px-pr-boussole{text-align:center}.px-pr-bsvg{width:min(70vw,280px);height:auto;display:block;margin:6px auto}.px-pr-bsvg .anneau{fill:none;stroke:var(--bord2);stroke-width:2}
 .px-pr-bsvg .aiguille{fill:var(--bio);filter:drop-shadow(0 0 6px var(--glow));transition:transform .2s}
+/* (0.99.29) la boussole : l'aiguille tourne en douceur (par le plus court) ; la tendance ; les traces et les rendez-vous du radar ; les outils */
+.px-pr-bsvg .rot{transition:transform .28s cubic-bezier(.2,.8,.3,1)}
+.px-pr-tend{font:600 12px var(--mono);color:var(--bio);margin:0 0 4px;min-height:1em}
+.px-pr-radar .trace{fill:none;stroke:var(--acc);stroke-width:2;stroke-dasharray:1 5;stroke-linecap:round;opacity:.55}
+.px-pr-radar .rdv{cursor:pointer}.px-pr-radar .rdv path{fill:var(--acc2);stroke:var(--bg);stroke-width:2}
+.px-pr-radar .rdv text{font:700 10px var(--mono);fill:var(--acc2);paint-order:stroke;stroke:var(--bg);stroke-width:3px}
+.px-pr-rdv b{color:var(--acc2)}.px-pr-outils{margin-bottom:6px}
+@media (prefers-reduced-motion:reduce){.px-pr-bsvg .rot{transition:none}}
 .px-pr-bd{font:700 2.2rem/1 var(--mono);color:var(--txt);margin:4px 0}.px-pr-bn{font:500 12px var(--mono);color:var(--muted);margin:4px 0 8px}
 .px-pr-dm{font:500 11px/1.5 var(--mono);color:var(--muted);margin:0 0 6px}.px-pr-dm[hidden]{display:none}.px-pr-dm button{min-height:28px;padding:0 8px;font:600 10px var(--mono)}.px-pr-dm b{color:var(--bio)}
 .px-pr-m.mention{border-left:3px solid var(--bio);padding-left:6px}

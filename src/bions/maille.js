@@ -23,6 +23,7 @@
 //     reste ; « fin » l'efface chez les autres ; rien n'est gardé en cache (une vieille position ne sert à rien).
 // Le tuyau (src/natif/proche-natif.js) : MultipeerConnectivity, le Bluetooth et le Wi-Fi direct ensemble ; 7 voisins directs au plus,
 // le maillage porte au-delà. Pur, sans DOM : la cryptographie (subtle), le hasard, l'heure, l'envoi et l'attente sont donnés.
+import { rdvValide } from './potes.js';   // (0.99.29) un rendez-vous reçu : validé comme tout ce qui vient d'à côté
 
 export const TTL_MAX = 7, PUBLIC = '#', TAILLE_MAX = 16000;
 const GENRES = new Set(['ann', 'pub', 'mp', 'ack', 'sync', 'pos']);
@@ -262,7 +263,7 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
       const o = await dechiffrer(k, p.d, p); if (!o) return;
       if (o.fin) { if (positions.delete(p.o)) changer('positions'); return; }
       const lat = +o.lat, lng = +o.lng; if (!(Math.abs(lat) <= 90 && Math.abs(lng) <= 180)) return;
-      positions.set(p.o, { fp: p.o, nom: p.n, lat, lng, precision: Math.max(0, Math.min(5000, +o.precision || 0)), cap: Number.isFinite(+o.cap) ? +o.cap : null, t: maintenant(), sauts, salon: p.a === id.fp ? null : p.s });
+      positions.set(p.o, { fp: p.o, nom: p.n, lat, lng, precision: Math.max(0, Math.min(5000, +o.precision || 0)), cap: Number.isFinite(+o.cap) ? +o.cap : null, t: maintenant(), sauts, salon: p.a === id.fp ? null : p.s, rdv: rdvValide(o.rdv) });
       changer('positions');
     }
   }
@@ -322,6 +323,7 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
   async function partagerPosition(pos, { a = [], salon = null } = {}) {
     if (!id || !pos) return 0;
     const charge = pos.fin ? { fin: 1 } : { lat: Math.round(+pos.lat * 1e5) / 1e5, lng: Math.round(+pos.lng * 1e5) / 1e5, precision: Math.round(+pos.precision || 0), cap: Number.isFinite(+pos.cap) ? Math.round(+pos.cap) : null, t: maintenant() };
+    if (!pos.fin && pos.rdv) { const r = rdvValide(pos.rdv); if (r) charge.rdv = r; }   // (0.99.29) le rendez-vous voyage avec la position, chiffré pareil
     if (!pos.fin && !(Math.abs(charge.lat) <= 90 && Math.abs(charge.lng) <= 180)) return 0;
     let n = 0;
     for (const fp of new Set(a)) { const k = HEX16.test(fp) ? await clePour(fp) : null; if (!k) continue; const p = paquetDe('pos', { a: fp }); p.d = await chiffrer(k, charge, p); const pr = pairs.get(fp); emettre(p, pr && pr.voisin && voisins.has(pr.voisin) ? [pr.voisin] : null); n++; }

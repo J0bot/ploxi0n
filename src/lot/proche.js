@@ -14,7 +14,8 @@ import { paquet, lire, ecart, meilleurEcart, partition, notesEntre, kicksEntre, 
 import { normaliser } from '../bions/son.js';   // (0.99.10) la basse peut porter le son du synthé (ses 33 réglages)
 import { creerMoteur } from './synthe.js';
 import { creerMaille, commande, PUBLIC } from '../bions/maille.js';
-import { relatif, echelle, aiguille, tourner, fraicheur, tuilesAutour, ATTRIBUTION } from '../bions/potes.js';
+import { relatif, echelle, ECHELLES, aiguille, tourner, fraicheur, tuilesAutour, ATTRIBUTION, lisserCap, tourCourt, guidage, tendance, minutesAPied, tuilesZone, ajouterTrace } from '../bions/potes.js';
+import { creerCacheTuiles } from '../app/carte-tuiles.js';   // ◫ (0.99.29) la carte hors ligne
 import { capBoussole, metres, fleche } from '../bions/autour.js';
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -43,7 +44,14 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
   // ---- ⌖ (0.99.22) LES POTES : partager sa position (chiffrée pour ses potes ✦, ou un salon fermé), le radar, la boussole, la carte ----
   // Ne pas nuire : rien ne part sans « partager » ; jamais dans un salon ouvert ; ça s'arrête tout seul (1 h, 4 h) ; « ■ arrêter » efface la
   // position chez les autres ; le bandeau le dit tant que ça dure ; rien n'est gardé sur le disque.
-  const P = { partage: null, moi: null, cap: null, cible: null, carte: true, devant: false, duree: 4, erreur: '', dernier: null, envoye: 0 };
+  const P = { partage: null, moi: null, cap: null, cible: null, carte: true, devant: false, duree: 4, erreur: '', dernier: null, envoye: 0,
+    rdv: null, zoom: null, guide: true, garde: null };   // (0.99.29) mon rendez-vous, le zoom du radar à la main (null = auto), le guidage aux vibrations, la carte qu'on garde
+  // (0.99.29, RS-7 01.11 : « améliore la map pour le Bluetooth et la boussole à amis ») : les traces des potes (leurs derniers pas, en mémoire
+  // seulement), l'historique des distances (« tu te rapproches »), l'aiguille qui tourne par le plus court, le cache des tuiles
+  const traces = new Map(), histos = new Map(), tuilesC = creerCacheTuiles({ W, boxion });
+  let aigAff = 0, minuteurGuide = 0, derGarde = 0, cleTuiles = '';
+  const hhmm = (t) => new Date(t).toTimeString().slice(0, 5);
+  const lesPotes = () => (maille && P.moi ? maille.positions().map(x => ({ ...x, r: relatif(P.moi, x) })).sort((a, b) => a.r.d - b.r.d) : []);
   let minuteurPartage = 0, minuteurMoi = 0;
   async function maPosition() {
     if (!position) { P.erreur = 'pas de position ici'; return null; }
@@ -59,7 +67,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     const bouge = !P.dernier || relatif(P.dernier, p).d > 8;
     if (force || bouge || maintenant() - P.envoye > 60000) {
       P.partage.a = [...new Set([...P.partage.a, ...(P.partage.potes ? potesAvecCle() : [])])];   // un pote ✦ qui s'est annoncé entre-temps
-      await maille.partagerPosition({ ...p, cap: P.cap }, { a: P.partage.a, salon: P.partage.salon }); P.dernier = p; P.envoye = maintenant();
+      await maille.partagerPosition({ ...p, cap: P.cap == null ? null : Math.round(P.cap), rdv: P.rdv }, { a: P.partage.a, salon: P.partage.salon }); P.dernier = p; P.envoye = maintenant();
     }
     peindre('potes');
   }
@@ -78,7 +86,42 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     if (maille) maille.partagerPosition({ fin: true }, { a, salon }); P.dernier = null; peindre();
   }
   // le cap de l'iPhone (la boussole) : seulement quand la page est là
-  let derCap = 0; const surCap = (ev) => { const c = capBoussole(ev); if (c == null) return; P.cap = c; const t = maintenant(); if (t - derCap > 180) { derCap = t; peindre('potes'); } };
+  /** (0.99.29) la cible de la boussole : un pote (son empreinte) ou un rendez-vous (« rdv:moi », « rdv:<empreinte> ») */
+  function lesRdv() {
+    if (!P.moi) return [];
+    const l = [], vus = new Set(), ajout = (fp, r, nom, t) => { const k = r.lat.toFixed(4) + ',' + r.lng.toFixed(4); if (vus.has(k)) return; vus.add(k); l.push({ fp, nom, lat: r.lat, lng: r.lng, t, precision: 0, rdv: true, r: relatif(P.moi, r) }); };
+    if (P.rdv) ajout('rdv:moi', P.rdv, P.rdv.nom, maintenant());
+    for (const x of (maille ? maille.positions() : [])) if (x.rdv) ajout('rdv:' + x.fp, x.rdv, x.rdv.nom + ' · ' + (x.nom || '?'), x.t);
+    return l;
+  }
+  const laCible = () => { if (!P.cible || !P.moi) return null; const l = [...lesPotes(), ...lesRdv()]; return l.find(x => x.fp === P.cible) || null; };
+  /** le guidage aux vibrations : la flèche droit devant (± 20°) → un tic, plus serré à mesure qu'on approche ; les yeux libres */
+  function guider() {
+    W.clearTimeout(minuteurGuide); minuteurGuide = 0;
+    if (!vue || !P.cible || !P.guide) return;
+    const x = laCible(), g = x && P.cap != null && x.r.d >= Math.max(15, x.precision || 0) ? guidage(x.r.d, aiguille(x.r.cap, P.cap)) : null;
+    if (g) vibrer('fx-cran');
+    minuteurGuide = W.setTimeout(guider, g ? g.intervalle : 500);
+  }
+  /** ⤓ garder la carte du coin (1,5 km) : pour l'avoir sans réseau, en soirée */
+  async function garderCarte() {
+    if (P.garde) return;
+    const m = P.moi || await maPosition(); if (!m) { peindre('potes'); return; }
+    const l = tuilesZone(m.lat, m.lng); P.garde = { fait: 0, total: l.length, echecs: 0 }; peindre('potes');
+    const r = await tuilesC.garder(l, { surProgres: (q) => { P.garde = q; const t = maintenant(); if (t - derGarde > 250) { derGarde = t; peindre('potes'); } }, arreter: () => !vue });
+    P.garde = null; cleTuiles = '';
+    e.info = r.echecs >= r.total ? '◫ la carte ne vient pas (pas de réseau ?)' : '◫ la carte du coin est gardée (' + (r.total - r.echecs) + ' tuiles) : elle s\'affiche aussi sans réseau';
+    vibrer(r.echecs >= r.total ? 'erreur' : 'succes'); peindre();
+  }
+  /** ◎ un rendez-vous là où je suis : il part avec ma position, chiffré, à ceux avec qui je la partage */
+  async function poserRdv() {
+    if (P.rdv) { P.rdv = null; vibrer('selection'); envoyerPosition(true); peindre('potes'); return; }
+    if (!P.partage) { e.info = 'partage ta position d\'abord : le rendez-vous part avec elle, seulement à tes potes ✦ (ou ton salon fermé)'; peindre(); return; }
+    const m = await maPosition(); if (!m) { peindre('potes'); return; }
+    P.rdv = { lat: m.lat, lng: m.lng, nom: 'ici · ' + hhmm(maintenant()) }; vibrer('fx-arrivee'); envoyerPosition(true); peindre('potes');
+  }
+  // (0.99.29) lissé : la boussole d'iOS tremble, l'aiguille ne doit pas
+  let derCap = 0; const surCap = (ev) => { const c = capBoussole(ev); if (c == null) return; P.cap = lisserCap(P.cap, c); const t = maintenant(); if (t - derCap > 120) { derCap = t; peindre('potes'); } };
 
   // ---- l'horloge : l'heure de l'hôte, vue d'ici ----
   const decalage = (id) => { const p = e.pairs.get(id); return p && p.ecart ? p.ecart.decalage : 0; };
@@ -266,32 +309,39 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       .map(([k, n]) => '<button type="button" data-pr-salon="' + esc(k) + '"' + (k === e.salon ? ' class="on"' : '') + '>' + esc(n) + '</button>').join('') : '');
     const moiHtml = () => { const m = maille && maille.moi(); return m ? 'ton empreinte : <b>' + m.fp.match(/.{4}/g).join(' ') + '</b> <small>(c\'est elle qui dit qui tu es, pas ton nom)</small>' : ''; };
     // ---- ⌖ (0.99.22) les potes ----
-    const hhmm = (t) => new Date(t).toTimeString().slice(0, 5);
     const enLigne = () => !W.navigator || W.navigator.onLine !== false;
-    const ctlHtml = () => {
+    // (0.99.29) les outils de la soirée : garder la carte du coin (avant de partir, avec du réseau) ; un rendez-vous là où je suis
+    const outilsHtml = () => '<div class="px-pr-seg px-pr-outils">'
+      + '<button type="button" data-pr-garder' + (P.garde || !enLigne() ? ' disabled' : '') + '>' + (P.garde ? '⤓ ' + P.garde.fait + ' / ' + P.garde.total : '⤓ garder la carte du coin') + '</button>'
+      + (P.partage ? '<button type="button" data-pr-rdv' + (P.rdv ? ' class="on"' : '') + '>' + (P.rdv ? '× le rendez-vous' : '◎ rendez-vous ici') + '</button>' : '') + '</div>';
+    const ctlHtml = () => outilsHtml() + ctlBase();
+    const ctlBase = () => {
       if (!maille) return '';
       if (P.partage) return '<p class="px-pr-partage">⌖ tu partages ta position avec ' + (P.partage.salon ? esc(P.partage.salon) : 'tes potes ✦ (' + P.partage.a.length + ')') + (P.partage.heures ? ' · jusqu\'à ' + hhmm(P.partage.jusqua) : ' · jusqu\'à ce que tu arrêtes') + '</p><button type="button" class="px-pr-b" data-pr-pos-stop>■ arrêter de partager (ta position s\'efface chez eux)</button>';
       return '<div class="px-pr-seg"><button type="button" data-pr-pos-partager="potes"' + (e.actif ? '' : ' disabled') + '>⌖ partager avec mes potes ✦</button>' + (salonFerme() ? '<button type="button" data-pr-pos-partager="salon">⌖ dans ' + esc(e.salon) + '</button>' : '') + '</div>'
         + '<div class="px-pr-seg px-pr-duree">' + [[1, '1 h'], [4, '4 h'], [0, 'jusqu\'à ce que j\'arrête']].map(([v, n]) => '<button type="button" data-pr-pos-duree="' + v + '"' + (P.duree === v ? ' class="on"' : '') + '>' + n + '</button>').join('') + '</div>';
     };
-    const lesPotes = () => (maille && P.moi ? maille.positions().map(x => ({ ...x, r: relatif(P.moi, x) })).sort((a, b) => a.r.d - b.r.d) : []);
-    let cleTuiles = '';
     function peindreRadar() {
       const zone = $('[data-pr-radar]'); if (!zone) return;
-      const l = lesPotes(), n = maille ? maille.positions().length : 0;
+      const l = lesPotes(), rdvs = lesRdv(), n = maille ? maille.positions().length : 0;
+      for (const x of l) traces.set(x.fp, ajouterTrace(traces.get(x.fp), x));   // (0.99.29) leurs derniers pas
       $('[data-pr-pos-ctl]').innerHTML = ctlHtml();
       const etat = $('[data-pr-pos-etat]'); etat.textContent = P.erreur || (!n ? (e.actif ? 'personne ne partage sa position avec toi pour l\'instant ; ✦ tes potes, et demande-leur de partager' : '') : !P.moi ? n + ' pote' + (n > 1 ? 's' : '') + ' partage' + (n > 1 ? 'nt' : '') + ' sa position ; la tienne arrive…' : '');
-      const b = $('[data-pr-boussole]'), cible = P.cible && l.find(x => x.fp === P.cible);
-      zone.hidden = !l.length || !!cible; b.hidden = !cible;
-      $('[data-pr-potes-l]').innerHTML = cible ? '' : l.map(x => { const f = fraicheur(x.t, maintenant()); return '<button type="button" class="px-pr-pote' + (f.vieux ? ' vieux' : '') + '" data-pr-pote="' + x.fp + '"><b>' + esc(x.nom || x.fp.slice(0, 4)) + '</b> ' + metres(x.r.d) + ' <i>' + fleche(x.r.cap, P.cap || 0) + '</i><small>' + f.texte + (x.precision ? ' · ± ' + Math.round(x.precision) + ' m' : '') + (x.salon ? ' · ' + esc(x.salon) : '') + (x.sauts ? ' · ↝' + x.sauts : '') + '</small></button>'; }).join('');
+      const b = $('[data-pr-boussole]'), cible = P.cible && [...l, ...rdvs].find(x => x.fp === P.cible);
+      zone.hidden = !(l.length || rdvs.length) || !!cible; b.hidden = !cible;
+      if (!cible && minuteurGuide) { W.clearTimeout(minuteurGuide); minuteurGuide = 0; }
+      $('[data-pr-potes-l]').innerHTML = cible ? '' : rdvs.map(x => '<button type="button" class="px-pr-pote px-pr-rdv" data-pr-pote="' + x.fp + '"><b>◎ ' + esc(x.nom) + '</b> ' + metres(x.r.d) + ' <i>' + fleche(x.r.cap, P.cap || 0) + '</i><small>rendez-vous</small></button>').join('') + l.map(x => { const f = fraicheur(x.t, maintenant()); return '<button type="button" class="px-pr-pote' + (f.vieux ? ' vieux' : '') + '" data-pr-pote="' + x.fp + '"><b>' + esc(x.nom || x.fp.slice(0, 4)) + '</b> ' + metres(x.r.d) + ' <i>' + fleche(x.r.cap, P.cap || 0) + '</i><small>' + f.texte + (x.precision ? ' · ± ' + Math.round(x.precision) + ' m' : '') + (x.salon ? ' · ' + esc(x.salon) : '') + (x.sauts ? ' · ↝' + x.sauts : '') + '</small></button>'; }).join('');
       if (cible) { peindreBoussole(cible); return; }
-      if (!l.length) return;
+      if (!l.length && !rdvs.length) return;
       $('[data-pr-carte]').classList.toggle('on', P.carte); $('[data-pr-devant]').textContent = P.devant ? '↑ devant en haut' : 'N nord en haut'; $('[data-pr-devant]').classList.toggle('on', P.devant);
       const disque = $('[data-pr-disque]'), S = Math.max(200, Math.min(520, disque.clientWidth || zone.clientWidth || 320)), c = S / 2, R = c - 16, cap0 = P.devant && P.cap != null ? P.cap : 0;
-      const ech = echelle([...l.map(x => x.r.d), P.moi.precision || 0]), mpp = ech / R;
+      const ech = P.zoom != null ? ECHELLES[P.zoom] : echelle([...l.map(x => x.r.d), ...rdvs.map(x => x.r.d), P.moi.precision || 0]), mpp = ech / R;   // (0.99.29) + / − : le zoom à la main
+      $('[data-pr-zoom-auto]').classList.toggle('on', P.zoom == null);
       // la carte : les tuiles (dans le repère nord en haut), tournées d'un bloc ; refaites seulement si la vue change
-      const tu = $('[data-pr-tuiles]'), carte = P.carte && enLigne(), D2 = Math.ceil(S * 1.42), k = carte ? [S, ech, P.moi.lat.toFixed(4), P.moi.lng.toFixed(4)].join('|') : '';
-      if (k !== cleTuiles) { cleTuiles = k; tu.innerHTML = carte ? tuilesAutour(P.moi.lat, P.moi.lng, mpp, D2, D2).map(t => '<img alt="" draggable="false" onerror="this.style.display=\'none\'" src="' + t.url + '" style="left:' + t.gauche + 'px;top:' + t.haut + 'px;width:' + t.cote + 'px;height:' + t.cote + 'px">').join('') : ''; }
+      const tu = $('[data-pr-tuiles]'), carte = P.carte, D2 = Math.ceil(S * 1.42), k = carte ? [S, ech, P.moi.lat.toFixed(4), P.moi.lng.toFixed(4)].join('|') : '';
+      // (0.99.29) une tuile gardée d'abord (la carte hors ligne), sinon le réseau s'il y en a ; ni l'un ni l'autre : le radar seul
+      if (k !== cleTuiles) { cleTuiles = k; tu.innerHTML = carte ? tuilesAutour(P.moi.lat, P.moi.lng, mpp, D2, D2).map(t => '<img alt="" draggable="false" onerror="this.style.display=\'none\'" data-tu="' + t.url + '" style="left:' + t.gauche + 'px;top:' + t.haut + 'px;width:' + t.cote + 'px;height:' + t.cote + 'px">').join('') : '';
+        for (const im of tu.querySelectorAll('img[data-tu]')) { const u = im.getAttribute('data-tu'); tuilesC.src(u).then(loc => { if (loc) im.src = loc; else if (enLigne()) im.src = u; else im.style.display = 'none'; }).catch(() => { if (enLigne()) im.src = u; }); } }
       tu.style.cssText = 'width:' + D2 + 'px;height:' + D2 + 'px;left:' + Math.round((S - D2) / 2) + 'px;top:' + Math.round((S - D2) / 2) + 'px;transform:rotate(' + (-cap0) + 'deg)';
       $('[data-pr-attrib]').hidden = !carte;
       disque.style.height = S + 'px';
@@ -303,6 +353,9 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       if (P.cap != null) { const [hx, hy] = pt(Math.sin(P.cap * Math.PI / 180) * R * 0.3 * mpp, Math.cos(P.cap * Math.PI / 180) * R * 0.3 * mpp); svg += '<line class="regard" x1="' + c + '" y1="' + c + '" x2="' + hx + '" y2="' + hy + '"/>'; }
       if (P.moi.precision && P.moi.precision / mpp > 6) svg += '<circle class="flou" cx="' + c + '" cy="' + c + '" r="' + Math.min(R, P.moi.precision / mpp) + '"/>';
       svg += '<circle class="moi" cx="' + c + '" cy="' + c + '" r="6"/>';
+      // (0.99.29) les traces (leurs derniers pas), puis les rendez-vous (◆), puis les potes
+      for (const x of l) { const tr = traces.get(x.fp) || []; if (tr.length < 2) continue; svg += '<polyline class="trace" points="' + tr.map(q => { const r2 = relatif(P.moi, q), [qx, qy] = pt(r2.x, r2.y); return qx + ',' + qy; }).join(' ') + '"/>'; }
+      for (const x of rdvs) { const [px, py, bord] = pt(x.r.x, x.r.y); svg += '<g class="rdv" data-pr-pote="' + x.fp + '"><path d="M' + px + ',' + (py - 10) + ' L' + (px + 10) + ',' + py + ' L' + px + ',' + (py + 10) + ' L' + (px - 10) + ',' + py + ' Z"/><text x="' + (px + 14) + '" y="' + (py + 4) + '" text-anchor="' + (px > c ? 'end' : 'start') + '" dx="' + (px > c ? -28 : 0) + '">' + esc(x.nom.slice(0, 14)) + (bord ? ' ' + metres(x.r.d) : '') + '</text></g>'; }   /* à côté du losange, du côté du centre : il ne couvre plus le nom du pote */
       for (const x of l) {
         const [px, py, bord] = pt(x.r.x, x.r.y), f = fraicheur(x.t, maintenant());
         svg += '<g class="pote' + (f.vieux ? ' vieux' : '') + (bord ? ' bord' : '') + '" data-pr-pote="' + x.fp + '">' + (x.precision && x.precision / mpp > 8 && !bord ? '<circle class="flou" cx="' + px + '" cy="' + py + '" r="' + Math.min(R, x.precision / mpp) + '"/>' : '')
@@ -314,12 +367,20 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     function peindreBoussole(x) {
       const a = aiguille(x.r.cap, P.cap), f = fraicheur(x.t, maintenant()), pres = x.r.d < Math.max(15, x.precision || 0);
       if (pres && !tuY) { tuY = true; vibrer('succes'); } if (!pres) tuY = false;
+      // (0.99.29) l'aiguille tourne par le plus court (jamais un tour complet), la distance a une tendance, le guidage tourne en fond
+      aigAff = tourCourt(aigAff, a);
+      const h = (histos.get(x.fp) || []).filter(q => maintenant() - q.t < 30000); if (!h.length || maintenant() - h[h.length - 1].t > 1500) h.push({ t: maintenant(), d: x.r.d }); histos.set(x.fp, h);
+      const td = tendance(h, maintenant());
+      if (P.guide && !minuteurGuide) guider();
       $('[data-pr-boussole]').innerHTML = '<svg viewBox="-100 -100 200 200" class="px-pr-bsvg" aria-hidden="true"><circle class="anneau" r="92"/>'
         + (P.cap != null ? '<text class="nord" x="' + Math.round(-78 * Math.sin(P.cap * Math.PI / 180)) + '" y="' + Math.round(-78 * Math.cos(P.cap * Math.PI / 180) + 4) + '" text-anchor="middle">N</text>' : '')   /* le nord, debout, là où il est */
-        + '<g transform="rotate(' + Math.round(a) + ')"><path class="aiguille" d="M0,-74 L24,14 L0,0 L-24,14 Z"/></g><circle class="moi" r="5"/></svg>'
-        + '<p class="px-pr-bd">' + (pres ? 'tu y es' : metres(x.r.d)) + '</p><p class="px-pr-bn"><b>' + esc(x.nom || '?') + '</b> · ' + f.texte + (x.precision ? ' · ± ' + Math.round(x.precision) + ' m' : '') + '</p>'
+        + '<g class="rot" style="transform:rotate(' + Math.round(aigAff) + 'deg)"><path class="aiguille" d="M0,-74 L24,14 L0,0 L-24,14 Z"/></g><circle class="moi" r="5"/></svg>'
+        + '<p class="px-pr-bd">' + (pres ? 'tu y es' : metres(x.r.d)) + '</p>'
+        + (!pres ? '<p class="px-pr-tend">' + (x.r.d > 60 ? '≈ ' + minutesAPied(x.r.d) + ' min à pied' : '') + (td ? (x.r.d > 60 ? ' · ' : '') + (td === 'rapproche' ? 'tu te rapproches' : 'tu t\'éloignes') : '') + '</p>' : '')
+        + '<p class="px-pr-bn"><b>' + esc(x.nom || '?') + '</b>' + (x.rdv ? ' · rendez-vous' : ' · ' + f.texte + (x.precision ? ' · ± ' + Math.round(x.precision) + ' m' : '')) + '</p>'
+        + (f.vieux && !x.rdv ? '<p class="px-sous">sa position date un peu : il a peut-être bougé (elle se met à jour quand vous êtes reliés)</p>' : '')
         + (P.cap == null ? '<p class="px-sous">pas de boussole : la flèche suppose que tu regardes le nord</p>' : '')
-        + '<div class="px-pr-seg"><button type="button" data-pr-boussole-fermer>‹ le radar</button>' + (enLigne() ? '<button type="button" data-pr-plans="' + x.lat + ',' + x.lng + '">à pied (Plans)</button>' : '') + '</div>';
+        + '<div class="px-pr-seg"><button type="button" data-pr-boussole-fermer>‹ le radar</button><button type="button" data-pr-guide' + (P.guide ? ' class="on"' : '') + '>≋ guidé aux vibrations</button>' + (enLigne() ? '<button type="button" data-pr-plans="' + x.lat + ',' + x.lng + '">à pied (Plans)</button>' : '') + '</div>';
     }
     const basseHtml = () => {
       if (hote === 'basse') return '<p class="px-pr-l">tu héberges la basse · ' + e.basse.tempo + ' bpm · tout le monde se cale sur toi</p>'
@@ -346,7 +407,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       + '<div class="px-pr-glyphes" data-ecrit>' + GLYPHES_MSG.map(g => '<button type="button" data-pr-glyphe="' + esc(g) + '" aria-label="envoyer : ' + esc(NOMS_GLYPHES[g] || g) + '">' + esc(g) + '</button>').join('') + '</div>'
       + '<div class="px-pr-envoi"><input type="text" maxlength="1000" placeholder="un message · /j #salon · /m @nom · /w" data-pr-msg><button type="button" data-pr="envoyer" aria-label="envoyer">→</button></div><p class="px-pr-info" data-pr-info hidden></p>'
       + '<h3 class="px-pr-t">⌖ mes potes</h3><div class="px-pr-potes" data-neurone><div data-pr-pos-ctl></div><p class="px-sous" data-pr-pos-etat></p>'
-      + '<div data-pr-radar hidden><div class="px-pr-radar" data-pr-disque><div class="px-pr-tuiles" data-pr-tuiles></div><div data-pr-radar-svg></div></div><div class="px-pr-rbtn"><button type="button" data-pr-carte>◫ carte</button><button type="button" data-pr-devant></button><small class="px-pr-attrib" data-pr-attrib hidden>' + ATTRIBUTION + '</small></div></div>'
+      + '<div data-pr-radar hidden><div class="px-pr-radar" data-pr-disque><div class="px-pr-tuiles" data-pr-tuiles></div><div data-pr-radar-svg></div></div><div class="px-pr-rbtn"><button type="button" data-pr-carte>◫ carte</button><button type="button" data-pr-devant></button><button type="button" data-pr-zoom="1" aria-label="zoomer">＋</button><button type="button" data-pr-zoom="-1" aria-label="dézoomer">－</button><button type="button" data-pr-zoom-auto>auto</button><small class="px-pr-attrib" data-pr-attrib hidden>' + ATTRIBUTION + '</small></div></div>'
       + '<div class="px-pr-boussole" data-pr-boussole hidden></div><div class="px-pr-potes-l" data-pr-potes-l></div></div>'
       + '<h3 class="px-pr-t">∿ la basse</h3><div data-pr-basse data-neurone></div><h3 class="px-pr-t">▷ le son</h3><div data-pr-son data-neurone></div></div>';
     const $ = (s) => hoteEl.querySelector(s);
@@ -386,7 +447,13 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       const du = ev.target.closest('[data-pr-pos-duree]'); if (du) { P.duree = +du.getAttribute('data-pr-pos-duree'); vibrer('selection'); peindre('potes'); return; }
       if (ev.target.closest('[data-pr-pos-stop]')) { arreterPartage(); vibrer('selection'); return; }
       const po = ev.target.closest('[data-pr-pote]'); if (po) { P.cible = po.getAttribute('data-pr-pote'); vibrer('fx-arrivee'); try { const DO = W.DeviceOrientationEvent; if (DO && DO.requestPermission) DO.requestPermission().catch(() => {}); } catch (x) { /* */ } peindre('potes'); return; }
-      if (ev.target.closest('[data-pr-boussole-fermer]')) { P.cible = null; peindre('potes'); return; }
+      if (ev.target.closest('[data-pr-boussole-fermer]')) { P.cible = null; W.clearTimeout(minuteurGuide); minuteurGuide = 0; peindre('potes'); return; }
+      // (0.99.29) le zoom du radar, la carte gardée, le rendez-vous, le guidage
+      const zo = ev.target.closest('[data-pr-zoom]'); if (zo) { const l2 = [...lesPotes(), ...lesRdv()], cur = P.zoom != null ? P.zoom : ECHELLES.indexOf(echelle([...l2.map(x => x.r.d), (P.moi && P.moi.precision) || 0])); P.zoom = Math.max(0, Math.min(ECHELLES.length - 1, cur - +zo.getAttribute('data-pr-zoom'))); cleTuiles = ''; vibrer('fx-cran'); peindre('potes'); return; }
+      if (ev.target.closest('[data-pr-zoom-auto]')) { P.zoom = null; cleTuiles = ''; vibrer('selection'); peindre('potes'); return; }
+      if (ev.target.closest('[data-pr-garder]')) { garderCarte(); return; }
+      if (ev.target.closest('[data-pr-rdv]')) { poserRdv(); return; }
+      if (ev.target.closest('[data-pr-guide]')) { P.guide = !P.guide; if (!P.guide) { W.clearTimeout(minuteurGuide); minuteurGuide = 0; } vibrer('selection'); peindre('potes'); return; }
       if (ev.target.closest('[data-pr-carte]')) { P.carte = !P.carte; boxion.put('reglages', 'proche-carte', P.carte).catch(() => {}); peindre('potes'); return; }
       if (ev.target.closest('[data-pr-devant]')) { P.devant = !P.devant; peindre('potes'); return; }
       const pl = ev.target.closest('[data-pr-plans]'); if (pl) { const u = 'https://maps.apple.com/?daddr=' + pl.getAttribute('data-pr-plans') + '&dirflg=w'; if (ouvrirLien) ouvrirLien(u); else if (W.open) W.open(u, '_blank', 'noopener'); return; }
@@ -411,7 +478,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     });
     hoteEl.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && ev.target.matches('[data-pr-msg]')) { if (envoyerMessage(ev.target.value)) ev.target.value = ''; } });
     hoteEl.addEventListener('change', (ev) => { if (ev.target.matches('[data-pr-tempo]')) hebergerBasse({ tempo: +ev.target.value }); });
-    return { unmount() { vivant = false; vue = false; W.removeEventListener('deviceorientation', surCap); W.clearInterval(minuteurMoi); desabo(); peindre = () => {}; hoteEl.innerHTML = ''; }, joue: () => !!(hote || e.ecoute.basse || e.ecoute.son || P.partage) };
+    return { unmount() { vivant = false; vue = false; W.clearTimeout(minuteurGuide); minuteurGuide = 0; W.removeEventListener('deviceorientation', surCap); W.clearInterval(minuteurMoi); desabo(); peindre = () => {}; hoteEl.innerHTML = ''; }, joue: () => !!(hote || e.ecoute.basse || e.ecoute.son || P.partage) };
   }
 
   const api = { demarrer, arreter, envoyerMessage, effacerTout, partagerSon, partagerPosition, arreterPartage, potes: () => ({ partage: P.partage, moi: P.moi, cap: P.cap, positions: maille ? maille.positions() : [] }), fil, voir: (salon) => { e.salon = salon || PUBLIC; peindre(); }, maille: () => maille, hebergerBasse, arreterBasse, hebergerSon, pauseSon, arreterSon, rejoindre, quitter, heureDe,

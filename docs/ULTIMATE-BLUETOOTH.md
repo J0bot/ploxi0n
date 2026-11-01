@@ -133,6 +133,19 @@ coupé, et iOS laisse un périphérique BLE annoncer en arrière-plan. Donc, der
 - **Pas encore vérifié** : le Swift n'est pas compilé ici (pas de Mac). Premier build avec l'option : à lire ligne par ligne si ça casse ; puis deux iPhones,
   le Wi-Fi coupé, Proche.
 
+### Mieux retrouver ses potes (0.99.29, RS-7 : « améliore la map pour le Bluetooth et la boussole à amis »)
+
+- **La carte hors ligne** : « ⤓ garder la carte du coin » (avec du réseau, avant la soirée) range les tuiles CARTO d'un disque de 1,5 km,
+  zooms 13 à 17 (450 au plus, `tuilesZone`), dans le cache du navigateur ou boxion_local (`src/app/carte-tuiles.js`). La carte lit d'abord
+  les tuiles gardées : elle s'affiche sans connexion. Rien n'est envoyé : on lit des tuiles publiques.
+- **Le rendez-vous** (◎) : un point que je pose là où je suis ; il voyage dans le même paquet `pos` que ma position, chiffré pour chaque pote
+  ✦ (ou le salon fermé), validé à l'arrivée (`rdvValide`). Un losange sur le radar ; la boussole sait y mener. Il suppose que je partage ma
+  position (il part avec elle) ; « × le rendez-vous » l'efface chez les autres au prochain envoi.
+- **La boussole** : le cap d'iOS lissé sur le cercle ; l'aiguille tourne par le plus court ; **guidé aux vibrations** : quand la flèche est
+  droit devant (± 20°), un tic, de toutes les 2,5 s (loin) à toutes les 0,35 s (tout près), pour marcher l'iPhone en poche ; le temps à
+  pied ; « tu te rapproches / tu t'éloignes » sur 30 s ; prévenu quand la position du pote date.
+- **Le radar** : les 12 derniers pas de chaque pote (en mémoire, jamais gardés) ; ＋ − pour zoomer à la main, « auto » pour revenir.
+
 ## La suite (⏭)
 
 - Le son en arrière-plan, écran verrouillé (passer par un `<audio>` comme les ambiances), et la basse sur les vibrations (le haptique).

@@ -7,6 +7,12 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.29', titre: 'Retrouver tes potes, mieux', points: [
+    '◫ Proche › mes potes › « ⤓ garder la carte du coin » : avec du réseau, avant la soirée ; ensuite la carte s\'affiche même sans connexion.',
+    '◎ Un rendez-vous là où tu es : il part avec ta position, chiffré, à tes potes ✦ ; un losange sur leur radar, et leur boussole t\'y mène.',
+    '≋ La boussole : l\'aiguille ne tremble plus, « guidé aux vibrations » tique quand tu marches dans la bonne direction (plus vite en approchant), le temps à pied, « tu te rapproches ».',
+    '⌖ Le radar : les derniers pas de chaque pote en pointillés ; ＋ − pour zoomer à la main, « auto » pour revenir.',
+  ] },
   { v: '0.99.28', titre: 'Les notifications', points: [
     '◉ ⚙ › Notifications › « Même app fermée » : le jeton de ton iPhone est gardé même si le labo ne répond pas encore, et tu peux le copier pour un envoi de test.',
   ] },

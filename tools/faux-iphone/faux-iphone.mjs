@@ -229,7 +229,7 @@ function voisinsFaux() {
       const app = tom.pairs().find(p => p.direct && p.nom !== 'Léa' && p.cle); if (!app) return;
       if (!bonjour) { bonjour = true; lea.dire('je suis deux sauts plus loin, Tom me relaie'); }
       tom.partagerPosition({ lat: 46.52085, lng: 6.63095, precision: 6 }, { a: [app.fp] });   // ~110 m au nord-est
-      if (lea.pairs().some(p => p.fp === app.fp && p.cle)) lea.partagerPosition({ lat: 46.51840, lng: 6.62760, precision: 25 }, { a: [app.fp] });   // ~300 m au sud-ouest
+      if (lea.pairs().some(p => p.fp === app.fp && p.cle)) lea.partagerPosition({ lat: 46.51840, lng: 6.62760, precision: 25, rdv: { lat: 46.51900, lng: 6.62900, nom: 'la fontaine' } }, { a: [app.fp] });   // ~300 m au sud-ouest ; (0.99.29) et son rendez-vous
     }, 2000).unref();   // ne retient pas la fin du faux iPhone
   })();
   return voisinsPrets;

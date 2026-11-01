@@ -163,4 +163,8 @@ test('⌖ (0.99.22) la position : chiffrée pour un pote ou un salon fermé, rel
   await R.T.A.partagerPosition({ fin: true }, { a: [fpC] }); await attendre(120);
   assert.equal(R.T.C.positions().length, 0);
   assert.equal(await R.T.A.partagerPosition({ lat: 999, lng: 0 }, { a: [fpC] }), 0, 'une position impossible ne part pas');
+  // (0.99.29) le rendez-vous voyage avec la position, chiffré ; un rendez-vous impossible est ignoré
+  await R.T.A.partagerPosition({ lat: 46.5, lng: 6.6, rdv: { lat: 46.51, lng: 6.61, nom: 'la fontaine' } }, { a: [fpC] }); await attendre(150);
+  assert.deepEqual(R.T.C.positions()[0].rdv, { lat: 46.51, lng: 6.61, nom: 'la fontaine' }); assert.ok(espion.every(t => !t.includes('fontaine')), 'le rendez-vous n\'est pas en clair');
+  await R.T.A.partagerPosition({ lat: 46.5, lng: 6.6, rdv: { lat: 500, lng: 0 } }, { a: [fpC] }); await attendre(150); assert.equal(R.T.C.positions()[0].rdv, null);
 });

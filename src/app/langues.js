@@ -4,6 +4,14 @@
 // par ce que tout le monde voit : l'accueil et la map, les réglages, le marketplace, Autour, Proche. Une phrase absente reste en français.
 // Le suisse d'abord : « Velo », « Glace », « Trottinett » en allemand de Suisse.
 export const LIGNES = [
+  // ---- (0.99.29) Proche › mes potes : la carte hors ligne, le rendez-vous, la boussole guidée ----
+  ['⤓ garder la carte du coin', '⤓ keep the local map', '⤓ Karte der Umgebung speichern', '⤓ salva la mappa della zona', '⤓ guardar el mapa de la zona'],
+  ['◎ rendez-vous ici', '◎ meet here', '◎ Treffpunkt hier', '◎ ritrovo qui', '◎ punto de encuentro aquí'],
+  ['× le rendez-vous', '× the meeting point', '× der Treffpunkt', '× il ritrovo', '× el punto de encuentro'],
+  ['≋ guidé aux vibrations', '≋ guided by vibrations', '≋ per Vibration geführt', '≋ guidato dalle vibrazioni', '≋ guiado por vibraciones'],
+  ['tu te rapproches', 'getting closer', 'du kommst näher', 'ti stai avvicinando', 'te estás acercando'],
+  ['tu t\'éloignes', 'moving away', 'du entfernst dich', 'ti stai allontanando', 'te estás alejando'],
+  ['rendez-vous', 'meeting point', 'Treffpunkt', 'ritrovo', 'punto de encuentro'],
   // ---- l'accueil, la map ----
   ['organique', 'organic', 'organisch', 'organico', 'orgánico'],
   ['tout le temps', 'all time', 'die ganze Zeit', 'tutto il tempo', 'todo el tiempo'],
