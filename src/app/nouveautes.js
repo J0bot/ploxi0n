@@ -7,6 +7,9 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.28', titre: 'Les notifications', points: [
+    '◉ ⚙ › Notifications › « Même app fermée » : le jeton de ton iPhone est gardé même si le labo ne répond pas encore, et tu peux le copier pour un envoi de test.',
+  ] },
   { v: '0.99.27', titre: 'Rien ne sort de l\'écran', points: [
     '▭ Tout l\'écran vérifié, à chaque taille, sur un iPhone SE, 15 et Pro Max, couché aussi : plus rien ne déborde ni ne se cache sous l\'encoche ou la barre d\'accueil.',
     '◈ Le dock ne déborde plus : ton nom se raccourcit (…) au lieu de pousser les boutons hors de l\'écran.',

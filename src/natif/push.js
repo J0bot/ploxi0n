@@ -25,7 +25,9 @@ export function creerPush({ W = globalThis.window, boxion, envoyer, source = 'ht
   }
   async function brancher(P) {
     if (ecoute) return; ecoute = true;
-    await P.addListener('registration', (t) => { const j = t && t.value; if (j) declarer(j).catch((e) => { r.erreur = e.message; garder(); }); });
+    // (0.99.28) le jeton est gardé DÈS qu'iOS le donne, même si le labo le refuse (sa route n'existait pas : le jeton était perdu, et
+    // impossible de tester un envoi) ; ⚙ › Notifications le montre et le copie
+    await P.addListener('registration', (t) => { const j = t && t.value; if (!j) return; r = { ...r, jeton: j }; garder(); declarer(j).catch((e) => { r.erreur = e.message; garder(); }); });
     await P.addListener('registrationError', (e) => { r.erreur = 'iOS refuse : ' + ((e && e.error) || 'inconnu'); garder(); });
     // reçue app ouverte : un signal discret (iOS ne l'affiche pas lui-même)
     await P.addListener('pushNotificationReceived', (n) => { vibrer('notification'); signaler('🔔 ' + ((n && n.title) || '') + (n && n.body ? ' · ' + n.body : '')); });

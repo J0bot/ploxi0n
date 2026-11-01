@@ -1,5 +1,6 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1793140522000,"0.99.26 : les crans vibrent — fx-cran manquait dans le moteur haptique (le wormion, la portion, la map, le synthé muets)"],
+export const COMMITS = [[1793144366000,"0.99.27 : rien ne sort de l'écran — l'audit de l'écran et ses corrections"],
+  [1793140522000,"0.99.26 : les crans vibrent — fx-cran manquait dans le moteur haptique (le wormion, la portion, la map, le synthé muets)"],
   [1793140261000,"0.99.26 : le bord droit revient — la taille de tout par la balise viewport, plus par le zoom natif"],
   [1793057256000,"faux iPhone : parcours-benchmark.mjs (le ploxion benchmark du labo : les épreuves, les workers, l'appareil, comparer, envoyer, quitter en pleine mesure)"],
   [1793052917000,"0.99.25 : la map tient sous les doigts — pincement stable, la page ne glisse plus de côté"],

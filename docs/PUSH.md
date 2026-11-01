@@ -1,5 +1,17 @@
 # Les notifications push (APNs) : la clé sur le labo (0.91)
 
+## Ce soir, le plus vite (0.99.28, RS-7 01.11)
+
+L'app est prête depuis la 0.91 (la permission, le jeton relayé par l'AppDelegate, les sujets, toucher = ouvrir le ploxion). Il manquait la
+route du labo (`/api/app/push` : 404) ; et, sans elle, l'app perdait le jeton (corrigé en 0.99.28 : gardé, et copiable).
+
+1. **La clé** (5 min) : ci-dessous, « 1. La clé ».
+2. **Un premier envoi sans le labo** (build 0.99.28) : ⚙ › Notifications › « Même app fermée » allumé → « copier » le jeton → sur ton ordinateur
+   `node tools/push/envoyer-push.mjs --cle AuthKey_XXXX.p8 --kid XXXX --team YYYY --jeton <collé>` → la notification arrive.
+3. **Le labo** : `docs/labo-push/` (le code prêt à coller, les routes, `php artisan push:test`). Avec lui, même le build déjà installé
+   envoie son jeton (rallumer l'interrupteur, ou relancer l'app).
+
+
 RS-7, 22.10 : « la clé APNs sur le labo ». C'est l'option (a) de la feuille de route : la clé `.p8` d'APNs vit sur le serveur du labo,
 isolée et révocable. Elle ne sert qu'à envoyer des notifications, pas à publier l'app.
 
