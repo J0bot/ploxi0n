@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.20', titre: 'La veille et les ondes', points: [
+    '◷ La veille en arrière-plan : ta position, même app fermée (les visites d\'iOS, presque rien pour la batterie, et un point tous les 5 m quand tu bouges). Mappion compte où tu passes du temps et crée tes zones. Elle reste sur ton téléphone.',
+    'ᛒ Autour › les ondes : tout ce qui émet en Bluetooth autour de toi, du plus proche au plus loin, avec la distance estimée et le fabricant (montres, écouteurs, ESP32…).',
+    '◉ Proche s\'annonce en Bluetooth : tu vois les autres ploxis à portée, et à quelle distance, avant même d\'être connectés.',
+  ] },
   { v: '0.99.19', titre: 'Plus grand, plus léger', points: [
     '◈ La peau légère par défaut : les couleurs de ta peau sans les membranes ondulées, qui faisaient ramer. ⚙ › Apparence › La peau : légère, auto (légère en économie d\'énergie), pleine.',
     '◈ Changer de peau marche pour de vrai (les membranes ne restaient plus vides sur l\'iPhone).',

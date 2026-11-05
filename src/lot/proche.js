@@ -59,6 +59,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
   function ajouterMessage(m) { e.messages.push(m); if (e.messages.length > 80) e.messages.shift(); boxion.put('reglages', 'proche-messages', e.messages.slice(-40)).catch(() => {}); peindre('messages'); }
   boxion.get('reglages', 'proche-messages').then(l => { if (Array.isArray(l) && !e.messages.length) e.messages = l.slice(-40); }).catch(() => {});
 
+  let offOndes = null;
   async function demarrer({ nom, salle } = {}) {
     if (nom != null) e.nom = String(nom).slice(0, 24); if (salle != null) e.salle = String(salle).slice(0, 40) || 'xerboxion';
     boxion.put('reglages', 'proche', { nom: e.nom, salle: e.salle }).catch(() => {});
@@ -66,11 +67,15 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     try { const r = await tuyau.demarrer({ nom: e.nom || 'ploxion', salle: e.salle }); e.moi = r.moi; e.actif = true; }
     catch (x) { e.erreur = (x && x.message) || 'impossible de démarrer'; e.actif = false; peindre(); return false; }
     W.clearInterval(ping); ping = W.setInterval(sonder, 4000);
+    // ᛒ (0.99.20) le Bluetooth bas niveau : ce téléphone s'annonce comme un ploxi, et voit les ploxis à portée AVANT qu'ils soient connectés
+    const O = W && W.jOSOndes;
+    if (O) { try { await O.annoncer(e.nom || 'ploxion'); await O.scanner(); if (!offOndes) offOndes = O.sur((v) => { if (v.ploxi) peindre('pairs'); }); } catch (x) { /* Proche vit sans */ } }
     vibrer('fx-arrivee'); peindre(); return true;
   }
   async function arreter() {
     if (hote === 'basse') arreterBasse(); if (hote === 'son') arreterSon();
     W.clearInterval(ping); couperBasse(); couperSon(); e.ecoute = { basse: false, son: false };
+    if (W && W.jOSOndes) { W.jOSOndes.arreterAnnonce(); W.jOSOndes.arreter(); } if (offOndes) { offOndes(); offOndes = null; }
     await tuyau.arreter(); e.actif = false; e.pairs.clear(); e.basse = e.son = e.basseHote = e.sonHote = null; peindre();
   }
   function envoyerMessage(texte) {
@@ -158,6 +163,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     let vivant = true;
     const pairsHtml = () => (e.pairs.size ? [...e.pairs].map(([id, p]) => '<span class="px-pr-pair' + (p.etat === 'connecte' ? ' on' : '') + '" data-neurone>◉ ' + esc(nomDe(id))
       + (p.ecart ? ' <small>' + (p.ecart.allerRetour < 1 ? '<1' : Math.round(p.ecart.allerRetour)) + ' ms</small>' : p.etat === 'connexion' ? ' <small>…</small>' : '') + '</span>').join('')
+      + ((W && W.jOSOndes) ? W.jOSOndes.appareils().filter(v => v.ploxi).slice(0, 12).map(v => '<span class="px-pr-pair">ᛒ ' + esc(v.nom || 'ploxi') + ' <small>~' + v.distance + ' m</small></span>').join('') : '')
       : '<p class="px-sous">' + (e.actif ? 'personne autour pour l\'instant, dans la salle « ' + esc(e.salle) + ' » ; les autres ouvrent Proche, même salle, et démarrent' : 'éteint : personne ne te voit') + '</p>');
     const messagesHtml = () => e.messages.slice(-40).map(m => '<p class="px-pr-m' + (m.moi ? ' moi' : '') + '"><b>' + esc(m.moi ? 'toi' : nomDe(m.de)) + '</b> ' + esc(m.texte) + '</p>').join('') || '<p class="px-sous">aucun message</p>';
     const basseHtml = () => {
