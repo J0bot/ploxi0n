@@ -33,6 +33,9 @@ Pièges nouveaux :
   l'applique comme l'iPhone, il voit donc enfin ce zoom ;
 - (0.99.26) un nom passé à `vibrer('…')` doit exister dans `src/natif/haptique.js` (`fx-cran` manquait : le wormion, la portion muets) ;
   `tests/haptique-usage.test.mjs` le vérifie ;
+- (0.99.30) une AUTRE session travaille sur `glob/xerbot-ledfx` (XERB0T, la veille, les ondes) : la fusionner régulièrement ; ses numéros de
+  version suivent les siens (sa « 0.99.20 » est devenue notre 0.99.30). PloxiBLE n'a pas de `@objc(…)` : `extraire-plugins.cjs` ne le voit pas (le
+  faux iPhone le traite comme non compilé, ce qui est le cas par défaut) ;
 - (0.99.27) **avant une version qui touche la mise en page : `parcours-ecran.mjs`** (l'audit de l'écran, toutes tailles, largeurs, couché,
   encoche ; `PX_ECRAN_RAPIDE=1` pour une seule configuration). Il doit rendre 0 défaut.
 

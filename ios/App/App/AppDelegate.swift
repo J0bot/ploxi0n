@@ -14,14 +14,12 @@ import GameKit
 import WebKit
 import ObjectiveC
 import CoreMotion
+import CoreBluetooth   // (0.99.20) PloxiOndes : le Bluetooth bas niveau ; (0.99.23) PloxiBLE, le maillage (option PLOXI0N_BLE)
 import MediaPlayer
 import AVKit
 import QuickLook
 import CoreImage   // (0.76) le QR code du partage en personne (CIQRCodeGenerator)
 import MultipeerConnectivity   // (0.99.1) l'ultimate Bluetooth : les téléphones proches (PloxiProche)
-#if PLOXI0N_BLE
-import CoreBluetooth   // (0.99.24) le maillage en Bluetooth basse consommation, comme bitchat (PloxiBLE), option de build
-#endif
 // l'AR native (0.73) : PloxiAR plus bas. Interrupteur de secours : PLOXI0N_AR=0 (fastlane) la retire du build.
 #if !PLOXI0N_SANS_AR
 import ARKit
@@ -2135,7 +2133,7 @@ public class PloxiProche: CAPPlugin, CAPBridgedPlugin, MCSessionDelegate, MCNear
 }
 
 #if PLOXI0N_BLE
-// 〰 (0.99.24, RS-7 : « ça doit être comme bitchat ») LE MAILLAGE EN BLUETOOTH BASSE CONSOMMATION, en arrière-plan aussi (les modes
+// 〰 (0.99.23, RS-7 : « ça doit être comme bitchat ») LE MAILLAGE EN BLUETOOTH BASSE CONSOMMATION, en arrière-plan aussi (les modes
 // bluetooth-central et bluetooth-peripheral, que fastlane ajoute avec l'option PLOXI0N_BLE). Chaque iPhone est à la fois PÉRIPHÉRIQUE (il
 // annonce un service, une caractéristique : on lui écrit, il notifie) et CENTRAL (il cherche ce service, se connecte, s'abonne). Il ne porte
 // que des OCTETS (des morceaux de 180 octets au plus) : le découpage, le recollage et tout le maillage sont en JS (src/bions/fragments.js,
@@ -2253,6 +2251,203 @@ public class PloxiBLE: CAPPlugin, CAPBridgedPlugin, CBCentralManagerDelegate, CB
     }
 }
 #endif
+// ◷ (0.99.20, 05.11) PLOXIVEILLE : la position EN ARRIÈRE-PLAN (RS-7 : « la localisation en arrière-plan » — mappion compte le temps passé à
+// chaque endroit, même app fermée). Deux régimes :
+//   eco  : les VISITES de CoreLocation (arrivée / départ d'un lieu, presque rien pour la batterie) + les grands déplacements ;
+//   fine : en plus, un point tous les 5 m quand tu bouges (iOS met en pause quand tu ne bouges plus : les visites comblent).
+// Tout est écrit sur le téléphone (Documents/veille.jsonl), même quand la page dort ; la page relit avec lire({ depuis }).
+//   demarrer({ fine }) → { etat }   arreter()   etat() → { etat, actif, fine, points }   lire({ depuis }) → { points, visites }   vider()
+//   événements : « position » { t, la, lo, acc, v } · « visite » { a, d?, la, lo, acc }
+// Ne pas nuire : rien ne démarre sans « demarrer » ; la flèche bleue d'iOS montre que la veille tourne ; rien ne quitte le téléphone ici.
+@objc(PloxiVeille)
+public class PloxiVeille: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate {
+    public let identifier = "PloxiVeille"
+    public let jsName = "PloxiVeille"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "demarrer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "arreter", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "etat", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "lire", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "vider", returnType: CAPPluginReturnPromise),
+    ]
+    private let lm = CLLocationManager()
+    private let file = DispatchQueue(label: "ploxi.veille")
+    private var fine = false
+    private var actif = false
+    private var fichier: URL { FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("veille.jsonl") }
+
+    override public func load() {
+        lm.delegate = self
+        // relancée par iOS (un grand déplacement, une visite) : on reprend là où on était
+        if UserDefaults.standard.bool(forKey: "ploxi.veille.actif") {
+            let f = UserDefaults.standard.bool(forKey: "ploxi.veille.fine")
+            DispatchQueue.main.async { self.lancer(fine: f) }
+        }
+    }
+    private func statut() -> String {
+        switch lm.authorizationStatus {
+        case .authorizedAlways: return "toujours"
+        case .authorizedWhenInUse: return "pendant-utilisation"
+        case .denied: return "refuse"
+        case .restricted: return "restreint"
+        default: return "a-demander"
+        }
+    }
+    private func lancer(fine: Bool) {
+        self.fine = fine; actif = true
+        lm.allowsBackgroundLocationUpdates = true
+        lm.showsBackgroundLocationIndicator = true
+        lm.pausesLocationUpdatesAutomatically = true
+        lm.activityType = .fitness
+        lm.desiredAccuracy = fine ? kCLLocationAccuracyBest : kCLLocationAccuracyHundredMeters
+        lm.distanceFilter = fine ? 5 : 100
+        lm.startMonitoringVisits()
+        lm.startMonitoringSignificantLocationChanges()
+        if fine { lm.startUpdatingLocation() } else { lm.stopUpdatingLocation() }
+    }
+    @objc func demarrer(_ call: CAPPluginCall) {
+        let f = call.getBool("fine") ?? true
+        DispatchQueue.main.async {
+            if self.lm.authorizationStatus == .notDetermined { self.lm.requestWhenInUseAuthorization() }
+            self.lm.requestAlwaysAuthorization()   // iOS propose « Toujours » après coup ; sans, la veille ne vit qu'app ouverte
+            UserDefaults.standard.set(true, forKey: "ploxi.veille.actif"); UserDefaults.standard.set(f, forKey: "ploxi.veille.fine")
+            self.lancer(fine: f)
+            call.resolve(["etat": self.statut(), "fine": f])
+        }
+    }
+    @objc func arreter(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            self.actif = false
+            UserDefaults.standard.set(false, forKey: "ploxi.veille.actif")
+            self.lm.stopUpdatingLocation(); self.lm.stopMonitoringVisits(); self.lm.stopMonitoringSignificantLocationChanges()
+            self.lm.allowsBackgroundLocationUpdates = false
+            call.resolve()
+        }
+    }
+    @objc func etat(_ call: CAPPluginCall) {
+        let n = (try? String(contentsOf: fichier, encoding: .utf8))?.split(separator: "\n").count ?? 0
+        DispatchQueue.main.async { call.resolve(["etat": self.statut(), "actif": self.actif, "fine": self.fine, "points": n]) }
+    }
+    @objc func lire(_ call: CAPPluginCall) {
+        let depuis = call.getDouble("depuis") ?? 0
+        file.async {
+            var points: [[String: Any]] = [], visites: [[String: Any]] = []
+            let texte = (try? String(contentsOf: self.fichier, encoding: .utf8)) ?? ""
+            for l in texte.split(separator: "\n") {
+                guard let d = l.data(using: .utf8), let o = (try? JSONSerialization.jsonObject(with: d)) as? [String: Any] else { continue }
+                if o["a"] != nil {
+                    let fin = (o["d"] as? Double) ?? (o["a"] as? Double) ?? 0
+                    if fin > depuis || o["d"] == nil { visites.append(o) }
+                } else if let t = o["t"] as? Double, t > depuis { points.append(o) }
+            }
+            call.resolve(["points": Array(points.suffix(20000)), "visites": Array(visites.suffix(2000))])
+        }
+    }
+    @objc func vider(_ call: CAPPluginCall) {
+        file.async { try? FileManager.default.removeItem(at: self.fichier); call.resolve() }
+    }
+    private func ecrire(_ o: [String: Any]) {
+        file.async {
+            guard let d = try? JSONSerialization.data(withJSONObject: o), var ligne = String(data: d, encoding: .utf8) else { return }
+            ligne += "\n"
+            if let h = try? FileHandle(forWritingTo: self.fichier) { h.seekToEndOfFile(); h.write(ligne.data(using: .utf8)!); try? h.close() }
+            else { try? ligne.write(to: self.fichier, atomically: true, encoding: .utf8) }
+            // au-delà de 8 Mo, on garde la seconde moitié (les mois récents)
+            if let a = try? FileManager.default.attributesOfItem(atPath: self.fichier.path), let s = a[.size] as? Int, s > 8_000_000,
+               let t = try? String(contentsOf: self.fichier, encoding: .utf8) {
+                let ls = t.split(separator: "\n"); try? (ls.suffix(ls.count / 2).joined(separator: "\n") + "\n").write(to: self.fichier, atomically: true, encoding: .utf8)
+            }
+        }
+    }
+    public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        for l in locations where l.horizontalAccuracy >= 0 && l.horizontalAccuracy < 100 {
+            let o: [String: Any] = ["t": l.timestamp.timeIntervalSince1970 * 1000, "la": l.coordinate.latitude, "lo": l.coordinate.longitude,
+                                    "acc": l.horizontalAccuracy, "v": max(0, l.speed)]
+            ecrire(o); notifyListeners("position", data: o)
+        }
+    }
+    public func locationManager(_ manager: CLLocationManager, didVisit visit: CLVisit) {
+        var o: [String: Any] = ["a": visit.arrivalDate.timeIntervalSince1970 * 1000, "la": visit.coordinate.latitude, "lo": visit.coordinate.longitude,
+                                "acc": visit.horizontalAccuracy]
+        if visit.departureDate != Date.distantFuture { o["d"] = visit.departureDate.timeIntervalSince1970 * 1000 }
+        if visit.arrivalDate == Date.distantPast { return }
+        ecrire(o); notifyListeners("visite", data: o)
+    }
+    public func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        notifyListeners("etat", data: ["etat": statut()])
+    }
+}
+
+// ᛒ (0.99.20, 05.11) PLOXIONDES : le Bluetooth BAS NIVEAU (RS-7 : « le Bluetooth low level aussi, pour Proche et Autour »). CoreBluetooth brut :
+//   scanner({ doublons }) : TOUT ce qui émet autour (nom, RSSI, puissance annoncée, données du fabricant, services, connectable)
+//   annoncer({ nom }) : ce téléphone s'annonce comme un ploxi (le service xerboxion) — les autres le voient dans Proche et Autour
+//   arreterScan()   arreterAnnonce()   événements : « appareil » {id, nom, rssi, tx?, fabricant, services, connectable} · « etat » {etat}
+// Limites d'iOS : l'id est un identifiant propre à CE téléphone (pas l'adresse MAC) ; en arrière-plan, le scan ne voit que les services
+// demandés et l'annonce perd son nom. Ne pas nuire : rien n'émet sans « annoncer », rien ne se connecte à personne ici.
+@objc(PloxiOndes)
+public class PloxiOndes: CAPPlugin, CAPBridgedPlugin, CBCentralManagerDelegate, CBPeripheralManagerDelegate {
+    public let identifier = "PloxiOndes"
+    public let jsName = "PloxiOndes"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "scanner", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "arreterScan", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "annoncer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "arreterAnnonce", returnType: CAPPluginReturnPromise),
+    ]
+    static let SERVICE = CBUUID(string: "6E1D0000-0000-4000-8000-0000000C0DE0")   // le service xerboxion (les ploxis se reconnaissent)
+    private var central: CBCentralManager?
+    private var periph: CBPeripheralManager?
+    private var scanVoulu = false, doublons = true, annonceVoulue = false, nom = "ploxion"
+    private var dernier: [UUID: TimeInterval] = [:]
+
+    private func etatTexte(_ s: CBManagerState) -> String {
+        switch s { case .poweredOn: return "allume"; case .poweredOff: return "eteint"; case .unauthorized: return "refuse"; case .unsupported: return "absent"; default: return "attente" }
+    }
+    @objc func scanner(_ call: CAPPluginCall) {
+        doublons = call.getBool("doublons") ?? true
+        DispatchQueue.main.async {
+            self.scanVoulu = true; self.dernier = [:]
+            if let c = self.central, c.state == .poweredOn { self.lancerScan() } else if self.central == nil { self.central = CBCentralManager(delegate: self, queue: nil) }
+            call.resolve(["etat": self.etatTexte(self.central?.state ?? .unknown)])
+        }
+    }
+    private func lancerScan() { central?.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: doublons]) }
+    @objc func arreterScan(_ call: CAPPluginCall) { DispatchQueue.main.async { self.scanVoulu = false; self.central?.stopScan(); call.resolve() } }
+    @objc func annoncer(_ call: CAPPluginCall) {
+        nom = String((call.getString("nom") ?? "ploxion").prefix(20))
+        DispatchQueue.main.async {
+            self.annonceVoulue = true
+            if let p = self.periph, p.state == .poweredOn { self.lancerAnnonce() } else if self.periph == nil { self.periph = CBPeripheralManager(delegate: self, queue: nil) }
+            call.resolve()
+        }
+    }
+    private func lancerAnnonce() {
+        periph?.stopAdvertising()
+        periph?.startAdvertising([CBAdvertisementDataLocalNameKey: nom, CBAdvertisementDataServiceUUIDsKey: [PloxiOndes.SERVICE]])
+    }
+    @objc func arreterAnnonce(_ call: CAPPluginCall) { DispatchQueue.main.async { self.annonceVoulue = false; self.periph?.stopAdvertising(); call.resolve() } }
+
+    public func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        notifyListeners("etat", data: ["etat": etatTexte(central.state)])
+        if central.state == .poweredOn && scanVoulu { lancerScan() }
+    }
+    public func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
+        if peripheral.state == .poweredOn && annonceVoulue { lancerAnnonce() }
+    }
+    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
+        let r = RSSI.intValue; if r == 127 { return }   // 127 = « inconnu » pour CoreBluetooth
+        let now = Date().timeIntervalSince1970
+        if let d = dernier[peripheral.identifier], now - d < 0.5 { return }   // au plus 2 fois par seconde par appareil
+        dernier[peripheral.identifier] = now
+        var o: [String: Any] = ["id": peripheral.identifier.uuidString, "rssi": r,
+                                "nom": (advertisementData[CBAdvertisementDataLocalNameKey] as? String) ?? peripheral.name ?? "",
+                                "connectable": (advertisementData[CBAdvertisementDataIsConnectable] as? NSNumber)?.boolValue ?? false,
+                                "services": ((advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID]) ?? []).map { $0.uuidString }]
+        if let tx = advertisementData[CBAdvertisementDataTxPowerLevelKey] as? NSNumber { o["tx"] = tx.intValue }
+        if let m = advertisementData[CBAdvertisementDataManufacturerDataKey] as? Data { o["fabricant"] = m.prefix(24).map { String(format: "%02x", $0) }.joined() }
+        notifyListeners("appareil", data: o)
+    }
+}
 
 class PloxionVC: CAPBridgeViewController {
     override func capacitorDidLoad() {
@@ -2261,8 +2456,10 @@ class PloxionVC: CAPBridgeViewController {
         bridge?.registerPluginInstance(PloxiLecteur())
         bridge?.registerPluginInstance(PloxiProche())
         #if PLOXI0N_BLE
-        bridge?.registerPluginInstance(PloxiBLE())   // (0.99.24) le maillage en Bluetooth basse consommation
+        bridge?.registerPluginInstance(PloxiBLE())   // (0.99.23) le maillage en Bluetooth basse consommation
         #endif
+        bridge?.registerPluginInstance(PloxiVeille())
+        bridge?.registerPluginInstance(PloxiOndes())
         #if !PLOXI0N_SANS_AR
         bridge?.registerPluginInstance(PloxiAR())
         #endif

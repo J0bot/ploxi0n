@@ -180,3 +180,30 @@ test('◬ le drone : ses messages MAVLink deviennent des entités ; deux command
   await assert.rejects(() => ADAPTATEURS.drone.lire({ req: async () => ({ status: 404 }) }, a), /ne répond pas/);
   assert.ok(entitesDrone({}).length === 1, 'sans message : la sécurité seule');
 });
+
+test('∿ LedFx : les écrans virtuels, les effets, les scènes ; ESPHome : couleur et effets d\'une lumière', async () => {
+  const appels = [];
+  const ctx = { req: async (o) => { appels.push((o.methode || 'GET') + ' ' + o.url + (o.corps ? ' ' + JSON.stringify(o.corps) : ''));
+    if (o.url.endsWith('/api/virtuals')) return { status: 200, json: { status: 'success', paused: false, virtuals: { 'salon-strip': { config: { name: 'Salon' }, active: true, effect: { type: 'energy', name: 'Energy' } }, cube: { config: { name: 'Cube' }, active: false } } } };
+    if (o.url.endsWith('/api/scenes')) return { status: 200, json: { scenes: { zbeul: { name: 'Zbeul' } } } };
+    if (o.url.endsWith('/api/schema')) return { status: 404, json: null };
+    return { status: 200, json: { status: 'success' } }; } };
+  const a = { id: 'l1', type: 'ledfx', adresse: '192.168.1.20' };
+  const r = await ADAPTATEURS.ledfx.lire(ctx, a);
+  assert.equal(r.entites.length, 3); assert.match(r.resume, /2 écrans · 1 scènes/);
+  const salon = r.entites.find(e => e.id === 'v:salon-strip'), scene = r.entites.find(e => e.id === 's:zbeul');
+  assert.equal(salon.on, true); assert.equal(salon.options.effet, 'energy'); assert.ok(salon.options.effets.some(([t]) => t === 'wavelength'));
+  await ADAPTATEURS.ledfx.agir(ctx, a, salon, 'effet', 'wavelength');
+  await ADAPTATEURS.ledfx.agir(ctx, a, salon, 'basculer');
+  await ADAPTATEURS.ledfx.agir(ctx, a, scene, 'lancer');
+  assert.ok(appels.includes('POST http://192.168.1.20:8888/api/virtuals/salon-strip/effects {"type":"wavelength"}'));
+  assert.ok(appels.includes('PUT http://192.168.1.20:8888/api/virtuals/salon-strip {"active":false}'));
+  assert.ok(appels.includes('PUT http://192.168.1.20:8888/api/scenes {"id":"zbeul","action":"activate"}'));
+  assert.equal(await ADAPTATEURS.ledfx.sonder(ctx, 'http://192.168.1.20:8888'), true);
+  const [lum] = entitesESPHome(['event: state', 'data: {"id":"light/ruban","name":"Ruban","state":"ON","brightness":128,"color":{"r":255,"g":0,"b":128},"effects":["None","Rainbow","Twinkle"],"effect":"None"}', '']);
+  assert.ok(lum.actions.includes('couleur') && lum.actions.includes('effet')); assert.equal(lum.couleur, '#ff0080');
+  const ap = []; const c2 = { req: async (o) => { ap.push(o.url); return { status: 200 }; } };
+  await ADAPTATEURS.esphome.agir(c2, { adresse: '192.168.1.30', type: 'esphome' }, lum, 'couleur', '#00ff00');
+  await ADAPTATEURS.esphome.agir(c2, { adresse: '192.168.1.30', type: 'esphome' }, lum, 'effet', 'Rainbow');
+  assert.deepEqual(ap, ['http://192.168.1.30/light/ruban/turn_on?r=0&g=255&b=0', 'http://192.168.1.30/light/ruban/turn_on?effect=Rainbow']);
+});

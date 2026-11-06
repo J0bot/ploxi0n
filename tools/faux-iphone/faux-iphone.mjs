@@ -210,6 +210,22 @@ const natif = {
     throw new Error('Could not connect to the server.'); } },
   CapacitorCookies: {}, WebView: { getServerBasePath: () => ({ path: '' }) }, Console: { log: () => ({}) },
 };
+// ᛒ ◷ (0.99.30, la branche xerbot-ledfx fusionnée) le Bluetooth bas niveau et la veille, simulés : trois appareils émettent (Tom s'annonce
+// comme un ploxi, une montre Apple, un ESP32) ; la veille rend trois points et une visite
+natif.PloxiOndes = {
+  scanner: () => { setTimeout(() => {
+    emettre('PloxiOndes', 'appareil', { id: 'A1B2-TOM', nom: 'Tom', rssi: -55, connectable: true, services: ['6E1D0000-0000-4000-8000-0000000C0DE0'] });
+    emettre('PloxiOndes', 'appareil', { id: 'C3D4-MONTRE', nom: 'Watch', rssi: -70, connectable: false, services: [], fabricant: '4c000215' });
+    emettre('PloxiOndes', 'appareil', { id: 'E5F6-ESP', nom: 'ESP32-LED', rssi: -82, tx: -65, connectable: true, services: [], fabricant: 'e5020102' });
+  }, 200); return { etat: 'allume' }; },
+  arreterScan: () => ({}), annoncer: () => ({}), arreterAnnonce: () => ({}),
+};
+natif.PloxiVeille = {
+  demarrer: (o) => ({ etat: 'toujours', fine: o.fine !== false }), arreter: () => ({}),
+  etat: () => ({ etat: 'toujours', actif: true, fine: true, points: 3 }),
+  lire: () => { const t = Date.now(); return { points: [0, 1, 2].map(i => ({ t: t - (3 - i) * 60000, la: 46.52 + i * 0.0001, lo: 6.63, acc: 8, v: 1.2 })), visites: [{ a: t - 3600e3, d: t - 1800e3, la: 46.5205, lo: 6.6301, acc: 20 }] }; },
+  vider: () => ({}),
+};
 
 // 〰 (0.99.22) les voisins du maillage : Tom (lié à l'app et à Léa) et Léa (liée à Tom seulement)
 let tom = null, lea = null, voisinsPrets = null;

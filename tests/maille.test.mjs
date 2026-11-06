@@ -77,7 +77,7 @@ test('〰 les messages privés : chiffrés de bout en bout ; B et C relaient san
   assert.ok(id); await attendre(200);
   const conv = R.T.D.fil('@' + R.T.A.moi().fp);
   assert.equal(conv.length, 1); assert.equal(conv[0].texte, 'le code du casier : 4417'); assert.equal(conv[0].prive, true);
-  assert.ok(espion.length && espion.every(t => !t.includes('4417')), 'rien de lisible chez le relais');
+  assert.ok(espion.length && espion.every(t => !t.includes('casier : 4417')), 'rien de lisible chez le relais');   /* une espace : jamais dans du base64 */
   assert.equal(R.T.B.fil('@' + R.T.A.moi().fp).length, 0); assert.equal(R.T.C.conversations().length, 0, 'les relais n\'ont pas de conversation');
   assert.equal(R.T.A.fil('@' + fpD)[0].etat, 'recu', '✓✓ : l\'accusé est revenu par le maillage');
   // un relais qui trafique le chiffré ou l'en-tête : D ne l'affiche pas comme lisible

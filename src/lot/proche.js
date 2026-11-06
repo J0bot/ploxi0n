@@ -164,6 +164,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
   function ajouterMessage(m) { e.messages.push(m); if (e.messages.length > 80) e.messages.shift(); boxion.put('reglages', 'proche-messages', e.messages.slice(-40)).catch(() => {}); peindre('messages'); }
   boxion.get('reglages', 'proche-messages').then(l => { if (Array.isArray(l) && !e.messages.length) e.messages = l.slice(-40); }).catch(() => {});
 
+  let offOndes = null;
   async function demarrer({ nom, salle } = {}) {
     if (nom != null) e.nom = String(nom).slice(0, 24); if (salle != null) e.salle = String(salle).slice(0, 40) || 'xerboxion';
     boxion.put('reglages', 'proche', { nom: e.nom, salle: e.salle }).catch(() => {});
@@ -172,6 +173,9 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     try { const r = await tuyau.demarrer({ nom: e.nom || 'ploxion', salle: e.salle }); e.moi = r.moi; e.actif = true; }
     catch (x) { e.erreur = (x && x.message) || 'impossible de démarrer'; e.actif = false; peindre(); return false; }
     W.clearInterval(ping); ping = W.setInterval(sonder, 4000);
+    // ᛒ (0.99.20) le Bluetooth bas niveau : ce téléphone s'annonce comme un ploxi, et voit les ploxis à portée AVANT qu'ils soient connectés
+    const O = W && W.jOSOndes;
+    if (O) { try { await O.annoncer(e.nom || 'ploxion'); await O.scanner(); if (!offOndes) offOndes = O.sur((v) => { if (v.ploxi) peindre('pairs'); }); } catch (x) { /* Proche vit sans */ } }
     vibrer('fx-arrivee'); peindre(); return true;
   }
   async function arreter() {
@@ -179,6 +183,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     W.clearInterval(ping); couperBasse(); couperSon(); e.ecoute = { basse: false, son: false };
     arreterPartage();
     if (maille) maille.arreter();
+    if (W && W.jOSOndes) { W.jOSOndes.arreterAnnonce(); W.jOSOndes.arreter(); } if (offOndes) { offOndes(); offOndes = null; }
     await tuyau.arreter(); e.actif = false; e.pairs.clear(); e.basse = e.son = e.basseHote = e.sonHote = null; peindre();
   }
   // 〰 un message, ou une commande (/j #salon [mot de passe] · /m @nom texte · /w · /bloquer @nom · /debloquer · /quitter · /effacer)
@@ -297,7 +302,9 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       + (p.ecart ? ' <small>' + (p.ecart.allerRetour < 1 ? '<1' : Math.round(p.ecart.allerRetour)) + ' ms</small>' : p.etat === 'connexion' ? ' <small>…</small>' : '') + '</span>').join('');
     // 〰 le maillage : qui est là, à combien de sauts ; ✉ lui écrire en privé, ⊘ le bloquer
     const loin = () => (maille ? maille.pairs().filter(p => !p.direct).map(p => '<span class="px-pr-pair px-pr-loin' + (p.bloque ? ' bloque' : '') + '" data-neurone>○ ' + esc(p.nom || '?') + '<small>#' + p.fp.slice(0, 4) + ' · ' + p.sauts + ' saut' + (p.sauts > 1 ? 's' : '') + '</small></span>').join('') : '');
-    const pairsHtml = () => ((e.pairs.size || (maille && maille.pairs().length)) ? directs() + loin()
+    // ᛒ (0.99.20, la branche xerbot-ledfx) les ploxis vus en Bluetooth bas niveau, à portée, avant même d'être reliés
+    const ondes = () => ((W && W.jOSOndes) ? W.jOSOndes.appareils().filter(v => v.ploxi).slice(0, 12).map(v => '<span class="px-pr-pair">ᛒ ' + esc(v.nom || 'ploxi') + ' <small>~' + v.distance + ' m</small></span>').join('') : '');
+    const pairsHtml = () => ((e.pairs.size || (maille && maille.pairs().length) || ondes()) ? directs() + ondes() + loin()
       + (maille ? '<div class="px-pr-qui">' + maille.pairs().map(p => '<button type="button" data-pr-fav="' + p.fp + '" aria-label="pote">' + (p.favori ? '✦' : '✧') + '</button><button type="button" data-pr-mp="' + p.fp + '"' + (p.cle ? '' : ' disabled') + '>@' + esc(p.nom || p.fp.slice(0, 4)) + (p.verifie ? ' ✓' : '') + '</button><button type="button" data-pr-bloq="' + p.fp + '" aria-label="' + (p.bloque ? 'débloquer' : 'bloquer') + '">' + (p.bloque ? '↺' : '⊘') + '</button>').join('') + '</div>' : '')
       : '<p class="px-sous">' + (e.actif ? 'personne autour pour l\'instant, dans la salle « ' + esc(e.salle) + ' » ; les autres ouvrent Proche, même salle, et démarrent' : 'éteint : personne ne te voit') + '</p>');
     const qui = (m) => (m.moi ? 'toi' : (m.nom || nomDe(m.de)) + (m.de && /^[0-9a-f]{16}$/.test(m.de) ? '#' + m.de.slice(0, 4) : ''));

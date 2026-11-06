@@ -1,5 +1,6 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1793496254000,"0.99.28 : les notifications — le jeton gardé et copiable, l'envoi de test, le code du labo prêt à coller"],
+export const COMMITS = [[1793497009000,"0.99.29 : retrouver ses potes, mieux — la carte hors ligne, le rendez-vous, la boussole guidée, le radar avec traces et zoom"],
+  [1793496254000,"0.99.28 : les notifications — le jeton gardé et copiable, l'envoi de test, le code du labo prêt à coller"],
   [1793144366000,"0.99.27 : rien ne sort de l'écran — l'audit de l'écran et ses corrections"],
   [1793140522000,"0.99.26 : les crans vibrent — fx-cran manquait dans le moteur haptique (le wormion, la portion, la map, le synthé muets)"],
   [1793140261000,"0.99.26 : le bord droit revient — la taille de tout par la balise viewport, plus par le zoom natif"],

@@ -61,7 +61,9 @@ import { creerChercherLocal } from './app/chercher-local.js';
 import { creerVueXers } from './app/vue-xers.js';
 import { creerApercus } from './natif/apercus.js';
 import { SOCIAUX, surveillerSocial, invitationDuLien, sessionSocial, supprimerCompteSocial } from './natif/social-apple.js';
-import { PloxiApple, PloxiProche, PloxiBLE } from './natif/plugins-app.js';
+import { PloxiApple, PloxiProche, PloxiBLE, PloxiVeille, PloxiOndes } from './natif/plugins-app.js';
+import { creerVeille } from './natif/veille-natif.js';
+import { creerOndes } from './natif/ondes-natif.js';
 import { creerTuyauProche } from './natif/proche-natif.js';   // ◉ (0.99.1) l'ultimate Bluetooth
 import { creerProche } from './lot/proche.js';
 import { creerSynthe } from './lot/synthe.js';
@@ -105,7 +107,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.29';
+const VERSION = '0.99.30';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -481,6 +483,8 @@ async function demarrer() {
     sonder: () => httpRelais.tete(SOURCE + '/favicon.ico'),
     ploxions: () => ({ vivants: routeur ? routeur.vivants() : [], endormis: routeur && routeur.endormis ? routeur.endormis() : [] }),
     ouvrir: (id) => routeurProxy.ouvrir(id) }).ploxion);
+  // ◷ ᛒ (0.99.20) la veille en arrière-plan et le Bluetooth bas niveau, pour les ploxions internes ET ceux du labo (mappion, Autour, Proche)
+  if (natifLot) { try { window.jOSVeille = creerVeille({ plugin: PloxiVeille }); window.jOSOndes = creerOndes({ plugin: PloxiOndes }); } catch (e) { /* le reste de l'app vit sans */ } }
   // ◉ (0.99.1) Proche, l'ultimate Bluetooth : les téléphones autour, sans internet (MultipeerConnectivity sur l'iPhone, un BroadcastChannel ailleurs)
   tuyauProche = creerTuyauProche({ W: window, plugin: natifLot ? PloxiProche : null, ble: natifLot ? PloxiBLE : null });
   const proche = creerProche({ W: window, boxion, vibrer: (x) => vibrer(x), tuyau: tuyauProche, position: () => window.jOSNatif.position(), ouvrirLien: (u) => window.jOSNatif.ouvrirLien(u) });

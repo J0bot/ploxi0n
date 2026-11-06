@@ -78,7 +78,9 @@ export function creerAutour({ W = globalThis.window, boxion, http, position, ouv
       + '<button type="button" class="px-au-wc" data-neurone data-au-wc></button>'
       + '<button type="button" class="px-au-wc px-au-tr" data-neurone data-au-tr hidden></button>'
       + '<h3 class="px-au-t">◈ à faire autour</h3><div class="px-au-prop" data-au-prop data-neurones="fin"></div>'
-      + '<div class="px-au-puces" data-au-puces></div><div class="px-au-liste" data-au-liste data-ecrit></div></div>';
+      + '<div class="px-au-puces" data-au-puces></div><div class="px-au-liste" data-au-liste data-ecrit></div>'
+      + (W.jOSOndes ? '<h3 class="px-au-t">ᛒ les ondes autour</h3><div class="px-au-b"><button type="button" data-au="ondes"></button></div><div class="px-au-liste" data-au-ondes data-ecrit></div>' : '')
+      + '</div>';
     const $ = (s) => hote.querySelector(s);
     const f = (l) => '<span data-au-f="' + Math.round(l.cap) + '">' + fleche(l.cap, cap0 || 0) + '</span>';   // la flèche : relative à ta direction si la boussole parle
     const ligne = (l, i) => '<button type="button" class="px-au-l" data-au-aller="' + i + '"><span class="px-au-g">' + esc(l.glyphe) + '</span><span class="px-au-n">' + esc(l.nom) + (l.horaires ? '<small>' + esc(l.horaires) + '</small>' : '') + (l.direct ? '<small>en direct · sharedmobility.ch</small>' : '') + '</span><span class="px-au-d">' + metres(l.d) + ' ' + f(l) + '</span></button>';
@@ -87,8 +89,21 @@ export function creerAutour({ W = globalThis.window, boxion, http, position, ouv
     const boussole = (e) => { const c = capBoussole(e); if (c == null) return; const d = cap0 == null ? 999 : Math.abs(((c - cap0 + 540) % 360) - 180);
       if (d < 8) return; const premier = cap0 == null; cap0 = c; if (premier) peindre(); else if (!tour) tour = W.requestAnimationFrame(tourner); };
     W.addEventListener('deviceorientation', boussole);
+    // ᛒ (0.99.20) tout ce qui émet en Bluetooth autour : le plus proche en haut, la distance estimée, le fabricant, les ploxis marqués
+    let ondesOn = false, offOndes = null, tOndes = 0;
+    const peindreOndes = () => { tOndes = 0; const el = $('[data-au-ondes]'), b = $('[data-au="ondes"]'); if (!el || !W.jOSOndes) return;
+      b.textContent = ondesOn ? '■ arrêter' : '◎ écouter les ondes'; b.classList.toggle('on', ondesOn);
+      const l = W.jOSOndes.appareils();
+      el.innerHTML = l.slice(0, 60).map(v => '<div class="px-au-l"><span class="px-au-g">' + (v.ploxi ? '◉' : 'ᛒ') + '</span><span class="px-au-n">' + esc(v.nom || v.fabricant || 'inconnu')
+        + '<small>' + esc([v.nom && v.fabricant, v.connectable ? 'connectable' : '', v.rssi + ' dBm'].filter(Boolean).join(' · ')) + '</small></span><span class="px-au-d">~' + v.distance + ' m</span></div>').join('')
+        || (ondesOn ? '<p class="px-sous">j\'écoute…</p>' : '<p class="px-sous">écoute tout ce qui émet en Bluetooth autour : montres, écouteurs, ESP32, téléphones avec ploxi0n</p>'); };
+    const ondes = (oui) => { if (!W.jOSOndes) return; ondesOn = oui;
+      if (oui) { W.jOSOndes.scanner().catch(() => {}); if (!offOndes) offOndes = W.jOSOndes.sur(() => { if (!tOndes) tOndes = W.setTimeout(peindreOndes, 700); }); }
+      else { W.jOSOndes.arreter(); if (offOndes) { offOndes(); offOndes = null; } }
+      peindreOndes(); };
     peindre = async () => {
       if (!vivant) return;
+      peindreOndes();
       $('[data-au="suivre"]').textContent = suivi ? '■ ne plus suivre' : '◉ suivre en marchant'; $('[data-au="suivre"]').classList.toggle('on', !!suivi);
       $('[data-au-etat]').textContent = etat || (pos ? ((lieux.size + vehicules.length) + ' lieux autour' + (suivi ? ' · je te suis' : '') + (cap0 != null ? ' · boussole' : '')) : 'touche « me situer »');
       $('[data-au-puces]').innerHTML = CATEGORIES.map(c => '<button type="button" data-au-genre="' + c[0] + '"' + (genres && genres.includes(c[0]) ? ' class="on"' : '') + '>' + esc(c[1]) + ' ' + esc(c[2]) + '</button>').join('') + '<button type="button" data-au-genre="mien"' + (genres && genres.includes('mien') ? ' class="on"' : '') + '>◉ les miens</button>';
@@ -111,10 +126,10 @@ export function creerAutour({ W = globalThis.window, boxion, http, position, ouv
       const id = (e.target.closest('[data-au-id]') || {}).dataset; if (id && id.auId) { const l = tous().find(x => x.id === id.auId); if (l) aller(l); return; }
       const wc = e.target.closest('[data-au-wc],[data-au-tr]'); if (wc) { const l = tous().find(x => x.id === wc.dataset.id); if (l) aller(l); return; }
       const b = e.target.closest('[data-au]'); if (!b) return; const a = b.getAttribute('data-au');
-      if (a === 'situer') situer(); else if (a === 'suivre') suivre(!suivi); else if (a === 'poser') poser('mien', '');
+      if (a === 'situer') situer(); else if (a === 'suivre') suivre(!suivi); else if (a === 'poser') poser('mien', ''); else if (a === 'ondes') ondes(!ondesOn);
     });
     if (!pos) situer();
-    return { unmount() { vivant = false; suivre(false); W.removeEventListener('deviceorientation', boussole); if (tour) W.cancelAnimationFrame(tour); peindre = () => {}; hote.innerHTML = ''; } };
+    return { unmount() { vivant = false; suivre(false); if (ondesOn) ondes(false); if (tOndes) W.clearTimeout(tOndes); W.removeEventListener('deviceorientation', boussole); if (tour) W.cancelAnimationFrame(tour); peindre = () => {}; hote.innerHTML = ''; } };
   }
   if (W) { W.jOSApps = W.jOSApps || {}; W.jOSApps.autour = { manifest: { id: 'autour', name: 'Autour', icon: '⌖' }, mount }; }
   return { mount, pret, situer, suivre, poser, etat: () => ({ pos, lieux: tous(), etat, suivi: !!suivi, cap: cap0, vehicules: vehicules.length }), ploxion: { id: 'autour', nom: 'Autour', icone: '⌖', interne: true } };

@@ -64,7 +64,7 @@ export function sondesBions(W, extras = {}) {
         const fpD = T.D.moi().fp, fpA = T.A.moi().fp;
         await T.A.prive(fpD, 'code 4417');
         const recu = await jusqua(() => T.D.fil('@' + fpA).some(m => m.texte === 'code 4417'));
-        const clair = R.relayes.B.concat(R.relayes.C).some(t => t.includes('4417'));
+        const clair = R.relayes.B.concat(R.relayes.C).some(t => t.includes('code 4417'));   // avec l'espace : le chiffré (base64) peut contenir « 4417 » par hasard, jamais une espace
         etapes.push(recu ? (clair ? 'privé ✗ (EN CLAIR chez un relais)' : 'privé chiffré ✓') : 'privé ✗ (pas reçu)');
         await T.A.rejoindre('#banc', 'pomme'); await T.D.rejoindre('#banc', 'pomme'); await T.B.rejoindre('#banc', 'poire');
         await T.A.dire('le mot', '#banc');
@@ -94,7 +94,7 @@ export function sondesBions(W, extras = {}) {
     { id: 'nb-plugins', groupe: G, nom: 'les plugins Swift de l\'app (compilés dans ce build ?)', quand: 'auto', fn: (c) => {
       if (!c.natif()) return non('natif seulement');
       const C = W.Capacitor, dispo = (n) => !!(C && C.isPluginAvailable && C.isPluginAvailable(n));
-      const noms = ['PloxiApple', 'PloxiProche', 'PloxiLecteur', 'PloxiAR', 'PloxiVocal'], manquants = noms.filter(n => !dispo(n));
+      const noms = ['PloxiApple', 'PloxiProche', 'PloxiLecteur', 'PloxiAR', 'PloxiVocal', 'PloxiVeille', 'PloxiOndes'], manquants = noms.filter(n => !dispo(n));
       const ble = dispo('PloxiBLE') ? 'PloxiBLE ✓ (build avec PLOXI0N_BLE)' : 'PloxiBLE : pas compilé (build sans PLOXI0N_BLE)';
       return manquants.length ? partiel('manquent : ' + manquants.join(', ') + ' · ' + ble) : ok(noms.length + ' ✓ · ' + ble);
     } },

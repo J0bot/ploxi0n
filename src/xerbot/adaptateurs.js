@@ -8,6 +8,8 @@
 //   - Tasmota : /cm?cmnd=Status%200 et Power<n> TOGGLE ;
 //   - Raspberry Pi : Glances (:61208, /api/4|5|3/quicklook, sensors, system) ; un boxion (boxion-rt :8730 /healthz, /px, /events, /emit) ;
 //   - n'importe quel ESP, Arduino ou Pi qui sert du JSON en HTTP : ses clés, et ses actions à soi.
+//   - LedFx (:8888) : les écrans virtuels (GET /api/virtuals ; PUT /api/virtuals/<id> {active} ; POST /api/virtuals/<id>/effects {type}) et les
+//     scènes (GET /api/scenes ; PUT /api/scenes {id, action:'activate'}). Les LED d'un ESPHome se branchent à LedFx par l'effet « wled » ou « e131 ».
 // Une ENTITÉ : { id, nom, domaine, etat, on (vrai/faux/null), bri (0..100|null), couleur ('#rrggbb'|null), valeur, unite, actions[], sensible,
 // options } ; actions ⊂ basculer, luminosite, couleur, effet, palette, preset, ouvrir, fermer, stop, plus, moins, lancer, appuyer, verrouiller,
 // deverrouiller, lecture. « sensible » (une serrure, une porte de garage) : l'app demande « sûr ? » avant (ne pas nuire) et le bus ne l'atteint pas.
@@ -20,6 +22,7 @@ export const TYPES = {
   tasmota: { nom: 'Tasmota', glyphe: '⏻', port: 80 },
   pi: { nom: 'Raspberry Pi (Glances)', glyphe: '▦', port: 61208 },
   boxion: { nom: 'boxion (boxion-rt)', glyphe: '⬡', port: 8730, jeton: true },
+  ledfx: { nom: 'LedFx', glyphe: '∿', port: 8888 },
   http: { nom: 'ESP · Arduino · Pi (HTTP JSON)', glyphe: '⌁', port: 80 },
   drone: { nom: 'drone (MAVLink · mavlink2rest)', glyphe: '◬', port: 8088 },   // (0.99.12) docs/DRONE.md
 };
@@ -128,6 +131,8 @@ export function entitesESPHome(lignes) {
     const e = { id: d.id, nom: d.name || String(d.id).replace(/^[^/-]+[/-]/, ''), domaine: dom, etat, on: null, bri: null, couleur: null, valeur: d.value != null ? d.value : etat, unite: '', actions: [], sensible: false, options: {} };
     if (dom === 'switch' || dom === 'light' || dom === 'fan') { e.on = d.value === true || /^on$/i.test(etat); e.actions.push('basculer'); }
     if (dom === 'light' && d.brightness != null) { e.bri = pct(d.brightness); e.actions.push('luminosite'); }
+    if (dom === 'light' && d.color && typeof d.color === 'object' && d.color.r != null) { e.couleur = hex([d.color.r, d.color.g, d.color.b]); e.actions.push('couleur'); }
+    if (dom === 'light' && Array.isArray(d.effects) && d.effects.length > 1) { e.options.effets = d.effects.map(n => [n, n]); e.options.effet = d.effect || 'None'; e.actions.push('effet'); }
     if (dom === 'button') e.actions.push('appuyer');
     if (dom === 'cover') { e.actions.push('ouvrir', 'stop', 'fermer'); e.sensible = true; }
     if (dom === 'lock') { e.actions.push(/locked/i.test(etat) && !/unlocked/i.test(etat) ? 'deverrouiller' : 'verrouiller'); e.sensible = true; }
@@ -143,12 +148,49 @@ const esphome = {
     return { en_ligne: true, resume: l.length + ' entités', entites: l };
   },
   async agir(ctx, a, e, action, val) {
-    const m = { basculer: 'toggle', appuyer: 'press', ouvrir: 'open', fermer: 'close', stop: 'stop', verrouiller: 'lock', deverrouiller: 'unlock', luminosite: 'turn_on' }[action];
+    const m = { basculer: 'toggle', appuyer: 'press', ouvrir: 'open', fermer: 'close', stop: 'stop', verrouiller: 'lock', deverrouiller: 'unlock', luminosite: 'turn_on', couleur: 'turn_on', effet: 'turn_on' }[action];
     if (!m) throw new Error('action inconnue : ' + action);
-    const q = action === 'luminosite' ? '?brightness=' + octet(val) : '';
+    const c = action === 'couleur' ? (rgb(val) || [255, 255, 255]) : null;
+    const q = action === 'luminosite' ? '?brightness=' + octet(val) : c ? '?r=' + c[0] + '&g=' + c[1] + '&b=' + c[2] : action === 'effet' ? '?effect=' + encodeURIComponent(String(val || 'None')) : '';
     ok(await ctx.req({ methode: 'POST', url: base(a) + cheminESPHome(e.id, e.domaine) + '/' + m + q, essais: 1 }), 'ESPHome');
   },
   async sonder(ctx, url) { const { lignes } = await ctx.flux({ url: url + '/events', duree: 900 }); return lireSSE(lignes).some(x => x.event === 'ping' || x.event === 'state'); },
+};
+
+// ---------------- LedFx (la musique en lumière) ----------------
+export const LEDFX_EFFETS = ['energy', 'energy2', 'wavelength', 'scroll', 'bars', 'power', 'magnitude', 'pitchSpectrum', 'rain', 'blade_power_plus', 'strobe',
+  'real_strobe', 'equalizer', 'multiBar', 'blocks', 'melt', 'lava_lamp', 'fire', 'gradient', 'rainbow', 'fade', 'singleColor'];
+export function entitesLedFx(virtuals, scenes, effets) {
+  const l = [];
+  for (const [id, v] of Object.entries(virtuals || {})) {
+    if (!v || typeof v !== 'object') continue;
+    const fx = (v.effect && v.effect.type) || '';
+    l.push({ id: 'v:' + id, nom: (v.config && v.config.name) || id, domaine: 'light', etat: v.active ? (fx || 'on') : 'off', on: !!v.active, bri: null, couleur: null,
+      valeur: fx ? (v.effect.name || fx) : '', unite: '', actions: ['basculer', 'effet', 'stop'], sensible: false,
+      options: { effet: fx, effets: (effets && effets.length ? effets : LEDFX_EFFETS).map(t => [t, t]) } });
+  }
+  for (const [id, sc] of Object.entries(scenes || {})) l.push({ id: 's:' + id, nom: (sc && sc.name) || id, domaine: 'scene', etat: '', on: null, bri: null, couleur: null, valeur: '', unite: '', actions: ['lancer'], sensible: false, options: {} });
+  return l;
+}
+const ledfx = {
+  async lire(ctx, a) {
+    const r = ok(await ctx.req({ url: base(a) + '/api/virtuals', delai: 4000 }), 'LedFx'), j = r.json || {};
+    let scenes = {}, effets = [];
+    try { const s = await ctx.req({ url: base(a) + '/api/scenes', delai: 2500, essais: 1 }); scenes = (s.json && s.json.scenes) || {}; } catch (e) { /* pas de scènes */ }
+    try { const s = await ctx.req({ url: base(a) + '/api/schema', delai: 3000, essais: 1 }); const ef = s.json && s.json.effects; if (ef && typeof ef === 'object') effets = Object.keys(ef).filter(k => !/^(hidden|_)/.test(k)).sort(); } catch (e) { /* la liste par défaut */ }
+    const nv = Object.keys(j.virtuals || {}).length;
+    return { en_ligne: true, resume: nv + ' écrans · ' + Object.keys(scenes).length + ' scènes' + (j.paused ? ' · en pause' : ''), entites: entitesLedFx(j.virtuals || {}, scenes, effets) };
+  },
+  async agir(ctx, a, e, action, val) {
+    const k = String(e.id).slice(0, 1), brut = String(e.id).slice(2), id = encodeURIComponent(brut);
+    if (k === 's' && action === 'lancer') { ok(await ctx.req({ methode: 'PUT', url: base(a) + '/api/scenes', corps: { id: brut, action: 'activate' }, essais: 1 }), 'LedFx'); return; }
+    if (k !== 'v') throw new Error('action inconnue : ' + action);
+    if (action === 'basculer') { ok(await ctx.req({ methode: 'PUT', url: base(a) + '/api/virtuals/' + id, corps: { active: !e.on }, essais: 1 }), 'LedFx'); return; }
+    if (action === 'effet') { ok(await ctx.req({ methode: 'POST', url: base(a) + '/api/virtuals/' + id + '/effects', corps: { type: String(val || 'energy') }, essais: 1 }), 'LedFx'); return; }
+    if (action === 'stop') { ok(await ctx.req({ methode: 'DELETE', url: base(a) + '/api/virtuals/' + id + '/effects', essais: 1 }), 'LedFx'); return; }
+    throw new Error('action inconnue : ' + action);
+  },
+  async sonder(ctx, url) { const r = await ctx.req({ url: url + '/api/virtuals', delai: 2500, essais: 1 }); return !!(r.json && r.json.virtuals && typeof r.json.virtuals === 'object'); },
 };
 
 // ---------------- Tasmota ----------------
@@ -273,11 +315,11 @@ const drone = {
   async sonder(ctx, url) { for (const p of ['', '/mavlink2rest']) { try { const r = await ctx.req({ url: url + p + '/mavlink/vehicles', delai: 2500, essais: 1 }); if (r.status === 200 && r.json) return true; } catch (e) { /* */ } } return false; },
 };
 
-export const ADAPTATEURS = { ha, wled, esphome, tasmota, pi, boxion, http, drone };
+export const ADAPTATEURS = { ha, wled, esphome, tasmota, ledfx, pi, boxion, http, drone };
 
 /** qu'est-ce qui répond à cette adresse ? (les ports par défaut de chaque famille ; le premier qui se reconnaît) */
 export async function sonder(ctx, adresse) {
-  const essais = [['wled', 80], ['tasmota', 80], ['esphome', 80], ['ha', 8123], ['boxion', 8730], ['pi', 61208], ['drone', 8088]];
+  const essais = [['wled', 80], ['tasmota', 80], ['esphome', 80], ['ha', 8123], ['ledfx', 8888], ['boxion', 8730], ['pi', 61208], ['drone', 8088]];
   const a0 = normaliser(adresse); if (!a0) throw new Error('adresse invalide');
   const aPort = /:\d+$/.test(new URL(a0).host);
   // toutes les familles en même temps (un appareil éteint ne coûte qu'un délai), la première de la liste qui se reconnaît l'emporte
