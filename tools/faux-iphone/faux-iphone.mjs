@@ -63,6 +63,9 @@ function laboFaux(url) {
   if (u.pathname === '/px/xerkions.json') return r(200, readFileSync(path.join(DONNEES, 'xerkions.labo.json'), 'utf8'), 'application/json');   // (0.90) la map : les hubs du labo
   if (u.pathname === '/px/registry.json') return r(200, JSON.stringify(['ultimate-social', ...SOUS].map(id => ({ id, name: id, hasScreen: true, enabled: true, status: 'live', cat_label: 'Social' }))), 'application/json');
   const m = /^\/px\/([^/]+)\/app\.js$/.exec(u.pathname);
+  // 🎧 (0.99.34) le ploxion spotify du labo : pas d'app.js, son code est dans sa page (tests/donnees/spotify.labo.html)
+  if (m && m[1] === 'spotify') return r(404, '<!doctype html>404');
+  if (/^\/px\/spotify\/?$/.test(u.pathname)) return r(200, readFileSync(path.join(DONNEES, 'spotify.labo.html'), 'utf8'));
   if (m && m[1] === 'ultimate-social') return r(200, readFileSync(path.join(DONNEES, 'ultimate-social.labo.js'), 'utf8'), 'application/javascript');
   if (m && SOUS.includes(m[1])) return r(200, sousBundle(m[1]), 'application/javascript');
   if (m) return r(304, '');

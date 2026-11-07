@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.34', titre: 'Spotify, un vrai xer', points: [
+    '🎧 Spotify sur le téléphone : tes playlists en grandes pochettes, une recherche, une playlist qui s\'ouvre en plein écran avec « tout jouer ».',
+    '🎧 Le lecteur flotte au-dessus des koins ; touche-le pour la vue « en lecture » : la grande pochette, la barre de temps, les gros boutons, le tsoin.',
+  ] },
   { v: '0.99.33', titre: 'Ton téléphone, un appareil xb', points: [
     '▸ Appareil xb : appaire ton téléphone à ton labo (un code à approuver, une fois) et allume l\'agent. Il apparaît dans ◈ appareils et dans le terminal xb, comme un Pi.',
     '▸ Depuis le labo : xb ouvrir <ploxion>, xb mode kiosque <url> (plein écran), xb scanner (le Bluetooth autour), xb notifier, xb infos. Le téléphone refuse tout le reste, et le journal montre ce qu\'il a fait.',

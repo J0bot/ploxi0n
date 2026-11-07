@@ -26,7 +26,7 @@ const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><p
 export const ACTIONS_BORDS = [['precedente', '← app précédente'], ['suivante', 'app suivante →'], ['accueil', '⌂ accueil'], ['minimiser', '▁ minimiser'], ['basculer', '⧉ basculer'],
   ['chercher', 'chercher'], ['reglages', 'réglages'], ['portion', '◈ portion'], ['tsoin', '⧗ noter un tsoin'], ['freefall', '◇ freefall (gyroscope)'],
   ['etat', '▣ l\'état : plein écran, pip, cadre'], ['tuto', '◎ le tuto ici'], ['carte', '⊞ tout le xerboxion'], ['holo', '◈ le xerploxion (l\'hologramme)'], ['cube', '▣ ses pages, dans le cube'], ['bande', '▥ la bande : vue d\'ensemble'], ['map', '▦ la map (les hubs)'], ['xers', '⊡ les xers à côté (aperçus, 4 directions)'], ['inviter', '✉ inviter quelqu\'un · partager'], ['mes-xers', '§ changer de xer'], ['rien', '— rien']];
-export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false, surChercher = null, surXers = null, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null, surMontrer = null, surTuto = null, partager = null, silence = PLOXIONS_QUI_FUIENT, toucherRapide = null, boutonsBarre = null } = {}) {
+export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false, surChercher = null, surXers = null, racine, catalogue = [], base = '/ploxions/', delai = 10000, boxion = null, verrou = null, bundleLocal = null, hud = null, surUsage = null, ecranAccueil = null, usage = null, retirer = null, prefs = () => ({}), apresChargement = null, vibrer = () => {}, doubleBord = null, ouvrirExterne = null, surVocal = null, surSession = null, tsoin = null, panneau = null, miniDocks = null, surMontrer = null, surTuto = null, partager = null, silence = PLOXIONS_QUI_FUIENT, toucherRapide = null, boutonsBarre = null, habiller = null } = {}) {
   // ▤ (0.51) les mini docks : miniDocks = { surVivants(), surFermeture(id), page() } — ⧉ ouvre leur page, ils remplacent « en arrière-plan »
   const W = fenetre, D = W.document;
   let parId = new Map(catalogue.map(p => [p.id, p]));
@@ -757,6 +757,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     if (holoV === v) quitterHolo();
     vivants.delete(id); pile = pile.filter(x => x !== id); fractale.oublier(id); pleins.delete(id);
     if (aOublier.has(id)) W.setTimeout(() => { if (!vivants.has(id)) oublierCode(id); }, 0);   // ↻ (0.80) après son unmount   // (0.63) sa carte part (sinon la toucher le faisait revivre)
+    try { if (v.habit && v.habit.couper) v.habit.couper(); } catch (e) { /* */ }
     try { if (v.inst && typeof v.inst.unmount === 'function') v.inst.unmount(); } catch (e) { console.warn('[ploxi0n] unmount', id, e); }
     v.hote.innerHTML = ''; v.hote.remove(); fermerCube(id); majBords();   // ▣ après : hôte parti, sa salle part tout de suite
     accrochesDe(id, n => { accroches.delete(n); try { n.remove(); } catch (e) { /* */ } });
@@ -833,6 +834,8 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
       const o = { embed: false, standalone: false, plein: true, host: 'ploxi0n', params: params || null, onglet: params && params.onglet };
       try { v.inst = silence.has(id) ? monterEnSilence(W, app, hote, o) : (app.mount(hote, o) || {}); }   // 🤫 (0.78) src/app/silence.js
       finally { if (avant !== null) W.setTimeout(() => { try { W.history.replaceState(W.history.state, '', W.location.pathname + avant + W.location.hash); } catch (er) { /* */ } }, 2000); }
+      // 🎧 (0.99.34) un xer de ploxi0n pour ce ploxion du labo (src/app/xer-spotify.js) : une autre interface sur le même moteur
+      if (habiller) { try { v.habit = habiller(id, hote) || null; } catch (er) { v.habit = null; } }
     } catch (er) {
       try { W.console.error('[ploxi0n] ' + id + ' ne s\'ouvre pas :', (er && er.stack) || er); } catch (e2) { /* */ }   // (0.99.19) la pile, pour l'inspecteur de Safari et le bilan de santé
       hote.innerHTML = '<p class="px-erreur">Ce ploxion n\'a pas pu s\'ouvrir : ' + texte(er.message) + '</p>';
