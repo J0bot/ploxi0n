@@ -21,6 +21,9 @@ const RACINE = path.resolve(ICI, '../..');
 execFileSync(process.execPath, [path.join(ICI, 'extraire-plugins.cjs'), path.join(sortie, 'plugins-ios.json')], { cwd: RACINE });   // toujours le Swift du moment
 let plugins = JSON.parse(readFileSync(path.join(sortie, 'plugins-ios.json'), 'utf8'));
 if (opts.includes('--sans-plugions')) { delete plugins.PloxiApple; delete plugins.PloxiVocal; }
+// (0.99.31) --sans-ploxi : AUCUN plugin Swift de l'app (PloxiApple, PloxiProche, PloxiLecteur…) : ce que verrait l'app sur Android (seuls les
+// plugins Capacitor y existent) ; pour savoir si l'app tient debout sans eux
+if (opts.includes('--sans-ploxi')) for (const k of Object.keys(plugins)) if (/^Ploxi/.test(k)) delete plugins[k];
 const web = opts.includes('--web');
 const iScript = opts.indexOf('--script'); const scriptEtapes = iScript >= 0 ? opts[iScript + 1] : null;
 const bridge = readFileSync(path.join(RACINE, 'node_modules/@capacitor/ios/Capacitor/Capacitor/assets/native-bridge.js'), 'utf8');
