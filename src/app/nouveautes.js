@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.37', titre: 'La carte du maillage', points: [
+    '◈ Proche › autour : la carte du maillage. Toi au centre, tes voisins directs autour, les autres plus loin ; un trait par lien. « Maillé » quand des nœuds sont reliés entre eux, pas seulement à toi.',
+    '↝ Sous chaque voisin, les paquets qu\'il t\'a fait passer pour d\'autres : la preuve qu\'il route. Un relais qui ne s\'annonce pas (un Pi, un PC) apparaît aussi, en ◌.',
+  ] },
   { v: '0.99.36', titre: 'Le maillage sans limite', points: [
     '〰 Proche relaie aussi loin que le maillage va : plus de limite à 7 sauts (255, l\'infini en pratique). Les boucles sont arrêtées par le dédoublonnage, et un message de plus de 72 h ne repart plus.',
   ] },

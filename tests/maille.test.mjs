@@ -177,3 +177,24 @@ test('⌖ (0.99.22) la position : chiffrée pour un pote ou un salon fermé, rel
   assert.deepEqual(R.T.C.positions()[0].rdv, { lat: 46.51, lng: 6.61, nom: 'la fontaine' }); assert.ok(espion.every(t => !t.includes('fontaine')), 'le rendez-vous n\'est pas en clair');
   await R.T.A.partagerPosition({ lat: 46.5, lng: 6.6, rdv: { lat: 500, lng: 0 } }, { a: [fpC] }); await attendre(150); assert.equal(R.T.C.positions()[0].rdv, null);
 });
+
+test('◈ (0.99.37) la carte du maillage : A–B–C–D en ligne, D voit les quatre nœuds et les trois liens ; B a relayé pour C', async () => {
+  const L = [['A', 'B'], ['B', 'C'], ['C', 'D']], R = reseau(['A', 'B', 'C', 'D'], L); await allumer(R, L);
+  await R.T.A.dire('coucou'); await attendre(600);
+  const T = R.T.D.topologie(), fp = (n) => R.T[n].moi().fp, cle = ([a, b]) => [a, b].sort().join('|');
+  assert.deepEqual(new Set(T.noeuds.map(n => n.id)), new Set(['A', 'B', 'C', 'D'].map(fp)));
+  const liens = new Set(T.liens.map(cle));
+  for (const [a, b] of L) assert.ok(liens.has(cle([fp(a), fp(b)])), a + '–' + b);
+  assert.equal(T.liens.length, 3, 'pas de lien inventé (A et D ne se touchent pas)');
+  const c = T.noeuds.find(n => n.id === fp('C')); assert.ok(c.direct && c.stats && c.stats.relayes > 0, 'C a fait passer à D des paquets d\'autres');
+  assert.ok(!T.noeuds.find(n => n.id === fp('A')).direct);
+});
+
+test('◈ (0.99.37) un relais muet (relié, mais qui ne s\'annonce jamais) apparaît quand même, avec ce qu\'il a relayé', async () => {
+  const L = [['A', 'B']], R = reseau(['A', 'B'], L); await allumer(R, L);
+  R.T.A.voisin('pi-ble', 'connecte');
+  const vieux = JSON.stringify({ m: 1, i: '00000000000000cc', o: 'fedcba9876543210', n: 'X', h: 254, t: Date.now(), k: 'pub', s: '#', d: { x: 'relayé par le pi' } });
+  R.T.A.recevoir('pi-ble', vieux); await attendre(50);
+  const m = R.T.A.topologie().noeuds.find(n => n.id === 'v:pi-ble');
+  assert.ok(m && m.muet && m.direct); assert.equal(m.stats.relayes, 1);
+});

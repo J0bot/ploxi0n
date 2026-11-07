@@ -322,11 +322,32 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     const loin = () => (maille ? maille.pairs().filter(p => !p.direct).map(p => '<span class="px-pr-pair px-pr-loin' + (p.bloque ? ' bloque' : '') + '" data-neurone>○ ' + esc(p.nom || '?') + '<small>#' + p.fp.slice(0, 4) + ' · ' + p.sauts + ' saut' + (p.sauts > 1 ? 's' : '') + '</small></span>').join('') : '');
     // ᛒ (0.99.20, la branche xerbot-ledfx) les ploxis vus en Bluetooth bas niveau, à portée, avant même d'être reliés
     const ondes = () => ((W && W.jOSOndes) ? W.jOSOndes.appareils().filter(v => v.ploxi).slice(0, 12).map(v => '<span class="px-pr-pair">ᛒ ' + esc(v.nom || 'ploxi') + ' <small>~' + v.distance + ' m</small></span>').join('') : '');
+    // ◈ (0.99.37) LA CARTE DU MAILLAGE : moi au centre, mes voisins directs autour, les autres plus loin (un anneau par saut, 3 au plus) ;
+    // un trait = un lien direct (le mien, ou celui qu'un nœud annonce) ; ◌ = un relais qui ne s'annonce pas ; sous chaque voisin direct,
+    // les paquets qu'il m'a fait passer pour d'autres (la preuve qu'il route)
+    const carteMailleHtml = () => {
+      if (!maille || !maille.moi()) return '';
+      const T = maille.topologie(); if (T.noeuds.length < 2) return '';
+      const S = 320, c = S / 2, R = [0, 62, 108, 146], pos = new Map(), anneaux = [[], [], [], []];
+      for (const n of T.noeuds) { if (n.moi) { pos.set(n.id, [c, c]); continue; } anneaux[n.direct ? 1 : Math.min(3, 1 + Math.max(1, n.sauts || 1))].push(n); }
+      anneaux.forEach((l, k) => l.forEach((n, i) => { const a = (i / l.length) * 2 * Math.PI - Math.PI / 2 + k * 0.4; pos.set(n.id, [Math.round(c + R[k] * Math.cos(a)), Math.round(c + R[k] * Math.sin(a))]); }));
+      let svg = '<svg viewBox="0 0 ' + S + ' ' + S + '" class="px-pr-maille-svg" role="img" aria-label="la carte du maillage">';
+      for (let k = 1; k < 4; k++) if (anneaux[k].length) svg += '<circle class="anneau" cx="' + c + '" cy="' + c + '" r="' + R[k] + '"/>';
+      for (const [a, b] of T.liens) { const p1 = pos.get(a), p2 = pos.get(b); if (p1 && p2) svg += '<line class="lien" x1="' + p1[0] + '" y1="' + p1[1] + '" x2="' + p2[0] + '" y2="' + p2[1] + '"/>'; }
+      for (const n of T.noeuds) { const [x, y] = pos.get(n.id); const cl = n.moi ? 'moi' : n.muet ? 'muet' : n.direct ? 'direct' : 'loin';
+        const nom = n.moi ? 'toi' : n.muet ? 'relais' : (n.nom || n.id.slice(0, 4));
+        svg += '<g class="noeud ' + cl + '"><circle cx="' + x + '" cy="' + y + '" r="' + (n.moi ? 9 : 7) + '"/><text x="' + x + '" y="' + (y - 12) + '" text-anchor="middle">' + esc(nom.slice(0, 12)) + '</text>'
+          + (n.stats && n.stats.relayes ? '<text class="relais" x="' + x + '" y="' + (y + 19) + '" text-anchor="middle">↝' + n.stats.relayes + '</text>' : '') + '</g>'; }
+      const me = maille.moi().fp, nb = T.noeuds.length - 1, maille2 = T.liens.some(([a, b]) => a !== me && b !== me);
+      return '<div class="px-pr-maille" data-neurone>' + svg + '</svg><p class="px-sous">' + nb + ' nœud' + (nb > 1 ? 's' : '') + ' · ' + T.liens.length + ' lien' + (T.liens.length > 1 ? 's' : '')
+        + (maille2 ? ' · maillé : des nœuds sont reliés entre eux, pas seulement à toi' : T.liens.length ? ' · en étoile : tout passe par toi' : '') + ' · ↝ = paquets relayés pour d\'autres</p></div>';
+    };
     // (0.99.35) une ligne par personne, ses actions dessus : ✦ pote, écrire (en privé, chiffré), ⊘ bloquer ; ce qui est vu en ᛒ mais pas encore relié en dessous
     const pairsHtml = () => {
       const ond = (W && W.jOSOndes) ? W.jOSOndes.appareils().filter(v => v.ploxi).slice(0, 12) : [];
       const l = maille ? maille.pairs() : [];
-      if (!l.length && !e.pairs.size && !ond.length) return '<p class="px-sous">' + (e.actif ? 'personne autour pour l\'instant, dans la salle « ' + esc(e.salle) + ' » ; les autres ouvrent Proche, même salle, et démarrent' : 'éteint : personne ne te voit') + '</p>';
+      const muets = maille ? maille.topologie().noeuds.filter(n => n.muet).length : 0;
+      if (!l.length && !e.pairs.size && !ond.length && !muets) return '<p class="px-sous">' + (e.actif ? 'personne autour pour l\'instant, dans la salle « ' + esc(e.salle) + ' » ; les autres ouvrent Proche, même salle, et démarrent' : 'éteint : personne ne te voit') + '</p>';
       if (!maille) return directs() + ond.map(v => '<span class="px-pr-pair">ᛒ ' + esc(v.nom || 'ploxi') + ' <small>~' + v.distance + ' m</small></span>').join('');
       const ms = (p) => { const d = [...e.pairs].find(([id]) => nomDe(id) === p.nom); return d && d[1].ecart ? (d[1].ecart.allerRetour < 1 ? '<1' : Math.round(d[1].ecart.allerRetour)) + ' ms' : 'direct'; };
       return '<ul class="px-pr-liste px-pr-gens">' + l.map(p => { const o = ond.find(v => v.nom === p.nom);
@@ -334,6 +355,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
           + '<button type="button" data-pr-fav="' + p.fp + '" aria-label="' + (p.favori ? 'retirer des potes' : 'ajouter aux potes') + '"' + (p.favori ? ' class="on"' : '') + '>' + (p.favori ? '✦' : '✧') + '</button>'
           + '<button type="button" data-pr-mp="' + p.fp + '"' + (p.cle ? '' : ' disabled') + '>écrire</button>'
           + '<button type="button" data-pr-bloq="' + p.fp + '" aria-label="' + (p.bloque ? 'débloquer' : 'bloquer') + '">' + (p.bloque ? '↺' : '⊘') + '</button></li>'; }).join('')
+        + maille.topologie().noeuds.filter(n => n.muet).map(n => '<li class="muet"><b>◌ relais</b><small>sans nom (il ne s\'annonce pas) · ' + (n.stats ? n.stats.recus + ' reçus · ' + n.stats.relayes + ' relayés' : 'relié') + '</small></li>').join('')
         + ond.filter(v => !l.some(p => p.nom === v.nom)).map(v => '<li class="loin"><b>ᛒ ' + esc(v.nom || 'ploxi') + '</b><small>~' + v.distance + ' m · pas encore relié</small></li>').join('') + '</ul>';
     };
     const qui = (m) => (m.moi ? 'toi' : (m.nom || nomDe(m.de)) + (m.de && /^[0-9a-f]{16}$/.test(m.de) ? '#' + m.de.slice(0, 4) : ''));
@@ -458,7 +480,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       // ◉ autour : qui je suis, démarrer, qui est là
       + '<section data-pr-section="autour"><div class="px-pr-id" data-neurone><input type="text" maxlength="24" placeholder="ton nom" data-pr-nom><input type="text" maxlength="40" placeholder="la salle" data-pr-salle><button type="button" data-pr="allumer"></button></div>'
       + '<p class="px-sous">les téléphones autour, sans internet : chacun relaie les messages des autres, aussi loin que le maillage va ; les privés sont chiffrés de bout en bout. Rien n\'est annoncé avant « démarrer ».</p>'
-      + '<h3 class="px-pr-t">qui est là</h3><div class="px-pr-pairs" data-pr-pairs></div></section>'
+      + '<h3 class="px-pr-t">qui est là</h3><div class="px-pr-pairs" data-pr-pairs></div><h3 class="px-pr-t">◈ la carte du maillage</h3><div data-pr-carte-maille><p class="px-sous">elle se dessine dès qu\'un voisin est relié</p></div></section>'
       // ≡ messages
       + '<section data-pr-section="messages"><div class="px-pr-salons" data-pr-salons></div><p class="px-pr-dm" data-pr-dm hidden></p><div class="px-pr-fil" data-pr-fil data-neurone data-ecrit></div>'
       + '<div class="px-pr-glyphes" data-ecrit>' + GLYPHES_MSG.map(g => '<button type="button" data-pr-glyphe="' + esc(g) + '" aria-label="envoyer : ' + esc(NOMS_GLYPHES[g] || g) + '">' + esc(g) + '</button>').join('') + '</div>'
@@ -490,7 +512,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       if (!vivant) return;
       if (quoi === 'onglets') { $('[data-pr-onglets]').innerHTML = onglets(); return; }
       if (!quoi || quoi === 'carte' || quoi === 'pairs') { if (!e.scan || quoi === 'carte' && !$('[data-pr-video]')) $('[data-pr-carte-page]').innerHTML = carteHtml(); if (quoi === 'carte') return; }
-      if (!quoi || quoi === 'pairs') $('[data-pr-pairs]').innerHTML = pairsHtml();
+      if (!quoi || quoi === 'pairs' || quoi === 'messages') { $('[data-pr-pairs]').innerHTML = pairsHtml(); const cm = carteMailleHtml(); $('[data-pr-carte-maille]').innerHTML = cm || '<p class="px-sous">elle se dessine dès qu\'un voisin est relié</p>'; }
       if (!quoi || quoi === 'messages') { const f = $('[data-pr-fil]'); f.innerHTML = messagesHtml(); f.scrollTop = f.scrollHeight; $('[data-pr-salons]').innerHTML = salonsHtml(); }
       if (!quoi || quoi === 'potes') peindreRadar();
       if (quoi) return;

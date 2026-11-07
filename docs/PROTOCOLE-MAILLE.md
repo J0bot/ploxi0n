@@ -60,8 +60,12 @@ au plus 64 paquets en cours par appareil. `n = 1` : le morceau est le paquet ent
 
 - Identité : une paire **ECDH P-256**. Clé publique brute non compressée (65 octets, `0x04…`). **Empreinte** = les 8 premiers octets du
   SHA-256 de cette clé, en hex (16 caractères). C'est l'empreinte qui fait foi, pas le nom.
-- `ann` : `d.cle` = la clé publique brute en base64 ; émis à chaque nouveau voisin et toutes les 60 s. À la réception : refuser si
-  SHA-256(clé)[0..8] ≠ `o`.
+- `ann` : `d.cle` = la clé publique brute en base64 ; (0.99.37) `d.v` = les empreintes de ses voisins directs (10 au plus) : c'est ce qui
+  dessine **la carte du maillage** chez les autres. Émis à chaque nouveau voisin, quand un nouveau voisin direct est identifié, et toutes
+  les 60 s. À la réception : refuser si SHA-256(clé)[0..8] ≠ `o`.
+- **Un appareil qui ne s'annonce pas** (un relais muet) apparaît quand même dans Proche (◌ relais, avec le nombre de paquets qu'il a fait
+  passer), mais sans nom ni lien au-delà de toi. Pour être un vrai nœud de la carte : envoyer des `ann` (avec `h = 255` : une app
+  d'avant 0.99.36 jette tout paquet à `h > 7`).
 - Clé d'une paire (privés, positions) : ECDH(ma clé privée, sa clé publique) → 256 bits → **HKDF-SHA256**, sel `ploxi-maille-v1`,
   info = les deux empreintes triées, jointes par `|` → **AES-GCM 256**.
 - Clé d'un salon fermé : **PBKDF2-SHA256**(mot de passe), sel `ploxi-salon:<#salon>`, 100 000 itérations → AES-GCM 256.

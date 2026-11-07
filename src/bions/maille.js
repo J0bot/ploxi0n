@@ -125,6 +125,9 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
   const vus = creerVus(), voisins = new Set(), cache = [], cacheFav = [], pairs = new Map(), clesPartagees = new Map(), clesSalons = new Map(), debits = new Map(), positions = new Map();
   let id = null, messages = [], salons = [PUBLIC], bloques = new Set(), auditeurs = new Set(), monNom = String(nom || '').slice(0, 24);
   let favoris = new Map(), verifies = new Set();   // (0.99.22) empreinte → nom ; les paires dont le code a été comparé
+  // ◈ (0.99.37, RS-7 : « une carte des nodes pour voir si le lien est meshé ; il routait des paquets ») : qui est relié à qui (chaque annonce dit
+  // ses voisins directs, 10 au plus, comme bitchat) ; ce que chaque voisin direct m'a fait passer (reçu, relayé pour d'autres)
+  const liens = new Map(), stats = new Map(); let reannonce = false;   // empreinte → { v: [empreintes], t } ; voisin (id du tuyau) → { recus, relayes, t }
   let contacts = new Map();   // (0.99.35) empreinte → clé publique (base64) : les potes ajoutés par leur QR, connus avant même qu'ils s'annoncent
   const changer = (quoi) => { for (const f of auditeurs) { try { f(quoi); } catch (e) { /* */ } } };
   const garder = () => { if (magasin) magasin.ecrire('maille', { messages: messages.slice(-MESSAGES_MAX), salons, bloques: [...bloques], favoris: [...favoris], verifies: [...verifies], contacts: [...contacts] }).catch(() => {}); };
@@ -198,7 +201,8 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
   // anti-déluge : 40 paquets par empreinte et par 10 s
   function tropBavard(o) { const t = maintenant(), d = debits.get(o) || { t, n: 0 }; if (t - d.t > 10000) { d.t = t; d.n = 0; } d.n++; debits.set(o, d); return d.n > 40; }
 
-  function annoncer(vers) { if (id) emettre(paquetDe('ann', { d: { cle: b64(id.brute) } }), vers); }
+  const fpsDirects = () => [...pairs].filter(([, p]) => p.voisin && voisins.has(p.voisin)).map(([fp]) => fp).slice(0, 10);
+  function annoncer(vers) { if (id) emettre(paquetDe('ann', { d: { cle: b64(id.brute), v: fpsDirects() } }), vers); }
   let finAnnonce = () => {};
 
   async function demarrer({ nom: n } = {}) {
@@ -224,6 +228,7 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
   /** un paquet arrive d'un voisin direct : true s'il était du maillage (lu, peut-être affiché, relayé) */
   function recevoir(de, texte) {
     const p = lireMaille(texte); if (!p) return false;
+    { const st = stats.get(de) || { recus: 0, relayes: 0, t: 0 }; st.recus++; st.t = maintenant(); if (p.h < TTL_MAX && p.k !== 'sync') st.relayes++; stats.set(de, st); }   // ◈ relayé = pas son paquet à lui
     if (!id) return true;
     if (p.k === 'sync') {   // d'un voisin seulement : on lui envoie ce qu'il n'a pas vu
       const ses = new Set(Array.isArray(p.d && p.d.ids) ? p.d.ids.filter(x => HEX16.test(x)).slice(0, 200) : []), t = maintenant();
@@ -238,7 +243,9 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
     cacher(p.i, texte, p);
     const sauts = TTL_MAX - p.h;
     const pr = pairs.get(p.o) || { nom: '', cle: null, vu: 0, sauts: 9, voisin: null }, avant = pr.nom + '|' + pr.sauts;
+    const neufDirect = sauts === 0 && pr.voisin !== de;
     pr.nom = p.n || pr.nom; pr.vu = maintenant(); pr.sauts = sauts; if (sauts === 0) pr.voisin = de; pairs.set(p.o, pr);
+    if (neufDirect && !reannonce) { reannonce = true; attente(400, () => { reannonce = false; annoncer(); }); }   // ◈ (0.99.37) un voisin direct de plus : les autres l'apprennent (la carte)
     if (avant !== pr.nom + '|' + pr.sauts && p.k !== 'ann') changer('pairs');   // un pair nouveau, ou qui s'est rapproché
     traiter(p, sauts).catch(() => {});
     if (!(p.a && p.a === id.fp)) relayer(p, de);   // ce qui m'est adressé s'arrête chez moi
@@ -249,6 +256,7 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
     if (p.k === 'ann') {
       const brute = deb64(p.d && p.d.cle); if (!brute || brute.length !== 65) return;
       if (await empreinte(brute) !== p.o) return;   // une clé qui ne donne pas son empreinte : un imposteur
+      liens.set(p.o, { v: Array.isArray(p.d.v) ? p.d.v.filter(x => HEX16.test(x) && x !== p.o).slice(0, 10) : [], t: maintenant() });   // ◈ ses voisins directs
       if (!pr.cle || hex(pr.cle) !== hex(brute)) { pr.cle = brute; clesPartagees.delete(p.o); }
       changer('pairs'); return;
     }
@@ -369,7 +377,7 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
   }
 
   async function effacerTout() {
-    messages = []; salons = [PUBLIC]; bloques = new Set(); favoris = new Map(); verifies = new Set(); contacts = new Map(); pairs.clear(); clesPartagees.clear(); clesSalons.clear(); cache.length = 0; cacheFav.length = 0; positions.clear();
+    messages = []; salons = [PUBLIC]; bloques = new Set(); favoris = new Map(); verifies = new Set(); contacts = new Map(); pairs.clear(); liens.clear(); stats.clear(); clesPartagees.clear(); clesSalons.clear(); cache.length = 0; cacheFav.length = 0; positions.clear();
     id = await identite(null);
     if (magasin) { await magasin.ecrire('maille-identite', id.jwk).catch(() => {}); await magasin.ecrire('maille', { messages: [], salons: [PUBLIC], bloques: [], favoris: [], verifies: [], contacts: [] }).catch(() => {}); }
     if (voisins.size) annoncer();
@@ -385,6 +393,24 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
     salons: () => salons.map(s => ({ salon: s, ferme: clesSalons.has(s) })),
     conversations: () => [...new Set(messages.filter(m => m.salon[0] === '@').map(m => m.salon))].map(s => ({ salon: s, fp: s.slice(1), nom: nomPair(s.slice(1)) })),
     pairs: () => [...pairs].filter(([, p]) => maintenant() - p.vu < 5 * 60e3).map(([fp, p]) => ({ fp, nom: p.nom, sauts: p.sauts, direct: !!(p.voisin && voisins.has(p.voisin)), cle: !!p.cle, bloque: bloques.has(fp), favori: favoris.has(fp), verifie: verifies.has(fp) })).sort((a, b) => a.sauts - b.sauts),
+    /** ◈ (0.99.37) la carte du maillage : les nœuds (moi, les pairs connus, les voisins directs sans identité = des relais muets) et les liens */
+    topologie() {
+      const t = maintenant(), vivant = (x) => t - x < 5 * 60e3, noeuds = [], aretes = new Map();
+      const lier = (a, b) => { if (!a || !b || a === b) return; const k = [a, b].sort().join('|'); if (!aretes.has(k)) aretes.set(k, [a, b]); };
+      const statDe = (v) => { const s = v && stats.get(v); return s ? { recus: s.recus, relayes: s.relayes } : null; };
+      if (id) noeuds.push({ id: id.fp, nom: monNom, moi: true, sauts: -1 });
+      const parVoisin = new Map();
+      for (const [fp, p] of pairs) {
+        if (!vivant(p.vu) || fp === (id && id.fp)) continue;
+        const direct = !!(p.voisin && voisins.has(p.voisin)); if (direct) parVoisin.set(p.voisin, fp);
+        noeuds.push({ id: fp, nom: p.nom, sauts: p.sauts, direct, stats: direct ? statDe(p.voisin) : null, favori: favoris.has(fp), bloque: bloques.has(fp) });
+        if (direct && id) lier(id.fp, fp);
+      }
+      for (const v of voisins) if (!parVoisin.has(v)) { noeuds.push({ id: 'v:' + v, nom: '', muet: true, direct: true, sauts: 0, stats: statDe(v) }); if (id) lier(id.fp, 'v:' + v); }
+      const connus = new Set(noeuds.map(n => n.id));
+      for (const [fp, l] of liens) if (vivant(l.t) && connus.has(fp)) for (const x of l.v) if (connus.has(x) || x === (id && id.fp)) lier(fp, x);
+      return { noeuds, liens: [...aretes.values()] };
+    },
     voisins: () => [...voisins], moi: () => (id ? { fp: id.fp, nom: monNom } : null), nommer: (n) => { monNom = String(n || '').slice(0, 24); },
     surChange(f) { auditeurs.add(f); return () => auditeurs.delete(f); },
   };
