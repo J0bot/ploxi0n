@@ -1,5 +1,8 @@
 # La soirée : un réseau parallèle, le temps d'une soirée
 
+> **Pour l'agent du nexus** (RS-7, 07.11 : « c'est pas trop pour toi ça, c'est pour l'agent du nexus, pas besoin de faire ça mtn »).
+> Rien n'est construit ici : c'est la passation, avec ce qui existe déjà côté ploxi0n et boxion-rt.
+
 *RS-7, 07.11 : « il faut que ça puisse être une redondance avec le ploxion messages avec les amis : s'ils sont dans nos amis, on peut direct les
 voir s'il y a un mesh. En soirée, un boxion qui traîne, qui fait toute la réplication avec le nexus, ou qui est hors ligne mais a déjà tout ce
 qu'il faut ; quelqu'un se connecte au Wi-Fi xion du boxion ou en Bluetooth, ça crée un mesh tout seul, et on parle avec nos amis sur le social

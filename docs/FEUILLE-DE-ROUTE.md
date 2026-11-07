@@ -281,7 +281,7 @@ contrepartie native (FOURNIS + src/natif/<bion>.js). Un ploxion qui « charge à
 | ⚠ 0.99.32 | ⌂ **ploxion comme écran d'accueil d'Android** (launcher) + le ploxion Applis (les applis du téléphone) | RS-7 07.11 |
 | ❓ | Android : le push (un projet Firebase, `google-services.json` : à créer par RS-7) | docs/ANDROID.md |
 | 💭 | Android : Proche (Nearby Connections), la veille, les ondes (le plugin bluetooth-le existe déjà), l'AR (ARCore) en Kotlin | |
-| ⏭ | 🌙 **La soirée** (docs/SOIREE.md) : un boxion qui traîne, son Wi-Fi xion, le maillage tout seul, les amis du social = les potes du maillage, le social sans réseau ; 1) le tuyau « boxion » dans Proche (le `/ws` du boxion + le QR de la soirée) ; 2) le boxion pair du maillage (boxion-rt) ; 3) les cartes des amis (labo) ; 4) le social sans réseau | RS-7 07.11 |
+| 💭 | 🌙 **La soirée** (docs/SOIREE.md ; RS-7 : « pour l'agent du nexus, pas maintenant ») : un boxion qui traîne, son Wi-Fi xion, le maillage tout seul, les amis du social = les potes du maillage, le social sans réseau ; 1) le tuyau « boxion » dans Proche (le `/ws` du boxion + le QR de la soirée) ; 2) le boxion pair du maillage (boxion-rt) ; 3) les cartes des amis (labo) ; 4) le social sans réseau | RS-7 07.11 |
 | 💭 | Android : le mode kiosque (Device Owner, lock task) : un téléphone qui n'a QUE ploxion, sans sortie possible | |
 | ⚠ 0.99.33 | ▸ **Le téléphone, un appareil xb** : l'agent xb dans l'app (appairage par code, battement, ouvrir / mode kiosque / scanner / notifier / infos) ; avec le launcher Android = un téléphone qui n'est que du xerboxion, piloté par le labo | jamais essayé contre le vrai labo |
 | 💭 | L'agent xb app fermée (Android : un service au premier plan ; iOS : impossible, seulement app ouverte) | |
