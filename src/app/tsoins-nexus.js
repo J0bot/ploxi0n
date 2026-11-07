@@ -1,5 +1,6 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1794079608000,"0.99.37 : la carte du maillage"],
+export const COMMITS = [[1794080026000,"0.99.38 : la boîte d'envoi et les coursiers (comme bitchat)"],
+  [1794079608000,"0.99.37 : la carte du maillage"],
   [1794079345000,"docs : ce que bitchat fait de plus (Tor pour le chemin internet, coursiers, boîte d'envoi, TTL adaptatif)"],
   [1794077760000,"0.99.36 : le maillage sans limite, la spec pour xb proche"],
   [1794076841000,"docs : la soirée, passation pour l'agent du nexus (rien à construire dans ploxi0n pour l'instant)"],

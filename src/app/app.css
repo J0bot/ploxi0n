@@ -1746,3 +1746,7 @@ html:not(.px-organique) .px-tel-vivant{display:none}
 .px-pr-gens li.muet b{color:var(--muted)}
 .px-pr-echec{color:#e0735c}
 .px-pr-transit{margin:8px 0 0;font:12px/1.5 var(--mono);color:var(--acc);text-align:center}
+/* (0.99.39, le relevé de RS-7 : « div#xhe-secours.xhe · fixed · 280,62 52×52 » = le rond vide en haut à droite, partout) le HUD du LABO
+   (le bion jOSHud) : un ploxion du labo le charge, il pose son calque plein écran (#xhud-layer, z 100058) et son bouton de secours (le mode
+   nu : #monui-rescue) sur toute l'app, et ils restent après le ploxion. Dans ploxi0n, la sortie, ce sont les koins et les bords : jamais ce calque. */
+body > #xhud-layer, body > #monui-rescue, body > #xhud-bar, body > #xhud-palette { display: none !important; }

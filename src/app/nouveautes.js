@@ -7,6 +7,9 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.39', titre: 'Le rond en haut à droite, parti', points: [
+    '◌ Le rond vide en haut à droite (le bouton de secours du HUD du labo, laissé par un ploxion) ne se pose plus sur l\'app.',
+  ] },
   { v: '0.99.38', titre: 'Les messages arrivent même plus tard', points: [
     '✉ Un message privé qui n\'est pas arrivé repart tout seul (à chaque nouveau voisin, quand ton pote réapparaît), jusqu\'à l\'accusé ; après 24 h ou 8 essais, « ⚠ pas remis ».',
     '✉ Les coursiers, comme bitchat : un téléphone qui croise ton message pour quelqu\'un d\'absent l\'emporte (chiffré) et le lui remet quand il le croise. Proche › autour montre ce qui est en route.',

@@ -38,6 +38,9 @@ Pièges nouveaux :
   faux iPhone le traite comme non compilé, ce qui est le cas par défaut) ;
 - (0.99.27) **avant une version qui touche la mise en page : `parcours-ecran.mjs`** (l'audit de l'écran, toutes tailles, largeurs, couché,
   encoche ; `PX_ECRAN_RAPIDE=1` pour une seule configuration). Il doit rendre 0 défaut.
+- (0.99.39) le **HUD du labo** (jOSHud : `#xhud-layer` plein écran, le bouton de secours `#xhe-secours`) peut être chargé par un ploxion du
+  labo et rester sur toute l'app : masqué par `app.css`. Un truc qui flotte et qu'on ne connaît pas : À propos › relever ici (« ce qui flotte »)
+  donne son sélecteur ; le chercher dans les pages du labo, pas dans `src/` ;
 - (0.99.32) **Android existe** (`android/`, docs/ANDROID.md) : un plugin de l'app (PloxiApple, PloxiProche, PloxiBLE, PloxiVeille, PloxiOndes…)
   ne s'appelle qu'après `ploxiIci('Ploxi…')` (`src/natif/plugins-app.js`) : Android n'en a AUCUN (seulement PloxiAccueil, en Java). `natifLot`
   (isNativePlatform) est vrai sur Android aussi. Le push : seulement `plateforme() === 'ios'` tant qu'il n'y a pas de `google-services.json`
