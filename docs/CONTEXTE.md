@@ -38,6 +38,12 @@ Pièges nouveaux :
   faux iPhone le traite comme non compilé, ce qui est le cas par défaut) ;
 - (0.99.27) **avant une version qui touche la mise en page : `parcours-ecran.mjs`** (l'audit de l'écran, toutes tailles, largeurs, couché,
   encoche ; `PX_ECRAN_RAPIDE=1` pour une seule configuration). Il doit rendre 0 défaut.
+- (0.99.32) **Android existe** (`android/`, docs/ANDROID.md) : un plugin de l'app (PloxiApple, PloxiProche, PloxiBLE, PloxiVeille, PloxiOndes…)
+  ne s'appelle qu'après `ploxiIci('Ploxi…')` (`src/natif/plugins-app.js`) : Android n'en a AUCUN (seulement PloxiAccueil, en Java). `natifLot`
+  (isNativePlatform) est vrai sur Android aussi. Le push : seulement `plateforme() === 'ios'` tant qu'il n'y a pas de `google-services.json`
+  (sans Firebase, `register()` tue l'app Android). Vérifier : faux iPhone `--android` + `parcours-android.mjs`, et `--sans-ploxi` (0 exception) ;
+- (0.99.32) après un `npm i` d'un plugin Capacitor : `npx cap sync android` (régénère `android/capacitor.settings.gradle` et
+  `android/app/capacitor.build.gradle`, versionnés) ; `android/app/src/main/assets/public` est ignoré (la CI le recopie) ;
 
 ## 1. Où en est tout
 

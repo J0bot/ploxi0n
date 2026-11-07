@@ -24,5 +24,8 @@
         "biometricAuth": false
       }
     }
+  },
+  "android": {
+    "backgroundColor": "#07050c"
   }
 }

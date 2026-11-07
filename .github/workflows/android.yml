@@ -1,0 +1,41 @@
+# ploxi0n sur Android (0.99.32) : un APK, sur Linux (minutes au tarif normal, pas de Mac). Les runners ubuntu ont déjà le SDK Android.
+# Comme pour iOS : à la main (workflow_dispatch), sur un tag v*, ou sur une branche glob/** quand le message du commit contient « [apk] ».
+# Sortie : l'APK de debug (signé avec la clé de debug d'Android : s'installe directement, « sources inconnues » à autoriser), en artefact.
+# Une version Play Store (AAB signé) demandera une clé à poser par RS-7 en secret (ANDROID_KEYSTORE…) : pas encore.
+name: Android APK
+on:
+  push:
+    tags: ['v*']
+    branches: ['glob/**']
+  workflow_dispatch:
+concurrency:
+  group: ${{ (github.event_name != 'push' || startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[apk]')) && 'android-apk' || format('android-sans-build-{0}', github.sha) }}
+  cancel-in-progress: true
+jobs:
+  apk:
+    if: ${{ github.event_name != 'push' || startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[apk]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21, cache: gradle }
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npx cap sync android
+      - name: le numéro de version (celui de package.json ; versionCode = le nombre de commits)
+        run: |
+          echo "PX_VERSION=$(node -p "require('./package.json').version")" >> "$GITHUB_ENV"
+          echo "PX_CODE=$(git rev-list --count HEAD 2>/dev/null || echo 1)" >> "$GITHUB_ENV"
+      - name: l'APK
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug -PpxVersion="$PX_VERSION" -PpxCode="$PX_CODE"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ploxi0n-${{ env.PX_VERSION }}-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          retention-days: 30

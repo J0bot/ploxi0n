@@ -1,5 +1,7 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1793872270000,"0.99.20 : la veille en arrière-plan (PloxiVeille : visites + points 5 m, écrits sur le téléphone, window.jOSVeille) et le Bluetooth bas niveau (PloxiOndes : sca"],
+export const COMMITS = [[1794066678000,"faux iPhone : option --sans-ploxi (l'app sans aucun plugin Swift, ce que verrait Android)"],
+  [1794044365000,"0.99.31 : ploxi0n dans la voiture — CarPlay (les potes, les ambiances), derrière l'option PLOXI0N_CARPLAY"],
+  [1793872270000,"0.99.20 : la veille en arrière-plan (PloxiVeille : visites + points 5 m, écrits sur le téléphone, window.jOSVeille) et le Bluetooth bas niveau (PloxiOndes : sca"],
   [1793497009000,"0.99.29 : retrouver ses potes, mieux — la carte hors ligne, le rendez-vous, la boussole guidée, le radar avec traces et zoom"],
   [1793496254000,"0.99.28 : les notifications — le jeton gardé et copiable, l'envoi de test, le code du labo prêt à coller"],
   [1793144366000,"0.99.27 : rien ne sort de l'écran — l'audit de l'écran et ses corrections"],

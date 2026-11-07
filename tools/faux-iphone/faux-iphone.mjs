@@ -3,7 +3,7 @@
 // le téléphone) + un « natif » simulé en Node (Preferences, SQLite réel via node:sqlite, CoreMotion, Santé…). L'app y prend le chemin
 // iPhone (isNativePlatform) : ce que le navigateur et jsdom ne voient jamais (le piège du proxy, 0.47) apparaît ici.
 // Usage : npm run build && npx vite preview --port 4173 &
-//         node tools/faux-iphone/faux-iphone.mjs http://localhost:4173/ <dossier-sortie> [--sans-plugions] [--web] [--script parcours-app.mjs]
+//         node tools/faux-iphone/faux-iphone.mjs http://localhost:4173/ <dossier-sortie> [--sans-plugions] [--sans-ploxi] [--android] [--web] [--script parcours-app.mjs]
 // Sortie : <dossier>/resume.json (appels natifs, erreurs, journal) + des captures PNG.
 import { createRequire } from 'node:module';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -24,6 +24,11 @@ if (opts.includes('--sans-plugions')) { delete plugins.PloxiApple; delete plugin
 // (0.99.31) --sans-ploxi : AUCUN plugin Swift de l'app (PloxiApple, PloxiProche, PloxiLecteur…) : ce que verrait l'app sur Android (seuls les
 // plugins Capacitor y existent) ; pour savoir si l'app tient debout sans eux
 if (opts.includes('--sans-ploxi')) for (const k of Object.keys(plugins)) if (/^Ploxi/.test(k)) delete plugins[k];
+// (0.99.32) --android : le faux ANDROID. Aucun plugin Swift, mais PloxiAccueil (le Java de l'écran d'accueil) ; Capacitor.getPlatform() → 'android'.
+// Le pont reste celui d'iOS (le contrat JS des plugins est le même) : ce qu'on vérifie, c'est le JS de l'app quand elle se croit sur Android.
+const android = opts.includes('--android');
+if (android) { for (const k of Object.keys(plugins)) if (/^Ploxi/.test(k)) delete plugins[k];
+  plugins.PloxiAccueil = ['estAccueil', 'choisir', 'applis', 'lancer', 'reglages'].map(name => ({ name, rtype: 'promise' })); }
 const web = opts.includes('--web');
 const iScript = opts.indexOf('--script'); const scriptEtapes = iScript >= 0 ? opts[iScript + 1] : null;
 const bridge = readFileSync(path.join(RACINE, 'node_modules/@capacitor/ios/Capacitor/Capacitor/assets/native-bridge.js'), 'utf8');
@@ -227,6 +232,13 @@ natif.PloxiOndes = {
 natif.PloxiCarPlay = { poser: (o) => { globalThis.carplayModele = o; globalThis.carplayPoses = (globalThis.carplayPoses || 0) + 1; return { connecte: !!globalThis.carplayBranche }; }, etat: () => ({ connecte: !!globalThis.carplayBranche }) };
 globalThis.carplayBrancher = (oui = true) => { globalThis.carplayBranche = oui; emettre('PloxiCarPlay', 'connexion', { connecte: oui }); };
 globalThis.carplayToucher = (id) => emettre('PloxiCarPlay', 'choix', { id });
+// ⌂ (0.99.32) le faux Android : trois applis (dont une sans icône), l'écran d'accueil qu'on choisit, ce qu'on lance
+const PNG1 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+const accueilFaux = { accueil: false, lances: [], reglages: [] };
+natif.PloxiAccueil = { estAccueil: () => ({ accueil: accueilFaux.accueil, peut: true }), choisir: () => { accueilFaux.accueil = true; return { accueil: true }; },
+  applis: () => ({ applis: [{ paquet: 'com.google.android.dialer', activite: 'D', nom: 'Téléphone', icone: PNG1 }, { paquet: 'com.android.settings', activite: 'S', nom: 'Paramètres', icone: PNG1 }, { paquet: 'org.mozilla.firefox', nom: 'Firefox' }] }),
+  lancer: (o) => { accueilFaux.lances.push(o); return {}; }, reglages: (o) => { accueilFaux.reglages.push(o); return {}; } };
+globalThis.androidRetour = () => emettre('App', 'backButton', { canGoBack: false });
 natif.PloxiVeille = {
   demarrer: (o) => ({ etat: 'toujours', fine: o.fine !== false }), arreter: () => ({}),
   etat: () => ({ etat: 'toujours', actif: true, fine: true, points: 3 }),
@@ -295,6 +307,7 @@ if (!web) {
     } } } };
   }, { entetes });
   await page.addInitScript({ content: bridge });
+  if (android) await page.addInitScript(() => { const C = window.Capacitor; Object.defineProperty(C, 'getPlatform', { configurable: true, get: () => () => 'android', set: () => {} }); });
 }
 await page.addInitScript(() => { window.__t0 = performance.now(); });
 
@@ -319,9 +332,9 @@ const etat = await page.evaluate(() => ({
   texte: document.body.innerText.slice(0, 600),
 }));
 let resultatsEtapes = null;
-if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux, procheEnvoyes, pont, droneFaux, tailles }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
+if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux, procheEnvoyes, pont, droneFaux, tailles, accueilFaux }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
 clearInterval(mouvementMinuteur);
-const resume = { url, mode: web ? 'web' : (opts.includes('--sans-plugions') ? 'ios-sans-plugions' : 'ios'), demarre, dureeBoot, etat,
+const resume = { url, mode: web ? 'web' : android ? 'android' : (opts.includes('--sans-plugions') ? 'ios-sans-plugions' : 'ios'), demarre, dureeBoot, etat,
   appelsNatifs: Object.entries(appels.reduce((a, x) => { const k = x.p + '.' + x.m; a[k] = (a[k] || 0) + 1; return a; }, {})).sort((a, b) => b[1] - a[1]),
   nonSimules: [...nonSimules], journal, resultatsEtapes };
 writeFileSync(path.join(sortie, 'resume.json'), JSON.stringify(resume, null, 1));

@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.32', titre: 'ploxion sur Android, comme écran d\'accueil', points: [
+    '⌂ ploxion arrive sur Android, et il peut devenir l\'écran d\'accueil du téléphone : Applis › « en faire l\'écran d\'accueil ». Le bouton maison ramène au xer, le bouton retour ferme le ploxion ouvert.',
+    '⌂ Le ploxion Applis (Android) : toutes les applis du téléphone, à chercher et à ouvrir depuis le xer ; appui long = ses réglages.',
+  ] },
   { v: '0.99.31', titre: 'ploxi0n dans la voiture', points: [
     '◫ CarPlay est prêt : tes potes (au nord-est, à 1,2 km ; toucher = l\'itinéraire dans Plans, sur l\'écran de la voiture) et les ambiances. Il arrive dès qu\'Apple donne son autorisation CarPlay.',
   ] },

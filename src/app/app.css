@@ -1626,3 +1626,15 @@ html:not(.px-organique) .px-tel-vivant{display:none}
 /* (0.99.27, « que rien ne sorte de l'écran ») un écran bas (l'iPhone couché) : la zone de jeu du synthé, plus haute que lui, ne colle plus en haut
    (son bas, les motifs, restait sous le bord) ; elle défile avec la page */
 @media (max-height:520px){.px-sy-jouer{position:static}}
+/* ⌂ (0.99.32) Android : les applis du téléphone (src/lot/applis.js) */
+.px-ap-tete{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 0 12px;font:12px/1.5 var(--mono);color:var(--grave)}
+.px-ap-tete .ok{color:var(--txt)}
+.px-ap-tete>span{flex:1 1 12em;min-width:0}
+.px-ap-q{width:100%;box-sizing:border-box;margin:0 0 14px;padding:10px 14px;border-radius:999px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:15px/1.3 inherit}
+.px-ap-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:14px 8px}
+.px-ap-a{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;padding:6px 2px;background:none;border:0;color:var(--txt);-webkit-touch-callout:none;user-select:none}
+.px-ap-a img,.px-ap-x{width:48px;height:48px;border-radius:14px}
+.px-ap-x{display:grid;place-items:center;background:var(--surface);border:var(--trait) solid var(--bord);font:600 20px/1 var(--mono)}
+.px-ap-a .n{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;line-height:1.3}
+.px-ap-a:active{transform:scale(.94)}
+.px-ap-vide{grid-column:1/-1;opacity:.7;font:12px/1.5 var(--mono)}

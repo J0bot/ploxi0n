@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- le fond du xer (#07050c, comme ios.backgroundColor) : pas d'éclair blanc au démarrage ni derrière la barre de navigation -->
+    <color name="fond">#07050C</color>
+</resources>

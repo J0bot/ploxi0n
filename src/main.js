@@ -61,7 +61,9 @@ import { creerChercherLocal } from './app/chercher-local.js';
 import { creerVueXers } from './app/vue-xers.js';
 import { creerApercus } from './natif/apercus.js';
 import { SOCIAUX, surveillerSocial, invitationDuLien, sessionSocial, supprimerCompteSocial } from './natif/social-apple.js';
-import { PloxiApple, PloxiProche, PloxiBLE, PloxiVeille, PloxiOndes, PloxiCarPlay } from './natif/plugins-app.js';
+import { PloxiApple, PloxiProche, PloxiBLE, PloxiVeille, PloxiOndes, PloxiCarPlay, PloxiAccueil, ploxiIci, plateforme } from './natif/plugins-app.js';
+import { creerAccueil, brancherRetourAndroid } from './natif/accueil-natif.js';
+import { creerApplis } from './lot/applis.js';
 import { creerCarPlay, ambiancesSansEcran } from './natif/carplay-natif.js';   // 🚗 (0.99.31) CarPlay
 import { modeleCarPlay } from './bions/carplay.js';
 import { creerVeille } from './natif/veille-natif.js';
@@ -109,7 +111,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.31';
+const VERSION = '0.99.32';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -449,7 +451,7 @@ async function demarrer() {
   const reglerModeConnecte = (v) => { if (v != null) { modeConnecte = !!v; boxion.put('reglages', 'mode-connecte', modeConnecte); } return modeConnecte; };
   // 🎙 les vocaux : enregistrer, transcrire (iOS, le vocabulaire du xerboxion), garder ; jOSNatif.vocal pour les ploxions
   // 🏝 (0.91) les Live Activities : ce qui est en cours sur l'écran verrouillé et la Dynamic Island (src/natif/activites.js)
-  const activites = creerActivites({ plugin: PloxiApple, boxion, natif: () => !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()), actif: () => prefs.lire().activites !== false });
+  const activites = creerActivites({ plugin: PloxiApple, boxion, natif: () => ploxiIci('PloxiApple'), actif: () => prefs.lire().activites !== false });
   window.jOSNatif.activite = { debut: (o) => activites.pour((routeur && routeur.courant()) || 'accueil').debut(o), maj: (o) => activites.pour((routeur && routeur.courant()) || 'accueil').maj(o), fin: () => activites.pour((routeur && routeur.courant()) || 'accueil').fin() };
   // ▦ (0.91) un widget par ploxion : jOSWidget.publier({ valeur, unite, sous, serie, bouton }) (src/natif/widgets-ploxions.js)
   const widgetsPx = creerWidgetsPloxions({ boxion, catalogue: () => (routeur ? routeur.catalogue() : []), courant: () => (routeur ? routeur.courant() : null),
@@ -474,21 +476,23 @@ async function demarrer() {
   internes.push(tsoinNatif.ploxion);
   // ▤ ≈ (0.88) le lot de ploxions de RS-7 : le système (btop) et les ambiances (Blanket), dans l'app, hors ligne
   const natifLot = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  // (0.99.32) Android : aucun plugin Swift ; chaque plugin de l'app se demande avant d'être appelé (ploxiIci), sinon le ploxion vit sans
+  const appleIci = natifLot && ploxiIci('PloxiApple');
   internes.push(atelier.ploxion);
   internes.push(creerPasse({ W: window, boxion, vibrer: (x) => vibrer(x), ouvrir: (id) => routeurProxy.ouvrir(id), catalogue: () => (routeur ? routeur.catalogue() : []), glyphe: (p) => glyphePloxion(p),
     revenir: (etat) => prefs.regler(etat),   // § revenir à un instant du xer
     xerboxion: async () => { const r = await httpRelais.requete({ methode: 'GET', url: SOURCE + '/api/app/tsoins?portee=xerboxion', headers: { Accept: 'application/json' } }, fetchOrigine); if (r.status !== 200) return []; const d = JSON.parse(r.texte || '{}'); return Array.isArray(d.tsoins) ? d.tsoins : []; } }).ploxion);
   internes.push(creerSysteme({ W: window,
-    systeme: natifLot ? () => PloxiApple.systeme() : null,
+    systeme: appleIci ? () => PloxiApple.systeme() : null,
     appareil: natifLot ? async () => { const { Device } = await import('@capacitor/device'); const i = await Device.getInfo(); return { model: i.model, operatingSystem: i.operatingSystem, osVersion: i.osVersion, memUsed: i.memUsed }; } : null,
     batterie: natifLot ? () => window.jOSNatif.batterie() : null, reseau: natifLot ? () => window.jOSNatif.reseau() : async () => ({ connecte: navigator.onLine !== false }),
     sonder: () => httpRelais.tete(SOURCE + '/favicon.ico'),
     ploxions: () => ({ vivants: routeur ? routeur.vivants() : [], endormis: routeur && routeur.endormis ? routeur.endormis() : [] }),
     ouvrir: (id) => routeurProxy.ouvrir(id) }).ploxion);
   // ◷ ᛒ (0.99.20) la veille en arrière-plan et le Bluetooth bas niveau, pour les ploxions internes ET ceux du labo (mappion, Autour, Proche)
-  if (natifLot) { try { window.jOSVeille = creerVeille({ plugin: PloxiVeille }); window.jOSOndes = creerOndes({ plugin: PloxiOndes }); } catch (e) { /* le reste de l'app vit sans */ } }
+  if (natifLot) { try { if (ploxiIci('PloxiVeille')) window.jOSVeille = creerVeille({ plugin: PloxiVeille }); if (ploxiIci('PloxiOndes')) window.jOSOndes = creerOndes({ plugin: PloxiOndes }); } catch (e) { /* le reste de l'app vit sans */ } }
   // ◉ (0.99.1) Proche, l'ultimate Bluetooth : les téléphones autour, sans internet (MultipeerConnectivity sur l'iPhone, un BroadcastChannel ailleurs)
-  tuyauProche = creerTuyauProche({ W: window, plugin: natifLot ? PloxiProche : null, ble: natifLot ? PloxiBLE : null });
+  tuyauProche = creerTuyauProche({ W: window, plugin: natifLot && ploxiIci('PloxiProche') ? PloxiProche : null, ble: natifLot && ploxiIci('PloxiBLE') ? PloxiBLE : null });
   const proche = creerProche({ W: window, boxion, vibrer: (x) => vibrer(x), tuyau: tuyauProche, position: () => window.jOSNatif.position(), ouvrirLien: (u) => window.jOSNatif.ouvrirLien(u) });
   internes.push(proche.ploxion);
   // ≋ (0.99.4) le synthé : des jOSKnob, des pads, une boucle (RS-7 : « qu'on puisse commencer à faire du son avec des knobs »)
@@ -498,6 +502,10 @@ async function demarrer() {
     ouvrirLien: (u) => (window.jOSNatif && window.jOSNatif.ouvrirLien ? window.jOSNatif.ouvrirLien(u) : window.open(u, '_blank')), usage: () => boxion.get('usage', 'stats') }).ploxion);
   const ambiancesApi = creerAmbiances({ W: window, boxion, vibrer: (x) => vibrer(x), activite: { debut: (o) => activites.debut('ambiances', { genre: 'minuteur', ploxion: 'ambiances', glyphe: 'ambiances', ...o }), fin: () => activites.fin('ambiances') } });
   internes.push(ambiancesApi.ploxion);
+  // ⌂ (0.99.32, RS-7 : « sur Android, ploxion utilisable comme launcher ») l'écran d'accueil d'Android et les applis du téléphone (PloxiAccueil.java)
+  document.documentElement.setAttribute('data-px-plateforme', plateforme());
+  const accueilAndroid = creerAccueil({ plugin: natifLot && ploxiIci('PloxiAccueil') ? PloxiAccueil : null });
+  if (accueilAndroid.dispo()) { window.jOSAccueil = accueilAndroid; internes.push(creerApplis({ W: window, accueil: accueilAndroid, vibrer: (x) => vibrer(x) }).ploxion); }
   // 🚗 (0.99.31, RS-7 : « ploxion sur CarPlay ») seulement si le Swift est compilé (option PLOXI0N_CARPLAY) : sinon rien ne change
   if (natifLot && window.Capacitor && window.Capacitor.isPluginAvailable && window.Capacitor.isPluginAvailable('PloxiCarPlay')) {
     const ambCar = ambiancesSansEcran({ W: window });
@@ -600,7 +608,8 @@ async function demarrer() {
   const notifs = creerNotifs({ boxion, vibrer, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id) => routeurProxy.ouvrir(id) });
   // 🔔 (0.91) les notifications push, app fermée aussi (la clé APNs vit sur le labo : docs/PUSH.md)
   const push = creerPush({ boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id, p) => routeurProxy.ouvrir(id, p || undefined), vibrer: (x) => vibrer(x),
-    signaler: (t) => routeur && routeur.signaler(t), connecte: () => !!(compteRef && compteRef.etat().connecte) });
+    signaler: (t) => routeur && routeur.signaler(t), connecte: () => !!(compteRef && compteRef.etat().connecte),
+    natif: () => plateforme() === 'ios' });   // (0.99.32) Android : le push passe par Firebase (google-services.json) ; sans lui, register() tue l'app
   notifs.push = push;
   await notifs.pret;
   boot(73, 'notifications');
@@ -692,7 +701,7 @@ async function demarrer() {
   { let avant = null; const poser = (p) => { const z = Math.min(1.6, Math.max(0.8, +p.taille || 1)); if (z === avant) return; avant = z;
       const apres = () => window.dispatchEvent(new Event('resize'));   /* la map, les membranes : tout se remesure */
       const mobile = natifLot || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-      if (natifLot) PloxiApple.taille({ zoom: 1 }).catch(() => {});   // un ancien zoom natif (avant 0.99.26) ne reste jamais
+      if (appleIci) PloxiApple.taille({ zoom: 1 }).catch(() => {});   // un ancien zoom natif (avant 0.99.26) ne reste jamais
       if (mobile) { document.documentElement.style.zoom = ''; zoomViewport(z); window.setTimeout(apres, 60); } else { document.documentElement.style.zoom = z === 1 ? '' : String(z); apres(); } };
     poser(prefs.lire()); prefs.surChangement(poser); }
   const langueApp = installerLangue({ W: window, interne: (id) => !!(routeur.catalogue().find(p => p.id === id) || {}).interne });
@@ -708,9 +717,9 @@ async function demarrer() {
   if (!modeSurJs) creerMouvement({ prefs, racine });
   // ◌ (0.99.11) le téléphone vivant : la chaleur, la batterie, le son, au bord de l'écran (RS-7 : « on aura l'impression que le téléphone est vivant »)
   // (0.99.19) la peau « auto » : légère dès que l'iPhone passe en économie d'énergie (relu toutes les 60 s et au retour dans l'app)
-  if (natifLot) { const economie = () => { if (prefs.lire().peau !== 'auto' || document.hidden) return; PloxiApple.systeme().then((x) => { const e = x && x.economie ? '1' : '0'; if (document.documentElement.getAttribute('data-px-economie') !== e) { document.documentElement.setAttribute('data-px-economie', e); prefs.appliquer(); } }).catch(() => {}); };
+  if (appleIci) { const economie = () => { if (prefs.lire().peau !== 'auto' || document.hidden) return; PloxiApple.systeme().then((x) => { const e = x && x.economie ? '1' : '0'; if (document.documentElement.getAttribute('data-px-economie') !== e) { document.documentElement.setAttribute('data-px-economie', e); prefs.appliquer(); } }).catch(() => {}); };
     economie(); setInterval(economie, 60000); document.addEventListener('visibilitychange', economie); prefs.surChangement(economie); }
-  if (!modeSurJs) installerTelVivant({ W: window, prefs, systeme: natifLot ? () => PloxiApple.systeme() : null, batterie: natifLot ? () => window.jOSNatif.batterie() : null });
+  if (!modeSurJs) installerTelVivant({ W: window, prefs, systeme: appleIci ? () => PloxiApple.systeme() : null, batterie: natifLot ? () => window.jOSNatif.batterie() : null });
   prefs.surChangement(() => barreHaut.mesurer());
   window.ploxi0nBarreHaut = barreHaut;
   const rafraichir = () => { if (routeur.courant()) routeur.rafraichirHud(); else routeur.accueil(); };
@@ -852,6 +861,9 @@ async function demarrer() {
   function couperVideosArrierePlan() { lecteurNatif.garde.arrierePlan(); pipAuto(); try { for (const m of document.querySelectorAll('video')) { if (!m.paused && document.pictureInPictureElement !== m && !m.webkitPresentationMode?.startsWith?.('picture')) m.pause(); } } catch (e) { /* */ } }
   if (!modeSurJs) { notifs.demarrer(); push.demarrer().catch(() => {}); widgetsPx.rafraichir(); }
   else { const b = document.createElement('div'); b.className = 'px-bulle'; b.textContent = '🛟 mode sûr pour ce lancement (le prochain réessaie tout). S\'il s\'est ouvert : le coupable est le fond photo, le thème vivant ou la session — dis-le à bother me.'; racine.appendChild(b); setTimeout(() => b.remove(), 9000); }
+  // ⌂ (0.99.32) le bouton retour d'Android : ce qui flotte, puis le ploxion, puis rien si ploxion est l'écran d'accueil ; le bouton maison → l'accueil
+  if (plateforme() === 'android') import('@capacitor/app').then(({ App }) => { window.ploxi0n_retour = brancherRetourAndroid({ W: window, app: App, routeur, accueil: accueilAndroid,
+    flottant: () => { const l = document.querySelectorAll('.px-feuille,.px-voile'); return l.length ? l[l.length - 1] : null; } }); }).catch(() => {});
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
     // Face ID (0.55) : en arrière-plan, les ploxions verrouillés se referment ; au retour, celui qui était à l'écran redemande le visage
     import('@capacitor/app').then(({ App }) => { let aReprendre = null; App.addListener('pause', () => { aReprendre = routeur.reverrouiller(); }); App.addListener('resume', () => { const id = aReprendre; aReprendre = null; if (id) routeur.redemander(id).catch(() => {}); }); }).catch(() => {});
