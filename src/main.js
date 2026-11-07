@@ -64,6 +64,9 @@ import { SOCIAUX, surveillerSocial, invitationDuLien, sessionSocial, supprimerCo
 import { PloxiApple, PloxiProche, PloxiBLE, PloxiVeille, PloxiOndes, PloxiCarPlay, PloxiAccueil, ploxiIci, plateforme } from './natif/plugins-app.js';
 import { creerAccueil, brancherRetourAndroid } from './natif/accueil-natif.js';
 import { creerApplis } from './lot/applis.js';
+import { creerAgentXb } from './bions/xb-agent.js';
+import { creerCommandesXb } from './natif/xb-commandes.js';
+import { creerAppareilXb } from './lot/appareil-xb.js';
 import { creerCarPlay, ambiancesSansEcran } from './natif/carplay-natif.js';   // 🚗 (0.99.31) CarPlay
 import { modeleCarPlay } from './bions/carplay.js';
 import { creerVeille } from './natif/veille-natif.js';
@@ -111,7 +114,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.32';
+const VERSION = '0.99.33';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -506,6 +509,23 @@ async function demarrer() {
   document.documentElement.setAttribute('data-px-plateforme', plateforme());
   const accueilAndroid = creerAccueil({ plugin: natifLot && ploxiIci('PloxiAccueil') ? PloxiAccueil : null });
   if (accueilAndroid.dispo()) { window.jOSAccueil = accueilAndroid; internes.push(creerApplis({ W: window, accueil: accueilAndroid, vibrer: (x) => vibrer(x) }).ploxion); }
+  // ▸ (0.99.33, RS-7 : « le xerboxion en entier, avec xb ») l'agent xb : ce téléphone devient un appareil du labo (src/bions/xb-agent.js)
+  let nomXb = 'ploxi0n · ' + plateforme();
+  if (natifLot) window.jOSNatif.appareil().then((i) => { nomXb = 'ploxi0n · ' + (i.modele || plateforme()); }).catch(() => {});
+  const coffreXb = { lire: () => (window.jOSVerrou ? window.jOSVerrou.lire('xb.jeton', 'allumer l\'agent xb') : null), garder: (j) => window.jOSVerrou.garder('xb.jeton', j), oublier: () => window.jOSVerrou.oublier('xb.jeton') };
+  const infosXb = async () => { const [a, b, r] = await Promise.all([natifLot ? window.jOSNatif.appareil().catch(() => ({})) : {}, natifLot ? window.jOSNatif.batterie().catch(() => ({})) : {}, window.jOSNatif.reseau ? window.jOSNatif.reseau().catch(() => ({})) : {}]);
+      return { systeme: [a.systeme, a.version].filter(Boolean).join(' '), modele: a.modele || '', batterie: b.niveau != null ? Math.round(b.niveau * 100) + ' %' + (b.enCharge ? ' (en charge)' : '') : '', wifi: r.type || '', mode: 'ploxi0n ' + VERSION, ploxion: (routeur && routeur.courant()) || 'accueil' }; };
+  const agentXb = creerAgentXb({ requete: (q) => httpRelais.requete(q, fetchOrigine), coffre: coffreXb, source: SOURCE, nom: () => nomXb, version: VERSION, os: plateforme(),
+    ouvrirLien: (u) => window.jOSNatif.ouvrirLien(u),
+    infos: infosXb,
+    cmds: creerCommandesXb({ ouvrir: (id) => routeurProxy.ouvrir(id), ouvrirLien: (u) => window.jOSNatif.ouvrirLien(u), accueil: () => routeur.accueil(),
+      plein: (on) => { if (routeur && routeur.courant() && !!routeur.plein() !== !!on) routeur.etat(); },
+      notifier: (t) => window.jOSNatif.notifier({ titre: 'xerboxion', texte: t }), signaler: (t) => routeur && routeur.signaler(t), etat: () => agentXb.etat(),
+      infos: infosXb,
+      scanner: window.jOSOndes ? async (sec) => { await window.jOSOndes.scanner(); await new Promise(r => setTimeout(r, sec * 1000)); window.jOSOndes.arreter(); return window.jOSOndes.appareils(); } : null }) });
+  window.jOSXb = agentXb;
+  const appareilXb = creerAppareilXb({ W: window, agent: agentXb, boxion, vibrer: (x) => vibrer(x) });
+  internes.push(appareilXb.ploxion);
   // 🚗 (0.99.31, RS-7 : « ploxion sur CarPlay ») seulement si le Swift est compilé (option PLOXI0N_CARPLAY) : sinon rien ne change
   if (natifLot && window.Capacitor && window.Capacitor.isPluginAvailable && window.Capacitor.isPluginAvailable('PloxiCarPlay')) {
     const ambCar = ambiancesSansEcran({ W: window });
@@ -864,6 +884,7 @@ async function demarrer() {
   // ⌂ (0.99.32) le bouton retour d'Android : ce qui flotte, puis le ploxion, puis rien si ploxion est l'écran d'accueil ; le bouton maison → l'accueil
   if (plateforme() === 'android') import('@capacitor/app').then(({ App }) => { window.ploxi0n_retour = brancherRetourAndroid({ W: window, app: App, routeur, accueil: accueilAndroid,
     flottant: () => { const l = document.querySelectorAll('.px-feuille,.px-voile'); return l.length ? l[l.length - 1] : null; } }); }).catch(() => {});
+  appareilXb.auLancement().catch(() => {});   // ▸ (0.99.33) l'agent xb, seulement si « allumé au lancement »
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
     // Face ID (0.55) : en arrière-plan, les ploxions verrouillés se referment ; au retour, celui qui était à l'écran redemande le visage
     import('@capacitor/app').then(({ App }) => { let aReprendre = null; App.addListener('pause', () => { aReprendre = routeur.reverrouiller(); }); App.addListener('resume', () => { const id = aReprendre; aReprendre = null; if (id) routeur.redemander(id).catch(() => {}); }); }).catch(() => {});

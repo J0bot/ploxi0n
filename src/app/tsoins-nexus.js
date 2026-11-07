@@ -67,6 +67,7 @@ export const COMMITS = [[1794066678000,"faux iPhone : option --sans-ploxi (l'app
   [1792695587000,"0.86 : les tsoins de l'iPhone remontent au boxion (au choix, tampon compris)"],
   [1792695225000,"0.85 : l'envoi de fichiers par le mode connecté"],
   [1792694409000,"0.84 : le social avec Apple pour de vrai (l'invitation, lier, supprimer le compte)"],
+  [1792637359000,"android : ploxi0n en apk (Capacitor Android, minSdk 26 pour le plugin santé)"],
   [1792542360000,"terrax : le koin xereye (le xer dans les yeux) dans les hubs 3ion et seption ; VERSION_KOIN 2"],
   [1792400462000,"0.83 : le labo connecté tout seul dans l'app"],
   [1792399998000,"0.82 : les icônes du labo (/px/icones.json) et les pages du labo dans l'app"],

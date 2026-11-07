@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.33', titre: 'Ton téléphone, un appareil xb', points: [
+    '▸ Appareil xb : appaire ton téléphone à ton labo (un code à approuver, une fois) et allume l\'agent. Il apparaît dans ◈ appareils et dans le terminal xb, comme un Pi.',
+    '▸ Depuis le labo : xb ouvrir <ploxion>, xb mode kiosque <url> (plein écran), xb scanner (le Bluetooth autour), xb notifier, xb infos. Le téléphone refuse tout le reste, et le journal montre ce qu\'il a fait.',
+  ] },
   { v: '0.99.32', titre: 'ploxion sur Android, comme écran d\'accueil', points: [
     '⌂ ploxion arrive sur Android, et il peut devenir l\'écran d\'accueil du téléphone : Applis › « en faire l\'écran d\'accueil ». Le bouton maison ramène au xer, le bouton retour ferme le ploxion ouvert.',
     '⌂ Le ploxion Applis (Android) : toutes les applis du téléphone, à chercher et à ouvrir depuis le xer ; appui long = ses réglages.',

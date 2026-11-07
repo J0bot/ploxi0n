@@ -43,3 +43,21 @@ Garde-fou : un plugin de l'app ne s'appelle qu'après `ploxiIci('Ploxi…')`. V�
 
 - **Le mode kiosque** : un téléphone qui n'a QUE ploxion, sans sortie (Device Owner + lock task, posé une fois par `adb`). Possible, à décider.
 - **Le xerboxion en entier sur Android** (« avec xb ») : à préciser (une ROM ? xerboxion-core ?).
+
+## Le téléphone, un appareil xb (0.99.33)
+
+Le ploxion **Appareil xb** (▸) fait du téléphone un appareil de ton labo, comme un Pi avec `xb agent` (même protocole que le CLI xb) :
+
+1. « appairer ce téléphone » : un code s'affiche et la page d'approbation du labo s'ouvre ; vérifie le code, approuve. Le jeton (droit `atelier`
+   seulement) va dans le trousseau, jamais dans une URL.
+2. « allumer l'agent » : le téléphone apparaît dans le labo › ◈ appareils et dans le « où » du terminal xb, tant que l'app est ouverte.
+   « allumé au lancement de l'app » pour qu'il s'allume tout seul.
+3. Depuis le labo : `xb ouvrir <ploxion | url>`, `xb mode kiosque <url>` (plein écran), `xb mode aucun`, `xb scanner` (le Bluetooth, là où il
+   est compilé), `xb notifier "…"`, `xb infos`, `xb sante`. Le téléphone refuse tout le reste (et le labo voit le refus) ; le journal du
+   ploxion montre tout ce qu'il a fait.
+4. « oublier ce labo » efface le jeton du téléphone ; révoque-le aussi sur le labo (Réglages › Données › jetons).
+
+Avec le launcher, c'est le téléphone « xerboxion seulement » : l'écran d'accueil est le xer, et le labo peut le piloter comme un écran en kiosque.
+
+Note pour le labo : le sondage de l'appairage passe le secret d'enrôlement dans l'URL (`/px/miroir/enroler/<id>?secret=…`), comme le CLI ;
+un en-tête serait plus propre (à changer des deux côtés en même temps).

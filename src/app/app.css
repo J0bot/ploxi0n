@@ -1638,3 +1638,15 @@ html:not(.px-organique) .px-tel-vivant{display:none}
 .px-ap-a .n{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;line-height:1.3}
 .px-ap-a:active{transform:scale(.94)}
 .px-ap-vide{grid-column:1/-1;opacity:.7;font:12px/1.5 var(--mono)}
+/* ▸ (0.99.33) l'appareil xb (src/lot/appareil-xb.js) */
+.px-xba-etat{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;margin:0 0 14px;font:12px/1.5 var(--mono)}
+.px-xba-etat b{font-size:15px}.px-xba-ok b{color:var(--acc)}.px-xba-mi b{color:var(--muted)}.px-xba-ko b,.px-xba-etat .ko{color:#e0735c}
+.px-xba-etat span{min-width:0;overflow-wrap:anywhere;color:var(--grave)}
+.px-xba-txt,.px-xba-msg{font-size:13px;line-height:1.5;margin:0 0 14px}
+.px-xba-code{display:flex;flex-direction:column;gap:10px;align-items:flex-start;margin:0 0 14px}
+.px-xba-code b{font:600 34px/1.1 var(--mono);letter-spacing:.12em}
+.px-xba-b{display:flex;flex-direction:column;gap:10px;align-items:flex-start;margin:0 0 14px}
+.px-xba-l{display:flex;gap:8px;align-items:center;font-size:13px}
+.px-xba-h{margin:18px 0 6px;font:500 10px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--grave)}
+.px-xba-cmds,.px-xba-j{list-style:none;margin:0;padding:0;font:12px/1.6 var(--mono)}
+.px-xba-cmds li,.px-xba-j li{overflow-wrap:anywhere}.px-xba-j time{color:var(--grave)}

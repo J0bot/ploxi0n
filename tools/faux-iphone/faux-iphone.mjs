@@ -73,6 +73,9 @@ function laboFaux(url) {
 const boxionFaux = new Map();
 const activitesFaux = [];   // (0.91) les Live Activities lancées
 const procheEnvoyes = [], droneFaux = [], tailles = [];   /* (0.99.19) les zooms de page demandés */   // (0.99.12) les commandes reçues par le drone simulé   // (0.99.1) ce que Proche a envoyé aux voisins
+const trousseauFaux = {};   // (0.99.33) le trousseau d'iOS simulé
+// ▸ (0.99.33) le labo de xb : l'enrôlement par code (approuvé au 2e sondage), le battement, les sorties ; demander(cmd, args) = le terminal xb du labo
+const xbFaux = { battements: 0, sorties: [], file: [], enrole: null, sondages: 0, jeton: 'xj_' + '5e'.repeat(24), n: 0, demander(cmd, args = []) { this.file.push({ uid: 'u' + (++this.n), cmd, args }); } };
 const pushFaux = [];   // (0.91) les jetons reçus par le faux labo   // (0.86) le boxion du compte, côté labo
 const wledFaux = { state: { on: true, bri: 128, seg: [{ col: [[255, 80, 0]], fx: 0, pal: 0 }] }, info: { name: 'Ruban du salon', ver: '0.15.0', leds: { count: 60, pwr: 420 } }, effects: ['Solid', 'Blink', 'Breathe'], palettes: ['Default', 'Lava'] };
 
@@ -113,7 +116,10 @@ const natif = {
     checkPermissions: () => ({ publicStorage: 'granted' }), requestPermissions: () => ({ publicStorage: 'granted' }),
   },
   Health: { isAvailable: () => ({ available: true, platform: 'ios' }), checkAuthorization: () => ({ readAuthorized: [], readDenied: [], writeAuthorized: [], writeDenied: [] }), requestAuthorization: () => ({ readAuthorized: [], readDenied: [], writeAuthorized: [], writeDenied: [] }), readSamples: () => ({ samples: [] }) },
-  NativeBiometric: { isAvailable: () => ({ isAvailable: true, biometryType: 2 }), verifyIdentity: () => ({}) },
+  NativeBiometric: { isAvailable: () => ({ isAvailable: true, biometryType: 2 }), verifyIdentity: () => ({}),
+    // (0.99.33) le trousseau : ce qui y est rangé (Face ID réussi d'office)
+    setCredentials: (o) => { trousseauFaux[o.server] = o.password; return {}; }, getSecureCredentials: (o) => { if (!(o.server in trousseauFaux)) throw new Error('aucun secret'); return { username: o.server, password: trousseauFaux[o.server] }; },
+    deleteCredentials: (o) => { delete trousseauFaux[o.server]; return {}; } },
   Clipboard: { read: () => ({ type: 'text/plain', value: presse }), write: (o) => { presse = o.string; return {}; } },
   TextToSpeech: { speak: () => ({}), stop: () => ({}), getSupportedLanguages: () => ({ languages: ['fr-FR', 'en-US'] }) },
   ScreenOrientation: { orientation: () => ({ type: 'portrait-primary' }), lock: () => ({}), unlock: () => ({}) },
@@ -192,6 +198,12 @@ const natif = {
       if (u.pathname === '/mavlink/vehicles') return j(200, [1]);
       const m = /messages\/(\w+)$/.exec(u.pathname); if (m && M[m[1]]) return j(200, { message: M[m[1]], status: {} }); return j(404, {}); }
     if (u.hostname === '10.0.0.9' && u.port === '8123') { if ((o.headers || {}).Authorization !== 'Bearer bon') return j(401, {}); if (u.pathname === '/api/states') return j(200, [{ entity_id: 'light.salon', state: 'on', attributes: { friendly_name: 'Salon', brightness: 200, supported_color_modes: ['brightness'] } }, { entity_id: 'sensor.temp', state: '21.5', attributes: { unit_of_measurement: '°C', friendly_name: 'Température' } }]); return j(200, []); }
+    if (u.hostname === 'labo.j0bot.ch' && u.pathname === '/px/miroir/enroler' && o.method === 'POST') { xbFaux.enrole = typeof o.data === 'string' ? JSON.parse(o.data) : o.data; return j(201, { id: 'e1', code: 'K7Q-42' }); }
+    if (u.hostname === 'labo.j0bot.ch' && u.pathname === '/px/miroir/enroler/e1') { if (!xbFaux.enrole || u.searchParams.get('secret') !== xbFaux.enrole.secret) return j(404, {}); xbFaux.sondages++; return j(200, xbFaux.sondages >= 2 ? { statut: 'approuve', jeton: xbFaux.jeton, nom_compte: 'RS-7' } : { statut: 'attente' }); }
+    if (u.hostname === 'labo.j0bot.ch' && u.pathname.startsWith('/xb/appareil/')) { if ((o.headers || {})['X-Xer-Jeton'] !== xbFaux.jeton) return j(401, {});
+      const b = typeof o.data === 'string' ? JSON.parse(o.data) : (o.data || {});
+      if (u.pathname === '/xb/appareil/battement') { xbFaux.battements++; xbFaux.dernier = b; return j(200, { demandes: xbFaux.file.splice(0) }); }
+      if (u.pathname.startsWith('/xb/appareil/sortie/')) { xbFaux.sorties.push({ uid: u.pathname.split('/').pop(), ...b }); return j(200, {}); } }
     // (0.91) le push : le labo garde le jeton du compte (seulement avec un jeton de compte)
     if (u.hostname === 'labo.j0bot.ch' && u.pathname === '/api/app/push') { if (!/^Bearer .+/.test((o.headers || {}).Authorization || '')) return j(401, { message: 'Unauthenticated.' });
       const b = typeof o.data === 'string' ? JSON.parse(o.data) : (o.data || {}); pushFaux.push({ methode: o.method, ...b }); return j(o.method === 'DELETE' ? 200 : 201, { ok: true }); }
@@ -332,7 +344,7 @@ const etat = await page.evaluate(() => ({
   texte: document.body.innerText.slice(0, 600),
 }));
 let resultatsEtapes = null;
-if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux, procheEnvoyes, pont, droneFaux, tailles, accueilFaux }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
+if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux, procheEnvoyes, pont, droneFaux, tailles, accueilFaux, xbFaux, trousseauFaux }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
 clearInterval(mouvementMinuteur);
 const resume = { url, mode: web ? 'web' : android ? 'android' : (opts.includes('--sans-plugions') ? 'ios-sans-plugions' : 'ios'), demarre, dureeBoot, etat,
   appelsNatifs: Object.entries(appels.reduce((a, x) => { const k = x.p + '.' + x.m; a[k] = (a[k] || 0) + 1; return a; }, {})).sort((a, b) => b[1] - a[1]),
