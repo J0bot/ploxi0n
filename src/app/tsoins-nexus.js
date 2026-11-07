@@ -1,5 +1,6 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1793497009000,"0.99.29 : retrouver ses potes, mieux — la carte hors ligne, le rendez-vous, la boussole guidée, le radar avec traces et zoom"],
+export const COMMITS = [[1793872270000,"0.99.20 : la veille en arrière-plan (PloxiVeille : visites + points 5 m, écrits sur le téléphone, window.jOSVeille) et le Bluetooth bas niveau (PloxiOndes : sca"],
+  [1793497009000,"0.99.29 : retrouver ses potes, mieux — la carte hors ligne, le rendez-vous, la boussole guidée, le radar avec traces et zoom"],
   [1793496254000,"0.99.28 : les notifications — le jeton gardé et copiable, l'envoi de test, le code du labo prêt à coller"],
   [1793144366000,"0.99.27 : rien ne sort de l'écran — l'audit de l'écran et ses corrections"],
   [1793140522000,"0.99.26 : les crans vibrent — fx-cran manquait dans le moteur haptique (le wormion, la portion, la map, le synthé muets)"],
@@ -14,6 +15,7 @@ export const COMMITS = [[1793497009000,"0.99.29 : retrouver ses potes, mieux —
   [1792811793000,"0.99.22 : retrouver ses potes (radar hors ligne, boussole, carte) ; le maillage++ (potes, lu, code de sécurité, mentions)"],
   [1792804054000,"0.99.21 : Proche devient un maillage comme bitchat ; un max de psy dans le synthé, et le partage des sons"],
   [1792792404000,"0.99.20 : le bilan de santé des 551 ploxions du labo, et ce qu'il a trouvé"],
+  [1792790017000,"xerbot : LedFx (écrans virtuels, effets, scènes) + ESPHome couleur et effets d'une lumière"],
   [1792785394000,"0.99.19 : la peau légère par défaut, le changement de peau réparé, la taille de tout, les bibliothèques des ploxions embarquées"],
   [1792729123000,"0.99.18 : les bugs de RS-7 sur l'iPhone"],
   [1792727900000,"La bionisation : le digesteur trouve les bions déguisés"],

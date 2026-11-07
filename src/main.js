@@ -61,7 +61,9 @@ import { creerChercherLocal } from './app/chercher-local.js';
 import { creerVueXers } from './app/vue-xers.js';
 import { creerApercus } from './natif/apercus.js';
 import { SOCIAUX, surveillerSocial, invitationDuLien, sessionSocial, supprimerCompteSocial } from './natif/social-apple.js';
-import { PloxiApple, PloxiProche, PloxiBLE, PloxiVeille, PloxiOndes } from './natif/plugins-app.js';
+import { PloxiApple, PloxiProche, PloxiBLE, PloxiVeille, PloxiOndes, PloxiCarPlay } from './natif/plugins-app.js';
+import { creerCarPlay, ambiancesSansEcran } from './natif/carplay-natif.js';   // 🚗 (0.99.31) CarPlay
+import { modeleCarPlay } from './bions/carplay.js';
 import { creerVeille } from './natif/veille-natif.js';
 import { creerOndes } from './natif/ondes-natif.js';
 import { creerTuyauProche } from './natif/proche-natif.js';   // ◉ (0.99.1) l'ultimate Bluetooth
@@ -95,7 +97,7 @@ const FLUX_INTERNES = {
 };   // ◈ (0.96) l'atelier des peaux : la fractale des UI, les knobs
 import { appliquerCouleurs } from './bions/membrane.js';   // 〰 (0.93) les bords organiques, les neurones
 import { creerMap } from './app/map-hubs.js';
-import { creerAmbiances } from './lot/ambiances.js';
+import { creerAmbiances, SONS as SONS_AMB } from './lot/ambiances.js';
 import { installerAppsALaDemande } from './shim/apps-a-la-demande.js';
 import { creerWikiNatif } from './app/wiki-natif.js';
 import { creerIconesLabo } from './app/icones-labo.js';
@@ -107,7 +109,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.30';
+const VERSION = '0.99.31';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -494,7 +496,15 @@ async function demarrer() {
   // ⌖ (0.99.9) Autour : les lieux d'OpenStreetMap autour de toi, en continu (RS-7 à Zurich : « des toilettes direct ; propositions selon mon vecteur xerion »)
   internes.push(creerAutour({ W: window, boxion, vibrer: (x) => vibrer(x), http: { get: (u, o) => httpRelais.get(u, o) }, position: () => window.jOSNatif.position(),
     ouvrirLien: (u) => (window.jOSNatif && window.jOSNatif.ouvrirLien ? window.jOSNatif.ouvrirLien(u) : window.open(u, '_blank')), usage: () => boxion.get('usage', 'stats') }).ploxion);
-  internes.push(creerAmbiances({ W: window, boxion, vibrer: (x) => vibrer(x), activite: { debut: (o) => activites.debut('ambiances', { genre: 'minuteur', ploxion: 'ambiances', glyphe: 'ambiances', ...o }), fin: () => activites.fin('ambiances') } }).ploxion);
+  const ambiancesApi = creerAmbiances({ W: window, boxion, vibrer: (x) => vibrer(x), activite: { debut: (o) => activites.debut('ambiances', { genre: 'minuteur', ploxion: 'ambiances', glyphe: 'ambiances', ...o }), fin: () => activites.fin('ambiances') } });
+  internes.push(ambiancesApi.ploxion);
+  // 🚗 (0.99.31, RS-7 : « ploxion sur CarPlay ») seulement si le Swift est compilé (option PLOXI0N_CARPLAY) : sinon rien ne change
+  if (natifLot && window.Capacitor && window.Capacitor.isPluginAvailable && window.Capacitor.isPluginAvailable('PloxiCarPlay')) {
+    const ambCar = ambiancesSansEcran({ W: window });
+    window.ploxi0n_carplay = creerCarPlay({ W: window, plugin: PloxiCarPlay,
+      modele: () => modeleCarPlay({ potes: proche.potes(), sons: SONS_AMB, volumes: ambiancesApi.etat().volumes }),
+      agir: (id) => { if (id === 'sons:couper') ambCar.couper(); else if (id.startsWith('son:')) ambCar.basculer(id.slice(4), ambiancesApi.etat().volumes); } });
+  }
   // ◈ (0.98) un ploxion vu de près : son code, ses bions ; son flux (entrées, sorties) ; (0.99.17) le flux gardé par version (memoFlux)
   const inspecteur = async (id) => { const p = await boxion.get('ploxions', id).catch(() => null), c = routeur ? routeur.catalogue().find(x => x.id === id) : null, code = (p && p.js) || '';
     return { id, nom: (p && p.nom) || (c && c.nom) || id, code, bions: bionsDuCode(code, (p && p.bions) || []) }; };

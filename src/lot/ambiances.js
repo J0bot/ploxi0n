@@ -111,7 +111,9 @@ export function creerAmbiances({ W = globalThis.window, boxion, Contexte = W.Aud
       hote.removeEventListener('pointerdown', premier);
       for (const [k] of SONS) if (+etat.volumes[k] > 0 && !sons.has(k)) regler(k, +etat.volumes[k]);
     });
-    return { unmount() { vivant = false; W.clearTimeout(fin); W.clearTimeout(finA); toutCouper(true); hote.innerHTML = ''; }, joue: () => sons.size > 0 };
+    // (0.99.31) pilotable sans son écran (CarPlay : src/natif/carplay-natif.js monte les ambiances dans un hôte caché)
+    return { unmount() { vivant = false; W.clearTimeout(fin); W.clearTimeout(finA); toutCouper(true); hote.innerHTML = ''; }, joue: () => sons.size > 0,
+      regler: (k, v) => { const i = hote.querySelector('[data-amb="' + k + '"]'); if (i) i.value = v; regler(k, v); }, couper: () => { minuter(0); toutCouper(); } };
   }
   W.jOSApps = W.jOSApps || {};
   W.jOSApps.ambiances = { manifest: { id: 'ambiances', name: 'Ambiances', icon: '≈' }, mount };

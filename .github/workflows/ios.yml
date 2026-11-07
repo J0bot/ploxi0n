@@ -17,6 +17,7 @@ on:
     inputs:
       regenerer_profil: { description: 'régénérer le profil de signature (après un changement de capabilities)', type: boolean, default: false }
       vlc: { description: "construire avec le lecteur VLC (MKV, DTS, sous-titres ; le lecteur intégré, en repli d'Apple)", type: boolean, default: false }
+      carplay: { description: "construire avec CarPlay (les potes et les ambiances sur l'écran de la voiture) : il faut d'abord l'autorisation CarPlay d'Apple (docs/CARPLAY.md)", type: boolean, default: false }
       ble: { description: "construire avec le maillage en Bluetooth basse consommation (Proche comme bitchat, aussi en arrière-plan)", type: boolean, default: false }
       widgets: { description: "construire avec les widgets (extension PloxionWidgets ; ch.j0bot.ploxi0n.widgets doit avoir le groupe group.ch.j0bot.ploxi0n)", type: boolean, default: false }
 concurrency:
@@ -80,6 +81,9 @@ jobs:
           PLOXI0N_VLC: ${{ inputs.vlc && '1' || vars.PLOXI0N_VLC }}
           # (0.99.24) le maillage BLE : l'entrée du lancement manuel, ou la variable du dépôt PLOXI0N_BLE=1
           PLOXI0N_BLE: ${{ inputs.ble && '1' || vars.PLOXI0N_BLE }}
+          # (0.99.31) CarPlay : l'entrée du lancement manuel, ou la variable du dépôt PLOXI0N_CARPLAY=1 ; PLOXI0N_CARPLAY_TYPE = audio (défaut) ou driving-task
+          PLOXI0N_CARPLAY: ${{ inputs.carplay && '1' || vars.PLOXI0N_CARPLAY }}
+          PLOXI0N_CARPLAY_TYPE: ${{ vars.PLOXI0N_CARPLAY_TYPE }}
           # l'AR native (0.73) est toujours là ; la variable du dépôt PLOXI0N_AR=0 la retire (secours, fastlane retirer_ar)
           PLOXI0N_AR: ${{ vars.PLOXI0N_AR }}
       - uses: actions/upload-artifact@v4

@@ -14,6 +14,9 @@ import GameKit
 import WebKit
 import ObjectiveC
 import CoreMotion
+#if PLOXI0N_CARPLAY
+import CarPlay   // (0.99.31) PloxiCarPlay, option de build (l'autorisation CarPlay d'Apple est nécessaire)
+#endif
 import CoreBluetooth   // (0.99.20) PloxiOndes : le Bluetooth bas niveau ; (0.99.23) PloxiBLE, le maillage (option PLOXI0N_BLE)
 import MediaPlayer
 import AVKit
@@ -2449,6 +2452,121 @@ public class PloxiOndes: CAPPlugin, CAPBridgedPlugin, CBCentralManagerDelegate, 
     }
 }
 
+#if PLOXI0N_CARPLAY
+// 🚗 (0.99.31, RS-7 07.11 : « ploxion sur CarPlay ») CARPLAY. CarPlay n'affiche jamais de page web : une app n'y a droit qu'aux gabarits d'Apple.
+// Le JS fabrique un MODÈLE (src/bions/carplay.js : des onglets de listes) ; PloxiCarPlay le reçoit (poser), le GARDE (UserDefaults, en JSON :
+// une voiture branchée avant que la page démarre a déjà quelque chose) ; la scène CarPlay le dessine : un CPTabBarTemplate de CPListTemplate.
+// Un élément avec « url » (un pote, un rendez-vous) ouvre Plans lui-même, sur l'écran de la voiture ; les autres renvoient « choix » { id } au
+// JS. Seulement des listes, des onglets et une alerte : ce que permettent à la fois les autorisations audio et « tâche de conduite ».
+// Il faut : l'autorisation CarPlay d'Apple sur l'identifiant de l'app, et fastlane ajouter_carplay (l'entitlement, la scène dans Info.plist).
+final class PloxiCarPlayEtat {
+    static var modele: [String: Any] = {
+        if let d = UserDefaults.standard.data(forKey: "ploxi.carplay.modele"), let o = (try? JSONSerialization.jsonObject(with: d)) as? [String: Any] { return o }
+        return [:]
+    }()
+    static weak var plugin: PloxiCarPlay?
+    static weak var scene: PloxiCarPlayScene?
+}
+
+@objc(PloxiCarPlay)
+public class PloxiCarPlay: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "PloxiCarPlay"
+    public let jsName = "PloxiCarPlay"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "poser", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "etat", returnType: CAPPluginReturnPromise),
+    ]
+    override public func load() { PloxiCarPlayEtat.plugin = self }
+    @objc func poser(_ call: CAPPluginCall) {
+        let m = (call.options as? [String: Any]) ?? [:]
+        DispatchQueue.main.async {
+            PloxiCarPlayEtat.modele = m
+            if let d = try? JSONSerialization.data(withJSONObject: m) { UserDefaults.standard.set(d, forKey: "ploxi.carplay.modele") }
+            PloxiCarPlayEtat.scene?.construire()
+            call.resolve(["connecte": PloxiCarPlayEtat.scene != nil])
+        }
+    }
+    @objc func etat(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { call.resolve(["connecte": PloxiCarPlayEtat.scene != nil]) }
+    }
+    func choisi(_ id: String) { notifyListeners("choix", data: ["id": id]) }
+    func connexion(_ oui: Bool) { notifyListeners("connexion", data: ["connecte": oui]) }
+}
+
+class PloxiCarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
+    private var ic: CPInterfaceController?
+    private var scene: CPTemplateApplicationScene?
+    private var listes: [String: CPListTemplate] = [:]
+    private var ordre: [String] = []
+
+    func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene, didConnect interfaceController: CPInterfaceController) {
+        ic = interfaceController; scene = templateApplicationScene
+        PloxiCarPlayEtat.scene = self
+        construire()
+        PloxiCarPlayEtat.plugin?.connexion(true)
+    }
+    func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene, didDisconnectInterfaceController interfaceController: CPInterfaceController) {
+        ic = nil; scene = nil; listes = [:]; ordre = []
+        if PloxiCarPlayEtat.scene === self { PloxiCarPlayEtat.scene = nil }
+        PloxiCarPlayEtat.plugin?.connexion(false)
+    }
+
+    /** dessiner le modèle : les mêmes onglets → seulement leurs listes changent (pas de clignotement, l'onglet choisi reste) */
+    func construire() {
+        guard let ic = ic else { return }
+        let onglets = Array(((PloxiCarPlayEtat.modele["onglets"] as? [[String: Any]]) ?? []).prefix(4))
+        let ids = onglets.map { ($0["id"] as? String) ?? "" }
+        if !onglets.isEmpty && ids == ordre {
+            for o in onglets { if let id = o["id"] as? String, let t = listes[id] { t.updateSections(sections(o)) } }
+            return
+        }
+        listes = [:]; ordre = ids
+        var tpl: [CPTemplate] = []
+        for o in onglets {
+            let t = CPListTemplate(title: o["titre"] as? String, sections: sections(o))
+            t.tabTitle = o["titre"] as? String
+            t.tabImage = UIImage(systemName: (o["icone"] as? String) ?? "circle")
+            if let vide = o["vide"] as? String { t.emptyViewTitleVariants = [vide] }
+            if let id = o["id"] as? String { listes[id] = t }
+            tpl.append(t)
+        }
+        if tpl.isEmpty {
+            let t = CPListTemplate(title: "ploxi0n", sections: [])
+            t.emptyViewTitleVariants = ["Ouvre ploxi0n sur l'iPhone"]
+            tpl.append(t)
+        }
+        ic.setRootTemplate(CPTabBarTemplate(templates: tpl), animated: false, completion: nil)
+    }
+
+    private func sections(_ o: [String: Any]) -> [CPListSection] {
+        return ((o["sections"] as? [[String: Any]]) ?? []).map { s in
+            let items = ((s["items"] as? [[String: Any]]) ?? []).prefix(CPListTemplate.maximumItemCount).map { self.element($0) }
+            return CPListSection(items: Array(items), header: s["titre"] as? String, sectionIndexTitle: nil)
+        }
+    }
+
+    private func element(_ d: [String: Any]) -> CPListItem {
+        let it = CPListItem(text: d["texte"] as? String, detailText: d["detail"] as? String)
+        let id = (d["id"] as? String) ?? ""
+        let url = (d["url"] as? String).flatMap { URL(string: $0) }
+        if url != nil { it.accessoryType = .disclosureIndicator }
+        it.handler = { [weak self] _, fini in
+            if let u = url { self?.scene?.open(u, options: nil, completionHandler: nil) }
+            else if let p = PloxiCarPlayEtat.plugin { p.choisi(id) }
+            else { self?.alerte("Ouvre ploxi0n sur l'iPhone, puis réessaie") }
+            fini()
+        }
+        return it
+    }
+
+    private func alerte(_ texte: String) {
+        guard let ic = ic else { return }
+        let a = CPAlertTemplate(titleVariants: [texte], actions: [CPAlertAction(title: "OK", style: .cancel, handler: { _ in ic.dismissTemplate(animated: true, completion: nil) })])
+        ic.presentTemplate(a, animated: true, completion: nil)
+    }
+}
+#endif
+
 class PloxionVC: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(PloxiVocal())
@@ -2460,6 +2578,9 @@ class PloxionVC: CAPBridgeViewController {
         #endif
         bridge?.registerPluginInstance(PloxiVeille())
         bridge?.registerPluginInstance(PloxiOndes())
+        #if PLOXI0N_CARPLAY
+        bridge?.registerPluginInstance(PloxiCarPlay())   // (0.99.31) CarPlay
+        #endif
         #if !PLOXI0N_SANS_AR
         bridge?.registerPluginInstance(PloxiAR())
         #endif

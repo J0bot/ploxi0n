@@ -8,4 +8,5 @@ export const PloxiAR = registerPlugin('PloxiAR');           // 👁 l'AR native 
 export const PloxiProche = registerPlugin('PloxiProche');   // ◉ (0.99.1) l'ultimate Bluetooth : MultipeerConnectivity (src/natif/proche-natif.js)
 export const PloxiBLE = registerPlugin('PloxiBLE');         // 〰 (0.99.23) le maillage en Bluetooth basse consommation (option de build PLOXI0N_BLE)
 export const PloxiVeille = registerPlugin('PloxiVeille');   // ◷ (0.99.20) la position en arrière-plan (src/natif/veille-natif.js)
+export const PloxiCarPlay = registerPlugin('PloxiCarPlay'); // 🚗 (0.99.31) CarPlay : les gabarits d'Apple dessinés depuis un modèle JS (option de build PLOXI0N_CARPLAY)
 export const PloxiOndes = registerPlugin('PloxiOndes');     // ᛒ (0.99.20) le Bluetooth bas niveau : scan brut + annonce (src/natif/ondes-natif.js)

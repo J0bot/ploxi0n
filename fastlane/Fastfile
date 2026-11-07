@@ -159,6 +159,37 @@ def ajouter_ble
   UI.success("le maillage BLE compilé (PLOXI0N_BLE), en arrière-plan : #{info["UIBackgroundModes"].join(', ')}")
 end
 
+# 🚗 (0.99.31, RS-7 : « ploxion sur CarPlay ») CARPLAY, option PLOXI0N_CARPLAY=1 : la condition de compilation (le Swift de PloxiCarPlay),
+# l'autorisation dans App.entitlements (com.apple.developer.carplay-<type> ; PLOXI0N_CARPLAY_TYPE = audio, le défaut, ou driving-task), la scène
+# CarPlay dans Info.plist. L'autorisation doit d'abord être ACCORDÉE par Apple sur l'identifiant de l'app (docs/CARPLAY.md), puis le profil
+# régénéré (le workflow : regenerer_profil) : sans elle, la signature échoue.
+CARPLAY = ENV["PLOXI0N_CARPLAY"] == "1"
+CARPLAY_TYPE = %w[audio driving-task].include?(ENV["PLOXI0N_CARPLAY_TYPE"].to_s) ? ENV["PLOXI0N_CARPLAY_TYPE"] : "audio"
+def ajouter_carplay
+  require "xcodeproj"
+  projet = Xcodeproj::Project.open(File.expand_path("../#{PROJET}", __dir__))
+  app = projet.targets.find { |t| t.name == "App" }
+  app.build_configurations.each do |c|
+    v = c.build_settings["SWIFT_ACTIVE_COMPILATION_CONDITIONS"]
+    l = v.is_a?(Array) ? v : v.to_s.split(" ")
+    l = ["$(inherited)"] if l.empty?
+    c.build_settings["SWIFT_ACTIVE_COMPILATION_CONDITIONS"] = (l + ["PLOXI0N_CARPLAY"]).uniq.join(" ")
+  end
+  projet.save
+  ent = File.expand_path("../ios/App/App/App.entitlements", __dir__)
+  e = Xcodeproj::Plist.read_from_path(ent)
+  e["com.apple.developer.carplay-#{CARPLAY_TYPE}"] = true
+  Xcodeproj::Plist.write_to_path(e, ent)
+  plist = File.expand_path("../ios/App/App/Info.plist", __dir__)
+  info = Xcodeproj::Plist.read_from_path(plist)
+  man = info["UIApplicationSceneManifest"] ||= {}
+  conf = man["UISceneConfigurations"] ||= {}
+  conf["CPTemplateApplicationSceneSessionRoleApplication"] = [{ "UISceneClassName" => "CPTemplateApplicationScene", "UISceneConfigurationName" => "CarPlay",
+                                                                "UISceneDelegateClassName" => "$(PRODUCT_MODULE_NAME).PloxiCarPlayScene" }]
+  Xcodeproj::Plist.write_to_path(info, plist)
+  UI.success("CarPlay compilé (PLOXI0N_CARPLAY), autorisation com.apple.developer.carplay-#{CARPLAY_TYPE}, scène CarPlay déclarée")
+end
+
 # l'identifiant des widgets sur le compte développeur, avec App Groups (le GROUPE lui-même s'assigne dans le portail : l'API ne le permet pas)
 def identifiant_widgets
   bid = asc(:get, "bundleIds?filter[identifier]=#{WID_ID}")["data"].first
@@ -196,6 +227,7 @@ platform :ios do
     ajouter_vlc if VLC
     retirer_ar if SANS_AR
     ajouter_ble if BLE
+    ajouter_carplay if CARPLAY
     if WIDGETS
       ajouter_widgets
       identifiant_widgets

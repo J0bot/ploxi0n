@@ -220,6 +220,10 @@ natif.PloxiOndes = {
   }, 200); return { etat: 'allume' }; },
   arreterScan: () => ({}), annoncer: () => ({}), arreterAnnonce: () => ({}),
 };
+// 🚗 (0.99.31) CarPlay, simulé : le dernier modèle reçu est gardé (globalThis.carplayModele) ; le parcours branche la voiture et touche
+natif.PloxiCarPlay = { poser: (o) => { globalThis.carplayModele = o; globalThis.carplayPoses = (globalThis.carplayPoses || 0) + 1; return { connecte: !!globalThis.carplayBranche }; }, etat: () => ({ connecte: !!globalThis.carplayBranche }) };
+globalThis.carplayBrancher = (oui = true) => { globalThis.carplayBranche = oui; emettre('PloxiCarPlay', 'connexion', { connecte: oui }); };
+globalThis.carplayToucher = (id) => emettre('PloxiCarPlay', 'choix', { id });
 natif.PloxiVeille = {
   demarrer: (o) => ({ etat: 'toujours', fine: o.fine !== false }), arreter: () => ({}),
   etat: () => ({ etat: 'toujours', actif: true, fine: true, points: 3 }),
