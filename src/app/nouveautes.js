@@ -7,6 +7,9 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.36', titre: 'Le maillage sans limite', points: [
+    '〰 Proche relaie aussi loin que le maillage va : plus de limite à 7 sauts (255, l\'infini en pratique). Les boucles sont arrêtées par le dédoublonnage, et un message de plus de 72 h ne repart plus.',
+  ] },
   { v: '0.99.35', titre: 'Proche, rangé ; ta carte de pote', points: [
     '◉ Proche en cinq pages : autour (qui est là, une ligne par personne), messages, potes (le radar, la boussole), son (la basse, le son partagé), ▣ carte.',
     '▣ Ta carte de pote : un QR avec ta clé et ton nom. Scanne celle d\'un pote en face de toi : il devient un pote ✦ vérifié, et vous pouvez vous écrire en privé, chiffré, avant même d\'être reliés. La caméra de l\'iPhone sur le QR ouvre aussi Proche.',

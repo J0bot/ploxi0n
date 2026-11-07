@@ -1,6 +1,6 @@
 // @bion maille — le maillage façon bitchat : des messages qui sautent de téléphone en téléphone, sans internet ni serveur ni compte | api: creerMaille, creerVus, commande, remplir, vider, lireMaille, TTL_MAX, PUBLIC (et du maillage : favori, lire, codeSecurite, verifier, partagerPosition, positions)
 // (0.99.21, RS-7 24.10 : « ça doit être comme bitchat mesh pour le truc Bluetooth »). Ce que bitchat fait, et ce qu'on en garde :
-//   - le MAILLAGE : chaque téléphone relaie ce qu'il reçoit à ses autres voisins ; un compteur de sauts (7 au plus) l'arrête ; un petit
+//   - le MAILLAGE : chaque téléphone relaie ce qu'il reçoit à ses autres voisins ; (0.99.36) sans limite pratique (255 relais) ; un petit
 //     délai au hasard avant de relayer (moins de collisions, et on devine moins qui a écrit le premier) ;
 //   - le DÉDOUBLONNAGE : chaque paquet a un id ; un filtre de Bloom (deux, qui tournent) se souvient de ceux déjà vus, en peu de place ;
 //   - STOCKER ET RELAYER : les paquets récents (12 h) sont gardés ; quand un voisin arrive, on échange la liste de ce qu'on a vu, chacun
@@ -25,7 +25,10 @@
 // le maillage porte au-delà. Pur, sans DOM : la cryptographie (subtle), le hasard, l'heure, l'envoi et l'attente sont donnés.
 import { rdvValide } from './potes.js';   // (0.99.29) un rendez-vous reçu : validé comme tout ce qui vient d'à côté
 
-export const TTL_MAX = 7, PUBLIC = '#', TAILLE_MAX = 16000;
+// (0.99.36, RS-7 : « la limite à 7 c'est zgeg, il nous faut de l'infini ») 255 relais : l'infini en pratique (un festival, un quartier).
+// Ce qui arrête les boucles, c'est le dédoublonnage (chaque paquet a un id : déjà vu = jeté, jamais relayé deux fois), pas ce compteur ;
+// et l'ÂGE : un paquet de plus de 72 h (ou venu du futur) n'est plus relayé, même si le filtre de Bloom l'a oublié.
+export const TTL_MAX = 255, PUBLIC = '#', TAILLE_MAX = 16000, AGE_MAX = 72 * 3600e3, AVANCE_MAX = 10 * 60e3;
 const GENRES = new Set(['ann', 'pub', 'mp', 'ack', 'sync', 'pos']);
 const HEX16 = /^[0-9a-f]{16}$/;
 const SALON = /^#[\p{L}\p{N}_-]{0,32}$/u;
@@ -229,6 +232,7 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
     }
     if (vus.a(p.i)) return true;
     vus.ajouter(p.i);
+    if (p.t > maintenant() + AVANCE_MAX || maintenant() - p.t > AGE_MAX) return true;   // (0.99.36) trop vieux, ou d'une horloge folle : ni lu ni relayé
     if (p.o === id.fp) return true;   // notre propre écho
     if (tropBavard(p.o)) return true;
     cacher(p.i, texte, p);

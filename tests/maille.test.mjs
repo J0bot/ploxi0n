@@ -35,7 +35,7 @@ test('〰 les petits bouts : Bloom, rembourrage, commandes, paquets suspects', (
   assert.equal(commande('/j').genre, 'erreur'); assert.equal(commande('/nimporte').genre, 'erreur'); assert.deepEqual(commande('  coucou '), { genre: 'texte', texte: 'coucou' });
   const bon = { m: 1, i: '0123456789abcdef', o: 'fedcba9876543210', n: 'A', h: 7, t: 1, k: 'pub', s: '#', d: { x: 'y' } };
   assert.equal(lireMaille(JSON.stringify(bon)).d.x, 'y');
-  for (const mal of [{ ...bon, h: 9 }, { ...bon, h: -1 }, { ...bon, i: 'court' }, { ...bon, k: 'virus' }, { ...bon, s: 'pas-un-salon' }, { ...bon, a: 'xyz' }, { ...bon, m: 2 }])
+  for (const mal of [{ ...bon, h: 256 }, { ...bon, h: 2.5 }, { ...bon, h: -1 }, { ...bon, i: 'court' }, { ...bon, k: 'virus' }, { ...bon, s: 'pas-un-salon' }, { ...bon, a: 'xyz' }, { ...bon, m: 2 }])
     assert.equal(lireMaille(JSON.stringify(mal)), null, JSON.stringify(mal));
   assert.equal(lireMaille('{"m":1'), null); assert.equal(lireMaille(JSON.stringify({ v: 1, g: 'msg' })), null, 'un paquet de l\'ancienne Proche n\'est pas du maillage');
 });
@@ -58,12 +58,21 @@ test('〰 en ligne A–B–C–D : le message de A arrive chez D (3 sauts), une 
   assert.ok(R.recus.A - avant.A <= 2 && R.recus.D - avant.D <= 2, 'pas de tempête : chacun reçoit le paquet une fois par voisin, au plus');
 });
 
-test('〰 le compteur de sauts arrête le paquet : au-delà de 7 relais, plus rien', async () => {
-  const N = Array.from({ length: 10 }, (_, i) => 'P' + i), L = N.slice(1).map((n, i) => [N[i], n]);
+test('〰 (0.99.36) l\'infini en pratique : 12 téléphones en ligne, le dernier entend le premier (11 relais) ; jamais deux fois', async () => {
+  const N = Array.from({ length: 12 }, (_, i) => 'P' + i), L = N.slice(1).map((n, i) => [N[i], n]);
   const R = reseau(N, L); await allumer(R, L);
-  await R.T.P0.dire('loin'); await attendre(250);
-  assert.equal(R.T.P8.fil().length, 1, '7 relais : P8 l\'entend'); assert.equal(R.T.P8.fil()[0].sauts, TTL_MAX);
-  assert.equal(R.T.P9.fil().length, 0, 'P9 est trop loin');
+  await R.T.P0.dire('loin'); await attendre(400);
+  assert.equal(TTL_MAX, 255);
+  assert.equal(R.T.P11.fil().length, 1, 'P11 l\'entend, une seule fois'); assert.equal(R.T.P11.fil()[0].sauts, 10, 'dix relais entre P0 et P11');
+});
+
+test('〰 (0.99.36) un paquet trop vieux (72 h) ou venu du futur n\'est ni lu ni relayé', async () => {
+  const L = [['A', 'B'], ['B', 'C']], R = reseau(['A', 'B', 'C'], L); await allumer(R, L);
+  const vieux = JSON.stringify({ m: 1, i: '00000000000000aa', o: 'fedcba9876543210', n: 'X', h: TTL_MAX, t: Date.now() - 73 * 3600e3, k: 'pub', s: '#', d: { x: 'fantôme' } });
+  const futur = JSON.stringify({ m: 1, i: '00000000000000bb', o: 'fedcba9876543210', n: 'X', h: TTL_MAX, t: Date.now() + 3600e3, k: 'pub', s: '#', d: { x: 'demain' } });
+  R.T.B.recevoir('A', vieux); R.T.B.recevoir('A', futur); await attendre(250);
+  assert.equal(R.T.B.fil().filter(m => /fantôme|demain/.test(m.texte || '')).length, 0);
+  assert.equal(R.T.C.fil().filter(m => /fantôme|demain/.test(m.texte || '')).length, 0, 'pas relayés');
 });
 
 test('〰 les messages privés : chiffrés de bout en bout ; B et C relaient sans rien lire ; l\'accusé revient chez A', async () => {

@@ -6,7 +6,7 @@
 //     de l'hôte (src/bions/proche.js : ping / pong à la NTP, les plus rapides disent vrai) ;
 //   ▶ le son : l'hôte donne un RENDEZ-VOUS (une adresse https, une position, une heure) ; chacun joue sa copie et se recale s'il dérive.
 // 〰 (0.99.21, RS-7 : « ça doit être comme bitchat mesh ») les messages passent par le MAILLAGE (src/bions/maille.js) : relayés de téléphone
-// en téléphone (7 sauts), gardés pour ceux qui arrivent après, des salons #, des messages privés chiffrés de bout en bout, bloquer, tout
+// en téléphone (sans limite de sauts depuis 0.99.36), gardés pour ceux qui arrivent après, des salons #, des messages privés chiffrés de bout en bout, bloquer, tout
 // effacer (trois touchers sur « ◉ proche »), les commandes /j /m /w. La basse et le son restent d'un hôte à ses voisins directs (l'horloge).
 // Ne pas nuire : rien n'est annoncé avant « démarrer » ; aucun son ne part chez quelqu'un sans son « rejoindre » ; ce qui vient d'à côté est
 // lu comme suspect (paquets bornés, textes échappés, adresses https seulement). La session tient quand on change de ploxion ; ‹ ne la coupe pas.
@@ -457,7 +457,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       + '<p class="px-pr-err" data-pr-err hidden></p><p class="px-pr-info" data-pr-info hidden></p>'
       // ◉ autour : qui je suis, démarrer, qui est là
       + '<section data-pr-section="autour"><div class="px-pr-id" data-neurone><input type="text" maxlength="24" placeholder="ton nom" data-pr-nom><input type="text" maxlength="40" placeholder="la salle" data-pr-salle><button type="button" data-pr="allumer"></button></div>'
-      + '<p class="px-sous">les téléphones autour, sans internet : chacun relaie les messages des autres (7 sauts), les privés sont chiffrés de bout en bout. Rien n\'est annoncé avant « démarrer ».</p>'
+      + '<p class="px-sous">les téléphones autour, sans internet : chacun relaie les messages des autres, aussi loin que le maillage va ; les privés sont chiffrés de bout en bout. Rien n\'est annoncé avant « démarrer ».</p>'
       + '<h3 class="px-pr-t">qui est là</h3><div class="px-pr-pairs" data-pr-pairs></div></section>'
       // ≡ messages
       + '<section data-pr-section="messages"><div class="px-pr-salons" data-pr-salons></div><p class="px-pr-dm" data-pr-dm hidden></p><div class="px-pr-fil" data-pr-fil data-neurone data-ecrit></div>'
