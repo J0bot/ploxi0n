@@ -55,3 +55,20 @@ ou les autres ploxions connectés, même sans réseau. On crée notre réseau pa
    quand il revient (la redondance : un même id de message, dédoublonné).
 5. **Android** dans le maillage : `PloxiBLE.java` (notre protocole, inspiré de meshlink), sinon le Wi-Fi du xion suffit déjà.
 6. **Plus loin** : plusieurs boxions qui se relaient entre eux (la fédération), un quartier, un festival.
+
+## Ce que bitchat fait de plus (lu le 07.11, github.com/permissionlesstech/bitchat, domaine public)
+
+- **Tor** : PAS dans le maillage Bluetooth. Il sert le chemin INTERNET : quand un téléphone a du réseau, les messages privés des potes
+  mutuels passent par des relais **Nostr** (des boîtes aux lettres publiques, le contenu chiffré), et ce trafic peut passer par **Tor**
+  (Arti, le client Tor en Rust, embarqué comme bibliothèque statique). Ça relie deux maillages éloignés sans que les relais sachent qui parle
+  à qui. Chez nous : le pont maillage ↔ internet (le boxion de la soirée ↔ le nexus) pourrait passer par Tor ; `xb nexus` a déjà
+  « l'onion en secours ».
+- **Les coursiers** (spray-and-wait) : un téléphone qui passe emporte une copie chiffrée d'un message pour quelqu'un d'absent, et la lui
+  remet quand il le croise (un nombre de copies borné). Le stocker-relayer, mais qui marche.
+- **La boîte d'envoi** : un privé non remis est réessayé à chaque reconnexion (8 fois, 24 h) jusqu'à l'accusé.
+- **Noise** (XX) pour les sessions directes (secret persistant sur la session) ; pas de secret persistant pour le courrier scellé, comme nous.
+- **Le TTL** : ils partent à 7 et le RÉDUISENT dans un maillage dense (≥ 6 liens → 5) ; leur livre blanc range le TTL parmi les défenses
+  anti-déluge. Nous : 255 depuis 0.99.36, les boucles arrêtées par le dédoublonnage ; à surveiller dans un maillage très dense
+  (beaucoup de téléphones collés = beaucoup de copies du même paquet).
+- Ils notent eux-mêmes leur faiblesse : les **métadonnées** (l'identifiant stable du téléphone dans chaque paquet, l'annonce en clair).
+  C'est aussi la nôtre (l'empreinte `o` dans chaque paquet).
