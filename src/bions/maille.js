@@ -29,6 +29,11 @@ import { rdvValide } from './potes.js';   // (0.99.29) un rendez-vous reçu : va
 // Ce qui arrête les boucles, c'est le dédoublonnage (chaque paquet a un id : déjà vu = jeté, jamais relayé deux fois), pas ce compteur ;
 // et l'ÂGE : un paquet de plus de 72 h (ou venu du futur) n'est plus relayé, même si le filtre de Bloom l'a oublié.
 export const TTL_MAX = 255, PUBLIC = '#', TAILLE_MAX = 16000, AGE_MAX = 72 * 3600e3, AVANCE_MAX = 10 * 60e3;
+// ✉ (0.99.38, RS-7 : « on implémente les mêmes idées » que bitchat) LA BOÎTE D'ENVOI : un privé sans accusé est renvoyé (24 h, 8 essais, pas plus
+// d'une fois par 20 s) à chaque nouveau voisin, quand le destinataire s'annonce, et chaque minute ; au-delà : « pas remis ». LES COURSIERS
+// (spray-and-wait) : un privé porte un budget de copies `c` ; qui le voit passer pour quelqu'un d'absent le garde dans sa SACOCHE (72 h),
+// en donne la moitié à chaque nouveau voisin croisé, et le remet au destinataire dès qu'il le croise directement. Tout reste chiffré.
+export const BOITE_PAR = 100, BOITE_GARDE = 24 * 3600e3, BOITE_ESSAIS = 8, BOITE_ECART = 20000, COPIES = 8, SACOCHE_MAX = 100, SACOCHE_GARDE = 72 * 3600e3;
 const GENRES = new Set(['ann', 'pub', 'mp', 'ack', 'sync', 'pos']);
 const HEX16 = /^[0-9a-f]{16}$/;
 const SALON = /^#[\p{L}\p{N}_-]{0,32}$/u;
@@ -105,7 +110,8 @@ export function lireMaille(texte) {
   if (!Number.isInteger(o.h) || o.h < 0 || o.h > TTL_MAX || !Number.isFinite(o.t)) return null;
   if (o.s != null && !(typeof o.s === 'string' && SALON.test(o.s))) return null;
   if (o.a != null && !HEX16.test(o.a)) return null;
-  return { i: o.i, o: o.o, n: typeof o.n === 'string' ? o.n.slice(0, 24) : '', h: o.h, t: o.t, k: o.k, s: o.s || null, a: o.a || null, d: o.d && typeof o.d === 'object' ? o.d : null };
+  if (o.c != null && !(Number.isInteger(o.c) && o.c >= 1 && o.c <= 16)) return null;   // ✉ (0.99.38) le budget du coursier
+  return { i: o.i, o: o.o, n: typeof o.n === 'string' ? o.n.slice(0, 24) : '', h: o.h, t: o.t, k: o.k, s: o.s || null, a: o.a || null, c: o.c || null, d: o.d && typeof o.d === 'object' ? o.d : null };
 }
 const ecrire = (p) => JSON.stringify({ m: 1, ...p });
 
@@ -121,16 +127,18 @@ const hex = (u8) => [...u8].map(x => x.toString(16).padStart(2, '0')).join('');
  * → { demarrer, voisin(id, etat), recevoir(de, texte) → bool, dire(texte, salon?), prive(fp, texte), rejoindre, quitter, bloquer, debloquer,
  *     effacerTout, fil(salon), salons(), pairs(), moi(), surChange(f) }
  */
-export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoyer, attente = (ms, f) => setTimeout(f, ms), repeter = (ms, f) => { const x = setInterval(f, ms); return () => clearInterval(x); }, magasin = null, nom = '' }) {
+export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoyer, attente = (ms, f) => setTimeout(f, ms), repeter = (ms, f) => { const x = setInterval(f, ms); return () => clearInterval(x); }, magasin = null, nom = '', ecartBoite = BOITE_ECART }) {
   const vus = creerVus(), voisins = new Set(), cache = [], cacheFav = [], pairs = new Map(), clesPartagees = new Map(), clesSalons = new Map(), debits = new Map(), positions = new Map();
   let id = null, messages = [], salons = [PUBLIC], bloques = new Set(), auditeurs = new Set(), monNom = String(nom || '').slice(0, 24);
   let favoris = new Map(), verifies = new Set();   // (0.99.22) empreinte → nom ; les paires dont le code a été comparé
   // ◈ (0.99.37, RS-7 : « une carte des nodes pour voir si le lien est meshé ; il routait des paquets ») : qui est relié à qui (chaque annonce dit
   // ses voisins directs, 10 au plus, comme bitchat) ; ce que chaque voisin direct m'a fait passer (reçu, relayé pour d'autres)
   const liens = new Map(), stats = new Map(); let reannonce = false;   // empreinte → { v: [empreintes], t } ; voisin (id du tuyau) → { recus, relayes, t }
-  let contacts = new Map();   // (0.99.35) empreinte → clé publique (base64) : les potes ajoutés par leur QR, connus avant même qu'ils s'annoncent
+  let contacts = new Map();
+  let boite = [];   // ✉ (0.99.38) { fp, m (l'id du message), charge, t, essais, dernier }
+  const sacoche = new Map();   // ✉ coursier : id du paquet → { i, a, texte, c, t, donne: Set(voisins), vers: 0 }   // (0.99.35) empreinte → clé publique (base64) : les potes ajoutés par leur QR, connus avant même qu'ils s'annoncent
   const changer = (quoi) => { for (const f of auditeurs) { try { f(quoi); } catch (e) { /* */ } } };
-  const garder = () => { if (magasin) magasin.ecrire('maille', { messages: messages.slice(-MESSAGES_MAX), salons, bloques: [...bloques], favoris: [...favoris], verifies: [...verifies], contacts: [...contacts] }).catch(() => {}); };
+  const garder = () => { if (magasin) magasin.ecrire('maille', { messages: messages.slice(-MESSAGES_MAX), salons, bloques: [...bloques], favoris: [...favoris], verifies: [...verifies], contacts: [...contacts], boite, sacoche: [...sacoche.values()].map(x => ({ i: x.i, a: x.a, texte: x.texte, c: x.c, t: x.t })) }).catch(() => {}); };
   const nouvelId = () => hex(alea(8));
 
   // ---- l'identité ----
@@ -195,7 +203,7 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
   function relayer(p, de) {
     if (p.h <= 0) return;
     const autres = [...voisins].filter(v => v !== de); if (!autres.length) return;
-    const texte = ecrire({ ...p, h: p.h - 1 });
+    const texte = ecrire({ ...p, h: p.h - 1, ...(p.c ? { c: 1 } : {}) });   // ✉ une copie relayée attend, elle ne se répand pas
     attente(10 + (alea(1)[0] % 140), () => envoyer(texte, autres.filter(v => voisins.has(v))));
   }
   // anti-déluge : 40 paquets par empreinte et par 10 s
@@ -212,8 +220,10 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
     if (magasin && (!jwk || jwk.d !== id.jwk.d)) await magasin.ecrire('maille-identite', id.jwk).catch(() => {});
     if (sauve) { messages = Array.isArray(sauve.messages) ? sauve.messages.slice(-MESSAGES_MAX) : []; salons = Array.isArray(sauve.salons) && sauve.salons.length ? [...new Set([PUBLIC, ...sauve.salons.filter(s => SALON.test(s))])] : [PUBLIC]; bloques = new Set(Array.isArray(sauve.bloques) ? sauve.bloques.filter(x => HEX16.test(x)) : []);
       favoris = new Map(Array.isArray(sauve.favoris) ? sauve.favoris.filter(x => Array.isArray(x) && HEX16.test(x[0])).map(([f, n]) => [f, String(n || '').slice(0, 24)]) : []); verifies = new Set(Array.isArray(sauve.verifies) ? sauve.verifies.filter(x => HEX16.test(x)) : []); }
+    if (sauve && Array.isArray(sauve.boite)) boite = sauve.boite.filter(b => b && HEX16.test(b.fp) && HEX16.test(b.m) && b.charge && typeof b.charge.x === 'string').slice(-BOITE_PAR * 4);
+    if (sauve && Array.isArray(sauve.sacoche)) for (const x of sauve.sacoche.slice(-SACOCHE_MAX)) if (x && HEX16.test(x.i) && HEX16.test(x.a) && typeof x.texte === 'string' && x.texte.length <= TAILLE_MAX) sacoche.set(x.i, { ...x, donne: new Set(), vers: 0 });
     if (sauve && Array.isArray(sauve.contacts)) for (const [f, k] of sauve.contacts) { const brute = deb64(k); if (HEX16.test(f) && brute && brute.length === 65 && await empreinte(brute) === f) { contacts.set(f, k); const pr = pairs.get(f) || { nom: favoris.get(f) || '', cle: null, vu: 0, sauts: 9, voisin: null }; pr.cle = pr.cle || brute; pairs.set(f, pr); } }
-    finAnnonce(); finAnnonce = repeter(60000, () => annoncer());   // les pairs lointains apprennent notre clé, et qu'on est là
+    finAnnonce(); finAnnonce = repeter(60000, () => { annoncer(); renvoyer().catch(() => {}); });   // les pairs lointains apprennent notre clé, et qu'on est là
     for (const v of voisins) { annoncer([v]); emettre(paquetDe('sync', { h: 0, d: { ids: recents() } }), [v]); }   // des voisins arrivés avant l'identité
     changer('tout'); return { fp: id.fp };
   }
@@ -221,7 +231,8 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
 
   /** un voisin direct arrive ou part (le tuyau) : on s'annonce, on échange ce qu'on a vu (stocker et relayer) */
   function voisin(v, etat) {
-    if (etat === 'connecte') { if (voisins.has(v)) return; voisins.add(v); if (!id) return; annoncer([v]); emettre(paquetDe('sync', { h: 0, d: { ids: recents() } }), [v]); changer('pairs'); }
+    if (etat === 'connecte') { if (voisins.has(v)) return; voisins.add(v); if (!id) return; annoncer([v]); emettre(paquetDe('sync', { h: 0, d: { ids: recents() } }), [v]); changer('pairs');
+      attente(500, () => { if (!voisins.has(v)) return; renvoyer().catch(() => {}); repandre(v); }); }
     else if (etat === 'perdu') { if (voisins.delete(v)) { for (const [fp, p] of pairs) if (p.voisin === v) p.voisin = null; changer('pairs'); } }
   }
 
@@ -232,10 +243,10 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
     if (!id) return true;
     if (p.k === 'sync') {   // d'un voisin seulement : on lui envoie ce qu'il n'a pas vu
       const ses = new Set(Array.isArray(p.d && p.d.ids) ? p.d.ids.filter(x => HEX16.test(x)).slice(0, 200) : []), t = maintenant();
-      for (const c of [...cache, ...cacheFav]) if (!ses.has(c.i) && t - c.t < c.garde) { let q = null; try { q = JSON.parse(c.texte); } catch (e) { continue; } envoyer(ecrire({ ...q, h: Math.max(0, q.h - 1) }), [de]); }
+      for (const c of [...cache, ...cacheFav]) if (!ses.has(c.i) && t - c.t < c.garde) { let q = null; try { q = JSON.parse(c.texte); } catch (e) { continue; } envoyer(ecrire({ ...q, h: Math.max(0, q.h - 1), ...(q.c ? { c: 1 } : {}) }), [de]); }
       return true;
     }
-    if (vus.a(p.i)) return true;
+    if (vus.a(p.i)) { const x = p.k === 'mp' && p.c ? sacoche.get(p.i) : null; if (x && p.c > x.c) { x.c = p.c; garder(); } return true; }   // ✉ une part du spray pour un message déjà porté
     vus.ajouter(p.i);
     if (p.t > maintenant() + AVANCE_MAX || maintenant() - p.t > AGE_MAX) return true;   // (0.99.36) trop vieux, ou d'une horloge folle : ni lu ni relayé
     if (p.o === id.fp) return true;   // notre propre écho
@@ -243,8 +254,15 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
     cacher(p.i, texte, p);
     const sauts = TTL_MAX - p.h;
     const pr = pairs.get(p.o) || { nom: '', cle: null, vu: 0, sauts: 9, voisin: null }, avant = pr.nom + '|' + pr.sauts;
-    const neufDirect = sauts === 0 && pr.voisin !== de;
-    pr.nom = p.n || pr.nom; pr.vu = maintenant(); pr.sauts = sauts; if (sauts === 0) pr.voisin = de; pairs.set(p.o, pr);
+    const neufDirect = sauts === 0 && pr.voisin !== de && !(p.k === 'mp' && p.h === 0);
+    // ✉ (0.99.38) un accusé qui passe : la sacoche n'a plus à porter ce message ; un privé pour quelqu'un d'absent : on le porte
+    if (p.k === 'ack' && p.d && HEX16.test(p.d.r) && sacoche.delete(p.d.r)) garder();
+    if (p.k === 'mp' && p.c && p.a && p.a !== id.fp) { const dest = pairs.get(p.a); if (!(dest && dest.voisin && voisins.has(dest.voisin))) porter(p, texte, de); }
+    const porte = p.k === 'mp' && p.h === 0;   // ✉ remis par un coursier : ça ne dit rien de la distance de l'auteur
+    pr.nom = p.n || pr.nom; if (!porte) { pr.vu = maintenant(); pr.sauts = sauts; if (sauts === 0) pr.voisin = de; } pairs.set(p.o, pr);
+    if (sauts === 0 && p.h > 0) remettre(p.o, de);   // ✉ le destinataire d'un message porté est là, à côté : on le lui remet
+    else if (p.k === 'ann') remettre(p.o, null);   // il s'annonce plus loin : une copie part vers lui (une fois par 10 min)
+    if (p.k === 'ann' && boite.some(b => b.fp === p.o)) renvoyer(p.o).catch(() => {});
     if (neufDirect && !reannonce) { reannonce = true; attente(400, () => { reannonce = false; annoncer(); }); }   // ◈ (0.99.37) un voisin direct de plus : les autres l'apprennent (la carte)
     if (avant !== pr.nom + '|' + pr.sauts && p.k !== 'ann') changer('pairs');   // un pair nouveau, ou qui s'est rapproché
     traiter(p, sauts).catch(() => {});
@@ -274,11 +292,13 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
       if (bloque) return;
       const k = await clePour(p.o); const o = k ? await dechiffrer(k, p.d, p) : null;
       if (!o || typeof o.x !== 'string') { poser({ id: p.i, salon: '@' + p.o, de: p.o, nom: p.n, texte: null, ferme: true, t: maintenant(), sauts }); return; }
-      poser({ id: p.i, salon: '@' + p.o, de: p.o, nom: p.n, texte: o.x.slice(0, 1000), prive: true, son: o.son && typeof o.son === 'object' ? o.son : null, t: maintenant(), sauts });
-      emettre(paquetDe('ack', { a: p.o, d: { r: p.i } }));   // l'accusé repart par le maillage
+      const mid = HEX16.test(o.m || '') ? o.m : p.i;   // ✉ (0.99.38) un renvoi de la boîte d'envoi : le même message (un seul dans le fil), un nouvel id de paquet
+      poser({ id: mid, salon: '@' + p.o, de: p.o, nom: p.n, texte: o.x.slice(0, 1000), prive: true, son: o.son && typeof o.son === 'object' ? o.son : null, t: maintenant(), sauts });
+      emettre(paquetDe('ack', { a: p.o, d: { r: mid } }));   // l'accusé repart par le maillage (même pour un doublon : l'expéditeur arrête de renvoyer)
       return;
     }
     if (p.k === 'ack' && p.a === id.fp && p.d && HEX16.test(p.d.r)) {
+      const avant = boite.length; boite = boite.filter(b => b.m !== p.d.r); if (boite.length !== avant) garder();   // ✉ remis : la boîte d'envoi l'oublie
       const m = messages.find(x => x.id === p.d.r && x.moi), e = p.d.l === 1 ? 'lu' : 'recu';
       if (m && m.etat !== e && m.etat !== 'lu') { m.etat = e; garder(); changer('messages'); }
       return;
@@ -304,13 +324,63 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
     emettre(p); poser({ id: p.i, salon: s, de: id.fp, nom: monNom, texte: t, moi: true, ferme: !!k, son, t: maintenant(), sauts: 0 });
     return p.i;
   }
+  // ---- ✉ (0.99.38) la boîte d'envoi et les coursiers ----
+  async function renvoyer(fp = null) {
+    if (!id || !boite.length) return 0;
+    const t = maintenant(); let n = 0, change = false;
+    for (const b of [...boite]) {
+      if (fp && b.fp !== fp) continue;
+      if (t - b.t > BOITE_GARDE || b.essais >= BOITE_ESSAIS) {   // abandonné : visible dans le fil
+        boite = boite.filter(x => x !== b); change = true;
+        const m = messages.find(x => x.id === b.m && x.moi); if (m && m.etat === 'envoye') { m.etat = 'echec'; changer('messages'); }
+        continue;
+      }
+      if (t - b.dernier < ecartBoite || !voisins.size) continue;
+      const k = await clePour(b.fp); if (!k) continue;
+      const p = paquetDe('mp', { a: b.fp, c: COPIES }); p.d = await chiffrer(k, { ...b.charge, m: b.m }, p);
+      const pr = pairs.get(b.fp); emettre(p, pr && pr.voisin && voisins.has(pr.voisin) ? [pr.voisin] : null);
+      b.essais++; b.dernier = t; n++; change = true;
+    }
+    if (change) garder(); return n;
+  }
+  /** un privé pour quelqu'un d'absent passe par ici : dans la sacoche (le plus vieux part si elle est pleine) */
+  function porter(p, texte, de) {
+    if (sacoche.has(p.i)) return;
+    const t = maintenant();
+    for (const [k, x] of sacoche) if (t - x.t > SACOCHE_GARDE) sacoche.delete(k);
+    while (sacoche.size >= SACOCHE_MAX) sacoche.delete(sacoche.keys().next().value);
+    sacoche.set(p.i, { i: p.i, a: p.a, texte, c: p.c, t: p.t, donne: new Set(de ? [de] : []), vers: 0 }); garder();
+  }
+  /** un nouveau voisin : il reçoit la moitié du budget de chaque message porté qu'on peut encore répandre (h = 0 : il le garde, il ne le diffuse pas) */
+  function repandre(v) {
+    for (const x of sacoche.values()) {
+      if (x.c < 2 || x.donne.has(v)) continue;
+      const moitie = Math.floor(x.c / 2); let q = null; try { q = JSON.parse(x.texte); } catch (e) { continue; }
+      envoyer(ecrire({ ...q, h: 0, c: moitie }), [v]); x.c -= moitie; x.donne.add(v);
+    }
+  }
+  /** le destinataire est là : à côté (de = son voisin) → on lui remet tout et on oublie ; plus loin → une copie part vers lui, une fois par 10 min */
+  function remettre(fp, de) {
+    let change = false; const t = maintenant();
+    for (const [k, x] of sacoche) {
+      if (x.a !== fp) continue;
+      let q = null; try { q = JSON.parse(x.texte); } catch (e) { sacoche.delete(k); continue; }
+      if (de) { envoyer(ecrire({ ...q, h: 0 }), [de]); sacoche.delete(k); change = true; }
+      else if (t - x.vers > 600000 && voisins.size) { x.vers = t; envoyer(ecrire({ ...q, h: TTL_MAX - 1 }), null); }
+    }
+    if (change) garder();
+  }
+
   async function prive(fp, texte, extra = null) {
     const t = String(texte || '').trim().slice(0, 1000); if (!t || !id || !HEX16.test(fp)) return null;
     const k = await clePour(fp); if (!k) return null;   // pas encore sa clé : il ne s'est pas annoncé
     const son = extra && extra.son && typeof extra.son === 'object' ? extra.son : null;
-    const p = paquetDe('mp', { a: fp }); p.d = await chiffrer(k, son ? { x: t, son } : { x: t }, p);
+    const charge = son ? { x: t, son } : { x: t };
+    const p = paquetDe('mp', { a: fp, c: COPIES }); p.d = await chiffrer(k, charge, p);
     const pr = pairs.get(fp), direct = pr && pr.voisin && voisins.has(pr.voisin) ? [pr.voisin] : null;   // un voisin direct : à lui seul
     emettre(p, direct); poser({ id: p.i, salon: '@' + fp, de: id.fp, nom: monNom, texte: t, moi: true, prive: true, son, etat: 'envoye', t: maintenant(), sauts: 0 });
+    boite.push({ fp, m: p.i, charge, t: maintenant(), essais: 1, dernier: maintenant() });
+    { const miens = boite.filter(b => b.fp === fp); if (miens.length > BOITE_PAR) boite = boite.filter(b => b !== miens[0]); } garder();
     return p.i;
   }
   async function rejoindre(salon, mdp = null) {
@@ -377,7 +447,7 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
   }
 
   async function effacerTout() {
-    messages = []; salons = [PUBLIC]; bloques = new Set(); favoris = new Map(); verifies = new Set(); contacts = new Map(); pairs.clear(); liens.clear(); stats.clear(); clesPartagees.clear(); clesSalons.clear(); cache.length = 0; cacheFav.length = 0; positions.clear();
+    messages = []; salons = [PUBLIC]; bloques = new Set(); favoris = new Map(); verifies = new Set(); contacts = new Map(); boite = []; sacoche.clear(); pairs.clear(); liens.clear(); stats.clear(); clesPartagees.clear(); clesSalons.clear(); cache.length = 0; cacheFav.length = 0; positions.clear();
     id = await identite(null);
     if (magasin) { await magasin.ecrire('maille-identite', id.jwk).catch(() => {}); await magasin.ecrire('maille', { messages: [], salons: [PUBLIC], bloques: [], favoris: [], verifies: [], contacts: [] }).catch(() => {}); }
     if (voisins.size) annoncer();
@@ -411,6 +481,8 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
       for (const [fp, l] of liens) if (vivant(l.t) && connus.has(fp)) for (const x of l.v) if (connus.has(x) || x === (id && id.fp)) lier(fp, x);
       return { noeuds, liens: [...aretes.values()] };
     },
+    /** ✉ (0.99.38) ce qui est en route : mes privés pas encore remis, les messages que je porte pour d'autres */
+    transit: () => ({ boite: boite.length, sacoche: sacoche.size }), renvoyer,
     voisins: () => [...voisins], moi: () => (id ? { fp: id.fp, nom: monNom } : null), nommer: (n) => { monNom = String(n || '').slice(0, 24); },
     surChange(f) { auditeurs.add(f); return () => auditeurs.delete(f); },
   };

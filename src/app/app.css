@@ -1744,3 +1744,5 @@ html:not(.px-organique) .px-tel-vivant{display:none}
 .px-pr-maille text{fill:var(--txt);font:10px/1 var(--mono)}
 .px-pr-maille text.relais{fill:var(--acc);font-size:9px}
 .px-pr-gens li.muet b{color:var(--muted)}
+.px-pr-echec{color:#e0735c}
+.px-pr-transit{margin:8px 0 0;font:12px/1.5 var(--mono);color:var(--acc);text-align:center}

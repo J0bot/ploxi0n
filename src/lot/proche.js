@@ -339,7 +339,8 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
         svg += '<g class="noeud ' + cl + '"><circle cx="' + x + '" cy="' + y + '" r="' + (n.moi ? 9 : 7) + '"/><text x="' + x + '" y="' + (y - 12) + '" text-anchor="middle">' + esc(nom.slice(0, 12)) + '</text>'
           + (n.stats && n.stats.relayes ? '<text class="relais" x="' + x + '" y="' + (y + 19) + '" text-anchor="middle">↝' + n.stats.relayes + '</text>' : '') + '</g>'; }
       const me = maille.moi().fp, nb = T.noeuds.length - 1, maille2 = T.liens.some(([a, b]) => a !== me && b !== me);
-      return '<div class="px-pr-maille" data-neurone>' + svg + '</svg><p class="px-sous">' + nb + ' nœud' + (nb > 1 ? 's' : '') + ' · ' + T.liens.length + ' lien' + (T.liens.length > 1 ? 's' : '')
+      const tr = maille.transit(), enRoute = tr.boite || tr.sacoche ? '<p class="px-pr-transit">✉ en route : ' + [tr.boite ? tr.boite + ' de tes messages pas encore remis' : '', tr.sacoche ? tr.sacoche + ' porté' + (tr.sacoche > 1 ? 's' : '') + ' pour d\'autres (tu les remets en les croisant)' : ''].filter(Boolean).join(' · ') + '</p>' : '';
+      return '<div class="px-pr-maille" data-neurone>' + svg + '</svg>' + enRoute + '<p class="px-sous">' + nb + ' nœud' + (nb > 1 ? 's' : '') + ' · ' + T.liens.length + ' lien' + (T.liens.length > 1 ? 's' : '')
         + (maille2 ? ' · maillé : des nœuds sont reliés entre eux, pas seulement à toi' : T.liens.length ? ' · en étoile : tout passe par toi' : '') + ' · ↝ = paquets relayés pour d\'autres</p></div>';
     };
     // (0.99.35) une ligne par personne, ses actions dessus : ✦ pote, écrire (en privé, chiffré), ⊘ bloquer ; ce qui est vu en ᛒ mais pas encore relié en dessous
@@ -362,7 +363,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     const messagesHtml = () => fil().slice(-60).map(m => '<p class="px-pr-m' + (m.moi ? ' moi' : '') + (m.texte == null ? ' ferme' : '') + (m.mention ? ' mention' : '') + '"><b>' + esc(qui(m)) + '</b> '
       + (m.texte == null ? '<i>◈ message fermé (pas le bon mot de passe, ou pas pour toi)</i>' : esc(m.texte))
       + (m.son && m.id ? ' <button type="button" class="px-pr-sonb" data-pr-son="' + esc(m.id) + '">▷ dans le synthé</button>' : '')
-      + (m.sauts ? ' <small class="px-pr-sauts">↝' + m.sauts + '</small>' : '') + (m.moi && m.prive ? ' <small>' + (m.etat === 'lu' ? '◉ lu' : m.etat === 'recu' ? '✓✓' : '✓') + '</small>' : '') + '</p>').join('') || '<p class="px-sous">aucun message' + (e.salon === PUBLIC ? '' : ' ici') + '</p>';
+      + (m.sauts ? ' <small class="px-pr-sauts">↝' + m.sauts + '</small>' : '') + (m.moi && m.prive ? ' <small' + (m.etat === 'echec' ? ' class="px-pr-echec"' : '') + '>' + (m.etat === 'lu' ? '◉ lu' : m.etat === 'recu' ? '✓✓' : m.etat === 'echec' ? '⚠ pas remis' : '✓') + '</small>' : '') + '</p>').join('') || '<p class="px-sous">aucun message' + (e.salon === PUBLIC ? '' : ' ici') + '</p>';
     const salonsHtml = () => (maille ? [...maille.salons().map(s => [s.salon, s.salon === PUBLIC ? '# tout le monde' : s.salon + (s.ferme ? ' ◈' : '')]), ...maille.conversations().map(c => [c.salon, '@' + (c.nom || c.fp.slice(0, 4))])]
       .map(([k, n]) => '<button type="button" data-pr-salon="' + esc(k) + '"' + (k === e.salon ? ' class="on"' : '') + '>' + esc(n) + '</button>').join('') : '');
     const moiHtml = () => { const m = maille && maille.moi(); return m ? 'ton empreinte : <b>' + m.fp.match(/.{4}/g).join(' ') + '</b> <small>(c\'est elle qui dit qui tu es, pas ton nom)</small>' : ''; };

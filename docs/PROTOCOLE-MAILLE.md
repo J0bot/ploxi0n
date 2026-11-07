@@ -75,6 +75,14 @@ au plus 64 paquets en cours par appareil. `n = 1` : le morceau est le paquet ent
 - `pub` : `d = { "x": "<texte>" }` en clair (salon ouvert), ou chiffré par la clé du salon (salon fermé) ; `s` = le salon (`#` = tout le monde).
 - `mp` : `a` = destinataire, `d` = `{ "x": "<texte>" }` chiffré par la clé de la paire. Le destinataire renvoie un `ack`
   (`a` = l'auteur, `d = { "r": "<i du message>" }`, `"l": 1` quand il est lu).
+- (0.99.38) **la boîte d'envoi** : un `mp` sans `ack` est renvoyé (à chaque nouveau voisin, quand le destinataire s'annonce, chaque minute ;
+  24 h et 8 essais au plus, 20 s entre deux) avec un **nouvel `i`** (sinon les relais le jettent : déjà vu) ; l'id du MESSAGE voyage dans le
+  chiffré : `{ "x": …, "m": "<16 hex : l'i du premier envoi>" }`. Le destinataire affiche et accuse `m` (un seul message, même reçu deux fois).
+- (0.99.38) **les coursiers** (spray-and-wait) : un `mp` porte `"c": <copies, 1..16>` (8 au départ). Qui le voit passer pour quelqu'un qui
+  n'est pas son voisin direct le garde (72 h, 100 au plus). Une copie relayée ou rejouée par `sync` part avec `c: 1` (elle attend). À un
+  NOUVEAU voisin, le porteur donne la moitié de ses copies (`h: 0, c: moitié` : il garde, il ne diffuse pas). Quand le destinataire est
+  à côté (un de ses paquets arrive avec `h = 255`), le porteur le lui remet (`h: 0`) et l'oublie ; s'il s'annonce plus loin, une copie part
+  vers lui (une fois par 10 min). Un `ack` qui passe (`d.r`) vide la sacoche de ce message.
 - `pos` : `{ lat, lng, precision, cap, rdv? }` ou `{ fin: true }`, chiffré pour un pote (`a`) ou un salon fermé (`s`), jamais en clair.
 
 ## 5. La carte de pote (le QR, 0.99.35)

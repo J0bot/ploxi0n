@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.38', titre: 'Les messages arrivent même plus tard', points: [
+    '✉ Un message privé qui n\'est pas arrivé repart tout seul (à chaque nouveau voisin, quand ton pote réapparaît), jusqu\'à l\'accusé ; après 24 h ou 8 essais, « ⚠ pas remis ».',
+    '✉ Les coursiers, comme bitchat : un téléphone qui croise ton message pour quelqu\'un d\'absent l\'emporte (chiffré) et le lui remet quand il le croise. Proche › autour montre ce qui est en route.',
+  ] },
   { v: '0.99.37', titre: 'La carte du maillage', points: [
     '◈ Proche › autour : la carte du maillage. Toi au centre, tes voisins directs autour, les autres plus loin ; un trait par lien. « Maillé » quand des nœuds sont reliés entre eux, pas seulement à toi.',
     '↝ Sous chaque voisin, les paquets qu\'il t\'a fait passer pour d\'autres : la preuve qu\'il route. Un relais qui ne s\'annonce pas (un Pi, un PC) apparaît aussi, en ◌.',
