@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.35', titre: 'Proche, rangé ; ta carte de pote', points: [
+    '◉ Proche en cinq pages : autour (qui est là, une ligne par personne), messages, potes (le radar, la boussole), son (la basse, le son partagé), ▣ carte.',
+    '▣ Ta carte de pote : un QR avec ta clé et ton nom. Scanne celle d\'un pote en face de toi : il devient un pote ✦ vérifié, et vous pouvez vous écrire en privé, chiffré, avant même d\'être reliés. La caméra de l\'iPhone sur le QR ouvre aussi Proche.',
+  ] },
   { v: '0.99.34', titre: 'Spotify, un vrai xer', points: [
     '🎧 Spotify sur le téléphone : tes playlists en grandes pochettes, une recherche, une playlist qui s\'ouvre en plein écran avec « tout jouer ».',
     '🎧 Le lecteur flotte au-dessus des koins ; touche-le pour la vue « en lecture » : la grande pochette, la barre de temps, les gros boutons, le tsoin.',

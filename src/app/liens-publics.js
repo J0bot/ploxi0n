@@ -56,6 +56,8 @@ export function reparerAffichage(racine, source = PUBLIC) {
 /** un lien reçu (collé, scanné, universel) → { id, lien } à ouvrir dans l'app, ou null */
 export function lienRecu(texte, source = PUBLIC) {
   let u; try { u = new URL(String(texte || '').trim()); } catch (e) { return null; }
+  // ▣ (0.99.35) la carte d'un pote (son QR, lu par la caméra d'iOS) : Proche s'ouvre et l'ajoute
+  if (u.protocol === 'ploxi0n:' && u.host === 'pote') return { id: 'proche', lien: '?carte=' + encodeURIComponent(u.href) };
   if (u.protocol === 'ploxi0n:') { const id = (u.host === 'px' ? u.pathname : u.pathname.replace(/^\/px/, '')).replace(/^\/+/, '').split('/')[0]; return id ? { id: decodeURIComponent(id), lien: u.search } : null; }
   if (!/^https?:$/.test(u.protocol) || (u.origin !== source && !LOCAL.test(u.origin))) return null;
   let r = /^\/(?:px|app\/ouvrir)\/([^/?#]+)/.exec(u.pathname);

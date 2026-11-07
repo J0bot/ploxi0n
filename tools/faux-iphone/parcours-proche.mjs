@@ -7,7 +7,7 @@ export default async function ({ page, ecrire, emettre, procheEnvoyes }) {
   await ecrire('01-proche-eteint');
   await page.evaluate(() => { const h = document.querySelector('.px-proche'); h.querySelector('[data-pr-nom]').value = 'RS-7'; h.querySelector('[data-pr-salle]').value = 'zurich'; h.querySelector('[data-pr="allumer"]').click(); });
   await page.waitForTimeout(1500);
-  r.pairs = await page.evaluate(() => [...document.querySelectorAll('.px-proche .px-pr-pair')].map(x => x.textContent));
+  r.pairs = await page.evaluate(() => [...document.querySelectorAll('.px-proche .px-pr-pair, .px-proche .px-pr-gens li')].map(x => x.textContent));
   await page.evaluate(() => { const h = document.querySelector('.px-proche'); h.querySelector('[data-pr-msg]').value = 'on se retrouve au lac ?'; h.querySelector('[data-pr="envoyer"]').click(); });
   await page.evaluate(() => document.querySelector('.px-proche [data-pr-glyphe="♡"]').click());
   await page.waitForTimeout(800);

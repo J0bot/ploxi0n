@@ -8,7 +8,7 @@ export default async function ({ page, ecrire, procheEnvoyes, appels }) {
   await page.evaluate(() => window.ploxi0n.routeur.ouvrir('proche')); await page.waitForTimeout(1200);
   await page.evaluate(() => { const h = document.querySelector('.px-proche'); h.querySelector('[data-pr-nom]').value = 'RS-7'; h.querySelector('[data-pr-salle]').value = 'soiree'; h.querySelector('[data-pr="allumer"]').click(); });
   await page.waitForTimeout(6000);
-  r.qui = await page.evaluate(() => [...document.querySelectorAll('.px-proche .px-pr-pair')].map(x => x.textContent));
+  r.qui = await page.evaluate(() => [...document.querySelectorAll('.px-proche .px-pr-pair, .px-proche .px-pr-gens li')].map(x => x.textContent));
   r.fil = await page.evaluate(() => [...document.querySelectorAll('.px-proche .px-pr-m')].map(x => x.textContent));
   r.potes = await page.evaluate(() => [...document.querySelectorAll('.px-proche .px-pr-pote')].map(x => x.textContent));
   r.radar = await page.evaluate(() => ({ visible: !document.querySelector('[data-pr-radar]').hidden, points: document.querySelectorAll('[data-pr-radar] g.pote').length, tuiles: document.querySelectorAll('[data-pr-tuiles] img').length, echelle: [...document.querySelectorAll('[data-pr-radar] .ech')].map(x => x.textContent) }));

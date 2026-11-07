@@ -17,13 +17,20 @@ import { creerMaille, commande, PUBLIC } from '../bions/maille.js';
 import { relatif, echelle, ECHELLES, aiguille, tourner, fraicheur, tuilesAutour, ATTRIBUTION, lisserCap, tourCourt, guidage, tendance, minutesAPied, tuilesZone, ajouterTrace } from '../bions/potes.js';
 import { creerCacheTuiles } from '../app/carte-tuiles.js';   // ◫ (0.99.29) la carte hors ligne
 import { capBoussole, metres, fleche } from '../bions/autour.js';
+import { qrSvg } from '../bions/qr.js';   // ▣ (0.99.35) la carte d'un pote en QR
+import { scannerQr } from '../natif/scanner-qr.js';
+import { lireCarte } from '../bions/maille.js';
+
+// (0.99.35, RS-7 : « l'UI de ce ploxion, encore ultra bloat : des sections distinctes, des pages différentes ») cinq pages, une à la fois
+export const PAGES = [['autour', '◉', 'autour'], ['messages', '≡', 'messages'], ['potes', '⌖', 'potes'], ['son', '∿', 'son'], ['carte', '▣', 'carte']];
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const httpsSeul = (u) => { try { const x = new URL(String(u)); return x.protocol === 'https:' ? x.href : null; } catch (e) { return null; } };
 
 export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () => {}, Contexte = W && (W.AudioContext || W.webkitAudioContext), maintenant = () => Date.now(), position = null, ouvrirLien = null }) {
   const e = { nom: '', salle: 'xerboxion', actif: false, moi: null, pairs: new Map(), messages: [],
-    basse: null, basseHote: null, son: null, sonHote: null, ecoute: { basse: false, son: false }, erreur: '', salon: PUBLIC, info: '' };
+    basse: null, basseHote: null, son: null, sonHote: null, ecoute: { basse: false, son: false }, erreur: '', salon: PUBLIC, info: '',
+    page: null, nonLus: 0, carteEnAttente: null, scan: null };   // (0.99.35) la page ouverte (null : autour si éteint, messages sinon), ce qui est arrivé ailleurs, une carte reçue par un lien
   let moteurSon = null, hote = null, ping = 0, annonce = 0, calage = 0, ordo = 0, ctx = null, audio = null, jusque = 0, peindre = () => {};
   const pret = boxion.get('reglages', 'proche').then(v => { if (v && typeof v === 'object') { e.nom = String(v.nom || ''); e.salle = String(v.salle || 'xerboxion'); } }).catch(() => {});
 
@@ -36,10 +43,20 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
   if (maille) maille.surChange((q) => {
     if (q === 'mention') { vibrer('fx-arrivee'); return; }   // (0.99.22) « @ton nom »
     if (q === 'positions') { peindre('potes'); return; }
-    if (q === 'messages') { const m = maille.fil(e.salon).at(-1); if (m && !m.moi) vibrer('selection'); if (e.salon[0] === '@' && vue) maille.lire(e.salon); }
+    if (q === 'messages') { const m = maille.fil(e.salon).at(-1); if (m && !m.moi) { vibrer('selection'); if (pageDe() !== 'messages') { e.nonLus++; peindre('onglets'); } } if (e.salon[0] === '@' && vue && pageDe() === 'messages') maille.lire(e.salon); }
     peindre(q === 'messages' || q === 'pairs' ? q : undefined);
   });
   let vue = false;   // la page est à l'écran (les « lu » ne partent que si la conversation est vraiment ouverte)
+  const pageDe = () => e.page || (e.actif ? 'messages' : 'autour');
+  /** ▣ (0.99.35) une carte de pote (scannée, ou reçue par ploxi0n://pote…) : ajoutée tout de suite si Proche tourne, sinon au démarrage */
+  async function ajouterCarte(texte) {
+    if (!maille) return { erreur: 'pas de maillage ici' };
+    if (!lireCarte(texte)) { e.info = 'ce QR n\'est pas une carte de pote ploxi0n'; peindre(); return { erreur: e.info }; }
+    if (!maille.moi()) { e.carteEnAttente = texte; e.info = '▣ une carte de pote attend : démarre Proche pour l\'ajouter'; peindre(); return { attente: true }; }
+    const r = await maille.ajouterCarte(texte);
+    e.info = r.erreur ? '▣ ' + r.erreur : '✦ ' + (r.nom || r.fp.slice(0, 4)) + ' est ton pote, vérifié en vrai : messages privés et position chiffrée, même avant qu\'il soit autour';
+    vibrer(r.erreur ? 'erreur' : 'succes'); if (!r.erreur && P.partage && P.partage.potes) envoyerPosition(true); peindre(); return r;
+  }
 
   // ---- ⌖ (0.99.22) LES POTES : partager sa position (chiffrée pour ses potes ✦, ou un salon fermé), le radar, la boussole, la carte ----
   // Ne pas nuire : rien ne part sans « partager » ; jamais dans un salon ouvert ; ça s'arrête tout seul (1 h, 4 h) ; « ■ arrêter » efface la
@@ -176,6 +193,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     // ᛒ (0.99.20) le Bluetooth bas niveau : ce téléphone s'annonce comme un ploxi, et voit les ploxis à portée AVANT qu'ils soient connectés
     const O = W && W.jOSOndes;
     if (O) { try { await O.annoncer(e.nom || 'ploxion'); await O.scanner(); if (!offOndes) offOndes = O.sur((v) => { if (v.ploxi) peindre('pairs'); }); } catch (x) { /* Proche vit sans */ } }
+    if (e.carteEnAttente) { const c = e.carteEnAttente; e.carteEnAttente = null; ajouterCarte(c); }
     vibrer('fx-arrivee'); peindre(); return true;
   }
   async function arreter() {
@@ -296,7 +314,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
   function couperSon() { W.clearInterval(calage); calage = 0; if (audio) { try { audio.pause(); } catch (x) { /* */ } } }
 
   // ---- la page ----
-  function mount(hoteEl) {
+  function mount(hoteEl, o) {
     let vivant = true;
     const directs = () => [...e.pairs].map(([id, p]) => '<span class="px-pr-pair' + (p.etat === 'connecte' ? ' on' : '') + '" data-neurone>◉ ' + esc(nomDe(id))
       + (p.ecart ? ' <small>' + (p.ecart.allerRetour < 1 ? '<1' : Math.round(p.ecart.allerRetour)) + ' ms</small>' : p.etat === 'connexion' ? ' <small>…</small>' : '') + '</span>').join('');
@@ -304,9 +322,20 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     const loin = () => (maille ? maille.pairs().filter(p => !p.direct).map(p => '<span class="px-pr-pair px-pr-loin' + (p.bloque ? ' bloque' : '') + '" data-neurone>○ ' + esc(p.nom || '?') + '<small>#' + p.fp.slice(0, 4) + ' · ' + p.sauts + ' saut' + (p.sauts > 1 ? 's' : '') + '</small></span>').join('') : '');
     // ᛒ (0.99.20, la branche xerbot-ledfx) les ploxis vus en Bluetooth bas niveau, à portée, avant même d'être reliés
     const ondes = () => ((W && W.jOSOndes) ? W.jOSOndes.appareils().filter(v => v.ploxi).slice(0, 12).map(v => '<span class="px-pr-pair">ᛒ ' + esc(v.nom || 'ploxi') + ' <small>~' + v.distance + ' m</small></span>').join('') : '');
-    const pairsHtml = () => ((e.pairs.size || (maille && maille.pairs().length) || ondes()) ? directs() + ondes() + loin()
-      + (maille ? '<div class="px-pr-qui">' + maille.pairs().map(p => '<button type="button" data-pr-fav="' + p.fp + '" aria-label="pote">' + (p.favori ? '✦' : '✧') + '</button><button type="button" data-pr-mp="' + p.fp + '"' + (p.cle ? '' : ' disabled') + '>@' + esc(p.nom || p.fp.slice(0, 4)) + (p.verifie ? ' ✓' : '') + '</button><button type="button" data-pr-bloq="' + p.fp + '" aria-label="' + (p.bloque ? 'débloquer' : 'bloquer') + '">' + (p.bloque ? '↺' : '⊘') + '</button>').join('') + '</div>' : '')
-      : '<p class="px-sous">' + (e.actif ? 'personne autour pour l\'instant, dans la salle « ' + esc(e.salle) + ' » ; les autres ouvrent Proche, même salle, et démarrent' : 'éteint : personne ne te voit') + '</p>');
+    // (0.99.35) une ligne par personne, ses actions dessus : ✦ pote, écrire (en privé, chiffré), ⊘ bloquer ; ce qui est vu en ᛒ mais pas encore relié en dessous
+    const pairsHtml = () => {
+      const ond = (W && W.jOSOndes) ? W.jOSOndes.appareils().filter(v => v.ploxi).slice(0, 12) : [];
+      const l = maille ? maille.pairs() : [];
+      if (!l.length && !e.pairs.size && !ond.length) return '<p class="px-sous">' + (e.actif ? 'personne autour pour l\'instant, dans la salle « ' + esc(e.salle) + ' » ; les autres ouvrent Proche, même salle, et démarrent' : 'éteint : personne ne te voit') + '</p>';
+      if (!maille) return directs() + ond.map(v => '<span class="px-pr-pair">ᛒ ' + esc(v.nom || 'ploxi') + ' <small>~' + v.distance + ' m</small></span>').join('');
+      const ms = (p) => { const d = [...e.pairs].find(([id]) => nomDe(id) === p.nom); return d && d[1].ecart ? (d[1].ecart.allerRetour < 1 ? '<1' : Math.round(d[1].ecart.allerRetour)) + ' ms' : 'direct'; };
+      return '<ul class="px-pr-liste px-pr-gens">' + l.map(p => { const o = ond.find(v => v.nom === p.nom);
+        return '<li class="' + (p.direct ? 'on' : 'loin') + (p.bloque ? ' bloque' : '') + '"><b>' + (p.direct ? '◉ ' : '○ ') + esc(p.nom || '?') + '</b><small>#' + p.fp.slice(0, 4) + ' · ' + (p.direct ? ms(p) : p.sauts + ' saut' + (p.sauts > 1 ? 's' : '')) + (o ? ' · ~' + o.distance + ' m' : '') + (p.verifie ? ' · ✓' : '') + '</small>'
+          + '<button type="button" data-pr-fav="' + p.fp + '" aria-label="' + (p.favori ? 'retirer des potes' : 'ajouter aux potes') + '"' + (p.favori ? ' class="on"' : '') + '>' + (p.favori ? '✦' : '✧') + '</button>'
+          + '<button type="button" data-pr-mp="' + p.fp + '"' + (p.cle ? '' : ' disabled') + '>écrire</button>'
+          + '<button type="button" data-pr-bloq="' + p.fp + '" aria-label="' + (p.bloque ? 'débloquer' : 'bloquer') + '">' + (p.bloque ? '↺' : '⊘') + '</button></li>'; }).join('')
+        + ond.filter(v => !l.some(p => p.nom === v.nom)).map(v => '<li class="loin"><b>ᛒ ' + esc(v.nom || 'ploxi') + '</b><small>~' + v.distance + ' m · pas encore relié</small></li>').join('') + '</ul>';
+    };
     const qui = (m) => (m.moi ? 'toi' : (m.nom || nomDe(m.de)) + (m.de && /^[0-9a-f]{16}$/.test(m.de) ? '#' + m.de.slice(0, 4) : ''));
     const messagesHtml = () => fil().slice(-60).map(m => '<p class="px-pr-m' + (m.moi ? ' moi' : '') + (m.texte == null ? ' ferme' : '') + (m.mention ? ' mention' : '') + '"><b>' + esc(qui(m)) + '</b> '
       + (m.texte == null ? '<i>◈ message fermé (pas le bon mot de passe, ou pas pour toi)</i>' : esc(m.texte))
@@ -405,22 +434,62 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
         : '<button type="button" class="px-pr-b px-pr-go" data-pr="son-rejoindre">▷ rejoindre le son de ' + esc(nomDe(e.sonHote)) + '</button><p class="px-sous">' + esc(e.son.url.replace(/^https:\/\//, '').slice(0, 60)) + '</p>';
       return '<div class="px-pr-envoi"><input type="url" inputmode="url" placeholder="https://… un son (mp3, m4a)" data-pr-url' + (e.actif ? '' : ' disabled') + '><button type="button" data-pr="son-heberger" aria-label="héberger ce son"' + (e.actif ? '' : ' disabled') + '>▷</button></div>';
     };
-    hoteEl.innerHTML = '<div class="px-page px-proche" data-neurones="fin"><p class="px-grave" data-pr-titre>◉ proche</p>'
-      + '<p class="px-sous">les téléphones autour de toi, sans internet : un maillage, comme bitchat. Chaque téléphone relaie les messages des autres (jusqu\'à 7 sauts), les garde pour ceux qui arrivent après ; les messages privés sont chiffrés de bout en bout. Et une basse, un son, partagés. Trois touchers sur « ◉ proche » : tout effacer.</p>'
-      + '<div class="px-pr-id" data-neurone><input type="text" maxlength="24" placeholder="ton nom" data-pr-nom><input type="text" maxlength="40" placeholder="la salle" data-pr-salle><button type="button" data-pr="allumer"></button></div>'
-      + '<p class="px-pr-err" data-pr-err hidden></p><div class="px-pr-pairs" data-pr-pairs></div>'
-      + '<p class="px-pr-moi" data-pr-moi></p>'
-      + '<h3 class="px-pr-t">≡ messages</h3><div class="px-pr-salons" data-pr-salons></div><p class="px-pr-dm" data-pr-dm hidden></p><div class="px-pr-fil" data-pr-fil data-neurone data-ecrit></div>'
+    // ▣ (0.99.35) la page « carte » : ma carte en QR (on me scanne), scanner celle d'un pote, mes potes ✦, mon empreinte, tout effacer
+    const carteHtml = () => {
+      if (!maille) return '<p class="px-sous">pas de maillage ici (il faut la cryptographie du téléphone)</p>';
+      const m = maille.moi(), c = maille.carte(), potes = maille.favoris();
+      let h = '';
+      if (e.scan) h += '<div class="px-pr-scan"><video data-pr-video playsinline muted></video><p class="px-sous">vise la carte de ton pote (dans son Proche › ▣ carte)</p><button type="button" class="px-pr-b" data-pr-scan-fin>× arrêter</button></div>';
+      else h += '<button type="button" class="px-pr-b px-pr-go" data-pr-scan' + (m ? '' : ' disabled') + '>▣ scanner la carte d\'un pote</button>';
+      if (e.carteEnAttente) h += '<p class="px-pr-l">▣ une carte de pote attend : démarre Proche (page autour) pour l\'ajouter</p>';
+      if (c && !e.scan) h += '<div class="px-pr-qr" data-neurone>' + qrSvg(c, { titre: 'ma carte de pote ploxi0n' }) + '</div>'
+        + '<p class="px-pr-carte-n"><b>' + esc(m.nom || 'sans nom') + '</b> · ' + esc(m.fp.match(/.{4}/g).join(' ')) + '</p>'
+        + '<p class="px-sous">ta carte : ta clé publique et ton nom, rien d\'autre. Qui la scanne en face de toi t\'ajoute comme pote vérifié ; fais pareil avec la sienne.</p>';
+      else if (!m) h += '<p class="px-sous">démarre Proche (page autour) : ta carte apparaît ici.</p>';
+      h += '<h3 class="px-pr-t">✦ mes potes</h3>' + (potes.length ? '<ul class="px-pr-liste">' + potes.map(f => '<li><b>' + esc(f.nom || f.fp.slice(0, 4)) + '</b><small>#' + f.fp.slice(0, 4) + (f.verifie ? ' · ✓ vérifié' : '') + (f.la ? ' · là' : '') + '</small><button type="button" data-pr-mp="' + f.fp + '"' + (f.cle ? '' : ' disabled') + '>écrire</button><button type="button" data-pr-fav="' + f.fp + '" aria-label="retirer des potes">×</button></li>').join('') + '</ul>' : '<p class="px-sous">aucun pote pour l\'instant : scanne leur carte, ou ✦ quelqu\'un dans la page autour</p>');
+      if (m) h += '<p class="px-pr-moi">' + moiHtml() + '</p><button type="button" class="px-pr-b px-pr-danger" data-pr-effacer>tout effacer (une nouvelle empreinte, plus aucun message)</button>';
+      return h;
+    };
+    const onglets = () => PAGES.map(([k, g, n]) => '<button type="button" role="tab" data-pr-page="' + k + '" aria-selected="' + (pageDe() === k) + '"' + (pageDe() === k ? ' class="on"' : '') + '><span>' + g + '</span><b>' + n + '</b>' + (k === 'messages' && e.nonLus ? '<i>' + Math.min(99, e.nonLus) + '</i>' : '') + (k === 'son' && (hote || e.basse || e.son) ? '<i>•</i>' : '') + '</button>').join('');
+    hoteEl.innerHTML = '<div class="px-page px-proche" data-neurones="fin">'
+      + '<div class="px-pr-tete"><p class="px-grave" data-pr-titre>◉ proche</p><span class="px-pr-etat" data-pr-etat></span></div>'
+      + '<nav class="px-pr-onglets" role="tablist" data-pr-onglets></nav>'
+      + '<p class="px-pr-err" data-pr-err hidden></p><p class="px-pr-info" data-pr-info hidden></p>'
+      // ◉ autour : qui je suis, démarrer, qui est là
+      + '<section data-pr-section="autour"><div class="px-pr-id" data-neurone><input type="text" maxlength="24" placeholder="ton nom" data-pr-nom><input type="text" maxlength="40" placeholder="la salle" data-pr-salle><button type="button" data-pr="allumer"></button></div>'
+      + '<p class="px-sous">les téléphones autour, sans internet : chacun relaie les messages des autres (7 sauts), les privés sont chiffrés de bout en bout. Rien n\'est annoncé avant « démarrer ».</p>'
+      + '<h3 class="px-pr-t">qui est là</h3><div class="px-pr-pairs" data-pr-pairs></div></section>'
+      // ≡ messages
+      + '<section data-pr-section="messages"><div class="px-pr-salons" data-pr-salons></div><p class="px-pr-dm" data-pr-dm hidden></p><div class="px-pr-fil" data-pr-fil data-neurone data-ecrit></div>'
       + '<div class="px-pr-glyphes" data-ecrit>' + GLYPHES_MSG.map(g => '<button type="button" data-pr-glyphe="' + esc(g) + '" aria-label="envoyer : ' + esc(NOMS_GLYPHES[g] || g) + '">' + esc(g) + '</button>').join('') + '</div>'
-      + '<div class="px-pr-envoi"><input type="text" maxlength="1000" placeholder="un message · /j #salon · /m @nom · /w" data-pr-msg><button type="button" data-pr="envoyer" aria-label="envoyer">→</button></div><p class="px-pr-info" data-pr-info hidden></p>'
-      + '<h3 class="px-pr-t">⌖ mes potes</h3><div class="px-pr-potes" data-neurone><div data-pr-pos-ctl></div><p class="px-sous" data-pr-pos-etat></p>'
+      + '<div class="px-pr-envoi"><input type="text" maxlength="1000" placeholder="un message · /j #salon · /m @nom · /w" data-pr-msg><button type="button" data-pr="envoyer" aria-label="envoyer">→</button></div></section>'
+      // ⌖ potes : la position, le radar, la boussole
+      + '<section data-pr-section="potes"><div class="px-pr-potes" data-neurone><div data-pr-pos-ctl></div><p class="px-sous" data-pr-pos-etat></p>'
       + '<div data-pr-radar hidden><div class="px-pr-radar" data-pr-disque><div class="px-pr-tuiles" data-pr-tuiles></div><div data-pr-radar-svg></div></div><div class="px-pr-rbtn"><button type="button" data-pr-carte>◫ carte</button><button type="button" data-pr-devant></button><button type="button" data-pr-zoom="1" aria-label="zoomer">＋</button><button type="button" data-pr-zoom="-1" aria-label="dézoomer">－</button><button type="button" data-pr-zoom-auto>auto</button><small class="px-pr-attrib" data-pr-attrib hidden>' + ATTRIBUTION + '</small></div></div>'
-      + '<div class="px-pr-boussole" data-pr-boussole hidden></div><div class="px-pr-potes-l" data-pr-potes-l></div></div>'
-      + '<h3 class="px-pr-t">∿ la basse</h3><div data-pr-basse data-neurone></div><h3 class="px-pr-t">▷ le son</h3><div data-pr-son data-neurone></div></div>';
+      + '<div class="px-pr-boussole" data-pr-boussole hidden></div><div class="px-pr-potes-l" data-pr-potes-l></div></div></section>'
+      // ∿ son : la basse, le son
+      + '<section data-pr-section="son"><h3 class="px-pr-t">∿ la basse</h3><div data-pr-basse data-neurone></div><h3 class="px-pr-t">▷ le son</h3><div data-pr-son data-neurone></div></section>'
+      // ▣ carte
+      + '<section data-pr-section="carte"><div data-pr-carte-page></div></section></div>';
     const $ = (s) => hoteEl.querySelector(s);
     pret.then(() => { if (!vivant) return; $('[data-pr-nom]').value = e.nom; $('[data-pr-salle]').value = e.salle; });
+    let scanneur = null;
+    const fermerScan = () => { if (scanneur) { scanneur.arreter(); scanneur = null; } e.scan = null; };
+    function lancerScan() {
+      fermerScan(); e.scan = true; peindre('carte');
+      const v = $('[data-pr-video]'); if (!v) return;
+      scanneur = scannerQr({ W, video: v, accepter: (t) => !!lireCarte(t), surCode: (t) => { scanneur = null; e.scan = null; ajouterCarte(t).then(() => peindre('carte')); },
+        surErreur: (x) => { scanneur = null; e.scan = null; e.info = '▣ ' + ((x && x.message) || x); peindre(); } });
+    }
+    const montrerPage = () => {
+      const k = pageDe();
+      for (const sct of hoteEl.querySelectorAll('[data-pr-section]')) sct.hidden = sct.getAttribute('data-pr-section') !== k;
+      $('[data-pr-onglets]').innerHTML = onglets();
+    };
     peindre = (quoi) => {
       if (!vivant) return;
+      if (quoi === 'onglets') { $('[data-pr-onglets]').innerHTML = onglets(); return; }
+      if (!quoi || quoi === 'carte' || quoi === 'pairs') { if (!e.scan || quoi === 'carte' && !$('[data-pr-video]')) $('[data-pr-carte-page]').innerHTML = carteHtml(); if (quoi === 'carte') return; }
       if (!quoi || quoi === 'pairs') $('[data-pr-pairs]').innerHTML = pairsHtml();
       if (!quoi || quoi === 'messages') { const f = $('[data-pr-fil]'); f.innerHTML = messagesHtml(); f.scrollTop = f.scrollHeight; $('[data-pr-salons]').innerHTML = salonsHtml(); }
       if (!quoi || quoi === 'potes') peindreRadar();
@@ -429,14 +498,18 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
         dm.hidden = false; dm.innerHTML = '◈ <span data-pr-code>…</span> ' + (pr.verifie ? '<b>✓ vérifié</b>' : '<button type="button" data-pr-verif="' + fp + '">✓ c\'est le même code</button>') + ' <button type="button" data-pr-fav="' + fp + '">' + (pr.favori || maille.favoris().some(x => x.fp === fp) ? '✦' : '✧') + '</button>';
         maille.codeSecurite(fp).then(cd => { const x = $('[data-pr-code]'); if (x) x.textContent = cd ? 'le code avec lui : ' + cd + ' (compare-le en vrai)' : 'pas encore sa clé'; }); maille.lire(e.salon); } else dm.hidden = true; }
       const b = $('[data-pr="allumer"]'); b.textContent = e.actif ? '■ éteindre' : '◉ démarrer'; b.classList.toggle('on', e.actif);
+      const et = $('[data-pr-etat]'); et.textContent = e.actif ? '● ' + (e.nom || 'ploxion') + ' · ' + e.salle + ' · ' + ((maille ? maille.pairs().length : 0) || e.pairs.size) + ' autour' : '○ éteint'; et.classList.toggle('on', e.actif);
+      montrerPage();
       for (const s of ['[data-pr-nom]', '[data-pr-salle]']) $(s).disabled = e.actif;
       const er = $('[data-pr-err]'); er.hidden = !e.erreur; er.textContent = e.erreur;
-      const inf = $('[data-pr-info]'); inf.hidden = !e.info; inf.textContent = e.info; $('[data-pr-moi]').innerHTML = e.actif ? moiHtml() : '';
+      const inf = $('[data-pr-info]'); inf.hidden = !e.info; inf.textContent = e.info;
       $('[data-pr-msg]').placeholder = e.salon[0] === '@' ? 'en privé, chiffré' : e.salon === PUBLIC ? 'un message · /j #salon · /m @nom · /w' : 'dans ' + e.salon;
       $('[data-pr-basse]').innerHTML = basseHtml(); $('[data-pr-son]').innerHTML = sonHtml();
       for (const x of hoteEl.querySelectorAll('[data-pr-glyphe],[data-pr="envoyer"],[data-pr-msg]')) x.disabled = !e.actif;
     };
     peindre();
+    // ▣ (0.99.35) ouvert par un lien ploxi0n://pote… (la caméra d'iOS sur un QR de pote) : la carte s'ajoute
+    { const l = o && o.params && typeof o.params.lien === 'string' ? o.params.lien : ''; let c = null; try { c = l ? new URLSearchParams(l.replace(/^\?/, '')).get('carte') : null; } catch (x) { c = null; } if (c) { e.page = 'carte'; ajouterCarte(c); } }
     vue = true; W.addEventListener('deviceorientation', surCap);
     boxion.get('reglages', 'proche-carte').then(v => { if (typeof v === 'boolean') { P.carte = v; peindre('potes'); } }).catch(() => {});
     // ma position pour le radar : toutes les 10 s, seulement si quelqu'un partage la sienne avec moi (ou si je partage)
@@ -445,6 +518,11 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     const desabo = maille ? maille.surChange((q) => { if (q === 'positions' && !P.moi) rafraichir(); }) : () => {};
     let touchers = [];
     hoteEl.addEventListener('click', (ev) => {
+      // (0.99.35) les pages
+      const og = ev.target.closest('[data-pr-page]'); if (og) { const k = og.getAttribute('data-pr-page'); if (k !== pageDe()) { if (k !== 'carte') fermerScan(); e.page = k; if (k === 'messages') { e.nonLus = 0; if (maille && e.salon[0] === '@') maille.lire(e.salon); } vibrer('selection'); peindre(); if (k === 'potes') peindre('potes'); if (k === 'messages') { const f = $('[data-pr-fil]'); f.scrollTop = f.scrollHeight; } } return; }
+      if (ev.target.closest('[data-pr-scan]')) { vibrer('selection'); lancerScan(); return; }
+      if (ev.target.closest('[data-pr-scan-fin]')) { fermerScan(); peindre('carte'); return; }
+      if (ev.target.closest('[data-pr-effacer]')) { effacerTout(); return; }
       // trois touchers sur le titre en moins d'une seconde : tout effacer (comme bitchat)
       if (ev.target.closest('[data-pr-titre]')) { const t = Date.now(); touchers = [...touchers.filter(x => t - x < 1000), t]; if (touchers.length >= 3) { touchers = []; effacerTout(); } return; }
       // ♫ un son reçu : il part dans le synthé (gardé dans « tes sons »), et le synthé s'ouvre
@@ -467,7 +545,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       const fa = ev.target.closest('[data-pr-fav]'); if (fa && maille) { const fp = fa.getAttribute('data-pr-fav'), est = maille.favoris().some(x => x.fp === fp); maille.favori(fp, !est); vibrer('selection'); if (!est && P.partage && P.partage.potes) envoyerPosition(true); peindre(); return; }
       const ve = ev.target.closest('[data-pr-verif]'); if (ve && maille) { maille.verifier(ve.getAttribute('data-pr-verif')); vibrer('succes'); peindre(); return; }
       const sa = ev.target.closest('[data-pr-salon]'); if (sa) { e.salon = sa.getAttribute('data-pr-salon'); e.info = ''; vibrer('selection'); peindre(); return; }
-      const mp = ev.target.closest('[data-pr-mp]'); if (mp) { e.salon = '@' + mp.getAttribute('data-pr-mp'); vibrer('selection'); peindre(); const i = $('[data-pr-msg]'); if (i) i.focus(); return; }
+      const mp = ev.target.closest('[data-pr-mp]'); if (mp) { fermerScan(); e.salon = '@' + mp.getAttribute('data-pr-mp'); e.page = 'messages'; e.nonLus = 0; vibrer('selection'); peindre(); const i = $('[data-pr-msg]'); if (i) i.focus(); return; }
       const bq = ev.target.closest('[data-pr-bloq]'); if (bq && maille) { const fp = bq.getAttribute('data-pr-bloq'); if (maille.pairs().find(p => p.fp === fp && p.bloque)) maille.debloquer(fp); else maille.bloquer(fp); vibrer('selection'); peindre(); return; }
       const g = ev.target.closest('[data-pr-glyphe]'); if (g) { envoyerMessage(g.getAttribute('data-pr-glyphe')); return; }
       const mo = ev.target.closest('[data-pr-motif]'); if (mo) { hebergerBasse({ motif: mo.getAttribute('data-pr-motif') }); vibrer('selection'); return; }
@@ -485,10 +563,10 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     });
     hoteEl.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && ev.target.matches('[data-pr-msg]')) { if (envoyerMessage(ev.target.value)) ev.target.value = ''; } });
     hoteEl.addEventListener('change', (ev) => { if (ev.target.matches('[data-pr-tempo]')) hebergerBasse({ tempo: +ev.target.value }); });
-    return { unmount() { vivant = false; vue = false; W.clearTimeout(minuteurGuide); minuteurGuide = 0; W.removeEventListener('deviceorientation', surCap); W.clearInterval(minuteurMoi); desabo(); peindre = () => {}; hoteEl.innerHTML = ''; }, joue: () => !!(hote || e.ecoute.basse || e.ecoute.son || P.partage) };
+    return { unmount() { fermerScan(); vivant = false; vue = false; W.clearTimeout(minuteurGuide); minuteurGuide = 0; W.removeEventListener('deviceorientation', surCap); W.clearInterval(minuteurMoi); desabo(); peindre = () => {}; hoteEl.innerHTML = ''; }, joue: () => !!(hote || e.ecoute.basse || e.ecoute.son || P.partage) };
   }
 
-  const api = { demarrer, arreter, envoyerMessage, effacerTout, partagerSon, partagerPosition, arreterPartage, potes: () => ({ partage: P.partage, moi: P.moi, cap: P.cap, rdv: P.rdv, positions: maille ? maille.positions() : [] }), fil, voir: (salon) => { e.salon = salon || PUBLIC; peindre(); }, maille: () => maille, hebergerBasse, arreterBasse, hebergerSon, pauseSon, arreterSon, rejoindre, quitter, heureDe,
+  const api = { ajouterCarte, page: (k) => { if (k) { e.page = k; peindre(); } return pageDe(); }, demarrer, arreter, envoyerMessage, effacerTout, partagerSon, partagerPosition, arreterPartage, potes: () => ({ partage: P.partage, moi: P.moi, cap: P.cap, rdv: P.rdv, positions: maille ? maille.positions() : [] }), fil, voir: (salon) => { e.salon = salon || PUBLIC; peindre(); }, maille: () => maille, hebergerBasse, arreterBasse, hebergerSon, pauseSon, arreterSon, rejoindre, quitter, heureDe,
     etat: () => ({ actif: e.actif, moi: e.moi, salle: e.salle, hote, pairs: [...e.pairs].map(([id, p]) => ({ id, etat: p.etat, ecart: p.ecart })), messages: fil(), salon: e.salon, info: e.info, maille: maille ? { moi: maille.moi(), pairs: maille.pairs(), salons: maille.salons(), conversations: maille.conversations() } : null, basse: e.basse, basseHote: e.basseHote, son: e.son, sonHote: e.sonHote, ecoute: { ...e.ecoute }, erreur: e.erreur }) };
   if (W) { W.jOSApps = W.jOSApps || {}; W.jOSApps.proche = { manifest: { id: 'proche', name: 'Proche', icon: '◉' }, mount }; }
   return { mount, pret, ...api, ploxion: { id: 'proche', nom: 'Proche', icone: '◉', interne: true } };

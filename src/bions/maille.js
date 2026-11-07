@@ -83,6 +83,18 @@ export function commande(texte) {
 }
 
 // ---- le paquet du maillage : { m: 1, i, o, n, h, t, k, s?, a?, d } en texte ; ce qui vient d'à côté est suspect ----
+// ▣ (0.99.35) la carte d'un pote dans un lien (le QR) : ploxi0n://pote?k=<clé publique, base64url>&f=<empreinte>&n=<nom>
+const b64url = (u8) => b64(u8).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const deb64url = (s) => deb64(String(s || '').replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((String(s || '').length + 3) % 4));
+export function lienCarte({ cle, nom = '', fp = '' }) { return 'ploxi0n://pote?k=' + b64url(cle) + (fp ? '&f=' + fp : '') + (nom ? '&n=' + encodeURIComponent(String(nom).slice(0, 24)) : ''); }
+/** → { cle: Uint8Array(65), fp?: string, nom } ou null (ce qui vient d'un QR est suspect : tout est borné) */
+export function lireCarte(texte) {
+  const t = String(texte || '').trim(); if (t.length > 400 || !/^ploxi0n:\/\/pote\?/.test(t)) return null;
+  let q; try { q = new URLSearchParams(t.slice(t.indexOf('?') + 1)); } catch (e) { return null; }
+  const cle = deb64url(q.get('k')); if (!cle || cle.length !== 65 || cle[0] !== 4) return null;
+  const fp = String(q.get('f') || '').toLowerCase(); if (fp && !HEX16.test(fp)) return null;
+  return { cle, fp: fp || null, nom: String(q.get('n') || '').replace(/[\u0000-\u001f]/g, '').slice(0, 24) };
+}
 export function lireMaille(texte) {
   if (typeof texte !== 'string' || texte.length > TAILLE_MAX || texte.indexOf('"m":1') < 0) return null;
   let o; try { o = JSON.parse(texte); } catch (e) { return null; }
@@ -110,8 +122,9 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
   const vus = creerVus(), voisins = new Set(), cache = [], cacheFav = [], pairs = new Map(), clesPartagees = new Map(), clesSalons = new Map(), debits = new Map(), positions = new Map();
   let id = null, messages = [], salons = [PUBLIC], bloques = new Set(), auditeurs = new Set(), monNom = String(nom || '').slice(0, 24);
   let favoris = new Map(), verifies = new Set();   // (0.99.22) empreinte → nom ; les paires dont le code a été comparé
+  let contacts = new Map();   // (0.99.35) empreinte → clé publique (base64) : les potes ajoutés par leur QR, connus avant même qu'ils s'annoncent
   const changer = (quoi) => { for (const f of auditeurs) { try { f(quoi); } catch (e) { /* */ } } };
-  const garder = () => { if (magasin) magasin.ecrire('maille', { messages: messages.slice(-MESSAGES_MAX), salons, bloques: [...bloques], favoris: [...favoris], verifies: [...verifies] }).catch(() => {}); };
+  const garder = () => { if (magasin) magasin.ecrire('maille', { messages: messages.slice(-MESSAGES_MAX), salons, bloques: [...bloques], favoris: [...favoris], verifies: [...verifies], contacts: [...contacts] }).catch(() => {}); };
   const nouvelId = () => hex(alea(8));
 
   // ---- l'identité ----
@@ -192,6 +205,7 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
     if (magasin && (!jwk || jwk.d !== id.jwk.d)) await magasin.ecrire('maille-identite', id.jwk).catch(() => {});
     if (sauve) { messages = Array.isArray(sauve.messages) ? sauve.messages.slice(-MESSAGES_MAX) : []; salons = Array.isArray(sauve.salons) && sauve.salons.length ? [...new Set([PUBLIC, ...sauve.salons.filter(s => SALON.test(s))])] : [PUBLIC]; bloques = new Set(Array.isArray(sauve.bloques) ? sauve.bloques.filter(x => HEX16.test(x)) : []);
       favoris = new Map(Array.isArray(sauve.favoris) ? sauve.favoris.filter(x => Array.isArray(x) && HEX16.test(x[0])).map(([f, n]) => [f, String(n || '').slice(0, 24)]) : []); verifies = new Set(Array.isArray(sauve.verifies) ? sauve.verifies.filter(x => HEX16.test(x)) : []); }
+    if (sauve && Array.isArray(sauve.contacts)) for (const [f, k] of sauve.contacts) { const brute = deb64(k); if (HEX16.test(f) && brute && brute.length === 65 && await empreinte(brute) === f) { contacts.set(f, k); const pr = pairs.get(f) || { nom: favoris.get(f) || '', cle: null, vu: 0, sauts: 9, voisin: null }; pr.cle = pr.cle || brute; pairs.set(f, pr); } }
     finAnnonce(); finAnnonce = repeter(60000, () => annoncer());   // les pairs lointains apprennent notre clé, et qu'on est là
     for (const v of voisins) { annoncer([v]); emettre(paquetDe('sync', { h: 0, d: { ids: recents() } }), [v]); }   // des voisins arrivés avant l'identité
     changer('tout'); return { fp: id.fp };
@@ -332,17 +346,35 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
   }
 
   /** tout effacer, d'un geste : une nouvelle identité, plus aucun message, salon, bloqué, favori, position, ni rien en cache */
+  // ---- ▣ (0.99.35, RS-7 : « de meshlink, seulement le code QR ») LA CARTE D'UN POTE : ma clé publique et mon nom dans un QR ----
+  // Le scanner en vrai = le voir en face : il devient un pote ✦ VÉRIFIÉ (comme si on avait comparé le code de sécurité), sa clé est gardée,
+  // les messages privés et la position chiffrée marchent tout de suite, même avant qu'il s'annonce dans le maillage. L'empreinte se recalcule
+  // depuis la clé : une carte trafiquée (une clé qui ne donne pas son empreinte) est refusée.
+  function carte() { return id ? lienCarte({ cle: id.brute, nom: monNom, fp: id.fp }) : null; }
+  async function ajouterCarte(texte) {
+    if (!id) return { erreur: 'démarre Proche d\'abord' };
+    const c = lireCarte(texte); if (!c) return { erreur: 'ce QR n\'est pas une carte de pote ploxi0n' };
+    const fp = await empreinte(c.cle);
+    if (c.fp && c.fp !== fp) return { erreur: 'carte trafiquée : la clé ne donne pas cette empreinte' };
+    if (fp === id.fp) return { erreur: 'c\'est ta propre carte' };
+    const pr = pairs.get(fp) || { nom: '', cle: null, vu: 0, sauts: 9, voisin: null };
+    if (pr.cle && hex(pr.cle) !== hex(c.cle)) clesPartagees.delete(fp);
+    pr.cle = c.cle; pr.nom = pr.nom || c.nom; pairs.set(fp, pr);
+    contacts.set(fp, b64(c.cle)); favoris.set(fp, pr.nom || c.nom); verifies.add(fp); bloques.delete(fp);
+    garder(); changer('pairs'); return { fp, nom: pr.nom || c.nom };
+  }
+
   async function effacerTout() {
-    messages = []; salons = [PUBLIC]; bloques = new Set(); favoris = new Map(); verifies = new Set(); pairs.clear(); clesPartagees.clear(); clesSalons.clear(); cache.length = 0; cacheFav.length = 0; positions.clear();
+    messages = []; salons = [PUBLIC]; bloques = new Set(); favoris = new Map(); verifies = new Set(); contacts = new Map(); pairs.clear(); clesPartagees.clear(); clesSalons.clear(); cache.length = 0; cacheFav.length = 0; positions.clear();
     id = await identite(null);
-    if (magasin) { await magasin.ecrire('maille-identite', id.jwk).catch(() => {}); await magasin.ecrire('maille', { messages: [], salons: [PUBLIC], bloques: [], favoris: [], verifies: [] }).catch(() => {}); }
+    if (magasin) { await magasin.ecrire('maille-identite', id.jwk).catch(() => {}); await magasin.ecrire('maille', { messages: [], salons: [PUBLIC], bloques: [], favoris: [], verifies: [], contacts: [] }).catch(() => {}); }
     if (voisins.size) annoncer();
     changer('tout'); return id.fp;
   }
 
   return {
     demarrer, arreter, voisin, recevoir, dire, prive, rejoindre, quitter, bloquer, debloquer, effacerTout, trouver,
-    favori, lire, codeSecurite, verifier, partagerPosition,
+    favori, lire, codeSecurite, verifier, partagerPosition, carte, ajouterCarte,
     favoris: () => [...favoris].map(([fp, n]) => { const p = pairs.get(fp); return { fp, nom: (p && p.nom) || n, la: !!(p && maintenant() - p.vu < 5 * 60e3), sauts: p ? p.sauts : null, cle: !!(p && p.cle), verifie: verifies.has(fp) }; }),
     positions: () => [...positions.values()].filter(x => maintenant() - x.t < POSITION_VIVE).sort((a, b) => b.t - a.t),
     fil: (salon = PUBLIC) => messages.filter(m => m.salon === salon),

@@ -1700,3 +1700,36 @@ html:not(.px-organique) .px-tel-vivant{display:none}
 @media (prefers-reduced-motion:reduce){.px-xsp .sp__side,.px-xsp .sp__main{transition:none}}
 .px-xsp .px-xsp-coeur{display:grid;place-items:center;aspect-ratio:1;background:linear-gradient(135deg,var(--acc),#3a2a5a);color:#fff;font-size:28px}
 .px-xsp .px-xsp-retour,.px-xsp .px-xsp-fermer{box-shadow:none;background:none}
+/* ◉ (0.99.35) Proche en pages : l'en-tête compact, les onglets (collés en haut), une page à la fois ; ▣ la carte (QR), le scanner */
+.px-pr-tete{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.px-pr-tete .px-grave{margin:0;cursor:pointer;-webkit-user-select:none;user-select:none}
+.px-pr-etat{font:11px/1.4 var(--mono);color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:62%}
+.px-pr-etat.on{color:var(--acc)}
+.px-pr-onglets{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin:10px 0 12px;padding:4px;border-radius:16px;
+  background:var(--surface,#120e1a);border:var(--trait,1px) solid var(--bord,#2a2438);box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.px-pr-onglets button{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;min-height:48px;padding:6px 2px;border:0;border-radius:12px;background:none;box-shadow:none;
+  color:var(--muted);font:11px/1.2 inherit;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.px-pr-onglets button span{font-size:17px;line-height:1}
+.px-pr-onglets button.on{background:var(--surface2,#1c1626);color:var(--txt)}
+.px-pr-onglets button i{position:absolute;top:4px;right:calc(50% - 22px);min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:var(--acc);color:#0b0812;font:700 10px/16px inherit;font-style:normal}
+.px-proche section[hidden]{display:none}
+.px-pr-qr{width:min(78vw,300px);margin:6px auto 10px;padding:10px;border-radius:18px;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.px-pr-qr svg{display:block;width:100%;height:auto}
+.px-pr-carte-n{text-align:center;font:12px/1.5 var(--mono);margin:0 0 6px;overflow-wrap:anywhere}
+.px-pr-scan{display:flex;flex-direction:column;align-items:center;gap:10px;margin:0 0 12px}
+.px-pr-scan video{width:min(84vw,340px);aspect-ratio:1;object-fit:cover;border-radius:18px;background:#000}
+.px-pr-liste{list-style:none;margin:0 0 14px;padding:0}
+.px-pr-liste li{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--filet,rgba(255,255,255,.06));min-width:0}
+.px-pr-liste li b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.px-pr-liste li small{flex:1;min-width:0;color:var(--muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.px-pr-liste li button{flex:0 0 auto;min-height:36px}
+.px-pr-danger{color:#e0735c;margin-top:8px}
+.px-proche .px-pr-onglets button{letter-spacing:0;text-transform:none}
+.px-proche .px-pr-onglets button b{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.px-pr-gens li.on b{color:var(--acc)}.px-pr-gens li.bloque{opacity:.5}
+.px-pr-gens li button.on{color:var(--acc)}
+.px-pr-gens li{flex-wrap:wrap;row-gap:4px}
+.px-pr-gens li b{flex:0 1 auto;max-width:45%}
+.px-pr-gens li small{flex:1 1 6em}
+.px-pr-gens li button,.px-pr-liste li button{min-height:36px;padding:0 10px;font-size:12px;letter-spacing:0}
+.px-pr-gens li.loin b{color:var(--muted)}
