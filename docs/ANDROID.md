@@ -5,8 +5,8 @@ que le xerboxion sur ton android, tu peux avoir un android sans rien et juste l'
 
 ## Avoir l'APK
 
-1. GitHub › Actions › **Android APK** › *Run workflow* (sur la branche voulue). Ou un tag `v*`, ou un commit dont le message contient `[apk]`
-   sur une branche `glob/**`. Linux seulement : minutes au tarif normal.
+1. Rien à faire : chaque push sur une branche `glob/**` qui touche l'app (src, android, les dépendances) construit l'APK tout seul
+   (GitHub › Actions › **Android APK**). Un tag `v*` aussi. Le bouton « Run workflow » n'apparaît que quand ce fichier est sur `main`.
 2. L'artefact `ploxi0n-<version>-apk` (en bas de la page du run) : un zip qui contient `app-debug.apk`.
 3. Sur le téléphone : ouvrir l'APK, autoriser « installer des applis inconnues » pour le navigateur ou les fichiers.
 

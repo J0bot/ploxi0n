@@ -1,5 +1,8 @@
 # ploxi0n sur Android (0.99.32) : un APK, sur Linux (minutes au tarif normal, pas de Mac). Les runners ubuntu ont déjà le SDK Android.
-# Comme pour iOS : à la main (workflow_dispatch), sur un tag v*, ou sur une branche glob/** quand le message du commit contient « [apk] ».
+# (0.99.40, RS-7 : « le GitHub Actions de l'apk marche pas ») il ne se lançait JAMAIS : sur un push, il attendait « [apk] » dans le message
+# (tous les runs « skipped » ; relancer un run sauté le saute encore, même commit) ; et le bouton « Run workflow » de GitHub n'existe que pour
+# un workflow présent sur la branche par défaut (main), or il n'est que sur les branches glob/**. Maintenant : chaque push sur une branche
+# glob/** qui touche l'app (src, android, les dépendances, ce fichier) construit l'APK ; un tag v* aussi ; et à la main une fois sur main.
 # Sortie : l'APK de debug (signé avec la clé de debug d'Android : s'installe directement, « sources inconnues » à autoriser), en artefact.
 # Une version Play Store (AAB signé) demandera une clé à poser par RS-7 en secret (ANDROID_KEYSTORE…) : pas encore.
 name: Android APK
@@ -7,13 +10,13 @@ on:
   push:
     tags: ['v*']
     branches: ['glob/**']
+    paths: ['src/**', 'public/**', 'android/**', 'index.html', 'package.json', 'package-lock.json', 'capacitor.config.json', 'vite.config.*', '.github/workflows/android.yml']
   workflow_dispatch:
 concurrency:
-  group: ${{ (github.event_name != 'push' || startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[apk]')) && 'android-apk' || format('android-sans-build-{0}', github.sha) }}
+  group: android-apk-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   apk:
-    if: ${{ github.event_name != 'push' || startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[apk]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
