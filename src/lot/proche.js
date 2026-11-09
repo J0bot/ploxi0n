@@ -41,12 +41,27 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     attente: (ms, f) => W.setTimeout(f, ms), repeter: (ms, f) => { const x = W.setInterval(f, ms); return () => W.clearInterval(x); },
     magasin: { lire: (k) => boxion.get('reglages', 'proche-' + k), ecrire: (k, v) => boxion.put('reglages', 'proche-' + k, v) } }) : null;
   if (maille) maille.surChange((q) => {
+    if (q === 'mention' || q === 'messages') notifierNouveaux();   // ◉ (0.99.40) Proche pas à l'écran : une notification (privé, mention)
     if (q === 'mention') { vibrer('fx-arrivee'); return; }   // (0.99.22) « @ton nom »
     if (q === 'positions') { peindre('potes'); return; }
     if (q === 'messages') { const m = maille.fil(e.salon).at(-1); if (m && !m.moi) { vibrer('selection'); if (pageDe() !== 'messages') { e.nonLus++; peindre('onglets'); } } if (e.salon[0] === '@' && vue && pageDe() === 'messages') maille.lire(e.salon); }
     peindre(q === 'messages' || q === 'pairs' ? q : undefined);
   });
   let vue = false;   // la page est à l'écran (les « lu » ne partent que si la conversation est vraiment ouverte)
+  // ◉ (0.99.40) les notifications : un message privé ou une mention, reçus quand Proche n'est pas à l'écran (ou l'app en arrière-plan) ; une
+  // fois chacun ; jamais les miens, ni un message fermé, ni le flot des salons ouverts. Le branchement : api.notifier (main.js → notifs.proche)
+  const dejaNotifies = new Set(); let notifierF = null;
+  function notifierNouveaux() {
+    if (!maille || typeof notifierF !== 'function') return;
+    const cache = vue && !(W.document && W.document.hidden) && pageDe() === 'messages';
+    for (const m of maille.derniers(10)) {
+      if (m.moi || m.texte == null || dejaNotifies.has(m.id) || (Date.now() - m.t > 120000)) continue;
+      dejaNotifies.add(m.id); if (dejaNotifies.size > 500) dejaNotifies.delete(dejaNotifies.values().next().value);
+      if (cache && e.salon === m.salon) continue;
+      const prive = m.salon[0] === '@'; if (!prive && !m.mention) continue;
+      notifierF({ titre: (prive ? '◉ ' : '@ ') + (m.nom || 'quelqu\'un') + (prive ? '' : ' · ' + m.salon), texte: m.texte, salon: m.salon, cle: m.id });
+    }
+  }
   const pageDe = () => e.page || (e.actif ? 'messages' : 'autour');
   /** ▣ (0.99.35) une carte de pote (scannée, ou reçue par ploxi0n://pote…) : ajoutée tout de suite si Proche tourne, sinon au démarrage */
   async function ajouterCarte(texte) {
@@ -589,7 +604,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     return { unmount() { fermerScan(); vivant = false; vue = false; W.clearTimeout(minuteurGuide); minuteurGuide = 0; W.removeEventListener('deviceorientation', surCap); W.clearInterval(minuteurMoi); desabo(); peindre = () => {}; hoteEl.innerHTML = ''; }, joue: () => !!(hote || e.ecoute.basse || e.ecoute.son || P.partage) };
   }
 
-  const api = { ajouterCarte, page: (k) => { if (k) { e.page = k; peindre(); } return pageDe(); }, demarrer, arreter, envoyerMessage, effacerTout, partagerSon, partagerPosition, arreterPartage, potes: () => ({ partage: P.partage, moi: P.moi, cap: P.cap, rdv: P.rdv, positions: maille ? maille.positions() : [] }), fil, voir: (salon) => { e.salon = salon || PUBLIC; peindre(); }, maille: () => maille, hebergerBasse, arreterBasse, hebergerSon, pauseSon, arreterSon, rejoindre, quitter, heureDe,
+  const api = { brancherNotifier: (f) => { notifierF = f; }, ajouterCarte, page: (k) => { if (k) { e.page = k; peindre(); } return pageDe(); }, demarrer, arreter, envoyerMessage, effacerTout, partagerSon, partagerPosition, arreterPartage, potes: () => ({ partage: P.partage, moi: P.moi, cap: P.cap, rdv: P.rdv, positions: maille ? maille.positions() : [] }), fil, voir: (salon) => { e.salon = salon || PUBLIC; peindre(); }, maille: () => maille, hebergerBasse, arreterBasse, hebergerSon, pauseSon, arreterSon, rejoindre, quitter, heureDe,
     etat: () => ({ actif: e.actif, moi: e.moi, salle: e.salle, hote, pairs: [...e.pairs].map(([id, p]) => ({ id, etat: p.etat, ecart: p.ecart })), messages: fil(), salon: e.salon, info: e.info, maille: maille ? { moi: maille.moi(), pairs: maille.pairs(), salons: maille.salons(), conversations: maille.conversations() } : null, basse: e.basse, basseHote: e.basseHote, son: e.son, sonHote: e.sonHote, ecoute: { ...e.ecoute }, erreur: e.erreur }) };
   if (W) { W.jOSApps = W.jOSApps || {}; W.jOSApps.proche = { manifest: { id: 'proche', name: 'Proche', icon: '◉' }, mount }; }
   return { mount, pret, ...api, ploxion: { id: 'proche', nom: 'Proche', icone: '◉', interne: true } };

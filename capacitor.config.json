@@ -23,6 +23,12 @@
       "iosBiometric": {
         "biometricAuth": false
       }
+    },
+    "PushNotifications": {
+      "presentationOptions": [
+        "list",
+        "badge"
+      ]
     }
   },
   "android": {

@@ -112,6 +112,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
           + '<div class="l"><span>Source<small>labo.j0bot.ch (le marketplace, les bions, le mode connecté)</small></span></div></div>'
           + (remontee ? '<p class="msg">⧗ tes tsoins (0.86)</p>' + remontee.html() : ''))
         + (notifs ? section('notifs', 'Notifications', '<div class="bloc"><div class="l"><span>Une notification de test<small>elle arrive 5 s après : verrouille le téléphone</small></span><button data-a="notif">tester</button></div>'
+          + bascule('data-t="proche"', notifs.reglage().proche !== false, 'Proche : messages privés et mentions', 'reçus par le maillage quand Proche n\'est pas à l\'écran (sans réseau aussi) ; il faut avoir permis les notifications une fois (« tester »)')
           + bascule('data-t="coord"', notifs.reglage().coord, 'Messages de coord', e.connecte ? 'tant que l\'app est ouverte (et app fermée : « même app fermée » ci-dessous)' : 'connecte-toi avec le compte admin') + '</div>'
           // 🔔 (0.91) le push (APNs, la clé sur le labo) et 🏝 les activités en direct
           + (notifs.push ? (() => { const pr = notifs.push.reglage(); return '<div class="bloc">' + bascule('data-t="push"', !!pr.actif, 'Même app fermée (push)', e.connecte ? 'le labo t\'envoie tes notifications ; ' + (pr.erreur ? '⚠ ' + pr.erreur : pr.envoye ? 'jeton envoyé au labo' : 'pas encore envoyé') : 'connecte-toi d\'abord (le labo envoie à ton compte)')
@@ -276,6 +277,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
       if (t.matches('[data-cube-face]') && cube) { await cube.choisir(+t.getAttribute('data-cube-face'), t.value); vibrer('selection'); return peindre(); }
       if (t.matches('[data-t="sante-partage"]') && sante) { const p = await sante.partager(t.checked); msg(t.checked ? (p.dernier ? '✓ envoyé à ton boxion' : '✓ activé : il partira dès que tu es connecté') : '✓ plus rien n\'est envoyé'); return; }
       if (t.matches('[data-t="mode"]')) { modeConnecte(t.checked); hud.regler(hud.config()); return; }
+      if (t.matches('[data-t="proche"]')) { await notifs.regler({ proche: t.checked }); vibrer('selection'); return; }
       if (t.matches('[data-t="coord"]')) { try { await notifs.coord(t.checked); const n = t.checked ? await notifs.verifierCoord() : []; msg(t.checked ? '✓ coord surveillé' + (n.length ? ' : ' + n.length + ' nouveau(x)' : '') : 'coord : plus de notifications'); } catch (er) { t.checked = false; await notifs.coord(false); msg('⚠ ' + (er.message || er)); } return; }
       if (t.matches('[data-t="push"]') && notifs && notifs.push) { try { if (t.checked) { await notifs.push.activer(); msg('✓ ploxi0n demande son jeton à iOS, puis l\'envoie au labo'); } else { await notifs.push.couper(); msg('push coupé : le labo oublie ce téléphone'); } } catch (er) { t.checked = false; msg('⚠ ' + (er.message || er)); } W.setTimeout(() => peindre(), 1500); return; }
       if (t.matches('[data-el]')) return majHud(c => { c.elements[+t.getAttribute('data-el')].on = t.checked; });

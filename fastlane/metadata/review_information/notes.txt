@@ -1,2 +1,11 @@
 ploxi0n fonctionne sans compte : tout l'essentiel (les ploxions de base, Santé, les tsoins, les réglages) est utilisable hors connexion.
 Le compte de démo (un compte « bion » de xerboxion.org) permet d'essayer le mode connecté. HealthKit : lecture seule, sur demande (❤ Santé iPhone) ; l'envoi d'un résumé à son propre boxion est un interrupteur explicite, éteint par défaut.
+
+Modes d'arrière-plan :
+- bluetooth-central / bluetooth-peripheral : « Proche » est une messagerie de proximité sans internet (un maillage Bluetooth entre téléphones, comme bitchat) ; les messages continuent d'être relayés et reçus quand l'app est en arrière-plan. Rien n'est annoncé avant que la personne touche « démarrer ».
+- location : la « veille » (facultative, éteinte par défaut) garde les lieux visités pour les zones de la personne, sur le téléphone seulement ; et le partage de position avec ses potes, chiffré, limité dans le temps (1 h, 4 h), qui s'arrête en un geste.
+- audio : les ambiances sonores et le lecteur continuent écran verrouillé.
+
+Notifications : toutes sont choisies par la personne (⚙ › Notifications) ; aucune notification marketing. Les messages de Proche notifient seulement les messages privés et les mentions.
+
+Pour essayer Proche, il faut deux appareils : sur chacun, Proche › autour › un nom › « démarrer » ; ils se voient et peuvent s'écrire (messages › salon « tout le monde », ou « écrire » à quelqu'un pour un message privé chiffré). ▣ carte : chacun peut scanner le QR de l'autre.

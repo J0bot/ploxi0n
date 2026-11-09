@@ -483,6 +483,8 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
     },
     /** ✉ (0.99.38) ce qui est en route : mes privés pas encore remis, les messages que je porte pour d'autres */
     transit: () => ({ boite: boite.length, sacoche: sacoche.size }), renvoyer,
+    /** les derniers messages, tous salons confondus (les notifications de Proche) */
+    derniers: (n = 20) => messages.slice(-n),
     voisins: () => [...voisins], moi: () => (id ? { fp: id.fp, nom: monNom } : null), nommer: (n) => { monNom = String(n || '').slice(0, 24); },
     surChange(f) { auditeurs.add(f); return () => auditeurs.delete(f); },
   };

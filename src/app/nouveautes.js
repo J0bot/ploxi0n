@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.40', titre: 'Les notifications de Proche', points: [
+    '🔔 Un message privé ou une mention reçus dans Proche, quand Proche n\'est pas à l\'écran : une notification, même sans réseau. La toucher ouvre la conversation. ⚙ › Notifications › Proche pour la couper.',
+    '🔔 Une notification reçue pendant que l\'app est ouverte reste aussi dans le centre de notifications.',
+  ] },
   { v: '0.99.39', titre: 'Le rond en haut à droite, parti', points: [
     '◌ Le rond vide en haut à droite (le bouton de secours du HUD du labo, laissé par un ploxion) ne se pose plus sur l\'app.',
   ] },
