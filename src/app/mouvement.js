@@ -12,16 +12,26 @@ const borne = (x) => Math.max(-1, Math.min(1, x));
 export function creerMouvement({ W = globalThis.window, prefs, plugin = null, racine = null }) {
   const D = W.document, h = D.documentElement;
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
-  let P = plugin, ecoute = null, actif = false, echec = false, enCours = false, erreur = null, web = false, b = null, abonnes = new Set(), envoiT = 0, s = { x: 0, y: 0 }, dernier = { x: 0, y: 0 }, chocT = 0;
+  let P = plugin, ecoute = null, actif = false, echec = false, enCours = false, erreur = null, web = false, b = null, abonnes = new Set(), bruts = new Set(), envoiT = 0, s = { x: 0, y: 0 }, dernier = { x: 0, y: 0 }, chocT = 0;
+  // (0.63) bruts : les abonnés qui veulent le CAPTEUR seul (la fractale, le freefall, la tuile soulevée) — le thème vivant ne se rallume pas
+  // pour eux dans un ploxion (--mx/--my sur <html> 8 fois par seconde : tout le document recalculé, hôtes lourds compris)
   const veut = () => {
     const p = prefs.lire();
-    if (echec || p.themeVivant === false || p.calme || D.hidden) return false;
+    if (echec || p.calme || D.hidden) return false;
     if (!P && !natif()) return false;
+    if (bruts.size) return true;   // (0.63) le capteur seul (la fractale, le freefall) : même sans le thème vivant
+    if (p.themeVivant === false) return false;
     // (0.53, RS-7 : « l'app lag de malade ») dans un ploxion, rien ne bouge sauf si un ploxion écoute (jOSNatif.mouvement.ecouter, devicemotion) :
     // 30 événements natifs par seconde et le style de toute la page recalculé, pour une ombre de barre
     const Rr = racine || D.getElementById('ploxi0n');
-    if (Rr && !Rr.classList.contains('px-mode-accueil') && !abonnes.size && !(W.__pxMouvementWeb > 0)) return false;
+    if (Rr && !Rr.classList.contains('px-mode-accueil') && !abonnes.size && !bruts.size && !(W.__pxMouvementWeb > 0)) return false;
     return true;
+  };
+  /** le thème lui-même (le fond, les icônes, --mx/--my) : à l'accueil, ou si un ploxion l'écoute ; jamais sous la fractale */
+  const themeVeut = () => {
+    const p = prefs.lire(), Rr = racine || D.getElementById('ploxi0n');
+    if (p.themeVivant === false || p.calme || (Rr && Rr.classList.contains('px-fx'))) return false;
+    return !Rr || Rr.classList.contains('px-mode-accueil') || abonnes.size > 0 || W.__pxMouvementWeb > 0;
   };
   /** une mesure : la gravité (gx, gy) → --mx, --my ; l'accélération propre (ax, ay, az) → un choc */
   function mesure(m) {
@@ -31,10 +41,12 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
     b.x += (gx - b.x) * 0.012; b.y += (gy - b.y) * 0.012;           // le neutre suit lentement (≈ 3 s à 30 Hz)
     s.x += (borne((gx - b.x) / 0.32) - s.x) * 0.28;                     // lissé : pas de tremblement
     s.y += (borne((gy - b.y) / 0.32) - s.y) * 0.28;
-    if (Math.abs(s.x - dernier.x) > 0.004 || Math.abs(s.y - dernier.y) > 0.004) { dernier = { x: s.x, y: s.y }; planifier(); }
+    const th = themeVeut(); if (th !== h.classList.contains('px-anime')) h.classList.toggle('px-anime', th);
+    if (th && (Math.abs(s.x - dernier.x) > 0.004 || Math.abs(s.y - dernier.y) > 0.004)) { dernier = { x: s.x, y: s.y }; planifier(); }
     // les ploxions s'abonnent (jOSNatif.mouvement.ecouter) ; le bus jOSPorts reçoit « natif/mouvement » à 10 Hz
     const ev = { x: s.x, y: -s.y, gx, gy, gz: +m.gz || 0, ax: +m.ax || 0, ay: +m.ay || 0, az: +m.az || 0 };
     for (const f of abonnes) { try { f(ev); } catch (e) { /* */ } }
+    for (const f of bruts) { try { f(ev); } catch (e) { /* */ } }
     // (0.53) sur le bus seulement si un ploxion y est abonné (chaque emit passait aussi par le journal)
     if (Date.now() - envoiT > 100 && W.jOSPorts && W.jOSPorts.emit && W.jOSPorts.topics && W.jOSPorts.topics().includes('ploxion.natif.mouvement')) { envoiT = Date.now(); try { W.jOSPorts.emit('natif', 'mouvement', ev); } catch (e) { /* */ } }
     const a = Math.hypot(+m.ax || 0, +m.ay || 0, +m.az || 0), t = Date.now();
@@ -46,12 +58,23 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
   function planifier() { if (!image) image = (W.requestAnimationFrame || ((f) => W.setTimeout(f, 16)))(appliquer); }
   function appliquer() {
     image = 0; const t = Date.now();
+    if (!themeVeut()) return;   // (0.63) sous la fractale : rien à faire bouger (--mx/--my reprennent à la mesure suivante)
     if (!cibles || t - ciblesT > 600) { ciblesT = t; cibles = [...D.querySelectorAll('.px-fond i')].map(e => [e, -16, 1.07]).concat([...D.querySelectorAll('.px-accueil>.px-pages,.px-accueil>.px-plat')].map(e => [e, 3, 1])); }
     for (const [e, k, z] of cibles) e.style.transform = 'translate3d(' + (s.x * k).toFixed(2) + 'px,' + (-s.y * k).toFixed(2) + 'px,0)' + (z !== 1 ? ' scale(' + z + ')' : '');
     if (t - varsT > 125) vars();
     else if (!varsMinute) varsMinute = W.setTimeout(() => { varsMinute = 0; vars(); }, 126 - (t - varsT));   // la dernière valeur arrive toujours
   }
-  function vars() { varsT = Date.now(); h.style.setProperty('--mx', s.x.toFixed(3)); h.style.setProperty('--my', (-s.y).toFixed(3)); }
+  // (0.64, RS-7 : « ultra lent ») --mx/--my n'est PLUS posé sur <html> : une propriété héritée qui change à la racine recalcule le style de
+  // TOUT le document — 238 ms par mesure au faux iPhone (CPU ×4) avec les 202 ploxions de RS-7, 8 fois par seconde : le fil principal
+  // saturé à l'accueil. Posé seulement sur ceux qui le lisent (le logo, le dock, la barre, les feuilles, les bulles, les mini docks) :
+  // leur sous-arbre, quelques dizaines de nœuds. Les valeurs restent lisibles : api.valeurs() (le widget cube).
+  const LECTEURS = '.px-logo,.px-dock,.px-barre,.px-tiroir,.px-bulle,.px-maintenant,.px-md';
+  let lecteurs = null, lecteursT = 0, vx = '0', vy = '0';
+  function vars() {
+    varsT = Date.now(); vx = s.x.toFixed(3); vy = (-s.y).toFixed(3);
+    if (!lecteurs || varsT - lecteursT > 600) { lecteursT = varsT; lecteurs = [...D.querySelectorAll(LECTEURS)]; }
+    for (const e of lecteurs) { e.style.setProperty('--mx', vx); e.style.setProperty('--my', vy); }
+  }
   // (0.44) LE GEL DU DÉMARRAGE (0.37 → 0.43, RS-7 sur iPhone ET iPad) : un échec ici retirait px-vivant de <html>, que ce module observait
   // lui-même → suivre() → redémarrer → échouer → retirer… une boucle de micro-tâches infinie : plus aucun dessin, plus aucun minuteur.
   // Désormais : <html> n'est plus observé, un échec est définitif pour la session, jamais deux démarrages en même temps.
@@ -61,7 +84,7 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
       if (!P) P = (await import('../natif/plugins-app.js')).PloxiApple;
       ecoute = await P.addListener('mouvement', mesure);
       await P.mouvementDebut({ hz: 30 });
-      actif = true; h.classList.add('px-anime');
+      actif = true; if (themeVeut()) h.classList.add('px-anime');
     } catch (e) {
       erreur = 'natif : ' + String((e && e.message) || e).slice(0, 160);
       try { if (ecoute) await ecoute.remove(); } catch (e2) { /* */ } ecoute = null;
@@ -76,7 +99,7 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
     mesure({ gx: -(g.x || 0) / 9.81, gy: -(g.y || 0) / 9.81, gz: -(g.z || 0) / 9.81, ax: (a.x || 0) / 9.81, ay: (a.y || 0) / 9.81, az: (a.z || 0) / 9.81 });
   }
   function repliWeb() {
-    const brancher = () => { W.addEventListener('devicemotion', surWeb); web = true; actif = true; h.classList.add('px-anime'); };
+    const brancher = () => { W.addEventListener('devicemotion', surWeb); web = true; actif = true; if (themeVeut()) h.classList.add('px-anime'); };
     const demander = W.DeviceMotionEvent && W.DeviceMotionEvent.requestPermission;
     if (!demander) return brancher();
     const unGeste = () => {
@@ -87,7 +110,7 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
   }
   async function arreter() {
     if (!actif) return; actif = false;
-    h.classList.remove('px-anime'); h.style.setProperty('--mx', '0'); h.style.setProperty('--my', '0');
+    h.classList.remove('px-anime'); vx = vy = '0'; for (const e of lecteurs || []) { e.style.removeProperty('--mx'); e.style.removeProperty('--my'); } lecteurs = null;
     for (const [e] of cibles || []) e.style.transform = ''; cibles = null; if (varsMinute) { W.clearTimeout(varsMinute); varsMinute = 0; }
     if (web) { W.removeEventListener('devicemotion', surWeb); web = false; return; }
     try { if (ecoute) await ecoute.remove(); ecoute = null; if (P && !(W.__pxMouvementWeb > 0)) await P.mouvementFin(); } catch (e) { /* */ }   // (0.47) pas si un ploxion écoute encore devicemotion (web-natif.js)
@@ -100,8 +123,10 @@ export function creerMouvement({ W = globalThis.window, prefs, plugin = null, ra
   suivre();
   const api = {
     /** un ploxion suit le téléphone : cb({ x, y (−1…1, lissés), gx, gy, gz, ax, ay, az }) → off() */
-    ecouter(cb) { abonnes.add(cb); suivre(); return () => { abonnes.delete(cb); suivre(); }; },
+    ecouter(cb, { theme = true } = {}) { const l = theme ? abonnes : bruts; l.add(cb); suivre(); return () => { l.delete(cb); suivre(); }; },
     etat: () => ({ actif, source: web ? 'web' : actif ? 'CoreMotion' : null, erreur }),
+    /** (0.64) l'inclinaison du thème (−1…1), sans la lire sur <html> */
+    valeurs: () => ({ x: +vx, y: +vy }),
   };
   W.jOSNatif = W.jOSNatif || {}; W.jOSNatif.mouvement = api;
   W.ploxi0nMouvement = api;

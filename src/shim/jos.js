@@ -15,15 +15,18 @@
 //   les autres moteurs window.jOS*  absents : les ploxions testent déjà leur existence
 // Toute autre route du serveur répond 503 {horsLigne:true} SANS toucher le réseau, et s'inscrit dans le journal 'manques' (ce qu'il faudra
 // réimplémenter) ; une URL externe part sur le réseau (les ploxions « online only »), comptée dans shim.sortants.
-// relais = { routes: [{ prefixe, vers(chemin) → url }], general() → bool, vers(chemin) → url, envoyer({methode, url, headers, corps}) →
+// relais = { routes: [{ prefixe, vers(chemin) → url, get?: GET seulement, filtre?(chemin) → bool }], general() → bool, vers(chemin) → url, envoyer({methode, url, headers, corps}) →
 // {status, texte, entetes} } : les routes nommées (ex. /bother → https://labo.j0bot.ch/api/app/bother) et, en MODE CONNECTÉ (general()),
 // toute autre route du serveur partent sur le réseau ; un GET réussi est gardé (boxion_local « routes ») et resservi hors ligne.
+
+import { corpsRelayable } from './corps-fichier.js';
+import { installerXhrRelais } from './xhr-relais.js';
 
 const NS_LS = 'localStorage';
 const NS_BOX = (ns) => 'box:' + ns;
 // (0.39, RS-7 : « ça reste bloqué » au lancement) /marketplace et /bions sont des fichiers DE L'APP : avant, en mode connecté, ils partaient
 // sur labo.j0bot.ch — sans délai, sur un réseau faible, le démarrage attendait pour toujours
-const ASSETS = /^\/(ploxions|assets|vendor|icons|fonts|img|data|marketplace|bions)\//;
+const ASSETS = /^\/(ploxions|assets|vendor|icons|fonts|img|data|marketplace|bions|coeur)\//;   // (0.99.17) coeur : le cœur Rust (WASM)
 
 export async function installerShim({ boxion, fenetre = globalThis.window, routeur = null, journalSortant = null, relais = null, distant = null } = {}) {
   if (!boxion) throw new Error('shim jOS : boxion_local manquant');
@@ -88,12 +91,26 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
     const e = { kind: 'action', ...entry };
     const local = { t: Date.now(), ...e };
     etat.tsoins.push(local);
+    if (enCours && enCours.events.length < 2000) enCours.events.push(local);
     return boxion.append('tsoins', e).then(r => { local.seq = r.seq; return r; });
   }
+  // (0.99.19, le bilan de santé : le ploxion tsoin plantait à l'ouverture) l'enregistreur du labo (_tsoin_recorder) : start / stop / isOn ;
+  // list() rend des SESSIONS { id, label, scope, at, dur, events } (gardées dans boxion_local « tsoin-sessions/liste », 200 au plus) ;
+  // pendant un enregistrement, chaque mark() entre aussi dans la session ; stop() envoie « tsoin:state » { on: false, tsoin } comme le labo
+  let enCours = null;
+  etat.sessions = await boxion.get('tsoin-sessions', 'liste').then(l => (Array.isArray(l) ? l : [])).catch(() => []);
+  const garderSessions = () => boxion.put('tsoin-sessions', 'liste', etat.sessions.slice(0, 200)).catch(() => {});
+  const session = (id) => (enCours && enCours.id === id ? enCours : etat.sessions.find(t => t.id === id || t.seq === id) || null);
+  const etatTsoin = (on, t) => { try { D.dispatchEvent(new W.CustomEvent('tsoin:state', { detail: { on, tsoin: t } })); } catch (e) { /* */ } };
   W.jOSTsoin = Object.assign(W.jOSTsoin || {}, {
+    isOn: () => !!enCours,
+    start(label, scope) { if (enCours) return enCours; enCours = { id: 'ts' + Date.now().toString(36), label: String(label || '').slice(0, 120) || 'tsoin du ' + new Date().toLocaleString('fr-CH'), scope: scope === 'construction' ? 'construction' : 'perso', at: Date.now(), dur: 0, events: [] }; etatTsoin(true, enCours); return enCours; },
+    stop() { if (!enCours) return null; const t = enCours; enCours = null; t.dur = Date.now() - t.at; etat.sessions.unshift(t); garderSessions(); etatTsoin(false, t); return t; },
+    list: () => etat.sessions.slice(), marques: () => etat.tsoins.slice(), get: (id) => session(id),
+    remove(id) { etat.sessions = etat.sessions.filter(t => t.id !== id); garderSessions(); },
+    tag(id, scope) { const t = session(id); if (t) { t.scope = scope === 'construction' ? 'construction' : 'perso'; garderSessions(); } return t; },
+    patch(id, o) { const t = session(id); if (t && o && typeof o === 'object') { Object.assign(t, o, { id: t.id }); garderSessions(); } return t; },
     mark(k, detail, extra) { const e = { k: String(k == null ? '' : k).slice(0, 80), d: detail == null ? '' : String(detail).slice(0, 120) }; if (extra && typeof extra === 'object') for (const kk in extra) if (!(kk in e)) e[kk] = extra[kk]; marquer(e).catch(() => {}); },
-    isOn: () => true, start() {}, stop() { return null; },
-    list: () => etat.tsoins.slice(), get: (id) => etat.tsoins.find(t => t.id === id || t.seq === id) || null,
     badge: (icon) => '<span>' + (icon || '⧗') + '</span>', svg: () => '',
   });
 
@@ -258,17 +275,19 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
     }
     // le relais : les routes nommées (ex. /bother → l'API sans session), puis, en MODE CONNECTÉ, toute route du serveur → labo.j0bot.ch
     // (le jeton de la personne si elle est connectée) ; un GET réussi est gardé dans boxion_local « routes » : le mode avion le resservira
-    const rel = relais && ((relais.routes || []).find(r => p === r.prefixe || p.startsWith(r.prefixe + '/')) || (relais.general && relais.general() ? { vers: relais.vers } : null));
+    const rel = relais && ((relais.routes || []).find(r => (p === r.prefixe || p.startsWith(r.prefixe + '/')) && (!r.get || methode === 'GET') && (!r.filtre || r.filtre(p))) || (relais.general && relais.general() ? { vers: relais.vers } : null));
     const cle = methode + ' ' + p + url.search;
     if (rel) {
       const cible = rel.vers(p) + url.search;
       etat.sortants.push(cible);
       try {
-        const corps = init && init.body != null ? (typeof init.body === 'string' ? init.body : init.body instanceof W.URLSearchParams ? init.body.toString() : null) : undefined;
-        if (corps === null) throw new Error('corps non texte (fichier) : pas encore relayé');
+        // 📤 (0.85) les fichiers aussi : FormData, Blob, ArrayBuffer → le multipart ou le binaire du HTTP natif (src/shim/corps-fichier.js)
+        const corps = await corpsRelayable(init && init.body, W);
+        if (corps === null) throw new Error('corps en flux : pas relayé');
         const h = {}; const hi = (init && init.headers) || {};
         if (hi instanceof W.Headers) hi.forEach((v, k) => { h[k] = v; }); else Object.assign(h, hi);
         delete h['X-CSRF-TOKEN']; delete h['x-csrf-token'];
+        if (corps && typeof corps === 'object') for (const k of Object.keys(h)) if (k.toLowerCase() === 'content-type') delete h[k];   // iOS pose le sien (le boundary)
         const r = await relais.envoyer({ methode, url: cible, headers: { Accept: 'application/json', ...h }, corps });
         const type = (r.entetes && (r.entetes['content-type'] || r.entetes['Content-Type'])) || 'application/json';
         // (0.42) jamais une réponse horodatée (?since=, ?t=, ?_=, ?after= : une clé neuve à chaque sondage → le cache grossissait sans fin et
@@ -290,6 +309,8 @@ export async function installerShim({ boxion, fenetre = globalThis.window, route
     boxion.append('manques', { methode, route: p }).catch(() => {});
     return json({ ok: false, horsLigne: true, route: p, message: 'pas encore dans ploxi0n hors ligne' }, 503);
   };
+  // 📤 (0.85) un XMLHttpRequest vers une route du serveur passe par ce fetch (le FS du labo envoie ainsi, pour suivre la progression)
+  installerXhrRelais(W, (u) => u.origin === W.location.origin && !ASSETS.test(u.pathname) && u.pathname !== '/' && u.pathname !== '/index.html');
 
   return {
     moi,

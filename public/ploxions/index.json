@@ -2,7 +2,9 @@
  "v": 1,
  "source": "labo",
  "base": [
-  "bother"
+  "bother",
+  "xp",
+  "clickion"
  ],
  "ploxions": [
   {
@@ -81,6 +83,28 @@
    "deps": [],
    "bions": [],
    "octets": 10814
+  },
+  {
+   "id": "xp",
+   "nom": "Jeu",
+   "icone": "🎮",
+   "hash": "6fa52f3f19afd05ad1cd73b01385bb1e6e910fcfbc49992aafcd18e928e8ba56",
+   "deps": [],
+   "bions": [
+    "jOSGame"
+   ],
+   "octets": 182052,
+   "labo": true
+  },
+  {
+   "id": "clickion",
+   "nom": "Clickion",
+   "icone": "◈",
+   "hash": "20bc108b30e6aa02648a9a65534da0d45e563c784e31b6a5425ab9db36720e9a",
+   "deps": [],
+   "bions": [],
+   "octets": 169047,
+   "labo": true
   }
  ]
 }

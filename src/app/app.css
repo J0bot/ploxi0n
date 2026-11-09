@@ -1,3 +1,5 @@
+/* (0.96) la ChillTekk : notre alphabet (tools/police/chilltekk.py) */
+@font-face{font-family:"ChillTekk";src:url("/fonts/chilltekk.woff2") format("woff2");font-display:swap}
 /* ploxi0n — CHILL-TEKK-7026 (RS-7 12.10 : « chill-tekk-ifier » ; « un violet profond, des bords ronds épais » ; « pas de dégradé » ;
    « pas assez sombre ; rond mais rond CHILL, pas trop ; plus futuriste ; qu'on ait l'impression que l'app a des milliers d'années, une app
    usée »). Le UI d'un endroit chill dans 5000 ans (braindump 11.10 : chill-tekk-<année + 5000>) :
@@ -14,15 +16,16 @@
   --bio:#79d9a2;           /* la veilleuse */
   --txt:#ddd6ea; --muted:#7f7699; --grave:#5f5878;
   --glow:rgba(121,217,162,.28);
-  --police:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,sans-serif;
-  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  /* (0.96) la police : la peau, sinon la préférence (src/bions/polices.js), sinon celle d'avant */
+  --police:var(--px-pol-peau,var(--px-pol,ui-rounded,"SF Pro Rounded",system-ui,-apple-system,sans-serif));
+  --mono:var(--px-mono-peau,var(--px-mono,ui-monospace,"SF Mono",Menlo,monospace));
   /* un arrondi CHILL, un peu inégal : usé par des siècles de pouces */
   --blob1:15px 17px 14px 16px; --blob2:17px 14px 16px 15px; --blob3:14px 16px 15px 17px; --blob4:16px 15px 17px 14px;
   --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .75 0 0 0 0 .7 0 0 0 0 .9 0 0 0 .055 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 html,body{margin:0;height:100%;color:var(--txt);font:15px/1.4 var(--police);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;background:var(--bg) var(--grain)}
 button{font-family:inherit;-webkit-user-select:none;user-select:none}
-#ploxi0n{height:100%;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
+#ploxi0n{height:100%;display:flex;flex-direction:column;padding-top:var(--px-haut,env(safe-area-inset-top));padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
 /* le métal usiné : un trait sombre, un filet clair à l'intérieur */
 .px-plaque,.px-visiere,.px-modif,.px-barre,.px-feuille>div,.px-tiroir{box-shadow:inset 0 0 0 1px var(--filet)}
 
@@ -72,16 +75,25 @@ button{font-family:inherit;-webkit-user-select:none;user-select:none}
 .px-barre>span:not(.px-hud){font:600 11.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;color:var(--muted)}
 .px-retour{font-size:1.4rem;line-height:1;background:var(--surface2);border:var(--trait) solid var(--bord);border-radius:12px;color:var(--acc);width:42px;height:42px;padding:0 0 3px;flex:none}
 .px-retour:active{transform:scale(.92)}
-.px-barre .px-hud{margin-left:auto;flex:none}
+.px-barre .px-hud{margin-left:auto;flex:0 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.px-barre .px-hud::-webkit-scrollbar{display:none}
+.px-barre .px-hud>*{flex:none}
+/* (0.69, RS-7 : « le dock dépasse, ensuite tous les ploxions on peut les décaler à gauche ») rien ne fait défiler la page de côté : la barre
+   défile dans elle-même, et la racine coupe ce qui dépasse */
+html,body,#ploxi0n{overflow-x:clip;max-width:100vw}
 .px-barre .px-compte{padding:0 11px}
 .px-verrou{font-size:1rem;background:var(--surface2);border:var(--trait) solid transparent;border-radius:12px;min-width:38px;min-height:38px}
 .px-hote{flex:1;min-height:0;position:relative;overflow:auto}
+/* (0.99.21) la police choisie habille le xer ; un ploxion du labo garde la sienne (⚙ › Apparence › « La police aussi dans les ploxions ») */
+html:not(.px-police-partout) .px-hote-labo{font-family:-apple-system,system-ui,"SF Pro Text","Helvetica Neue",sans-serif;--police:-apple-system,system-ui,sans-serif;--mono:ui-monospace,"SF Mono",Menlo,monospace}
 .px-erreur{color:#d993ad;padding:16px}
+.px-erreur-boot{padding:calc(env(safe-area-inset-top,0px) + 40px) 22px 22px;font:15px/1.5 var(--police,system-ui)}.px-erreur-boot p{margin:0 0 14px}.px-erreur-boot button{min-height:46px;padding:0 20px;border-radius:14px;border:2px solid #d993ad;background:none;color:#f1d6e0;font:600 15px var(--police,system-ui)}
 
 /* ---- les feuilles : une plaque qui monte du bas ---- */
 .px-feuille,.px-voile{position:fixed;inset:0;z-index:50;background:rgba(3,2,6,.78);display:flex;align-items:flex-end}
 .px-feuille>div,.px-tiroir{width:100%;box-sizing:border-box;background:var(--surface) var(--grain);border:var(--trait) solid var(--bord2);border-bottom:0;border-radius:22px 22px 0 0;
   padding:12px 18px calc(22px + env(safe-area-inset-bottom,0px))}
+/* (0.99.27) une feuille plus haute que l'écran (le tuto à ×1,45, un iPhone SE) sortait par le haut, hors d'atteinte : elle s'arrête sous l'encoche et défile */
+.px-feuille>div,.px-tiroir{max-height:calc(100% - env(safe-area-inset-top,0px) - 14px);overflow-y:auto;overflow-x:hidden;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .px-feuille>div::before,.px-tiroir::before{content:"";display:block;width:38px;height:4px;border-radius:2px;background:var(--bord2);margin:0 auto 16px}
 .px-feuille h2{margin:0 0 6px;font-size:1.1rem}.px-feuille p{color:var(--muted);margin:0 0 14px;line-height:1.45}
 .px-feuille button,.px-tiroir button{width:100%;min-height:50px;padding:0 16px;border-radius:13px;font:600 15px var(--police);margin:5px 0;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);text-align:left;transition:transform .1s;box-shadow:inset 0 0 0 1px var(--filet)}
@@ -108,7 +120,7 @@ button{font-family:inherit;-webkit-user-select:none;user-select:none}
 .px-mode-accueil .px-ecran{flex:1}
 .px-mode-accueil .px-scene{display:none}
 .px-scene{flex:1;min-height:0;position:relative}
-.px-scene>.px-hote{position:absolute;inset:0;overflow:auto}
+.px-scene>.px-hote{position:absolute;inset:0;overflow:auto;padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}   /* (0.99.27) en paysage, l'encoche est sur le côté : le ploxion ne passe plus dessous */
 .px-scene>.px-hote[hidden]{display:none}
 .px-mini{min-width:38px;min-height:38px;border-radius:12px;border:var(--trait) solid transparent;background:var(--surface2);color:var(--muted);font:600 14px var(--mono);padding:0 8px;display:inline-flex;align-items:center;gap:3px}
 .px-mini b{font:600 10px var(--mono);color:var(--bio)}
@@ -132,10 +144,12 @@ button{font-family:inherit;-webkit-user-select:none;user-select:none}
 
 /* ---- le DOCK en bas (RS-7 12.10 : « la barre boxion avec les épinglés en bas ») : compte, épinglés, ⚙, au pouce ---- */
 .px-accueil{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
-.px-dock{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);z-index:30;margin:0;padding:7px;border-radius:22px;
+.px-dock{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 10px);z-index:30;margin:0;padding:7px;border-radius:22px;
   background:rgba(15,11,24,.94) var(--grain);border:var(--trait) solid var(--bord2);box-shadow:inset 0 0 0 1px var(--filet),0 12px 30px -10px rgba(0,0,0,.8)}
 .px-dock .px-h-b{min-width:48px;min-height:48px;border-radius:14px;font-size:1.45rem}
 .px-dock .px-compte{min-height:48px;border-radius:14px}
+/* (0.99.27, « que rien ne sorte de l'écran ») le compte se rétrécit (son nom en « … ») plutôt que de pousser le dock au-delà du bord */
+.px-compte{min-width:0;flex:0 1 auto}.px-compte .n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.px-hud-c>.px-h-b,.px-hud-c>.px-h-ic{flex:none}
 .px-dock [data-reglages]{font-size:1.2rem}
 .px-mode-ploxion .px-dock{display:none}
 .px-bord{bottom:calc(env(safe-area-inset-bottom,0px) + 90px)}
@@ -161,7 +175,7 @@ button{font-family:inherit;-webkit-user-select:none;user-select:none}
 .px-vue-categories .px-plat{gap:0}.px-vue-categories .px-titre-page{margin:18px 2px 12px}.px-vue-categories .px-titre-page:first-child{margin-top:0}
 
 /* ---- plus de zooms bizarres (RS-7 12.10) : ni double-tap, ni zoom sur un champ (iOS zoome sous 16 px), ni loupe d'appui long ---- */
-html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 input,textarea,select{font-size:max(16px,1em)}
 .px-tuile,.px-ligne,.px-dock button,.px-vivant button{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 
@@ -205,6 +219,8 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]
 .px-telecommande .mk-sec{top:0}
 .px-telecommande .rg{display:flex;flex-direction:column-reverse}
 .px-telecommande .rg-tete{top:auto;bottom:0;border-bottom:0;border-top:1px solid var(--bord)}
+/* (0.99.27) sans la barre du ploxion (les koins la remplacent), ces barres touchent le bas de l'écran : elles laissent la place de l'indicateur d'accueil */
+html.px-koins.px-telecommande .rg-tete,html.px-koins.px-telecommande .mk-top{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
 .px-telecommande .px-bulle{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
 .px-telecommande .mk{padding:0;min-height:100%;box-sizing:border-box}
 .px-telecommande .mk>div[data-c]{flex:1}
@@ -236,14 +252,41 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]
 .px-calme .px-tuto-bords i,.px-calme .px-tuto-bords b,.px-calme .px-tuto-appui i{animation:none;opacity:.6}
 
 /* ---- ▔ notre barre du haut (plein écran) : à gauche et à droite de l'île, gravée en mono ---- */
-.px-haut{position:fixed;top:0;left:0;right:0;z-index:60;height:max(env(safe-area-inset-top,0px),22px);display:flex;align-items:flex-end;justify-content:space-between;padding:0 max(18px,env(safe-area-inset-left,0px)) 6px;box-sizing:border-box;background:var(--bg);font:600 12px/1 var(--mono);letter-spacing:.06em;color:var(--muted);text-transform:lowercase;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+/* ▔ (0.63) L'IMMERSION (RS-7 13.10 : « y a toujours une bordure noire en haut qui remplit pas l'écran pour une vraie immersion, il faut
+   remplir ça »). La bande noire, c'était .px-haut : un aplat var(--bg) en z60, et peint MÊME CACHÉ (son display:flex battait [hidden]) :
+   avec ou sans plein écran, sur le fond, sur les ploxions, sur ⚙. Maintenant :
+   - .px-haut est transparente ; un voile doux (rgba(0,0,0,.35) → rien, le seul dégradé de chill-tekk : il ne décore pas, il garde l'heure
+     lisible sur une photo) ; sans notre barre (barre d'iOS, ou barre coupée) : .px-haut-vide, le voile seul, aucun toucher ;
+   - --px-haut = la hauteur de la bande. #ploxi0n ne la réserve plus (un vide où se voyait le noir du body) : le premier élément de chaque
+     mode la prend EN DEDANS et peint jusqu'au bord. L'accueil (padding : les tuiles passent sous la bande en défilant, sur le fond d'écran) ;
+     la barre d'un ploxion quand elle est en haut ; en télécommande, l'hôte du ploxion (une bordure haute transparente : son contenu, ses
+     position:absolute et son défilement restent sous la bande, exactement comme avant ; son fond, lu sur la racine du ploxion par
+     barre-haut.js, la remplit : --px-hote-fond, --px-hote-image) ;
+   - un ploxion clair (html.px-haut-clair, posé par barre-haut.js) : le voile blanchit, l'encre fonce (la nôtre ; celle d'iOS par SystemBars). */
+:root{--px-haut:env(safe-area-inset-top,0px)}
+html.px-haut-on{--px-haut:max(env(safe-area-inset-top,0px),22px)}
+.px-haut{position:fixed;top:0;left:0;right:0;z-index:60;height:var(--px-haut);display:flex;align-items:flex-end;justify-content:space-between;padding:0 max(18px,env(safe-area-inset-left,0px)) 6px;box-sizing:border-box;background:none;font:600 12px/1 var(--mono);letter-spacing:.06em;color:rgba(228,222,240,.88);text-shadow:0 1px 2px rgba(0,0,0,.6);text-transform:lowercase;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.px-haut::before{content:"";position:absolute;left:0;right:0;top:0;bottom:-16px;z-index:-1;pointer-events:none;background:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,0))}
+.px-haut[hidden]{display:none}
+.px-haut-vide{pointer-events:none}
 .px-haut .g,.px-haut .d{display:flex;gap:10px;align-items:center;min-width:0;white-space:nowrap;overflow:hidden}
 .px-haut .g{flex:1}.px-haut .d{flex:1;justify-content:flex-end}
 .px-haut .ile{flex:0 0 130px}
-.px-haut [data-k="heure"]{color:var(--txt);font-size:14px;letter-spacing:.04em}
+.px-haut [data-k="heure"]{color:#f1ecfa;font-size:14px;letter-spacing:.04em}
 .px-haut [data-k="tsoins"]{color:var(--bio)}
-.px-haut .bas{color:#e08a7a}
-html.px-haut-on #ploxi0n{padding-top:max(env(safe-area-inset-top,0px),22px)}
+.px-haut .bas{color:#f0a090}
+html.px-haut-clair .px-haut{color:rgba(16,12,26,.82);text-shadow:0 1px 1px rgba(255,255,255,.4)}
+html.px-haut-clair .px-haut::before{background:linear-gradient(rgba(255,255,255,.35),rgba(255,255,255,0))}
+html.px-haut-clair .px-haut [data-k="heure"]{color:#0d0a16}
+html.px-haut-clair .px-haut [data-k="tsoins"]{color:#1d6b45}
+html.px-haut-clair .px-haut .bas{color:#a3322a}
+/* la bande, prise en dedans par le premier élément de chaque mode (sans mode : l'erreur de démarrage, la ligne 25 la garde) */
+#ploxi0n.px-mode-accueil,#ploxi0n.px-mode-ploxion{padding-top:0}
+#ploxi0n .px-accueil{padding-top:calc(var(--px-haut) + 10px)}
+#ploxi0n .px-ecran>.px-barre:first-child{padding-top:calc(var(--px-haut) + 8px)}
+html.px-telecommande #ploxi0n.px-mode-ploxion .px-ecran>.px-barre:first-child{padding-top:8px}
+html.px-telecommande .px-scene>.px-hote:not(.px-flottant):not(.px-pip):not(.px-cadre){border-top:var(--px-haut) solid transparent}
+.px-scene>.px-hote{background-color:var(--px-hote-fond,transparent);background-image:var(--px-hote-image,none);background-origin:border-box;background-repeat:no-repeat}
 /* ---- ⧗ le composeur de tsoin et le journal ---- */
 .px-tsoin textarea{width:100%;box-sizing:border-box;padding:12px;border-radius:13px;border:2px solid var(--bord2);background:var(--creux);color:var(--txt);font:16px var(--police);margin:2px 0 8px;resize:none}
 .px-tsoin .px-puces{margin:4px 0}
@@ -337,7 +380,8 @@ html:not(.px-fond-partout):has(#ploxi0n.px-mode-ploxion) .px-fond{display:none}
 .px-entree .px-accueil .px-tuile:nth-child(25){animation-delay:350ms}.px-entree .px-accueil .px-tuile:nth-child(26){animation-delay:364ms}.px-entree .px-accueil .px-tuile:nth-child(27){animation-delay:378ms}.px-entree .px-accueil .px-tuile:nth-child(28){animation-delay:392ms}.px-entree .px-accueil .px-tuile:nth-child(29){animation-delay:406ms}.px-entree .px-accueil .px-tuile:nth-child(30){animation-delay:420ms}.px-entree .px-accueil .px-tuile:nth-child(31){animation-delay:434ms}.px-entree .px-accueil .px-tuile:nth-child(32){animation-delay:448ms}
 
 @keyframes px-pose{from{opacity:0;transform:translateY(10px) scale(.94)}}
-.px-scene>.px-hote:not([hidden]){animation:px-entre .2s cubic-bezier(.2,.9,.3,1) both}
+.px-scene>.px-hote:not([hidden]){animation:px-entre .2s cubic-bezier(.2,.9,.3,1) backwards}
+.px-scene>.px-hote.px-sans-entree{animation:none}   /* (0.63) l'app amenée par la fractale : pas de clignement à la fin du zoom */
 @keyframes px-entre{from{opacity:0;transform:translateY(14px) scale(.985)}}
 .px-voile{animation:px-fondu .16s ease-out both}
 .px-voile>.px-tiroir,.px-feuille>div{animation:px-monte .24s cubic-bezier(.2,.9,.3,1.1) both}
@@ -429,7 +473,7 @@ html.px-m-xerbot .px-accueil>.px-vues,html.px-m-xerbot .px-accueil>.px-pages,htm
 .px-xb-bus{display:flex;gap:6px;margin:6px 0}.px-xb-bus input{flex:1;min-width:0;padding:9px 12px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--creux);color:inherit;font:16px var(--police)}
 /* ▤ (0.51) LES MINI DOCKS : tout ce qui vit en arrière-plan (ploxions minimisés, la musique, la blouse, la Santé, la vidéo à reprendre,
    le vocal, le tsoin pas fini), empilé au-dessus du dock ; ▤ ouvre la page de tous. Seulement sur l'accueil ; --px-md = leur hauteur. */
-.px-md{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 92px);z-index:29;display:flex;flex-direction:column-reverse;gap:6px}
+.px-md{position:fixed;left:calc(16px + env(safe-area-inset-left,0px));right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 92px);z-index:29;display:flex;flex-direction:column-reverse;gap:6px}
 .px-md[hidden],#ploxi0n:not(.px-mode-accueil) ~ .px-md{display:none}
 .px-sans-dock .px-md{bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}
 .px-md-c{display:flex;align-items:center;gap:9px;height:52px;box-sizing:border-box;padding:5px 6px 5px 5px;border-radius:17px;border:var(--trait) solid var(--bord);background:var(--surface) var(--grain);
@@ -523,7 +567,7 @@ html.px-px-chill body{
 .xki{width:1.3em;height:1.3em;display:inline-block;vertical-align:-.3em;flex:none;border-radius:22%}
 .px-ic:has(>.xki){overflow:hidden;background:#05070c;border-color:transparent}
 .px-ic>.xki{position:absolute;inset:0;width:100%;height:100%;border-radius:0}
-.px-h-b:has(>.xki){padding:0;overflow:hidden;border-color:transparent;background:#05070c}
+.px-h-b:has(>.xki){width:38px;height:38px;padding:0;overflow:hidden;border-color:transparent;background:#05070c}
 .px-h-b>.xki{width:100%;height:100%;border-radius:0;display:block}
 .px-md-g:has(>.xki){width:100%;height:100%;display:block}.px-md-g .xki{width:100%;height:100%;border-radius:0;display:block}
 .px-dock .px-h-b:has(>.xki){width:48px;height:48px}
@@ -554,22 +598,32 @@ html.px-px-chill body{
 .px-at-type{margin:8px 2px 0 !important}
 /* ⧉ (0.59) la fractale des ploxions, l'aperçu, le slider et le glissement (src/app/fractale.js) */
 @keyframes px-fx-in{from{opacity:0}}
-.px-fx-fond{position:fixed;inset:0;z-index:39;background:rgba(5,6,12,.62);-webkit-backdrop-filter:blur(10px) saturate(.85);backdrop-filter:blur(10px) saturate(.85);animation:px-fx-in .28s ease-out}
+/* (0.63) plus de flou d'arrière-plan (recalculé par le GPU à chaque image, sous des dizaines de couches 3D) : un aplat profond */
+.px-fx:not(.px-fx-prep) .px-fx-fond{animation:px-fx-in .24s ease-out}
+.px-fx-fond{position:fixed;inset:0;z-index:39;background:radial-gradient(120% 80% at 50% 45%,rgba(14,16,28,.9),rgba(3,4,9,.96));opacity:1;transition:opacity .24s ease-out;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .px-fx .px-scene{z-index:41}
 .px-mode-accueil.px-fx .px-scene,.px-mode-accueil .px-scene.px-transit{display:block;position:fixed;left:0;right:0;bottom:0;top:calc(env(safe-area-inset-top,0px) + 56px);z-index:41;pointer-events:none}
 .px-mode-accueil .px-scene.px-transit{z-index:30}
-.px-scene>.px-hote.px-fx-carte,.px-scene>.px-hote.px-fx-carte[hidden]{display:block;pointer-events:none;overflow:hidden;border-radius:28px;transform-origin:50% 50%;box-shadow:0 22px 70px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.07);transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s,border-radius .3s;will-change:transform}
-.px-fx-icone{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;border-radius:28px;background:var(--surface,#0d0d16) var(--grain);box-shadow:0 22px 70px rgba(0,0,0,.6),inset 0 0 0 1px var(--filet,rgba(255,255,255,.07));pointer-events:none;transform-origin:50% 50%;transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s;will-change:transform}
+.px-scene>.px-hote.px-fx-carte,.px-scene>.px-hote.px-fx-carte[hidden]{display:block;pointer-events:none;overflow:hidden;border-radius:28px;transform-origin:50% 50%;box-shadow:0 14px 34px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.07);transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s;will-change:transform}
+.px-fx-icone{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;border-radius:28px;background:var(--surface,#0d0d16);box-shadow:0 14px 34px rgba(0,0,0,.55),inset 0 0 0 1px var(--filet,rgba(255,255,255,.07));pointer-events:none;transform-origin:50% 50%;transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s;will-change:transform}
+/* (0.63) loin du focus (sur la tranche) : ni coins clippés ni ombre (une passe hors écran par carte et par image) ; le zoom efface les coins en route */
+.px-scene>.px-hote.px-fx-carte.px-fx-loin,.px-fx-icone.px-fx-loin{border-radius:0;box-shadow:none}
+/* (0.63) une carte est opaque : un ploxion au fond transparent laissait voir sa voisine à travers lui */
+.px-scene>.px-hote.px-fx-carte{background:var(--bg,#07070d)}
+.px-scene>.px-hote.px-fx-carte.px-fx-zoom,.px-fx-icone.px-fx-zoom{border-radius:0;box-shadow:none;transition:transform .32s cubic-bezier(.16,1,.3,1),opacity .26s,border-radius .3s}
 .px-fx-ic{width:42%;max-width:260px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--bio)}
 .px-fx-ic .xki,.px-fx-ic .px-g{width:100%;height:100%;border-radius:22%}
 .px-fx-icone b{font:600 40px var(--police);color:var(--txt);letter-spacing:.02em}
 .px-fx-icone small{font:600 24px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-.px-fx-calque{position:fixed;z-index:42;pointer-events:none}
+.px-fx-calque{position:fixed;z-index:42;pointer-events:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .px-fx-ouverte .px-fx-calque{pointer-events:auto;touch-action:none}
-.px-fx-cible{position:absolute;inset:0;width:auto;min-height:0;margin:0;padding:0;background:none;border:0;border-radius:28px;transform-origin:50% 50%;transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
+.px-fx-cible{position:absolute;inset:0;width:auto;min-height:0;margin:0;padding:0;background:none;border:0;border-radius:28px;transform-origin:50% 50%;transition:transform .38s cubic-bezier(.16,1,.3,1),opacity .26s,box-shadow .2s;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* (0.63) le voile : une couche unie dont seule l'opacité change (composée, jamais repeinte) — remplace le ::after à --voile */
+.px-fx-voile{position:absolute;inset:0;border-radius:inherit;background:#03040a;opacity:0;pointer-events:none;will-change:opacity}
 .px-fx-cible.on{box-shadow:0 0 0 4px var(--bio),0 0 60px var(--glow)}
-.px-fx-suit .px-fx-carte,.px-fx-suit .px-fx-icone,.px-fx-suit .px-fx-cible{transition:none !important}
-.px-fx-indice{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 30px);z-index:43;text-align:center;font:600 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);pointer-events:none;animation:px-fx-in .4s ease-out}
+.px-fx-suit .px-fx-carte,.px-fx-suit .px-fx-icone,.px-fx-suit .px-fx-cible,.px-fx-suit .px-fx-dessus{transition:none !important}
+/* (0.63) l'indice : TOUJOURS sur une ligne (RS-7 : « le texte passe sur deux lignes ») */
+.px-fx-indice{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 30px);z-index:43;text-align:center;font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .2s}
 .px-fx-trace{position:fixed;top:0;bottom:0;left:0;width:2px;z-index:44;pointer-events:none;background:linear-gradient(180deg,transparent,var(--bio) 30%,var(--bio) 70%,transparent);box-shadow:0 0 28px 8px var(--glow)}
 .px-scene>.px-hote.px-fx-sortant[hidden]{display:block;pointer-events:none;z-index:0;overflow:hidden;border-radius:28px}
 .px-fx-apercu .px-fx-tete{opacity:0}
@@ -579,15 +633,17 @@ html.px-px-chill body{
 .px-fx-tete i .xki,.px-fx-tete i .px-g{width:100%;height:100%;border-radius:0}
 .px-fx-tete b{min-width:0;font:600 38px var(--police);color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .px-fx-tete small{font:600 26px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-left:4px}
-.px-fx-cible::after{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(3,4,10,var(--voile,0));pointer-events:none;transition:background .3s}
-.px-fx-cible.on::before{content:"";position:absolute;left:0;bottom:-16px;height:7px;width:calc(var(--tenu,0) * 100%);border-radius:4px;background:var(--bio);box-shadow:0 0 12px var(--glow)}
-.px-fx-curseur{position:fixed;top:calc(env(safe-area-inset-top,0px) + 62px);bottom:calc(env(safe-area-inset-bottom,0px) + 66px);left:50%;width:0;z-index:43;pointer-events:none;opacity:0;transition:opacity .3s}
-.px-fx-slider .px-fx-curseur,.px-fx-cube .px-fx-curseur{opacity:1}
+.px-fx-cible.on::before{content:"";position:absolute;left:0;bottom:-16px;height:7px;width:100%;border-radius:4px;background:var(--bio);box-shadow:0 0 12px var(--glow);transform-origin:left center;transform:scaleX(var(--tenu,0))}
+.px-fx-curseur{position:fixed;top:calc(env(safe-area-inset-top,0px) + 62px);bottom:calc(env(safe-area-inset-bottom,0px) + 66px);left:50%;width:0;z-index:43;pointer-events:none;opacity:0;transition:opacity .3s;--charge:0}
+/* (0.63) le curseur de réel : seulement dans le slider (dans le cube, il traversait la face) ; il se charge vers le cube */
+.px-fx-slider .px-fx-curseur{opacity:1}
+.px-fx-curseur i{transform:scaleX(calc(1 + var(--charge) * 1.6));transition:transform .12s}
 .px-fx-curseur b{position:absolute;top:0;bottom:0;left:-1px;width:2px;background:linear-gradient(180deg,var(--bio),transparent 28%,transparent 72%,var(--bio));box-shadow:0 0 14px var(--glow)}
 .px-fx-curseur i{position:absolute;left:-16px;width:32px;height:3px;border-radius:2px;background:var(--bio);box-shadow:0 0 12px var(--glow)}
 .px-fx-curseur i:first-child{top:0}.px-fx-curseur i:last-child{bottom:0}
 .px-fx-cube .px-fx-carte,.px-fx-cube .px-fx-icone,.px-fx-cube .px-fx-cible{-webkit-backface-visibility:hidden;backface-visibility:hidden}
-.px-fx-cube .px-fx-tete{opacity:0}.px-fx-cube .px-fx-cible.on .px-fx-tete{opacity:1}
+/* (0.63) dans le cube, aucune tête (elle chevauchait la face du dessus) : le nom passe dans l'indice */
+.px-fx-cube .px-fx-tete,.px-fx-cube .px-fx-cible.on .px-fx-tete{opacity:0}
 .px-fx-dessus{position:absolute;left:0;right:0;z-index:85;opacity:0;pointer-events:none;border-radius:28px;overflow:hidden;background:var(--surface,#0d0d16) var(--grain);box-shadow:inset 0 0 0 3px var(--bio),0 0 60px var(--glow);transform-origin:50% 50%;transition:opacity .25s,transform .38s cubic-bezier(.16,1,.3,1);-webkit-backface-visibility:hidden;backface-visibility:hidden}
 .px-fx-suit .px-fx-dessus{transition:opacity .25s}
 .px-fx-dessus-in{padding:44px 48px;display:flex;flex-direction:column;gap:24px}
@@ -599,8 +655,23 @@ html.px-px-chill body{
 .px-fx-dessus-in li .px-g{width:30px;height:30px;flex:none}
 .px-freefall{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:50%;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:8px;width:auto;height:30px;min-height:0;margin:0;padding:0 12px;border-radius:15px;border:var(--trait) solid var(--bio);background:var(--surface) var(--grain);color:var(--bio);font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;box-shadow:0 0 18px var(--glow)}
 .px-freefall .px-g{width:14px;height:14px}.px-freefall b{color:var(--muted);font-size:14px;font-weight:600}
-/* (0.60.1) pendant la fractale : ni sélection, ni loupe, ni menu d'iOS, nulle part */
-.px-fx,.px-fx *,.px-tire-bord,.px-tire-bord *{-webkit-user-select:none !important;user-select:none !important;-webkit-touch-callout:none !important}
+/* (0.60.1) pendant la fractale : ni sélection, ni loupe, ni menu d'iOS — (0.63) posé une fois sur ce qui se touche (plus de « .px-fx * » :
+   tout le DOM recalculé à chaque toucher de bord) ; une sélection qui fuit est effacée (routeur.js, selectionchange) */
+.px-fx-icone,.px-fx-dessus,.px-fx-indice,.px-fx-tout{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* (0.63) la fractale devant TOUT : ce qui est accroché à <body> après <main id=ploxi0n> (mini docks, à l'écoute, barre du haut, toasts,
+   bulles et poignées des ploxions) passait par-dessus le jeu de cartes. Opacité seulement : ni mise en page, ni iframe rechargée. */
+#ploxi0n.px-fx:not(.px-fx-prep){z-index:2147483000}
+#ploxi0n.px-fx:not(.px-fx-prep)~*:not(.px-demo-doigt):not(.px-demo-badge):not(.px-carte){opacity:0 !important;pointer-events:none !important;transition:opacity .16s ease-out}
+#ploxi0n.px-fx:not(.px-fx-prep)>.px-bulle,#ploxi0n.px-fx:not(.px-fx-prep)>.px-installation{opacity:0;pointer-events:none}
+/* les bords restent atteignables pendant l'aperçu, la fractale et le slider (le deuxième doigt : les deux bords) */
+#ploxi0n.px-fx:not(.px-fx-ouverte) .px-bord{z-index:45}
+/* (0.63) la préparation (invisible) : le doigt tient depuis 0,14 s, le gros du travail se fait avant l'aperçu */
+.px-fx-prep .px-fx-fond,.px-fx-prep .px-fx-indice,.px-fx-prep .px-fx-calque,.px-fx-prep .px-fx-curseur{opacity:0;transition:none}
+/* le zoom vers l'app choisie : le décor fond pendant le zoom, pas d'un coup à la fin */
+.px-fx-zooming .px-fx-fond,.px-fx-zooming .px-fx-indice,.px-fx-zooming .px-fx-curseur,.px-fx-zooming .px-fx-salle,.px-fx-zooming .px-fx-tout{opacity:0;transition:opacity .22s ease-out}
+/* ⊞ tout le xerboxion (la carte) */
+.px-fx-tout{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 46px);transform:translateX(-50%);z-index:44;display:flex;align-items:center;gap:8px;width:auto;height:34px;min-height:0;margin:0;padding:0 14px;border-radius:17px;border:var(--trait) solid var(--bord2);background:var(--surface);color:var(--txt);font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;animation:px-fx-in .3s ease-out}
+.px-fx-tout .px-g{width:16px;height:16px;color:var(--bio)}.px-fx-tout[hidden]{display:none}
 .px-fx-calque,.px-fx-cible{-webkit-tap-highlight-color:transparent}
 .px-fantome-bions{position:fixed;z-index:91;transform:translate(-50%,calc(-100% - 52px));min-width:150px;max-width:240px;padding:10px 12px;border-radius:14px;background:var(--surface) var(--grain);box-shadow:0 12px 30px rgba(0,0,0,.6),inset 0 0 0 1px var(--bio);display:flex;flex-direction:column;gap:4px;pointer-events:none;animation:px-fx-in .2s ease-out}
 .px-fantome-bions b{font:600 13px var(--police);color:var(--txt)}.px-fantome-bions small{font:11px var(--mono);color:var(--muted)}
@@ -628,3 +699,1054 @@ html.px-px-chill body{
 .px-auj-l .px-ic{width:42px;height:42px;border-radius:12px;flex:none}
 .px-auj-tx{display:flex;flex-direction:column;min-width:0}.px-auj-tx b{font:600 14px var(--police);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.px-auj-tx small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .px-page-sp .px-cat{margin-bottom:18px}.px-page-sp .px-titre-page{margin-top:10px}
+/* ▶ (0.63) les démos : le doigt fantôme fait le geste pour de vrai (src/app/demo.js) ; les nouveautés se jouent */
+.px-demo-doigt{position:fixed;left:0;top:0;z-index:2147483600;width:46px;height:46px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.55),rgba(255,255,255,.12) 62%,transparent 70%);box-shadow:0 0 0 2px rgba(255,255,255,.55),0 0 26px 6px var(--glow,rgba(120,255,200,.35));opacity:.55;transition:opacity .15s,box-shadow .15s;will-change:transform}
+.px-demo-doigt.on{opacity:1;box-shadow:0 0 0 3px var(--bio,#7fe0b0),0 0 34px 10px var(--glow,rgba(120,255,200,.45))}
+.px-demo-doigt[hidden]{display:none}
+.px-demo-badge{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);transform:translateX(-50%);z-index:2147483601;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:16px;background:var(--surface,#0d0d16);border:var(--trait,1px) solid var(--bio,#7fe0b0);color:var(--txt,#eee);font:600 11px var(--mono,monospace);letter-spacing:.08em;white-space:nowrap;pointer-events:none;box-shadow:0 0 18px var(--glow,rgba(120,255,200,.3))}
+.px-demo-badge b{color:var(--bio,#7fe0b0)}.px-demo-badge small{color:var(--muted,#999);font-size:10px}
+.px-nv-essai{display:inline-flex;align-items:center;width:auto;min-height:0;margin:4px 0 0;padding:3px 9px;border-radius:11px;border:var(--trait) solid var(--bio);background:none;color:var(--bio);font:600 11px var(--mono);letter-spacing:.06em;vertical-align:middle}
+/* ▣ (0.63) les états d'un ploxion : plein écran, pip, cadre (src/app/routeur.js, cyclerEtat) */
+#ploxi0n.px-plein-ploxion{padding-top:0}
+.px-plein-ploxion.px-mode-ploxion>.px-ecran{display:none}
+.px-a-flottant.px-mode-accueil .px-scene{display:block;position:fixed;inset:0;z-index:35;pointer-events:none}
+.px-scene>.px-hote.px-flottant{position:fixed;left:0;top:0;right:auto;bottom:auto;width:var(--fw,100vw);height:var(--fh,100vh);z-index:35;transform:translate3d(var(--fx,0),var(--fy,0),0) scale(var(--fs,1));transform-origin:0 0;overflow:hidden;background:var(--bg);animation:none;
+  border-radius:calc(22px / var(--fs,1));box-shadow:0 0 0 calc(1px / var(--fs,1)) rgba(255,255,255,.14),0 calc(18px / var(--fs,1)) calc(44px / var(--fs,1)) rgba(0,0,0,.6);transition:transform .32s cubic-bezier(.16,1,.3,1),width .25s,height .25s,border-radius .25s}
+.px-scene>.px-hote.px-pip{pointer-events:none}
+.px-pip-tenu .px-scene>.px-hote.px-flottant{transition:none}
+.px-scene>.px-hote.px-cadre{pointer-events:auto;border-radius:0 0 16px 16px}
+.px-pip-poigne{position:fixed;left:0;top:0;z-index:36;border-radius:22px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .32s cubic-bezier(.16,1,.3,1)}
+.px-pip-tenu .px-pip-poigne{transition:none}
+.px-cadre-barre{position:fixed;left:0;top:0;z-index:36;height:38px;box-sizing:border-box;display:flex;align-items:center;gap:6px;padding:0 6px 0 10px;border-radius:16px 16px 0 0;background:var(--surface2,#14141c);border:var(--trait) solid var(--bord2);border-bottom:0;touch-action:none;-webkit-user-select:none;user-select:none;--ch:300px}
+.px-cadre-barre>span{flex:1;min-width:0;display:flex;align-items:center;gap:8px;font:600 12.5px var(--police);color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-cadre-barre>span .xki,.px-cadre-barre>span .px-g{width:18px;height:18px;flex:none;border-radius:5px}
+.px-cadre-barre button{width:30px;height:28px;min-height:0;margin:0;padding:0;border-radius:9px;border:0;background:none;color:var(--muted);font:600 15px var(--police)}
+.px-cadre-coin{position:absolute;right:-8px;top:calc(38px + var(--ch) - 26px);width:34px;height:34px;border-radius:0 0 16px 0;border-right:3px solid var(--bio);border-bottom:3px solid var(--bio);box-sizing:border-box;touch-action:none}
+/* ◎ (0.63) le HUD de tuto (src/app/tuto-hud.js) : l'iPhone au trait et ses neuf zones, tenir, le tuto du ploxion */
+.px-tuto-hud .px-tiroir section{margin:0 0 14px}
+.px-tuto-hud h3{margin:4px 2px 8px;display:flex;align-items:center;gap:8px;font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.px-tuto-hud h3 .px-g{width:14px;height:14px;color:var(--bio)}
+.px-th-tel{display:grid;grid-template-columns:1fr 92px 1fr;grid-template-rows:repeat(3,auto);gap:8px 10px;align-items:center}
+.px-th-ecran{grid-column:2;grid-row:1/4;align-self:stretch;min-height:150px;border:1.5px solid var(--txt);border-radius:18px;position:relative;opacity:.8}
+.px-th-ecran i{position:absolute;top:6px;left:50%;width:30px;height:8px;transform:translateX(-50%);border-radius:5px;background:var(--txt);opacity:.7}
+.px-th-zone{display:flex;align-items:center;gap:6px;min-height:40px;font:600 11.5px var(--police);color:var(--txt)}
+.px-th-zone b{font-weight:600;line-height:1.25}
+.px-th-g{grid-column:1;justify-content:flex-end;text-align:right;border-right:2px solid var(--bio);padding-right:8px}
+.px-th-d{grid-column:3;border-left:2px solid var(--bio);padding-left:8px}
+.px-th-zone button,.px-th-tenir button{flex:none;width:28px;height:24px;min-height:0;margin:0;padding:0;border-radius:12px;border:var(--trait) solid var(--bio);background:none;color:var(--bio);font:600 10px var(--mono)}
+.px-th-deux{margin:10px 2px 0;font:12px var(--police);color:var(--muted)}.px-th-deux b{color:var(--txt);font-weight:600}
+.px-th-tenir{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.px-th-tenir li{display:flex;align-items:center;gap:10px;padding:7px 8px 7px 10px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2)}
+.px-th-tenir li b{flex:none;width:92px;font:600 11px var(--mono);color:var(--bio)}.px-th-tenir li span{flex:1;min-width:0;overflow-wrap:anywhere;font:12.5px var(--police);color:var(--txt)}
+.px-th-ici ol{margin:0 0 8px;padding-left:22px;font:13.5px/1.45 var(--police);color:var(--txt)}
+.px-th-ici textarea{width:100%;box-sizing:border-box}
+.px-th-actions{display:flex;gap:8px;flex-wrap:wrap}.px-th-actions button{width:auto;flex:1;min-height:36px;margin:0}
+/* ☾ (0.64) dodo / réveil : la rangée santé du composeur de tsoin ; la nuit dite dans la page Santé */
+.px-tsoin-vite{display:flex;align-items:center;gap:8px;margin:8px 0 2px}
+.px-tsoin-vite small{flex:1;font:600 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.px-tiroir .px-tsoin-vite button{width:auto;min-height:38px;margin:0;padding:0 14px;border-radius:19px;border:var(--trait) solid var(--bio);background:none;color:var(--txt);font:600 13px var(--police)}
+.px-sante-dodo{margin:4px 2px 10px;font:13px/1.5 var(--police);color:var(--muted)}.px-sante-dodo b{color:var(--txt);font-weight:600}
+/* ≋ (0.64) chill-synth, phase 1 (src/chill/chill-synth.js) */
+.px-chill-src{display:flex;gap:8px;align-items:center;margin:10px 0}.px-chill-src input[type=url]{flex:1;min-width:0}
+.px-chill-modes{display:flex;gap:8px;margin:8px 0}.px-chill-modes button{flex:1;margin:0;min-height:40px;font:600 12px var(--police)}.px-chill-modes button.on{border-color:var(--bio);color:var(--bio)}
+.px-chill-piste{margin:6px 2px;font:12.5px var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.px-chill-vu{display:block;width:100%;height:120px;margin:12px 0;border-radius:12px;background:#1f1f1d}
+.px-chill-journal{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font:12.5px var(--mono);color:var(--txt)}
+/* ⊞ (0.64) la carte du xerboxion (src/app/carte-xer.js) — « le trait » : fond #1f1f1d, traits #ecebe9, la seule couleur = les fils */
+.px-carte{position:fixed;inset:0;z-index:2147483200;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  background:#1f1f1d;background-image:linear-gradient(rgba(236,235,233,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(236,235,233,.05) 1px,transparent 1px);background-size:48px 48px;color:#ecebe9;animation:px-fx-in .2s ease-out}
+.px-carte-plan{position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0;will-change:transform}
+.px-carte-fils{position:absolute;overflow:visible;pointer-events:none;stroke-width:2;opacity:.7;display:none}.px-carte[data-niveau="pres"] .px-carte-fils{display:block}
+.px-carte-case,.px-carte-cube{position:absolute;width:84px;height:84px;margin:0;padding:0;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0;background:none;color:#ecebe9;-webkit-tap-highlight-color:transparent}
+.px-carte-ic{width:52px;height:52px;display:flex;align-items:center;justify-content:center}.px-carte-ic .xki,.px-carte-ic .px-g{width:100%;height:100%}
+.px-carte-case b{max-width:92px;font:600 10px var(--police,system-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-carte-case small{display:none;font:600 9px var(--mono,monospace);color:#d8b04a;white-space:nowrap}
+.px-carte-case.ici .px-carte-ic{outline:2px solid #ecebe9;outline-offset:4px;border-radius:14px}
+.px-carte-endormi{opacity:.55}.px-carte-verrou .px-carte-ic{filter:grayscale(1)}
+.px-carte-vivant .px-carte-ic::after{content:"";position:absolute;width:8px;height:8px;margin:-40px 0 0 46px;border-radius:50%;background:#ecebe9}
+.px-carte-case.porte{z-index:5;opacity:.85}
+.px-carte-cube i{position:absolute;left:50%;top:44%;border:1.5px solid #ecebe9;transform:translate(-50%,-50%)}
+.px-carte-cube i:nth-child(1){width:60px;height:60px}.px-carte-cube i:nth-child(2){width:40px;height:40px}.px-carte-cube i:nth-child(3){width:20px;height:20px}
+.px-carte-cube b{margin-top:72px;font:600 9px var(--mono,monospace);letter-spacing:.14em;text-transform:uppercase}
+.px-carte-koin{position:absolute;transform:translate(-50%,-50%);display:none;flex-direction:column;align-items:center;gap:6px;pointer-events:none;color:#ecebe9;opacity:.8}
+.px-carte-koin .px-g{width:90px;height:90px}.px-carte-koin b{font:600 22px var(--mono,monospace);letter-spacing:.2em;text-transform:uppercase}
+.px-carte[data-niveau="loin"] .px-carte-koin{display:flex}
+.px-carte[data-niveau="loin"] .px-carte-case b{display:none}
+.px-carte[data-niveau="pres"] .px-carte-case small{display:block}
+.px-carte-x,.px-carte-moi{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:2;width:auto;height:36px;min-height:0;margin:0;padding:0 14px;border-radius:18px;border:1.5px solid #ecebe9;background:#1f1f1d;color:#ecebe9;font:600 12px var(--mono,monospace)}
+.px-carte-x{right:16px}.px-carte-moi{left:16px}
+.px-carte-aide{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);margin:0;text-align:center;font:600 10px var(--mono,monospace);letter-spacing:.12em;text-transform:uppercase;color:rgba(236,235,233,.6);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ◈ (0.66) le xerploxion : la version holographique d'un ploxion (src/app/routeur.js, basculerHolo) ; ⧈ le xerbion sur le dessus du cube */
+.px-scene>.px-hote.px-holo{transform-origin:50% 88%;border-radius:22px;overflow:hidden;opacity:.9;background:rgba(6,18,28,.55);box-shadow:0 0 0 1px rgba(120,235,255,.55),0 0 46px rgba(90,220,255,.35);will-change:transform;animation:none}
+.px-holo-on .px-scene{background:radial-gradient(70% 45% at 50% 92%,rgba(70,200,255,.18),transparent 70%),#04060b}
+.px-holo-socle{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);width:78vw;height:44px;transform:translateX(-50%);z-index:36;pointer-events:none}
+.px-holo-socle i{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(140,240,255,.75);box-shadow:0 0 26px rgba(90,220,255,.6),inset 0 0 18px rgba(90,220,255,.4)}
+.px-holo-socle b{position:absolute;left:8%;right:8%;bottom:22px;height:62vh;background:linear-gradient(0deg,rgba(90,220,255,.16),transparent);clip-path:polygon(0 100%,100% 100%,88% 0,12% 0)}
+.px-holo-on .px-scene::after{content:"";position:absolute;inset:0;z-index:37;pointer-events:none;mix-blend-mode:screen;background:repeating-linear-gradient(0deg,rgba(120,235,255,.09) 0 1px,transparent 1px 4px)}
+.px-fx-xb .px-xb-titre{margin:18px 0 8px;font:600 22px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.px-fx-xb .px-xb{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font:24px var(--mono);color:var(--txt)}
+.px-fx-xb .px-xb b{color:var(--bio)}.px-fx-xb .px-xb i{color:var(--muted)}
+html.px-telecommande .px-holo-socle{bottom:calc(env(safe-area-inset-bottom,0px) + 78px)}
+.px-holo-socle button{position:absolute;left:50%;bottom:52px;transform:translateX(-50%);pointer-events:auto;width:auto;min-height:0;height:30px;margin:0;padding:0 12px;border-radius:15px;border:1px solid rgba(140,240,255,.7);background:rgba(4,12,20,.8);color:#bff4ff;font:600 11px var(--mono);letter-spacing:.08em;white-space:nowrap}
+/* ▣ (0.67) dans le cube (src/app/cube-interieur.js) : l'écran est la face ouverte ; « le trait » pour les murs */
+.ci-salle{position:absolute;inset:0;overflow:hidden;background:#1f1f1d;perspective:380px}
+.ci-boite{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d}
+.ci-face{position:absolute;left:0;top:0;box-sizing:border-box;border:1.5px solid rgba(236,235,233,.55);background:#22221f;color:#ecebe9;padding:44px 14px 14px;overflow:hidden}
+.ci-trait{background:#1f1f1d;background-image:linear-gradient(rgba(236,235,233,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(236,235,233,.08) 1px,transparent 1px);background-size:40px 40px}
+.ci-etiquette{position:absolute;left:10px;top:10px;width:auto;min-height:0;height:28px;margin:0;padding:0 10px;border-radius:14px;border:1px solid rgba(236,235,233,.6);background:#1f1f1d;color:#ecebe9;font:600 11px var(--mono);letter-spacing:.06em}
+.ci-grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:10px}
+.ci-grille button{display:flex;flex-direction:column;align-items:center;gap:4px;width:auto;min-height:0;margin:0;padding:4px;border:0;background:none;color:#ecebe9;font:600 10px var(--police)}
+.ci-grille span,.ci-objet span{width:44px;height:44px;display:flex;align-items:center;justify-content:center}.ci-grille .xki,.ci-objet .xki{width:100%;height:100%}
+.ci-grille b{max-width:70px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-tsoins{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font:13px var(--police)}.ci-tsoins small{color:#d8b04a;font-family:var(--mono)}
+.ci-vide{margin:20px 0;font:600 12px var(--mono);color:rgba(236,235,233,.6)}
+.ci-img{width:100%;height:100%;object-fit:cover;border-radius:6px}
+.ci-objet{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:4px;color:#ecebe9;touch-action:none;-webkit-user-select:none;user-select:none}
+.ci-objet b{font:600 11px var(--police)}.ci-objet p{margin:0;padding:8px 12px;border:1.5px solid #ecebe9;border-radius:10px;background:#1f1f1d;font:600 16px var(--police);white-space:nowrap}
+.ci-objet img{width:120px;border-radius:10px;border:1.5px solid #ecebe9}.ci-objet .px-g{width:70px;height:70px;color:#ecebe9}
+.ci-barre{position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;align-items:center;gap:10px;pointer-events:none}
+.ci-barre button{pointer-events:auto;width:auto;min-height:0;height:36px;margin:0;padding:0 14px;border-radius:18px;border:1.5px solid #ecebe9;background:#1f1f1d;color:#ecebe9;font:600 12px var(--mono)}
+.ci-barre small{flex:1;font:600 10px var(--mono);color:rgba(236,235,233,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-feuille{position:absolute;inset:0;z-index:5;background:rgba(10,10,9,.6);display:flex;align-items:flex-end}
+.ci-feuille>div{width:100%;max-height:70%;overflow:auto;padding:16px 14px calc(env(safe-area-inset-bottom,0px) + 16px);border-radius:18px 18px 0 0;background:#1f1f1d;border-top:1.5px solid #ecebe9;display:flex;flex-direction:column;gap:6px}
+.ci-feuille p{margin:0 2px 6px;font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(236,235,233,.7)}
+.ci-feuille button{margin:0;min-height:40px;text-align:left;padding:0 12px;border-radius:10px;border:1px solid rgba(236,235,233,.3);background:none;color:#ecebe9;font:600 13px var(--police)}
+/* ▣ (0.68) le cube des pages : par-dessus l'hôte du ploxion (dans la scène) ; les faces de pages montrent leur photo, inerte */
+.px-cube-pages{position:absolute;inset:0;z-index:6;background:#1f1f1d;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.ci-des-pages{touch-action:none}.ci-des-pages .ci-face,.ci-des-pages .ci-objet{transition:opacity .16s}
+.ci-tourne .ci-face{-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.ci-page{padding:0;background:#141412}.ci-fond.ci-page{border-color:#ecebe9;border-width:2px}
+.ci-photo{position:absolute;left:0;top:0;overflow:hidden;pointer-events:none}
+.ci-cliche{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.ci-sans-photo{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#ecebe9;font:600 15px var(--police)}.ci-sans-photo p{margin:0;font-size:42px}.ci-sans-photo small{font:600 10px var(--mono);opacity:.6}
+.ci-et-page{pointer-events:none;z-index:2;display:flex;align-items:center;max-width:calc(100% - 20px);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ci-entre .ci-face:not(.ci-fond),.ci-entre .ci-objet,.ci-entre .ci-etiquette{opacity:0}.ci-entre+.ci-barre{opacity:0;transition:opacity .16s}
+.ci-media{display:flex;align-items:center;justify-content:center;min-height:80px;background:rgba(0,0,0,.4);color:#ecebe9;font-size:28px}
+.ci-prise{animation:ci-prise 1s ease-in-out infinite alternate}@keyframes ci-prise{from{opacity:.35}to{opacity:.8}}
+html.px-calme .ci-prise{animation:none}
+
+/* 🔍 (0.69) chercher chez soi */
+.px-cl{display:flex;flex-direction:column;gap:10px;max-height:78vh}
+.px-cl-q{width:100%;box-sizing:border-box;padding:12px 14px;border-radius:14px;border:var(--trait,2px) solid var(--bord);background:var(--creux,#0a0712);color:inherit;font:16px var(--police);-webkit-appearance:none}
+.px-cl-liste{overflow:auto;display:flex;flex-direction:column;gap:2px;min-height:60px}
+.px-cl-l{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:8px 6px;border:0;border-radius:12px;background:none;color:inherit;font:inherit;min-height:52px}
+.px-cl-l:active{background:var(--surface2)}.px-cl-l b{display:block;font-weight:600}.px-cl-l small{display:block;color:var(--muted);font:11px var(--mono)}
+.px-cl-ic{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center}.px-cl-ic .xki,.px-cl-ic .px-g{width:100%;height:100%}
+.px-cl-bas{display:flex;gap:8px;flex-wrap:wrap}.px-cl-bas button{flex:1 1 auto;min-height:42px;border-radius:12px;border:var(--trait,2px) solid var(--bord);background:var(--surface2);color:inherit;font:600 13px var(--police)}
+.px-cl-vide,.px-cl-msg{margin:4px 2px;color:var(--muted);font:12px var(--mono)}.px-cl-msg:empty{display:none}
+/* ⊡ (0.70) la vue des xers : le xer en image au centre, ses voisins de la carte qui dépassent des bords */
+.px-vx{position:fixed;inset:0;z-index:2147483200;background:radial-gradient(80% 60% at 50% 50%,rgba(70,60,120,.35),transparent 70%),#07060c;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.px-vx-plan{position:absolute;inset:0;will-change:transform}
+.px-vx-t{position:absolute;left:50%;top:50%;transform:translate(calc(-50% + var(--vx-x,0px)),calc(-50% + var(--vx-y,0px)));border-radius:26px;background:var(--bg,#0b0912);box-shadow:0 0 0 1.5px rgba(236,235,233,.35),0 18px 50px rgba(0,0,0,.55);transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .2s}
+.px-vx-t:not(.px-vx-centre){opacity:.62}
+.px-vx-centre{box-shadow:0 0 0 2px #ecebe9,0 0 40px rgba(150,130,255,.35),0 24px 60px rgba(0,0,0,.6)}
+.px-vx-ap{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none}
+.px-vx-ap>.ci-cliche{position:absolute;inset:0}
+.px-vx-carte{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#ecebe9;text-align:center;padding:12px}
+.px-vx-ic{width:44%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:44px}.px-vx-ic .xki,.px-vx-ic .px-g{width:100%;height:100%}
+.px-vx-carte b{font:600 17px var(--police)}.px-vx-carte small{font:600 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(236,235,233,.55)}
+.px-vx-clip{position:absolute;inset:0;border-radius:26px;overflow:hidden}
+.px-vx-nom{position:absolute;left:6px;top:-28px;max-width:calc(100% - 12px);padding:4px 10px;border-radius:12px;background:rgba(7,6,12,.78);color:#ecebe9;font:600 11px var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-vx-dirs{position:absolute;inset:0;pointer-events:none}
+.px-vx-d{position:absolute;width:8px;height:8px;border-radius:50%;background:#ecebe9;opacity:.8}.px-vx-d.px-vx-vide{opacity:.15}
+.px-vx-d-haut{left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);margin-left:-4px}.px-vx-d-bas{left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);margin-left:-4px}
+.px-vx-d-gauche{left:8px;top:50%;margin-top:-4px}.px-vx-d-droite{right:8px;top:50%;margin-top:-4px}
+.px-vx-x{position:absolute;right:14px;top:calc(env(safe-area-inset-top,0px) + 12px);width:40px;height:40px;min-height:0;border-radius:50%;border:1.5px solid rgba(236,235,233,.6);background:rgba(7,6,12,.7);color:#ecebe9;font-size:16px}
+.px-vx-aide{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 22px);margin:0;padding:6px 12px;border-radius:14px;background:rgba(7,6,12,.85);width:max-content;max-width:calc(100vw - 32px);text-align:center;font:600 10px var(--mono);letter-spacing:.06em;color:rgba(236,235,233,.65);pointer-events:none;animation:px-vx-aide 4s ease forwards}
+@keyframes px-vx-aide{0%,70%{opacity:1}100%{opacity:0}}
+.px-vx-entre .px-vx-t:not(.px-vx-centre),.px-vx-entre .px-vx-aide,.px-vx-entre .px-vx-x{opacity:0}
+.px-vx-eclair{position:absolute;inset:0;background:#fff;pointer-events:none;animation:px-vx-eclair .32s ease-out forwards}
+@keyframes px-vx-eclair{from{opacity:.85}to{opacity:0}}
+html.px-calme .px-vx-t{transition:none}html.px-calme .px-vx-eclair{animation:none;opacity:0}
+/* 🌍 (0.71) le terrax */
+.tx{position:absolute;inset:0;display:flex;flex-direction:column;background:#06080a;color:#e8f2ea;font:14px var(--police)}
+.tx-onglets{display:flex;gap:6px;padding:8px 10px;overflow-x:auto;scrollbar-width:none;flex:none;background:#06080a;border-bottom:1px solid rgba(120,255,170,.18)}
+.tx-onglets::-webkit-scrollbar{display:none}
+.tx-onglets button{flex:none;min-height:34px;padding:0 14px;border-radius:17px;border:1.5px solid rgba(120,255,170,.35);background:none;color:#cfe9d6;font:600 12px var(--mono)}
+.tx-onglets button.on{background:#79f2a8;color:#06080a;border-color:#79f2a8}
+.tx-p{position:relative;flex:1;min-height:0;overflow:auto}.tx-p[hidden]{display:none}
+.tx-terrion,.tx-ar{overflow:hidden}
+.tx-carte{position:absolute;inset:0;overflow:hidden;touch-action:none;background:#0b1410;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.tx-tuiles,.tx-marques{position:absolute;inset:0}
+.tx-t{position:absolute;left:0;top:0;width:256px;height:256px;transform-origin:0 0;pointer-events:none;-webkit-user-drag:none}
+.tx-m{position:absolute;left:0;top:0;width:40px;height:40px;margin:-20px 0 0 -20px;min-height:0;padding:0;border-radius:12px;border:2px solid #fff;background:rgba(6,8,10,.82);font-size:22px;line-height:36px;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+.tx-m.tx-partage{border-color:#79f2a8;box-shadow:0 0 14px rgba(121,242,168,.6)}
+.tx-moi{position:absolute;left:0;top:0;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#79f2a8;border:3px solid #fff;box-shadow:0 0 0 8px rgba(121,242,168,.25)}
+.tx-mire{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border:1.5px solid rgba(255,255,255,.7);border-radius:50%;pointer-events:none}
+.tx-outils{position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 34px);display:flex;flex-direction:column;gap:10px}
+.tx-outils button,.tx-ar-bas button,.tx-ligne button,.tx-chambre>button{min-height:46px;min-width:46px;padding:0 14px;border-radius:23px;border:1.5px solid rgba(255,255,255,.4);background:rgba(6,8,10,.85);color:#e8f2ea;font:600 16px var(--police)}
+.tx-plus{background:#79f2a8 !important;color:#06080a !important;border-color:#79f2a8 !important}
+.tx-credit{position:absolute;left:8px;bottom:6px;margin:0;font:10px var(--mono);color:rgba(255,255,255,.75);text-shadow:0 1px 2px #000;pointer-events:none}
+.tx-ar{background:#000}.tx-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tx-calque{position:absolute;inset:0;pointer-events:none}
+.tx-objet{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:2px;will-change:transform}
+.tx-objet b{font-size:54px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}.tx-objet small{padding:2px 8px;border-radius:10px;background:rgba(6,8,10,.8);font:600 11px var(--mono);white-space:nowrap}
+.tx-hud{position:absolute;left:12px;top:12px;display:flex;flex-direction:column;gap:2px;padding:8px 12px;border-radius:14px;background:rgba(6,8,10,.7)}
+.tx-hud b{font:700 18px var(--mono);color:#79f2a8}.tx-hud small{font:11px var(--mono);color:#cfe9d6}
+.tx-ar-bas{position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;justify-content:center;gap:10px}
+.tx-feuille{position:absolute;inset:0;z-index:5;display:flex;align-items:flex-end;background:rgba(0,0,0,.45)}
+.tx-feuille>div{width:100%;max-height:80%;overflow:auto;box-sizing:border-box;padding:16px 14px calc(env(safe-area-inset-bottom,0px) + 16px);border-radius:20px 20px 0 0;background:#0d1210;border-top:1.5px solid rgba(121,242,168,.5);display:flex;flex-direction:column;gap:10px}
+.tx-feuille p{margin:0}.tx-feuille small{color:#9db8a6;font:11px var(--mono)}.tx-gros{font-size:48px}
+.tx-emojis{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.tx-emojis button{flex:none;width:46px;height:46px;min-height:0;border-radius:12px;border:1.5px solid rgba(255,255,255,.2);background:none;font-size:22px}.tx-emojis button.on{border-color:#79f2a8;background:rgba(121,242,168,.15)}
+.tx-feuille textarea{width:100%;box-sizing:border-box;border-radius:14px;border:1.5px solid rgba(121,242,168,.35);background:#06080a;color:inherit;padding:10px 12px;font:16px var(--police)}
+.tx-nexus{display:flex;align-items:center;gap:8px;font-size:13px}.tx-ligne{display:flex;gap:8px}.tx-ligne .tx-plus{flex:1}
+.tx-photo{width:100%;border-radius:12px}
+.tx-chambre,.tx-quetes{padding:14px 14px 40px;display:flex;flex-direction:column;gap:10px}
+.tx-titre{margin:6px 2px 2px;font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#79f2a8}
+.tx-vide{margin:2px;color:#9db8a6;font:12px var(--mono)}
+.tx-liste{display:flex;flex-direction:column;gap:6px}.tx-liste button{display:flex;align-items:center;gap:10px;min-height:52px;padding:6px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:#0d1210;color:inherit;text-align:left;font:inherit}
+.tx-liste b{font-size:26px}.tx-liste span{flex:1}.tx-liste img{width:44px;height:44px;object-fit:cover;border-radius:10px}
+.tx-q{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}.tx-q li{display:flex;gap:10px;align-items:baseline;padding:10px 12px;border-radius:14px;background:#0d1210;border:1px solid rgba(255,255,255,.08)}
+.tx-q b{flex:none;min-width:34px;font:700 12px var(--mono);color:#79f2a8}.tx-q li.fait{border-color:rgba(121,242,168,.5)}.tx-code b{min-width:96px;color:#d8b04a}
+
+/* 📸 (0.72) la dernière capture d'un xer, gardée par le téléphone */
+.px-vx-photo{position:absolute;inset:0;background:#07060c}.px-vx-photo img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+
+/* 🤖 (0.75) XERB0T · le contrôleur (src/xerbot/controleur.js) : les mêmes onglets et la même palette que le terrax */
+.xb{position:absolute;inset:0;display:flex;flex-direction:column;background:#06080a;color:#e8f2ea;font:14px var(--police)}
+.xb-p[hidden]{display:none !important}
+.xb-p{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px calc(env(safe-area-inset-bottom,0px) + 40px);display:flex;flex-direction:column;gap:8px}
+.xb button,.xb select,.xb input{min-height:44px;border-radius:12px;border:1.5px solid rgba(255,255,255,.22);background:rgba(13,18,16,.95);color:#e8f2ea;font:600 14px var(--police);padding:0 12px;box-sizing:border-box}
+.xb input[type=range]{padding:0;border:0;background:none;accent-color:#79f2a8;min-width:110px;flex:1}
+.xb input[type=color]{width:48px;padding:2px;flex:none}
+.xb-liste{display:flex;flex-direction:column;gap:6px}
+.xb-app{display:flex !important;align-items:center;gap:12px;min-height:58px !important;text-align:left;width:100%}
+.xb-app .g{font-size:22px;width:30px;text-align:center;color:#79f2a8}.xb-app>span:nth-child(2){flex:1;min-width:0}
+.xb-app b,.xb-e b{display:block;font:600 15px var(--police);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xb-app small,.xb-e small{display:block;color:#9db8a6;font:12px var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xb-point{width:10px;height:10px;border-radius:50%;flex:none;background:#55605a}.xb-point.ok{background:#79f2a8;box-shadow:0 0 10px #79f2a8}.xb-point.ko{background:#ff6b6b}
+.xb-tete{display:flex;align-items:center;gap:10px}.xb-tete b{flex:1;font:600 17px var(--police)}.xb-tete button{min-width:44px}
+.xb-sous{margin:0;color:#9db8a6;font:12px var(--mono)}.xb-err{margin:0;color:#ffb3b3;font:12px var(--mono)}
+.xb-dom{margin:10px 2px 0;font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#79f2a8}
+.xb-e{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px;border-radius:14px;background:#0d1210;border:1px solid rgba(255,255,255,.08)}
+.xb-e>span:first-child{flex:1 1 140px;min-width:120px}.xb-hl{opacity:.45}
+.xb-c{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex:1 1 180px;min-width:0}.xb select{max-width:100%}
+.xb-int{min-width:92px}.xb-int.on{background:#79f2a8 !important;color:#06080a !important;border-color:#79f2a8 !important}
+.xb-sensible{border-color:#ffb36b !important}
+.xb-ligne{display:flex;gap:6px;flex-wrap:wrap;width:100%}.xb-ligne input{flex:1 1 140px;min-width:0}
+.xb-form{display:flex;flex-direction:column;gap:6px}
+.xb-log{margin:0;padding:10px;border-radius:12px;background:#000;color:#9db8a6;font:11px/1.45 var(--mono);white-space:pre-wrap;word-break:break-all;max-height:40vh;overflow:auto}
+.xb-retirer{margin-top:14px;color:#ffb3b3 !important;border-color:rgba(255,120,120,.4) !important}
+
+/* ✉ (0.76) inviter · partager (src/app/partage.js) : la feuille (QR natif, lien, partager, copier) et le ploxion « inviter » */
+.px-pt{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.px-pt-sous{margin:0;color:var(--muted);font-size:13px}
+.px-pt-qr{align-self:center;width:min(62vw,260px);aspect-ratio:1;border-radius:16px;background:#fff;padding:12px;display:grid;place-items:center;transition:width .25s ease}
+.px-pt-qr img{width:100%;height:100%;image-rendering:pixelated}.px-pt-qr span{color:#666;font:12px var(--mono)}
+.px-pt-qr.grand{width:min(92vw,520px)}
+.px-pt-lien{min-height:44px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:13px var(--mono);padding:0 12px}
+.px-pt-b{display:flex;gap:8px}.px-pt-b button{flex:1}
+.px-inviter{display:flex;flex-direction:column;gap:10px;padding:16px 14px calc(env(safe-area-inset-bottom,0px) + 40px);overflow-y:auto;height:100%;box-sizing:border-box}
+.px-gros{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-height:64px;padding:12px 14px;border-radius:16px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);text-align:left;font:inherit}
+.px-gros b{font:600 16px var(--police)}.px-gros small{color:var(--muted);font-size:12px}
+.px-gros.p{background:var(--accent,#79f2a8);color:#06080a;border-color:transparent}.px-gros.p small{color:rgba(0,0,0,.65)}
+.px-inviter input{min-height:44px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);padding:0 12px;font:14px var(--police)}
+.px-iv-l{display:flex;flex-wrap:wrap;gap:6px}.px-iv-l button{min-height:40px;padding:0 12px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:600 13px var(--police)}
+/* § (0.77) mes xers */
+.px-xers{display:flex;flex-direction:column;gap:10px;padding:16px 14px calc(env(safe-area-inset-bottom,0px) + 40px);overflow-y:auto;height:100%;box-sizing:border-box}
+.px-xers>.px-sous{margin:0 0 4px}
+.px-xr{border-radius:16px;border:var(--trait) solid var(--bord);background:var(--surface);overflow:hidden}
+.px-xr.on{border-color:var(--accent,#79f2a8);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent,#79f2a8) 40%,transparent)}
+.px-xr-b{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:10px 14px;background:none;border:0;color:var(--txt);text-align:left;font:inherit}
+.px-xr-b>span:nth-child(2){display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}.px-xr-b b{font:600 16px var(--police)}.px-xr-b small{color:var(--muted);font-size:12px}
+.px-xr-ic{width:42px;height:42px;flex:0 0 auto;display:grid;place-items:center;border-radius:12px;background:var(--surface2);font-size:20px}
+.px-xr-b em{font:600 11px var(--mono);font-style:normal;padding:3px 9px;border-radius:99px;background:color-mix(in srgb,var(--accent,#79f2a8) 25%,transparent);color:var(--txt)}
+.px-xr-a{display:flex;gap:6px;padding:0 10px 10px}.px-xr-a button,.px-xr-n button,.px-xr-recu>button:not(.px-gros){min-height:38px;padding:0 12px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:600 13px var(--police)}
+.px-xr-n{display:flex;flex-wrap:wrap;gap:6px}
+.px-xr-recu{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:16px;border:var(--trait) dashed var(--accent,#79f2a8);background:var(--surface)}
+.px-xr-recu .px-ft,.px-xr-recu .px-sous{margin:0}
+.px-xr-c{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+/* 📖 (0.81) le wiki natif (src/app/wiki-natif.js) : l'article du labo, avec nos styles */
+.px-wiki-hote{position:absolute;inset:0;display:flex;overflow:hidden}
+.px-wiki{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;width:100%;background:var(--bg)}
+.px-wiki-b{display:flex;gap:6px;align-items:center;padding:8px 10px;border-bottom:var(--trait) solid var(--bord)}
+.px-wiki-b input{flex:1;min-width:0;min-height:40px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);padding:0 12px;font:16px var(--police)}
+.px-wiki-b button{min-width:40px;min-height:40px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:600 16px var(--police)}
+.px-wiki-b button:disabled{opacity:.35}
+.px-wiki-p{flex:1;min-width:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 40px)}
+.px-wiki-m{color:var(--muted);font-size:13px}.px-wiki-m a{color:var(--accent,#79f2a8)}
+.px-wiki-a{color:var(--txt);font:15px/1.6 var(--police);overflow-wrap:anywhere;max-width:100%}.px-wiki-a *{max-width:100%;box-sizing:border-box}.px-wiki-a pre,.px-wiki-a code{white-space:pre-wrap}
+.px-wiki-a h1,.px-wiki-a .wiki-h1,.px-wiki-a .wiki-title{font:700 24px/1.2 var(--police);margin:4px 0 10px}
+.px-wiki-a h2,.px-wiki-a .wiki-h2{font:600 18px/1.3 var(--police);margin:22px 0 8px;padding-bottom:4px;border-bottom:var(--trait) solid var(--bord)}
+.px-wiki-a a[data-wiki]{color:var(--accent,#79f2a8);text-decoration:none;border-bottom:1px dotted currentColor}
+.px-wiki-a a[data-externe]{color:var(--txt);text-decoration:underline}
+.px-wiki-a img{max-width:100%;height:auto;border-radius:10px}
+.px-wiki-a svg{max-width:100%;height:auto}.px-wiki-a .xr-glyph svg,.px-wiki-a .infobox__glyph svg{width:64px;height:64px}
+.px-wiki-a .infobox,.px-wiki-a .wiki-toc,.px-wiki-a .term-section,.px-wiki-a .wiki-layer{border:var(--trait) solid var(--bord);border-radius:14px;background:var(--surface);padding:10px 12px;margin:10px 0}
+.px-wiki-a .infobox__row{display:flex;gap:8px;justify-content:space-between;font-size:13px;padding:3px 0}.px-wiki-a .infobox__label{color:var(--muted)}
+.px-wiki-a .term-chip,.px-wiki-a .ion-chip,.px-wiki-a .badge{display:inline-block;padding:2px 9px;margin:2px;border-radius:99px;border:var(--trait) solid var(--bord);font-size:12.5px}
+.px-wiki-a ul,.px-wiki-a ol{padding-left:20px}.px-wiki-a .wiki-toc__title{font-weight:600}
+.px-wiki-a .wiki-subtitle,.px-wiki-a .term-meta,.px-wiki-a .term-hatnote{color:var(--muted);font-size:13px}
+.px-wiki-a table{border-collapse:collapse;max-width:100%;display:block;overflow-x:auto}.px-wiki-a td,.px-wiki-a th{border:var(--trait) solid var(--bord);padding:4px 8px}
+/* ⧉ (0.81) un sous-ploxion qui arrive (jOSApps.monter) */
+.px-ald{display:flex;flex-direction:column;gap:6px;padding:16px;color:var(--txt);font:15px var(--police)}.px-ald small{color:var(--muted);font-size:12.5px}
+.px-ald button{align-self:flex-start;min-height:38px;padding:0 14px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:600 13px var(--police)}
+.px-ald-r{display:inline-block;animation:px-ald-t 1.2s linear infinite}@keyframes px-ald-t{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.px-ald-r{animation:none}}
+/* ---- (0.92) L'ALLURE CHILL-TEKK des nouveautés 0.87 → 0.91 (RS-7 22.10 : « une meilleure allure chill-tekk, l'allure chill-tekk xerboxion ») :
+   les jetons du haut de ce fichier — presque noir violet, la plaque à bord double (un trait, un filet), le grain, l'arrondi usé (--blob*),
+   les inscriptions gravées (--mono, --grave), le lilas pour le geste, le vert biolumineux SEULEMENT pour ce qui est vivant. Aucun dégradé,
+   aucune animation continue. Les glyphes du carnet restent ceux du lexique. ---- */
+.px-plaque-ct{background:var(--surface) var(--grain);border:var(--trait) solid var(--bord);box-shadow:inset 0 0 0 1px var(--filet)}
+
+/* ▥ (0.87) la bande façon niri (src/app/bande.js) : des colonnes posées par translation ; la suivante dépasse à droite ; la vue d'ensemble */
+.px-scene.px-bande{overflow:hidden}
+.px-scene.px-bande>.px-hote.px-bande-col{transition:transform .28s cubic-bezier(.2,.9,.3,1),opacity .2s;animation:none;transform-origin:0 0;will-change:transform;border-right:var(--trait) solid var(--bord);box-shadow:inset -1px 0 0 var(--filet)}
+.px-scene.px-bande-calme>.px-hote.px-bande-col{transition:none}
+.px-scene.px-bande>.px-hote.px-bande-voisin{opacity:.5;pointer-events:none}
+.px-bande-suite{position:absolute;top:0;bottom:0;z-index:5;background:transparent;border:0;padding:0;margin:0;-webkit-tap-highlight-color:transparent}
+.px-bande-suite::after{content:'';position:absolute;left:4px;top:50%;width:4px;height:56px;margin-top:-28px;border-radius:3px;background:var(--acc);opacity:.55}
+.px-scene.px-bande-vue{background:var(--bg) var(--grain)}
+.px-scene.px-bande-vue>.px-hote.px-bande-col{opacity:1;pointer-events:none;border:var(--trait) solid var(--bord2);border-radius:var(--blob1);overflow:hidden;box-shadow:inset 0 0 0 1px var(--filet)}
+.px-bande-calque{position:absolute;inset:0;z-index:6;touch-action:none;transition:transform .2s}
+.px-bande-etiquette{position:absolute;background:transparent;border:0;border-radius:var(--blob2);color:var(--txt);padding:0;display:flex;align-items:flex-end;justify-content:center}
+.px-bande-etiquette>span{transform:translateY(calc(100% + 10px));font:500 10px/1.2 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--grave);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.px-bande-etiquette.px-bande-endormi{border:var(--trait) dashed var(--bord);align-items:center;background:var(--creux)}
+.px-bande-etiquette.px-bande-endormi>span{transform:none;color:var(--muted)}
+
+/* ▤ (0.88) le système, façon btop (src/lot/systeme.js) : des plaques, des inscriptions gravées, des jauges au lilas */
+.px-btop [data-btop]{display:grid;gap:12px}
+.px-btop-p{background:var(--surface) var(--grain);border:var(--trait) solid var(--bord);border-radius:var(--blob1);box-shadow:inset 0 0 0 1px var(--filet);padding:12px 14px 10px;font:12px/1.55 var(--mono)}
+.px-btop-p:nth-child(2){border-radius:var(--blob2)}.px-btop-p:nth-child(3){border-radius:var(--blob3)}
+.px-btop-p h4{margin:0 0 6px;font:500 10px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--grave)}
+.px-btop-l{display:grid;grid-template-columns:7.5em 1fr;gap:0 8px;align-items:baseline}
+.px-btop-l .k{color:var(--muted)}.px-btop-l .v{color:var(--txt);font-variant-numeric:tabular-nums}.px-btop-l .p{grid-column:2;color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.px-btop-l code{font:inherit;letter-spacing:-.05em;color:var(--acc)}
+.px-btop-ok .v{color:var(--bio)}.px-btop-mi .v{color:#d8b979}.px-btop-ko .v{color:#e08a9a}
+.px-btop-b{margin-top:14px}
+
+/* ≈ (0.88) les ambiances (src/lot/ambiances.js) : une plaque, une ligne par son ; ce qui joue s'allume (la veilleuse) */
+.px-ambiances [data-amb-sons]{display:grid;gap:0;margin:12px 0;background:var(--surface) var(--grain);border:var(--trait) solid var(--bord);border-radius:var(--blob1);box-shadow:inset 0 0 0 1px var(--filet);overflow:hidden}
+.px-amb-l{display:grid;grid-template-columns:1.8em 6.8em 1fr;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid var(--filet)}
+.px-amb-l:first-child{border-top:0}
+.px-amb-l .g{font-size:1.15em;text-align:center;color:var(--grave)}.px-amb-l .n{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.px-amb-l.px-amb-on .g{color:var(--bio)}.px-amb-l.px-amb-on .n{color:var(--txt)}
+.px-amb-l input,.px-amb-b input{width:100%;accent-color:var(--acc)}
+.px-amb-b{display:grid;gap:12px;margin-top:8px}.px-amb-b label{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.px-amb-b>button{background:var(--surface);border:var(--trait) solid var(--bord);border-radius:var(--blob2);color:var(--txt);min-height:42px;font:500 12px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+
+/* ◉ (0.99.1) Proche, l'ultimate Bluetooth (src/lot/proche.js) : qui est là, le fil des messages, la basse et le son partagés */
+.px-proche input[type=text],.px-proche input[type=url]{min-width:0;min-height:42px;padding:0 12px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--creux,var(--surface));color:var(--txt);font:15px var(--police)}
+.px-proche button{min-height:42px;padding:0 14px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:600 12px var(--mono);letter-spacing:.08em}
+.px-proche button:disabled,.px-proche input:disabled{opacity:.4}
+.px-pr-id{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin:12px 0 6px}
+.px-pr-id button.on,.px-pr-seg button.on{color:var(--bio);border-color:var(--bio);box-shadow:0 0 10px var(--glow)}
+.px-pr-err{color:#e08a9a;font:500 12px var(--mono);margin:4px 0}.px-pr-err[hidden]{display:none}
+.px-pr-pairs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
+.px-pr-pair{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:var(--trait) solid var(--bord);background:var(--surface);font:600 12px var(--mono);color:var(--muted)}
+.px-pr-pair.on{color:var(--txt);border-color:var(--bio)}.px-pr-pair small{font:500 9px var(--mono);color:var(--grave)}
+.px-pr-t{font:600 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--grave);margin:18px 0 6px}
+.px-pr-fil{max-height:30vh;overflow:auto;padding:8px 12px;border-radius:var(--blob1,16px);border:var(--trait) solid var(--bord);background:var(--surface);-webkit-overflow-scrolling:touch}
+.px-pr-m{margin:4px 0;font:14px/1.35 var(--police);color:var(--txt);word-break:break-word}.px-pr-m b{font:600 10px var(--mono);letter-spacing:.08em;color:var(--acc2);margin-right:4px}
+.px-pr-m.moi b{color:var(--bio)}
+.px-pr-glyphes{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin:6px 0}.px-pr-glyphes button{padding:0;font:18px/1 var(--police);min-height:38px}
+.px-pr-envoi{display:grid;grid-template-columns:1fr auto;gap:6px}
+.px-pr-b{width:100%;margin:4px 0}.px-pr-go{color:var(--bio);border-color:var(--bio);box-shadow:0 0 12px var(--glow)}
+.px-pr-l{font:500 12px/1.4 var(--mono);color:var(--txt);margin:4px 0 8px}
+.px-pr-r{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px;font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:6px 0}
+.px-pr-r input{accent-color:var(--acc)}
+.px-pr-seg{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}.px-pr-seg button{flex:1;min-height:36px;padding:0 8px;font-size:11px}
+/* 〰 (0.99.21) le maillage : les pairs lointains, les salons, l'empreinte, les infos */
+.px-pr-loin{border-style:dashed}.px-pr-pair.bloque{opacity:.4;text-decoration:line-through}
+.px-pr-qui{display:flex;flex-wrap:wrap;gap:4px;width:100%;margin-top:4px}.px-pr-qui button{min-height:34px;padding:0 10px;font:600 11px var(--mono)}
+.px-pr-salons{display:flex;gap:4px;overflow-x:auto;margin:0 0 6px;-webkit-overflow-scrolling:touch}.px-pr-salons button{flex:none;min-height:34px;padding:0 12px;font:600 11px var(--mono);border-radius:999px}
+.px-pr-salons button.on{color:var(--bio);border-color:var(--bio);box-shadow:0 0 10px var(--glow)}
+.px-pr-moi{font:500 11px/1.4 var(--mono);color:var(--muted);margin:6px 0 0}.px-pr-moi b{color:var(--txt);letter-spacing:.08em}
+.px-pr-info{font:500 11px/1.4 var(--mono);color:var(--acc2);margin:6px 0}.px-pr-info[hidden]{display:none}
+/* ⌖ (0.99.22) les potes : le radar (la carte dessous quand il y a du réseau), la liste, la boussole */
+.px-pr-potes{padding:10px;border-radius:var(--blob1,16px);border:var(--trait) solid var(--bord);background:var(--surface)}
+.px-pr-partage{font:600 12px/1.4 var(--mono);color:var(--bio);margin:2px 0 6px}
+.px-pr-radar{position:relative;width:100%;max-width:520px;margin:8px auto;border-radius:50%;overflow:hidden;background:radial-gradient(circle,var(--creux) 0,var(--bg) 75%);touch-action:manipulation}
+[data-pr-radar][hidden],.px-pr-boussole[hidden]{display:none}
+.px-pr-tuiles{position:absolute;transform-origin:50% 50%;opacity:.75;pointer-events:none}.px-pr-tuiles img{position:absolute;max-width:none;image-rendering:auto}
+.px-pr-radar [data-pr-radar-svg]{position:absolute;inset:0}.px-pr-radar svg{display:block;overflow:visible}
+.px-pr-radar .anneau{fill:none;stroke:var(--bord2);stroke-width:1;opacity:.7}.px-pr-radar .ech{font:500 9px var(--mono);fill:var(--grave)}
+.px-pr-radar .nord,.px-pr-bsvg .nord{font:700 12px var(--mono);fill:var(--acc2)}.px-pr-radar .regard{stroke:var(--bio);stroke-width:3;stroke-linecap:round;opacity:.6}
+.px-pr-radar .moi,.px-pr-bsvg .moi{fill:var(--bio);stroke:var(--bg);stroke-width:2}.px-pr-radar .flou{fill:var(--bio);opacity:.08}
+.px-pr-radar .pote{cursor:pointer}.px-pr-radar .pote circle:not(.flou){fill:var(--acc);stroke:var(--bg);stroke-width:2}.px-pr-radar .pote text{font:700 11px var(--mono);fill:var(--txt);paint-order:stroke;stroke:var(--bg);stroke-width:3px}
+.px-pr-radar .pote.vieux{opacity:.45}.px-pr-radar .pote.bord circle:not(.flou){fill:var(--acc2)}
+.px-pr-rbtn{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;margin:4px 0 2px}.px-pr-rbtn button{min-height:30px;padding:0 8px;font:600 10px var(--mono);border-radius:999px;background:var(--surface)}.px-pr-rbtn button.on{color:var(--bio);border-color:var(--bio)}
+.px-pr-attrib{width:100%;text-align:center;font:500 8px var(--mono);color:var(--muted)}.px-pr-attrib[hidden]{display:none}
+.px-pr-potes-l{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.px-pr-pote{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;text-align:left;min-height:44px;padding:6px 12px;font:600 13px var(--mono)}.px-pr-pote i{font-style:normal;color:var(--bio);font-size:16px}.px-pr-pote small{width:100%;font:500 10px var(--mono);color:var(--muted)}.px-pr-pote.vieux{opacity:.55}
+.px-pr-boussole{text-align:center}.px-pr-bsvg{width:min(70vw,280px);height:auto;display:block;margin:6px auto}.px-pr-bsvg .anneau{fill:none;stroke:var(--bord2);stroke-width:2}
+.px-pr-bsvg .aiguille{fill:var(--bio);filter:drop-shadow(0 0 6px var(--glow));transition:transform .2s}
+/* (0.99.29) la boussole : l'aiguille tourne en douceur (par le plus court) ; la tendance ; les traces et les rendez-vous du radar ; les outils */
+.px-pr-bsvg .rot{transition:transform .28s cubic-bezier(.2,.8,.3,1)}
+.px-pr-tend{font:600 12px var(--mono);color:var(--bio);margin:0 0 4px;min-height:1em}
+.px-pr-radar .trace{fill:none;stroke:var(--acc);stroke-width:2;stroke-dasharray:1 5;stroke-linecap:round;opacity:.55}
+.px-pr-radar .rdv{cursor:pointer}.px-pr-radar .rdv path{fill:var(--acc2);stroke:var(--bg);stroke-width:2}
+.px-pr-radar .rdv text{font:700 10px var(--mono);fill:var(--acc2);paint-order:stroke;stroke:var(--bg);stroke-width:3px}
+.px-pr-rdv b{color:var(--acc2)}.px-pr-outils{margin-bottom:6px}
+@media (prefers-reduced-motion:reduce){.px-pr-bsvg .rot{transition:none}}
+.px-pr-bd{font:700 2.2rem/1 var(--mono);color:var(--txt);margin:4px 0}.px-pr-bn{font:500 12px var(--mono);color:var(--muted);margin:4px 0 8px}
+.px-pr-dm{font:500 11px/1.5 var(--mono);color:var(--muted);margin:0 0 6px}.px-pr-dm[hidden]{display:none}.px-pr-dm button{min-height:28px;padding:0 8px;font:600 10px var(--mono)}.px-pr-dm b{color:var(--bio)}
+.px-pr-m.mention{border-left:3px solid var(--bio);padding-left:6px}
+.px-pr-sonb{min-height:30px;padding:0 10px;margin-left:4px;font:600 11px var(--mono);color:var(--bio);border-color:var(--bio)}
+.px-pr-m.ferme i{color:var(--muted)}.px-pr-m small{font:500 9px var(--mono);color:var(--grave)}
+
+/* ≋ (0.99.4) le synthé (src/lot/synthe.js) : l'oscilloscope, 16 pads, la boucle, les knobs par groupe (jOSKnob), les sons */
+.px-synthe{color:var(--bio)}
+.px-sy-scope{display:block;width:100%;height:70px;margin:10px 0 8px;border-radius:var(--blob1,14px);border:var(--trait) solid var(--bord);background:var(--creux,var(--surface));color:var(--bio)}
+.px-sy-pads{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:6px 0 10px;touch-action:none;-webkit-user-select:none;user-select:none}
+.px-sy-pad{aspect-ratio:1/1;min-height:0;border-radius:16px;border:var(--trait) solid var(--bord);background:var(--surface);position:relative;padding:0;transition:transform .08s ease,box-shadow .12s ease}
+.px-sy-seq[hidden]{display:none}
+.px-sy-grille{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:2px;margin:6px 0;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.px-sy-c{min-height:20px!important;height:20px;padding:0!important;border-radius:4px!important;border:1px solid var(--bord)!important;background:var(--creux,var(--surface))!important}
+.px-sy-c.px-sy-temps{border-color:var(--bord2,var(--acc2))!important}
+.px-sy-c.on{background:var(--bio,#7cff9b)!important;border-color:var(--bio,#7cff9b)!important;box-shadow:0 0 6px var(--glow,rgba(124,255,155,.5))}
+.px-sy-c.ici{outline:1px solid var(--memb2,#b48cff);outline-offset:0}.px-sy-c.on.ici{background:#fff!important}
+.px-sy-pad i{position:absolute;inset:34%;border-radius:50%;border:2px solid var(--memb2,var(--acc2));opacity:.6}
+.px-sy-pad.on{transform:scale(.94);border-color:var(--bio);box-shadow:0 0 18px var(--glow),inset 0 0 14px var(--glow)}.px-sy-pad.on i{background:var(--bio);border-color:var(--bio);opacity:1}
+html.px-organique .px-sy-pad{--n-bord:var(--memb2)}html.px-organique .px-sy-pad.on{--n-bord:var(--bio)}
+.px-synthe button:not(.px-sy-pad){min-height:38px;padding:0 12px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:600 11px var(--mono);letter-spacing:.06em}
+.px-synthe button.on{color:var(--bio);border-color:var(--bio);box-shadow:0 0 10px var(--glow)}
+.px-sy-l{display:grid;grid-template-columns:auto 1fr;gap:6px;align-items:start}
+.px-sy-seg{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}.px-sy-seg button{flex:1 1 auto}
+/* (0.99.21) les styles psy : le nom, et le tempo en petit */
+.px-sy-psy button{display:flex;flex-direction:column;align-items:center;gap:1px;min-height:46px;color:var(--bio);border-color:var(--bio)}.px-sy-psy small{font:500 9px var(--mono);color:var(--grave)}
+.px-sy-g{margin:10px 0;padding:8px 10px;border-radius:var(--blob2,16px);border:var(--trait) solid var(--bord);background:var(--surface)}
+.px-sy-g .jkn-panel{display:flex;flex-wrap:wrap;gap:4px 8px;justify-content:space-around}
+.px-sy-t{font:600 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--grave);margin:12px 0 6px}
+.px-sy-g .px-sy-t{margin:2px 0 4px}
+.px-sy-plus button{font-size:10px}
+.px-sy-msg{font:500 12px/1.4 var(--police);color:var(--acc2);margin:4px 0}.px-sy-msg[hidden]{display:none}
+.px-sy-garder{display:grid;grid-template-columns:1fr auto;gap:6px;margin:6px 0 20px}
+.px-sy-garder input{min-width:0;min-height:40px;padding:0 12px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--creux,var(--surface));color:var(--txt);font:15px var(--police)}
+
+/* ⌖ (0.99.9) Autour (src/lot/autour.js) : les toilettes en un geste, les propositions, les puces, la liste du plus proche au plus loin */
+.px-autour button{min-height:40px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:600 12px var(--mono);letter-spacing:.04em}
+.px-autour button.on{color:var(--bio);border-color:var(--bio);box-shadow:0 0 10px var(--glow)}
+.px-au-b{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:10px 0 4px}
+.px-au-etat{font:500 11px var(--mono);color:var(--muted);margin:4px 0 8px}
+.px-au-wc{display:block;width:100%;min-height:56px!important;text-align:left;padding:0 14px;font:600 14px var(--police)!important;border-color:var(--acc2)!important}
+.px-au-wc b{display:inline-block;min-width:34px;font:700 15px var(--mono);color:var(--bio)}
+.px-au-wc[hidden]{display:none}
+.px-au-tr{margin-top:6px;min-height:48px!important;border-color:var(--memb2,var(--acc2))!important}.px-au-tr small{display:block;font:400 10px var(--mono);color:var(--muted);letter-spacing:.06em}
+.px-au-t{font:600 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--grave);margin:14px 0 6px}
+.px-au-prop{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px}
+.px-au-p{display:flex!important;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 10px;min-height:68px;text-align:left}
+.px-au-p b{font:600 12px/1.2 var(--police);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.px-au-p small{font:500 10px var(--mono);color:var(--muted)}
+.px-au-g{font:700 14px var(--mono);color:var(--acc);min-width:26px;display:inline-block}
+.px-au-puces{display:flex;gap:4px;overflow-x:auto;margin:14px -4px 6px;padding:0 4px 4px;-webkit-overflow-scrolling:touch}
+.px-au-puces button{flex:none;min-height:34px;padding:0 10px;font-size:11px}
+.px-au-liste{display:grid;gap:4px}
+.px-au-l{display:grid!important;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;padding:6px 10px;text-align:left}
+.px-au-n{min-width:0;font:500 13px/1.25 var(--police);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.px-au-n small{display:block;font:400 10px var(--mono);color:var(--grave);overflow:hidden;text-overflow:ellipsis}
+.px-au-d{font:600 11px var(--mono);color:var(--bio);white-space:nowrap}
+
+/* ◺◿ (0.89) les koins remplacent le dock et le HUD (src/app/koins.js, le carnet de RS-7 : docs/KOINS.md) ; (0.92) en chill-tekk */
+html.px-koins .px-dock,html.px-koins .px-mode-ploxion .px-ecran>.px-barre{display:none}
+html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.px-koins-r{position:fixed;inset:auto 0 0 0;height:0;z-index:40;color:var(--txt)}
+.px-koin{position:fixed;bottom:0;width:76px;height:76px;padding:0;margin:0;border:0;background:transparent;color:var(--acc);z-index:42;
+  transition:width .26s cubic-bezier(.2,.9,.3,1),height .26s cubic-bezier(.2,.9,.3,1),opacity .2s;-webkit-tap-highlight-color:transparent}
+.px-koin-gauche{left:0}.px-koin-droite{right:0}   /* (0.99.7) collés au coin : l'arrondi de l'écran les découpe */
+.px-koin svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linejoin:round;opacity:.8}
+.px-koin svg polygon:first-child{fill:var(--surface);stroke:var(--bord2)}
+.px-koin svg .f{fill:var(--bio);stroke:none;opacity:.7}
+.px-koin[data-etape="1"]{width:30vw;height:30vw}.px-koin[data-etape="2"]{width:47vw;height:47vw}
+.px-koin[data-etape="3"]{opacity:0;pointer-events:none}
+.px-koins-r.px-koins-ouverts .px-koin{width:76px;height:76px}
+.px-koin-voile{position:fixed;inset:0;z-index:39;background:rgba(7,5,12,.62)}
+.px-koin-cases{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);width:calc(50vw - 17px);display:grid;grid-template-rows:auto auto;gap:8px;z-index:41}
+.px-koin-cases-gauche{left:12px}.px-koin-cases-droite{right:12px}
+.px-koin-cases>button,.px-koin-pad{aspect-ratio:1/1;max-height:22vh;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  background:var(--surface) var(--grain);border:var(--trait) solid var(--bord);box-shadow:inset 0 0 0 1px var(--filet);color:var(--txt);padding:10px;font:500 9.5px/1.2 var(--mono);letter-spacing:.16em;text-transform:uppercase}
+.px-koin-cases-gauche>:first-child{border-radius:var(--blob1)}.px-koin-cases-gauche>:last-child{border-radius:var(--blob3)}
+.px-koin-cases-droite>:first-child{border-radius:var(--blob2)}.px-koin-cases-droite>:last-child{border-radius:var(--blob4)}
+.px-koin-cases>button .px-g{width:50%;height:50%;fill:none;stroke:var(--acc);stroke-width:3}
+.px-koin-cases>button .px-g .f{fill:var(--acc)}
+.px-koin-cases>button small{color:var(--muted)}
+.px-koin-cases>button:active{border-color:var(--acc2)}
+/* ○ □ (0.92) les trackpads : un creux (la surface qu'on touche), le glyphe gravé dessous, ce qui va se passer écrit dessus */
+.px-koin-pad{position:relative;overflow:hidden;background:var(--creux) var(--grain);touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}
+.px-koin-pad .px-pad-g{position:absolute;inset:12%;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.px-koin-pad .px-pad-g .px-g{width:100%;height:100%;fill:none;stroke:var(--bord2);stroke-width:2}
+.px-koin-pad .px-pad-g .px-g .f{fill:var(--bord2)}
+.px-koin-pad b{position:relative;font:600 11px/1.25 var(--mono);letter-spacing:.14em;color:var(--txt);text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.px-koin-pad small{position:relative;font:500 8px/1.3 var(--mono);letter-spacing:.1em;color:var(--grave);text-align:center;text-transform:none}
+.px-koin-pad.px-pad-actif,.px-koin-pad:not([data-dir=""]){border-color:var(--acc2)}
+.px-koin-pad.px-pad-actif .px-pad-g .px-g{stroke:var(--acc)}
+.px-koin-pad[data-dir]:not([data-dir=""]) .px-pad-g .px-g{stroke:var(--acc)}
+.px-koin-pad i{position:absolute;pointer-events:none}
+.px-koin-pad-wormion i[data-pad-a]{left:50%;top:50%;width:2px;height:42%;margin-left:-1px;transform-origin:50% 0;background:var(--acc);opacity:.0;border-radius:1px}
+.px-koin-pad-wormion.px-pad-actif i[data-pad-a]{opacity:.7}
+.px-koin-pad-portion i[data-pad-p]{left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid var(--acc);opacity:.0}
+.px-koin-pad-portion:not([data-dir=""]) i[data-pad-p],.px-koin-pad-portion:active i[data-pad-p]{opacity:.8}
+.px-koin-barre{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px + min(44vh, 100vw - 34px) + 16px);z-index:41;display:flex;justify-content:space-between;
+  background:var(--surface) var(--grain);border:var(--trait) solid var(--bord);border-radius:16px;box-shadow:inset 0 0 0 1px var(--filet);padding:5px 4px}
+.px-koin-barre>button{flex:1;min-width:0;height:40px;border:0;border-radius:12px;background:transparent;color:var(--acc);font:600 20px/1 var(--police);display:flex;align-items:center;justify-content:center}
+.px-koin-barre>button:active{background:var(--surface2)}
+.px-koin-barre>button .px-g{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:4}
+.px-koin-barre>button .px-g .f{fill:currentColor}
+.px-koin-cases[hidden],.px-koin-barre[hidden],.px-koin-voile[hidden]{display:none}
+
+/* ▦ (0.90) la map du xerboxion en carrés (src/app/map-hubs.js) ; (0.92) en chill-tekk : des plaques usées, le hub où tu es bordé de lilas */
+.px-map{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;overflow:clip}   /* (0.99.25) clip : plus un cadre qui défile (dézoomée, la map dépassait et iOS la faisait glisser de côté, l'accueil avec) */
+.px-map-b,.px-map-z{touch-action:none}   /* (0.99.25) un doigt sur la barre ou la règle pendant un pincement : aucun geste natif */
+.px-map-b{display:flex;align-items:center;gap:8px;padding:10px 14px 8px}
+.px-map-b>button{width:40px;height:40px;background:var(--surface) var(--grain);border:var(--trait) solid var(--bord);border-radius:12px;box-shadow:inset 0 0 0 1px var(--filet);color:var(--acc);font:600 18px/1 var(--police);display:flex;align-items:center;justify-content:center;flex:none}
+.px-map-b>button .px-g{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:4}
+.px-map-b>button:disabled{opacity:.3}
+.px-map-ou{flex:1;min-width:0;font:500 11px/1.2 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--grave);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-map-v{position:relative;flex:1;min-height:0;touch-action:none;overflow:hidden}
+.px-map-plan{position:absolute;inset:0;will-change:transform}
+.px-map-c{position:absolute;left:50%;top:50%;width:var(--S);height:var(--S);margin:calc(var(--S) / -2) 0 0 calc(var(--S) / -2);box-sizing:border-box;display:flex;flex-direction:column;padding:10px;
+  background:var(--surface) var(--grain);border:var(--trait) solid var(--bord);border-radius:var(--blob1);box-shadow:inset 0 0 0 1px var(--filet);color:var(--txt)}
+.px-map-ici{border-color:var(--acc2)}
+.px-map-droite{transform:translateX(var(--P));opacity:.55;border-radius:var(--blob2)}.px-map-gauche{transform:translateX(calc(var(--P) * -1));opacity:.55;border-radius:var(--blob3)}
+.px-map-haut{transform:translateY(calc(var(--P) * -1));opacity:.55;border-radius:var(--blob4)}.px-map-bas{transform:translateY(var(--P));opacity:.55;border-radius:var(--blob2)}
+.px-map-t{display:flex;align-items:baseline;gap:8px;padding:0 4px 8px;border-bottom:1px solid var(--bord);margin-bottom:8px}
+.px-map-t b{font:600 12px/1.2 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.px-map-t span{font:500 9.5px var(--mono);letter-spacing:.08em;color:var(--grave);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.px-map-t button{border:0;border-radius:8px;background:transparent;color:var(--acc);font-size:15px;padding:0 4px;min-height:0}
+.px-map-g{flex:1;min-height:0;display:grid;grid-template:repeat(4,1fr)/repeat(4,1fr);gap:5px}
+.px-map-centre{grid-area:2/2/4/4;display:flex;align-items:center;justify-content:center;background:var(--creux);border:var(--trait) solid var(--bord);border-radius:var(--blob3)}
+.px-map-centre .px-g{width:60%;height:60%;fill:none;stroke:var(--acc);stroke-width:2.5}
+.px-map-k{min-width:0;min-height:0;background:var(--surface2);border:1px solid var(--bord);border-radius:10px;color:var(--txt);padding:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;overflow:hidden}
+.px-map-k:active{border-color:var(--acc2)}
+.px-map-k .px-g{width:50%;height:50%;fill:none;stroke:var(--acc);stroke-width:4;flex:none}
+.px-map-k small{font:500 7.5px/1.1 var(--mono);letter-spacing:.04em;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--muted)}
+.px-map-k-hub{border-style:dashed;border-color:var(--bord2)}
+.px-map-g .px-g .f{fill:currentColor}
+.px-map-pied{padding:8px 4px 0;font:500 9.5px/1.2 var(--mono);letter-spacing:.1em;color:var(--grave)}
+.px-map-autres{padding:6px 14px calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:6px;align-items:center;font:500 10px var(--mono);letter-spacing:.08em;color:var(--grave)}
+.px-map-autres button{display:inline-flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--bord);border-radius:10px;color:var(--txt);padding:5px 9px;font:500 11px var(--police)}
+.px-map-autres .px-g{width:14px;height:14px;fill:none;stroke:var(--acc);stroke-width:5}
+.px-map-ed-g{display:flex;flex-wrap:wrap;gap:6px}
+.px-map-ed-g button{width:44px;height:44px;background:var(--surface);border:var(--trait) solid var(--bord);border-radius:12px;color:var(--acc);padding:7px}
+.px-map-ed-g button.on{border-color:var(--acc);background:var(--surface2)}
+.px-map-ed-g .px-g{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:4}
+.px-map-ed-k{max-height:34vh;overflow:auto;display:grid;gap:0;margin-bottom:10px;background:var(--creux);border:1px solid var(--bord);border-radius:14px}
+.px-map-ed-k label{display:flex;align-items:center;gap:10px;padding:9px 12px;font-size:14px;border-top:1px solid var(--filet)}
+.px-map-ed-k label:first-child{border-top:0}
+.px-map-ed-k .px-g{width:20px;height:20px;fill:none;stroke:var(--acc);stroke-width:4;flex:none}
+.px-map-ed input[data-ed-nom]{width:100%;box-sizing:border-box;min-height:46px;margin:6px 0 4px;padding:0 14px;background:var(--creux);border:var(--trait) solid var(--bord);border-radius:13px;box-shadow:inset 0 0 0 1px var(--filet);color:var(--txt);font:500 16px var(--police);outline:none}
+.px-map-ed input[data-ed-nom]:focus{border-color:var(--acc2)}.px-map-ed input[data-ed-nom]::placeholder{color:var(--grave)}
+.px-map-ed .seg{display:flex;gap:6px;margin-bottom:6px}.px-map-ed .seg button{flex:1;margin:0;min-height:44px;font:600 16px var(--mono);color:var(--muted)}
+.px-map-ed .seg button.on{border-color:var(--acc);color:var(--acc);background:var(--creux)}
+.px-map-ed-k input[type=checkbox]{accent-color:var(--acc);width:18px;height:18px;margin:0}
+
+/* 〰 (0.93) LES BORDS ORGANIQUES ET LES NEURONES (src/app/neurones.js ; RS-7 22.10 : « les bords plus épais, plus organiques, genre ondulé,
+   mais que les éléments du UI se collent entre eux comme des neurones »). Un groupe [data-neurones], ses cellules [data-neurone] : une couche SVG
+   derrière dessine les corps (une membrane épaisse qui ondule, le dedans) et les synapses entre voisins ; la cellule devient transparente
+   (son grain reste). --n-fond, --n-bord : les couleurs du corps. Coupé (⚙ › Apparence › Bords organiques) : les plaques d'avant. */
+html.px-organique{--trait:3px}
+:where(html.px-organique [data-neurones]){position:relative}
+html.px-organique [data-neurones]{isolation:isolate}
+html.px-organique:not(.px-leger) :is([data-neurone],.px-neurone){--n-fond:var(--surface);--n-bord:var(--bord2);background-color:transparent!important;border-color:transparent!important;box-shadow:none!important}
+/* (0.99.19) la peau légère : les mêmes couleurs de peau, en CSS seul (un fond, un bord intérieur) ; aucune couche SVG, aucun filtre */
+html.px-organique.px-leger :is([data-neurone],.px-neurone){background-color:var(--n-fond)!important;border-color:transparent!important;box-shadow:inset 0 0 0 2px var(--n-bord)!important}
+html.px-leger :not([data-neurones-variante])>.px-neurones{display:none}
+html.px-organique.px-leger [data-neurones-variante] :is([data-neurone],.px-neurone){background-color:transparent!important;box-shadow:none!important}
+.px-neurones{position:absolute;z-index:-1;pointer-events:none;overflow:visible}
+html:not(.px-organique) .px-neurones,html:not(.px-organique) .px-neurones-defs{display:none}
+html.px-organique [data-neurone].on,html.px-organique [data-neurone]:active{--n-bord:var(--acc2)}
+/* les koins : la couche passe au-dessus du voile (39), sous les cases (41) */
+.px-koins-r>.px-neurones{z-index:40}
+html.px-organique .px-koin-pad{--n-fond:var(--creux)}
+html.px-organique .px-koin-pad.px-pad-actif,html.px-organique .px-koin-pad:not([data-dir=""]){--n-bord:var(--acc)}
+/* la map : les hubs collés par leurs portails ; le hub où tu es, la membrane lilas ; dans chaque hub, ses koins autour du centre */
+html.px-organique .px-map-c{--n-bord:var(--bord)}
+html.px-organique .px-map-ici{--n-bord:var(--acc2)}
+html.px-organique .px-map-centre,html.px-organique .px-map-k-hub{--n-fond:var(--creux)}
+html.px-organique .px-map-k-hub{--n-bord:var(--acc2)}
+html.px-organique .px-map-g{gap:7px}
+/* le système, les ambiances : les plaques se touchent, la xerminal pend sous la dernière */
+html.px-organique .px-btop [data-btop]{gap:14px}
+
+/* 〰 (0.94) LE XER ORGANIQUE (RS-7 22.10 : « avant on avait le xer ploxi0n, maintenant c'est le xer chill-tekk, gardé tel qu'il était ; le
+   truc de base, c'est que tout le UI entier ait l'air vivant »). Le mode de base : html.px-m-organique + html.px-organique (prefs.js). D'après
+   ses planches (chill-tekk_ui) : un fond bleu-nuit presque noir, des membranes épaisses qui LUISENT (vert biolumineux, violet), un dedans de
+   verre sombre, des gouttes aux coins (les koins), des tubes entre les cellules. Le chill-tekk d'avant ne change pas (ses jetons du haut). */
+/* (0.95, RS-7 : « je veux qu'on utilise uniquement mes couleurs ») : SEULEMENT la palette de ses planches (chill-tekk_ui, les SVG Figma, par
+   fréquence) — verts #007d28 #014116 #004817 #029402 #0cdb0c #00fe44 #8bc88b ; violets #37008a #1d0048 #310573 #20024d ; neutres #191919
+   #222222 #302f2f #3f3e3e #4d4d4d #5d5d5d #b0b0b0 #d9d9d9 #f0f0f0 ; rares #a90707 #ffff00. Rien d'autre (le menthe et le lilas d'avant
+   venaient des rendus d'IA, pas de lui). */
+html.px-organique{
+  --bg:#191919; --surface:#222222; --surface2:#302f2f; --creux:#1d0048;
+  --bord:#3f3e3e; --bord2:#4d4d4d; --filet:rgba(217,217,217,.06);
+  --acc:#8bc88b; --acc2:#029402; --bio:#0cdb0c; --glow:rgba(12,219,12,.3);
+  --txt:#f0f0f0; --muted:#b0b0b0; --grave:#5d5d5d;
+  --memb:#007d28; --memb2:#37008a;
+}
+html.px-organique :is([data-neurone],.px-neurone){--n-fond:var(--surface);--n-bord:var(--memb)}
+html.px-organique .px-neurones-dd{opacity:var(--n-verre,.8)}   /* (0.95) le dedans en verre : le fond passe à travers */
+html.px-organique :is([data-neurone],.px-neurone):is(.on,:active){--n-bord:var(--memb2)}
+/* le vert et le violet alternent, comme sur les planches (les membranes passent de l'un à l'autre dans les tubes) */
+html.px-organique .px-koin-cases>button{--n-bord:var(--memb2)}
+html.px-organique .px-koin-pad{--n-bord:var(--memb)}
+html.px-organique .px-koin-pad.px-pad-actif,html.px-organique .px-koin-pad:not([data-dir=""]){--n-bord:var(--bio)}
+html.px-organique .px-map-c{--n-bord:var(--memb)}
+html.px-organique .px-map-ici{--n-bord:var(--memb2)}
+html.px-organique .px-map-k{--n-bord:var(--memb2)}
+html.px-organique .px-map-k-hub{--n-bord:var(--memb)}
+html.px-organique .px-btop-p:nth-child(2n){--n-bord:var(--memb2)}
+html.px-organique [data-amb-min]{--n-bord:var(--memb2)}
+
+/* 🧭 (0.95) LE GUIDE (src/app/guide.js) : le projecteur (tout s'assombrit sauf la cible ; l'ombre ne prend pas les touchers), une bulle d'une
+   phrase, un doigt qui pulse sur ce qu'il faut toucher (seulement pendant le guide) */
+.px-guide{position:fixed;inset:0;z-index:90;pointer-events:none}
+.px-guide-trou{position:fixed;border-radius:18px;box-shadow:0 0 0 200vmax rgba(4,3,12,.74);border:2px solid var(--bio);pointer-events:none;transition:all .25s}
+.px-guide-voile{position:fixed;inset:0;background:rgba(4,3,12,.74)}
+.px-guide-astuce .px-guide-trou{box-shadow:0 0 0 200vmax rgba(4,3,12,.45)}
+.px-guide-quoi .px-guide-voile{background:rgba(4,3,12,.25)}
+.px-guide-doigt{position:fixed;width:44px;height:44px;border-radius:50%;background:var(--glow);border:2px solid var(--bio);animation:px-guide-pouls 1.3s ease-in-out infinite}
+@keyframes px-guide-pouls{0%,100%{transform:scale(.7);opacity:.9}50%{transform:scale(1.05);opacity:.4}}
+html.px-calme .px-guide-doigt{animation:none}
+.px-guide-bulle{position:fixed;left:16px;right:16px;pointer-events:auto;background:var(--surface2) var(--grain);border:var(--trait) solid var(--bio);border-radius:18px;padding:14px 16px 12px;color:var(--txt);box-shadow:0 14px 40px -12px rgba(0,0,0,.85)}
+.px-guide-bulle p{margin:0;font:600 16px/1.35 var(--police)}
+.px-guide-bulle small{display:block;margin-top:6px;color:var(--muted);font-size:13px;line-height:1.35}
+.px-guide-b{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+.px-guide-b button{min-height:40px;padding:0 14px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:600 14px var(--police)}
+.px-guide-b button.p{background:var(--acc);border-color:var(--acc);color:#0d0a16;margin-left:auto}
+.px-guide-n{font:500 11px var(--mono);letter-spacing:.14em;color:var(--grave)}
+/* 〰 (0.95) L'ORGANIQUE DANS TOUS LES PLOXIONS (RS-7 22.10 : « appliqué à tous les ploxions de tout le xerboxion : le wiki, terrax, tout a le
+   même UI et le même HUD » ; « le but : transformer ploxi0n en xerboxion complet »). Les ploxions se peignent avec les variables du xer
+   (--xr-*, 0.52) : en organique, leurs bords deviennent des membranes (vert translucide, le halo), leurs rayons ceux d'une cellule ; leurs
+   boutons et champs sans style propre prennent la membrane. Sans SVG (des milliers d'éléments) : bord translucide + halo + le filet clair. */
+html.px-organique.px-px-chill body{--xr-border:rgba(0,125,40,.7);--xr-line:rgba(55,0,138,.6);--xr-radius:16px;--xr-glow:rgba(12,219,12,.3);--xr-accent-soft:rgba(139,200,139,.16);--xr-accent-weak:rgba(139,200,139,.1)}
+:where(html.px-organique.px-px-chill .px-hote) :where(button,select,input:not([type=checkbox],[type=radio],[type=range],[type=color],[type=file]),textarea){
+  background:rgba(34,34,34,.78);border:2.5px solid rgba(0,125,40,.75);border-radius:14px 16px 13px 15px;
+  box-shadow:0 0 12px -3px rgba(12,219,12,.4),inset 0 0 0 1px rgba(240,240,240,.05)}
+:where(html.px-organique.px-px-chill .px-hote) :where(button:active){border-color:#37008a;box-shadow:0 0 14px -2px rgba(55,0,138,.7)}
+:where(html.px-organique.px-px-chill .px-hote) :where(hr){border-top:2px solid rgba(0,125,40,.5)}
+/* le HUD : la barre d'un ploxion, le dock, les modes, les vues — des cellules ; la plaque qui les portait s'efface */
+html.px-organique .px-barre[data-neurones]{background:transparent;border-bottom-color:transparent}
+html.px-organique .px-dock[data-neurones],html.px-organique .px-modes[data-neurones],html.px-organique .px-vues[data-neurones]{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+html.px-organique .px-modes .px-neurone,html.px-organique .px-vues .px-neurone{--n-bord:var(--memb2)}
+html.px-organique .px-modes .px-neurone.on,html.px-organique .px-vues .px-neurone.on{--n-bord:var(--memb)}
+/* (0.95) LES CINQ PEAUX DE L'ORGANIQUE (src/bions/membrane.js ; ⚙ › Apparence › L'organique) : la forme est dans les filtres, ici le verre
+   du dedans et la teinte des membranes. RS-7 : « donne-moi plusieurs versions en même temps, je veux pouvoir comparer ». */
+html.px-organique[data-px-variante="vaisseaux"]{--memb:#029402;--memb2:#310573}
+html.px-organique[data-px-variante="vaisseaux"]{--n-verre:.7}
+html.px-organique[data-px-variante="cables"]{--memb:#0cdb0c;--memb2:#37008a}
+html.px-organique[data-px-variante="cables"]{--n-verre:.88}
+html.px-organique[data-px-variante="gelee"]{--memb:#007d28;--memb2:#37008a}
+html.px-organique[data-px-variante="gelee"]{--n-verre:.95}
+/* le hand terminal de The Expanse, dans SES couleurs : le verre (#222222 translucide), les arêtes vert pâle #8bc88b, les coins coupés */
+html.px-organique[data-px-variante="terminal"]{--memb:#8bc88b;--memb2:#b0b0b0;--acc:#8bc88b;--acc2:#029402}
+html.px-organique[data-px-variante="terminal"]{--n-verre:.5}
+/* (0.95) LE DEUXIÈME LOT, plus alien (câbles × gelée) — toujours la seule palette de RS-7 */
+.px-f-photo{flood-color:var(--bio)}
+html.px-organique[data-px-variante="cablegel"]{--memb:#0cdb0c;--memb2:#37008a}
+html.px-organique[data-px-variante="cablegel"]{--n-verre:.95}
+html.px-organique[data-px-variante="faisceaux"]{--memb:#00fe44;--memb2:#310573}
+html.px-organique[data-px-variante="faisceaux"]{--n-verre:.92}
+html.px-organique[data-px-variante="mycelium"]{--memb:#8bc88b;--memb2:#029402}
+html.px-organique[data-px-variante="mycelium"]{--n-verre:.9}
+html.px-organique[data-px-variante="xeno"]{--memb:#37008a;--memb2:#4d4d4d;--surface:#191919;--surface2:#222222}
+html.px-organique[data-px-variante="xeno"]{--n-verre:.97}
+html.px-organique[data-px-variante="abysses"]{--memb:#310573;--memb2:#20024d;--bio:#0cdb0c}
+html.px-organique[data-px-variante="abysses"]{--n-verre:.85}
+html.px-organique[data-px-variante="cristal"]{--memb:#d9d9d9;--memb2:#8bc88b}
+html.px-organique[data-px-variante="cristal"]{--n-verre:.55}
+.px-f-contour{flood-color:var(--n-contour,#191919)}
+.px-f-glitch1{flood-color:var(--memb2)}.px-f-glitch2{flood-color:#00fe44}
+html.px-organique[data-px-variante="portail"]{--memb:#0cdb0c;--memb2:#00fe44;--surface:#014116;--surface2:#004817}
+html.px-organique[data-px-variante="portail"]{--n-verre:.9}
+html.px-organique[data-px-variante="melange"]{--memb:#007d28;--memb2:#37008a;--bio:#00fe44}
+html.px-organique[data-px-variante="melange"]{--n-verre:.93}
+html.px-organique[data-px-variante="cyberpunk"]{--memb:#00fe44;--memb2:#37008a;--n-contour:#ffff00;--surface:#191919;--surface2:#222222}
+html.px-organique[data-px-variante="cyberpunk"]{--n-verre:.9}
+html.px-organique[data-px-variante="cyberglysm"]{--memb:#0cdb0c;--memb2:#37008a}
+html.px-organique[data-px-variante="cyberglysm"]{--n-verre:.92}
+html.px-organique[data-px-variante="tribal"]{--memb:#007d28;--memb2:#014116;--n-contour:#191919;--surface:#191919}
+html.px-organique[data-px-variante="tribal"]{--n-verre:.96}
+
+/* ◈ (0.96) L'ATELIER DES PEAUX (src/lot/atelier-peaux.js) : la grille fractale (3 × 3 petits xers, chacun sa peau), les knobs (jOSKnob) */
+.px-atelier .px-at-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:8px 0}
+.px-atelier .px-at-t{min-width:0}   /* (0.99.18, RS-7 : l'atelier débordait à droite, la page glissait de côté) une tuile ne pousse plus la grille */
+.px-at-t{position:relative;aspect-ratio:1/1;padding:9px;border:0;background:transparent;display:grid;grid-template:auto 1fr 1fr/1fr 1fr;gap:7px;border-radius:14px}
+.px-at-t>i{display:block;border-radius:9px;min-height:14px}
+.px-at-t>.px-at-barre{grid-column:1/3;height:12px;min-height:0}
+.px-at-t>i:nth-child(odd){--n-bord:var(--memb2)}
+.px-at-t.px-at-ici{outline:1px dashed var(--grave);outline-offset:2px}
+.px-at-z{margin:2px 0 8px;font:500 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--grave)}
+.px-at-b{display:flex;gap:8px;margin-bottom:14px}.px-at-b button{flex:1;min-height:44px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:600 16px var(--police)}
+.px-at-b button.p{flex:2;color:var(--bio)}
+.px-at-k .jkn-panel{justify-content:space-between;gap:8px 4px}
+.px-at-k .jkn svg path{fill:var(--surface);stroke:var(--memb)}
+.px-at-k .jkn svg circle[fill^="rgba"]{fill:var(--bord2)}
+.px-at-k .jkn__val{color:var(--acc)}.px-at-k .jkn__lab{color:var(--muted)}
+.px-at-d,.px-at-m{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.px-at-d button,.px-at-mp button{min-height:34px;padding:0 10px;border-radius:10px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:500 12px var(--mono)}
+.px-at-mp{display:inline-flex;gap:2px}
+
+/* ✎ (0.96) L'ÉCRITURE : comment tout s'écrit (prefs.ecriture ; RS-7 23.10 : « un mode texte + glyphes, pur glyphes, pur texte, emoji, minimal,
+   xerboxion : tous les modes »). xerboxion, texte + glyphes et emoji passent par les glyphes (prefs.lire) ; ici, ce qu'on cache ou montre. */
+/* rien que des glyphes : plus un mot (les noms restent dans aria-label, et « c'est quoi ça ? » les dit) */
+html.px-e-glyphes .px-tuile>span:last-child,html.px-e-glyphes .px-koin-cases>button small,html.px-e-glyphes .px-map-k small,html.px-e-glyphes .px-ligne-t small,
+html.px-e-glyphes .px-koin-pad b,html.px-e-glyphes .px-koin-pad small,html.px-e-glyphes .px-modes button,html.px-e-glyphes .px-vues button{font-size:0}
+html.px-e-glyphes .px-modes button .px-g,html.px-e-glyphes .px-vues button .px-g{width:22px;height:22px}
+html.px-e-glyphes .px-barre>span{font-size:0}html.px-e-glyphes .px-barre>span .px-g{width:24px;height:24px}
+html.px-e-glyphes .px-tuile .px-ic{transform:scale(1.12)}
+/* rien que des mots : plus un glyphe ; un bouton qui n'avait qu'un glyphe dit son nom */
+html.px-e-texte .px-ic,html.px-e-texte .px-tuile .px-g,html.px-e-texte .px-koin-cases>button .px-g,html.px-e-texte .px-map-k .px-g,html.px-e-texte .px-modes .px-g,
+html.px-e-texte .px-vues .px-g,html.px-e-texte .px-barre>span .px-g,html.px-e-texte .px-koin-pad .px-pad-g{display:none}
+html.px-e-texte .px-tuile{min-height:64px;justify-content:center}
+html.px-e-texte .px-tuile>span:last-child{font:600 14px/1.2 var(--police);color:var(--txt)}
+html.px-e-texte :is(.px-koin-barre,.px-map-b,.px-barre,.px-dock) button[aria-label]:not(:has(span,b,small))>.px-g{display:none}
+html.px-e-texte :is(.px-koin-barre,.px-map-b,.px-barre,.px-dock) button[aria-label]:not(:has(span,b,small))::after{content:attr(aria-label);font:600 9px/1.1 var(--mono);letter-spacing:.04em;text-align:center}
+html.px-e-texte .px-koin-barre button{font-size:0}html.px-e-texte .px-koin-barre button[data-court]::after{content:attr(data-court);font:600 10px/1 var(--mono);letter-spacing:.02em}
+/* ⊙ (0.99.8, RS-7 : « un mode humain, où y a zéro texte, que des glyphes human readable et des fonctions mathématiques ») — l'écriture
+   « humain » : tout ce que fait « glyphes » (plus un mot sur les tuiles, les koins, la map), et ce qui restait de texte devient des maths
+   (src/bions/humain.js : 8◇ · 4⊡, Δt −2 d, ∀t, →3 · 2→, ∅) ou disparaît (les phrases d'explication, les noms). « c'est quoi ça ? » dit les mots. */
+html.px-e-humain .px-tuile>span:last-child,html.px-e-humain .px-koin-cases>button small,html.px-e-humain .px-map-k small,html.px-e-humain .px-ligne-t small,
+html.px-e-humain .px-koin-pad b,html.px-e-humain .px-koin-pad small,html.px-e-humain .px-modes button,html.px-e-humain .px-vues button,
+html.px-e-humain .px-map-tc small,html.px-e-humain .px-map-rc small,html.px-e-humain .px-nv-o i,html.px-e-humain .px-map-z button span{font-size:0}
+/* plus forts que l'organique et le zoom (qui donnent une taille aux étiquettes) */
+html.px-e-humain .px-map :is(.px-map-k,.px-map-tc,.px-map-rc) small,html.px-e-humain .px-nv-noyau>b,html.px-e-humain .px-nv-noyau>small{display:none!important}
+html.px-e-humain .px-map-t b{font-size:0!important}
+html.px-e-humain [data-nv-action][data-h]{font-size:0}html.px-e-humain [data-nv-action][data-h]::after{content:attr(data-h);font-size:18px}
+html.px-e-humain .px-modes button .px-g,html.px-e-humain .px-vues button .px-g{width:22px;height:22px}
+html.px-e-humain .px-barre>span{font-size:0}html.px-e-humain .px-barre>span .px-g{width:24px;height:24px}
+html.px-e-humain .px-sous,html.px-e-humain .px-map-t span,html.px-e-humain .px-map-ou,html.px-e-humain .px-map-autres{display:none}
+html.px-e-humain .px-map-t b::before{content:"◇";font-size:16px!important}
+html.px-e-humain :is(.px-map-pied,.px-map-temps b,.px-nv-g,.px-nv-vide)[data-h]{font-size:0}
+html.px-e-humain :is(.px-map-pied,.px-map-temps b,.px-nv-g,.px-nv-vide)[data-h]::after{content:attr(data-h);font:600 12px/1.2 var(--mono);letter-spacing:.06em;color:var(--txt)}
+html.px-e-humain :is(.px-map-k,.px-map-tc)[data-quand-h]:not([data-quand-h=""])::after{content:attr(data-quand-h)}
+html.px-e-humain .px-map-k[data-quand]:not([data-quand=""]) small{display:none}
+/* minimal : des mots en mono minuscules, pas de cadres ; le calme */
+html.px-e-minimal .px-ic,html.px-e-minimal .px-tuile .px-g,html.px-e-minimal .px-modes .px-g,html.px-e-minimal .px-vues .px-g,html.px-e-minimal .px-plaque{display:none}
+html.px-e-minimal .px-tuile{min-height:40px;align-items:flex-start;justify-content:center;border-left:2px solid var(--bord);padding-left:8px}
+html.px-e-minimal .px-tuile>span:last-child{font:500 12px/1.3 var(--mono);text-transform:lowercase;letter-spacing:.02em;color:var(--muted);text-align:left}
+html.px-e-minimal{--grain:none}
+html.px-e-minimal .px-grille{gap:6px 14px}
+
+/* ▦ (0.97) la map en 3 × 3 (les coins : DIAGONALES) ; le temps sur les koins (« il y a 2 sem ») et la réglette du wormion */
+.px-map-hg{transform:translate(calc(var(--P) * -1),calc(var(--P) * -1));opacity:.4;border-radius:var(--blob1)}.px-map-hd{transform:translate(var(--P),calc(var(--P) * -1));opacity:.4;border-radius:var(--blob2)}
+.px-map-bg{transform:translate(calc(var(--P) * -1),var(--P));opacity:.4;border-radius:var(--blob3)}.px-map-bd{transform:translate(var(--P),var(--P));opacity:.4;border-radius:var(--blob4)}
+.px-map-k{position:relative}
+.px-map-k[data-quand]:not([data-quand=""])::after{content:attr(data-quand);position:absolute;top:2px;right:3px;font:500 6px/1 var(--mono);color:var(--grave);letter-spacing:.02em}
+.px-map-temps-on .px-map-k:not(.px-map-vu):not(.px-map-k-hub){opacity:.25}
+.px-map-vu{--n-bord:var(--bio)!important}.px-map-vu::after{color:var(--bio)!important}
+.px-map-temps{display:flex;align-items:center;gap:10px;padding:4px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+.px-map-temps span{color:var(--acc);font-size:18px}.px-map-temps input{flex:1;accent-color:var(--bio)}
+.px-map-temps b{min-width:96px;text-align:right;font:500 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+/* ○ (0.97) le passé : les paliers du zoom de temps, les seaux, les ploxions et les tsoins à l'envers */
+.px-passe-z{display:flex;gap:6px;margin:6px 0 14px;flex-wrap:wrap}.px-passe-z button{min-height:36px;padding:0 10px;border-radius:10px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--muted);font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.px-passe-z button.on{color:var(--bio);border-color:var(--bio)}
+.px-passe-s h4{margin:16px 0 8px;font:500 10px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--grave)}
+.px-passe-c{display:flex;flex-wrap:wrap;gap:8px}
+.px-passe-e,.px-passe-t{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:4px 12px 4px 6px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);text-align:left;max-width:100%}
+.px-passe-e .px-g{width:26px;height:26px;fill:none;stroke:var(--acc);stroke-width:4;flex:none}
+.px-passe-e b,.px-passe-t b{font:600 13px var(--police)}.px-passe-e small,.px-passe-t small{font:500 10px var(--mono);color:var(--muted);margin-left:2px}
+.px-passe-t span{color:var(--bio)}
+.px-passe-p{display:flex;gap:6px;margin:0 0 6px;flex-wrap:wrap}.px-passe-p button{min-height:36px;padding:0 12px;border-radius:10px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--muted);font:600 12px var(--police)}
+.px-passe-p button.on{color:var(--bio);border-color:var(--bio)}
+.px-passe-commit b{font:500 12px/1.3 var(--police)!important;white-space:normal}.px-passe-palier span{color:var(--acc)!important}
+.px-passe-xer{flex-wrap:wrap}.px-passe-xer button{margin-left:6px;min-height:30px;padding:0 10px;border-radius:9px;border:var(--trait) solid var(--bio);background:transparent;color:var(--bio);font:600 11px var(--mono)}
+
+/* ◈ (0.98) UNE SEULE MAP, TOUT EST FRACTAL : dans l'organique, l'accueil est la map ; la règle du zoom (tes ploxions · le réseau · le hub ·
+   le ploxion · le bion) ; la scène des paliers ; la plongée et le recul ; le neurone (entrées, soma, sorties, synapses) */
+html.px-m-organique .px-accueil>.px-vues,html.px-m-organique .px-accueil>.px-pages,html.px-m-organique .px-accueil>.px-plat,html.px-m-organique .px-accueil>.px-points,
+html.px-m-organique .px-accueil>.px-sous,html.px-m-organique .px-accueil .px-plaque,html.px-m-organique .px-accueil>.px-grille,html.px-m-organique .px-accueil>.px-cat,html.px-m-organique .px-accueil>h2{display:none}
+.px-org-map{position:relative;height:calc(100vh - 150px - env(safe-area-inset-top,0px));min-height:420px;margin:0 -18px}
+.px-org-map-h{position:absolute;inset:0}
+.px-map-z{position:absolute;right:6px;top:50%;transform:translateY(-50%);z-index:6;display:flex;flex-direction:column;gap:4px}
+.px-map-z button{display:flex;align-items:center;justify-content:flex-end;gap:6px;min-height:30px;padding:0 4px;border:0;background:transparent;color:var(--grave)}
+.px-map-z button i{width:10px;height:10px;border-radius:50%;border:2px solid var(--bord2);flex:none}
+.px-map-z button span{font:500 8px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;opacity:0;transition:opacity .2s}
+/* (0.99.19) le nom du palier flotte à gauche de son point : il ne prend plus de place (la règle faisait ~100 px et mangeait la dernière colonne) */
+.px-map-z button{position:relative}.px-map-z button span{position:absolute;right:calc(100% + 2px);top:50%;margin-top:-4px;white-space:nowrap;pointer-events:none;text-shadow:0 0 4px #000,0 1px 2px #000}
+.px-map-z button.on{color:var(--bio)}.px-map-z button.on i{border-color:var(--bio);background:var(--bio);box-shadow:0 0 10px var(--glow)}.px-map-z button.on span{animation:px-palier-nom 1.8s ease forwards}
+@keyframes px-palier-nom{0%,60%{opacity:1}100%{opacity:0}}
+.px-map-temps[hidden]{display:none}
+.px-map-z button:disabled{opacity:.25}
+/* ❄ (0.99) LE ZOOM LIBRE OU PAR PALIERS (src/bions/zoom.js) : l'écriture suit l'échelle (RS-7 23.10 : « selon les niveaux y a que le glyphe,
+   que le texte, ou les deux » ; « que la police ressorte »). De loin le glyphe seul, au milieu les deux, de près le texte en ChillTekk.
+   Les écritures forcées (pur glyphes, pur texte, minimal) gardent la main. */
+.px-map{--ct:"ChillTekk",ui-monospace,monospace}
+html.px-organique .px-map :is(.px-map-k,.px-map-tc,.px-map-rc) small,html.px-organique .px-map-t b,html.px-organique .px-map-ou,html.px-organique .px-nv-c b{font-family:var(--ct)}
+.px-map :is(.px-map-k,.px-map-tc,.px-map-rc) :is(.px-g,small){transition:width .22s ease,height .22s ease,font-size .22s ease,opacity .22s ease}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal):not(.px-e-humain) .px-map[data-detail="glyphe"] :is(.px-map-k,.px-map-tc,.px-map-rc) small{font-size:0;opacity:0}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal):not(.px-e-humain) .px-map[data-detail="glyphe"] :is(.px-map-k,.px-map-tc,.px-map-rc) .px-g{width:68%;height:68%}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal):not(.px-e-humain) .px-map[data-detail="glyphe"] .px-map-t span{opacity:0}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal):not(.px-e-humain) .px-map[data-detail="texte"] :is(.px-map-k,.px-map-tc,.px-map-rc) .px-g{width:0;height:0;opacity:0}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal):not(.px-e-humain) .px-map[data-detail="texte"] :is(.px-map-k,.px-map-tc,.px-map-rc) small{font-size:12px;line-height:1.15;color:var(--txt);white-space:normal;text-align:center;word-break:break-word;letter-spacing:.06em}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal):not(.px-e-humain) .px-map[data-detail="texte"] .px-map-t b{color:var(--bio);text-shadow:0 0 8px var(--glow)}
+html:not(.px-e-glyphes):not(.px-e-texte):not(.px-e-minimal):not(.px-e-humain) .px-map[data-detail="texte"] .px-nv-c small{font-size:10.5px;color:var(--txt)}
+/* la règle : ❄ fige ce zoom (un palier à toi), libre / paliers, tes paliers figés, le niveau */
+/* ◈ (0.99.2, RS-7 sur l'iPhone : « ça reste pas fixe à la page ; c'est pas assez lisible ») — l'accueil de l'organique = la map, FIXE : il ne
+   défile plus (les membranes le faisaient déborder : 399 px pour 393, 918 pour 852) ; la map prend toute la hauteur qui reste. Et lisible sur
+   n'importe quel fond : un voile sombre derrière la map, des étiquettes plus grandes, claires, avec un halo ; les voisins moins effacés. */
+html.px-organique .px-accueil:has(.px-org-map){display:flex;flex-direction:column;overflow:hidden;overflow:clip;overscroll-behavior:none;padding-bottom:0}
+html.px-organique .px-accueil:has(.px-org-map)>*{flex:none}
+html.px-organique .px-accueil>.px-org-map{flex:1 1 auto;height:auto;min-height:0;overflow:hidden;margin-bottom:0}
+.px-org-map::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 90% 70% at 50% 45%,rgba(6,5,12,.72),rgba(6,5,12,.42) 70%,rgba(6,5,12,.2))}
+html.px-organique .px-map :is(.px-map-k,.px-map-tc,.px-map-rc) small{font-size:9px;line-height:1.1;letter-spacing:0;color:var(--txt);text-shadow:0 0 3px #000,0 1px 2px #000;
+  white-space:normal;text-align:center;word-break:normal;overflow-wrap:break-word;-webkit-hyphens:auto;hyphens:auto;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+html.px-organique .px-map-k .px-g{width:42%;height:42%}
+html.px-organique .px-map-t b{font-size:13px;text-shadow:0 0 6px #000}
+html.px-organique .px-map-t span,html.px-organique .px-map-pied{color:var(--muted);text-shadow:0 1px 2px #000}
+html.px-organique .px-map-pied{font-size:10.5px}
+html.px-organique .px-map-ou{color:var(--muted)}
+html.px-organique :is(.px-map-droite,.px-map-gauche,.px-map-haut,.px-map-bas){opacity:.72}
+html.px-organique :is(.px-map-hg,.px-map-hd,.px-map-bg,.px-map-bd){opacity:.5}
+html.px-organique .px-map-temps-on .px-map-k:not(.px-map-vu):not(.px-map-k-hub){opacity:.38}
+html.px-organique .px-map-k[data-quand]:not([data-quand=""])::after{font-size:7px;color:var(--muted);text-shadow:0 1px 2px #000}
+/* la réglette du temps : entre les deux koins du bas, plus dessous */
+html.px-koins .px-map-temps,html.px-organique .px-map-temps{padding:4px 82px calc(14px + env(safe-area-inset-bottom,0px))}
+/* la règle du zoom, plus étroite : elle ne mange plus les tuiles */
+.px-map-z .px-map-zb,.px-map-figes button{min-width:0;width:30px;height:30px;min-height:30px;padding:0;border-radius:50%;font:600 14px/1 var(--police);letter-spacing:0;align-self:flex-end;justify-content:center}
+.px-map-figes button{font:600 11px/1 var(--ct);color:var(--acc2)}
+.px-map-n{padding-right:58px}
+html.px-organique .px-map-temps b{min-width:0;color:var(--txt);text-shadow:0 1px 2px #000;white-space:nowrap}
+.px-map-figes{display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-top:6px}
+.px-map-figes button{min-height:26px;padding:0 6px;border-radius:9px;border:1px solid var(--bord2);background:var(--surface);color:var(--acc2);font:600 10px/1 var(--ct)}
+.px-map-z .px-map-zb{justify-content:center;min-height:30px;min-width:34px;padding:0 6px;border-radius:10px;border:1px solid var(--bord);background:var(--surface);color:var(--muted);font:600 10px/1 var(--ct);letter-spacing:.08em}
+.px-map-z .px-map-zb.on{color:var(--bio);border-color:var(--bio);box-shadow:0 0 10px var(--glow)}
+.px-map-niv{align-self:flex-end;font:600 9px/1 var(--ct);color:var(--grave);letter-spacing:.06em;padding:2px 4px}
+html.px-organique .px-map-figes button,html.px-organique .px-map-z .px-map-zb{background:var(--creux)}
+.px-map-n{position:relative;flex:1;min-height:0;overflow:auto;padding:10px 46px 30px 14px;-webkit-overflow-scrolling:touch}
+.px-map-n[hidden]{display:none}
+@keyframes px-plonge{from{transform:scale(.72);opacity:0;filter:blur(3px)}to{transform:none;opacity:1;filter:none}}
+@keyframes px-recule{from{transform:scale(1.35);opacity:0;filter:blur(3px)}to{transform:none;opacity:1;filter:none}}
+.px-map.px-zoom-in .px-map-n,.px-map.px-zoom-in .px-map-v{animation:px-plonge .32s cubic-bezier(.2,.9,.3,1)}
+.px-map.px-zoom-out .px-map-n,.px-map.px-zoom-out .px-map-v{animation:px-recule .32s cubic-bezier(.2,.9,.3,1)}
+html.px-calme .px-map .px-map-n,html.px-calme .px-map .px-map-v{animation:none}
+/* tes ploxions : la grille, en cellules */
+.px-map-tt{display:grid;grid-template-columns:repeat(var(--tt-c,4),minmax(0,1fr));gap:8px;--tt-cel:80px}
+/* (0.99.19) les cases suivent leur taille : le glyphe et le nom grandissent avec elles */
+.px-map-tt .px-map-tc{border-radius:clamp(10px,calc(var(--tt-cel) * .16),22px)}
+html .px-map .px-map-tt .px-map-tc small{font-size:clamp(8px,calc(var(--tt-cel) * .12),14px)}
+.px-map-tc{position:relative;aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:14px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);padding:4px}
+.px-map-tc .px-g{width:46%;height:46%;fill:none;stroke:var(--acc);stroke-width:4}
+.px-map-tc small{font:500 8px/1.1 var(--mono);color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.px-map-tc[data-quand]:not([data-quand=""])::after{content:attr(data-quand);position:absolute;top:3px;right:4px;font:500 6px var(--mono);color:var(--grave)}
+/* le réseau des hubs */
+.px-map-rs{position:relative;margin:20px}
+.px-map-rc{position:absolute;width:84px;height:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:16px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);padding:6px}
+.px-map-rc .px-g{width:44%;height:44%;fill:none;stroke:var(--acc);stroke-width:4}.px-map-rc small{font:500 8px/1.1 var(--mono);text-align:center;color:var(--muted)}
+html.px-organique .px-map-rc-ici{--n-bord:var(--bio)}
+/* le neurone */
+.px-nv{position:relative;display:flex;flex-direction:column;gap:22px;padding-bottom:20px}
+.px-nv-g{margin:0;font:500 9px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--grave)}
+.px-nv-e,.px-nv-s,.px-nv-l{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;position:relative;z-index:1}
+.px-nv-c,.px-nv-lien{display:flex;flex-direction:column;gap:2px;max-width:46%;padding:7px 10px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);text-align:left}
+.px-nv-c b,.px-nv-lien b{font:600 11px/1.2 var(--mono);word-break:break-word}.px-nv-c small,.px-nv-lien small{font:400 9px/1.25 var(--police);color:var(--muted)}
+html.px-organique .px-nv-e{--n-bord:var(--memb2)}html.px-organique .px-nv-c.px-nv-e{--n-bord:var(--memb2)}html.px-organique .px-nv-c.px-nv-s{--n-bord:var(--memb)}
+.px-nv-core b::before{content:'◆ ';color:var(--bio)}
+.px-nv-soma{display:flex;justify-content:center;position:relative;z-index:1}
+.px-nv-noyau{width:min(78%,300px);display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 14px 14px;border-radius:28px;border:var(--trait) solid var(--bord2);background:var(--surface2);text-align:center}
+html.px-organique .px-nv-noyau{--n-bord:var(--bio);--n-fond:var(--surface2)}
+.px-nv-gl .px-g{width:64px;height:64px;fill:none;stroke:var(--acc);stroke-width:3.5}.px-nv-noyau>b{font:600 17px var(--police)}.px-nv-noyau>small{font:400 11px/1.35 var(--police);color:var(--muted)}
+.px-nv-b{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:4px}
+.px-nv-o{display:flex;flex-direction:column;align-items:center;gap:2px;width:56px;padding:6px 2px;border-radius:12px;border:var(--trait) solid var(--bord);background:var(--creux);color:var(--txt)}
+.px-nv-o .px-g{width:20px;height:20px;fill:none;stroke:var(--bio);stroke-width:5}.px-nv-o i{font:500 7px var(--mono);font-style:normal;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+html.px-organique .px-nv-o{--n-fond:var(--creux)}
+/* (0.99.5) le cœur d'un ploxion : son propre bion, en premier, plus grand ; les noms des bions lisibles */
+.px-nv-o i{font-size:8.5px;color:var(--txt)}
+.px-nv-coeur{width:64px;border-color:var(--bio)}.px-nv-coeur .px-g{width:26px;height:26px}.px-nv-coeur i{color:var(--bio)}
+html.px-organique .px-nv-coeur{--n-bord:var(--bio)}
+.px-nv-a{display:flex;gap:8px;margin-top:6px}.px-nv-a button{min-height:36px;padding:0 12px;border-radius:11px;border:var(--trait) solid var(--bio);background:transparent;color:var(--bio);font:600 12px var(--police)}
+.px-nv-vide{margin:0;font:400 11px var(--police);color:var(--grave)}
+.px-nv-ax{position:absolute;left:0;top:0;pointer-events:none;z-index:0;overflow:visible}
+.px-nv-ax-e{fill:none;stroke:var(--memb2);stroke-width:4;opacity:.85;filter:drop-shadow(0 0 4px var(--memb2))}.px-nv-ax-s{fill:none;stroke:var(--memb);stroke-width:4;opacity:.9;filter:drop-shadow(0 0 4px var(--memb))}
+.px-nv-term-e{fill:var(--memb2)}.px-nv-term-s{fill:var(--memb)}
+html:not(.px-organique) .px-nv-ax-e{stroke:var(--acc2)}html:not(.px-organique) .px-nv-ax-s{stroke:var(--bio)}
+
+/* ⟷ (0.99.5, RS-7 : « commencer une version paysage iPhone ») — l'iPhone couché (hauteur ≤ 520 px). Les bords d'iOS (l'encoche, à gauche ou à
+   droite) sont respectés ; l'accueil organique : l'en-tête et les modes en colonne à gauche, la map à droite sur toute la hauteur ; le synthé :
+   jouer à gauche (les pads tiennent dans la hauteur), régler à droite (les knobs défilent). */
+.jkn{touch-action:none}
+.jkn.px-tord svg{transform:scale(1.18);filter:drop-shadow(0 0 8px var(--glow,rgba(124,255,155,.6)));transition:transform .12s ease}
+.jkn.px-tord-deux svg{transform:scale(1.3)}
+.jkn svg{transition:transform .18s ease}
+@media (orientation: landscape) and (max-height: 520px) {
+  .px-accueil,.px-page{padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
+  html.px-organique .px-accueil:has(.px-org-map){display:grid;grid-template-columns:minmax(150px,22%) minmax(0,1fr);grid-template-rows:auto auto 1fr;column-gap:10px}
+  html.px-organique .px-accueil:has(.px-org-map)>*{grid-column:1}
+  html.px-organique .px-accueil>.px-org-map{grid-column:2;grid-row:1/4;margin:0;min-height:0;height:auto}
+  html.px-organique .px-accueil:has(.px-org-map) .px-tete{margin:6px 0}
+  html.px-organique .px-accueil:has(.px-org-map) .px-modes{flex-direction:column;align-items:stretch}
+  html.px-organique .px-accueil:has(.px-org-map) .px-modes button{min-height:30px;text-align:left;padding:0 10px}
+  .px-map-temps{padding-left:74px;padding-right:74px}
+  /* le synthé */
+  .px-synthe{display:grid;grid-template-columns:minmax(0,44%) minmax(0,1fr);column-gap:14px;align-items:start}
+  .px-synthe>.px-grave,.px-synthe>.px-sous{grid-column:1/-1;margin:2px 0}
+  .px-sy-jouer{position:sticky;top:0}
+  .px-sy-scope{height:46px;margin:4px 0}
+  .px-sy-pads{width:min(100%,calc(100vh - 175px));margin:4px auto 6px;gap:6px}
+  .px-sy-regler{max-height:calc(100vh - 70px);overflow:auto;-webkit-overflow-scrolling:touch;padding-bottom:60px}
+  .px-sy-g{margin:6px 0}
+  /* ⟷ (0.99.13) les autres écrans. Les réglages et le marketplace : la tête (titre, recherche, vues) devient une colonne collée à gauche
+     (la télécommande en bas mangeait 111 px sur 393) ; les catégories des réglages sur deux colonnes */
+  html .px-hote>.rg{display:grid;grid-template-columns:minmax(170px,24%) minmax(0,1fr);column-gap:16px;max-width:none;min-height:0;padding-bottom:40px}
+  html .px-hote>.rg>.rg-tete{grid-column:1;grid-row:1;position:sticky;top:0;bottom:auto;align-self:start;margin:0;padding:10px 0;border:0;background:none}
+  html .px-hote>.rg>.rg-tete .rg-fil{margin-bottom:10px}
+  html .px-hote>.rg>div[data-c]{grid-column:2;grid-row:1;padding-bottom:0}
+  html .px-hote>.rg [data-accueil]{columns:2;column-gap:16px}
+  html .px-hote>.rg [data-accueil] h3{break-after:avoid;margin-top:14px}
+  html .px-hote>.rg [data-accueil] .bloc{break-inside:avoid}
+  html .px-hote>.mk{display:grid;grid-template-columns:minmax(170px,24%) minmax(0,1fr);column-gap:8px;min-height:0;padding:0 0 40px}
+  html .px-hote>.mk>.mk-top{grid-column:1;grid-row:1;position:sticky;top:0;bottom:auto;align-self:start;border:0;background:none;padding:10px 0 10px 4px}
+  html .px-hote>.mk>.mk-top .mk-vues{flex-direction:column;overflow:visible}
+  html .px-hote>.mk>.mk-top .mk-vues button{text-align:left}
+  html .px-hote>.mk>div[data-c]{grid-column:2;grid-row:1;min-width:0}
+  html .px-hote>.mk .mk-sec{top:0}
+  /* les écrans en liste : deux ou trois colonnes */
+  .px-ambiances>div:has(>.px-amb-l){display:grid;grid-template-columns:1fr 1fr;column-gap:12px}
+  .px-btop>div:has(>.px-btop-p){display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start}
+  .px-pr-glyphes{grid-template-columns:repeat(12,1fr)}
+  .px-inviter{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;align-items:start}
+  .px-inviter>.px-grave{grid-column:1/-1}
+  /* l'atelier des peaux : la grille 3 × 3 à gauche, collée ; les knobs et le reste à droite */
+  .px-atelier{display:grid;grid-template-columns:minmax(0,40%) minmax(0,1fr);column-gap:16px;align-items:start}
+  .px-atelier>*{grid-column:2}
+  .px-atelier>.px-at-g{grid-column:1;grid-row:1/span 12;position:sticky;top:0;margin:4px 0;width:min(100%,calc((100vh - 24px) * .92));gap:6px}
+}
+
+/* ◌ (0.99.11) le téléphone vivant (src/app/tel-vivant.js) : un bord qui respire ; --tv-periode (la chaleur), --tv-intensite (la batterie),
+   --tv-son (le son qui joue), data-teinte (bio · chaud · charge · faible) ; une couche fixe, jamais un toucher */
+.px-tel-vivant{position:fixed;inset:0;z-index:38;pointer-events:none;--tv-rgb:124,255,155;
+  box-shadow:inset 0 0 calc(22px + 46px * var(--tv-son,0)) calc(1px + 7px * var(--tv-son,0)) rgba(var(--tv-rgb),calc(.12 + .38 * var(--tv-intensite,1)));
+  animation:px-tv-souffle var(--tv-periode,6s) ease-in-out infinite;transition:box-shadow .12s linear}
+.px-tel-vivant[hidden]{display:none}
+.px-tel-vivant[data-teinte="plein"]{--tv-rgb:255,170,40}.px-tel-vivant.px-tv-irregulier{animation-timing-function:steps(5,jump-none)}   /* (0.99.23) le disque presque plein : il étouffe */
+.px-tel-vivant[data-teinte="chaud"]{--tv-rgb:255,140,90}.px-tel-vivant[data-teinte="charge"]{--tv-rgb:150,180,255}.px-tel-vivant[data-teinte="faible"]{--tv-rgb:200,120,170}
+@keyframes px-tv-souffle{0%,100%{opacity:.35}50%{opacity:1}}
+html:not(.px-organique) .px-tel-vivant{display:none}
+
+/* (0.99.18) les bugs de RS-7 sur l'iPhone
+   - une page interne ne glisse jamais de côté : ce qui déborde (les membranes, une grille trop large) est coupé au bord de l'écran
+     (clip, pas hidden : pas de défilement créé, le sticky marche toujours) ;
+   - les onglets d'un ploxion du labo ne rétrécissent plus sous leur texte (Xerax : « .xrx * { min-width: 0 } » écrasait leur largeur ;
+     la vraie correction est dans le labo) */
+.px-page{overflow-x:clip}
+.px-hote :is([role=tablist],[class*="tabs"],[class*="onglets"])>:is(button,a,[role=tab]){flex-shrink:0;min-width:max-content}
+/* ⊕ (0.99.19) la taille de tout (le zoom de page) rend l'écran plus étroit : les modes se serrent au lieu de couper « xerbot » */
+.px-modes button{min-width:0;overflow-wrap:anywhere}
+@media (max-width:360px){.px-modes{gap:3px}.px-modes button{letter-spacing:.02em;font-size:9.5px;padding-left:2px;padding-right:2px}}
+/* (0.99.19, RS-7 : « MACHINE » coupé, « AUDIO » sous les boutons) le réseau se fait glisser jusqu'à ce qu'un hub sorte de dessous les
+   contrôles de droite (la règle, ✻, ∿) et de dessous les mini docks */
+.px-map-rs{margin:0 64px 150px 0}
+/* (0.99.27, « que rien ne sorte de l'écran ») un écran bas (l'iPhone couché) : la zone de jeu du synthé, plus haute que lui, ne colle plus en haut
+   (son bas, les motifs, restait sous le bord) ; elle défile avec la page */
+@media (max-height:520px){.px-sy-jouer{position:static}}
+/* ⌂ (0.99.32) Android : les applis du téléphone (src/lot/applis.js) */
+.px-ap-tete{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 0 12px;font:12px/1.5 var(--mono);color:var(--grave)}
+.px-ap-tete .ok{color:var(--txt)}
+.px-ap-tete>span{flex:1 1 12em;min-width:0}
+.px-ap-q{width:100%;box-sizing:border-box;margin:0 0 14px;padding:10px 14px;border-radius:999px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt);font:15px/1.3 inherit}
+.px-ap-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:14px 8px}
+.px-ap-a{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;padding:6px 2px;background:none;border:0;color:var(--txt);-webkit-touch-callout:none;user-select:none}
+.px-ap-a img,.px-ap-x{width:48px;height:48px;border-radius:14px}
+.px-ap-x{display:grid;place-items:center;background:var(--surface);border:var(--trait) solid var(--bord);font:600 20px/1 var(--mono)}
+.px-ap-a .n{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;line-height:1.3}
+.px-ap-a:active{transform:scale(.94)}
+.px-ap-vide{grid-column:1/-1;opacity:.7;font:12px/1.5 var(--mono)}
+/* ▸ (0.99.33) l'appareil xb (src/lot/appareil-xb.js) */
+.px-xba-etat{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;margin:0 0 14px;font:12px/1.5 var(--mono)}
+.px-xba-etat b{font-size:15px}.px-xba-ok b{color:var(--acc)}.px-xba-mi b{color:var(--muted)}.px-xba-ko b,.px-xba-etat .ko{color:#e0735c}
+.px-xba-etat span{min-width:0;overflow-wrap:anywhere;color:var(--grave)}
+.px-xba-txt,.px-xba-msg{font-size:13px;line-height:1.5;margin:0 0 14px}
+.px-xba-code{display:flex;flex-direction:column;gap:10px;align-items:flex-start;margin:0 0 14px}
+.px-xba-code b{font:600 34px/1.1 var(--mono);letter-spacing:.12em}
+.px-xba-b{display:flex;flex-direction:column;gap:10px;align-items:flex-start;margin:0 0 14px}
+.px-xba-l{display:flex;gap:8px;align-items:center;font-size:13px}
+.px-xba-h{margin:18px 0 6px;font:500 10px/1.4 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--grave)}
+.px-xba-cmds,.px-xba-j{list-style:none;margin:0;padding:0;font:12px/1.6 var(--mono)}
+.px-xba-cmds li,.px-xba-j li{overflow-wrap:anywhere}.px-xba-j time{color:var(--grave)}
+/* 🎧 (0.99.34) le xer de Spotify (src/app/xer-spotify.js) : le moteur du labo, une interface de téléphone */
+.px-xsp .sp{position:relative;font-size:14px;background:var(--bg,#07050c)}
+.px-xsp .sp__top{position:relative;overflow:hidden;display:block}
+.px-xsp .sp__side,.px-xsp .sp__main{position:absolute;inset:0;max-width:none;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  padding:12px max(14px,env(safe-area-inset-right,0px)) 18px max(14px,env(safe-area-inset-left,0px));transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .28s}
+.px-xsp .sp__side{border-right:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px 12px;align-content:start}
+.px-xsp .sp__main{transform:translateX(100%);background:var(--bg,#07050c);z-index:2}
+.px-xsp .sp__top.px-xsp-pistes .sp__main{transform:none}
+.px-xsp .sp__top.px-xsp-pistes .sp__side{transform:translateX(-18%);opacity:.3;pointer-events:none}
+.px-xsp .sp__grp{grid-column:1/-1;margin:8px 2px 0;font:500 10px/1.4 var(--mono);letter-spacing:.2em;color:var(--grave)}
+.px-xsp .px-xsp-q{grid-column:1/-1;width:100%;box-sizing:border-box;padding:11px 16px;border-radius:999px;border:var(--trait,1px) solid var(--bord,#2a2438);background:var(--surface,#120e1a);color:var(--txt);font:16px/1.3 inherit}
+.px-xsp .sp__pl{flex-direction:column;align-items:stretch;gap:8px;padding:0;border-radius:14px;background:none;min-width:0}
+.px-xsp .sp__pl[hidden]{display:none}
+.px-xsp .sp__pl.on,.px-xsp .sp__pl:hover{background:none}
+.px-xsp .sp__pl:active{transform:scale(.97)}
+.px-xsp .sp__plimg{width:100%;height:auto;aspect-ratio:1;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.px-xsp .sp__pl[data-liked]{grid-column:1/-1;flex-direction:row;align-items:center;gap:14px;padding:10px;background:var(--surface,#120e1a);border:var(--trait,1px) solid var(--bord,#2a2438)}
+.px-xsp .sp__pl[data-liked] .sp__plimg{width:64px;flex:0 0 64px}
+.px-xsp .sp__plt{font-size:14px;line-height:1.3}.px-xsp .sp__plc{font-size:11px}
+.px-xsp .px-xsp-tete{display:grid;grid-template-columns:120px 1fr;gap:6px 16px;align-items:end;margin:0 0 14px}
+.px-xsp .px-xsp-retour{grid-column:1/-1;justify-self:start;background:none;border:0;color:var(--acc);font:15px/1 inherit;padding:8px 0;min-height:40px}
+.px-xsp .px-xsp-cover{width:120px;aspect-ratio:1;border-radius:14px;overflow:hidden;background:var(--surface,#120e1a);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.px-xsp .px-xsp-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.px-xsp .px-xsp-info{display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:0}
+.px-xsp .px-xsp-info small{color:var(--muted);font-size:12px}
+.px-xsp .px-xsp-tout{border:0;border-radius:999px;padding:10px 18px;background:var(--acc);color:#0b0812;font:700 14px/1 inherit;min-height:42px}
+.px-xsp .sp__htitle{font-size:22px;line-height:1.2;margin:0 0 10px;overflow-wrap:anywhere}
+.px-xsp .sp__tr{padding:8px 4px;gap:12px}.px-xsp .sp__trimg{width:48px;height:48px;border-radius:8px}
+.px-xsp .sp__trt{font-size:15px}.px-xsp .sp__tra{font-size:12px}.px-xsp .sp__tr.play .sp__trt{color:var(--acc)}
+/* le lecteur : une carte au-dessus des koins (les triangles des coins du bas) */
+.px-xsp .sp__bar{position:relative;margin:0 10px calc(env(safe-area-inset-bottom,0px) + 64px);padding:8px 10px;gap:10px;border:var(--trait,1px) solid var(--bord,#2a2438);border-radius:18px;
+  background:var(--surface,#120e1a);box-shadow:0 10px 30px rgba(0,0,0,.5);cursor:pointer;flex-wrap:nowrap}
+.px-xsp .sp__barn{flex:1;max-width:none}.px-xsp .sp__seek,.px-xsp .px-xsp-fermer,.px-xsp .px-xsp-enlecture{display:none}
+.px-xsp .sp__ctl{flex:0 0 auto}.px-xsp .sp__cb{width:40px;height:40px}.px-xsp .sp__ctl [data-tsoin]{display:none}
+.px-xsp .sp__cb.main{background:var(--acc);color:#0b0812}
+/* « en lecture » : le lecteur déplié sur tout le ploxion */
+.px-xsp .sp__bar.px-xsp-grand{position:absolute;inset:0;z-index:30;margin:0;border-radius:0;border:0;cursor:default;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  padding:calc(env(safe-area-inset-top,0px) + 56px) max(24px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 84px) max(24px,env(safe-area-inset-left,0px));background:var(--bg,#07050c);overflow:hidden}
+.px-xsp .sp__bar.px-xsp-grand::before{content:"";position:absolute;inset:-40px;background:var(--xsp-art) center/cover;filter:blur(40px) saturate(1.3);opacity:.35;z-index:-1}
+.px-xsp .sp__bar.px-xsp-grand .px-xsp-fermer{display:block;position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);left:50%;transform:translateX(-50%);background:none;border:0;color:var(--txt);font-size:28px;min-width:56px;min-height:44px}
+.px-xsp .sp__bar.px-xsp-grand .px-xsp-enlecture{display:block;margin:0;font:500 10px/1.4 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--grave)}
+.px-xsp .sp__bar.px-xsp-grand .sp__barimg{width:min(78vw,42vh,360px);height:auto;aspect-ratio:1;border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.px-xsp .sp__bar.px-xsp-grand .sp__barn{flex:0 0 auto;width:100%;max-width:420px;text-align:center}
+.px-xsp .sp__bar.px-xsp-grand .sp__bart{font-size:22px;white-space:normal}.px-xsp .sp__bar.px-xsp-grand .sp__bara{font-size:14px;white-space:normal}
+.px-xsp .sp__bar.px-xsp-grand .sp__seek{display:flex;flex:0 0 auto;width:100%;max-width:420px;font-size:12px}
+.px-xsp .sp__bar.px-xsp-grand .sp__ctl{gap:18px}.px-xsp .sp__bar.px-xsp-grand .sp__cb{width:56px;height:56px;font-size:20px}
+.px-xsp .sp__bar.px-xsp-grand .sp__cb.main{width:76px;height:76px;font-size:26px}.px-xsp .sp__bar.px-xsp-grand .sp__ctl [data-tsoin]{display:inline-block}
+@media (prefers-reduced-motion:reduce){.px-xsp .sp__side,.px-xsp .sp__main{transition:none}}
+.px-xsp .px-xsp-coeur{display:grid;place-items:center;aspect-ratio:1;background:linear-gradient(135deg,var(--acc),#3a2a5a);color:#fff;font-size:28px}
+.px-xsp .px-xsp-retour,.px-xsp .px-xsp-fermer{box-shadow:none;background:none}
+/* ◉ (0.99.35) Proche en pages : l'en-tête compact, les onglets (collés en haut), une page à la fois ; ▣ la carte (QR), le scanner */
+.px-pr-tete{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.px-pr-tete .px-grave{margin:0;cursor:pointer;-webkit-user-select:none;user-select:none}
+.px-pr-etat{font:11px/1.4 var(--mono);color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:62%}
+.px-pr-etat.on{color:var(--acc)}
+.px-pr-onglets{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin:10px 0 12px;padding:4px;border-radius:16px;
+  background:var(--surface,#120e1a);border:var(--trait,1px) solid var(--bord,#2a2438);box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.px-pr-onglets button{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;min-height:48px;padding:6px 2px;border:0;border-radius:12px;background:none;box-shadow:none;
+  color:var(--muted);font:11px/1.2 inherit;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.px-pr-onglets button span{font-size:17px;line-height:1}
+.px-pr-onglets button.on{background:var(--surface2,#1c1626);color:var(--txt)}
+.px-pr-onglets button i{position:absolute;top:4px;right:calc(50% - 22px);min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:var(--acc);color:#0b0812;font:700 10px/16px inherit;font-style:normal}
+.px-proche section[hidden]{display:none}
+.px-pr-qr{width:min(78vw,300px);margin:6px auto 10px;padding:10px;border-radius:18px;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.px-pr-qr svg{display:block;width:100%;height:auto}
+.px-pr-carte-n{text-align:center;font:12px/1.5 var(--mono);margin:0 0 6px;overflow-wrap:anywhere}
+.px-pr-scan{display:flex;flex-direction:column;align-items:center;gap:10px;margin:0 0 12px}
+.px-pr-scan video{width:min(84vw,340px);aspect-ratio:1;object-fit:cover;border-radius:18px;background:#000}
+.px-pr-liste{list-style:none;margin:0 0 14px;padding:0}
+.px-pr-liste li{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--filet,rgba(255,255,255,.06));min-width:0}
+.px-pr-liste li b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.px-pr-liste li small{flex:1;min-width:0;color:var(--muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.px-pr-liste li button{flex:0 0 auto;min-height:36px}
+.px-pr-danger{color:#e0735c;margin-top:8px}
+.px-proche .px-pr-onglets button{letter-spacing:0;text-transform:none}
+.px-proche .px-pr-onglets button b{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.px-pr-gens li.on b{color:var(--acc)}.px-pr-gens li.bloque{opacity:.5}
+.px-pr-gens li button.on{color:var(--acc)}
+.px-pr-gens li{flex-wrap:wrap;row-gap:4px}
+.px-pr-gens li b{flex:0 1 auto;max-width:45%}
+.px-pr-gens li small{flex:1 1 6em}
+.px-pr-gens li button,.px-pr-liste li button{min-height:36px;padding:0 10px;font-size:12px;letter-spacing:0}
+.px-pr-gens li.loin b{color:var(--muted)}
+/* ◈ (0.99.37) la carte du maillage (Proche › autour) */
+.px-pr-maille svg{display:block;width:min(100%,360px);height:auto;margin:0 auto}
+.px-pr-maille .anneau{fill:none;stroke:var(--bord,#2a2438);stroke-dasharray:3 4}
+.px-pr-maille .lien{stroke:var(--acc);stroke-width:1.5;opacity:.6}
+.px-pr-maille .noeud circle{fill:var(--surface2,#1c1626);stroke:var(--muted);stroke-width:2}
+.px-pr-maille .noeud.moi circle{fill:var(--acc);stroke:var(--acc)}
+.px-pr-maille .noeud.direct circle{stroke:var(--acc)}
+.px-pr-maille .noeud.muet circle{stroke-dasharray:3 2}
+.px-pr-maille text{fill:var(--txt);font:10px/1 var(--mono)}
+.px-pr-maille text.relais{fill:var(--acc);font-size:9px}
+.px-pr-gens li.muet b{color:var(--muted)}
+.px-pr-echec{color:#e0735c}
+.px-pr-transit{margin:8px 0 0;font:12px/1.5 var(--mono);color:var(--acc);text-align:center}
+/* (0.99.39, le relevé de RS-7 : « div#xhe-secours.xhe · fixed · 280,62 52×52 » = le rond vide en haut à droite, partout) le HUD du LABO
+   (le bion jOSHud) : un ploxion du labo le charge, il pose son calque plein écran (#xhud-layer, z 100058) et son bouton de secours (le mode
+   nu : #monui-rescue) sur toute l'app, et ils restent après le ploxion. Dans ploxi0n, la sortie, ce sont les koins et les bords : jamais ce calque. */
+body > #xhud-layer, body > #monui-rescue, body > #xhud-bar, body > #xhud-palette { display: none !important; }

@@ -13,7 +13,8 @@ export function cadreAutorise(csp) {
   return /(^|\s)(capacitor:|capacitor:\/\/localhost|\*)(\s|$)/i.test(m[1]);
 }
 
-export function creerCadresLabo({ W = globalThis.window, source = 'https://labo.j0bot.ch', tete = null, navigateur = (u) => W.open(u, '_blank') } = {}) {
+// (0.81) lecteur = { cheminWiki(p), remplacerCadre(f, p) } : un cadre vers le wiki n'est plus une carte, il se LIT dans l'app (src/app/wiki-natif.js)
+export function creerCadresLabo({ W = globalThis.window, source = 'https://labo.j0bot.ch', tete = null, navigateur = (u) => W.open(u, '_blank'), lecteur = null, connecter = null } = {}) {
   const D = W.document, regles = new Map();
   const prefixe = (p) => '/' + (String(p).split(/[?#]/)[0].split('/')[1] || '');
   /** 'oui' | 'non' | 'injoignable' : le labo se laisse-t-il encadrer pour ce chemin ? */
@@ -43,8 +44,15 @@ export function creerCadresLabo({ W = globalThis.window, source = 'https://labo.
   }
   function traiter(f) {
     if (!f || f.tagName !== 'IFRAME' || !f.closest || !f.closest('.px-hote')) return;   // seulement dans les ploxions
-    const p = cheminServeur(f.getAttribute('src')); if (!p) return;
-    f.setAttribute('src', source + p);
+    const src = f.getAttribute('src');
+    // 📖 (0.81) le wiki (« /wiki/x », ou déjà réécrit en https://labo.j0bot.ch/wiki/x par le shim) : lu dans l'app, sans charger les 3,6 Mo
+    // de la page du labo dans un cadre qu'il refuse ; un nouveau src (ploxion.wiki.goto) fait naviguer le lecteur
+    const w = lecteur && src && src !== 'about:blank' ? lecteur.cheminWiki(src) : null;
+    if (w) { f.setAttribute('src', 'about:blank'); lecteur.remplacerCadre(f, w); return; }
+    const p = cheminServeur(src); if (!p) return;
+    // 🔑 (0.83) connecté tout seul : l'adresse avec un passe à usage unique (src/natif/connexion-labo.js) ; le temps de le demander, rien
+    if (connecter) { f.setAttribute('src', 'about:blank'); connecter(p).catch(() => source + p).then((u) => { if (f.isConnected && f.getAttribute('src') === 'about:blank') f.setAttribute('src', u); }); }
+    else f.setAttribute('src', source + p);
     permis(p).then(r => { if (r === 'non' && f.isConnected) carte(f, p); else if (f.__pxCarte && r === 'oui') { f.__pxCarte.remove(); f.__pxCarte = null; f.style.display = ''; } });
   }
   function balayer(n) { if (!n || n.nodeType !== 1) return; if (n.tagName === 'IFRAME') traiter(n); else if (n.querySelectorAll) for (const f of n.querySelectorAll('iframe')) traiter(f); }

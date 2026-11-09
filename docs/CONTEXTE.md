@@ -4,6 +4,50 @@
 
 *(13.10) Lire aussi `docs/VISION-ORIGINELLE.md` : la vision d'origine de RS-7 (la map des apps, le cube, les modes, le mesh).*
 
+## 0. La dernière session (24–26.10 : 0.99.19 → 0.99.23) — à lire d'abord
+
+Le détail est dans la feuille de route (une entrée par version). L'essentiel pour reprendre :
+- **Le bilan de santé** : `tools/faux-iphone/parcours-tous.mjs` ouvre les 551 ploxions publics du labo avec leur vrai code et leurs vrais
+  bions (`tools/digestion/recolter.mjs`, `recolter-bions.mjs` ; le réseau de Node passe par `NODE_USE_ENV_PROXY=1
+  NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt`). En 3 morceaux (`PX_TOUS_DE`, `PX_TOUS_N`), l'un après l'autre (la mémoire), ou ciblé
+  (`PX_TOUS_IDS=a,b` : la pile des erreurs). Il reprend où il s'est arrêté. `tools/digestion/compat-iphone.mjs` le verse dans
+  `public/marketplace/compat.json` (ip = ok | attend | casse) : le badge du marketplace.
+- **Proche = un maillage façon bitchat** (`src/bions/maille.js`, docs/ULTIMATE-BLUETOOTH.md) : multi-sauts, Bloom, stocker-relayer, ECDH +
+  AES-GCM, salons fermés, potes ✦, « lu », code de sécurité, positions chiffrées ; **les potes** (`src/bions/potes.js`) : radar hors ligne,
+  boussole, carte CARTO. Le faux iPhone fait tourner le VRAI maillage pour Tom et Léa (`parcours-potes.mjs`).
+- **La peau légère par défaut** (`html.px-leger`, aucune couche SVG) ; **la taille de tout** (`PloxiApple.taille` → `pageZoom`, grande
+  par défaut) ; **la police** n'habille que le xer (`.px-hote-labo`) ; **une zone « chez moi »** par défaut (le plugion jOSZone).
+- **Le synthé psy** (psytrance, tribe, acidcore, mentalcore, le kick) et le partage des sons (maillage, code `ploxi-son:`). Le cœur Rust
+  suit le bion proche (`npm run rust` : la preuve compare 7 218 cas).
+- **Les autorisations d'iOS en 5 langues** : `tools/ios/infoplist-langues.mjs` → `ios/App/App/*.lproj/InfoPlist.strings` ; fastlane
+  `ajouter_langues` (gem xcodeproj, rattrapé : jamais un build cassé), testé ici sur une copie du projet.
+
+Pièges nouveaux :
+- le filtre sans-emoji efface tout `\p{Extended_Pictographic}` : ★ ✉ ♫ 〰 ⚑ disparaissent de l'interface (✦ ✧ @ ≈ passent) ;
+- `jOS3D` (un chiffre après « jOS ») : les regex de bions doivent accepter `jOS[A-Z0-9]` ;
+- un ploxion qui en monte un autre (`jOSApps.rs.mount`) : `ploxionsDelegues` + `prechargerComposes` dans le routeur ;
+- le faux iPhone ne garde plus les options de plus de 20 Ko dans `appels` (le bilan tombait à court de mémoire) ;
+- `npm test` qui ne finit pas = un test qui échoue avant `p.fin()` (la page reste ouverte) : lancer le fichier seul avec `timeout`.
+- (0.99.26) **jamais `WKWebView.pageZoom`** : il posait tout ce qui est fixé à droite hors de l'écran (le bord droit, le koin droit, ▤) et la
+  vue glissait de côté. La taille de tout = la balise viewport (`zoomViewport` dans `src/main.js`) ; le faux iPhone (Chromium mobile)
+  l'applique comme l'iPhone, il voit donc enfin ce zoom ;
+- (0.99.26) un nom passé à `vibrer('…')` doit exister dans `src/natif/haptique.js` (`fx-cran` manquait : le wormion, la portion muets) ;
+  `tests/haptique-usage.test.mjs` le vérifie ;
+- (0.99.30) une AUTRE session travaille sur `glob/xerbot-ledfx` (XERB0T, la veille, les ondes) : la fusionner régulièrement ; ses numéros de
+  version suivent les siens (sa « 0.99.20 » est devenue notre 0.99.30). PloxiBLE n'a pas de `@objc(…)` : `extraire-plugins.cjs` ne le voit pas (le
+  faux iPhone le traite comme non compilé, ce qui est le cas par défaut) ;
+- (0.99.27) **avant une version qui touche la mise en page : `parcours-ecran.mjs`** (l'audit de l'écran, toutes tailles, largeurs, couché,
+  encoche ; `PX_ECRAN_RAPIDE=1` pour une seule configuration). Il doit rendre 0 défaut.
+- (0.99.39) le **HUD du labo** (jOSHud : `#xhud-layer` plein écran, le bouton de secours `#xhe-secours`) peut être chargé par un ploxion du
+  labo et rester sur toute l'app : masqué par `app.css`. Un truc qui flotte et qu'on ne connaît pas : À propos › relever ici (« ce qui flotte »)
+  donne son sélecteur ; le chercher dans les pages du labo, pas dans `src/` ;
+- (0.99.32) **Android existe** (`android/`, docs/ANDROID.md) : un plugin de l'app (PloxiApple, PloxiProche, PloxiBLE, PloxiVeille, PloxiOndes…)
+  ne s'appelle qu'après `ploxiIci('Ploxi…')` (`src/natif/plugins-app.js`) : Android n'en a AUCUN (seulement PloxiAccueil, en Java). `natifLot`
+  (isNativePlatform) est vrai sur Android aussi. Le push : seulement `plateforme() === 'ios'` tant qu'il n'y a pas de `google-services.json`
+  (sans Firebase, `register()` tue l'app Android). Vérifier : faux iPhone `--android` + `parcours-android.mjs`, et `--sans-ploxi` (0 exception) ;
+- (0.99.32) après un `npm i` d'un plugin Capacitor : `npx cap sync android` (régénère `android/capacitor.settings.gradle` et
+  `android/app/capacitor.build.gradle`, versionnés) ; `android/app/src/main/assets/public` est ignoré (la CI le recopie) ;
+
 ## 1. Où en est tout
 
 | Dépôt | Branche | État |
@@ -102,6 +146,441 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 
 ## 3. Ce qui reste, par ordre
 
+**0.99.6 (24.10)** — ⚠ RS-7 : « avec le build actuel, quand j'ouvre l'app ça freeze, je peux rien faire ».
+- La cause : sur l'iPhone, lire ou écrire un ploxion dans boxion_local fait passer son bundle (jusqu'à 2 Mo) par le pont natif, sérialisé sur
+  le fil principal. Le faux iPhone compte maintenant ces octets (`pont` dans les parcours) : 120 ploxions de 600 Ko → 496 Mo en 35 s.
+  Coupables : `installes()` reconstruit 3 à 4 fois EN PARALLÈLE (pas de verrou), `inventaire()` appelé à chaque lancement par
+  `src/natif/dossier.js`, `completerBions` (bions-v3 de la 0.99.3 : tout relu, tout réécrit), `aJour` 0.99.5 (chaque ploxion réécrit pour sa
+  marque de changelog), `bions()` et `dependances()` (tout relu).
+- Le remède (src/marketplace/depot.js) : l'index porte taille, ETag, manquants (`manq`), composés ; `majIndex(id, doc)` entrée par entrée
+  (plus jamais `del installes-index`) ; une seule reconstruction partagée ; `bions()`, `dependances()`, `inventaire()` (sans `tailles: true`),
+  `aJour` (ancien chemin compris) depuis l'index ; marques du changelog dans `marketplace/changelog-marques` ; `completerBions({ max, pause })`
+  ne prend que les `manq > 0` (ou inconnus), rend `reste` ; main.js le lance 25 s après, à chaque lancement tant qu'il en reste ; pause d'une
+  minute sur 429, échecs mémorisés pour la session. Après : 7 Mo avec un index à jour.
+- Règle : ne JAMAIS parcourir les ploxions installés en lisant leurs documents ; passer par `depot.installes()`. `parcours-lourd.mjs`
+  (PX_LOURD_N, PX_LOURD_KO, PX_LOURD_INDEX, PX_LOURD_ANCIEN) le vérifie.
+
+**0.99.5 (24.10)** — cinq demandes de RS-7 d'un coup.
+- **Les mises à jour par le changelog** : `depot.changelog()` lit `/px/changelog.json` (par_ploxion : dernier, n, commits ; head). `aJour` : pour
+  chaque installé, une marque `dernier#n#commit` comparée à `p.changelog` ; sans marque : à jour si le dernier changement est avant `p.maj ||
+  p.installe` (ou absent du changelog) ; sinon l'ancienne vérification (ETag / hash) et la marque retenue. Rien à vérifier = aucune requête.
+  `aJour({ forcer: true })` saute le changelog. Le `mtime` du registre est le même pour tous : inutilisable.
+- **Le bion d'un ploxion** : main.js `bionsDuCode(js, notes)` (tous les jOSNom touchés, sans ceux qu'il définit) ; `bionInfo(nom)` d'un id de ploxion =
+  son cœur (son code, ce qu'il enregistre : manifest / mount / describe…, ses bions) ; la map : le cœur en premier (`.px-nv-coeur`), un bion a ses bions.
+- **33 knobs** (`src/bions/son.js`) et le moteur qui va avec (`creerMoteur` : 2 ondes, intervalle, bruit, glisse, type de filtre, vibrato,
+  trémolo, saturation tanh, réverb fabriquée, panoramique ; swing et gate dans la boucle ; octave et transposition sur les pads).
+- **Tordre** (`src/bions/tordre.js`) : posé PAR-DESSUS jOSKnob (capture du pointerdown / pointermove, pas du pointerup) ; `brancherPanneau`.
+- **Le paysage** : @media (orientation: landscape) and (max-height: 520px) en fin d'app.css ; `taille()` de la map couchée ; Info.plist
+  autorisait déjà le paysage. ⏭ les autres écrans (réglages, marketplace, ploxions du labo), les koins couchés.
+- Piège (3 fois cette session) : un `//` en fin de ligne au milieu d'un objet ou d'un one-liner avale la suite ; écrire `/* */` dans le code ajouté.
+
+**0.99.4 (24.10)** — ≋ le synthé (RS-7 : « et qu'on puisse commencer à faire du son avec des knobs »).
+- `src/bions/son.js` : PARAMS (clé, nom, bornes, pas, départ, format, forme kion / koin, groupe), `normaliser`, PRESETS, `noteDePad`, `hasard(graine)`.
+- `src/lot/synthe.js` : `creerMoteur(ctx, lire)` (debut / fin / appliquer en direct sur les notes tenues / toutCouper) ; le ploxion (jOSKnob
+  chargé comme dans l'atelier des peaux, un panneau par groupe ; pads en pointer events, capture ; boucle = partition de Proche ; AudioContext
+  créé au premier toucher, iOS l'exige). Tests : `tests/synthe.test.mjs` (un faux Web Audio). Faux iPhone : `parcours-synthe.mjs`.
+- Piège trouvé : le routeur fait de tout appui de 500 ms un clic droit (`contextmenu`) et AVALE le toucher suivant (800 ms) ; tenir un pad
+  > 500 ms faisait ignorer le preset touché juste après. `[data-instrument]` l'exclut (pads, knobs) ; à poser sur tout instrument.
+- ⏭ le synthé dans Proche (jouer à plusieurs, la partition du pad partagée), le son en arrière-plan (MediaStreamDestination → <audio>,
+  comme les ambiances), un séquenceur pas à pas, les capteurs comme knobs (le gyroscope sur la coupure).
+
+**0.99.3 (24.10)** — RS-7 : « y a des ploxions qui s'installent pas » (capture : « jOSChemin — le serveur refuse jOSChemin (HTTP 40…) »).
+- Audit : un script Node installe chaque ploxion du registre du labo avec `creerDepot` (fetch de Node : `NODE_USE_ENV_PROXY=1
+  NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt`, sinon 0 ploxion). Avant : 488 / 496, 140 sans leurs bions. Après : 496 / 496, 0 manquant.
+- `bundleDeLaPage` : `jOSApps['id'] =`, `jOSApps[ID] =` (ID posé dans le script, même en liste : `var W = window, ID = 'chemin'`), `jOSApps.id =`.
+- `getPatient` (depot.js) pour app.js, la page et les bions : 429 / 5xx → réessai (Retry-After, sinon 0,7 / 1,4 / 2,8 s). « bions-absents »
+  seulement sur 404 / 410 (ou une page HTML servie en 200) ; un ancien absent sur un autre statut est ignoré. `reglages/bions-v3` : completerBions une fois.
+- Un id `jOS[A-Z0-9]…` est un bion : `routeurProxy.ouvrir` ouvre la map au palier « bion » ; `installerAbsent` refuse. La map lit ses
+  paramètres dans `o.params` (le routeur) comme à plat (l'accueil). Faux iPhone : `parcours-bion-ouvert.mjs`.
+- Piège payé deux fois cette session : un `// commentaire` ajouté en fin de ligne d'un one-liner avale la fin du code (node --check).
+
+**0.99.2 (24.10)** — RS-7 sur l'iPhone, son fond galaxie : « stylé mais ça reste pas fixe à la page, et c'est pas assez lisible ».
+Mesuré au faux iPhone : `.px-accueil` (overflow auto) défilait de 6 px en large (les SVG `px-neurones` dépassent) et 66 px en long ; le
+`scrollIntoView` du palier réseau faisait défiler tous les ancêtres. Fix : `html.px-organique .px-accueil:has(.px-org-map)` en colonne flex,
+`overflow: clip`, la map en `flex: 1` ; la scène centrée à la main. Lisible : `.px-org-map::before` (un voile), les étiquettes à 9 px sur deux
+lignes avec halo (`.px-map-tt` en `minmax(0, 1fr)` : une étiquette longue n'élargit plus la grille), la règle du zoom en ronds de 30 px.
+`parcours-lisible.mjs` simule un fond chargé et vérifie que l'accueil ne bouge plus (scrollTop/Left forcés restent à 0).
+
+**0.99.1 (23.10)** — ◉ Proche, l'ultimate Bluetooth (RS-7 : « je te laisse extrapoler et implémenter toi-même ») : tout est dans
+`docs/ULTIMATE-BLUETOOTH.md` (« Ce qui est construit »). ⚠ Le Swift de PloxiProche n'a pas été compilé : vérifier le premier build. À essayer
+à deux iPhones : même salle, démarrer des deux côtés ; l'invitation part du nom le plus petit. Piège payé : `src/app/sans-emoji.js` efface
+les signes pictographiques (♡ ▶ ◼ ❄…) dans les ploxions internes (tester avec `/\p{Extended_Pictographic}/u`) ; `[data-ecrit]` les garde.
+
+**0.99 (23.10)** — RS-7 : « et il faut que la police ressorte, genre selon les niveaux y a que le glyphe, que le texte, ou les deux ; les
+niveaux de zoom ça se balade partout, et on peut freeze des zooms pour faire nos paliers au lieu que ça soit zoom libre ».
+- `src/bions/zoom.js` (pur, `tests/zoom.test.mjs`) : MIN/MAX/PLONGE/RECULE, `niveau(iScene, s)` = l'indice du palier + (s − 1)/2,
+  `versScene(g)` (l'inverse), `detailDe(s)` (glyphe < 0.85 < deux < 1.28 < texte), `figer`, `prochainFige`.
+- `src/app/map-hubs.js` : le pincer est continu (`appliquerEchelle` : scale de la vue ou de la scène, origine sous les doigts ; la carte
+  porte `data-detail`) ; en libre, PLONGE → `plonger` (ce qui est sous les doigts), RECULE → le palier d'avant ; en paliers, au lâcher on saute
+  au palier figé suivant (sans palier figé : les scènes). La règle : `[data-map-figer]` (❄ fige), `[data-map-mode]`, `[data-map-fige]` (p1…),
+  `[data-map-niveau]`. Réglage gardé dans boxion `reglages/zoom` { mode, figes: [{ g, nom }] }. `hote.__map` pour les parcours.
+- `app.css` (bloc ❄ 0.99) : les étiquettes de la map en ChillTekk dans l'organique ; `data-detail` ne joue pas sous les écritures forcées
+  (glyphes, texte, minimal). Faux iPhone : `parcours-zoom.mjs` (0px / 7.5px / 10px aux trois niveaux, le palier figé y ramène).
+- ⏭ « ça se balade partout » : le même bion pour le passé (il a déjà ses paliers au pincer), le neurone, puis les koins en trackpads de zoom.
+  Le pincer n'a jamais touché un vrai iPhone : à sentir (seuils PLONGE 1.55 / RECULE 0.66).
+
+**0.98 (23.10)** — RS-7 : « ouais parfait, on relie tout ; une seule map, tout est fractal ; chaque bion et ploxion, il faut les input et
+output ; ça a été fait dans le xer du labo sur téléphone, copie un peu de là ; le but, c'est de changer tout le UI pour une expérience ultra
+stylée ce soir » (Spotify : plus tard).
+- `src/app/registre-labo.js` : un instantané du labo (boxion-rt `web-marketplace/registry.json` + les `core.json`) : les PORTS des 11 cores
+  (contrat `docs/CORE-UI-BINDING-v0.md` du labo : ports.in / ports.out) et le rôle + l'API des 21 bions. À rafraîchir quand le labo bouge.
+- `src/bions/flux.js` : `lireCode(js)` (jOSPorts.emit/on, jOSBoxion, fetch, jOSNatif, jOSTsoin), `fluxDe({ id, code, bions, cores })`,
+  `synapsesEntre(a, b)` (le bus avec jokers, le même rangement), `court(canal)`. main.js `FLUX_INTERNES` : les canaux déclarés des ploxions de l'app.
+- `src/app/neurone-vue.js` : `neuroneHtml(n)` (entrées en haut, soma + bions, sorties en bas, synapses), `poserAxones` (mesuré par
+  offsetLeft/Top : juste pendant la plongée animée).
+- `map-hubs.js` : PALIERS_MAP (tout, reseau, hub, ploxion, bion), `placerReseau` ; la règle (`.px-map-z`), pincer (plonger dans ce qui est
+  sous les doigts, reculer), l'appui long sur un koin → son neurone ; options `inspecter`, `bionInfo`, `flux`, `neurone`, `tous`.
+- `modes.js` : l'organique monte LA map une fois dans l'accueil (`monterMap`, gardée entre les redessins) ; la grille d'avant = le palier « tes ploxions ».
+- Faux iPhone : `parcours-fractale.mjs`.
+
+**0.97 (23.10)** — RS-7 : « le but de tout mon système, c'est trouver des apps et ouvrir des ploxions selon le temps » ; « un zoom de temps, un
+zoom de fractale » ; « le wormion, se balader dans le temps ; le portion, entre les ploxions » ; « les tsoins du nexus, c'est les commits » ;
+« le passé, c'est aussi comment les ploxions et le xer ont évolué ; retourner au moment où l'app venait de se lancer » ; « c'est le moment de
+prendre tous les morceaux et de tout assembler » ; « tout ça, c'est du lore : le clickion, protagonistes, le xerboxion, le nexus, pourriture-4 ».
+- ○ `src/lot/passe.js` (ploxion « passe », le wormion des koins y mène) : `grouper(evs, palier)`, PALIERS, PORTEES ; journaux `passe` (main.js
+  `surUsage` : { id, sec }) et `xer` (main.js : l'état d'interface à chaque changement, le premier `debut`) ; `revenir(etat)` = prefs.regler.
+- ⎇ `tools/tsoins-nexus.mjs` → `src/app/tsoins-nexus.js` (COMMITS, PALIERS_EXISTENCE) : **à relancer à chaque version**.
+- ▦ `map-hubs.js` : `diagonales` (3 × 3), `ilYa`, `FENETRES`, `servi(usage, id, fenetre)` ; `creerMap({ usage })`.
+- ✎ `tools/police/chilltekk.py` (fonttools + skia-pathops, un venv à part) → `public/fonts/chilltekk.woff2` ; `src/bions/polices.js` ; le gène
+  « police » ; `prefs.ecriture` (xerboxion, texte-glyphes, glyphes, texte, emoji, minimal ; CSS `px-e-*`).
+- ◺◿ koins : toujours en organique (`main.js` actif), le réglage d'avant ailleurs ; ⚙ › HUD : le dock caché en organique.
+- ⏭ les paliers de la map (cubion, spherion, kion, tsoin) ; le jeu (débloquer en jouant au clickion / le mode créatif xerboxion) ; le
+  téléphone vivant (les gènes branchés sur la RAM, la température, le son) ; la route des tsoins côté labo (docs/TSOINS.md) ; l'ASSEMBLAGE.
+- 💭 (RS-7 23.10, « pas maintenant, dans le futur ») la SIGNATURE GPG de RS-7 sur tous les ploxions : savoir qui fait quoi (le bion jOSGpg
+  est déjà dans le pack : public/bions/jOSGpg.js).
+
+**0.96 (23.10)** — RS-7 : « on garde tout, il faut pouvoir choisir entre toutes ces possibilités ; mes préférées : xéno et cyberpunk ; il faut
+découvrir la fractale des UI, avoir des knobs pour modifier le UI selon un générateur fractal, c'est des formules au final le UI ; dans
+organique, le but c'est de trouver le UI qui est parfait pour toi ; tout le monde a une vision différente ; des UI pour tous les types de DA ».
+- `src/bions/genome.js` : GENES (23 gènes, 0..1 : le goo, l'onde, la paroi… les excroissances, deux couleurs de la PALETTE de RS-7) ;
+  `genomeDe(variante)`, `versVariante(g)`, `muter`, `croiser`, `grille(g, ecart, graine)` (3 × 3 le long de deux directions tirées : la fractale).
+- `src/lot/atelier-peaux.js` (ploxion interne « atelier-peaux ») : la grille (chaque tuile = un petit xer, `data-neurones-variante="_at<i>"`),
+  toucher = zoomer (l'écart × 0,5), ⊖ dézoomer (× 2), hasard, ‹ revenir ; les knobs = **jOSKnob du labo** (RS-7 : « on a déjà les jOSKnob » —
+  composé, pas refait ; embarqué dans `public/bions/jOSKnob.js` tel que le labo le sert : ça complète aussi beats, spiderion-sim, bras, noyau,
+  qfractale, forge-flow) ; la peau « perso » suit en direct ; ✓ garder → `reglages/peaux`, un tsoin « peau ».
+- `membrane.js` : `redefinir` (en direct), `appliquerCouleurs` (une peau qui porte ses couleurs ; main.js les suit sur `data-px-variante`) ;
+  le dedans en `--n-verre`. `neurones.js` : une peau par groupe, ce qui pousse seulement sur les cellules ≥ 56 px.
+- Lot 3 : gothique (ogives), evangelion (bandes d'alerte), eldritch. Faux iPhone : `parcours-atelier.mjs`, `parcours-variantes.mjs` (PX_VARIANTES).
+- ⏭ RS-7 : « bientôt réactif au son ; le téléphone vivant : la RAM, la température, le stockage, le calcul, dans les membranes, sans avoir
+  besoin de lire l'info » → brancher des gènes sur des signaux (le rapide sur ce qui ne coûte rien : le halo, la respiration ; le lent sur la forme).
+
+**0.95 en cours (22.10, poussé : `b27eaa6`)** — le guide (`src/app/guide.js` : 4 étapes sur la vraie interface, les astuces une fois,
+« ⓘ c'est quoi ça ? ») ; l'organique translucide (nerfs, vaisseaux, câbles) ; tous les ploxions (--xr-*) et le HUD (barre, dock, modes, vues)
+en membranes ; les bions `src/bions/synapses.js` et `src/bions/membrane.js` ; CINQ PEAUX à comparer (nerfs, vaisseaux, câbles, gelée,
+terminal — le hand terminal de The Expanse) : `parcours-variantes.mjs` → `build/fi-var/comparer-5-peaux.png` ; **uniquement la palette de
+RS-7** (extraite de ses SVG : #007d28 #37008a #0cdb0c #8bc88b #191919 #222222…). ❓ RS-7 choisit une peau (ou un mélange).
+⏭ demandé le 22.10, pas encore fait : les tsoins de xer (le CSS d'un xer figé à un instant, l'historique) ; les koins = des mini trackpads
+de zoom ; la map fractale (tout se zoome) ; les vues entrées/sorties des ploxions et des bions (le shim + la pile, `gel.js` `auteur` ;
+exécuter chaque bion dans son propre script `bion/<nom>.js` pour les reconnaître) ; 🐛 **le ploxion musique ne joue pas Spotify** ;
+la visualisation musicale (avseoul particleEqualizer, dataarts webgl-globe, Chrome Experiments) ; le ploxion morse (googlecreativelab
+morse-learn) ; Rust → WASM là où ça calcule vraiment (pas le dessin : WebKit le fait déjà en natif).
+
+**0.94 (22.10)** — le xer organique, le mode de base. RS-7 : « avant on avait le xer ploxi0n, maintenant c'est le xer chill-tekk, l'ancien
+thème est gardé tel qu'il était ; le truc de base, c'est que tout le UI entier ait l'air vivant ». Ses planches : `chill-tekk_ui` (des SVG
+Figma + des rendus : membranes vert biolumineux / violet qui luisent, gouttes aux coins, verre sombre, tubes entre les cellules, synapses).
+- `modes.js` : `organique` en tête de MODES (glyphe `neurone`), le défaut. `prefs.js` : `mode: 'organique'` par défaut ; une fois
+  (`organiqueVu`), un chill-tekk enregistré passe à l'organique ; `html.px-organique` ⇔ mode organique (la bascule 0.93 des réglages s'en va).
+- `xers.js` : modèle « organique » ; une fois (`xers/snapshot-chill-tekk`), chez qui avait déjà ses xers, une copie du xer actif au mode
+  chill-tekk, rangée dans mes xers. ⚠ RS-7 précise ensuite : le snapshot d'un xer = **l'état de son CSS à un moment** (« les tsoins de xer ») :
+  à faire (⏭ ci-dessous).
+- `neurones.js` : la membrane a son halo (feGaussianBlur posé dessous), 4 px d'épaisseur, des gouttes aux coins des grandes cellules
+  (`koinsDe`). app.css : les jetons de l'organique sous `html.px-organique` (--memb vert, --memb2 violet).
+- ⏭ (demandé le 22.10, dans l'ordre) : les tsoins de xer (figer le CSS d'un xer, revenir à un instant) ; les koins = des mini trackpads
+  pour zoomer / dézoomer le ploxion ; la map fractale (tout se zoome : réseau des hubs → hub → koin/ploxion → ses bions) ; les vues
+  entrées/sorties de chaque ploxion et bion (observées par le shim + lues dans le code ; la pile dit qui appelle, `gel.js` `auteur`) ;
+  le tuto amélioré au maximum (« les gens me disent que c'est trop compliqué »).
+
+**0.93 (22.10)** — RS-7 : « je veux que les bords soient plus épais, et plus organiques, genre ondulé, mais que les éléments du UI se collent
+entre eux comme des neurones ».
+- 〰 `src/app/neurones.js` : un groupe `[data-neurones]` (« fin » : un flou court pour les grilles serrées ; `data-neurones-seuil`), ses
+  cellules `[data-neurone]` à toute profondeur (un groupe imbriqué garde les siennes). Derrière, une couche SVG `.px-neurones` : la membrane
+  (couleur `--n-bord`) et le dedans (`--n-fond`, rétréci de 3 px par feMorphology), passés dans un filtre flou → turbulence FIXE → seuil
+  d'alpha (« goo ») ; les synapses = `synapses()` : un arbre (union-find, les plus proches d'abord) + une part fixe de liens en plus. Rien
+  n'est redessiné si la géométrie et les couleurs n'ont pas changé (une clé) ; MutationObserver + ResizeObserver, un rAF.
+- Les cellules deviennent transparentes (le grain reste). `html.px-organique` (`prefs.organique`, vrai par défaut ; ⚙ › Apparence ›
+  Bords organiques) : `--trait` passe à 3 px partout.
+- Branché : les koins (la racine, 4 cases + la barre ; la couche à z 40, entre le voile et les cases), la map (la barre du haut, le plan :
+  les hubs collés par leurs portails, seuil 64 ; dans chaque hub, ses koins et le centre, « fin »), le système, les ambiances.
+- ⚠ les filtres SVG coûtent au dessin, pas à l'affichage : à vérifier sur l'iPhone (la map, le plus gros : ≈ 900 × 900 px). Pas sur
+  l'accueil : le thème vivant y fait flotter les icônes par transform, la couche ne les suivrait pas (💭 à faire en les dessinant dans la
+  même boucle rAF que le thème vivant).
+
+**0.92 (22.10)** — RS-7 : « une meilleure allure chill-tekk à ces nouveaux changements ; le but c'est que le wormion et le portion soient
+comme des trackpads ».
+- ○ □ `src/app/pads.js` : `creerPadWormion` (rotation signée autour du centre, un cran tous les 30° = `CRAN_ANGLE`, horaire = plus loin dans
+  le passé ; lâcher ouvre, un toucher = l'action `temps`) et `creerPadPortion` (le grain de `creerTexture` du banc trackpad, `directionDe` :
+  ← `precedente`, → `suivante`, ↑ `carte`, ↓ `accueil` ; un toucher = la map). `koins.js` : `PADS` rend ces deux cases en surfaces
+  (`[data-pad]`) ; main.js fournit `listeTemps` (vivants récents puis endormis, sans l'actuel, 12 max) et `aller`.
+- ◇ app.css, du bloc 0.87 à la fin : bande, btop, ambiances (`.px-amb-on` posé par ambiances.js sur le son qui joue), koins, pads, map
+  (plaques, `--blob*`, `.px-map-ici` en `--acc2`, la feuille « ＋ un hub »). Que les jetons du thème : les modes suivent.
+- Faux iPhone : `parcours-koins.mjs` (tourne le wormion, glisse le portion → la map), `parcours-map.mjs`, `parcours-lot.mjs`, `parcours-bande-niri.mjs`.
+- ❓ la vue des xers en carrés aussi ? l'échelle des rangs pour l'icône (toujours au labo).
+
+**0.91 (22.10)** — RS-7 : « la clé APNs sur le labo, les glyphes [pour l'icône du rang], parfait, live activités et widget ».
+- 🏝 **Live Activities** : `PloxiActivite` (ActivityAttributes) défini À L'IDENTIQUE dans AppDelegate.swift (`#if canImport(ActivityKit)`) et
+  PloxionWidgets.swift ; PloxiApple `activiteDebut/Maj/Fin` (iOS 16.2+) ; la vue `ActivitePloxi0n` (écran verrouillé, Dynamic Island) dans
+  l'extension ; Info.plist `NSSupportsLiveActivities`. JS : `src/natif/activites.js` (une activité par clé : dodo, vocal, ambiances, px:<id>) ;
+  dodo/réveil passent par le nouveau `surTsoin` de tsoin-natif. ⚙ › Notifications › Activités en direct (`prefs.activites`).
+- ▦ **Un ploxion** (widget configurable, AppIntentConfiguration + `PxWidgetEntite`) : Préférences `ploxi0n.px-widgets` → l'AppDelegate copie
+  dans l'App Group (ajouté à la liste des clés copiées) → l'extension. JS : `src/natif/widgets-ploxions.js`, `window.jOSWidget.publier`.
+  Le journal des tsoins publie « N tsoins aujourd'hui » et un bouton « + tsoin » (`?nouveau=1` ouvre le composeur).
+- 🔔 **Push** : `@capacitor/push-notifications` (8.1.3, `cap sync`), l'AppDelegate relaie le jeton
+  (`.capacitorDidRegisterForRemoteNotifications`) ; `src/natif/push.js` (POST/DELETE /api/app/push avec le jeton du compte ; les sujets ;
+  toucher → `data.ouvrir`). `aps-environment` et la capability étaient déjà là. ⏭ côté labo : **docs/PUSH.md** (la clé .p8, les routes, l'envoi).
+- Les Live Activities et le widget ne se voient qu'avec l'extension : un build « widgets » (Codemagic l'a toujours ; GitHub : l'entrée widgets).
+- ⏭ l'icône selon le rang, avec les glyphes : il manque l'échelle des rangs (bion → … → xeroction, au labo).
+Faux iPhone : `parcours-natif-091.mjs`.
+
+**0.90 (22.10)** — ▦ la map en carrés (RS-7, sur une capture de la vue des xers : « je veux pouvoir me balader comme ça plutôt, avec des
+carrés, et faut remplir avec les infos de la map ; je kiffe la map du labo, de pouvoir en créer »). `src/app/map-hubs.js`, ploxion interne
+`map` (action des bords `map`, la case portion des koins). Les hubs du labo : `/px/xerkions.json` (template `hub` : center, koins, portals),
+par le HTTP natif, gardés dans boxion « map/xerkions ». Les tiens : jOSStore `xerkions-persos` (localStorage `store:xerkions-persos:items` +
+`jOSBoxion.save('xerkions-persos','items')`, qui part au labo en mode connecté). `voisins()` : portals[0..3] = droite, gauche, haut, bas,
+complétés par le retour des portails des autres, le reste en « d'autres portails ». Un hub = un carré : son glyphe au centre (2×2 d'une
+grille 4×4), ses koins dans l'anneau (12 au plus). Faux iPhone : `parcours-map.mjs` (fixture `tests/donnees/xerkions.labo.json`, 12 hubs).
+❓ RS-7 : la vue des xers (0.70) passe-t-elle aussi aux carrés, ou la map la remplace-t-elle ?
+
+**0.89 (22.10)** — ◺◿ les koins du carnet de RS-7 (deux pages : `docs/look/references/koins-0*.jpg`, transcrites dans **docs/KOINS.md**,
+avec ce qui est posé, ma lecture, et les maillons qui manquent). `glyphes.js` : xeroction, tsoin, wormion, trion, portion redessinés d'après
+le carnet, `ploxion` et `xer` ajoutés. `src/app/koins.js` (`prefs.koins`, coupé par défaut) : html.px-koins efface `.px-dock` et la
+`.px-barre` d'un ploxion ; deux koins de coin, 4 étapes (`data-etape`), à la dernière deux carrés de deux cases (trion, wormion | xer,
+portion) et la barre des glyphes ; les actions passent par le routeur (`faire('carte'|'basculer'|'mes-xers'|'accueil'|'minimiser')`,
+`retour()`). Faux iPhone : `parcours-koins.mjs`.
+
+**0.88 (22.10)** — 📚 le lot de ploxions, premier sous-lot (composer d'abord : le registre du labo a déjà `web`, `math`, `xerminal`, `notes`,
+`pdf` ; mpv = le lecteur intégré de la 0.49). Nouveaux, internes, hors ligne : `src/lot/systeme.js` (▤ btop : fps mesurés au rAF, Device.getInfo
+`memUsed`, `navigator.storage.estimate`, batterie, réseau, latence HEAD jusqu'au labo, et le Swift `PloxiApple.systeme` : thermalState,
+isLowPowerModeEnabled, physicalMemory, volumeAvailableCapacityForImportantUsage) ; `src/lot/ambiances.js` (≈ Blanket : 8 sons en Web Audio,
+bruits blanc/rose/brun filtrés et modulés ; sortie par un `<audio>` MediaStreamDestination → le routeur voit qu'il joue et ne l'endort pas ;
+‹ coupe, ▁ garde). Reste du lot : Foliate (EPUB), coffre Obsidian ; ❓ Zotero (clé), LocalSend (entitlement multicast), AppFlowy (web).
+Faux iPhone : `parcours-lot.mjs`.
+
+**0.87 (22.10)** — ▥ la bande façon niri (`src/app/bande.js`, `prefs.bande`, coupée par défaut). Le routeur garde tout (montrer, cacher,
+sommeil, pile) et appelle `bande.poser()` à la fin de `montrer()` ; la bande ne pose que `width`/`transform` sur les `.px-hote` (jamais de
+déplacement DOM : un iframe se rechargerait). L'ordre : `ordreBande` + `placerDansOrdre` (à droite de `depuis`, le courant au moment
+d'`ouvrir`) ; `fileBords` le suit quand la bande est là. Le voisin visible (`.px-bande-voisin`) ne s'endort pas. `glisser()` (l'animation des
+bords) est coupé en bande : la transition CSS des colonnes la remplace. La vue d'ensemble : `ouvrirVue()` (échelle 0,34, une ligne qui se
+glisse, les endormis en pointillés). Action des bords `bande`. Faux iPhone : `parcours-bande-niri.mjs`.
+
+**0.86 (22.10)** — ⧗ les tsoins remontent au boxion. Le journal boxion_local « tsoins » (tsoins notés, jOSTsoin.mark des ploxions, marketplace,
+terrax, xerbot, compte…) restait sur le téléphone. `src/app/remontee-tsoins.js` : modes `non` (défaut), `tsoins` (kind tsoin et vocal), `tout`,
+`tampon` (part seulement sur « envoyer ») ; passer de « non » à un mode part de MAINTENANT (« tout depuis le début » pour le passé) ; jOSBoxion
+du compte par `distant.appel` (GET /px/boxion/load puis POST save), ns `tsoins-iphone`, clé `<jour>.<appareil>` (`reglages/appareil-id`),
+fusion par `seq`, 3000 par document ; curseur dans `reglages/tsoins-remontee-etat`, avancé seulement après un save réussi. « Me demander un
+tsoin » : session ≥ 2 min puis pause ≥ 20 min → un mini dock « un tsoin de ta session ? ». ❓ pour RS-7 : partager le journal d'un ploxion au
+Nexus ou au chaoxion (où, quel format). Faux iPhone : `parcours-remontee-tsoins.mjs`.
+
+**0.85 (22.10)** — 📤 l'envoi de fichiers par le mode connecté (RS-7 a choisi 8 chantiers de la feuille de route : celui-ci d'abord). Le relais
+du shim (`jos.js`) passe maintenant FormData, Blob, ArrayBuffer : `src/shim/corps-fichier.js` → `{ dataType: 'formData' | 'file', data }`, que
+`creerHttp().requete` (depot.js) donne à `CapacitorHttp.request` (iOS pose le boundary ; ⚠ le Swift force-déballe `fileName` et `contentType`
+d'un fichier : toujours fournis). `src/shim/xhr-relais.js` : un XMLHttpRequest asynchrone vers une route du serveur passe par le fetch du shim
+(le FS du labo envoie par XHR pour la progression). `photos.importer` envoie aussi au boxion (`/fs/write`, Photos/) quand `distant.actif()`.
+Faux iPhone : `parcours-envoi-fichiers.mjs`. Les 7 autres chantiers choisis (22.10) : tsoins → boxion + journal du mode test, la bande niri,
+le lot de ploxions, Live Activities, un widget par ploxion, l'icône selon le rang, les notifications push (APNs : la clé, décision de RS-7).
+
+**0.84 (22.10)** — 🍏🎟 le social avec Apple, pour de vrai. api.j0bot.ch (dépôt J0bot/api-j0bot, `main`) a la porte depuis le 22.10 :
+`POST /api/v1/auth/apple` (Apple ID lié → 200 ; nouveau + `code` d'invitation valide → 201, un compte pseudonyme ami de l'inviteur ; nouveau sans
+code → 403 `invitation_requise`), `POST /auth/apple/lier` (Bearer), `DELETE /me` `{ confirmer: "supprimer" }`. Côté app (`src/natif/social-apple.js`) :
+le code d'un lien `…?px=invite&code=…` qui ouvre l'app est gardé (`liens.js` → `surLien` → boxion « social/invitation ») et part tout seul ; sinon un
+panneau sous le bouton (coller le lien ; ou lier avec l'identifiant et le mot de passe de l'écran du social), sans remontrer la feuille d'Apple ;
+⚙ › Compte : supprimer le compte du social. ⚠ **CORS** : l'api ne répondait qu'à `*.j0bot.ch`, pas à `capacitor://localhost` → le social du labo
+ne pouvait pas lire l'api dans l'app. Corrigé côté api (`config/cors.php`, commit `787b072`, **à redéployer**) ; les appels Apple de l'app passent
+déjà par le HTTP natif. Faux iPhone : `parcours-social-apple.mjs` (lien → code gardé → Apple → compte → suppression).
+
+**0.83 (19.10)** — 🔑 le labo connecté tout seul (RS-7, capture du mode xerboxion : « j'ai un code »). Le contrat complet et ce que le labo
+doit faire : **docs/CONNEXION-LABO.md**. Côté app : `src/natif/connexion-labo.js` (`adresse(chemin)`, `emballer(url)`) ; `modes.js` : le cadre
+naît en `about:blank` avec `data-vers`, la règle du labo (HEAD) puis l'adresse connectée ; `cadres-labo.js` : `connecter(p)` ; main.js enveloppe
+`jOSNatif.navigateur` (une adresse du labo → connectée). Un 404 de `/api/app/passe` = la route pas encore là : l'adresse simple jusqu'au
+prochain lancement. iOS bloque les cookies tiers d'un cadre : seuls les cookies `Partitioned` (WebKit 26.2+) tiennent → le labo doit poser sa
+session ainsi quand `Sec-Fetch-Dest: iframe`. Faux iPhone : `parcours-connexion-labo.mjs` (HEAD avec la nouvelle CSP, le passe simulé).
+
+**0.82 (19.10)** — Le labo a fait les deux corrections demandées (déployées, vérifiées en ligne ici) : la CSP vaut `frame-ancestors 'self'
+https://*.j0bot.ch capacitor://localhost` (les cadres du labo s'affichent dans l'app ; une autre app iOS pourrait aussi les encadrer, mais sans
+la session de RS-7 : chaque app a ses cookies) ; `/wiki/<slug>?fragment=1` ne rend que `<article class="wiki-app">` (sans `<head>`, donc sans
+canonical : le lecteur garde le chemin demandé). ⬡ `/px/icones.json` (l'atelier des glyphes du labo, lu par la coquille avec la session) :
+`src/app/icones-labo.js` le lit par `httpRelais` (X-Ploxi0n + Bearer), garde `reglages/icones-labo`, relit au lancement (3 s) et à chaque
+vérification des mises à jour (`maj.completer`). `glyphes[{nom, corps}]` → `nettoyerCorps` (DOMParser SVG : path/circle/rect/line/polyline/
+polygon/ellipse/g, la géométrie seulement, `class` f/p) → `ajouterGlyphe` (glyphes.js) ; l'icône d'un ploxion = registre ← `tous[id]` ←
+`specPerso(mien[id])` ← l'atelier de l'app (main.js `xk`).
+
+**0.81 (19.10)** — ⧉ les ploxions composés et 📖 le wiki. Les captures de RS-7 (Ultimate social : « carte / social / chat indisponible
+ici ») : ultimate-social (et socialion, space, stockage, theme, dl) montent leurs sous-ploxions par `jOSApps.monter(id, hôte, ctx)` si
+`jOSApps.peut(id)` — le contrat de la coquille du labo (monde.html : charge, peut, ensure, monter → `{ unmount, ready, lazy, robuste, instance }`).
+ploxi0n avait `peut = routeur.connait` (installé seulement) → `src/shim/apps-a-la-demande.js` : non énumérables sur jOSApps ; `ensureApp` (main) =
+`installerSilencieux` (pack, puis `depot.installer`, sans barre) + `routeur.chargerApp`. Les dépendances : `ploxionsComposes(js)` (les `app: 'x'`,
+`jOSApps.monter/ensure('x')`, `jOSApps['x']` lus, pas assignés) ; `depot.installer` rend `composes` et appelle `surInstalle` → installées en fond ;
+`depot.dependances()` + `maj.completer` : ce qui manque, à chaque vérification. Le wiki (`src/app/wiki-natif.js`) : la page `/wiki/<slug>`
+(3,6 Mo, 1,1 Mo gzippé : toute la coquille du labo) lue en HTTP natif, on garde `.wiki-app` (~30 Ko), nettoyée (`RETIRER`, on*, style,
+javascript:) ; `data-wiki` pour les liens internes, `data-externe` pour le reste ; boxion « wiki/<chemin> » (frais 24 h, hors ligne : le cache) ;
+`cadres-labo.js` remplace l'iframe /wiki… (même réécrite en https://labo… par le shim) par le lecteur, suit `ploxion.wiki.goto`. Le sommaire
+(#ancres) défile sans toucher au # du routeur. Faux iPhone : `parcours-composes.mjs` (le labo simulé : le vrai ultimate-social et le vrai article,
+`tests/donnees/`).
+**✅ Fait par le labo le 19.10 (voir 0.82)** — demandé alors : (1) la CSP du labo (`frame-ancestors 'self' https://*.j0bot.ch`, config/csp.php) : ajouter
+`capacitor://localhost` — alors ideas (/ideas), makelab (/objets/), files et ultimate-files (/boxions), xerkions, universal-suit et phone-test
+s'affichent DANS l'app sans rien changer ici (cadres-labo.js le détecte par un HEAD) ; (2) `/wiki/{slug}?fragment=1` qui ne rend que
+`.wiki-app` (le lecteur le demande déjà) : 30 Ko au lieu de 1,1 Mo par page.
+
+**0.80 (19.10)** — ↻ les mises à jour des ploxions. Pourquoi « pas à jour directement » : (1) une fois monté, un ploxion restait dans la page
+(`W.jOSApps[id]`) : le nouveau code n'était lu qu'au redémarrage → `routeur.oublier(id)` (jOSApps, `script[data-ploxion]`, `style[data-px-css]`),
+tout de suite, ou à sa fermeture s'il est vivant (`aOublier`, dans `tuer`) ; le dépôt l'appelle par `surMisAJour` ; (2) une nouvelle version ne
+téléchargeait pas ses nouveaux bions → `resoudreBions` dans `aJour` ; (3) iOS pouvait servir une copie en cache → `?maj=<t>` + `Cache-Control:
+no-cache` ; (4) le pack restait figé → il suit le labo s'il a mieux (sinon `a-jour` sans erreur). `aJour({ concurrence: 6, ids, progres, auto })` ;
+un 404 (`maj-introuvables`) attend 7 jours en automatique. `src/marketplace/mises-a-jour.js` : `reglages/maj` = { auto: true, bions: true, heures: 6 },
+`reglages/maj-etat` ; `demarrer()` (20 s après le lancement, un tic toutes les 15 min, au retour dans l'app) ; la section de ⚙ › Ploxions
+(`html`/`brancher`). Les bions mis à jour se chargent au prochain lancement (garde `if (window.jOSX) return`, et le moteur partagé du clicker
+aussi). Le faux iPhone simule maintenant `CapacitorHttp.get` (304 pour un app.js du labo). Faux iPhone : `parcours-maj.mjs`.
+
+**0.79 (18.10)** — 🏆 Game Center pour le clicker (RS-7 : « j'ai déjà ajouté ça sur le truc Apple »). L'ID du classement n'est écrit nulle
+part : `PloxiApple.gameCenterClassements` (`GKLeaderboard.loadLeaderboards(IDs: nil)`) les liste, `choisirClassements` prend celui qui parle
+de clicker/xer/score/record (sinon le seul qui n'est pas « Xeroctions » 001 ; « dim » = celui des dimensions). Le score = `floor(max(stats.meilleur,
+L) × 100)` (le record en exposant, au centième : il faut « décimal, 2 décimales, plus haut = mieux » dans App Store Connect). Envoyé au plus
+toutes les 2 min quand il monte, et en partant ; les derniers envoyés sont dans boxion « reglages/game-center ». `gameCenterOuvrir` :
+`GKAccessPoint.shared.trigger(leaderboardID:playerScope:timeScope:)` (iOS 18), sinon `trigger(state: .leaderboards)`. Le routeur a
+`boutonsBarre(id)` (🏆 pour xp et clickion). Signatures vérifiées contre la doc d'Apple (JSON). **🦀 Décision de RS-7 : plus tard, Rust
+uniquement (Bevy…) : `docs/RUST.md`.**
+
+**0.78 (18.10)** — ◈ le clicker et le Clickion en natif. Les VRAIS bundles du labo (`/px/xp/app.js`, `/px/clickion/app.js`, format 2) sont
+copiés tels quels dans `public/ploxions/{xp,clickion}/app.js` (+ `public/bions/jOSGame.js`, sans réseau) ; `index.json` : `"labo": true` →
+`installerLocal` garde `origine` = le labo, donc ↻ tout mettre à jour les suit (sinon `pack` reste figé). Les deux embarquent le même moteur
+`jOSXerClicker` (script 1, identique) et partagent `xb:xpclick` + boxion `xp/idle` (le shim : boxion_local) + `window.__xpPartie`.
+`src/jeu/clicker-natif.js` : `toucherRapide` (le routeur ne fait jamais de clic droit sur `.xc-coeur/[data-orb]/.ck-cube/[data-cube]` d'un hôte
+xp/clickion) ; `installerToucherRapide` (pointerdown → un click synthétique par doigt, le click d'iOS qui suit avalé) ; le moteur enveloppé par
+un `defineProperty` sur window (son `production(ctx)` donne le contexte) → `auRetour()` rattrape l'absence quand seul le Clickion est monté ;
+`px.clicker` publié (jOSRaccourcis.valeur, toutes les 60 s et en partant). `src/app/silence.js` : pour `PLOXIONS_QUI_FUIENT` (xp), les écouteurs
+window/document posés pendant le mount sont décrochés à l'unmount. `bionsTouches` ignore un bion que le code définit lui-même
+(jOSXerClicker : 404 de 3,5 Mo évité). Faux iPhone : `parcours-clicker.mjs` (7 touchers à 3, 2, 1, 1 doigts = 7).
+**À corriger dans le labo (RS-7, pas d'accès ici)** : xp L1044 le `visibilitychange` jamais retiré ; xp `vueDefis` et clickion ck-verrou
+utilisent `data-aller` (réservé au routeur de l'app, sans effet tant qu'ils sont dans `.px-hote`) ; clickion ne rattrape qu'au mount (ajouter
+`C.rattraper` sur visibilitychange visible) et n'affiche jamais le gain d'absence ; clickion › ferme : `dessiner()` complet chaque seconde tant
+qu'une parcelle est mûre ; l'élan (watchPosition haute précision) continue quand l'app est cachée ; le textarea d'export en 11 px (iOS zoome) ;
+le tic de xp tourne et écrit le localStorage chaque seconde même caché.
+
+**0.77 (18.10)** — § mes xers (`src/app/xers.js`, ploxion interne `mes-xers`). Un xer = `{ prefs (PREFS_XER seulement : pas haptique,
+Calme, vivants, sommeil), hud, accueil (routeur.docAccueil / chargerAccueil), fond (sa photo à part : boxion « xers/fond:<id> », fond.poserImage),
+barre, ploxions }` ; boxion « xers/liste », « xers/actif ». Basculer : garderActif() puis poser() puis `jos:xer` + bus `ploxion.xer.change`
+(le contrat du ploxion xer-switch du labo). Partager : JSON → deflate-raw (CompressionStream) → base64url, `…/app/ouvrir/mes-xers?app=1&x=z…`
+(≈ 600 caractères, QR jusqu'à 2000) ; recevoir : `nettoyerXer` (clés et types connus, actions des bords connues), jamais posé sans toucher.
+`installerAbsent(id)` dans main.js (partagé avec routeurProxy). Faux iPhone : `parcours-xers.mjs`. Corrigé : `.px-h-b:has(>.xki)` sans taille
+hors du dock (un épinglé géant dans la barre d'un ploxion).
+
+**0.76 (18.10)** — ✉ inviter · partager. La cause du zbeul : les ploxions du labo font leurs liens avec `location.origin`
+(`capacitor://localhost` dans l'app). `src/app/liens-publics.js` répare à chaque SORTIE (feuille de partage, presse-papiers, jOSNatif.partager/
+copier, le bion jOSQR enveloppé par un `defineProperty` sur window, les champs readonly observés) : `…/local?px=<id>&…` → `https://labo.j0bot.ch/px/<id>?…`
+(lien universel, l'AASA couvre `/px/*`). Et à l'ENTRÉE : `lienRecu` (`/px/`, `/app/ouvrir/`, `?px=`, `/join?inv=` → le ploxion invitation,
+`ploxi0n://px/`) ; le routeur pose `params.lien` dans `location.search` le temps du montage (là où les ploxions lisent `code`, `join`, `cur`).
+`src/app/partage.js` : `creerInvitation` (POST /api/v1/invites, Bearer `jos_social_token`, HTTP natif), la feuille (QR `PloxiApple.qr`,
+CIQRCodeGenerator), le ploxion interne `inviter`. Faux iPhone : `parcours-partage.mjs`.
+
+**0.75 (17.10)** — 🤖 XERB0T · le contrôleur (docs/XERBOT.md). `src/xerbot/reseau.js` (CapacitorHttp sans le jeton du labo, délai court,
+2 essais ; `PloxiApple.httpFlux` pour le SSE ; Bonjour `reseauChercher` / `reseauResoudre` en NWBrowser / NWConnection IPv4, `import Network`
+dans AppDelegate — ne jamais nommer NWEndpoint/NWPath, NetworkExtension a les mêmes) ; `adaptateurs.js` (ha, wled, esphome, tasmota, pi =
+Glances, boxion, http ; une forme d'entité commune ; `sonder` en parallèle) ; `controleur.js` (registre `xerbot/appareils`, jetons via jOSVerrou,
+BLE UART, HomeKit, le pont du bus xerbot v1 : `idBus`, `versActions`, ack/state ; le ploxion `controleur`). Le mode xerbot : la carte du
+contrôleur, la commande legacy du contrat (`commandeLegacy`), « ultimate » → l'id `bluetooth`. Info.plist : NSAllowsLocalNetworking,
+NSLocalNetworkUsageDescription, NSBonjourServices. Les bords par défaut de RS-7 (d-bas accueil, deux-milieu xers, deux-bas carte).
+Inventaire du nexus pour le physique : scratchpad (rapports labo/boxion/natif) résumé dans docs/XERBOT.md.
+
+**0.74.1 (15.10)** — Revue adverse de l'AR (3 angles + 3 sceptiques, avec la doc d'Apple en JSON) ; corrigé : `TerraxVC` délégué du guide
+(`coachingOverlayViewDidRequestSessionReset` → fermer sans carte), `sessionWasInterrupted` → `retrouvee = false`,
+`sessionShouldAttemptRelocalization` → true ; la carte de la chambre enregistrée seulement si `worldMappingStatus` est `.mapped` ou `.extending`,
+une carte illisible effacée (+ « chambre-neuve ») ; l'étiquette posée par son bas (`position.y = 0,6·t`) ; `poserModele` en
+`Entity.loadModelAsync` (repli : l'étiquette 📦) ; `fermer()` → `(presentingViewController ?? self).dismiss` ; PieceVC ignore un `didPresent`
+après annulation ; `apercu({ url })` : statut HTTP, `suggestedFilename` ; page : `uneFois` (une ouverture AR / scan / capture à la fois, « déjà
+ouverte » ne perd plus la session), fichiers-natif (sans #fragment, extension du type pour blob:/data:, `r.ok`). Restent (non bloquants,
+notés par la revue) : reprendre un calcul Object Capture interrompu (le checkpoint le permet), refuser une 2e présentation native.
+
+**0.74 (15.10)** — 📦 Object Capture (RS-7 montre la vidéo « AR Quick Look, meet Object Capture » : « ça pour l'AR »). `AppDelegate.swift` :
+`PloxiAR.capturerObjet` → **`ObjetVC`** (iOS 17 : `ObjectCaptureSession` + `ObjectCaptureView` dans un `UIHostingController` — d'où
+`import SwiftUI` ; `stateUpdates` → les boutons viser / capturer / terminer ; à `.completed`, la capture est libérée puis
+`PhotogrammetrySession(input:configuration:)` + `.modelFile(url:)` (détail `.reduced` par défaut sur iOS) → Documents/terrax/objets/*.usdz ;
+photos dans un dossier temporaire effacé). `disponible` rend `objet` (lu sur l'acteur principal : `ObjectCaptureSession.isSupported` est
+`@MainActor` sans `@preconcurrency`) et `objets`. `TerraxVC.poserModele` : `Entity.loadModel(contentsOf:)`, posé par le bas
+(`visualBounds`), tourné (`rot`) ; `modeles` = les objets capturés proposés dans la feuille de pose (événement pose : `modele`, `rot`).
+Page : `ar.capturerObjet` / `voirObjet`, terrax `capturerObjet`, `modelesDe`, `versAR` (le modèle jusqu'à 30 m, `PRES_MODELE`).
+**Méthode** : la doc d'Apple se lit d'ici en JSON (`https://developer.apple.com/tutorials/data/documentation/<framework>/<symbole>.json` :
+déclaration exacte, plateformes, membres) ; chaque API Swift ajoutée y a été vérifiée (pièges trouvés : `TextureResource.generate` a une
+jumelle `async` → `withName: nil` explicite ; `ARQuickLookPreviewItem` est dans QuickLook). Faux iPhone : `parcours-ar.mjs` (capture comprise).
+
+**0.73 (15.10)** — 👁 l'AR native, RS-7 : « le plus important de tout, c'est l'AR ; utiliser au max les fonctions natives ; et AR Quick Look ».
+`AppDelegate.swift` : le plugin **`PloxiAR`** (disponible, ouvrir, fermer, scannerPiece ; événement « ar » : pose, touche, chambre-neuve,
+ferme), **`TerraxVC`** (ARView de RealityKit sans configuration automatique, `ARCoachingOverlayView` ; terre = `.gravityAndHeading`, x est,
+z sud ; chambre = `.gravity` + `initialWorldMap` gardée dans Documents/terrax/chambre ; LiDAR : `sceneReconstruction = .mesh` +
+occlusion, `.personSegmentationWithDepth` ; les objets = une image emoji + texte sur un plan qui pivote vers la caméra à chaque image ;
+toucher = `entity(at:)` sinon `raycast(.estimatedPlane)` → `UIAlertController`) et **`PieceVC`** (RoomPlan, iOS 16, `#if canImport` :
+`RoomCaptureView` → `CapturedRoom.export` → Documents/terrax/pieces/*.usdz). `PloxiApple.apercu` : `url` (téléchargé par iOS) et
+`echelleReelle` (`ARQuickLookPreviewItem`, `allowsContentScaling = false`). Tout l'AR est entre `#if !PLOXI0N_SANS_AR` : **secours =
+la variable PLOXI0N_AR=0** (GitHub › Settings › Variables, ou Codemagic) → fastlane `retirer_ar`. Page : `src/natif/ar-natif.js`
+(`creerArNatif`, `brancherLiensAR` : un lien .usdz / .reality / rel="ar" → AR Quick Look), `src/terrax/terrax.js` (`versAR` / `depuisAR`,
+« ouvrir les yeux » natif d'abord, l'AR web en repli ; la chambre : `place` {x,y,z} dans la carte de la chambre ; `piece` = le nom du USDZ).
+Le Swift n'est pas compilé ici : relu ligne par ligne + revue adverse. Faux iPhone : `parcours-ar.mjs`. Les widgets : la pochette réduite
+(`preparingThumbnail`), `Text` interpolé au lieu de `Text + Text`.
+
+**0.72 (15.10)** — ▦ `ios/App/PloxionWidgets/PloxionWidgets.swift` : le kit HUD (`Peau` .chill/.mono, `PEAU`, `FondHUD`, `Tete`,
+`Etat`, `Ligne`, `Kion`, `Portion`), valeurs (tsoins-jour en héros, `.accessoryCircular`), cube (`surFace` : le texte imprimé sur les faces ;
+`.contentMarginsDisabled()`), lecture (`Disque`, `source`), épinglés (`g64` : le glyphe PNG rendu par `glyphePng`, src/natif/raccourcis.js).
+Le Swift n'est pas compilé ici : relu ligne par ligne + un vérificateur. 📸 `PloxiApple.capturerXer` (WKWebView.takeSnapshot → Caches/xers)
++ `src/natif/apercus.js` (index « reglages/apercus ») ; main.js photographie AVANT d'ouvrir la vue des xers. 🍏 `src/natif/social-apple.js` :
+bouton sur `#so-f-login` des ploxions social / socialion / ultimate-social (via `apresChargement`), POST api.j0bot.ch/api/v1/auth/apple
+(404 au 15.10 : docs/SOCIAL-APPLE.md, le contrat serveur), session dans `jos_social_token` / `jos_social_user`.
+
+**0.71 (14.10)** — 🌍 `src/terrax/terrax.js` (ploxion interne `terrax`, pages `[data-page-cube]` : terrion / terrax / chambre / quêtes ;
+géométrie pure testée : distanceCap, decaler, versTuile, projeter ; couches en lecture : mappion `box:mappion/souvenirs`, nexus `pull`).
+Le nexus : `nexus.push/pull` dans main.js = le protocole de jOSNexus (`/nexus/push|pull`, relayés par le shim). Le vrai nord : AppDelegate
+`mouvementDebut` en `.xMagneticNorthZVertical` + `cap` = m.heading → shim `webkitCompassHeading`. ◬ `src/terrax/koin-ion.js` sème les hubs
+perso (`store:xerkions-persos:items` + `box:xerkions-persos/items`). Le braindump et les quêtes : `docs/TERRAX.md`. Inventaire du nexus pour
+la suite (jOSCarte, jOSZone, jOSObjets, scan-reel, cubmap, SkyView) : docs/TERRAX.md §2.
+
+**0.70 (14.10)** — ⊡ `src/app/vue-xers.js` : `voisins(places, de, venu)` (cône 45°, un ploxion par direction, d'où l'on vient derrière soi),
+aperçus = `photographier` des hôtes vivants, sinon icône + nom ; places = `carteXer.placesAJour()` (sans ouvrir la carte). La capture d'écran :
+AppDelegate.swift (PloxionVC.viewDidLoad) observe `userDidTakeScreenshotNotification` → `bridge.triggerWindowJSEvent("ploxi0n-capture")` → main.js.
+Action des bords « xers » (option `surXers`). Faux iPhone : `parcours-vue-xers.mjs`.
+
+**0.69 (14.10)** — Le démarrage : `ouvrirSqliteResilient` (`src/boxion-local/index.js`, 5 essais, attend le premier plan ; err.verrouille) +
+AppDelegate.swift passe Library/CapacitorDatabase en `completeUntilFirstUserAuthentication` (l'entitlement reste « Complete » : sa valeur doit
+suivre le profil d'Apple, ne pas la changer sans le portail). L'écran d'erreur a ↻ réessayer et se recharge au retour au premier plan.
+La barre : `.px-barre .px-hud` défile dans elle-même ; `html,body,#ploxi0n{overflow-x:clip}`. Le sommeil des cachés : `endormirVieux` (routeur,
+pref `sommeil` en minutes, 0 = jamais), jamais s'il joue (`<audio>/<video>`, ou Web Audio : `gel.aDuSon`, l'AudioContext attribué par sa pile).
+🔍 : `src/app/chercher-local.js` (option `surChercher` du routeur). Faux iPhone : `parcours-069.mjs`.
+
+**0.68 (14.10)** — RS-7 : « surtout, le cube c'est une vue pour les ploxions qui ont plusieurs pages ». `src/app/cube-interieur.js` est devenu
+la SALLE partagée (`monterSalle`, `facesDesPages` : fond = page i, droite i+1, gauche i−1, plafond i+2, sol i−2) ; `src/app/cube-pages.js` en
+fait le cube DES PAGES d'un ploxion (▣ `data-cube` dans la barre, action des bords « cube », `routeur.cube()`/`cubeActif()`). Les pages :
+1. le contrat de l'instance montée `pages()`/`allerPage(cle,{muet})`/`garderEtat()` (marketplace, réglages) ; 2. une liste blanche d'onglets
+du DOM (`ONGLETS`, chacun avec son panneau) ; jamais `DANGER`, jamais les `EXCLUS` (cape, pomodoro). Photos = clones inertes : les onglets
+se photographient DANS le clone (`photoDuPanneau`, aucun clic : le ploxion ne bouge pas) ; seul le contrat feuillette derrière la salle,
+et le ploxion revient à sa page/son défilement/son état (la salle vide reste tant que ce n'est pas fait ; `ouvrir` attend ce `retour`).
+0.68.1 (revue adverse, 6 agents) : ouverture annulable (`seq`, `ouvert()` dit aussi l'attente), le geste « cube » (`cubeFerme`), les
+canvas (la face reçoit LE nœud gardé), plafond/sol en fondu ; `src/app/modes.js` ne capture plus les `data-mode` d'un ploxion (le minuteur). Piège : l'enveloppe des photos porte `px-hote` (le thème chill
+habille sous .px-hote) mais n'est pas enfant direct de la scène — ne pas chercher les hôtes autrement que `.px-scene>.px-hote` ou par
+`data-ploxion`. Faux iPhone : `tools/faux-iphone/parcours-cube-pages.mjs` (bother, réglages, marketplace).
+
+**0.66 → 0.67 (14.10)** — 0.66 : ⧈ le xerbion (`src/app/xerbion.js`, sur la face du dessus du cube de la fractale), ◈ le xerploxion (le
+ploxion en hologramme : « LE XERPLOXION » dans `src/app/routeur.js`, `tools/faux-iphone/parcours-holo.mjs`). 0.67 : ◈ sur un xerkion
+dev/bouffe/ferme/pont/veille ouvre le ploxion du labo `xerploxions` avec `{ xerploxion: 'xerploxion-<d>' }` (`CONSOLES`/`consoleDe`) ;
+⚠ pas vérifié que `xerploxions` lise ce paramètre passé au montage (son code vit au labo). ▣ « dans le cube » (`src/app/cube-interieur.js`,
+ploxion interne, gardé dans boxion_local « reglages/cube-interieur » ; `tools/faux-iphone/parcours-cube-interieur.mjs`). Le marketplace :
+`PORTEES`/`porteeDe` (depuis `compat` de `tools/audit-ploxions.mjs` : A prêt = partout, B = nexus, C = externe ; interne = natif), icônes
+xerkion (`icone`), ploxions internes (`internes`). Les puces de portée ne s'affichent qu'en grille/liste ; la vitrine a le rayon ◇ Partout.
+
+**0.63.1 → 0.65 (14.10)** — 0.63.1 : la lenteur, c'était le thème vivant (--mx sur <html>, tout le document recalculé 8×/s : 2 i/s à
+l'accueil de RS-7 au faux iPhone ×4 → 50 i/s ; `tools/faux-iphone/parcours-perf.mjs`). 0.64 : ☾ dodo/réveil (tsoin, ploxi0n://dodo,
+`comparerNuit` dans Santé), « Réduire les animations » = Calme, ≋ chill-synth phase 1 (`src/chill/chill-synth.js` : à valider sur
+l'iPhone, 10 min verrouillé, essais A et B), `docs/APP-STORE.md` (chaque écran d'App Store Connect), les extrapolations en commentaires
+(`src/natif/compte.js`). 0.65 : ⊞ la carte du xerboxion (`src/app/carte-xer.js`, `tools/faux-iphone/parcours-carte.mjs`).
+
+**0.63 (14.10)** — voir `src/app/nouveautes.js` 0.63 et les commentaires d'en-tête de `src/app/fractale.js` (le moteur), `src/natif/haptique.js`
+(fx-*, creerDebit, densité), `src/natif/jos-natif.js` (module Haptics gardé, crans), `src/app/demo.js`, `src/app/tuto-hud.js`, `src/app/routeur.js`
+(« LES ÉTATS D'UN PLOXION », ACTIONS_BORDS, GESTES_DEFAUT remappés), `src/app/barre-haut.js` (l'immersion), `src/natif/lecteur-natif.js` (la garde).
+Pièges : `tools/faux-iphone/parcours-lecteur.mjs` est cassé par la garde du lecteur (Playwright compte comme un geste ; neutraliser
+`navigator.userActivation` et présenter par `page.tap`) ; le Swift du lecteur (presenter → Bool, renvoyer après l'entrée) n'est pas compilé.
+RS-7 (14.10) : « on optimise tout au max, on n'a pas beaucoup d'usage » ; « la limite : il faudra commit » ; **il lance le build lui-même** (pas de
+`[build]` dans les messages). Ensuite, dans l'ordre : la LENTEUR (« ultra important, là c'est ultra lent ») ; le « dodo » (tsoin santé/sommeil,
+comparé au sommeil de la Garmin via Santé) ; l'accessibilité (VoiceOver, police plus grande, contraste, sans couleur seule, animations réduites)
+et la fiche App Store (URL de confidentialité, classement Game Center « Xeroctions », achats intégrés / abonnements pour la Milky Way Foundation
+— milkywayhub.org —, le compte de vérification d'Apple = « leur xer à eux ») ; le mode CHILL-SYNTH (brief du 14.10 : phase 1 = le lecteur en
+arrière-plan, valider sur l'iPhone avant la suite ; les extrapolations en commentaires seulement) ; la carte du xerboxion ; voir son xerbion et
+son xerploxion.
+
 0. **RS-7 (13.10, fin de session)** : « je veux que l'app soit un peu comme niri » (la bande de colonnes défilantes ; nouveau à droite ;
    vue d'ensemble) ; et un LOT de ploxions : Zotero, Foliate, un browser à la Helium, Blanket (ambiances), vaults Obsidian, LocalSend,
    AppFlowy, Manim (maths), un mpv, un btop, « et intégrer le xerminal dessus ». Au labo existent déjà `web` (Browser), `xerminal`, `ssh`,
@@ -132,6 +611,8 @@ sur tous les ploxions publics (`tools/diagnostic-iphone.mjs` existe aussi, en js
 6. Plus tard : le mode xeroction ; Live Activities (la musique : `maintenant.js` a tout) ; ⏯ du widget sans ouvrir l'app.
 
 ## 4. Les décisions de RS-7 (à ne pas re-demander)
+
+- **(18.10) Plus tard, du Rust uniquement**, « avec du Bevy ou autre truc » : le code neuf vise Rust (WASM et natif) ; le chemin est dans `docs/RUST.md`.
 
 - Santé « connecté » = **les deux** : `jOSSante` pour le hub, ET un résumé sur le boxion, opt-in, éteint par défaut.
 - Lecteur = **Apple d'abord, VLC en repli** ; Stremio seul = **un bouton « ▶ ploxi0n »** (lien `ploxi0n://lire`).

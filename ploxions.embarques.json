@@ -7,9 +7,13 @@
   "piano",
   "couleurs",
   "langues",
-  "recits"
+  "recits",
+  "xp",
+  "clickion"
  ],
  "base": [
-  "bother"
+  "bother",
+  "xp",
+  "clickion"
  ]
 }

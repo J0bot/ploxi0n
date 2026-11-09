@@ -1,0 +1,18 @@
+/* généré par tools/ios/infoplist-langues.mjs : ne pas éditer à la main */
+"NSCameraUsageDescription" = "ploxi0n usa la fotocamera quando un ploxion te lo chiede (foto, scansione); nulla lascia il tuo telefono senza il tuo consenso.";
+"NSPhotoLibraryUsageDescription" = "ploxi0n apre le tue foto quando scegli di darne una a un ploxion.";
+"NSPhotoLibraryAddUsageDescription" = "ploxi0n salva nelle tue foto ciò che scegli di esportare.";
+"NSMicrophoneUsageDescription" = "ploxi0n usa il microfono quando un ploxion registra o ascolta, solo su tua richiesta.";
+"NSLocationWhenInUseUsageDescription" = "ploxi0n usa la tua posizione quando un ploxion ne ha bisogno (mappa, luoghi, ritrovare gli amici); resta sul tuo telefono, a meno che tu non la condivida con loro.";
+"NSMotionUsageDescription" = "ploxi0n legge i sensori di movimento per i ploxion che li usano (passi, inclinazione, bussola).";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "ploxi0n usa la tua posizione in background solo se un ploxion lo propone e tu accetti (per esempio i luoghi visitati); resta sul tuo telefono.";
+"NSLocationAlwaysUsageDescription" = "ploxi0n usa la tua posizione in background solo se un ploxion lo propone e tu accetti; resta sul tuo telefono.";
+"NSBluetoothAlwaysUsageDescription" = "ploxi0n usa il Bluetooth per vedere e comandare i dispositivi intorno a te (sensori, luci, robot) quando un ploxion lo propone.";
+"NSHealthShareUsageDescription" = "ploxi0n legge i dati Salute che autorizzi (passi, sonno, battito) per i tuoi ploxion della salute. Restano sul tuo telefono, a meno che tu non scelga di inviare un riepilogo al tuo boxion.";
+"NSHealthUpdateUsageDescription" = "ploxi0n scrive in Salute solo ciò che gli chiedi di registrare.";
+"NFCReaderUsageDescription" = "ploxi0n legge i tag NFC che avvicini, per i ploxion che li usano.";
+"NSLocalNetworkUsageDescription" = "ploxi0n trova e comanda i dispositivi della tua rete: Home Assistant, WLED, ESPHome, Tasmota, i tuoi Raspberry Pi e i tuoi boxion. E, quando lo avvii in Proche, i telefoni intorno a te per condividere messaggi, suoni e dove sono i tuoi amici.";
+"NSHomeKitUsageDescription" = "ploxi0n accende, spegne e mostra gli accessori di casa dai tuoi ploxion.";
+"NSAppleMusicUsageDescription" = "ploxi0n cerca e riproduce Apple Music nei tuoi ploxion.";
+"NSSpeechRecognitionUsageDescription" = "ploxi0n trascrive i tuoi vocali in testo, sul tuo telefono quando possibile.";
+"NSFaceIDUsageDescription" = "ploxi0n usa Face ID per aprire i ploxion e i segreti che hai bloccato.";

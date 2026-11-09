@@ -74,7 +74,7 @@ export function creerMiniDocks({ W = globalThis.window, routeur = () => null, pr
   function dessiner() {
     minute = null;
     if (!D.body) return;
-    if (glisse) { planifier(); return; }   // pas sous le doigt
+    if (glisse || D.querySelector('#ploxi0n.px-fx')) { planifier(); return; }   // pas sous le doigt, (0.63) pas sous la fractale
     const l = liste().filter(m => !m.ici), vus = l.filter(m => !m.endormi).slice(0, max()), caches = l.length - vus.length;
     if (!pile) {
       pile = D.createElement('div'); pile.className = 'px-md'; pile.setAttribute('role', 'region'); pile.setAttribute('aria-label', 'mini docks');

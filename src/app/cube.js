@@ -7,7 +7,7 @@
 // Réglages : boxion_local « reglages/cube » = [6 clés de valeurs].
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 export const FACES_DEFAUT = ['tsoins-jour', 'musique', 'pas', 'ploxions', 'compte', 'dernier-tsoin'];
-export const GLYPHES = { 'tsoins-jour': '⧗', 'dernier-tsoin': '✎', musique: '♫', pas: '∷', sommeil: '☾', ploxions: '▣', compte: '◇', mode: '◈' };   // (0.54) aucun emoji : le widget les écrit tels quels
+export const GLYPHES = { 'px.clicker': '◈', 'tsoins-jour': '⧗', 'dernier-tsoin': '✎', musique: '♫', pas: '∷', sommeil: '☾', ploxions: '▣', compte: '◇', mode: '◈' };   // (0.54) aucun emoji : le widget les écrit tels quels
 
 /** les six faces : [{ k, g (glyphe), t (titre), v (valeur) }] */
 export function faces(choix, valeurs) {
@@ -18,7 +18,7 @@ export function creerCube({ W = globalThis.window, boxion, valeurs = () => ({}),
   let choix = [...FACES_DEFAUT], dernier = '';
   const pret = boxion.get('reglages', 'cube').then(v => { if (Array.isArray(v) && v.length === 6) choix = v.map(String); }).catch(() => {});
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
-  const inclinaison = () => { const st = W.document.documentElement.style, r = (x) => Math.round((+x || 0) * 10) / 10; return { x: r(st.getPropertyValue('--mx')), y: r(st.getPropertyValue('--my')) }; };
+  const inclinaison = () => { const v = (W.ploxi0nMouvement && W.ploxi0nMouvement.valeurs) ? W.ploxi0nMouvement.valeurs() : { x: 0, y: 0 }, r = (x) => Math.round((+x || 0) * 10) / 10; return { x: r(v.x), y: r(v.y) }; };   // (0.64) plus lu sur <html>
   const lesFaces = () => faces(choix, valeurs() || {});
   async function publier() {
     await pret;

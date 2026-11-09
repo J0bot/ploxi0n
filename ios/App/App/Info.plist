@@ -64,6 +64,8 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleLightContent</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
@@ -75,7 +77,7 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>ploxi0n utilise le micro quand un ploxion enregistre ou écoute, seulement à ta demande.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>ploxi0n utilise ta position quand un ploxion en a besoin (carte, lieux) ; elle reste sur ton téléphone.</string>
+	<string>ploxi0n utilise ta position quand un ploxion en a besoin (carte, lieux, retrouver tes potes) ; elle reste sur ton téléphone, sauf si tu la partages avec eux.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>ploxi0n lit les capteurs de mouvement pour les ploxions qui s'en servent (pas, inclinaison, boussole).</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
@@ -92,18 +94,41 @@
 	<string>ploxi0n n'écrit dans Santé que ce que tu lui demandes d'enregistrer.</string>
 	<key>NFCReaderUsageDescription</key>
 	<string>ploxi0n lit les tags NFC que tu approches, pour les ploxions qui s'en servent.</string>
+	<!-- 🏝 (0.91) les Live Activities : écran verrouillé et Dynamic Island (PloxiApple.activiteDebut ; la vue : l'extension PloxionWidgets) -->
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>bluetooth-central</string>
 		<string>audio</string>
+		<string>location</string>
+		<string>bluetooth-peripheral</string>
 	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoadsInWebContent</key>
 		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
 		<key>NSAllowsArbitraryLoadsForMedia</key>
 		<true/>
 	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>ploxi0n trouve et pilote les appareils de ton réseau : Home Assistant, WLED, ESPHome, Tasmota, tes Raspberry Pi et tes boxions. Et, quand tu le démarres dans Proche, les téléphones autour de toi pour partager des messages, du son et où sont tes potes.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_ploxi-proche._tcp</string>
+		<string>_ploxi-proche._udp</string>
+		<string>_home-assistant._tcp</string>
+		<string>_wled._tcp</string>
+		<string>_esphomelib._tcp</string>
+		<string>_http._tcp</string>
+		<string>_arduino._tcp</string>
+		<string>_ssh._tcp</string>
+		<string>_workstation._tcp</string>
+		<string>_mqtt._tcp</string>
+		<string>_shelly._tcp</string>
+	</array>
 	<key>NSHomeKitUsageDescription</key>
 	<string>ploxi0n allume, éteint et montre les accessoires de ta maison depuis tes ploxions.</string>
 	<key>NSAppleMusicUsageDescription</key>

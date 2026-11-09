@@ -5,7 +5,8 @@
 import { glyphe, nomDepuisEmoji } from './glyphes.js';
 
 const EMOJI = /(\p{Extended_Pictographic}(?:️|‍\p{Extended_Pictographic}|\p{Emoji_Modifier})*)(\s?)/gu;
-const IGNORER = 'svg,script,style,textarea,input,select,option,[contenteditable],.px-g-e';
+// [data-ecrit] (0.99.1) : ce que les gens écrivent ou s'envoient (les messages de Proche, ses glyphes d'un geste) garde ses signes
+const IGNORER = 'svg,script,style,textarea,input,select,option,[contenteditable],.px-g-e,[data-ecrit]';
 
 // (19.10, le labo) ignorer : un sélecteur de plus à laisser tel quel — ce que les gens ÉCRIVENT (posts, messages, bios) garde ses emojis
 // (19.10, le labo) inconnu(emoji) → un SVG pour un emoji hors du dictionnaire (le labo : un glyphe généré, stable) ; sans lui, il disparaît (l'app)

@@ -9,21 +9,66 @@ import MusicKit
 import CoreLocation
 import HomeKit
 import NetworkExtension
+import Network   // (0.75) Bonjour et le réseau local du contrôleur XERB0T (NWBrowser, NWConnection) ; ne jamais nommer NWEndpoint/NWPath (NetworkExtension a les mêmes noms)
 import GameKit
 import WebKit
 import ObjectiveC
 import CoreMotion
+#if PLOXI0N_CARPLAY
+import CarPlay   // (0.99.31) PloxiCarPlay, option de build (l'autorisation CarPlay d'Apple est nécessaire)
+#endif
+import CoreBluetooth   // (0.99.20) PloxiOndes : le Bluetooth bas niveau ; (0.99.23) PloxiBLE, le maillage (option PLOXI0N_BLE)
 import MediaPlayer
 import AVKit
 import QuickLook
+import CoreImage   // (0.76) le QR code du partage en personne (CIQRCodeGenerator)
+import MultipeerConnectivity   // (0.99.1) l'ultimate Bluetooth : les téléphones proches (PloxiProche)
+// l'AR native (0.73) : PloxiAR plus bas. Interrupteur de secours : PLOXI0N_AR=0 (fastlane) la retire du build.
+#if !PLOXI0N_SANS_AR
+import ARKit
+import RealityKit
+import Combine
+import SwiftUI
+#if canImport(RoomPlan)
+import RoomPlan
+#endif
+#endif
 #if canImport(MobileVLCKit)
 import MobileVLCKit
+#endif
+#if canImport(ActivityKit)
+import ActivityKit
+
+// 🏝 (0.91) LES LIVE ACTIVITIES (écran verrouillé, Dynamic Island) : un tsoin en cours, un vocal, un minuteur, ce qu'un ploxion suit.
+// Le MÊME type, au caractère près, dans l'extension (ios/App/PloxionWidgets/PloxionWidgets.swift) : ActivityKit les apparie par leur nom.
+struct PloxiActivite: ActivityAttributes {
+    public struct ContentState: Codable, Hashable {
+        var titre: String
+        var sous: String
+        var glyphe: String          // un symbole SF (hourglass, mic, timer, waveform…)
+        var debut: Date?            // un chrono qui monte depuis
+        var fin: Date?              // un compte à rebours jusqu'à
+        var progression: Double?    // 0…1
+    }
+    var genre: String               // tsoin, vocal, minuteur, ploxion
+    var ploxion: String             // le toucher ouvre ploxi0n://px/<ploxion>
+}
 #endif
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+
+    // 🔔 (0.91) LES NOTIFICATIONS PUSH (APNs, RS-7 22.10 : « la clé APNs sur le labo ») : le jeton de l'iPhone passe au plugin
+    // @capacitor/push-notifications (src/natif/push.js l'envoie au labo, qui détient la clé .p8 et envoie les notifications)
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications, object: deviceToken)
+    }
+
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: error)
+    }
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // les raccourcis automatiques (Raccourcis.swift) : la liste des ploxions proposés à Siri et à l'app Raccourcis suit les installations
@@ -56,6 +101,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 }
                 d.set(String(items.count) + " éléments, " + String(vide / 1_000_000) + " Mo", forKey: "CapacitorStorage.ploxi0n.caches-vides")
             } else { d.removeObject(forKey: "CapacitorStorage.ploxi0n.caches-vides") }
+        }
+        // LA BASE QUAND L'IPHONE EST VERROUILLÉ (RS-7 14.10 : « ploxi0n n'a pas pu démarrer : … rc: 14 unable to open database file ») : la
+        // protection « Complete » de l'app ferme la base dès le verrouillage ; un démarrage en arrière-plan (le son, un raccourci « dodo »)
+        // ne pouvait plus l'ouvrir. Le dossier de la base et ce qu'il contient (la base, son journal) passent en « jusqu'au premier
+        // déverrouillage », le réglage par défaut d'iOS : chiffré tant que l'iPhone n'a pas été déverrouillé depuis son démarrage.
+        if let lib = fm.urls(for: .libraryDirectory, in: .userDomainMask).first {
+            let dossierBase = lib.appendingPathComponent("CapacitorDatabase", isDirectory: true)
+            let protection: [FileAttributeKey: Any] = [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication]
+            try? fm.createDirectory(at: dossierBase, withIntermediateDirectories: true, attributes: protection)
+            try? fm.setAttributes(protection, ofItemAtPath: dossierBase.path)
+            for f in (try? fm.contentsOfDirectory(atPath: dossierBase.path)) ?? [] {
+                try? fm.setAttributes(protection, ofItemAtPath: dossierBase.appendingPathComponent(f).path)
+            }
         }
         let sur = plantages >= 2
         d.set(sur ? "1" : "0", forKey: "CapacitorStorage.ploxi0n.mode-sur")
@@ -111,7 +169,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         guard let g = UserDefaults(suiteName: "group.ch.j0bot.ploxi0n") else { ecrireEtat(["groupe": false]); return }
         let conteneur = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.ch.j0bot.ploxi0n") != nil
         var change = false, tailles: [String: Int] = [:]
-        for k in ["ploxi0n.epingles", "ploxi0n.valeurs", "ploxi0n.lecture", "ploxi0n.cube"] {
+        for k in ["ploxi0n.epingles", "ploxi0n.valeurs", "ploxi0n.lecture", "ploxi0n.cube", "ploxi0n.px-widgets"] {   // (0.91) le widget « un ploxion »
             let v = UserDefaults.standard.string(forKey: "CapacitorStorage." + k)
             tailles[k] = v?.count ?? -1
             if v != nil && g.string(forKey: k) != v { g.set(v, forKey: k); change = true }
@@ -214,6 +272,14 @@ public class PloxiVocal: CAPPlugin, CAPBridgedPlugin {
     }
 }
 
+// (0.75) l'état partagé des fermetures du réseau local (toujours lu et écrit sur la même file)
+final class BoiteReseau {
+    var services: [String: [String: Any]] = [:]
+    var fini = false
+    var lignes: [String] = []
+    var statut = 0
+}
+
 // 🍎 LES SERVICES D'APPLE (RS-7 12.10 : « ajoute MusicKit, ShazamKit, WeatherKit comme utilisables ») : un plugin de l'app, jOSNatif côté page.
 //   meteo({lat,lng})        WeatherKit : maintenant + 7 jours (l'attribution « Apple Weather » doit être affichée : rendue avec)
 //   shazam()                ShazamKit (iOS 17+) : écoute le micro, rend titre, artiste, pochette, lien Apple Music
@@ -224,6 +290,7 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
     public let jsName = "PloxiApple"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "meteo", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "taille", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "shazam", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "musiqueChercher", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "musiqueJouer", returnType: CAPPluginReturnPromise),
@@ -233,6 +300,8 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         CAPPluginMethod(name: "wifiRejoindre", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "gameCenter", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "gameCenterScore", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "gameCenterClassements", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "gameCenterOuvrir", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "mouvementDebut", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "mouvementFin", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "ecranEveille", returnType: CAPPluginReturnPromise),
@@ -240,6 +309,15 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         CAPPluginMethod(name: "lectureFin", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "lampe", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "apercu", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "capturerXer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "reseauChercher", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "reseauResoudre", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "httpFlux", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "qr", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "systeme", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "activiteDebut", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "activiteMaj", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "activiteFin", returnType: CAPPluginReturnPromise),
     ]
 
     // 🔦 LA LAMPE DE POCHE (0.49) : lampe({ allume?, niveau? 0…1 }) ; sans « allume », elle bascule
@@ -256,20 +334,37 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
     }
 
     // 👁 LE VISUALISEUR DE FICHIERS (0.49) : QuickLook — PDF, images, vidéos, Office, Pages/Numbers/Keynote, texte, USDZ (3D/AR)…
-    // apercu({ base64, nom }) ou apercu({ chemin }) ; partager, imprimer, annoter : les boutons d'iOS.
+    // apercu({ base64, nom }) ou apercu({ chemin }) ou (0.73) apercu({ url }) : téléchargé par iOS (pas de CORS) ; partager, imprimer, annoter :
+    // les boutons d'iOS. Un USDZ s'ouvre en AR QUICK LOOK (l'onglet AR d'iOS) ; echelleReelle : à l'échelle 1, sans pincer (une pièce scannée).
     private var apercuURL: URL?
+    private var apercuEchelleReelle = false
     @objc func apercu(_ call: CAPPluginCall) {
         var url: URL? = nil
+        let echelle = call.getBool("echelleReelle") ?? false
         if let chemin = call.getString("chemin"), !chemin.isEmpty {
             url = chemin.hasPrefix("file://") ? URL(string: chemin) : URL(fileURLWithPath: chemin)
         } else if let b64 = call.getString("base64"), let data = Data(base64Encoded: b64, options: .ignoreUnknownCharacters) {
             let nom = (call.getString("nom") ?? "fichier").replacingOccurrences(of: "/", with: "-")
             let u = FileManager.default.temporaryDirectory.appendingPathComponent(nom.isEmpty ? "fichier" : nom)
             do { try data.write(to: u, options: .atomic); url = u } catch { call.reject("aperçu : \(error.localizedDescription)"); return }
+        } else if let lien = call.getString("url"), let distant = URL(string: lien), ["http", "https"].contains(distant.scheme?.lowercased() ?? "") {
+            URLSession.shared.downloadTask(with: distant) { tmp, reponse, erreur in
+                if let h = reponse as? HTTPURLResponse, !(200..<300).contains(h.statusCode) { call.reject("aperçu : HTTP \(h.statusCode)"); return }
+                guard let tmp = tmp else { call.reject("aperçu : " + (erreur?.localizedDescription ?? "rien reçu")); return }
+                let nom = reponse?.suggestedFilename ?? (distant.lastPathComponent.isEmpty ? "fichier" : distant.lastPathComponent)
+                let u = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + "-" + nom)
+                do { try FileManager.default.moveItem(at: tmp, to: u) } catch { call.reject("aperçu : \(error.localizedDescription)"); return }
+                self.montrerApercu(u, echelle, call)
+            }.resume()
+            return
         }
-        guard let fichier = url else { call.reject("aperçu : rien à montrer (chemin ou base64)"); return }
+        guard let fichier = url else { call.reject("aperçu : rien à montrer (chemin, base64 ou url)"); return }
+        montrerApercu(fichier, echelle, call)
+    }
+    private func montrerApercu(_ fichier: URL, _ echelle: Bool, _ call: CAPPluginCall) {
         DispatchQueue.main.async {
             self.apercuURL = fichier
+            self.apercuEchelleReelle = echelle
             let ql = QLPreviewController()
             ql.dataSource = self
             self.bridge?.viewController?.present(ql, animated: true)
@@ -277,7 +372,228 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         }
     }
     public func numberOfPreviewItems(in controller: QLPreviewController) -> Int { apercuURL == nil ? 0 : 1 }
-    public func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem { (apercuURL ?? URL(fileURLWithPath: "/")) as NSURL }
+
+    // 📸 (0.72) LA PHOTO D'UN XER (RS-7 15.10 : « quand tu screenshot vraiment, ça s'enregistre sur l'appli dans le cache, pour avoir plus de vues
+    // rapidement sans devoir les fetch, juste nativement du téléphone ») : ce que montre la page, rendu par WebKit (takeSnapshot), à demi-largeur,
+    // en JPEG dans Caches/xers/<id>.jpg (régénérable : iOS peut le vider s'il manque de place) ; rend son chemin
+    @objc func capturerXer(_ call: CAPPluginCall) {
+        let brut = call.getString("id") ?? "accueil"
+        let propre = String(brut.map { ($0.isLetter || $0.isNumber || $0 == "-" || $0 == "_") ? $0 : "-" })
+        let id = String(propre.prefix(80))
+        DispatchQueue.main.async {
+            guard let web = self.bridge?.webView else { call.reject("capture : pas de page"); return }
+            let reglage = WKSnapshotConfiguration()
+            reglage.snapshotWidth = NSNumber(value: Double(web.bounds.width) * 0.5)
+            web.takeSnapshot(with: reglage) { image, erreur in
+                guard let image = image, let jpeg = image.jpegData(compressionQuality: 0.72) else { call.reject("capture : " + (erreur?.localizedDescription ?? "rien")); return }
+                let fm = FileManager.default
+                guard let caches = fm.urls(for: .cachesDirectory, in: .userDomainMask).first else { call.reject("capture : pas de cache"); return }
+                let dossier = caches.appendingPathComponent("xers", isDirectory: true)
+                try? fm.createDirectory(at: dossier, withIntermediateDirectories: true)
+                let fichier = dossier.appendingPathComponent(id + ".jpg")
+                do {
+                    try jpeg.write(to: fichier, options: .atomic)
+                    call.resolve(["chemin": fichier.path, "largeur": Double(image.size.width), "hauteur": Double(image.size.height)])
+                } catch { call.reject("capture : " + error.localizedDescription) }
+            }
+        }
+    }
+    // 🤖 (0.75) LE RÉSEAU LOCAL DU CONTRÔLEUR XERB0T (RS-7 16.10 : « se connecter avec Home Assistant, WLED, les ESP, Arduino, Raspberry Pi ;
+    // un controller pour checker et contrôler tout ça ») — le HTTP lui-même passe par CapacitorHttp (natif, sans CORS) :
+    //   reseauChercher({ types, duree })        Bonjour (NWBrowser) : ce qui s'annonce sur le réseau → { services: [{ nom, type, domaine, txt }] }
+    //                                           (chaque type doit être dans Info.plist, NSBonjourServices)
+    //   reseauResoudre({ nom, type, domaine })  → { hote (IPv4), port }
+    //   httpFlux({ url, duree, entetes })       lit un flux (SSE : ESPHome /events, boxion-rt /events) pendant `duree` ms → { lignes, statut }
+    // ↗ (0.76) LE QR CODE (RS-7 17.10 : « inviter des gens plus facilement, partager des ploxions ») : qr({ texte, echelle }) → { base64 (PNG), cote }
+    @objc func qr(_ call: CAPPluginCall) {
+        guard let texte = call.getString("texte"), !texte.isEmpty, let filtre = CIFilter(name: "CIQRCodeGenerator") else { call.reject("qr : un texte"); return }
+        filtre.setValue(Data(texte.utf8), forKey: "inputMessage")
+        filtre.setValue("M", forKey: "inputCorrectionLevel")
+        guard let brut = filtre.outputImage else { call.reject("qr : rien"); return }
+        let echelle = CGFloat(max(4, min(24, call.getInt("echelle") ?? 12)))
+        let image = brut.transformed(by: CGAffineTransform(scaleX: echelle, y: echelle))
+        guard let cg = CIContext().createCGImage(image, from: image.extent), let png = UIImage(cgImage: cg).pngData() else { call.reject("qr : rendu"); return }
+        call.resolve(["base64": png.base64EncodedString(), "cote": Int(image.extent.width)])
+    }
+
+    // ⊕ (0.99.19, RS-7 : « l'entièreté du truc est trop petite ») le zoom de page de WebKit (iOS 14+) : tout grandit, la mise en page suit
+    @objc func taille(_ call: CAPPluginCall) {
+        let z = min(1.6, max(0.8, call.getDouble("zoom") ?? 1))
+        DispatchQueue.main.async {
+            guard let web = self.bridge?.webView else { call.reject("taille : pas de page"); return }
+            web.pageZoom = CGFloat(z)
+            call.resolve(["zoom": z])
+        }
+    }
+
+    // ▤ (0.88) le ploxion système (btop) : ce que seul iOS sait — l'état thermique, le mode économie, le disque, la mémoire, les cœurs
+    @objc func systeme(_ call: CAPPluginCall) {
+        let p = ProcessInfo.processInfo
+        let thermique: String
+        switch p.thermalState {
+        case .nominal: thermique = "nominal"
+        case .fair: thermique = "tiede"
+        case .serious: thermique = "chaud"
+        case .critical: thermique = "critique"
+        @unknown default: thermique = "inconnu"
+        }
+        var libre: Double = -1, total: Double = -1
+        if let v = try? URL(fileURLWithPath: NSHomeDirectory()).resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey, .volumeTotalCapacityKey]) {
+            if let l = v.volumeAvailableCapacityForImportantUsage { libre = Double(l) }
+            if let t = v.volumeTotalCapacity { total = Double(t) }
+        }
+        call.resolve(["thermique": thermique, "economie": p.isLowPowerModeEnabled, "memoire": Double(p.physicalMemory), "coeurs": p.activeProcessorCount, "depuis": p.systemUptime, "disqueLibre": libre, "disqueTotal": total])
+    }
+
+    // 🏝 (0.91) les Live Activities : debut → { id } ; maj(id, …) ; fin(id) (sans id : toutes). Les dates en millisecondes (JS).
+    @objc func activiteDebut(_ call: CAPPluginCall) {
+        #if canImport(ActivityKit)
+        if #available(iOS 16.2, *) {
+            guard ActivityAuthorizationInfo().areActivitiesEnabled else { call.reject("activités en direct coupées : Réglages › ploxi0n"); return }
+            let attributs = PloxiActivite(genre: call.getString("genre") ?? "ploxion", ploxion: call.getString("ploxion") ?? "accueil")
+            do {
+                let a = try Activity.request(attributes: attributs, content: ActivityContent(state: etatActivite(call), staleDate: nil), pushType: nil)
+                call.resolve(["id": a.id])
+            } catch { call.reject("activité : \(error.localizedDescription)") }
+            return
+        }
+        #endif
+        call.reject("activités en direct : iOS 16.2 ou plus")
+    }
+
+    @objc func activiteMaj(_ call: CAPPluginCall) {
+        #if canImport(ActivityKit)
+        if #available(iOS 16.2, *) {
+            guard let id = call.getString("id"), let a = Activity<PloxiActivite>.activities.first(where: { $0.id == id }) else { call.reject("activité inconnue"); return }
+            let etat = etatActivite(call)
+            Task { await a.update(ActivityContent(state: etat, staleDate: nil)); call.resolve() }
+            return
+        }
+        #endif
+        call.reject("activités en direct : iOS 16.2 ou plus")
+    }
+
+    @objc func activiteFin(_ call: CAPPluginCall) {
+        #if canImport(ActivityKit)
+        if #available(iOS 16.2, *) {
+            let id = call.getString("id")
+            let liste = Activity<PloxiActivite>.activities.filter { id == nil || $0.id == id }
+            Task {
+                for a in liste { await a.end(ActivityContent(state: a.content.state, staleDate: nil), dismissalPolicy: .immediate) }
+                call.resolve(["n": liste.count])
+            }
+            return
+        }
+        #endif
+        call.resolve(["n": 0])
+    }
+
+    #if canImport(ActivityKit)
+    @available(iOS 16.2, *)
+    private func etatActivite(_ call: CAPPluginCall) -> PloxiActivite.ContentState {
+        let date: (String) -> Date? = { k in call.getDouble(k).map { Date(timeIntervalSince1970: $0 / 1000) } }
+        return PloxiActivite.ContentState(titre: String((call.getString("titre") ?? "ploxi0n").prefix(60)), sous: String((call.getString("sous") ?? "").prefix(80)),
+                                          glyphe: call.getString("glyphe") ?? "hourglass", debut: date("debut"), fin: date("fin"),
+                                          progression: call.getDouble("progression").map { min(1, max(0, $0)) })
+    }
+    #endif
+
+    @objc func reseauChercher(_ call: CAPPluginCall) {
+        let types = Array((call.getArray("types", String.self) ?? []).filter { $0.hasPrefix("_") && $0.hasSuffix("._tcp") }.prefix(16))
+        let duree = max(1.0, min(15.0, (call.getDouble("duree") ?? 4000) / 1000))
+        let file = DispatchQueue(label: "ploxi0n.reseau.chercher")
+        let boite = BoiteReseau()
+        var navigateurs: [NWBrowser] = []
+        for t in types {
+            let n = NWBrowser(for: .bonjourWithTXTRecord(type: t, domain: nil), using: NWParameters())
+            n.browseResultsChangedHandler = { resultats, _ in
+                for r in resultats {
+                    guard case let .service(nom, type, domaine, _) = r.endpoint else { continue }
+                    var txt: [String: String] = [:]
+                    if case let .bonjour(enr) = r.metadata { txt = enr.dictionary }
+                    boite.services[type + "|" + nom] = ["nom": nom, "type": type, "domaine": domaine, "txt": txt]
+                }
+            }
+            n.start(queue: file)
+            navigateurs.append(n)
+        }
+        let tous = navigateurs
+        file.asyncAfter(deadline: .now() + duree) {
+            for n in tous { n.cancel() }
+            call.resolve(["services": Array(boite.services.values)])
+        }
+    }
+
+    @objc func reseauResoudre(_ call: CAPPluginCall) {
+        guard let nom = call.getString("nom"), let type = call.getString("type") else { call.reject("résoudre : nom et type"); return }
+        let domaine = call.getString("domaine") ?? "local."
+        let p = NWParameters.tcp
+        if let ip = p.defaultProtocolStack.internetProtocol as? NWProtocolIP.Options { ip.version = .v4 }   // une adresse IPv4 : simple à mettre dans une URL
+        let c = NWConnection(to: .service(name: nom, type: type, domain: domaine, interface: nil), using: p)
+        let file = DispatchQueue(label: "ploxi0n.reseau.resoudre")
+        let boite = BoiteReseau()
+        let finir: (String?, Int, String?) -> Void = { hote, port, erreur in
+            if boite.fini { return }
+            boite.fini = true
+            c.cancel()
+            if let h = hote { call.resolve(["hote": h, "port": port]) } else { call.reject("résoudre : " + (erreur ?? "rien")) }
+        }
+        c.stateUpdateHandler = { etat in
+            switch etat {
+            case .ready:
+                if case let .hostPort(hote, port)? = c.currentPath?.remoteEndpoint {
+                    var h = "\(hote)"
+                    if let i = h.firstIndex(of: "%") { h = String(h[..<i]) }
+                    finir(h, Int(port.rawValue), nil)
+                } else {
+                    finir(nil, 0, "pas d'adresse")
+                }
+            case .failed(let e): finir(nil, 0, e.localizedDescription)
+            case .waiting(let e): finir(nil, 0, e.localizedDescription)
+            default: break
+            }
+        }
+        c.start(queue: file)
+        file.asyncAfter(deadline: .now() + 6) { finir(nil, 0, "délai dépassé") }
+    }
+
+    @objc func httpFlux(_ call: CAPPluginCall) {
+        guard let s = call.getString("url"), let u = URL(string: s), ["http", "https"].contains(u.scheme?.lowercased() ?? "") else { call.reject("flux : une url http"); return }
+        let duree = max(0.3, min(10.0, (call.getDouble("duree") ?? 2000) / 1000))
+        var req = URLRequest(url: u)
+        req.timeoutInterval = duree + 3
+        req.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+        for (k, v) in call.getObject("entetes") ?? [:] { if let t = v as? String { req.setValue(t, forHTTPHeaderField: k) } }
+        let requete = req
+        Task {
+            let boite = BoiteReseau()
+            do {
+                let (flux, reponse) = try await URLSession.shared.bytes(for: requete)
+                boite.statut = (reponse as? HTTPURLResponse)?.statusCode ?? 0
+                let tache = flux.task
+                DispatchQueue.global().asyncAfter(deadline: .now() + duree) { tache.cancel() }
+                for try await ligne in flux.lines {
+                    boite.lignes.append(ligne)
+                    if boite.lignes.count >= 3000 { tache.cancel(); break }
+                }
+            } catch {
+                // la fin voulue (la durée écoulée) arrive ici aussi : on rend ce qui a été lu
+            }
+            call.resolve(["lignes": boite.lignes, "statut": boite.statut])
+        }
+    }
+
+    public func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
+        let u = apercuURL ?? URL(fileURLWithPath: "/")
+        #if !PLOXI0N_SANS_AR
+        if apercuEchelleReelle, ["usdz", "reality"].contains(u.pathExtension.lowercased()) {
+            let item = ARQuickLookPreviewItem(fileAt: u)
+            item.allowsContentScaling = false
+            return item
+        }
+        #endif
+        return u as NSURL
+    }
 
     // ♫ À L'ÉCOUTE (0.48, RS-7 : l'écran verrouillé disait « Spotify Embedded Player », sans pochette, ±10 s au lieu de ⏮ ⏭). Le son des
     // ploxions joue souvent dans un iframe d'un autre site (le SDK de Spotify) : la page (maintenant.js) sait ce qui joue et le publie ici —
@@ -388,9 +704,13 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         let hz = max(5.0, min(60.0, call.getDouble("hz") ?? 30))
         mouvements.deviceMotionUpdateInterval = 1.0 / hz
         if !mouvements.isDeviceMotionActive {
-            mouvements.startDeviceMotionUpdates(to: .main) { [weak self] m, _ in
+            // (0.71, le terrax) LE NORD : le repère du nord magnétique quand l'iPhone l'a (le magnétomètre) ; « cap » = m.heading, en degrés
+            // depuis le nord, sens horaire (−1 sans boussole). Personne ne lisait le lacet : le thème et la fractale ne lisent que la gravité.
+            let repere: CMAttitudeReferenceFrame = CMMotionManager.availableAttitudeReferenceFrames().contains(.xMagneticNorthZVertical) ? .xMagneticNorthZVertical : .xArbitraryZVertical
+            mouvements.startDeviceMotionUpdates(using: repere, to: .main) { [weak self] m, _ in
                 guard let m = m else { return }
                 self?.notifyListeners("mouvement", data: [
+                    "cap": repere == .xMagneticNorthZVertical ? m.heading : -1.0,
                     "roll": m.attitude.roll, "pitch": m.attitude.pitch, "yaw": m.attitude.yaw,
                     "gx": m.gravity.x, "gy": m.gravity.y, "gz": m.gravity.z,
                     "ax": m.userAcceleration.x, "ay": m.userAcceleration.y, "az": m.userAcceleration.z,
@@ -481,6 +801,26 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         guard let classement = call.getString("classement"), let score = call.getInt("score") else { call.reject("classement et score manquants"); return }
         GKLeaderboard.submitScore(score, context: 0, player: GKLocalPlayer.local, leaderboardIDs: [classement]) { err in
             if let err = err { call.reject("Game Center : \(err.localizedDescription)") } else { call.resolve(["ok": true]) }
+        }
+    }
+    // ◈ (0.79) les classements de l'app (IDs: nil = tous ceux d'App Store Connect) : { classements: [{ id, titre }] } — le JS y trouve celui du clicker
+    @objc func gameCenterClassements(_ call: CAPPluginCall) {
+        GKLeaderboard.loadLeaderboards(IDs: nil) { liste, err in
+            if let err = err { call.reject("Game Center : \(err.localizedDescription)"); return }
+            let l: [[String: String]] = (liste ?? []).map { ["id": $0.baseLeaderboardID, "titre": $0.title ?? ""] }
+            call.resolve(["classements": l])
+        }
+    }
+    // 🏆 (0.79) le classement par l'écran de Game Center (le point d'accès d'iOS) ; sans id, ou avant iOS 18 : la liste des classements
+    @objc func gameCenterOuvrir(_ call: CAPPluginCall) {
+        let id = call.getString("classement") ?? ""
+        Task { @MainActor in
+            if #available(iOS 18.0, *), !id.isEmpty {
+                GKAccessPoint.shared.trigger(leaderboardID: id, playerScope: .global, timeScope: .allTime)
+            } else {
+                GKAccessPoint.shared.trigger(state: .leaderboards) {}
+            }
+            call.resolve(["ok": true])
         }
     }
 
@@ -601,11 +941,14 @@ public class PloxiLecteur: CAPPlugin, CAPBridgedPlugin, AVPlayerViewControllerDe
 
     // (0.54, RS-7 : « ça prend tout l'écran et ça crash ») présenter depuis le contrôleur du DESSUS (une feuille, Safari, l'aperçu peuvent
     // déjà être là), et jamais un contrôleur déjà présenté (UIKit lève une exception : le plantage)
-    private func presenter(_ vc: UIViewController) {
-        guard var haut = bridge?.viewController else { return }
+    // (0.63) false : le dessus est encore en train d'entrer — UIKit ignorerait la présentation, et le lecteur jouerait sans écran (le son fantôme)
+    @discardableResult private func presenter(_ vc: UIViewController) -> Bool {
+        guard var haut = bridge?.viewController else { return false }
         while let p = haut.presentedViewController, !p.isBeingDismissed { haut = p }
-        if vc.presentingViewController != nil || vc.isBeingPresented || haut === vc { return }
+        if vc.presentingViewController != nil || vc.isBeingPresented || haut === vc { return true }
+        if haut.isBeingPresented { return false }
         haut.present(vc, animated: true)
+        return true
     }
 
     private func emettre(_ etat: String, _ moteur: String, _ extra: [String: Any] = [:]) {
@@ -624,6 +967,8 @@ public class PloxiLecteur: CAPPlugin, CAPBridgedPlugin, AVPlayerViewControllerDe
         let sousTitres = (call.getArray("sousTitres", String.self) ?? []).compactMap { URL(string: $0) }
         let illisibleParApple = ["mkv", "avi", "webm", "wmv", "flv", "m2ts", "vob", "ogv", "divx", "rmvb"].contains(url.pathExtension.lowercased())
         DispatchQueue.main.async {
+            // (0.63) jamais quand l'app n'est pas au premier plan (une alerte, Face ID, le Centre de contrôle, l'arrière-plan)
+            guard UIApplication.shared.applicationState == .active else { call.reject("l'app n'est pas au premier plan"); return }
             self.toutFermer()
             self.derniere = (position, 0)
             if moteur == "vlc" || (moteur == "auto" && illisibleParApple && PloxiLecteur.vlcDisponible) {
@@ -671,7 +1016,7 @@ public class PloxiLecteur: CAPPlugin, CAPBridgedPlugin, AVPlayerViewControllerDe
         var pret = false
         observations.append(item.observe(\.status, options: [.new]) { [weak self] it, _ in
             DispatchQueue.main.async {
-                guard let self = self else { return }
+                guard let self = self, self.appleVC === vc else { return }   // (0.63) remplacé entre-temps : ni son fantôme, ni l'appleVC du suivant effacé
                 if it.status == .readyToPlay && !pret {
                     pret = true
                     if position > 1 { lecteur.seek(to: CMTime(seconds: position, preferredTimescale: 600)) }
@@ -679,13 +1024,17 @@ public class PloxiLecteur: CAPPlugin, CAPBridgedPlugin, AVPlayerViewControllerDe
                     self.emettre("lecture", "apple")
                 } else if it.status == .failed {
                     let raison = it.error?.localizedDescription ?? "format non lu par iOS"
+                    // (0.63) un échec PENDANT l'entrée (un MKV refusé d'emblée) : UIKit ignore le dismiss, le lecteur noir reste (« ça reste bloqué ») → après l'entrée
+                    let renvoyer: (Bool, (() -> Void)?) -> Void = { anime, puis in
+                        if vc.isBeingPresented, let tc = vc.transitionCoordinator { tc.animate(alongsideTransition: nil) { _ in vc.dismiss(animated: anime, completion: puis) } } else { vc.dismiss(animated: anime, completion: puis) }
+                    }
                     if repli {
                         self.emettre("repli", "apple", ["raison": raison])
-                        vc.dismiss(animated: false) { _ = self.ouvrirVLC(url, titre: titre, position: position, entetes: entetes, sousTitres: sousTitres) }
+                        renvoyer(false, { _ = self.ouvrirVLC(url, titre: titre, position: position, entetes: entetes, sousTitres: sousTitres) })
                         self.appleVC = nil
                     } else {
                         self.emettre("erreur", "apple", ["raison": raison])
-                        vc.dismiss(animated: true)
+                        renvoyer(true, nil)
                         self.appleVC = nil
                     }
                 }
@@ -698,25 +1047,29 @@ public class PloxiLecteur: CAPPlugin, CAPBridgedPlugin, AVPlayerViewControllerDe
             self.derniere = (t.seconds.isFinite ? t.seconds : 0, d.isFinite ? d : 0)
             self.emettre("position", "apple")
         }
-        presenter(vc)
+        if !presenter(vc) { toutFermer(); emettre("erreur", "apple", ["raison": "un autre écran s'ouvre encore : réessaie"]) }   // (0.63) pas de lecteur sans écran
     }
     // ✕ (ou glisser vers le bas) : la fin du plein écran = fermé, sauf si l'image passe en PiP
     public func playerViewController(_ playerViewController: AVPlayerViewController, willEndFullScreenPresentationWithAnimationCoordinator coordinator: UIViewControllerTransitionCoordinator) {
         coordinator.animate(alongsideTransition: nil) { [weak self] ctx in
-            guard let self = self, !ctx.isCancelled, !self.enPiP else { return }
+            // (0.63) seulement le lecteur d'aujourd'hui : celui que toutFermer() remplace émettait « ferme » au milieu de l'ouverture du suivant
+            guard let self = self, playerViewController === self.appleVC, !ctx.isCancelled, !self.enPiP else { return }
             playerViewController.player?.pause()
             self.emettre("ferme", "apple")
         }
     }
     public func playerViewControllerWillStartPictureInPicture(_ playerViewController: AVPlayerViewController) { enPiP = true }
     public func playerViewControllerDidStopPictureInPicture(_ playerViewController: AVPlayerViewController) {
+        guard playerViewController === appleVC else { return }   // (0.63) le PiP d'un lecteur remplacé : rien pour celui d'aujourd'hui
         enPiP = false
         if playerViewController.presentingViewController == nil { emettre("ferme", "apple") }
     }
     public func playerViewController(_ playerViewController: AVPlayerViewController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
         if playerViewController.presentingViewController != nil || playerViewController.isBeingPresented { completionHandler(true); return }
-        guard var haut = bridge?.viewController else { completionHandler(false); return }
+        // (0.63) un PiP d'un lecteur remplacé, ou personne pour le présenter : il se ferme (et completionHandler est TOUJOURS appelé)
+        guard playerViewController === appleVC, var haut = bridge?.viewController else { completionHandler(false); return }
         while let p = haut.presentedViewController, !p.isBeingDismissed { haut = p }
+        if haut.presentedViewController != nil || haut.isBeingPresented { completionHandler(false); return }
         haut.present(playerViewController, animated: true) { completionHandler(true) }
     }
 
@@ -892,11 +1245,1345 @@ final class EcranVLC: UIViewController, VLCMediaPlayerDelegate {
 }
 #endif
 
+// 👁 L'AR NATIVE (0.73). RS-7 (15.10) : « le plus important de tout, c'est l'AR ; utiliser au max les fonctions natives ; et AR Quick Look ».
+// ARKit + RealityKit, sans bibliothèque. Le terrax (src/terrax/terrax.js) l'appelle ; les autres ploxions par jOSNatif.ar.
+//   disponible()   → { ar, lidar, piece, chambre, pieces }   (chambre : la carte de ta chambre est gardée ; pieces : le dossier des scans)
+//   ouvrir({ mode: terre | chambre, objets: [{ id, x, y, z, taille, emoji, texte }], emojis, maillage })   l'AR en plein écran.
+//       terre   : le monde aligné sur la gravité ET le nord (x = est, z = sud, en mètres depuis l'iPhone à l'ouverture) : la page place
+//                 chaque objet à sa vraie direction et sa distance (GPS) ;
+//       chambre : la carte de ta chambre (ARWorldMap, Documents/terrax/chambre) est rechargée : tes objets reviennent à leur place exacte.
+//     LiDAR : le maillage du réel cache ce qui est derrière un mur, un meuble, une personne ; on peut le montrer (◇).
+//     Toucher le réel : poser là (le rayon sur la surface touchée) ; toucher un objet : le voir. Événement « ar » :
+//       { type: pose, id, x, y, z, emoji, texte } · { type: touche, id } · { type: chambre-neuve } · { type: ferme }
+//   fermer()
+//   scannerPiece() → { nom, chemin }   RoomPlan (iOS 16, LiDAR) : la pièce en USDZ dans Documents/terrax/pieces ; elle s'ouvre ensuite en
+//     AR Quick Look (PloxiApple.apercu, echelleReelle : la pièce posée à l'échelle 1).
+//   capturerObjet() → { nom, chemin }  (0.74) Object Capture (iOS 17, LiDAR) : ton objet réel en modèle 3D (USDZ, Documents/terrax/objets),
+//     vu en AR Quick Look et posé dans l'AR (ouvrir : objets[].modele, rot ; modeles : [{ nom, texte }] proposés quand on pose).
+#if !PLOXI0N_SANS_AR
+@objc(PloxiAR)
+public class PloxiAR: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "PloxiAR"
+    public let jsName = "PloxiAR"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "disponible", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "ouvrir", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "fermer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "scannerPiece", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "capturerObjet", returnType: CAPPluginReturnPromise),
+    ]
+    private weak var ecran: TerraxVC?
+
+    static func dossier(_ nom: String) -> URL? {
+        guard let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return nil }
+        let d = docs.appendingPathComponent("terrax", isDirectory: true).appendingPathComponent(nom, isDirectory: true)
+        try? FileManager.default.createDirectory(at: d, withIntermediateDirectories: true)
+        return d
+    }
+    static var carteChambre: URL? { dossier("chambre")?.appendingPathComponent("chambre.arworldmap") }
+
+    @objc func disponible(_ call: CAPPluginCall) {
+        var piece = false
+        #if canImport(RoomPlan)
+        if #available(iOS 16.0, *) { piece = RoomCaptureSession.isSupported }
+        #endif
+        let carte = PloxiAR.carteChambre.map { FileManager.default.fileExists(atPath: $0.path) } ?? false
+        let base: [String: Any] = [
+            "ar": ARWorldTrackingConfiguration.isSupported,
+            "lidar": ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh),
+            "piece": piece,
+            "chambre": carte,
+            "pieces": PloxiAR.dossier("pieces")?.path ?? "",
+            "objets": PloxiAR.dossier("objets")?.path ?? "",
+        ]
+        // ObjectCaptureSession.isSupported ne se lit que sur l'acteur principal
+        Task { @MainActor in
+            var d = base
+            var objet = false
+            if #available(iOS 17.0, *) { objet = ObjectCaptureSession.isSupported && PhotogrammetrySession.isSupported }
+            d["objet"] = objet
+            call.resolve(d)
+        }
+    }
+
+    @objc func ouvrir(_ call: CAPPluginCall) {
+        guard ARWorldTrackingConfiguration.isSupported else { call.reject("l'AR n'est pas sur cet appareil"); return }
+        let objets = call.getArray("objets", JSObject.self) ?? []
+        let chambre = call.getString("mode") == "chambre"
+        let emojis = call.getArray("emojis", String.self) ?? []
+        let maillage = call.getBool("maillage") ?? false
+        let modeles = call.getArray("modeles", JSObject.self) ?? []
+        DispatchQueue.main.async {
+            guard let hote = self.bridge?.viewController else { call.reject("AR : pas de page"); return }
+            if self.ecran != nil { call.reject("l'AR est déjà ouverte"); return }
+            let vc = TerraxVC()
+            vc.chambre = chambre
+            vc.objets = objets
+            if !emojis.isEmpty { vc.emojis = emojis }
+            vc.maillageVisible = maillage
+            vc.modeles = modeles
+            vc.surEvenement = { [weak self] d in self?.notifyListeners("ar", data: d) }
+            vc.modalPresentationStyle = .fullScreen
+            self.ecran = vc
+            hote.present(vc, animated: true)
+            call.resolve(["ok": true])
+        }
+    }
+
+    @objc func fermer(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            self.ecran?.fermer()
+            call.resolve(["ok": true])
+        }
+    }
+
+    @objc func scannerPiece(_ call: CAPPluginCall) {
+        #if canImport(RoomPlan)
+        if #available(iOS 16.0, *) {
+            guard RoomCaptureSession.isSupported else { call.reject("le scan de pièce demande le LiDAR (iPhone Pro, iPad Pro)"); return }
+            DispatchQueue.main.async {
+                guard let hote = self.bridge?.viewController else { call.reject("scan : pas de page"); return }
+                let vc = PieceVC()
+                vc.modalPresentationStyle = .fullScreen
+                vc.fini = { u, erreur in
+                    if let u = u { call.resolve(["nom": u.lastPathComponent, "chemin": u.path]) } else { call.reject(erreur ?? "scan annulé") }
+                }
+                hote.present(vc, animated: true)
+            }
+            return
+        }
+        #endif
+        call.reject("le scan de pièce demande iOS 16 et le LiDAR")
+    }
+
+    @objc func capturerObjet(_ call: CAPPluginCall) {
+        guard #available(iOS 17.0, *) else { call.reject("la capture d'objet demande iOS 17 et le LiDAR"); return }
+        Task { @MainActor in
+            guard ObjectCaptureSession.isSupported, PhotogrammetrySession.isSupported else {
+                call.reject("la capture d'objet demande le LiDAR (iPhone 12 Pro ou plus récent)"); return
+            }
+            guard let hote = self.bridge?.viewController else { call.reject("capture : pas de page"); return }
+            let vc = ObjetVC()
+            vc.modalPresentationStyle = .fullScreen
+            vc.fini = { u, erreur in
+                if let u = u { call.resolve(["nom": u.lastPathComponent, "chemin": u.path]) } else { call.reject(erreur ?? "capture annulée") }
+            }
+            hote.present(vc, animated: true)
+        }
+    }
+}
+
+// l'écran de l'AR : une ARView (RealityKit) sans configuration automatique, le guide d'Apple (ARCoachingOverlayView) par-dessus
+final class TerraxVC: UIViewController, ARSessionDelegate, ARCoachingOverlayViewDelegate {
+    var chambre = false
+    var objets: [JSObject] = []
+    var emojis: [String] = ["✨", "🌳", "🗿", "🤖", "🪑", "🎵", "💡", "🍄"]
+    var maillageVisible = false
+    var modeles: [JSObject] = []   // tes objets 3D (Object Capture) : { nom, texte }, proposés quand on pose
+    var surEvenement: (([String: Any]) -> Void)?
+    private var vue: ARView!
+    private var abonnement: Cancellable?
+    private var etiquettes: [ModelEntity] = []
+    private var chargements: [AnyCancellable] = []   // les modèles 3D chargés hors du fil principal
+    private var infos: [String: (String, String)] = [:]
+    private let etat = UILabel()
+    private var lance = false
+    private var carteChargee = false
+    private var retrouvee = true
+    private var ferme = false
+
+    override var prefersStatusBarHidden: Bool { true }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        vue = ARView(frame: view.bounds, cameraMode: .ar, automaticallyConfigureSession: false)
+        vue.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        vue.session.delegate = self
+        view.addSubview(vue)
+        let guide = ARCoachingOverlayView(frame: view.bounds)
+        guide.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        guide.session = vue.session
+        guide.goal = .tracking
+        guide.activatesAutomatically = true
+        guide.delegate = self
+        vue.addSubview(guide)
+        etat.textColor = .white
+        etat.font = .systemFont(ofSize: 14, weight: .semibold)
+        etat.textAlignment = .center
+        etat.numberOfLines = 2
+        etat.backgroundColor = UIColor(white: 0, alpha: 0.45)
+        etat.layer.cornerRadius = 14
+        etat.clipsToBounds = true
+        etat.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(etat)
+        let g = view.safeAreaLayoutGuide
+        let croix = bouton("✕", #selector(toucheFermer))
+        NSLayoutConstraint.activate([
+            croix.topAnchor.constraint(equalTo: g.topAnchor, constant: 8),
+            croix.trailingAnchor.constraint(equalTo: g.trailingAnchor, constant: -12),
+            etat.topAnchor.constraint(equalTo: g.topAnchor, constant: 8),
+            etat.leadingAnchor.constraint(equalTo: g.leadingAnchor, constant: 12),
+            etat.trailingAnchor.constraint(equalTo: croix.leadingAnchor, constant: -10),
+            etat.heightAnchor.constraint(greaterThanOrEqualToConstant: 44),
+        ])
+        if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
+            let b = bouton("  ◇ le maillage du réel  ", #selector(basculerMaillage))
+            b.leadingAnchor.constraint(equalTo: g.leadingAnchor, constant: 12).isActive = true
+            b.bottomAnchor.constraint(equalTo: g.bottomAnchor, constant: -12).isActive = true
+            if maillageVisible { vue.debugOptions.insert(.showSceneUnderstanding) }
+        }
+        if chambre {
+            let b = bouton("  ↺ nouvelle chambre  ", #selector(nouvelleChambre))
+            b.trailingAnchor.constraint(equalTo: g.trailingAnchor, constant: -12).isActive = true
+            b.bottomAnchor.constraint(equalTo: g.bottomAnchor, constant: -12).isActive = true
+        }
+        vue.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(toucher(_:))))
+        abonnement = vue.scene.subscribe(to: SceneEvents.Update.self) { [weak self] _ in self?.tourner() }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if lance { return }
+        lance = true
+        lancer(neuve: false)
+    }
+
+    private func bouton(_ titre: String, _ action: Selector) -> UIButton {
+        let b = UIButton(type: .system)
+        b.setTitle(titre, for: .normal)
+        b.setTitleColor(.white, for: .normal)
+        b.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        b.backgroundColor = UIColor(white: 0, alpha: 0.45)
+        b.layer.cornerRadius = 22
+        b.translatesAutoresizingMaskIntoConstraints = false
+        b.addTarget(self, action: action, for: .touchUpInside)
+        view.addSubview(b)
+        b.widthAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
+        b.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        return b
+    }
+
+    private func dire(_ t: String) { etat.text = "  " + t + "  " }
+
+    // la session : la terre alignée sur la gravité et le nord ; la chambre sur la gravité, avec sa carte gardée (ARWorldMap)
+    private func lancer(neuve: Bool) {
+        let c = ARWorldTrackingConfiguration()
+        c.worldAlignment = chambre ? .gravity : .gravityAndHeading
+        c.planeDetection = [.horizontal, .vertical]
+        if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
+            c.sceneReconstruction = .mesh
+            vue.environment.sceneUnderstanding.options.insert(.occlusion)
+        }
+        if ARWorldTrackingConfiguration.supportsFrameSemantics(.personSegmentationWithDepth) {
+            c.frameSemantics.insert(.personSegmentationWithDepth)
+        }
+        carteChargee = false
+        if chambre, !neuve, let u = PloxiAR.carteChambre, FileManager.default.fileExists(atPath: u.path) {
+            if let data = try? Data(contentsOf: u), let carte = try? NSKeyedUnarchiver.unarchivedObject(ofClass: ARWorldMap.self, from: data) {
+                c.initialWorldMap = carte
+                carteChargee = true
+            } else {
+                try? FileManager.default.removeItem(at: u)   // illisible : une chambre neuve, les places de la page sont oubliées
+                surEvenement?(["type": "chambre-neuve"])
+            }
+        }
+        retrouvee = !carteChargee
+        if !carteChargee {
+            if chambre { objets = [] }   // sans sa carte, les places gardées de la chambre ne veulent plus rien dire
+            ajouterTous()
+        }
+        vue.session.run(c, options: neuve ? [.resetTracking, .removeExistingAnchors] : [])
+        dire(carteChargee ? "je retrouve ta chambre : regarde autour, doucement" : resume())
+    }
+
+    private func resume() -> String {
+        if chambre { return "ta chambre · à toi seul · touche une surface pour y poser un objet" }
+        return "\(etiquettes.count) autour de toi · touche le réel pour y poser quelque chose"
+    }
+
+    private func ajouterTous() {
+        for o in objets {
+            let x = Float(o["x"] as? Double ?? 0), y = Float(o["y"] as? Double ?? 0), z = Float(o["z"] as? Double ?? 0)
+            let id = o["id"] as? String ?? "", texte = o["texte"] as? String ?? "", p = SIMD3<Float>(x, y, z)
+            if let nom = o["modele"] as? String, !nom.isEmpty, poserModele(id: id, nom: nom, texte: texte, en: p, rot: Float(o["rot"] as? Double ?? 0)) { continue }
+            poser(id: id, emoji: o["emoji"] as? String ?? "✨", texte: texte, en: p, taille: Float(o["taille"] as? Double ?? 0.5))
+        }
+        objets = []
+    }
+
+    // un objet 3D à toi (Object Capture) : le vrai modèle, à l'échelle 1, posé SUR le point (le bas du modèle), tourné comme à la pose
+    @discardableResult
+    private func poserModele(id: String, nom: String, texte: String, en p: SIMD3<Float>, rot: Float) -> Bool {
+        guard let u = PloxiAR.dossier("objets")?.appendingPathComponent(nom), FileManager.default.fileExists(atPath: u.path) else { return false }
+        infos[id] = ("📦", texte)
+        Entity.loadModelAsync(contentsOf: u).sink(receiveCompletion: { [weak self] fin in
+            if case .failure = fin { self?.poser(id: id, emoji: "📦", texte: texte, en: p, taille: 0.3) }
+        }, receiveValue: { [weak self] e in
+            guard let self = self, !self.ferme else { return }
+            e.name = id
+            e.generateCollisionShapes(recursive: true)
+            let q = simd_quatf(angle: rot, axis: SIMD3<Float>(0, 1, 0))
+            let b = e.visualBounds(relativeTo: e)
+            e.orientation = q
+            e.position = q.act(SIMD3<Float>(-b.center.x, -b.min.y, -b.center.z))
+            let ancre = AnchorEntity(world: p)
+            ancre.addChild(e)
+            self.vue.scene.addAnchor(ancre)
+        }).store(in: &chargements)
+        return true
+    }
+
+    // un objet : son emoji et son texte dessinés une fois en image, sur un plan qui se tourne toujours vers toi (debout)
+    private func poser(id: String, emoji: String, texte: String, en p: SIMD3<Float>, taille: Float) {
+        guard let image = TerraxVC.etiquette(emoji, texte),
+              let tex = try? TextureResource.generate(from: image, withName: nil, options: .init(semantic: .color)) else { return }
+        var m = UnlitMaterial()
+        m.color = .init(tint: UIColor.white.withAlphaComponent(0.999), texture: .init(tex))
+        m.blending = .transparent(opacity: .init(floatLiteral: 1.0))
+        let t = max(0.15, min(taille, 12))
+        let e = ModelEntity(mesh: .generatePlane(width: t, height: t * 1.2), materials: [m])
+        e.name = id
+        e.collision = CollisionComponent(shapes: [.generateBox(size: SIMD3<Float>(t, t * 1.2, 0.04))])
+        e.position = SIMD3<Float>(0, t * 0.6, 0)   // le bas de l'étiquette sur le point touché (sinon le LiDAR cache sa moitié sous la surface)
+        let ancre = AnchorEntity(world: p)
+        ancre.addChild(e)
+        vue.scene.addAnchor(ancre)
+        etiquettes.append(e)
+        infos[id] = (emoji, texte)
+    }
+
+    static func etiquette(_ emoji: String, _ texte: String) -> CGImage? {
+        let f = UIGraphicsImageRendererFormat.default()
+        f.scale = 2
+        f.opaque = false
+        let l: CGFloat = 200, h: CGFloat = 240
+        let image = UIGraphicsImageRenderer(size: CGSize(width: l, height: h), format: f).image { _ in
+            let centre = NSMutableParagraphStyle()
+            centre.alignment = .center
+            (emoji as NSString).draw(in: CGRect(x: 0, y: 4, width: l, height: 146), withAttributes: [.font: UIFont.systemFont(ofSize: 118), .paragraphStyle: centre])
+            if texte.isEmpty { return }
+            let pastille = CGRect(x: 6, y: 156, width: l - 12, height: 78)
+            UIColor(white: 0.04, alpha: 0.7).setFill()
+            UIBezierPath(roundedRect: pastille, cornerRadius: 20).fill()
+            (texte as NSString).draw(in: pastille.insetBy(dx: 10, dy: 8), withAttributes: [.font: UIFont.systemFont(ofSize: 21, weight: .semibold), .foregroundColor: UIColor.white, .paragraphStyle: centre])
+        }
+        return image.cgImage
+    }
+
+    // à chaque image : chaque objet pivote (autour de la verticale) pour te faire face
+    private func tourner() {
+        let cam = vue.cameraTransform.translation
+        for e in etiquettes {
+            let p = e.position(relativeTo: nil)
+            e.setOrientation(simd_quatf(angle: atan2(cam.x - p.x, cam.z - p.z), axis: SIMD3<Float>(0, 1, 0)), relativeTo: nil)
+        }
+    }
+
+    @objc private func toucher(_ geste: UITapGestureRecognizer) {
+        if ferme { return }
+        let pt = geste.location(in: vue)
+        if let e = vue.entity(at: pt), !e.name.isEmpty, let i = infos[e.name] {
+            surEvenement?(["type": "touche", "id": e.name])
+            let a = UIAlertController(title: i.0, message: i.1.isEmpty ? nil : i.1, preferredStyle: .alert)
+            a.addAction(UIAlertAction(title: "ok", style: .default))
+            present(a, animated: true)
+            return
+        }
+        guard retrouvee else { dire("je retrouve d'abord ta chambre : regarde autour"); return }
+        var p: SIMD3<Float>
+        if let r = vue.raycast(from: pt, allowing: .estimatedPlane, alignment: .any).first {
+            let c = r.worldTransform.columns.3
+            p = SIMD3<Float>(c.x, c.y, c.z)
+        } else {
+            let m = vue.cameraTransform.matrix
+            let devant = -SIMD3<Float>(m.columns.2.x, m.columns.2.y, m.columns.2.z)
+            p = vue.cameraTransform.translation + devant * 1.5
+        }
+        choisir(p)
+    }
+
+    // poser : la feuille d'iOS (un texte, puis l'emoji)
+    private func choisir(_ p: SIMD3<Float>) {
+        let a = UIAlertController(title: "poser ici", message: chambre ? "dans ta chambre (à toi seul)" : "à cette place du réel", preferredStyle: .alert)
+        let invite = chambre ? "quoi ? (ton robot, ton meuble…)" : "qu'est-ce qu'il y a ici ?"
+        a.addTextField { t in t.placeholder = invite }
+        for e in emojis.prefix(12) {
+            a.addAction(UIAlertAction(title: e, style: .default) { [weak self, weak a] _ in
+                guard let self = self else { return }
+                let brut = a?.textFields?.first?.text ?? ""
+                let texte = String(brut.trimmingCharacters(in: .whitespacesAndNewlines).prefix(280))
+                let id = "tx" + String(Int(Date().timeIntervalSince1970 * 1000), radix: 36)
+                self.poser(id: id, emoji: e, texte: texte, en: p, taille: self.chambre ? 0.25 : 0.5)
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                self.surEvenement?(["type": "pose", "id": id, "x": Double(p.x), "y": Double(p.y), "z": Double(p.z), "emoji": e, "texte": texte])
+                self.dire(self.resume())
+            })
+        }
+        // tes objets 3D : le vrai modèle, tourné vers toi
+        for m in modeles.prefix(5) {
+            guard let nom = m["nom"] as? String, !nom.isEmpty else { continue }
+            let titre = "📦 " + ((m["texte"] as? String).map { String($0.prefix(30)) } ?? "ton objet 3D")
+            a.addAction(UIAlertAction(title: titre, style: .default) { [weak self, weak a] _ in
+                guard let self = self else { return }
+                let brut = a?.textFields?.first?.text ?? ""
+                var texte = String(brut.trimmingCharacters(in: .whitespacesAndNewlines).prefix(280))
+                if texte.isEmpty { texte = m["texte"] as? String ?? "" }
+                let id = "tx" + String(Int(Date().timeIntervalSince1970 * 1000), radix: 36)
+                let cam = self.vue.cameraTransform.translation
+                let rot = atan2(cam.x - p.x, cam.z - p.z)
+                guard self.poserModele(id: id, nom: nom, texte: texte, en: p, rot: rot) else { self.dire("ce modèle 3D est introuvable"); return }
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                self.surEvenement?(["type": "pose", "id": id, "x": Double(p.x), "y": Double(p.y), "z": Double(p.z), "emoji": "📦", "texte": texte, "modele": nom, "rot": Double(rot)])
+                self.dire(self.resume())
+            })
+        }
+        a.addAction(UIAlertAction(title: "annuler", style: .cancel))
+        present(a, animated: true)
+    }
+
+    @objc private func basculerMaillage() {
+        if vue.debugOptions.contains(.showSceneUnderstanding) { vue.debugOptions.remove(.showSceneUnderstanding) } else { vue.debugOptions.insert(.showSceneUnderstanding) }
+    }
+
+    @objc private func nouvelleChambre() {
+        let a = UIAlertController(title: "nouvelle chambre ?", message: "la carte de ta chambre recommence : tes objets restent dans ta liste, mais sans leur place en AR", preferredStyle: .alert)
+        a.addAction(UIAlertAction(title: "recommencer", style: .destructive) { [weak self] _ in
+            guard let self = self else { return }
+            if let u = PloxiAR.carteChambre { try? FileManager.default.removeItem(at: u) }
+            self.vue.scene.anchors.removeAll()
+            self.etiquettes.removeAll()
+            self.infos.removeAll()
+            self.lancer(neuve: true)
+            self.surEvenement?(["type": "chambre-neuve"])
+        })
+        a.addAction(UIAlertAction(title: "annuler", style: .cancel))
+        present(a, animated: true)
+    }
+
+    func session(_ session: ARSession, cameraDidChangeTrackingState camera: ARCamera) {
+        let s = camera.trackingState
+        if case .normal = s {
+            if !retrouvee {
+                retrouvee = true
+                ajouterTous()
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            }
+            dire(resume())
+        } else if case .limited(.relocalizing) = s {
+            dire("je retrouve ta chambre : regarde autour, doucement")
+        } else if case .limited(_) = s {
+            dire("bouge un peu l'iPhone, doucement")
+        }
+    }
+
+    func session(_ session: ARSession, didFailWithError error: Error) {
+        dire("l'AR : " + error.localizedDescription)
+    }
+
+    // une interruption (un appel, une autre app) : le repère peut avoir bougé. ARKit tente de le retrouver ; d'ici là, ni pose ni carte
+    // enregistrée (le cas .normal remet retrouvee à true)
+    func sessionWasInterrupted(_ session: ARSession) { retrouvee = false }
+    func sessionShouldAttemptRelocalization(_ session: ARSession) -> Bool { true }
+    // « recommencer » du guide d'Apple : le repère est perdu ; on ferme sans écraser la carte, la page rouvrira
+    func coachingOverlayViewDidRequestSessionReset(_ coachingOverlayView: ARCoachingOverlayView) {
+        retrouvee = false
+        fermer()
+    }
+
+    @objc private func toucheFermer() { fermer() }
+
+    // fermer : la chambre garde sa carte (si elle a été retrouvée, ou si elle est neuve) pour la prochaine fois
+    func fermer() {
+        if ferme { return }
+        ferme = true
+        let fin: () -> Void = { [weak self] in
+            guard let self = self else { return }
+            self.abonnement?.cancel()
+            self.abonnement = nil
+            self.chargements.removeAll()
+            self.vue.session.pause()
+            self.vue.scene.anchors.removeAll()
+            (self.presentingViewController ?? self).dismiss(animated: true) { self.surEvenement?(["type": "ferme"]) }
+        }
+        let statut = vue.session.currentFrame?.worldMappingStatus
+        if chambre, retrouvee, statut == .mapped || statut == .extending, let u = PloxiAR.carteChambre {
+            vue.session.getCurrentWorldMap { carte, _ in
+                if let carte = carte, let data = try? NSKeyedArchiver.archivedData(withRootObject: carte, requiringSecureCoding: true) {
+                    try? data.write(to: u, options: .atomic)
+                }
+                DispatchQueue.main.async { fin() }
+            }
+        } else {
+            fin()
+        }
+    }
+}
+
+#if canImport(RoomPlan)
+// le scan d'une pièce (RoomPlan, iOS 16, LiDAR) : la vue d'Apple guide le scan ; « terminer » → la pièce calculée → « garder » → un USDZ
+@available(iOS 16.0, *)
+final class PieceVC: UIViewController, RoomCaptureViewDelegate {
+    var fini: ((URL?, String?) -> Void)?
+    private var vue: RoomCaptureView?
+    private var chemin: URL?
+    private let finir = UIButton(type: .system)
+    private var lance = false
+    private var rendu = false
+
+    override var prefersStatusBarHidden: Bool { true }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        let v = RoomCaptureView(frame: view.bounds)
+        v.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        v.delegate = self
+        view.addSubview(v)
+        vue = v
+        let croix = UIButton(type: .system)
+        for (b, titre) in [(croix, "✕"), (finir, "  terminer le scan  ")] {
+            b.setTitle(titre, for: .normal)
+            b.setTitleColor(.white, for: .normal)
+            b.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
+            b.backgroundColor = UIColor(white: 0, alpha: 0.5)
+            b.layer.cornerRadius = 22
+            b.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(b)
+        }
+        croix.addTarget(self, action: #selector(annuler), for: .touchUpInside)
+        finir.addTarget(self, action: #selector(terminer), for: .touchUpInside)
+        let g = view.safeAreaLayoutGuide
+        NSLayoutConstraint.activate([
+            croix.topAnchor.constraint(equalTo: g.topAnchor, constant: 8),
+            croix.trailingAnchor.constraint(equalTo: g.trailingAnchor, constant: -12),
+            croix.widthAnchor.constraint(equalToConstant: 44),
+            croix.heightAnchor.constraint(equalToConstant: 44),
+            finir.bottomAnchor.constraint(equalTo: g.bottomAnchor, constant: -16),
+            finir.centerXAnchor.constraint(equalTo: g.centerXAnchor),
+            finir.heightAnchor.constraint(equalToConstant: 48),
+        ])
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if lance { return }
+        lance = true
+        vue?.captureSession.run(configuration: RoomCaptureSession.Configuration())
+    }
+
+    @objc private func terminer() {
+        if let c = chemin { rendre(c, nil); return }
+        finir.isEnabled = false
+        finir.setTitle("  je calcule la pièce…  ", for: .normal)
+        vue?.captureSession.stop()
+    }
+
+    @objc private func annuler() {
+        vue?.captureSession.stop()
+        if let c = chemin { try? FileManager.default.removeItem(at: c) }
+        rendre(nil, "scan annulé")
+    }
+
+    private func rendre(_ u: URL?, _ erreur: String?) {
+        if rendu { return }
+        rendu = true
+        dismiss(animated: true) { self.fini?(u, erreur) }
+    }
+
+    func captureView(shouldPresent roomDataForProcessing: CapturedRoomData, error: Error?) -> Bool { true }
+
+    func captureView(didPresent processedResult: CapturedRoom, error: Error?) {
+        if rendu { return }
+        if let error = error { rendre(nil, "scan : " + error.localizedDescription); return }
+        guard let dossier = PloxiAR.dossier("pieces") else { rendre(nil, "scan : pas de dossier"); return }
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd-HHmmss"
+        let u = dossier.appendingPathComponent("piece-" + f.string(from: Date()) + ".usdz")
+        do {
+            try processedResult.export(to: u)
+            chemin = u
+            finir.isEnabled = true
+            finir.setTitle("  ✓ garder la pièce  ", for: .normal)
+        } catch {
+            rendre(nil, "scan : " + error.localizedDescription)
+        }
+    }
+}
+#endif
+
+// 📦 OBJECT CAPTURE (0.74). RS-7 (15.10, la vidéo d'Apple « AR Quick Look, meet Object Capture ») : « ça pour l'AR ». Ton objet réel (un robot,
+// un meuble IKEA) devient un modèle 3D, sur l'iPhone, sans serveur : la capture guidée d'Apple (ObjectCaptureView, iOS 17, LiDAR) prend les
+// photos tout autour (Caches temporaires), puis PhotogrammetrySession calcule le modèle (USDZ, à l'échelle réelle) dans Documents/terrax/objets.
+// La capture est libérée avant le calcul (les deux ensemble, c'est trop de mémoire). Le modèle s'ouvre en AR Quick Look et se pose dans l'AR.
+@available(iOS 17.0, *)
+final class ObjetVC: UIViewController {
+    var fini: ((URL?, String?) -> Void)?
+    private var session: ObjectCaptureSession?
+    private var hote: UIViewController?
+    private var photogrammetrie: PhotogrammetrySession?
+    private var suivi: Task<Void, Never>?
+    private var calcul: Task<Void, Never>?
+    private let action = UIButton(type: .system)
+    private let etat = UILabel()
+    private var travail: URL?
+    private var sortie: URL?
+    private var eveilAvant = false
+    private var lance = false
+    private var calculLance = false
+    private var rendu = false
+
+    override var prefersStatusBarHidden: Bool { true }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        let s = ObjectCaptureSession()
+        session = s
+        let h = UIHostingController(rootView: ObjectCaptureView(session: s))
+        addChild(h)
+        h.view.frame = view.bounds
+        h.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.addSubview(h.view)
+        h.didMove(toParent: self)
+        hote = h
+        etat.textColor = .white
+        etat.font = .systemFont(ofSize: 14, weight: .semibold)
+        etat.textAlignment = .center
+        etat.numberOfLines = 3
+        etat.backgroundColor = UIColor(white: 0, alpha: 0.5)
+        etat.layer.cornerRadius = 14
+        etat.clipsToBounds = true
+        etat.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(etat)
+        let croix = UIButton(type: .system)
+        for (b, titre) in [(croix, "✕"), (action, "  …  ")] {
+            b.setTitle(titre, for: .normal)
+            b.setTitleColor(.white, for: .normal)
+            b.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
+            b.backgroundColor = UIColor(white: 0, alpha: 0.55)
+            b.layer.cornerRadius = 24
+            b.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(b)
+        }
+        croix.addTarget(self, action: #selector(annuler), for: .touchUpInside)
+        action.addTarget(self, action: #selector(agir), for: .touchUpInside)
+        action.isHidden = true
+        let g = view.safeAreaLayoutGuide
+        NSLayoutConstraint.activate([
+            croix.topAnchor.constraint(equalTo: g.topAnchor, constant: 8),
+            croix.trailingAnchor.constraint(equalTo: g.trailingAnchor, constant: -12),
+            croix.widthAnchor.constraint(equalToConstant: 48),
+            croix.heightAnchor.constraint(equalToConstant: 48),
+            etat.topAnchor.constraint(equalTo: g.topAnchor, constant: 8),
+            etat.leadingAnchor.constraint(equalTo: g.leadingAnchor, constant: 12),
+            etat.trailingAnchor.constraint(equalTo: croix.leadingAnchor, constant: -10),
+            etat.heightAnchor.constraint(greaterThanOrEqualToConstant: 48),
+            action.bottomAnchor.constraint(equalTo: g.bottomAnchor, constant: -16),
+            action.centerXAnchor.constraint(equalTo: g.centerXAnchor),
+            action.heightAnchor.constraint(equalToConstant: 52),
+        ])
+        dire("la caméra démarre…")
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if lance { return }
+        lance = true
+        eveilAvant = UIApplication.shared.isIdleTimerDisabled
+        UIApplication.shared.isIdleTimerDisabled = true   // l'écran reste allumé pendant la capture et le calcul
+        guard let s = session else { return }
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd-HHmmss"
+        let nom = "objet-" + f.string(from: Date())
+        let t = FileManager.default.temporaryDirectory.appendingPathComponent(nom, isDirectory: true)
+        let images = t.appendingPathComponent("images", isDirectory: true)
+        let points = t.appendingPathComponent("points", isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(at: images, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: points, withIntermediateDirectories: true)
+        } catch { rendre(nil, "capture : " + error.localizedDescription); return }
+        travail = t
+        sortie = PloxiAR.dossier("objets")?.appendingPathComponent(nom + ".usdz")
+        var c = ObjectCaptureSession.Configuration()
+        c.checkpointDirectory = points
+        s.start(imagesDirectory: images, configuration: c)
+        surEtat(s.state)
+        suivi = Task { [weak self] in
+            for await e in s.stateUpdates { self?.surEtat(e) }
+        }
+    }
+
+    private func dire(_ t: String) { etat.text = "  " + t + "  " }
+
+    private func montrer(_ t: String, _ bouton: String?) {
+        dire(t)
+        action.isHidden = bouton == nil
+        action.isEnabled = true
+        if let b = bouton { action.setTitle("  " + b + "  ", for: .normal) }
+    }
+
+    // les étapes de la capture d'Apple : prête → viser l'objet (la boîte) → capturer en tournant autour → terminer → le calcul
+    private func surEtat(_ e: ObjectCaptureSession.CaptureState) {
+        if rendu { return }
+        switch e {
+        case .initializing: montrer("la caméra démarre…", nil)
+        case .ready: montrer("pose ton objet sur une table, de l'espace tout autour ; vise-le", "◎ viser cet objet")
+        case .detecting: montrer("ajuste la boîte autour de l'objet", "● commencer la capture")
+        case .capturing: montrer("tourne lentement autour, puis plus haut ; termine quand le cercle est plein", "✓ terminer")
+        case .finishing: montrer("je range les photos…", nil)
+        case .completed: reconstruire()
+        case .failed(let erreur): rendre(nil, "capture : " + erreur.localizedDescription)
+        @unknown default: break
+        }
+    }
+
+    @objc private func agir() {
+        guard let s = session else { return }
+        switch s.state {
+        case .ready: if !s.startDetecting() { dire("je ne trouve pas d'objet : rapproche-toi, vise-le au centre") }
+        case .detecting: s.startCapturing()
+        case .capturing:
+            action.isEnabled = false
+            s.finish()
+        default: break
+        }
+    }
+
+    // le calcul, sur l'iPhone : la capture est d'abord libérée (caméra, mémoire)
+    private func reconstruire() {
+        if calculLance || rendu { return }
+        calculLance = true
+        suivi?.cancel()
+        suivi = nil
+        hote?.willMove(toParent: nil)
+        hote?.view.removeFromSuperview()
+        hote?.removeFromParent()
+        hote = nil
+        session = nil
+        guard let t = travail, let sortie = sortie else { rendre(nil, "capture : pas de dossier"); return }
+        montrer("je calcule ton objet en 3D… garde ploxi0n ouvert", nil)
+        var conf = PhotogrammetrySession.Configuration()
+        conf.checkpointDirectory = t.appendingPathComponent("points", isDirectory: true)
+        let p: PhotogrammetrySession
+        do {
+            p = try PhotogrammetrySession(input: t.appendingPathComponent("images", isDirectory: true), configuration: conf)
+            try p.process(requests: [.modelFile(url: sortie)])
+        } catch { rendre(nil, "calcul : " + error.localizedDescription); return }
+        photogrammetrie = p
+        calcul = Task { [weak self] in
+            do {
+                for try await o in p.outputs {
+                    guard let self = self else { return }
+                    if case .requestProgress(_, let f) = o {
+                        self.dire("je calcule ton objet en 3D… \(Int(f * 100)) %")
+                    } else if case .requestError(_, let erreur) = o {
+                        self.rendre(nil, "calcul : " + erreur.localizedDescription)
+                        return
+                    } else if case .processingCancelled = o {
+                        self.rendre(nil, "calcul annulé")
+                        return
+                    } else if case .processingComplete = o {
+                        if FileManager.default.fileExists(atPath: sortie.path) { self.rendre(sortie, nil) } else { self.rendre(nil, "calcul : pas de modèle") }
+                        return
+                    }
+                }
+            } catch {
+                self?.rendre(nil, "calcul : " + error.localizedDescription)
+            }
+        }
+    }
+
+    @objc private func annuler() {
+        session?.cancel()
+        photogrammetrie?.cancel()
+        rendre(nil, "capture annulée")
+    }
+
+    // une seule fin : la promesse de la page est tenue une fois ; les photos (temporaires) sont effacées
+    private func rendre(_ u: URL?, _ erreur: String?) {
+        if rendu { return }
+        rendu = true
+        suivi?.cancel()
+        calcul?.cancel()
+        UIApplication.shared.isIdleTimerDisabled = eveilAvant
+        if let t = travail { try? FileManager.default.removeItem(at: t) }
+        if u == nil, let s = sortie { try? FileManager.default.removeItem(at: s) }
+        dismiss(animated: true) { self.fini?(u, erreur) }
+    }
+}
+#endif
+
+// ◉ L'ULTIMATE BLUETOOTH (0.99.1, RS-7 23.10 : « envoyer des messages en Bluetooth, partager du son ou une basse, un téléphone qui host le son
+// et tous les autres qui répliquent » ; docs/ULTIMATE-BLUETOOTH.md). MultipeerConnectivity : le Bluetooth et le Wi-Fi direct ensemble,
+// sans internet, chiffré. Le service « ploxi-proche » (Info.plist : NSBonjourServices _ploxi-proche._tcp et ._udp). On ne transporte que
+// de petits paquets de texte (une partition, un rendez-vous, un message) : le son est joué par chaque téléphone (src/bions/proche.js).
+//   demarrer({ nom, salle })   annonce et cherche dans la salle ; nom = un identifiant unique (« RS-7·a3f2 », fait par la page)
+//   arreter()                  se tait et quitte la session
+//   envoyer({ donnees, a? })   à tous les connectés, ou à ceux de « a » (des noms)
+//   pairs()                    { pairs: [noms connectés] }
+//   événements : « pair » { id, etat: connexion | connecte | perdu } · « message » { de, donnees }
+// Pour éviter la double invitation : seul celui dont le nom est le plus petit invite l'autre.
+@objc(PloxiProche)
+public class PloxiProche: CAPPlugin, CAPBridgedPlugin, MCSessionDelegate, MCNearbyServiceAdvertiserDelegate, MCNearbyServiceBrowserDelegate {
+    public let identifier = "PloxiProche"
+    public let jsName = "PloxiProche"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "demarrer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "arreter", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "envoyer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "pairs", returnType: CAPPluginReturnPromise),
+    ]
+    private let service = "ploxi-proche"
+    private var moi: MCPeerID?
+    private var lien: MCSession?
+    private var annonce: MCNearbyServiceAdvertiser?
+    private var cherche: MCNearbyServiceBrowser?
+    private var salle = ""
+
+    @objc func demarrer(_ call: CAPPluginCall) {
+        // MCPeerID lève une exception (l'app tombe) sur un nom vide ou de plus de 63 octets
+        var nom = (call.getString("nom") ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        while nom.utf8.count > 60 { nom.removeLast() }
+        if nom.isEmpty { nom = "ploxion" }
+        let s = String((call.getString("salle") ?? "xerboxion").prefix(40))
+        DispatchQueue.main.async {
+            self.toutArreter()
+            let p = MCPeerID(displayName: nom)
+            let se = MCSession(peer: p, securityIdentity: nil, encryptionPreference: .required)
+            se.delegate = self
+            let an = MCNearbyServiceAdvertiser(peer: p, discoveryInfo: ["salle": s], serviceType: self.service)
+            an.delegate = self
+            let ch = MCNearbyServiceBrowser(peer: p, serviceType: self.service)
+            ch.delegate = self
+            self.moi = p; self.lien = se; self.annonce = an; self.cherche = ch; self.salle = s
+            an.startAdvertisingPeer()
+            ch.startBrowsingForPeers()
+            call.resolve(["moi": nom, "salle": s])
+        }
+    }
+
+    @objc func arreter(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { self.toutArreter(); call.resolve() }
+    }
+
+    private func toutArreter() {
+        annonce?.stopAdvertisingPeer(); cherche?.stopBrowsingForPeers(); lien?.disconnect()
+        annonce = nil; cherche = nil; lien = nil; moi = nil
+    }
+
+    @objc func envoyer(_ call: CAPPluginCall) {
+        guard let texte = call.getString("donnees"), let data = texte.data(using: .utf8) else { call.reject("donnees manquantes"); return }
+        guard data.count <= 16000 else { call.reject("paquet trop gros"); return }
+        DispatchQueue.main.async {
+            guard let se = self.lien else { call.resolve(["envoyes": 0]); return }
+            let noms = call.getArray("a", String.self) ?? []
+            let cibles = noms.isEmpty ? se.connectedPeers : se.connectedPeers.filter { noms.contains($0.displayName) }
+            if cibles.isEmpty { call.resolve(["envoyes": 0]); return }
+            do {
+                try se.send(data, toPeers: cibles, with: .reliable)
+                call.resolve(["envoyes": cibles.count])
+            } catch { call.reject("envoi impossible : \(error.localizedDescription)") }
+        }
+    }
+
+    @objc func pairs(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { call.resolve(["pairs": (self.lien?.connectedPeers ?? []).map { $0.displayName }]) }
+    }
+
+    // ---- la session ----
+    public func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
+        let etat: String
+        switch state {
+        case .connected: etat = "connecte"
+        case .connecting: etat = "connexion"
+        default: etat = "perdu"
+        }
+        notifyListeners("pair", data: ["id": peerID.displayName, "etat": etat])
+    }
+    public func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
+        guard data.count <= 16000, let texte = String(data: data, encoding: .utf8) else { return }
+        notifyListeners("message", data: ["de": peerID.displayName, "donnees": texte])
+    }
+    public func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {}
+    public func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {}
+    public func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {}
+
+    // ---- l'annonce : on accepte ceux de la même salle ----
+    public func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
+        DispatchQueue.main.async {
+            let s = context.flatMap { String(data: $0, encoding: .utf8) } ?? ""
+            // (0.99.21) le maillage : 7 voisins directs au plus (une MCSession tient 8 appareils, soi compris) ; au-delà, les autres relaient
+            guard let se = self.lien, s == self.salle, se.connectedPeers.count < 7 else { invitationHandler(false, nil); return }
+            invitationHandler(true, se)
+        }
+    }
+    public func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
+        notifyListeners("pair", data: ["id": "", "etat": "erreur", "message": error.localizedDescription])
+    }
+
+    // ---- la recherche : on invite ceux de la même salle (seulement si notre nom est le plus petit) ----
+    public func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
+        DispatchQueue.main.async {
+            guard let p = self.moi, let se = self.lien, info?["salle"] == self.salle, p.displayName < peerID.displayName, se.connectedPeers.count < 7 else { return }
+            browser.invitePeer(peerID, to: se, withContext: self.salle.data(using: .utf8), timeout: 20)
+        }
+    }
+    public func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {}
+    public func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
+        notifyListeners("pair", data: ["id": "", "etat": "erreur", "message": error.localizedDescription])
+    }
+}
+
+#if PLOXI0N_BLE
+// 〰 (0.99.23, RS-7 : « ça doit être comme bitchat ») LE MAILLAGE EN BLUETOOTH BASSE CONSOMMATION, en arrière-plan aussi (les modes
+// bluetooth-central et bluetooth-peripheral, que fastlane ajoute avec l'option PLOXI0N_BLE). Chaque iPhone est à la fois PÉRIPHÉRIQUE (il
+// annonce un service, une caractéristique : on lui écrit, il notifie) et CENTRAL (il cherche ce service, se connecte, s'abonne). Il ne porte
+// que des OCTETS (des morceaux de 180 octets au plus) : le découpage, le recollage et tout le maillage sont en JS (src/bions/fragments.js,
+// src/bions/maille.js). Les octets passent en base64 par le pont. Un voisin = l'identifiant que CoreBluetooth lui donne (« p:… » quand on
+// est son central, « c:… » quand il est le nôtre) : un même téléphone peut apparaître deux fois ; le maillage dédoublonne les paquets.
+public class PloxiBLE: CAPPlugin, CAPBridgedPlugin, CBCentralManagerDelegate, CBPeripheralManagerDelegate, CBPeripheralDelegate {
+    public let identifier = "PloxiBLE"
+    public let jsName = "PloxiBLE"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "demarrer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "arreter", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "envoyer", returnType: CAPPluginReturnPromise),
+    ]
+    private let service = CBUUID(string: "8F3A1C2E-5B7D-4E9A-9C1F-0D2B4A6E8C10")
+    private let carac = CBUUID(string: "8F3A1C2E-5B7D-4E9A-9C1F-0D2B4A6E8C11")
+    private let file = DispatchQueue(label: "ploxi.ble")
+    private var central: CBCentralManager?
+    private var periph: CBPeripheralManager?
+    private var maCarac: CBMutableCharacteristic?
+    private var peripheriques: [UUID: CBPeripheral] = [:]     // nous sommes leur central
+    private var ecrire: [UUID: CBCharacteristic] = [:]
+    private var abonnes: [UUID: CBCentral] = [:]              // nous sommes leur périphérique
+    private var enAttente: [(Data, [CBCentral])] = []         // ce que la file de notification n'a pas pris (peripheralManagerIsReady)
+
+    @objc func demarrer(_ call: CAPPluginCall) {
+        file.async {
+            if self.central == nil { self.central = CBCentralManager(delegate: self, queue: self.file) }
+            if self.periph == nil { self.periph = CBPeripheralManager(delegate: self, queue: self.file) }
+            call.resolve(["morceau": 180])
+        }
+    }
+
+    @objc func arreter(_ call: CAPPluginCall) {
+        file.async {
+            self.central?.stopScan()
+            for p in self.peripheriques.values { self.central?.cancelPeripheralConnection(p) }
+            self.periph?.stopAdvertising(); self.periph?.removeAllServices()
+            self.peripheriques.removeAll(); self.ecrire.removeAll(); self.abonnes.removeAll(); self.enAttente.removeAll()
+            self.central = nil; self.periph = nil; self.maCarac = nil
+            call.resolve()
+        }
+    }
+
+    @objc func envoyer(_ call: CAPPluginCall) {
+        guard let b64 = call.getString("donnees"), let data = Data(base64Encoded: b64), data.count <= 512 else { call.reject("morceau illisible ou trop gros"); return }
+        let a = call.getArray("a", String.self) ?? []
+        file.async {
+            var n = 0
+            for (id, p) in self.peripheriques {
+                guard let c = self.ecrire[id], a.isEmpty || a.contains("p:" + id.uuidString) else { continue }
+                p.writeValue(data, for: c, type: .withoutResponse); n += 1
+            }
+            if let mc = self.maCarac, let pm = self.periph {
+                let cibles = self.abonnes.filter { a.isEmpty || a.contains("c:" + $0.key.uuidString) }.map { $0.value }
+                if !cibles.isEmpty { if !pm.updateValue(data, for: mc, onSubscribedCentrals: cibles) { self.enAttente.append((data, cibles)) }; n += cibles.count }
+            }
+            call.resolve(["envoyes": n])
+        }
+    }
+
+    private func pair(_ id: String, _ etat: String) { notifyListeners("pair", data: ["id": id, "etat": etat]) }
+
+    // ---- central : chercher le service, se connecter, s'abonner ----
+    public func centralManagerDidUpdateState(_ c: CBCentralManager) {
+        if c.state == .poweredOn { c.scanForPeripherals(withServices: [service], options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]) }
+        else if c.state == .unauthorized { notifyListeners("pair", data: ["id": "", "etat": "erreur", "message": "Bluetooth refusé (Réglages › ploxi0n)"]) }
+    }
+    public func centralManager(_ c: CBCentralManager, didDiscover p: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
+        guard peripheriques[p.identifier] == nil, peripheriques.count < 8 else { return }
+        peripheriques[p.identifier] = p; p.delegate = self; c.connect(p, options: nil)
+    }
+    public func centralManager(_ c: CBCentralManager, didConnect p: CBPeripheral) { p.discoverServices([service]) }
+    public func centralManager(_ c: CBCentralManager, didFailToConnect p: CBPeripheral, error: Error?) { peripheriques[p.identifier] = nil }
+    public func centralManager(_ c: CBCentralManager, didDisconnectPeripheral p: CBPeripheral, error: Error?) {
+        peripheriques[p.identifier] = nil; ecrire[p.identifier] = nil; pair("p:" + p.identifier.uuidString, "perdu")
+    }
+    public func peripheral(_ p: CBPeripheral, didDiscoverServices error: Error?) {
+        for s in p.services ?? [] where s.uuid == service { p.discoverCharacteristics([carac], for: s) }
+    }
+    public func peripheral(_ p: CBPeripheral, didDiscoverCharacteristicsFor s: CBService, error: Error?) {
+        for c in s.characteristics ?? [] where c.uuid == carac {
+            ecrire[p.identifier] = c; p.setNotifyValue(true, for: c); pair("p:" + p.identifier.uuidString, "connecte")
+        }
+    }
+    public func peripheral(_ p: CBPeripheral, didUpdateValueFor c: CBCharacteristic, error: Error?) {
+        guard let v = c.value, !v.isEmpty else { return }
+        notifyListeners("message", data: ["de": "p:" + p.identifier.uuidString, "donnees": v.base64EncodedString()])
+    }
+
+    // ---- périphérique : annoncer le service, recevoir les écritures, notifier les abonnés ----
+    public func peripheralManagerDidUpdateState(_ pm: CBPeripheralManager) {
+        guard pm.state == .poweredOn, maCarac == nil else { return }
+        let c = CBMutableCharacteristic(type: carac, properties: [.notify, .write, .writeWithoutResponse], value: nil, permissions: [.writeable])
+        let s = CBMutableService(type: service, primary: true)
+        s.characteristics = [c]; maCarac = c
+        pm.add(s)
+        pm.startAdvertising([CBAdvertisementDataServiceUUIDsKey: [service]])
+    }
+    public func peripheralManager(_ pm: CBPeripheralManager, central: CBCentral, didSubscribeTo c: CBCharacteristic) {
+        abonnes[central.identifier] = central; pair("c:" + central.identifier.uuidString, "connecte")
+    }
+    public func peripheralManager(_ pm: CBPeripheralManager, central: CBCentral, didUnsubscribeFrom c: CBCharacteristic) {
+        abonnes[central.identifier] = nil; pair("c:" + central.identifier.uuidString, "perdu")
+    }
+    public func peripheralManager(_ pm: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
+        for r in requests { if let v = r.value, !v.isEmpty { notifyListeners("message", data: ["de": "c:" + r.central.identifier.uuidString, "donnees": v.base64EncodedString()]) } }
+        if let r = requests.first { pm.respond(to: r, withResult: .success) }
+    }
+    public func peripheralManagerIsReady(toUpdateSubscribers pm: CBPeripheralManager) {
+        guard let mc = maCarac else { return }
+        while let premier = enAttente.first {
+            if !pm.updateValue(premier.0, for: mc, onSubscribedCentrals: premier.1) { return }
+            enAttente.removeFirst()
+        }
+    }
+}
+#endif
+// ◷ (0.99.20, 05.11) PLOXIVEILLE : la position EN ARRIÈRE-PLAN (RS-7 : « la localisation en arrière-plan » — mappion compte le temps passé à
+// chaque endroit, même app fermée). Deux régimes :
+//   eco  : les VISITES de CoreLocation (arrivée / départ d'un lieu, presque rien pour la batterie) + les grands déplacements ;
+//   fine : en plus, un point tous les 5 m quand tu bouges (iOS met en pause quand tu ne bouges plus : les visites comblent).
+// Tout est écrit sur le téléphone (Documents/veille.jsonl), même quand la page dort ; la page relit avec lire({ depuis }).
+//   demarrer({ fine }) → { etat }   arreter()   etat() → { etat, actif, fine, points }   lire({ depuis }) → { points, visites }   vider()
+//   événements : « position » { t, la, lo, acc, v } · « visite » { a, d?, la, lo, acc }
+// Ne pas nuire : rien ne démarre sans « demarrer » ; la flèche bleue d'iOS montre que la veille tourne ; rien ne quitte le téléphone ici.
+@objc(PloxiVeille)
+public class PloxiVeille: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate {
+    public let identifier = "PloxiVeille"
+    public let jsName = "PloxiVeille"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "demarrer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "arreter", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "etat", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "lire", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "vider", returnType: CAPPluginReturnPromise),
+    ]
+    private let lm = CLLocationManager()
+    private let file = DispatchQueue(label: "ploxi.veille")
+    private var fine = false
+    private var actif = false
+    private var fichier: URL { FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("veille.jsonl") }
+
+    override public func load() {
+        lm.delegate = self
+        // relancée par iOS (un grand déplacement, une visite) : on reprend là où on était
+        if UserDefaults.standard.bool(forKey: "ploxi.veille.actif") {
+            let f = UserDefaults.standard.bool(forKey: "ploxi.veille.fine")
+            DispatchQueue.main.async { self.lancer(fine: f) }
+        }
+    }
+    private func statut() -> String {
+        switch lm.authorizationStatus {
+        case .authorizedAlways: return "toujours"
+        case .authorizedWhenInUse: return "pendant-utilisation"
+        case .denied: return "refuse"
+        case .restricted: return "restreint"
+        default: return "a-demander"
+        }
+    }
+    private func lancer(fine: Bool) {
+        self.fine = fine; actif = true
+        lm.allowsBackgroundLocationUpdates = true
+        lm.showsBackgroundLocationIndicator = true
+        lm.pausesLocationUpdatesAutomatically = true
+        lm.activityType = .fitness
+        lm.desiredAccuracy = fine ? kCLLocationAccuracyBest : kCLLocationAccuracyHundredMeters
+        lm.distanceFilter = fine ? 5 : 100
+        lm.startMonitoringVisits()
+        lm.startMonitoringSignificantLocationChanges()
+        if fine { lm.startUpdatingLocation() } else { lm.stopUpdatingLocation() }
+    }
+    @objc func demarrer(_ call: CAPPluginCall) {
+        let f = call.getBool("fine") ?? true
+        DispatchQueue.main.async {
+            if self.lm.authorizationStatus == .notDetermined { self.lm.requestWhenInUseAuthorization() }
+            self.lm.requestAlwaysAuthorization()   // iOS propose « Toujours » après coup ; sans, la veille ne vit qu'app ouverte
+            UserDefaults.standard.set(true, forKey: "ploxi.veille.actif"); UserDefaults.standard.set(f, forKey: "ploxi.veille.fine")
+            self.lancer(fine: f)
+            call.resolve(["etat": self.statut(), "fine": f])
+        }
+    }
+    @objc func arreter(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            self.actif = false
+            UserDefaults.standard.set(false, forKey: "ploxi.veille.actif")
+            self.lm.stopUpdatingLocation(); self.lm.stopMonitoringVisits(); self.lm.stopMonitoringSignificantLocationChanges()
+            self.lm.allowsBackgroundLocationUpdates = false
+            call.resolve()
+        }
+    }
+    @objc func etat(_ call: CAPPluginCall) {
+        let n = (try? String(contentsOf: fichier, encoding: .utf8))?.split(separator: "\n").count ?? 0
+        DispatchQueue.main.async { call.resolve(["etat": self.statut(), "actif": self.actif, "fine": self.fine, "points": n]) }
+    }
+    @objc func lire(_ call: CAPPluginCall) {
+        let depuis = call.getDouble("depuis") ?? 0
+        file.async {
+            var points: [[String: Any]] = [], visites: [[String: Any]] = []
+            let texte = (try? String(contentsOf: self.fichier, encoding: .utf8)) ?? ""
+            for l in texte.split(separator: "\n") {
+                guard let d = l.data(using: .utf8), let o = (try? JSONSerialization.jsonObject(with: d)) as? [String: Any] else { continue }
+                if o["a"] != nil {
+                    let fin = (o["d"] as? Double) ?? (o["a"] as? Double) ?? 0
+                    if fin > depuis || o["d"] == nil { visites.append(o) }
+                } else if let t = o["t"] as? Double, t > depuis { points.append(o) }
+            }
+            call.resolve(["points": Array(points.suffix(20000)), "visites": Array(visites.suffix(2000))])
+        }
+    }
+    @objc func vider(_ call: CAPPluginCall) {
+        file.async { try? FileManager.default.removeItem(at: self.fichier); call.resolve() }
+    }
+    private func ecrire(_ o: [String: Any]) {
+        file.async {
+            guard let d = try? JSONSerialization.data(withJSONObject: o), var ligne = String(data: d, encoding: .utf8) else { return }
+            ligne += "\n"
+            if let h = try? FileHandle(forWritingTo: self.fichier) { h.seekToEndOfFile(); h.write(ligne.data(using: .utf8)!); try? h.close() }
+            else { try? ligne.write(to: self.fichier, atomically: true, encoding: .utf8) }
+            // au-delà de 8 Mo, on garde la seconde moitié (les mois récents)
+            if let a = try? FileManager.default.attributesOfItem(atPath: self.fichier.path), let s = a[.size] as? Int, s > 8_000_000,
+               let t = try? String(contentsOf: self.fichier, encoding: .utf8) {
+                let ls = t.split(separator: "\n"); try? (ls.suffix(ls.count / 2).joined(separator: "\n") + "\n").write(to: self.fichier, atomically: true, encoding: .utf8)
+            }
+        }
+    }
+    public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        for l in locations where l.horizontalAccuracy >= 0 && l.horizontalAccuracy < 100 {
+            let o: [String: Any] = ["t": l.timestamp.timeIntervalSince1970 * 1000, "la": l.coordinate.latitude, "lo": l.coordinate.longitude,
+                                    "acc": l.horizontalAccuracy, "v": max(0, l.speed)]
+            ecrire(o); notifyListeners("position", data: o)
+        }
+    }
+    public func locationManager(_ manager: CLLocationManager, didVisit visit: CLVisit) {
+        var o: [String: Any] = ["a": visit.arrivalDate.timeIntervalSince1970 * 1000, "la": visit.coordinate.latitude, "lo": visit.coordinate.longitude,
+                                "acc": visit.horizontalAccuracy]
+        if visit.departureDate != Date.distantFuture { o["d"] = visit.departureDate.timeIntervalSince1970 * 1000 }
+        if visit.arrivalDate == Date.distantPast { return }
+        ecrire(o); notifyListeners("visite", data: o)
+    }
+    public func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        notifyListeners("etat", data: ["etat": statut()])
+    }
+}
+
+// ᛒ (0.99.20, 05.11) PLOXIONDES : le Bluetooth BAS NIVEAU (RS-7 : « le Bluetooth low level aussi, pour Proche et Autour »). CoreBluetooth brut :
+//   scanner({ doublons }) : TOUT ce qui émet autour (nom, RSSI, puissance annoncée, données du fabricant, services, connectable)
+//   annoncer({ nom }) : ce téléphone s'annonce comme un ploxi (le service xerboxion) — les autres le voient dans Proche et Autour
+//   arreterScan()   arreterAnnonce()   événements : « appareil » {id, nom, rssi, tx?, fabricant, services, connectable} · « etat » {etat}
+// Limites d'iOS : l'id est un identifiant propre à CE téléphone (pas l'adresse MAC) ; en arrière-plan, le scan ne voit que les services
+// demandés et l'annonce perd son nom. Ne pas nuire : rien n'émet sans « annoncer », rien ne se connecte à personne ici.
+@objc(PloxiOndes)
+public class PloxiOndes: CAPPlugin, CAPBridgedPlugin, CBCentralManagerDelegate, CBPeripheralManagerDelegate {
+    public let identifier = "PloxiOndes"
+    public let jsName = "PloxiOndes"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "scanner", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "arreterScan", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "annoncer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "arreterAnnonce", returnType: CAPPluginReturnPromise),
+    ]
+    static let SERVICE = CBUUID(string: "6E1D0000-0000-4000-8000-0000000C0DE0")   // le service xerboxion (les ploxis se reconnaissent)
+    private var central: CBCentralManager?
+    private var periph: CBPeripheralManager?
+    private var scanVoulu = false, doublons = true, annonceVoulue = false, nom = "ploxion"
+    private var dernier: [UUID: TimeInterval] = [:]
+
+    private func etatTexte(_ s: CBManagerState) -> String {
+        switch s { case .poweredOn: return "allume"; case .poweredOff: return "eteint"; case .unauthorized: return "refuse"; case .unsupported: return "absent"; default: return "attente" }
+    }
+    @objc func scanner(_ call: CAPPluginCall) {
+        doublons = call.getBool("doublons") ?? true
+        DispatchQueue.main.async {
+            self.scanVoulu = true; self.dernier = [:]
+            if let c = self.central, c.state == .poweredOn { self.lancerScan() } else if self.central == nil { self.central = CBCentralManager(delegate: self, queue: nil) }
+            call.resolve(["etat": self.etatTexte(self.central?.state ?? .unknown)])
+        }
+    }
+    private func lancerScan() { central?.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: doublons]) }
+    @objc func arreterScan(_ call: CAPPluginCall) { DispatchQueue.main.async { self.scanVoulu = false; self.central?.stopScan(); call.resolve() } }
+    @objc func annoncer(_ call: CAPPluginCall) {
+        nom = String((call.getString("nom") ?? "ploxion").prefix(20))
+        DispatchQueue.main.async {
+            self.annonceVoulue = true
+            if let p = self.periph, p.state == .poweredOn { self.lancerAnnonce() } else if self.periph == nil { self.periph = CBPeripheralManager(delegate: self, queue: nil) }
+            call.resolve()
+        }
+    }
+    private func lancerAnnonce() {
+        periph?.stopAdvertising()
+        periph?.startAdvertising([CBAdvertisementDataLocalNameKey: nom, CBAdvertisementDataServiceUUIDsKey: [PloxiOndes.SERVICE]])
+    }
+    @objc func arreterAnnonce(_ call: CAPPluginCall) { DispatchQueue.main.async { self.annonceVoulue = false; self.periph?.stopAdvertising(); call.resolve() } }
+
+    public func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        notifyListeners("etat", data: ["etat": etatTexte(central.state)])
+        if central.state == .poweredOn && scanVoulu { lancerScan() }
+    }
+    public func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
+        if peripheral.state == .poweredOn && annonceVoulue { lancerAnnonce() }
+    }
+    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
+        let r = RSSI.intValue; if r == 127 { return }   // 127 = « inconnu » pour CoreBluetooth
+        let now = Date().timeIntervalSince1970
+        if let d = dernier[peripheral.identifier], now - d < 0.5 { return }   // au plus 2 fois par seconde par appareil
+        dernier[peripheral.identifier] = now
+        var o: [String: Any] = ["id": peripheral.identifier.uuidString, "rssi": r,
+                                "nom": (advertisementData[CBAdvertisementDataLocalNameKey] as? String) ?? peripheral.name ?? "",
+                                "connectable": (advertisementData[CBAdvertisementDataIsConnectable] as? NSNumber)?.boolValue ?? false,
+                                "services": ((advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID]) ?? []).map { $0.uuidString }]
+        if let tx = advertisementData[CBAdvertisementDataTxPowerLevelKey] as? NSNumber { o["tx"] = tx.intValue }
+        if let m = advertisementData[CBAdvertisementDataManufacturerDataKey] as? Data { o["fabricant"] = m.prefix(24).map { String(format: "%02x", $0) }.joined() }
+        notifyListeners("appareil", data: o)
+    }
+}
+
+#if PLOXI0N_CARPLAY
+// 🚗 (0.99.31, RS-7 07.11 : « ploxion sur CarPlay ») CARPLAY. CarPlay n'affiche jamais de page web : une app n'y a droit qu'aux gabarits d'Apple.
+// Le JS fabrique un MODÈLE (src/bions/carplay.js : des onglets de listes) ; PloxiCarPlay le reçoit (poser), le GARDE (UserDefaults, en JSON :
+// une voiture branchée avant que la page démarre a déjà quelque chose) ; la scène CarPlay le dessine : un CPTabBarTemplate de CPListTemplate.
+// Un élément avec « url » (un pote, un rendez-vous) ouvre Plans lui-même, sur l'écran de la voiture ; les autres renvoient « choix » { id } au
+// JS. Seulement des listes, des onglets et une alerte : ce que permettent à la fois les autorisations audio et « tâche de conduite ».
+// Il faut : l'autorisation CarPlay d'Apple sur l'identifiant de l'app, et fastlane ajouter_carplay (l'entitlement, la scène dans Info.plist).
+final class PloxiCarPlayEtat {
+    static var modele: [String: Any] = {
+        if let d = UserDefaults.standard.data(forKey: "ploxi.carplay.modele"), let o = (try? JSONSerialization.jsonObject(with: d)) as? [String: Any] { return o }
+        return [:]
+    }()
+    static weak var plugin: PloxiCarPlay?
+    static weak var scene: PloxiCarPlayScene?
+}
+
+@objc(PloxiCarPlay)
+public class PloxiCarPlay: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "PloxiCarPlay"
+    public let jsName = "PloxiCarPlay"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "poser", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "etat", returnType: CAPPluginReturnPromise),
+    ]
+    override public func load() { PloxiCarPlayEtat.plugin = self }
+    @objc func poser(_ call: CAPPluginCall) {
+        let m = (call.options as? [String: Any]) ?? [:]
+        DispatchQueue.main.async {
+            PloxiCarPlayEtat.modele = m
+            if let d = try? JSONSerialization.data(withJSONObject: m) { UserDefaults.standard.set(d, forKey: "ploxi.carplay.modele") }
+            PloxiCarPlayEtat.scene?.construire()
+            call.resolve(["connecte": PloxiCarPlayEtat.scene != nil])
+        }
+    }
+    @objc func etat(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { call.resolve(["connecte": PloxiCarPlayEtat.scene != nil]) }
+    }
+    func choisi(_ id: String) { notifyListeners("choix", data: ["id": id]) }
+    func connexion(_ oui: Bool) { notifyListeners("connexion", data: ["connecte": oui]) }
+}
+
+class PloxiCarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
+    private var ic: CPInterfaceController?
+    private var scene: CPTemplateApplicationScene?
+    private var listes: [String: CPListTemplate] = [:]
+    private var ordre: [String] = []
+
+    func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene, didConnect interfaceController: CPInterfaceController) {
+        ic = interfaceController; scene = templateApplicationScene
+        PloxiCarPlayEtat.scene = self
+        construire()
+        PloxiCarPlayEtat.plugin?.connexion(true)
+    }
+    func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene, didDisconnectInterfaceController interfaceController: CPInterfaceController) {
+        ic = nil; scene = nil; listes = [:]; ordre = []
+        if PloxiCarPlayEtat.scene === self { PloxiCarPlayEtat.scene = nil }
+        PloxiCarPlayEtat.plugin?.connexion(false)
+    }
+
+    /** dessiner le modèle : les mêmes onglets → seulement leurs listes changent (pas de clignotement, l'onglet choisi reste) */
+    func construire() {
+        guard let ic = ic else { return }
+        let onglets = Array(((PloxiCarPlayEtat.modele["onglets"] as? [[String: Any]]) ?? []).prefix(4))
+        let ids = onglets.map { ($0["id"] as? String) ?? "" }
+        if !onglets.isEmpty && ids == ordre {
+            for o in onglets { if let id = o["id"] as? String, let t = listes[id] { t.updateSections(sections(o)) } }
+            return
+        }
+        listes = [:]; ordre = ids
+        var tpl: [CPTemplate] = []
+        for o in onglets {
+            let t = CPListTemplate(title: o["titre"] as? String, sections: sections(o))
+            t.tabTitle = o["titre"] as? String
+            t.tabImage = UIImage(systemName: (o["icone"] as? String) ?? "circle")
+            if let vide = o["vide"] as? String { t.emptyViewTitleVariants = [vide] }
+            if let id = o["id"] as? String { listes[id] = t }
+            tpl.append(t)
+        }
+        if tpl.isEmpty {
+            let t = CPListTemplate(title: "ploxi0n", sections: [])
+            t.emptyViewTitleVariants = ["Ouvre ploxi0n sur l'iPhone"]
+            tpl.append(t)
+        }
+        ic.setRootTemplate(CPTabBarTemplate(templates: tpl), animated: false, completion: nil)
+    }
+
+    private func sections(_ o: [String: Any]) -> [CPListSection] {
+        return ((o["sections"] as? [[String: Any]]) ?? []).map { s in
+            let items = ((s["items"] as? [[String: Any]]) ?? []).prefix(CPListTemplate.maximumItemCount).map { self.element($0) }
+            return CPListSection(items: Array(items), header: s["titre"] as? String, sectionIndexTitle: nil)
+        }
+    }
+
+    private func element(_ d: [String: Any]) -> CPListItem {
+        let it = CPListItem(text: d["texte"] as? String, detailText: d["detail"] as? String)
+        let id = (d["id"] as? String) ?? ""
+        let url = (d["url"] as? String).flatMap { URL(string: $0) }
+        if url != nil { it.accessoryType = .disclosureIndicator }
+        it.handler = { [weak self] _, fini in
+            if let u = url { self?.scene?.open(u, options: nil, completionHandler: nil) }
+            else if let p = PloxiCarPlayEtat.plugin { p.choisi(id) }
+            else { self?.alerte("Ouvre ploxi0n sur l'iPhone, puis réessaie") }
+            fini()
+        }
+        return it
+    }
+
+    private func alerte(_ texte: String) {
+        guard let ic = ic else { return }
+        let a = CPAlertTemplate(titleVariants: [texte], actions: [CPAlertAction(title: "OK", style: .cancel, handler: { _ in ic.dismissTemplate(animated: true, completion: nil) })])
+        ic.presentTemplate(a, animated: true, completion: nil)
+    }
+}
+#endif
+
 class PloxionVC: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(PloxiVocal())
         bridge?.registerPluginInstance(PloxiApple())
         bridge?.registerPluginInstance(PloxiLecteur())
+        bridge?.registerPluginInstance(PloxiProche())
+        #if PLOXI0N_BLE
+        bridge?.registerPluginInstance(PloxiBLE())   // (0.99.23) le maillage en Bluetooth basse consommation
+        #endif
+        bridge?.registerPluginInstance(PloxiVeille())
+        bridge?.registerPluginInstance(PloxiOndes())
+        #if PLOXI0N_CARPLAY
+        bridge?.registerPluginInstance(PloxiCarPlay())   // (0.99.31) CarPlay
+        #endif
+        #if !PLOXI0N_SANS_AR
+        bridge?.registerPluginInstance(PloxiAR())
+        #endif
     }
     private var plein: Bool { UserDefaults.standard.string(forKey: "CapacitorStorage.ploxi0n.plein-ecran") == "1" }
     // l'indicateur d'accueil : le plugin SystemBars de Capacitor 8 le gère déjà (CAPBridgeViewController.prefersHomeIndicatorAutoHidden n'est
@@ -906,6 +2593,12 @@ class PloxionVC: CAPBridgeViewController {
         super.viewDidLoad()
         NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in
             self?.setNeedsUpdateOfScreenEdgesDeferringSystemGestures()
+        }
+        // LA CAPTURE D'ÉCRAN (RS-7 14.10 : « faire la manœuvre des screenshots et avoir l'impression de faire un screenshot sur l'app, mais ça fait
+        // comme une image : on peut dézoomer notre xer et voir les autres xers à côté ») : iOS prévient après chaque capture ; la page reçoit
+        // l'événement « ploxi0n-capture » sur window et en fait la photo du xer (src/app/vue-xers.js)
+        NotificationCenter.default.addObserver(forName: UIApplication.userDidTakeScreenshotNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.bridge?.triggerWindowJSEvent(eventName: "ploxi0n-capture")
         }
     }
 }

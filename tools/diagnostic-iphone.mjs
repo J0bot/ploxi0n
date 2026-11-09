@@ -32,7 +32,7 @@ for (const id of ids) {
     r.bions = ins.bions; r.absents = ins.manquants;
     const js = await depot.bundle(id);
     // les bions que le code touche sans les déclarer (window.jOSX…) : absents eux aussi
-    const touches = [...new Set((js.match(/\bjOS[A-Z][A-Za-z0-9]*/g) || []))].filter(b => !FOURNIS.has(b) && !ins.bions.includes(b) && !bionsDuBundle(js).includes(b));
+    const touches = [...new Set((js.match(/\bjOS[A-Z0-9][A-Za-z0-9]*/g) || []))].filter(b => !FOURNIS.has(b) && !ins.bions.includes(b) && !bionsDuBundle(js).includes(b));
     // --connecte : le mode connecté de l'app (anonyme ici : aucun jeton), les routes du serveur partent sur xerboxion.org
     const relais = connecte ? { routes: [], general: () => true, vers: (c) => 'https://xerboxion.org' + c, envoyer: async (q) => { const r = await fetch(q.url, { method: q.methode, headers: { ...q.headers, 'X-Ploxi0n': '1' }, body: q.corps }); const h = {}; r.headers.forEach((v, k) => { h[k] = v; }); return { status: r.status, texte: await r.text(), entetes: h }; } } : null;
     p = await page({ avion: true, bundles: [{ id, js }], relais });

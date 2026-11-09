@@ -69,7 +69,9 @@ export async function executeurCapacitor({ base = 'ploxi0n-local' } = {}) {
   const coherent = (await sqlite.checkConnectionsConsistency()).result;
   const existe = (await sqlite.isConnection(base, false)).result;
   const db = coherent && existe ? await sqlite.retrieveConnection(base, false) : await sqlite.createConnection(base, false, 'no-encryption', 1, false);
-  await db.open();
+  // déjà ouverte (une connexion retrouvée après un essai raté) : ne pas la rouvrir
+  let ouverte = false; try { ouverte = !!(await db.isDBOpen()).result; } catch (e) { /* */ }
+  if (!ouverte) await db.open();
   return {
     async run(sql, params) { const r = await db.run(sql, params, false); return { lastId: r && r.changes ? r.changes.lastId : undefined }; },
     async query(sql, params) { return (await db.query(sql, params)).values || []; },

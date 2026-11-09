@@ -1,0 +1,44 @@
+# ploxi0n sur Android (0.99.32) : un APK, sur Linux (minutes au tarif normal, pas de Mac). Les runners ubuntu ont déjà le SDK Android.
+# (0.99.40, RS-7 : « le GitHub Actions de l'apk marche pas ») il ne se lançait JAMAIS : sur un push, il attendait « [apk] » dans le message
+# (tous les runs « skipped » ; relancer un run sauté le saute encore, même commit) ; et le bouton « Run workflow » de GitHub n'existe que pour
+# un workflow présent sur la branche par défaut (main), or il n'est que sur les branches glob/**. Maintenant : chaque push sur une branche
+# glob/** qui touche l'app (src, android, les dépendances, ce fichier) construit l'APK ; un tag v* aussi ; et à la main une fois sur main.
+# Sortie : l'APK de debug (signé avec la clé de debug d'Android : s'installe directement, « sources inconnues » à autoriser), en artefact.
+# Une version Play Store (AAB signé) demandera une clé à poser par RS-7 en secret (ANDROID_KEYSTORE…) : pas encore.
+name: Android APK
+on:
+  push:
+    tags: ['v*']
+    branches: ['glob/**']
+    paths: ['src/**', 'public/**', 'android/**', 'index.html', 'package.json', 'package-lock.json', 'capacitor.config.json', 'vite.config.*', '.github/workflows/android.yml']
+  workflow_dispatch:
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21, cache: gradle }
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npx cap sync android
+      - name: le numéro de version (celui de package.json ; versionCode = le nombre de commits)
+        run: |
+          echo "PX_VERSION=$(node -p "require('./package.json').version")" >> "$GITHUB_ENV"
+          echo "PX_CODE=$(git rev-list --count HEAD 2>/dev/null || echo 1)" >> "$GITHUB_ENV"
+      - name: l'APK
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug -PpxVersion="$PX_VERSION" -PpxCode="$PX_CODE"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ploxi0n-${{ env.PX_VERSION }}-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          retention-days: 30

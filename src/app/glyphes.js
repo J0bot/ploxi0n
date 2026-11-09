@@ -15,17 +15,20 @@ export const GLYPHES = {
   // ---- le lexique du xerboxion (le sprite du labo) ----
   ion: C(50, 50, 36) + C(50, 50, 6, 1),
   koin: POLY('50,14 88,82 12,82') + C(50, 60, 5, 1),
-  trion: POLY('50,14 88,82 12,82') + L(50, 30, 50, 74, 'p') + L(26, 58, 74, 58, 'p'),
+  // (0.89) les six du carnet de RS-7 (docs/KOINS.md, docs/look/references/koins-01-glyphes.jpg) : xeroction, tsoin, wormion, trion, portion, ploxion
+  trion: POLY('50,10 92,86 8,86') + POLY('50,32 74,76 26,76') + POLY('50,52 60,70 40,70', 1),
   cubion: R(18, 32, 50, 50) + P('M18 32 34 16h50v50L68 82M68 32 84 16'),
   xerboxion: R(18, 32, 50, 50) + P('M18 32 34 16h50v50L68 82M68 32 84 16') + P('M30 44l20 26M50 44 30 70'),
-  wormion: C(50, 50, 36) + '<circle cx="50" cy="50" r="22" class="p"/>' + C(50, 50, 8, 1),
-  portion: R(16, 16, 68, 68) + '<rect x="32" y="32" width="36" height="36" class="p"/>' + R(44, 44, 12, 12, 0, 1),
-  tsoin: POLY('24,14 76,14 24,86 76,86') + C(50, 50, 5, 1),
+  wormion: C(50, 50, 38) + C(52, 48, 28) + C(53, 47, 18) + C(54, 46, 9) + C(54, 46, 3, 1),
+  portion: R(12, 12, 76, 76) + R(24, 24, 52, 52) + R(36, 36, 28, 28) + R(45, 45, 10, 10, 0, 1),
+  tsoin: P('M22 12H78Q56 50 78 88H22Q44 50 22 12Z') + POLY('38,22 62,22 50,38') + POLY('38,78 62,78 50,62') + C(50, 50, 3, 1),
   bion: C(50, 50, 6, 1) + '<ellipse cx="50" cy="50" rx="36" ry="13"/><ellipse cx="50" cy="50" rx="36" ry="13" transform="rotate(60 50 50)"/><ellipse cx="50" cy="50" rx="36" ry="13" transform="rotate(120 50 50)"/>',
   spherion: C(50, 50, 36) + '<ellipse cx="50" cy="50" rx="36" ry="14"/><ellipse cx="50" cy="50" rx="14" ry="36"/>',
   kion: POLY('50,10 90,50 50,90 10,50') + L(50, 10, 50, 90) + L(10, 50, 90, 50),
   coeur: P('M50 84 16 50a17 17 0 0 1 34-24 17 17 0 0 1 34 24z'),
-  xeroction: C(50, 50, 7, 1) + '<circle cx="50" cy="50" r="22" class="p"/><circle cx="50" cy="50" r="38" class="p"/>',
+  xeroction: P('M12 20Q48 46 80 88M20 12Q54 52 88 80') + P('M88 20Q52 46 20 88M80 12Q46 52 12 80') + P('M12 20 20 12M80 88 88 80M88 20 80 12M20 88 12 80') + C(50, 50, 4, 1),
+  ploxion: POLY('50,8 92,50 50,92 8,50') + POLY('50,24 76,50 50,76 24,50') + POLY('50,38 62,50 50,62 38,50') + C(50, 50, 3, 1),
+  xer: R(14, 14, 72, 72) + R(34, 34, 32, 32) + L(14, 14, 34, 34) + L(86, 14, 66, 34) + L(14, 86, 34, 66) + L(86, 86, 66, 66),
   // ---- l'interface ----
   chercher: C(44, 44, 26) + L(63, 63, 86, 86),
   reglages: POLY('50,12 83,31 83,69 50,88 17,69 17,31') + C(50, 50, 13),
@@ -59,6 +62,8 @@ export const GLYPHES = {
   nfc: P('M30 30a28 28 0 0 1 0 40M44 22a40 40 0 0 1 0 56M58 14a52 52 0 0 1 0 72') + C(20, 50, 5, 1),
   wifi: P('M14 40a52 52 0 0 1 72 0M26 54a34 34 0 0 1 48 0M38 68a16 16 0 0 1 24 0') + C(50, 80, 5, 1),
   bluetooth: P('M30 32l40 36-20 18V14l20 18-40 36'),
+  proche: C(24, 50, 7, 1) + C(76, 50, 7, 1) + P('M38 36a20 20 0 0 1 0 28M62 36a20 20 0 0 0 0 28M46 26a34 34 0 0 1 0 48M54 26a34 34 0 0 0 0 48'),   // ◉ (0.99.1) deux téléphones, leurs ondes qui se rejoignent
+  vague: P('M10 50q10-18 20 0t20 0t20 0t20 0'),   /* 〰 (0.99.23) le maillage, le xer organique : le filtre sans-emoji l'effaçait */
   maison: P('M14 50 50 18l36 32M24 42v42h52V42') + R(42, 60, 16, 24),
   widgets: R(16, 16, 30, 30, 6) + R(54, 16, 30, 30, 6) + R(16, 54, 30, 30, 6) + R(54, 54, 30, 30, 6),
   notifs: P('M28 66V44a22 22 0 0 1 44 0v22l8 8H20zM42 82a8 8 0 0 0 16 0'),
@@ -86,6 +91,7 @@ export const GLYPHES = {
   valider: P('M18 52l20 20 44-44'),
   stop: R(26, 26, 48, 48, 5, 1),
   xerbot: R(22, 34, 56, 46, 8) + L(50, 34, 50, 18) + C(50, 15, 4, 1) + C(38, 54, 5, 1) + C(62, 54, 5, 1) + L(40, 68, 60, 68),
+  neurone: C(42, 46, 13) + C(42, 46, 4, 1) + P('M31 38L16 24M16 24l-4 6M16 24l6-4') + P('M33 57L18 74') + P('M44 33L46 14') + P('M54 52Q70 62 84 78') + C(86, 80, 5),   // (0.94) le xer organique
   chilltekk: POLY('50,10 90,50 50,90 10,50') + POLY('50,30 70,50 50,70 30,50'),
   globe: C(50, 50, 36) + '<ellipse cx="50" cy="50" rx="15" ry="36"/>' + L(14, 50, 86, 50),
   marche: P('M18 36h64l-6 46H24zM36 36V28a14 14 0 0 1 28 0v8'),
@@ -95,13 +101,15 @@ export const GLYPHES = {
 const DEPUIS_EMOJI = { '🔎': 'chercher', '⚙': 'reglages', '⚙️': 'reglages', '🎙': 'vocal', '🎙️': 'vocal', '⧗': 'tsoin', '👤': 'compte', '📶': 'reseau', '📴': 'horsligne',
   '✎': 'editer', '▁': 'minimiser', '⧉': 'basculer', '✕': 'fermer', '🔒': 'verrou', '🔓': 'deverrou', '▶': 'lecture', '⏸': 'pause', '⏭': 'suivant', '⏮': 'precedent',
   '▦': 'grille', '▪': 'compacte', '☰': 'liste', '⏱': 'usage', '↺': 'recents', '◫': 'categories', '📁': 'dossier', '▤': 'minidocks', '♫': 'musique', '🎞': 'video',
-  '🥼': 'cape', '❤': 'coeur', '❤️': 'coeur', '🔦': 'lampe', '◉': 'nfc', 'ᛒ': 'bluetooth', '🏠': 'maison', '🔔': 'notifs', '📲': 'iphone', '🎨': 'palette', '🫧': 'haptique',
+  '🥼': 'cape', '❤': 'coeur', '❤️': 'coeur', '🔦': 'lampe', '◉': 'nfc', 'ᛒ': 'bluetooth', '🏠': 'maison', '〰': 'vague', '🔔': 'notifs', '📲': 'iphone', '🎨': 'palette', '🫧': 'haptique',
   '🧭': 'navigation', '🧩': 'dock', '▣': 'portion', '⬡': 'xerboxion', '💾': 'donnees', '◇': 'chilltekk', '🤖': 'xerbot', '🌐': 'globe', '🛍': 'marche', '🧪': 'flacon',
   '📦': 'boite', '📷': 'photo', '📍': 'lieu', '↗': 'partager', '⚡': 'bion', '🔌': 'bion', '⏻': 'allumer', '↻': 'relire', '✓': 'valider', '＋': 'plus', '+': 'plus', '−': 'moins', '🗯': 'bulle', '■': 'stop', '📳': 'haptique', '📋': 'liste', '🔔': 'notifs', '🔋': 'reseau', '📡': 'wifi', '🗣': 'vocal',
   '🧲': 'navigation', '🔐': 'verrou', '🎵': 'musique', '📚': 'livre', '📖': 'livre', '🎮': 'manette', '💬': 'bulle', '🗂': 'dossier', '📄': 'dossier', '🖥': 'terminal', '⌨': 'clavier', '🎧': 'musique', '🎬': 'video', '🕐': 'horloge', '⏲': 'horloge', '🗺': 'globe', '🔑': 'verrou', '☁': 'spherion', '🌸': 'coeur', '⌚': 'horloge', '📱': 'iphone', '🏃': 'coeur', '☾': 'horloge' };
 
 /** le nom du glyphe d'un emoji (ou null) */
 export function nomDepuisEmoji(e) { const k = String(e || '').replace(/[\uFE0F\u200D]/g, ''); return DEPUIS_EMOJI[k] || DEPUIS_EMOJI[e] || null; }
+/** (0.82) un glyphe dessiné dans l'atelier des glyphes du labo (/px/icones.json, src/app/icones-labo.js) : son corps déjà nettoyé */
+export function ajouterGlyphe(nom, corps) { if (/^[a-z0-9][a-z0-9_-]{0,40}$/.test(String(nom || '')) && typeof corps === 'string' && corps) { GLYPHES[nom] = corps; return true; } return false; }
 /** un glyphe en SVG inline (hérite la couleur du texte) ; nom inconnu → le point (ion) */
 export function glyphe(nom, cls = '') {
   const g = GLYPHES[nom] || GLYPHES[DEPUIS_EMOJI[nom]] || null;
@@ -128,7 +136,7 @@ const MOTS = [
   [/fichier|files|documents?|pdf|explorateur|dossier|archive/i, 'dossier'],
   [/code|forge|atelier|xerminal|ssh|terminal|console|shell|\bop\b/i, 'terminal'],
   [/jeu|game|doom|arcade|puzzle/i, 'manette'],
-  [/bluetooth/i, 'bluetooth'], [/wifi|r[eé]seau|connexion/i, 'wifi'],
+  [/^proche$|ultimate.?bluetooth/i, 'proche'], [/^autour$/i, 'lieu'], [/bluetooth/i, 'bluetooth'], [/wifi|r[eé]seau|connexion/i, 'wifi'],
   [/sant[eé]|endo|\bflo\b|coeur|c[oœ]ur|sport|forme/i, 'coeur'],
   [/s[eé]curit[eé]|verrou|mot de passe|password|cl[eé]/i, 'verrou'],
   [/photo|cam[eé]ra|image|galerie/i, 'photo'],

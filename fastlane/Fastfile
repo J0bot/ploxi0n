@@ -69,6 +69,30 @@ def ajouter_confidentialite
   UI.success("PrivacyInfo.xcprivacy ajouté aux ressources de l'app")
 end
 
+# (0.99.23) LES LANGUES des autorisations d'iOS : ios/App/App/<langue>.lproj/InfoPlist.strings (tools/ios/infoplist-langues.mjs) ajoutés aux
+# ressources de l'app ICI (gem xcodeproj), en un groupe de variantes « InfoPlist.strings », idempotent. Rattrapé : si la gem refuse, le build
+# continue sans (les autorisations restent en français), jamais un build cassé pour ça.
+LANGUES_IOS = %w[fr en de it es]
+def ajouter_langues
+  require "xcodeproj"
+  projet = Xcodeproj::Project.open(File.expand_path("../#{PROJET}", __dir__))
+  app = projet.targets.find { |t| t.name == "App" }
+  return UI.message("InfoPlist.strings déjà dans l'app") if app.resources_build_phase.files_references.any? { |r| r && r.respond_to?(:name) && r.name == "InfoPlist.strings" }
+  groupe = projet.main_group.children.find { |g| g.respond_to?(:path) && g.path == "App" } || projet.main_group
+  variantes = groupe.new_variant_group("InfoPlist.strings")
+  LANGUES_IOS.each do |l|
+    next unless File.exist?(File.expand_path("../ios/App/App/#{l}.lproj/InfoPlist.strings", __dir__))
+    ref = variantes.new_reference("#{l}.lproj/InfoPlist.strings")
+    ref.name = l
+  end
+  app.add_resources([variantes])
+  projet.root_object.known_regions = (projet.root_object.known_regions + LANGUES_IOS).uniq
+  projet.save
+  UI.success("InfoPlist.strings (#{LANGUES_IOS.join(', ')}) ajoutés aux ressources de l'app")
+rescue StandardError => e
+  UI.important("les langues des autorisations ne sont pas ajoutées (#{e.message}) : le build continue, les autorisations restent en français")
+end
+
 # Le LECTEUR VLC (0.49, option PLOXI0N_VLC) : le paquet SPM vlckit-spm (MobileVLCKit, LGPL) ajouté à la cible App ICI (gem xcodeproj),
 # idempotent. Le Swift (PloxiLecteur, EcranVLC) est entre #if canImport(MobileVLCKit) : sans le paquet, il n'est pas compilé.
 VLC_PAQUET = "https://github.com/tylerjonesio/vlckit-spm"
@@ -93,6 +117,77 @@ def ajouter_vlc
   app.frameworks_build_phase.files << fichier
   projet.save
   UI.success("VLC ajouté à l'app (#{VLC_PAQUET})")
+end
+
+# L'AR NATIVE (0.73, PloxiAR dans AppDelegate.swift : ARKit, RealityKit, RoomPlan) est dans CHAQUE build. Interrupteur de secours, si un
+# Xcode la refusait un jour : PLOXI0N_AR=0 → la condition de compilation PLOXI0N_SANS_AR sur la cible App (gem xcodeproj, sur le Mac de la
+# CI) : PloxiAR n'est pas compilé, le terrax garde son AR web.
+SANS_AR = ENV["PLOXI0N_AR"] == "0"
+def retirer_ar
+  require "xcodeproj"
+  projet = Xcodeproj::Project.open(File.expand_path("../#{PROJET}", __dir__))
+  app = projet.targets.find { |t| t.name == "App" }
+  app.build_configurations.each do |c|
+    v = c.build_settings["SWIFT_ACTIVE_COMPILATION_CONDITIONS"]
+    l = v.is_a?(Array) ? v : v.to_s.split(" ")
+    l = ["$(inherited)"] if l.empty?
+    c.build_settings["SWIFT_ACTIVE_COMPILATION_CONDITIONS"] = (l + ["PLOXI0N_SANS_AR"]).uniq.join(" ")
+  end
+  projet.save
+  UI.important("l'AR native retirée de ce build (PLOXI0N_AR=0)")
+end
+
+# (0.99.24) LE MAILLAGE EN BLUETOOTH BASSE CONSOMMATION (PloxiBLE dans AppDelegate.swift, derrière #if PLOXI0N_BLE) : PLOXI0N_BLE=1 → la
+# condition de compilation sur la cible App, et le mode d'arrière-plan bluetooth-peripheral dans Info.plist (gem xcodeproj, sur le Mac de
+# la CI). Sans l'option, le build est exactement celui d'avant : le Swift du BLE n'est même pas compilé.
+BLE = ENV["PLOXI0N_BLE"] == "1"
+def ajouter_ble
+  require "xcodeproj"
+  projet = Xcodeproj::Project.open(File.expand_path("../#{PROJET}", __dir__))
+  app = projet.targets.find { |t| t.name == "App" }
+  app.build_configurations.each do |c|
+    v = c.build_settings["SWIFT_ACTIVE_COMPILATION_CONDITIONS"]
+    l = v.is_a?(Array) ? v : v.to_s.split(" ")
+    l = ["$(inherited)"] if l.empty?
+    c.build_settings["SWIFT_ACTIVE_COMPILATION_CONDITIONS"] = (l + ["PLOXI0N_BLE"]).uniq.join(" ")
+  end
+  projet.save
+  plist = File.expand_path("../ios/App/App/Info.plist", __dir__)
+  info = Xcodeproj::Plist.read_from_path(plist)
+  info["UIBackgroundModes"] = ((info["UIBackgroundModes"] || []) + ["bluetooth-central", "bluetooth-peripheral"]).uniq
+  Xcodeproj::Plist.write_to_path(info, plist)
+  UI.success("le maillage BLE compilé (PLOXI0N_BLE), en arrière-plan : #{info["UIBackgroundModes"].join(', ')}")
+end
+
+# 🚗 (0.99.31, RS-7 : « ploxion sur CarPlay ») CARPLAY, option PLOXI0N_CARPLAY=1 : la condition de compilation (le Swift de PloxiCarPlay),
+# l'autorisation dans App.entitlements (com.apple.developer.carplay-<type> ; PLOXI0N_CARPLAY_TYPE = audio, le défaut, ou driving-task), la scène
+# CarPlay dans Info.plist. L'autorisation doit d'abord être ACCORDÉE par Apple sur l'identifiant de l'app (docs/CARPLAY.md), puis le profil
+# régénéré (le workflow : regenerer_profil) : sans elle, la signature échoue.
+CARPLAY = ENV["PLOXI0N_CARPLAY"] == "1"
+CARPLAY_TYPE = %w[audio driving-task].include?(ENV["PLOXI0N_CARPLAY_TYPE"].to_s) ? ENV["PLOXI0N_CARPLAY_TYPE"] : "audio"
+def ajouter_carplay
+  require "xcodeproj"
+  projet = Xcodeproj::Project.open(File.expand_path("../#{PROJET}", __dir__))
+  app = projet.targets.find { |t| t.name == "App" }
+  app.build_configurations.each do |c|
+    v = c.build_settings["SWIFT_ACTIVE_COMPILATION_CONDITIONS"]
+    l = v.is_a?(Array) ? v : v.to_s.split(" ")
+    l = ["$(inherited)"] if l.empty?
+    c.build_settings["SWIFT_ACTIVE_COMPILATION_CONDITIONS"] = (l + ["PLOXI0N_CARPLAY"]).uniq.join(" ")
+  end
+  projet.save
+  ent = File.expand_path("../ios/App/App/App.entitlements", __dir__)
+  e = Xcodeproj::Plist.read_from_path(ent)
+  e["com.apple.developer.carplay-#{CARPLAY_TYPE}"] = true
+  Xcodeproj::Plist.write_to_path(e, ent)
+  plist = File.expand_path("../ios/App/App/Info.plist", __dir__)
+  info = Xcodeproj::Plist.read_from_path(plist)
+  man = info["UIApplicationSceneManifest"] ||= {}
+  conf = man["UISceneConfigurations"] ||= {}
+  conf["CPTemplateApplicationSceneSessionRoleApplication"] = [{ "UISceneClassName" => "CPTemplateApplicationScene", "UISceneConfigurationName" => "CarPlay",
+                                                                "UISceneDelegateClassName" => "$(PRODUCT_MODULE_NAME).PloxiCarPlayScene" }]
+  Xcodeproj::Plist.write_to_path(info, plist)
+  UI.success("CarPlay compilé (PLOXI0N_CARPLAY), autorisation com.apple.developer.carplay-#{CARPLAY_TYPE}, scène CarPlay déclarée")
 end
 
 # l'identifiant des widgets sur le compte développeur, avec App Groups (le GROUPE lui-même s'assigne dans le portail : l'API ne le permet pas)
@@ -125,10 +220,14 @@ platform :ios do
     increment_build_number(xcodeproj: PROJET, build_number: numero.to_s)
     begin
       ajouter_confidentialite
+      ajouter_langues
     rescue => e   # jamais bloquant : sans manifeste, TestFlight accepte le build (Apple prévient par e-mail, ITMS-91053)
       UI.important("PrivacyInfo.xcprivacy pas ajouté : #{e.message}")
     end
     ajouter_vlc if VLC
+    retirer_ar if SANS_AR
+    ajouter_ble if BLE
+    ajouter_carplay if CARPLAY
     if WIDGETS
       ajouter_widgets
       identifiant_widgets

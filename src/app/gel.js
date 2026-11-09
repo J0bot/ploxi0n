@@ -26,6 +26,14 @@ export function installerGel({ W = globalThis.window, courant = () => null, viva
   };
   nouveau.__gel = true;
   W.requestAnimationFrame = nouveau;
+  // (0.69) LE SON WEB AUDIO d'un ploxion : qui a créé l'AudioContext (sa pile, une fois par contexte), et s'il joue encore — le sommeil des
+  // cachés (routeur) n'endort jamais un ploxion qui fait du son, même sans <audio> ni <video>
+  const sons = new Map();   // contexte → id du ploxion
+  for (const nom of ['AudioContext', 'webkitAudioContext']) {
+    const C = W[nom]; if (typeof C !== 'function' || C.__gel) continue;
+    const E = function (...a) { const ctx = new C(...a); const id = auteur(new Error().stack); if (id) sons.set(ctx, id); return ctx; };
+    E.prototype = C.prototype; E.__gel = true; W[nom] = E;
+  }
   W.cancelAnimationFrame = function cancelAnimationFrame(k) { if (geles.has(k)) { geles.delete(k); return; } return caf(k); };
   return {
     /** le ploxion revient devant : ses images reprennent */
@@ -33,5 +41,7 @@ export function installerGel({ W = globalThis.window, courant = () => null, viva
     /** le ploxion est fermé : ses images en attente partent avec lui */
     liberer(id) { for (const [k, g] of geles) if (g.id === id) geles.delete(k); },
     enAttente: () => geles.size,
+    /** ce ploxion fait-il du son (Web Audio qui tourne) ? */
+    aDuSon(id) { for (const [ctx, x] of sons) { if (ctx.state === 'closed') { sons.delete(ctx); continue; } if (x === id && ctx.state === 'running') return true; } return false; },
   };
 }

@@ -14,7 +14,7 @@ function serveur() {
       { id: 'pomo', name: 'Pomodoro', icon: '🍅', hasScreen: true, enabled: true, admin: false, status: 'live', description: 'minuteur', cat_label: 'Temps' },
       { id: 'secret', name: 'Admin', hasScreen: true, enabled: true, admin: true, status: 'live' },
       { id: 'idee', name: 'Idée', hasScreen: false, enabled: true, status: 'idea' } ]), entetes: {} };
-    const m = url.match(/\/px\/([^/]+)\/app\.js$/); const id = m && decodeURIComponent(m[1]);
+    const m = url.match(/\/px\/([^/]+)\/app\.js(?:\?|$)/); const id = m && decodeURIComponent(m[1]);
     if (!s.js[id]) return { status: 404, texte: '', entetes: {} };
     if (headers['If-None-Match'] && headers['If-None-Match'] === s.etag[id]) return { status: 304, texte: '', entetes: {} };
     return { status: 200, texte: s.js[id], entetes: { etag: s.etag[id] } };
@@ -178,11 +178,18 @@ test('dépendances 0.8 : les bions TOUCHÉS (non déclarés) aussi, récursiveme
   const b = await d.bundle('xk');
   assert.ok(b.indexOf('window.jOSStore') < b.indexOf('window.jOSXerkion=') && b.indexOf('window.jOSXerkion=') < b.indexOf('jOSApps'));
   // un ploxion installé à l'ancienne (sans ses bions touchés) est complété
-  await boxion.put('ploxions', 'xk', { ...(await boxion.get('ploxions', 'xk')), bions: [] });
+  const { manquants, ...ancien } = await boxion.get('ploxions', 'xk');
+  await boxion.put('ploxions', 'xk', { ...ancien, bions: [] }); await boxion.del('marketplace', 'installes-index');   // l'index d'avant ne le connaissait pas
   const n = demandes.length;
-  assert.deepEqual(await d.completerBions(), [{ id: 'xk', avant: 0, apres: 2 }]);
+  const r1 = await d.completerBions({ pause: 0 });
+  assert.deepEqual([...r1], [{ id: 'xk', avant: 0, apres: 2 }]); assert.equal(r1.reste, 0);
   assert.equal(demandes.length, n, 'les bions déjà là ne se retéléchargent pas');
-  assert.deepEqual(await d.completerBions(), [], 'idempotent');
+  assert.deepEqual([...await d.completerBions({ pause: 0 })], [], 'idempotent : il ne lui manque plus rien');
+  // (0.99.19) installé quand jOS3D n'était pas reconnu : l'index le croit complet ; aRevoir() le remet en file, sans relire de code
+  await boxion.put('ploxions', 'xk', { ...(await boxion.get('ploxions', 'xk')), bions: [] }); await d.completerBions({ pause: 0 });
+  assert.equal((await d.installes()).find(x => x.id === 'xk').manq, 0);
+  assert.ok(await d.aRevoir() >= 1);
+  assert.deepEqual([...await d.completerBions({ pause: 0 })], [{ id: 'xk', avant: 0, apres: 2 }], 'repris après aRevoir');
 });
 
 test('⚙ réglages et HUD composé : éléments, ordre, épinglés, ⚙ toujours sur l\'accueil, mode connecté, verrous', async () => {
@@ -478,16 +485,19 @@ test('les deux bords en même temps ouvrent portion (même depuis l\'accueil vid
   try {
     const racine = W.document.createElement('div'); W.document.body.appendChild(racine);
     const ouverts = [], vib = [];
-    const r = creerRouteur({ fenetre: W, racine, catalogue: [], vibrer: (x) => vib.push(x), doubleBord: () => ouverts.push('portion') });
+    const r = creerRouteur({ fenetre: W, racine, catalogue: [], vibrer: (x) => vib.push(x), doubleBord: () => ouverts.push('portion'), surXers: () => ouverts.push('xers') });
     await r.accueil();
     const g = racine.querySelector('.px-bord-g'), d = racine.querySelector('.px-bord-d');
-    g.getBoundingClientRect = d.getBoundingClientRect = () => ({ top: 0, height: 0 });   // le milieu
-    const ev = (el, t, x) => el.dispatchEvent(new W.MouseEvent(t, { clientX: x, bubbles: true }));
-    ev(g, 'pointerdown', 2); ev(d, 'pointerdown', 380); ev(g, 'pointermove', 80); ev(d, 'pointermove', 300);
+    g.getBoundingClientRect = d.getBoundingClientRect = () => ({ top: 0, height: 1000 });
+    const ev = (el, t, x, y = 50) => el.dispatchEvent(new W.MouseEvent(t, { clientX: x, clientY: y, bubbles: true }));
+    ev(g, 'pointerdown', 2); ev(d, 'pointerdown', 380); ev(g, 'pointermove', 80); ev(d, 'pointermove', 300);   // en haut : le portion
     ev(g, 'pointerup', 80); assert.deepEqual(ouverts, [], 'pas avant d\'avoir lâché les deux');
     ev(d, 'pointerup', 300);
     assert.deepEqual(ouverts, ['portion']); assert.ok(vib.includes('portion'));
     ev(d, 'pointerdown', 380); ev(d, 'pointerup', 300); assert.deepEqual(ouverts, ['portion'], 'un seul bord ne l\'ouvre pas');
+    // (0.75, les réglages de RS-7) au milieu, les deux bords : les xers à côté
+    ev(g, 'pointerdown', 2, 500); ev(d, 'pointerdown', 380, 500); ev(g, 'pointermove', 80, 500); ev(d, 'pointermove', 300, 500); ev(g, 'pointerup', 80, 500); ev(d, 'pointerup', 300, 500);
+    assert.deepEqual(ouverts, ['portion', 'xers']);
   } finally { p.fin(); }
 });
 
@@ -507,6 +517,13 @@ test('appui long dans un ploxion = clic droit (contextmenu), jamais sur un champ
     assert.equal(recus.length, 1, 'pas sur un champ');
     z.dispatchEvent(new W.MouseEvent('pointerdown', { bubbles: true, clientX: 40, clientY: 50 })); z.dispatchEvent(new W.MouseEvent('pointerup', { bubbles: true })); await attendre(560);
     assert.equal(recus.length, 1, 'un appui court reste un clic');
+    // ≋ (0.99.4) un instrument : tenir une note (un pad du synthé) n'est pas un clic droit, et le toucher suivant n'est pas avalé
+    const pad = W.document.createElement('div'); pad.setAttribute('data-instrument', ''); pad.innerHTML = '<b class="pad">♪</b>'; racine.querySelector('.px-hote').appendChild(pad);
+    pad.addEventListener('contextmenu', () => recus.push(['pad']));
+    pad.firstChild.dispatchEvent(new W.MouseEvent('pointerdown', { bubbles: true, clientX: 40, clientY: 120 })); await attendre(560);
+    assert.equal(recus.length, 1, 'pas de clic droit sur un instrument');
+    let clic = 0; z.addEventListener('click', () => clic++); z.dispatchEvent(new W.MouseEvent('click', { bubbles: true }));
+    assert.equal(clic, 1, 'le toucher suivant passe');
   } finally { p.fin(); }
 });
 
@@ -657,4 +674,88 @@ test('(0.51) un ploxion servi dans sa page (Spotify : pas d\'app.js) s\'installe
   const avant = appels.filter(u => /jOSCineJournal/.test(u)).length;
   await d.completerBions();
   assert.equal(appels.filter(u => /jOSCineJournal/.test(u)).length, avant, 'noté absent : pas redemandé');
+});
+
+test('(0.67) la portée d\'un ploxion : natif, partout, partiel, nexus, web externe, pas mesuré', async () => {
+  const { porteeDe } = await import('../src/marketplace/marketplace.js');
+  assert.equal(porteeDe({ interne: true }), 'natif');
+  assert.equal(porteeDe({ compat: { classe: 'A', verdict: 'pret', complet: 'oui' } }), 'partout');
+  assert.equal(porteeDe({ compat: { classe: 'A' } }), 'partout');
+  assert.equal(porteeDe({ compat: { classe: 'A', verdict: 'pret', complet: 'non' } }), 'partiel');
+  assert.equal(porteeDe({ compat: { classe: 'B' } }), 'nexus');
+  assert.equal(porteeDe({ compat: { classe: 'C' } }), 'externe');
+  assert.equal(porteeDe({}), 'inconnu');
+});
+
+// (0.99.3) RS-7 sur l'iPhone : « y a des ploxions qui s'installent pas » ; l'audit des 496 ploxions du labo : 8 refusés, 140 sans leurs bions
+test('⬇ (0.99.3) les trois façons d\'enregistrer une app dans sa page : [\'id\'], [ID] avec ID posé, .id', async () => {
+  const { bundleDeLaPage } = await import('../src/marketplace/depot.js');
+  const page = (s) => '<html><script>var x = 1;</script><script>' + s + '</script><div id="pxhost"></div></html>';
+  assert.ok(bundleDeLaPage(page("window.jOSApps['notes'] = { mount: m };"), 'notes'));
+  assert.ok(bundleDeLaPage(page("var W = window, D = document, ID = 'chemin'; window.jOSApps[ID] = { mount: m };"), 'chemin'));
+  assert.ok(bundleDeLaPage(page("const ID = \"musique\";\nwindow.jOSApps[ID] = { mount: m };"), 'musique'));
+  assert.ok(bundleDeLaPage(page("jOSApps.calendar = { mount: m };"), 'calendar'));
+  assert.equal(bundleDeLaPage(page("var ID = 'autre'; window.jOSApps[ID] = {};"), 'chemin'), null, 'l\'ID d\'un autre ploxion');
+  assert.equal(bundleDeLaPage(page("if (jOSApps[ID] === x) {} var ID = 'chemin';"), 'chemin'), null, 'une comparaison n\'est pas un enregistrement');
+});
+
+test('⬇ (0.99.3) un 429 du labo : on patiente et on réessaie ; un bion n\'est noté absent que sur un vrai 404', async () => {
+  const boxion = creerMemoire(); let essais = 0; const vus = [];
+  const http = { async get(url) { vus.push(url);
+    if (url.endsWith('/px/p/app.js')) return { status: 200, texte: "window.jOSApps['p'] = { mount(){ jOSKnob.create(); jOSRien.x(); } }; /* bions: jOSKnob jOSRien */", entetes: {} };
+    if (url.endsWith('/bion-app/jOSKnob.js')) { essais++; return essais < 3 ? { status: 429, texte: 'Too Many Requests', entetes: { 'retry-after': '0' } } : { status: 200, texte: 'window.jOSKnob = {}; /* jOSKnob */', entetes: {} }; }
+    if (url.endsWith('/bion-app/jOSRien.js')) return { status: 404, texte: '<html>404</html>', entetes: {} };
+    return { status: 404, texte: '', entetes: {} }; } };
+  const d = creerDepot({ boxion, http });
+  const r = await d.installer('p');
+  assert.ok(r.bions.includes('jOSKnob'), 'jOSKnob arrive après deux 429 : ' + JSON.stringify(r));
+  assert.equal(essais, 3);
+  assert.equal(await boxion.get('bions-absents', 'jOSKnob'), null, 'jamais noté absent');
+  assert.equal((await boxion.get('bions-absents', 'jOSRien')).status, 404);
+  // un ancien « absent » sur un 429 (avant la 0.99.3) ne bloque plus
+  await boxion.del('bions', 'jOSKnob'); await boxion.put('bions-absents', 'jOSKnob', { le: Date.now(), status: 429 }); essais = 10;
+  const r2 = await d.installer('p'); assert.ok(r2.bions.includes('jOSKnob'));
+});
+
+test('↻ (0.99.5) les mises à jour par le CHANGELOG : un ploxion qui n\'a pas changé n\'est pas retéléchargé', async () => {
+  const boxion = creerMemoire(); const vus = []; let changelog = { head: 'a1', par_ploxion: { pomo: { dernier: '2026-01-01', n: 3, commits: ['c3'] } } };
+  const bundles = { pomo: "window.jOSApps['pomo'] = { v: 1 };", notes: "window.jOSApps['notes'] = { v: 1 };" };
+  const http = { async get(url) { vus.push(url.replace(/\?.*/, ''));
+    if (url.includes('/px/changelog.json')) return { status: 200, texte: JSON.stringify(changelog), entetes: {} };
+    const m = /\/px\/([a-z]+)\/app\.js/.exec(url); if (m && bundles[m[1]]) return { status: 200, texte: bundles[m[1]], entetes: {} };
+    return { status: 404, texte: '', entetes: {} }; } };
+  const d = creerDepot({ boxion, http });
+  await d.installer('pomo'); await d.installer('notes');
+  vus.length = 0;
+  // installés après leur dernier changement (pomo : 2026-01-01 ; notes : absent du changelog) → rien n'est téléchargé
+  let r = await d.aJour();
+  assert.deepEqual(r.map(x => x.etat), ['a-jour', 'a-jour']); assert.deepEqual(vus, ['https://labo.j0bot.ch/px/changelog.json'], 'une seule requête : ' + vus.join(', '));
+  // pomo change au labo : seul pomo est téléchargé
+  changelog = { head: 'a2', par_ploxion: { pomo: { dernier: '2099-01-01', n: 4, commits: ['c4'] } } }; bundles.pomo = "window.jOSApps['pomo'] = { v: 2 };"; vus.length = 0;
+  r = await d.aJour();
+  assert.deepEqual(r.find(x => x.id === 'pomo').etat, 'mis-a-jour'); assert.deepEqual(r.find(x => x.id === 'notes').etat, 'a-jour');
+  assert.deepEqual(vus.filter(u => u.includes('app.js')), ['https://labo.j0bot.ch/px/pomo/app.js']);
+  // la fois d'après : plus rien
+  vus.length = 0; await d.aJour(); assert.deepEqual(vus, ['https://labo.j0bot.ch/px/changelog.json']);
+});
+
+test('◬ (0.99.19, le bilan de santé : moteur, doomion, monde-os, scan-reel « jOSEngine absent ») un bion dont le nom commence par un chiffre (jOS3D) est un bion', async () => {
+  const { bionsTouches } = await import('../src/marketplace/depot.js');
+  assert.deepEqual(bionsTouches("function create(c) { if (!window.jOS3D) return null; jOS3D.load(); }", 'jOSEngine'), ['jOS3D']);
+  assert.deepEqual(bionsTouches("window.jOS3D = { load() {} }; jOS3D.load()"), [], 'un bion défini par le code lui-même');
+});
+
+test('⧉ (0.99.21) un bion déjà vivant dans la page (l\'app, le pack, un autre ploxion) n\'est ni relu ni relancé', async () => {
+  const s = serveur(), boxion = creerMemoire();
+  s.js.xk = BUNDLE('xk') + '\nif (window.jOSXerkion) jOSXerkion.ouvrir();';
+  const BIONS = { jOSXerkion: 'window.jOSXerkion={ouvrir(){ if (window.jOSStore) jOSStore.get(); }};', jOSStore: 'window.jOSStore={get(){}};' };
+  const get = s.http.get; s.http.get = async (url, o) => { const m = url.match(/\/px\/bion-app\/(\w+)\.js$/); if (m) return BIONS[m[1]] ? { status: 200, texte: BIONS[m[1]], entetes: {} } : { status: 404, texte: '', entetes: {} }; return get(url, o); };
+  const d = creerDepot({ boxion, http: s.http }); await d.installer('xk');
+  const lus = []; const g0 = boxion.get.bind(boxion); boxion.get = (ns, k) => { if (ns === 'bions') lus.push(k); return g0(ns, k); };
+  const deja = new Set(), b = await d.bundle('xk', { deja, present: (n) => n === 'jOSStore' });
+  assert.ok(!b.includes('window.jOSStore={'), 'jOSStore est déjà là'); assert.ok(b.includes('window.jOSXerkion='));
+  assert.deepEqual(lus, ['jOSXerkion'], 'seul le bion qui manque traverse le pont');
+  assert.ok(deja.has('jOSStore') && deja.has('jOSXerkion'));
+  lus.length = 0; const b2 = await d.bundle('xk', { deja, present: () => false });
+  assert.ok(!b2.includes('window.jOSXerkion=') && !lus.length, 'un second ploxion qui compose les mêmes bions : rien n\'est relu');
 });

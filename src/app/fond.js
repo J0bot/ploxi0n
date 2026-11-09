@@ -92,5 +92,7 @@ export function creerFond({ W = globalThis.window, boxion, vibrer = () => {} }) 
     (D.getElementById('ploxi0n') || D.body).appendChild(f);
     peindre();
   }
-  return { pret, composer, regler, choisirPhoto, retirer, reglage: () => ({ ...r }), image: () => image };
+  /** § (0.77) la photo d'un xer, remise en place quand on y revient */
+  async function poserImage(url) { if (!url) return; image = url; await boxion.put('reglages', 'fond-image', { url }).catch(() => {}); appliquer(); }
+  return { pret, composer, regler, choisirPhoto, retirer, poserImage, reglage: () => ({ ...r }), image: () => image };
 }

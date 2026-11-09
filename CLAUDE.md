@@ -12,7 +12,8 @@ français, dans le vocabulaire du xerboxion (ploxion, bion, tsoin, boxion, xer, 
 - Ce qui touche le chemin iPhone : **le faux iPhone** (`npm run build && npx vite preview --port 4173 &` puis
   `node tools/faux-iphone/faux-iphone.mjs http://localhost:4173/ build/fi --script tools/faux-iphone/parcours-<x>.mjs`) — le vrai
   `native-bridge.js` de Capacitor + les plugins tels que le Swift les déclare. Le navigateur et jsdom ne voient PAS les bugs du pont natif.
-- Une version = `package.json` + `VERSION` de `src/main.js` + une entrée de `src/app/nouveautes.js` + la feuille de route.
+- Une version = `package.json` + `VERSION` de `src/main.js` + une entrée de `src/app/nouveautes.js` + la feuille de route
+  + `node tools/tsoins-nexus.mjs` (les commits = les tsoins du nexus, embarqués dans le passé).
 
 ## Les pièges déjà payés
 

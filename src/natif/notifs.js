@@ -8,14 +8,14 @@
 import { surPromesse } from './plugin-sur.js';
 export function creerNotifs({ W = globalThis.window, boxion, vibrer = () => {}, envoyer, source = 'https://labo.j0bot.ch', ouvrir = () => {}, charger = () => import('@capacitor/local-notifications') }) {
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
-  let reglage = { coord: false, dernierCoord: 0 }, minuterie = null, ecoute = false;
+  let reglage = { coord: false, dernierCoord: 0, proche: true }, minuterie = null, ecoute = false;   // (0.99.40) proche : les messages du maillage
   const pret = boxion.get('reglages', 'notifs').then(v => { if (v && typeof v === 'object') reglage = { ...reglage, ...v }; }).catch(() => {});
   const garder = () => boxion.put('reglages', 'notifs', reglage).catch(() => {});
   async function LN() { return surPromesse((await charger()).LocalNotifications); }
   async function permission() {
     const L = await LN(); const p = await L.requestPermissions();
     if (p.display !== 'granted') throw new Error('notifications refusées : Réglages iOS › ploxi0n › Notifications');
-    if (!ecoute) { ecoute = true; L.addListener('localNotificationActionPerformed', (e) => { const x = e && e.notification && e.notification.extra; if (x && x.ouvrir) ouvrir(x.ouvrir); }).catch(() => {}); }
+    if (!ecoute) { ecoute = true; L.addListener('localNotificationActionPerformed', (e) => { const x = e && e.notification && e.notification.extra; if (x && x.ouvrir) ouvrir(x.ouvrir, x.params || null); }).catch(() => {}); }
     return L;
   }
   async function verifierCoord() {
@@ -44,6 +44,17 @@ export function creerNotifs({ W = globalThis.window, boxion, vibrer = () => {}, 
       const L = await permission();
       await L.schedule({ notifications: [{ id: 4243, title: '◇ ploxi0n', body: 'Une notification de test : verrouille ton téléphone, elle arrive dans 5 secondes.', schedule: { at: new Date(Date.now() + 5000) }, extra: { ouvrir: 'reglages-app' } }] });
     },
+    /** ◉ (0.99.40) un message du maillage (Proche), app en arrière-plan ou Proche fermé : jamais de fenêtre de permission ici (on peut être
+     *  en arrière-plan) ; seulement si les notifications sont déjà permises (la notification de test, coord, ou le push l'ont demandé) */
+    async proche({ titre, texte, salon, cle }) {
+      if (!natif() || reglage.proche === false) return false;
+      const L = await LN(); const p = await L.checkPermissions().catch(() => null); if (!p || p.display !== 'granted') return false;
+      if (!ecoute) { ecoute = true; L.addListener('localNotificationActionPerformed', (e) => { const x = e && e.notification && e.notification.extra; if (x && x.ouvrir) ouvrir(x.ouvrir, x.params || null); }).catch(() => {}); }
+      let h = 0; for (const c of String(cle || salon || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+      await L.schedule({ notifications: [{ id: 710000 + (h % 80000), title: String(titre || '◉ proche').slice(0, 80), body: String(texte || '').slice(0, 220), threadIdentifier: 'proche:' + String(salon || ''), extra: { ouvrir: 'proche', params: { salon: String(salon || '') } } }] });
+      vibrer('notification'); return true;
+    },
+    async regler(o) { reglage = { ...reglage, ...o }; await garder(); return { ...reglage }; },
     async coord(actif) {
       reglage.coord = !!actif; if (!actif) reglage.dernierCoord = 0;
       await garder();

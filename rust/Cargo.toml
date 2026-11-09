@@ -1,0 +1,11 @@
+# ploxi0n en Rust (0.99.17, RS-7 : « le plus de truc en Rust possible ») : docs/RUST.md
+[workspace]
+resolver = "2"
+members = ["ploxi-coeur", "ploxi-digest"]
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

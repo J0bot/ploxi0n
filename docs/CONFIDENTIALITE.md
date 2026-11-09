@@ -6,7 +6,9 @@
 
 ## Sur le téléphone
 - Les ploxions, leurs données, tes tsoins, tes vocaux et tes réglages sont gardés sur l'iPhone, dans la base de l'app,
-  chiffrée par iOS quand le téléphone est verrouillé (Data Protection « Complete »).
+  chiffrée par iOS (Data Protection : « Complete » pour l'app ; la base elle-même « jusqu'au premier déverrouillage », pour que le son
+  en arrière-plan et les raccourcis comme « dodo » marchent iPhone verrouillé : chiffrée tant que l'iPhone n'a pas été déverrouillé
+  depuis son démarrage).
 - Les capacités de l'iPhone (position, micro, caméra, Bluetooth, NFC, Santé, HomeKit, Apple Music…) ne servent qu'au moment où tu
   les utilises, après la demande d'iOS ; tu peux les retirer dans Réglages iOS › ploxi0n.
 

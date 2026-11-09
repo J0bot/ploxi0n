@@ -4,9 +4,18 @@
   "webDir": "dist",
   "ios": {
     "contentInset": "never",
+    "backgroundColor": "#07050c",
     "limitsNavigationsToAppBoundDomains": false
   },
   "plugins": {
+    "SystemBars": {
+      "style": "DARK"
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "overlaysWebView": true,
+      "backgroundColor": "#07050c"
+    },
     "CapacitorSQLite": {
       "iosDatabaseLocation": "Library/CapacitorDatabase",
       "iosIsEncryption": false,
@@ -14,6 +23,15 @@
       "iosBiometric": {
         "biometricAuth": false
       }
+    },
+    "PushNotifications": {
+      "presentationOptions": [
+        "list",
+        "badge"
+      ]
     }
+  },
+  "android": {
+    "backgroundColor": "#07050c"
   }
 }

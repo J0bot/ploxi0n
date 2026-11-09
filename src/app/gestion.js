@@ -9,7 +9,7 @@ export function enregistrerGestion({ W = globalThis.window, depot, ouvrir = () =
   function mount(hote) {
     let vivant = true, tri = 'poids', ouvert = null, msg = '';
     const dessiner = async () => {
-      const inv = await depot.inventaire(); if (!vivant) return;
+      const inv = await depot.inventaire({ tailles: true }); if (!vivant) return;
       const T = inv.totaux, liste = inv.ploxions.slice().sort(tri === 'nom' ? (a, b) => String(a.nom).localeCompare(String(b.nom)) : tri === 'deps' ? (a, b) => b.deps.length - a.deps.length : (a, b) => b.liberable - a.liberable);
       const max = Math.max(1, ...liste.map(p => p.total));
       hote.innerHTML = '<div class="px-page px-gestion"><p class="px-grave">📦 ploxions installés · ' + liste.length + '</p>'
@@ -35,14 +35,14 @@ export function enregistrerGestion({ W = globalThis.window, depot, ouvrir = () =
         if ((b = t.closest('[data-retirer]'))) {
           const id = b.getAttribute('data-retirer');
           if (b.dataset.sur !== '1') { b.dataset.sur = '1'; b.textContent = 'sûr ? toucher encore pour retirer'; vibrer('moyen'); return; }
-          const libere = (await depot.inventaire()).ploxions.find(p => p.id === id);
+          const libere = (await depot.inventaire({ tailles: true })).ploxions.find(p => p.id === id);
           await retirer(id);
           // les bions qui ne servaient qu'à lui partent aussi
           for (const d of (libere && libere.deps) || []) if (d.partage <= 1) await depot.retirerBion(d.nom).catch(() => {});
           msg = '« ' + id + ' » retiré · ' + ko((libere && libere.liberable) || 0) + ' libérés'; ouvert = null; vibrer('succes'); return dessiner();
         }
         if (t.closest('[data-orphelins]')) {
-          const inv = await depot.inventaire(); let n = 0, o = 0;
+          const inv = await depot.inventaire({ tailles: true }); let n = 0, o = 0;
           for (const x of inv.totaux.orphelins) { await depot.retirerBion(x.nom).catch(() => {}); n++; o += x.octets; }
           msg = n + ' bion(s) orphelin(s) retiré(s) · ' + ko(o) + ' libérés'; vibrer('succes'); return dessiner();
         }

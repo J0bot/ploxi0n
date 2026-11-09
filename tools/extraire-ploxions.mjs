@@ -54,7 +54,7 @@ for (const id of ids) {
   }
   // ses bions (servis seuls par le labo : /px/bion-app/<jOSNom>.js) et les bibliothèques locales qu'ils chargent (ex. /vendor/js/openpgp.min.js)
   const bions = [];
-  for (const b of [...new Set(d.js.match(/\bjOS[A-Z][A-Za-z0-9]*/g) || [])].filter(b => !FOURNIS.has(b))) {
+  for (const b of [...new Set(d.js.match(/\bjOS[A-Z0-9][A-Za-z0-9]*/g) || [])].filter(b => !FOURNIS.has(b))) {
     const r = await fetch(SOURCE_BIONS + '/px/bion-app/' + b + '.js').catch(() => null);
     if (!r || r.status !== 200) continue;
     const js = await r.text(); if (!js.includes(b)) continue;

@@ -52,10 +52,19 @@ export function installerImages({ W = globalThis.window, source = 'https://labo.
     if (n.querySelectorAll) for (const x of n.querySelectorAll('img,source,video,audio,iframe,[style*="url("]')) img(x);
   }
   balayer(D.body);
+  // (0.63) les styles écrits par l'app à chaque image (la fractale, les bords, le fantôme, le parallaxe) ne sont plus relus : un
+  // style ne compte que s'il porte une url(…) ; un élément vu une fois par lot ; getPropertyValue lit une propriété sans tout sérialiser
+  const APP = '.px-hote,.px-fx-icone,.px-fx-cible,.px-fx-voile,.px-fx-dessus,.px-fantome,.px-bord,.px-fond i,.px-pages,.px-plat,.px-scene,.px-fx-calque,.px-fx-curseur';
   new W.MutationObserver((l) => {
+    const vus = new Set();
     for (const r of l) {
-      if (r.type === 'childList') for (const n of r.addedNodes) balayer(n);
-      else if (r.target.nodeType === 1) img(r.target);
+      if (r.type === 'childList') { for (const n of r.addedNodes) balayer(n); continue; }
+      const t = r.target; if (t.nodeType !== 1 || vus.has(t)) continue; vus.add(t);
+      if (r.attributeName === 'style') {
+        if (t.matches && t.matches(APP)) continue;
+        const st = t.style; if (!st || !/url\(/.test(st.getPropertyValue('background-image') + st.getPropertyValue('background'))) continue;
+      }
+      img(t);
     }
   }).observe(D.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['src', 'srcset', 'poster', 'style'] });
   return { abs, distant };

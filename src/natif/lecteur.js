@@ -60,6 +60,7 @@ export function installerLecteur({ W = globalThis.window, boxion, vibrer = () =>
 
   // ---- l'haptique du son ----
   let ctx = null; const sources = new WeakMap();
+  const fractale = () => { const r = D.getElementById('ploxi0n'); return !!(r && r.classList.contains('px-fx')); };
   function lisible(m) {
     const s = m.currentSrc || m.src || ''; if (!s) return false;
     if (/^(blob|data):/.test(s)) return true;
@@ -72,8 +73,11 @@ export function installerLecteur({ W = globalThis.window, boxion, vibrer = () =>
       ctx = ctx || new AC(); if (ctx.state === 'suspended') ctx.resume();
       let a = sources.get(m);
       if (!a) { const src = ctx.createMediaElementSource(m), an = ctx.createAnalyser(); an.fftSize = 512; src.connect(an); an.connect(ctx.destination); a = { an, buf: new Uint8Array(an.frequencyBinCount), moyenne: 0, dernier: 0 }; sources.set(m, a); }
+      const n = a.tour = (a.tour || 0) + 1;   // un seul battement par élément (pause → lecture pendant l'attente de la fractale : pas deux boucles)
       const boucle = () => {
-        if (m.paused || m.ended || D.hidden || !reglage.haptiqueSon) return;   // rien quand rien ne joue ou que l'écran est caché (Pi 4 : jamais de rAF invisible)
+        if (a.tour !== n || m.paused || m.ended || D.hidden || !reglage.haptiqueSon) return;   // rien quand rien ne joue ou que l'écran est caché (Pi 4 : jamais de rAF invisible)
+        // (0.63) la fractale (#ploxi0n.px-fx) a ses crans : le son se tait, un regard par battement, et plus de rAF pendant le geste
+        if (fractale()) { W.setTimeout(boucle, 250); return; }
         a.an.getByteFrequencyData(a.buf);
         let e = 0; for (let i = 1; i < 12; i++) e += a.buf[i]; e /= 11;   // les basses (≈ 40–500 Hz)
         const t = W.performance.now();

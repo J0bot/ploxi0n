@@ -1,0 +1,14 @@
+[package]
+name = "ploxi-coeur"
+version = "0.1.0"
+edition = "2024"
+description = "Le cœur de ploxi0n en Rust : les bions purs (proche, autour, dire), pour le WASM de la WebView et le natif d'iOS"
+publish = false
+
+[lib]
+# cdylib : le WASM de la WebView ; staticlib : la bibliothèque d'iOS (aarch64-apple-ios) ; rlib : les tests
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["float_roundtrip"] }

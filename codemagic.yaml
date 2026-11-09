@@ -2,7 +2,7 @@
 # Le même chemin que .github/workflows/ios.yml : npm → tests → build → cap sync → paquets Swift → fastlane beta (match + clé API App Store
 # Connect). Les secrets : un groupe « ploxi0n » dans Codemagic (Teams › Global variables and secrets) avec les MÊMES noms que les secrets
 # GitHub : ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8, APPLE_TEAM_ID, MATCH_PAT, MATCH_PASSWORD, TESTFLIGHT_EMAIL ; et, si voulu,
-# PLOXI0N_WIDGETS=1, PLOXI0N_VLC=1. Démarrer : un tag v* poussé, ou « Start new build » dans Codemagic. Guide : docs/TESTFLIGHT.md.
+# PLOXI0N_WIDGETS=1, PLOXI0N_VLC=1, PLOXI0N_BLE=1 (0.99.24 : le maillage en Bluetooth basse consommation) ; PLOXI0N_AR=0 retire l'AR native (secours, 0.73). Démarrer : un tag v* poussé, ou « Start new build » dans Codemagic. Guide : docs/TESTFLIGHT.md.
 workflows:
   testflight:
     name: ploxi0n → TestFlight

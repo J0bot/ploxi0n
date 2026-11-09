@@ -33,12 +33,33 @@ test('jOSTsoin.mark → boxion_local « tsoins », et list() les rend ; POST /ch
   await attendre();
   const t = await p.boxion.lire('tsoins');
   assert.equal(t.length, 1); assert.deepEqual([t[0].entry.kind, t[0].entry.k, t[0].entry.d, t[0].entry.x], ['action', 'clic', 'bouton', 1]);
-  assert.equal(p.w.jOSTsoin.list().length, 1);
+  assert.equal(p.w.jOSTsoin.marques().length, 1);
   const r = await p.w.fetch('/chat', { method: 'POST', body: JSON.stringify({ kind: 'tsoin', texte: 'note' }) });
   assert.equal(r.status, 200);
   assert.equal((await p.boxion.lire('tsoins')).at(-1).entry.texte, 'note');
-  assert.equal(p.w.jOSTsoin.isOn(), true);
   p.fin();
+});
+
+test('⧗ (0.99.19) l\'enregistreur du labo : start → mark → stop rend une session { label, scope, at, dur, events }, gardée', async () => {
+  const boxion = creerMemoire();
+  const p = await page({ boxion });
+  const T = p.w.jOSTsoin, vus = [];
+  p.w.document.addEventListener('tsoin:state', (e) => vus.push(e.detail.on));
+  assert.equal(T.isOn(), false); assert.deepEqual(T.list(), []);
+  T.start('essai'); assert.equal(T.isOn(), true);
+  T.mark('clic', 'a'); T.mark('clic', 'b');
+  const t = T.stop();
+  assert.equal(T.isOn(), false);
+  assert.deepEqual([t.label, t.scope, t.events.length, typeof t.at, typeof t.dur], ['essai', 'perso', 2, 'number', 'number']);
+  assert.deepEqual(vus, [true, false], 'tsoin:state au début et à l\'arrêt, comme le labo');
+  T.tag(t.id, 'construction'); T.patch(t.id, { rv: 'x' });
+  assert.deepEqual([T.get(t.id).scope, T.get(t.id).rv, T.list().length], ['construction', 'x', 1]);
+  await attendre();
+  p.fin();
+  const q = await page({ boxion });
+  assert.equal(q.w.jOSTsoin.list()[0].label, 'essai', 'les sessions survivent au redémarrage');
+  q.w.jOSTsoin.remove(t.id); assert.equal(q.w.jOSTsoin.list().length, 0);
+  q.fin();
 });
 
 test('/xion/snapshot reconstruit l\'état depuis le journal ; POST /xion/emit diffuse et journalise', async () => {
@@ -118,7 +139,7 @@ test('le TEST HORS LIGNE DE RÉFÉRENCE (simulé) : mode avion, écrire (localSt
   const b = await page({ boxion, avion: true }); // une page neuve : localStorage vide
   assert.equal(b.w.localStorage.getItem('jos:compteur'), '41', 'restauré depuis boxion_local');
   assert.equal(b.w.localStorage.getItem('xb:reglage'), '{"x":1}');
-  assert.equal(b.w.jOSTsoin.list().at(-1).k, 'ecrit', 'le tsoin est là');
+  assert.equal(b.w.jOSTsoin.marques().at(-1).k, 'ecrit', 'le tsoin est là');
   const vu = [];
   b.w.jOSPorts.on('ploxion.p1.out', (d) => vu.push(d));
   b.w.jOSPorts.emit('p1', 'out', 'bonjour p2');
@@ -210,4 +231,25 @@ test('jOSBoxion connecté : le boxion fait foi en ligne, copie locale hors ligne
     connecte = false; await B.save('perso', 'k', [{ id: 'anonyme' }]); connecte = true;
     assert.equal(await B.pousser(), 0); assert.equal(serveur['perso\u0000k'], undefined);
   } finally { p.fin(); }
+});
+
+test('⇄ (0.99.19, le bilan de santé : quetes lisait /px/quetes.json dans l\'app) les lectures publiques /px du labo partent au labo, même hors mode connecté ; gardées pour le mode avion', async () => {
+  const envois = []; let enLigne = true;
+  const relais = { routes: [{ prefixe: '/px', get: true, filtre: (c) => /\.json$/i.test(c), vers: (c) => 'https://labo.j0bot.ch' + c }],
+    envoyer: async (q) => { envois.push(q); if (!enLigne) throw new Error('mode avion'); return { status: 200, texte: JSON.stringify({ quetes: [1, 2] }) }; } };
+  const p = await page({ relais });
+  const r = await p.w.fetch('/px/quetes.json');
+  assert.equal(r.status, 200); assert.equal((await r.json()).quetes.length, 2);
+  assert.equal(envois[0].url, 'https://labo.j0bot.ch/px/quetes.json');
+  assert.equal((await p.w.fetch('/px/boxion/load?ns=a&key=b')).status, 200, '/px/boxion reste local hors connexion');
+  assert.equal(envois.length, 1);
+  await p.w.fetch('/px/x', { method: 'POST', body: '{}' });
+  assert.equal(envois.length, 1, 'jamais une écriture');
+  await p.w.fetch('/px/doomion/doom_core.wasm');
+  assert.equal(envois.length, 1, 'que du JSON (le relais rend du texte)');
+  enLigne = false;
+  await attendre(30);
+  const h = await p.w.fetch('/px/quetes.json');
+  assert.equal(h.status, 200, 'le mode avion ressert la copie'); assert.equal((await h.json()).quetes.length, 2);
+  p.fin();
 });

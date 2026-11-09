@@ -72,7 +72,7 @@ for (const p of registre) {
     }
   }
   if (urlCfg && /^https?:\/\//i.test(urlCfg)) externes.add(urlCfg.replace(/^(https?:\/\/[^/?#]+).*/i, '$1'));
-  const bions = [...new Set((js.match(/\bjOS[A-Z][\w]*/g) || []))].sort();
+  const bions = [...new Set((js.match(/\bjOS[A-Z0-9][\w]*/g) || []))].sort();
   const xion = /\bjOSPorts\b/.test(js) ? 'oui' : 'non';
   const bionsReseau = bions.filter(b => BIONS_RESEAU.has(b));
   let classe;

@@ -1,0 +1,18 @@
+/* généré par tools/ios/infoplist-langues.mjs : ne pas éditer à la main */
+"NSCameraUsageDescription" = "ploxi0n uses the camera when a ploxion asks for it (photo, scan); nothing leaves your phone without your consent.";
+"NSPhotoLibraryUsageDescription" = "ploxi0n opens your photos when you choose to give one to a ploxion.";
+"NSPhotoLibraryAddUsageDescription" = "ploxi0n saves to your photos what you choose to export.";
+"NSMicrophoneUsageDescription" = "ploxi0n uses the microphone when a ploxion records or listens, only when you ask.";
+"NSLocationWhenInUseUsageDescription" = "ploxi0n uses your location when a ploxion needs it (map, places, finding your friends); it stays on your phone unless you share it with them.";
+"NSMotionUsageDescription" = "ploxi0n reads the motion sensors for the ploxions that use them (steps, tilt, compass).";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "ploxi0n only uses your location in the background if a ploxion offers it and you accept (for example places you visited); it stays on your phone.";
+"NSLocationAlwaysUsageDescription" = "ploxi0n only uses your location in the background if a ploxion offers it and you accept; it stays on your phone.";
+"NSBluetoothAlwaysUsageDescription" = "ploxi0n uses Bluetooth to see and control the devices around you (sensors, lights, robots) when a ploxion offers it.";
+"NSHealthShareUsageDescription" = "ploxi0n reads the Health data you allow (steps, sleep, heart rate) for your health ploxions. It stays on your phone, unless you choose to send a summary to your own boxion.";
+"NSHealthUpdateUsageDescription" = "ploxi0n only writes to Health what you ask it to record.";
+"NFCReaderUsageDescription" = "ploxi0n reads the NFC tags you bring close, for the ploxions that use them.";
+"NSLocalNetworkUsageDescription" = "ploxi0n finds and controls the devices on your network: Home Assistant, WLED, ESPHome, Tasmota, your Raspberry Pis and your boxions. And, when you start it in Proche, the phones around you to share messages, sound and where your friends are.";
+"NSHomeKitUsageDescription" = "ploxi0n turns on, turns off and shows your home accessories from your ploxions.";
+"NSAppleMusicUsageDescription" = "ploxi0n searches and plays Apple Music in your ploxions.";
+"NSSpeechRecognitionUsageDescription" = "ploxi0n turns your voice notes into text, on your phone when possible.";
+"NSFaceIDUsageDescription" = "ploxi0n uses Face ID to open the ploxions and secrets you locked.";
