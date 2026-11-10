@@ -15,6 +15,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(PloxiAccueil.class);
+        registerPlugin(PloxiBLE.class);   // 〰 (0.99.41) Proche en Bluetooth, comme sur l'iPhone
         super.onCreate(savedInstanceState);
         pret = true;
     }

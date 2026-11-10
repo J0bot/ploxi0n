@@ -24,8 +24,9 @@ export function creerTuyauProche({ W = globalThis.window, plugin = null, ble = n
   const msg = (e) => { for (const f of auditeursMsg) { try { f(e); } catch (x) { /* */ } } };
   let actif = false, moi = null;
 
-  if (plugin) {   // l'iPhone
-    const P = surPromesse(plugin), B = ble ? surPromesse(ble) : null; let poignees = [], bleActif = false, n = (Math.random() * 2 ** 32) >>> 0;
+  // l'iPhone (Multipeer + BLE s'il est compilé) ; Android (0.99.41) : pas de Multipeer, le BLE seul (PloxiBLE.java), plugin = null
+  if (plugin || ble) {
+    const P = plugin ? surPromesse(plugin) : null, B = ble ? surPromesse(ble) : null; let poignees = [], bleActif = false, n = (Math.random() * 2 ** 32) >>> 0;
     const recolleur = creerRecolleur(), voisinsBle = new Set();
     const surMorceau = (e) => { if (!e || !e.de) return; let o = null; try { o = deb64(e.donnees); } catch (x) { return; } const t = recolleur.ajouter(e.de, o); if (t != null) msg({ de: e.de, donnees: t }); };
     const surPairBle = (e) => { if (e && e.id) { if (e.etat === 'connecte') voisinsBle.add(e.id); else if (e.etat === 'perdu') voisinsBle.delete(e.id); } pair(e); };
@@ -38,18 +39,20 @@ export function creerTuyauProche({ W = globalThis.window, plugin = null, ble = n
       natif: true,
       demarrer({ nom = 'ploxion', salle = 'xerboxion' } = {}) {
         moi = court(nom) + '·' + suffixe();
-        if (!poignees.length) { poignees = [P.addListener('pair', pair), P.addListener('message', msg)]; if (B) poignees.push(B.addListener('pair', surPairBle), B.addListener('message', surMorceau)); }
+        if (!poignees.length) { poignees = P ? [P.addListener('pair', pair), P.addListener('message', msg)] : []; if (B) poignees.push(B.addListener('pair', surPairBle), B.addListener('message', surMorceau)); }
+        // le BLE seul (Android) : son refus (Bluetooth éteint, autorisation refusée) EST l'échec du démarrage, avec son message
+        if (!P) return B.demarrer().then(() => { bleActif = true; actif = true; return { moi }; }, (e) => { bleActif = false; throw e; });
         if (B) B.demarrer().then(() => { bleActif = true; }, () => { bleActif = false; });   // pas compilé (sans PLOXI0N_BLE) : rien ne change
         return P.demarrer({ nom: moi, salle: String(salle).slice(0, 40) }).then(() => { actif = true; return { moi }; });
       },
-      arreter() { actif = false; if (B && bleActif) { bleActif = false; voisinsBle.clear(); B.arreter().catch(() => {}); } return P.arreter().catch(() => {}); },
+      arreter() { actif = false; if (B && bleActif) { bleActif = false; voisinsBle.clear(); B.arreter().catch(() => {}); } return P ? P.arreter().catch(() => {}) : Promise.resolve(); },
       envoyer(texte, a) {
         if (!actif) return Promise.resolve({ envoyes: 0 });
         const mc = a && a.length ? a.filter(x => !estBle(x)) : null;
-        const un = mc && !mc.length ? Promise.resolve({ envoyes: 0 }) : P.envoyer({ donnees: texte, ...(mc ? { a: mc } : {}) });
+        const un = !P || (mc && !mc.length) ? Promise.resolve({ envoyes: 0 }) : P.envoyer({ donnees: texte, ...(mc ? { a: mc } : {}) });
         return Promise.all([un, envoyerBle(texte, a)]).then(([r, nb]) => ({ envoyes: ((r && r.envoyes) || 0) + nb }));
       },
-      pairs() { return P.pairs().then(r => [...(r && Array.isArray(r.pairs) ? r.pairs : []), ...voisinsBle]); },
+      pairs() { return (P ? P.pairs() : Promise.resolve({ pairs: [] })).then(r => [...(r && Array.isArray(r.pairs) ? r.pairs : []), ...voisinsBle]); },
       ble: () => bleActif,
       surPair(f) { auditeursPair.add(f); return () => auditeursPair.delete(f); },
       surMessage(f) { auditeursMsg.add(f); return () => auditeursMsg.delete(f); },
