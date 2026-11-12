@@ -1,6 +1,6 @@
 
 (function () {
-    function esc(s){return window.jOSb&&window.jOSb.esc?window.jOSb.esc(s):(function(x){var d=document.createElement('div');d.textContent=x==null?'':x;return d.innerHTML;})(s);}
+    function esc(s) { return window.jOSb.esc(s); }
     // Chaque récit = un xerion : la grande idée + la science qu'elle inspire/prédit.
     var R = [
         { t:'Fondation', a:'Isaac Asimov', y:'1951', m:'Livre', idea:'La psychohistoire : prédire l’avenir des civilisations par les statistiques de masse.', sci:'sociologie statistique, modèles prédictifs → la formule de la certitude.', x:'Le rêve de prévoir l’histoire — le cœur de notre projet.' },

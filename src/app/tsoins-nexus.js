@@ -1,5 +1,6 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1794455754000,"0.99.48 : les ploxions sortent de leur icône et y rentrent (comme iOS)"],
+export const COMMITS = [[1794457466000,"0.99.49 : le build iPhone repart (synonymes Siri derrière iOS 17), Android vérifié"],
+  [1794455754000,"0.99.48 : les ploxions sortent de leur icône et y rentrent (comme iOS)"],
   [1794455158000,"0.99.47 : le koin qui s'ouvre (une animation), wormion et portion animés, le xer dans la case, chill-tekk par défaut"],
   [1794453459000,"0.99.46 : piloter de la tête ou du regard (PloxiRegard, ARKit, sans image gardée)"],
   [1794452749000,"0.99.45 : notifications riches (avatar, glyphe), répondre depuis la notif, les événements du maillage"],
