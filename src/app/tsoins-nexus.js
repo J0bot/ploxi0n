@@ -1,5 +1,6 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1794270765000,"0.99.41 : Proche sur Android (PloxiBLE.java : le maillage Bluetooth, le même contrat que l'iPhone et xb proche)"],
+export const COMMITS = [[1794449282000,"0.99.42 : Maille v1, le protocole public du maillage (spec, vecteurs, C de référence, nœud ESP32)"],
+  [1794270765000,"0.99.41 : Proche sur Android (PloxiBLE.java : le maillage Bluetooth, le même contrat que l'iPhone et xb proche)"],
   [1794238467000,"0.99.40 : les notifications de Proche, prêt pour l'App Store"],
   [1794238000000,"docs : les missions admin (ce que seul RS-7 peut faire pour débloquer le xerboxion) + le patch du benchmark pour le labo"],
   [1794102747000,"CI Android : l'APK se construit à chaque push qui touche l'app (il ne se lançait jamais)"],

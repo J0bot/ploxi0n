@@ -7,6 +7,7 @@ import WeatherKit
 import ShazamKit
 import MusicKit
 import CoreLocation
+import UserNotifications   // (0.99.43) « tu y es » : la notification d'arrivée de la balade
 import HomeKit
 import NetworkExtension
 import Network   // (0.75) Bonjour et le réseau local du contrôleur XERB0T (NWBrowser, NWConnection) ; ne jamais nommer NWEndpoint/NWPath (NetworkExtension a les mêmes noms)
@@ -49,8 +50,14 @@ struct PloxiActivite: ActivityAttributes {
         var debut: Date?            // un chrono qui monte depuis
         var fin: Date?              // un compte à rebours jusqu'à
         var progression: Double?    // 0…1
+        // 🏝 (0.99.43) la balade (PloxiVeille : mappion, Autour, la boussole des potes) ; absents = nil (les anciennes activités se lisent toujours)
+        var metres: Double? = nil   // la distance parcourue
+        var cible: String? = nil    // vers quoi : des toilettes, Tom, le rendez-vous
+        var cibleM: Double? = nil   // à combien de mètres
+        var cibleCap: Double? = nil // dans quelle direction, en degrés depuis le nord
+        var compte: Int? = nil      // un nombre à montrer dans la Dynamic Island (Proche : les voisins)
     }
-    var genre: String               // tsoin, vocal, minuteur, ploxion
+    var genre: String               // tsoin, vocal, minuteur, ploxion, balade
     var ploxion: String             // le toucher ouvre ploxi0n://px/<ploxion>
 }
 #endif
@@ -169,12 +176,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         guard let g = UserDefaults(suiteName: "group.ch.j0bot.ploxi0n") else { ecrireEtat(["groupe": false]); return }
         let conteneur = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.ch.j0bot.ploxi0n") != nil
         var change = false, tailles: [String: Int] = [:]
-        for k in ["ploxi0n.epingles", "ploxi0n.valeurs", "ploxi0n.lecture", "ploxi0n.cube", "ploxi0n.px-widgets"] {   // (0.91) le widget « un ploxion »
+        var controles = false
+        for k in ["ploxi0n.epingles", "ploxi0n.valeurs", "ploxi0n.lecture", "ploxi0n.cube", "ploxi0n.px-widgets", "ploxi0n.controles"] {   // (0.91) le widget « un ploxion » ; (0.99.43) l'état des contrôles
             let v = UserDefaults.standard.string(forKey: "CapacitorStorage." + k)
             tailles[k] = v?.count ?? -1
-            if v != nil && g.string(forKey: k) != v { g.set(v, forKey: k); change = true }
+            if v != nil && g.string(forKey: k) != v { g.set(v, forKey: k); change = true; if k == "ploxi0n.controles" { controles = true } }
         }
         if change { WidgetCenter.shared.reloadAllTimelines() }
+        if controles, #available(iOS 18.0, *) { ControlCenter.shared.reloadAllControls() }   // 🎛 Proche allumé, une balade : le Centre de contrôle suit
         ecrireEtat(["groupe": true, "conteneur": conteneur, "epingles": tailles["ploxi0n.epingles"] ?? -1, "valeurs": tailles["ploxi0n.valeurs"] ?? -1,
                     "relu": g.string(forKey: "ploxi0n.epingles")?.count ?? -1])
     }
@@ -494,7 +503,8 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         let date: (String) -> Date? = { k in call.getDouble(k).map { Date(timeIntervalSince1970: $0 / 1000) } }
         return PloxiActivite.ContentState(titre: String((call.getString("titre") ?? "ploxi0n").prefix(60)), sous: String((call.getString("sous") ?? "").prefix(80)),
                                           glyphe: call.getString("glyphe") ?? "hourglass", debut: date("debut"), fin: date("fin"),
-                                          progression: call.getDouble("progression").map { min(1, max(0, $0)) })
+                                          progression: call.getDouble("progression").map { min(1, max(0, $0)) },
+                                          compte: call.getInt("compte").map { min(9999, max(0, $0)) })
     }
     #endif
 
@@ -2272,6 +2282,9 @@ public class PloxiVeille: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate
         CAPPluginMethod(name: "etat", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "lire", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "vider", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "baladeDebut", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "baladeCible", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "baladeFin", returnType: CAPPluginReturnPromise),
     ]
     private let lm = CLLocationManager()
     private let file = DispatchQueue(label: "ploxi.veille")
@@ -2286,6 +2299,7 @@ public class PloxiVeille: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate
             let f = UserDefaults.standard.bool(forKey: "ploxi.veille.fine")
             DispatchQueue.main.async { self.lancer(fine: f) }
         }
+        DispatchQueue.main.async { self.baladeReprendre() }
     }
     private func statut() -> String {
         switch lm.authorizationStatus {
@@ -2329,7 +2343,7 @@ public class PloxiVeille: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate
     }
     @objc func etat(_ call: CAPPluginCall) {
         let n = (try? String(contentsOf: fichier, encoding: .utf8))?.split(separator: "\n").count ?? 0
-        DispatchQueue.main.async { call.resolve(["etat": self.statut(), "actif": self.actif, "fine": self.fine, "points": n]) }
+        DispatchQueue.main.async { call.resolve(["etat": self.statut(), "actif": self.actif, "fine": self.fine, "points": n, "balade": self.bId != nil, "metres": self.bMetres]) }
     }
     @objc func lire(_ call: CAPPluginCall) {
         let depuis = call.getDouble("depuis") ?? 0
@@ -2366,7 +2380,9 @@ public class PloxiVeille: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate
         for l in locations where l.horizontalAccuracy >= 0 && l.horizontalAccuracy < 100 {
             let o: [String: Any] = ["t": l.timestamp.timeIntervalSince1970 * 1000, "la": l.coordinate.latitude, "lo": l.coordinate.longitude,
                                     "acc": l.horizontalAccuracy, "v": max(0, l.speed)]
-            ecrire(o); notifyListeners("position", data: o)
+            if actif { ecrire(o) }   // l'historique : seulement si la veille est allumée (une balade seule ne garde pas de trace)
+            notifyListeners("position", data: o)
+            DispatchQueue.main.async { self.baladeAvancer(l) }
         }
     }
     public func locationManager(_ manager: CLLocationManager, didVisit visit: CLVisit) {
@@ -2378,6 +2394,168 @@ public class PloxiVeille: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate
     }
     public func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         notifyListeners("etat", data: ["etat": statut()])
+    }
+
+    // 🏝 (0.99.43) LA BALADE (RS-7 : « une activité pour le ploxion mappion ») : une Live Activity que le Swift met à jour LUI-MÊME à chaque
+    // position (le JS dort en arrière-plan) : le chrono, la distance parcourue, et une cible (des toilettes, un pote, le rendez-vous) avec sa
+    // distance et sa direction. « tu y es » à moins de 25 m. Tout le main thread. Sans la veille : le GPS ne tourne que le temps de la balade
+    // et rien n'est écrit dans l'historique.
+    private var bId: String? = nil
+    private var bDebut: Date? = nil
+    private var bMetres: Double = 0
+    private var bDernier: CLLocation? = nil
+    private var bCible: (nom: String, lat: Double, lng: Double)? = nil
+    private var bTitre = "balade"
+    private var bPloxion = "mappion"
+    private var bMaj = Date.distantPast
+    private var bArrive = false
+    private var bNotifier = true
+    private var bGps = false   // c'est la balade qui a allumé le GPS (pas la veille)
+
+    private func lireCible(_ call: CAPPluginCall) {
+        if let c = call.getObject("cible"), let la = c["lat"] as? Double, let lo = c["lng"] as? Double, abs(la) <= 90, abs(lo) <= 180 {
+            bCible = (String(((c["nom"] as? String) ?? "là-bas").prefix(40)), la, lo)
+        } else { bCible = nil }
+        bArrive = false
+    }
+    private func baladeGps(_ on: Bool) {
+        if on {
+            bGps = true
+            if lm.authorizationStatus == .notDetermined { lm.requestWhenInUseAuthorization() }
+            lm.allowsBackgroundLocationUpdates = true; lm.showsBackgroundLocationIndicator = true
+            lm.pausesLocationUpdatesAutomatically = false; lm.activityType = .fitness
+            lm.desiredAccuracy = kCLLocationAccuracyBest; lm.distanceFilter = 5
+            lm.startUpdatingLocation()
+        } else {
+            bGps = false
+            if actif { lancer(fine: fine) } else { lm.stopUpdatingLocation(); lm.allowsBackgroundLocationUpdates = false }
+        }
+    }
+    private func baladeGarder() {
+        guard let id = bId else { UserDefaults.standard.removeObject(forKey: "ploxi.balade"); return }
+        var o: [String: Any] = ["id": id, "debut": (bDebut ?? Date()).timeIntervalSince1970, "metres": bMetres, "titre": bTitre, "ploxion": bPloxion, "gps": bGps, "notifier": bNotifier, "arrive": bArrive]
+        if let c = bCible { o["cible"] = ["nom": c.nom, "lat": c.lat, "lng": c.lng] }
+        UserDefaults.standard.set(o, forKey: "ploxi.balade")
+    }
+    private func baladeReprendre() {
+        #if canImport(ActivityKit)
+        if #available(iOS 16.2, *) {
+            guard let o = UserDefaults.standard.dictionary(forKey: "ploxi.balade"), let id = o["id"] as? String,
+                  Activity<PloxiActivite>.activities.contains(where: { $0.id == id && $0.activityState == .active }) else { UserDefaults.standard.removeObject(forKey: "ploxi.balade"); return }
+            bId = id; bDebut = Date(timeIntervalSince1970: (o["debut"] as? Double) ?? Date().timeIntervalSince1970)
+            bMetres = (o["metres"] as? Double) ?? 0; bTitre = (o["titre"] as? String) ?? "balade"; bPloxion = (o["ploxion"] as? String) ?? "mappion"
+            bNotifier = (o["notifier"] as? Bool) ?? true; bArrive = (o["arrive"] as? Bool) ?? false
+            if let c = o["cible"] as? [String: Any], let la = c["lat"] as? Double, let lo = c["lng"] as? Double { bCible = ((c["nom"] as? String) ?? "là-bas", la, lo) }
+            if (o["gps"] as? Bool) == true { baladeGps(true) }
+        }
+        #endif
+    }
+    /** le cap de a vers b, en degrés depuis le nord (0…360) */
+    private func cap(_ a: CLLocationCoordinate2D, _ b: CLLocationCoordinate2D) -> Double {
+        let p1 = a.latitude * .pi / 180, p2 = b.latitude * .pi / 180, dl = (b.longitude - a.longitude) * .pi / 180
+        let y = sin(dl) * cos(p2), x = cos(p1) * sin(p2) - sin(p1) * cos(p2) * cos(dl)
+        return (atan2(y, x) * 180 / .pi + 360).truncatingRemainder(dividingBy: 360)
+    }
+    private func baladeAvancer(_ l: CLLocation) {
+        guard bId != nil, l.horizontalAccuracy >= 0, l.horizontalAccuracy < 30 else { return }
+        if let d = bDernier {
+            let m = l.distance(from: d)
+            if m >= 3 { if m < 200 { bMetres += m }; bDernier = l }   // un saut de plus de 200 m d'un coup : le GPS qui saute, pas compté
+        } else { bDernier = l }
+        var force = false
+        if let c = bCible, !bArrive, l.distance(from: CLLocation(latitude: c.lat, longitude: c.lng)) < 25 {
+            bArrive = true; force = true
+            if bNotifier {
+                let n = UNMutableNotificationContent(); n.title = "◎ tu y es"; n.body = c.nom; n.sound = .default
+                UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "ploxi-balade-arrivee", content: n, trigger: nil))
+            }
+        }
+        baladePousser(force: force)
+    }
+    private func baladePousser(force: Bool) {
+        #if canImport(ActivityKit)
+        if #available(iOS 16.2, *) {
+            guard let id = bId else { return }
+            if !force && Date().timeIntervalSince(bMaj) < 10 { return }   // une mise à jour toutes les 10 s au plus (la batterie, le budget d'iOS)
+            guard let a = Activity<PloxiActivite>.activities.first(where: { $0.id == id }), a.activityState == .active else {
+                bId = nil; baladeGarder(); if bGps { baladeGps(false) }; return   // balayée de l'écran verrouillé : la balade s'arrête
+            }
+            bMaj = Date()
+            let e = baladeEtat()
+            Task { await a.update(ActivityContent(state: e, staleDate: nil)) }
+            baladeGarder()
+        }
+        #endif
+    }
+    #if canImport(ActivityKit)
+    @available(iOS 16.2, *)
+    private func baladeEtat() -> PloxiActivite.ContentState {
+        let parcouru = bMetres < 1000 ? "\(Int(bMetres)) m" : String(format: "%.1f km", bMetres / 1000)
+        var cm: Double? = nil, cc: Double? = nil
+        if let c = bCible, let p = bDernier ?? lm.location {
+            let la = CLLocation(latitude: c.lat, longitude: c.lng); cm = p.distance(from: la); cc = cap(p.coordinate, la.coordinate)
+        }
+        let sous = bArrive ? "tu y es · " + parcouru + " parcourus" : parcouru + " parcourus"
+        let glyphe = bCible == nil ? "figure.walk" : (bArrive ? "mappin.circle.fill" : "location.north.line.fill")
+        return PloxiActivite.ContentState(titre: bTitre, sous: sous, glyphe: glyphe, debut: bDebut, fin: nil, progression: nil,
+                                          metres: bMetres, cible: bCible?.nom, cibleM: cm, cibleCap: cc)
+    }
+    #endif
+
+    // baladeDebut({ titre?, ploxion?, cible?: { nom, lat, lng }, notifier? }) → { id } (l'app doit être à l'écran : une règle d'iOS)
+    @objc func baladeDebut(_ call: CAPPluginCall) {
+        #if canImport(ActivityKit)
+        if #available(iOS 16.2, *) {
+            DispatchQueue.main.async {
+                guard ActivityAuthorizationInfo().areActivitiesEnabled else { call.reject("activités en direct coupées : Réglages › ploxi0n"); return }
+                self.bTitre = String((call.getString("titre") ?? "balade").prefix(40))
+                self.bNotifier = call.getBool("notifier") ?? true
+                self.lireCible(call)
+                if let id = self.bId, Activity<PloxiActivite>.activities.contains(where: { $0.id == id && $0.activityState == .active }) {
+                    self.baladePousser(force: true); call.resolve(["id": id, "deja": true]); return   // déjà en balade : on change seulement le titre et la cible
+                }
+                self.bPloxion = call.getString("ploxion") ?? "mappion"
+                self.bDebut = Date(); self.bMetres = 0; self.bDernier = nil; self.bMaj = Date.distantPast
+                do {
+                    let a = try Activity.request(attributes: PloxiActivite(genre: "balade", ploxion: self.bPloxion),
+                                                 content: ActivityContent(state: self.baladeEtat(), staleDate: nil), pushType: nil)
+                    self.bId = a.id
+                    self.baladeGps(true)
+                    self.baladeGarder()
+                    call.resolve(["id": a.id])
+                } catch { call.reject("balade : \(error.localizedDescription)") }
+            }
+            return
+        }
+        #endif
+        call.reject("activités en direct : iOS 16.2 ou plus")
+    }
+    // baladeCible({ cible?: { nom, lat, lng } }) : changer la cible (sans cible : juste marcher)
+    @objc func baladeCible(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            guard self.bId != nil else { call.reject("pas de balade en cours"); return }
+            self.lireCible(call); self.baladePousser(force: true); call.resolve()
+        }
+    }
+    // baladeFin() → { metres, secondes } : l'activité reste un moment sur l'écran verrouillé avec le bilan
+    @objc func baladeFin(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            let metres = self.bMetres, secondes = self.bDebut.map { Date().timeIntervalSince($0) } ?? 0
+            #if canImport(ActivityKit)
+            if #available(iOS 16.2, *), let id = self.bId {
+                let parcouru = metres < 1000 ? "\(Int(metres)) m" : String(format: "%.1f km", metres / 1000)
+                let fin = PloxiActivite.ContentState(titre: self.bTitre, sous: "fini · " + parcouru + " en \(Int(secondes / 60)) min", glyphe: "flag.checkered",
+                                                     debut: nil, fin: nil, progression: nil, metres: metres)
+                for a in Activity<PloxiActivite>.activities where a.id == id {
+                    Task { await a.end(ActivityContent(state: fin, staleDate: nil), dismissalPolicy: .after(Date().addingTimeInterval(15 * 60))) }
+                }
+            }
+            #endif
+            self.bId = nil; self.bCible = nil; self.bDernier = nil; self.bDebut = nil; self.bMetres = 0
+            self.baladeGarder()
+            if self.bGps { self.baladeGps(false) }
+            call.resolve(["metres": metres, "secondes": secondes])
+        }
     }
 }
 

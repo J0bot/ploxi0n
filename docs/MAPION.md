@@ -67,6 +67,25 @@ Et juste avant, sur les zooms : **le wormion et le portion sont de gros knobs co
   `ch.bfe.sharedmobility.*`, geometry x/y ou GeoJSON) ; à vérifier sur l'iPhone.
 - ⏭ les events, le terrax en 3D.
 
+## Construit (0.99.43) : la balade, sur l'écran verrouillé
+
+RS-7 : « je veux avoir une activité pour le ploxion mappion ». Une **Live Activity** (écran verrouillé, Dynamic Island) que le Swift
+(`PloxiVeille`, `ios/App/App/AppDelegate.swift`) met à jour **lui-même** à chaque position, app en arrière-plan, JS endormi : le chrono,
+la distance parcourue, et une **cible** (des toilettes, un pote, le rendez-vous) avec sa distance et sa direction (flèche nord en haut +
+le point cardinal écrit : l'écran verrouillé ne sait pas où regarde le téléphone). « ◎ tu y es » (une notification) à moins de 25 m.
+Sans la veille allumée, le GPS ne tourne que le temps de la balade et **rien n'est écrit dans l'historique**.
+
+Pour **mappion** (le labo), dans l'app : `window.jOSVeille.balade`
+- `debut({ titre?, ploxion?: 'mappion', cible?: { nom, lat, lng }, notifier? })` → `{ id }` : l'app doit être à l'écran (une règle d'iOS).
+  Toucher l'activité rouvre `ploxi0n://px/<ploxion>`.
+- `cible({ nom, lat, lng } | null)` : changer la cible (un souvenir 🧿, un lieu), ou juste marcher.
+- `fin()` → `{ metres, secondes }` : le bilan reste 15 min sur l'écran verrouillé.
+- `jOSVeille.etat()` dit aussi `balade` (en cours ?) et `metres`. Coupé dans ⚙ › Réglages › Activités en direct → `debut` refuse.
+
+Dans l'app : Autour › 🏝 balade (toucher un lieu = la cible, ↗ Plans, ✕ cible) ; Proche › potes › la boussole › 🏝 écran verrouillé
+(vers un pote ou un rendez-vous, la cible suit sa position) ; et trois boutons du **Centre de contrôle** (iOS 18) : Proche (allumé /
+éteint), Balade, Toilettes (les plus proches, guidées). ⚠ Swift jamais compilé ici : à essayer sur l'iPhone (build avec les widgets).
+
 ## Questions ouvertes (à RS-7, quand il en aura envie)
 
 - Mapion (le ploxion) et mappion (celui du labo), c'est le même ?

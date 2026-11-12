@@ -7,6 +7,12 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.43', titre: 'La balade sur l\'écran verrouillé', points: [
+    '🏝 Autour › 🏝 balade : le chrono, la distance et ta cible sur l\'écran verrouillé et la Dynamic Island, même l\'app fermée. Touche un lieu : la flèche et les mètres t\'y mènent ; « tu y es » à l\'arrivée.',
+    '🏝 Proche › potes › la boussole › 🏝 écran verrouillé : vers un pote ou le rendez-vous.',
+    '◉ Proche tient sur l\'écran verrouillé tant qu\'il tourne : tes voisins, maillé ou pas, les non-lus (jamais le texte d\'un message).',
+    '🎛 Trois nouveaux boutons pour le Centre de contrôle (iOS 18) : Proche (allumé / éteint), Balade, Toilettes. Centre de contrôle › ＋ › ploxi0n.',
+  ] },
   { v: '0.99.42', titre: 'Le maillage a un protocole public', points: [
     '🌐 Maille v1, le protocole de Proche, est écrit noir sur blanc (docs/protocole/MAILLE-v1.md) avec des vecteurs de test : n\'importe qui peut fabriquer un appareil qui entre dans le maillage, comme nœud (il relaie) ou comme client (il écoute et parle).',
     '🌐 Une implémentation de référence en C (pour un ESP32, un Pi, un PC) et un nœud ESP32 à flasher.',

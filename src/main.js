@@ -115,7 +115,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.42';
+const VERSION = '0.99.43';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -461,6 +461,10 @@ async function demarrer() {
   const widgetsPx = creerWidgetsPloxions({ boxion, catalogue: () => (routeur ? routeur.catalogue() : []), courant: () => (routeur ? routeur.courant() : null),
     glyphePng: (p) => glyphePng(window, p),
     ecrire: async (k, v) => { if (!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) return; const { Preferences } = await import('@capacitor/preferences'); await Preferences.set({ key: k, value: v }); } });
+  // 🎛 (0.99.43) l'état des boutons du Centre de contrôle (Proche allumé, une balade en cours) : les Préférences « ploxi0n.controles » →
+  // l'AppDelegate les copie dans l'App Group et recharge les contrôles (ControlCenter) → l'extension affiche « allumé » comme le Wi-Fi
+  const etatCtl = { proche: false, balade: false };
+  const controles = (patch) => { Object.assign(etatCtl, patch); widgetsPx.ecrireBrut('ploxi0n.controles', JSON.stringify(etatCtl)); };
   window.jOSWidget = { publier: (d, id) => widgetsPx.publier(d, id), retirer: (id) => widgetsPx.retirer(id) };
   const vocal = creerVocal({ boxion, catalogue: () => (routeur ? routeur.catalogue() : []), vibrer: (x) => vibrer(x), ouvrir: (id, p) => routeurProxy.ouvrir(id, p),
     surEtat: (on) => { if (routeur) routeur.rafraichirHud(); if (on) activites.debut('vocal', { genre: 'vocal', titre: 'vocal', sous: 'j\'enregistre', glyphe: 'vocal', debut: Date.now() }); else activites.fin('vocal');
@@ -494,16 +498,19 @@ async function demarrer() {
     ploxions: () => ({ vivants: routeur ? routeur.vivants() : [], endormis: routeur && routeur.endormis ? routeur.endormis() : [] }),
     ouvrir: (id) => routeurProxy.ouvrir(id) }).ploxion);
   // ◷ ᛒ (0.99.20) la veille en arrière-plan et le Bluetooth bas niveau, pour les ploxions internes ET ceux du labo (mappion, Autour, Proche)
-  if (natifLot) { try { if (ploxiIci('PloxiVeille')) window.jOSVeille = creerVeille({ plugin: PloxiVeille }); if (ploxiIci('PloxiOndes')) window.jOSOndes = creerOndes({ plugin: PloxiOndes }); } catch (e) { /* le reste de l'app vit sans */ } }
+  if (natifLot) { try { if (ploxiIci('PloxiVeille')) window.jOSVeille = creerVeille({ plugin: PloxiVeille, activites: () => prefs.lire().activites !== false, quand: (on) => controles({ balade: on }) }); if (ploxiIci('PloxiOndes')) window.jOSOndes = creerOndes({ plugin: PloxiOndes }); } catch (e) { /* le reste de l'app vit sans */ } }
   // ◉ (0.99.1) Proche, l'ultimate Bluetooth : les téléphones autour, sans internet (MultipeerConnectivity sur l'iPhone, un BroadcastChannel ailleurs)
   tuyauProche = creerTuyauProche({ W: window, plugin: natifLot && ploxiIci('PloxiProche') ? PloxiProche : null, ble: natifLot && ploxiIci('PloxiBLE') ? PloxiBLE : null });
-  const proche = creerProche({ W: window, boxion, vibrer: (x) => vibrer(x), tuyau: tuyauProche, position: () => window.jOSNatif.position(), ouvrirLien: (u) => window.jOSNatif.ouvrirLien(u) });
+  const proche = creerProche({ W: window, boxion, vibrer: (x) => vibrer(x), tuyau: tuyauProche, position: () => window.jOSNatif.position(), ouvrirLien: (u) => window.jOSNatif.ouvrirLien(u),
+    activite: { debut: (o) => { controles({ proche: true }); return activites.debut('proche', { ...o, genre: 'proche', ploxion: 'proche' }); }, maj: (o) => activites.maj('proche', o), fin: () => { controles({ proche: false }); return activites.fin('proche'); } } });   // 🏝 (0.99.43)
+  if (window.jOSVeille) window.jOSVeille.etat().then(r => controles({ balade: !!(r && r.balade) })).catch(() => {}); else controles({});   // 🎛 l'état réel au lancement (une balade survit à l'app tuée)
   internes.push(proche.ploxion);
   // ≋ (0.99.4) le synthé : des jOSKnob, des pads, une boucle (RS-7 : « qu'on puisse commencer à faire du son avec des knobs »)
   internes.push(creerSynthe({ W: window, boxion, vibrer: (x) => vibrer(x), proche }).ploxion);   // (0.99.10) jouer à plusieurs : le son part dans Proche
   // ⌖ (0.99.9) Autour : les lieux d'OpenStreetMap autour de toi, en continu (RS-7 à Zurich : « des toilettes direct ; propositions selon mon vecteur xerion »)
-  internes.push(creerAutour({ W: window, boxion, vibrer: (x) => vibrer(x), http: { get: (u, o) => httpRelais.get(u, o) }, position: () => window.jOSNatif.position(),
-    ouvrirLien: (u) => (window.jOSNatif && window.jOSNatif.ouvrirLien ? window.jOSNatif.ouvrirLien(u) : window.open(u, '_blank')), usage: () => boxion.get('usage', 'stats') }).ploxion);
+  const autour = creerAutour({ W: window, boxion, vibrer: (x) => vibrer(x), http: { get: (u, o) => httpRelais.get(u, o) }, position: () => window.jOSNatif.position(),
+    ouvrirLien: (u) => (window.jOSNatif && window.jOSNatif.ouvrirLien ? window.jOSNatif.ouvrirLien(u) : window.open(u, '_blank')), usage: () => boxion.get('usage', 'stats') });   // 🎛 (0.99.43) gardé : le bouton « Toilettes » du Centre de contrôle
+  internes.push(autour.ploxion);
   const ambiancesApi = creerAmbiances({ W: window, boxion, vibrer: (x) => vibrer(x), activite: { debut: (o) => activites.debut('ambiances', { genre: 'minuteur', ploxion: 'ambiances', glyphe: 'ambiances', ...o }), fin: () => activites.fin('ambiances') } });
   internes.push(ambiancesApi.ploxion);
   // ⌂ (0.99.32, RS-7 : « sur Android, ploxion utilisable comme launcher ») l'écran d'accueil d'Android et les applis du téléphone (PloxiAccueil.java)
@@ -775,7 +782,13 @@ async function demarrer() {
   brancherLiens({ routeur, compte, surLien: (r) => { const c = invitationDuLien(r); if (c) boxion.put('social', 'invitation', { code: c, le: Date.now() }).catch(() => {}); }, installer: (id) => routeurProxy.ouvrir(id), lecture: (c) => maintenant.commander(c), lire: (o) => lecteurNatif.ouvrir(o.url, o).catch(() => {}),
     // ☾ (0.64) ploxi0n://dodo et ploxi0n://reveil : un raccourci, le Toucher au dos, ou l'automatisation « quand Sommeil s'active » d'iOS le notent seuls
     actions: { dodo: () => tsoinNatif.dodo().then(() => routeur.signaler('☾ dodo noté')).catch(() => {}), reveil: () => tsoinNatif.reveil().catch(() => {}),
-      tsoin: () => tsoinNatif.ouvrir({}), vocal: () => vocal.basculer().catch(() => {}), lampe: () => window.jOSNatif.lampe().catch(() => {}) } });   // une icône de l'écran d'accueil vers un ploxion absent : installé à la volée
+      tsoin: () => tsoinNatif.ouvrir({}), vocal: () => vocal.basculer().catch(() => {}), lampe: () => window.jOSNatif.lampe().catch(() => {}),
+      // 🎛 (0.99.43) Proche (allumer / éteindre, comme le Bluetooth), la balade (la Live Activity de mappion), les toilettes guidées
+      proche: () => { if (proche.etat().actif) { proche.arreter().then(() => routeur.signaler('◉ Proche éteint')).catch(() => {}); return; } routeur.ouvrir('proche'); proche.demarrer().catch(() => {}); },
+      balade: () => { const B = window.jOSVeille && window.jOSVeille.balade; if (!B) return routeur.signaler('🏝 la balade : sur l\'iPhone seulement');
+        (etatCtl.balade ? B.fin().then(r => routeur.signaler('🏝 balade finie · ' + Math.round((r && r.metres) || 0) + ' m')) : B.debut({ titre: 'balade', ploxion: 'mappion' }).then(() => routeur.signaler('🏝 la balade est sur l\'écran verrouillé')))
+          .catch((er) => routeur.signaler('🏝 ' + ((er && er.message) || 'impossible'))); },
+      toilettes: () => { routeur.ouvrir('autour'); autour.toilettes().catch(() => {}); } } });   // une icône de l'écran d'accueil vers un ploxion absent : installé à la volée
   // « Dis à ploxi0n … » (Siri, la dictée) : une phrase → une action
   async function commande(texte) {
     const c = comprendre(texte);

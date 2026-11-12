@@ -259,6 +259,10 @@ natif.PloxiVeille = {
   etat: () => ({ etat: 'toujours', actif: true, fine: true, points: 3 }),
   lire: () => { const t = Date.now(); return { points: [0, 1, 2].map(i => ({ t: t - (3 - i) * 60000, la: 46.52 + i * 0.0001, lo: 6.63, acc: 8, v: 1.2 })), visites: [{ a: t - 3600e3, d: t - 1800e3, la: 46.5205, lo: 6.6301, acc: 20 }] }; },
   vider: () => ({}),
+  // 🏝 (0.99.43) la balade : une Live Activity de plus dans activitesFaux (genre balade)
+  baladeDebut: (o) => { const deja = activitesFaux.find(x => x.genre === 'balade' && !x.finie); if (deja) { Object.assign(deja, o); return { id: deja.id, deja: true }; } activitesFaux.push({ ...o, genre: 'balade', id: 'act-' + (activitesFaux.length + 1), metres: 0 }); return { id: 'act-' + activitesFaux.length }; },
+  baladeCible: (o) => { const a = activitesFaux.find(x => x.genre === 'balade' && !x.finie); if (!a) throw new Error('pas de balade en cours'); a.cible = o.cible || null; return {}; },
+  baladeFin: () => { const a = activitesFaux.find(x => x.genre === 'balade' && !x.finie); if (a) a.finie = true; return { metres: a ? 420 : 0, secondes: a ? 600 : 0 }; },
 };
 
 // 〰 (0.99.22) les voisins du maillage : Tom (lié à l'app et à Léa) et Léa (liée à Tom seulement)

@@ -14,6 +14,9 @@ const GARDE = 3 * 864e5;
 export function creerAutour({ W = globalThis.window, boxion, http, position, ouvrirLien = null, usage = async () => null, vibrer = () => {}, maintenant = () => Date.now() }) {
   let pos = null, lieux = new Map(), miens = [], genres = null, etat = '', suivi = 0, enCours = new Set(), peindre = () => {};
   let vehicules = [], vehCase = '', vehLe = 0, cap0 = null;
+  // 🏝 (0.99.43) la balade : la Live Activity de PloxiVeille (écran verrouillé, Dynamic Island) ; pendant une balade, toucher un lieu en fait la cible
+  let balade = null;   // null, ou { cible: { id, nom, lat, lng } | null }
+  const V = () => (W.jOSVeille && W.jOSVeille.balade) || null;
   const pret = boxion.get('reglages', 'autour-miens').then(l => { if (Array.isArray(l)) miens = l.slice(0, 500); }).catch(() => {});
 
   /** une case : le cache (3 jours), sinon Overpass (le miroir si le premier est occupé) */
@@ -67,13 +70,27 @@ export function creerAutour({ W = globalThis.window, boxion, http, position, ouv
     miens = [...miens, l].slice(-500); await boxion.put('reglages', 'autour-miens', miens).catch(() => {}); vibrer('succes'); peindre(); return l;
   }
   const tous = () => [...lieux.values(), ...vehicules, ...miens];
-  const aller = (l) => { const u = plansLien(l); vibrer('fx-arrivee'); if (ouvrirLien) ouvrirLien(u); else if (W.open) W.open(u, '_blank'); };
+  async function baladeOnOff(cible = null) {
+    const B = V(); if (!B) return;
+    try {
+      if (balade && !cible) { const r = await B.fin(); balade = null; etat = '🏝 balade finie · ' + metres(r.metres || 0); }
+      else if (balade) { await B.cible(cible); balade.cible = cible; etat = '🏝 sur l\'écran verrouillé : ' + cible.nom; }
+      else { await B.debut({ titre: 'balade', ploxion: 'autour', cible }); balade = { cible }; etat = '🏝 la balade est sur l\'écran verrouillé' + (cible ? ' : ' + cible.nom : ' · touche un lieu pour t\'y guider'); }
+      vibrer('selection');
+    } catch (e) { etat = '🏝 ' + ((e && e.message) || 'impossible'); }
+    peindre(); W.setTimeout(() => { etat = ''; peindre(); }, 4000);
+  }
+  const cibleDe = (l) => ({ id: l.id, nom: ((l.glyphe && !/^[\p{L}\p{N}]+$/u.test(l.glyphe) ? l.glyphe + ' ' : '') + (l.nom || '')).trim().slice(0, 40), lat: l.lat, lng: l.lng });   // « WC » n'est pas un symbole : pas « WC WC de la place »
+  const aller = (l) => {
+    if (balade) { baladeOnOff(cibleDe(l)); return; }   // en balade : le lieu devient la cible (↗ Plans reste dans la barre)
+    const u = plansLien(l); vibrer('fx-arrivee'); if (ouvrirLien) ouvrirLien(u); else if (W.open) W.open(u, '_blank'); };
 
   function mount(hote) {
     let vivant = true, vus = [];
     hote.innerHTML = '<div class="px-page px-autour" data-neurones="fin"><p class="px-grave">⌖ autour</p>'
       + '<p class="px-sous">Ce qu\'il y a autour de toi (OpenStreetMap), du plus proche au plus loin. Ta position ne part pas : seulement le centre d\'une case d\'un kilomètre.</p>'
-      + '<div class="px-au-b"><button type="button" data-au="situer">◎ me situer</button><button type="button" data-au="suivre"></button><button type="button" data-au="poser">＋ poser ici</button></div>'
+      + '<div class="px-au-b"><button type="button" data-au="situer">◎ me situer</button><button type="button" data-au="suivre"></button><button type="button" data-au="poser">＋ poser ici</button>' + (V() ? '<button type="button" data-au="balade"></button>' : '') + '</div>'
+      + '<div class="px-au-b px-au-balade" data-au-bal hidden></div>'
       + '<p class="px-au-etat" data-au-etat></p>'
       + '<button type="button" class="px-au-wc" data-neurone data-au-wc></button>'
       + '<button type="button" class="px-au-wc px-au-tr" data-neurone data-au-tr hidden></button>'
@@ -105,6 +122,8 @@ export function creerAutour({ W = globalThis.window, boxion, http, position, ouv
       if (!vivant) return;
       peindreOndes();
       $('[data-au="suivre"]').textContent = suivi ? '■ ne plus suivre' : '◉ suivre en marchant'; $('[data-au="suivre"]').classList.toggle('on', !!suivi);
+      const bb = $('[data-au="balade"]'); if (bb) { bb.textContent = balade ? '■ finir la balade' : '🏝 balade'; bb.classList.toggle('on', !!balade); }
+      const bl = $('[data-au-bal]'); if (bl) { bl.hidden = !balade; bl.innerHTML = balade ? '<span class="px-sous">🏝 ' + (balade.cible ? 'vers ' + esc(balade.cible.nom) : 'touche un lieu : il te guide depuis l\'écran verrouillé') + '</span>' + (balade.cible ? '<button type="button" data-au="plans">↗ Plans</button><button type="button" data-au="sans">✕ cible</button>' : '') : ''; }
       $('[data-au-etat]').textContent = etat || (pos ? ((lieux.size + vehicules.length) + ' lieux autour' + (suivi ? ' · je te suis' : '') + (cap0 != null ? ' · boussole' : '')) : 'touche « me situer »');
       $('[data-au-puces]').innerHTML = CATEGORIES.map(c => '<button type="button" data-au-genre="' + c[0] + '"' + (genres && genres.includes(c[0]) ? ' class="on"' : '') + '>' + esc(c[1]) + ' ' + esc(c[2]) + '</button>').join('') + '<button type="button" data-au-genre="mien"' + (genres && genres.includes('mien') ? ' class="on"' : '') + '>◉ les miens</button>';
       if (!pos) { $('[data-au-wc]').hidden = true; $('[data-au-prop]').innerHTML = ''; $('[data-au-liste]').innerHTML = ''; return; }
@@ -120,6 +139,7 @@ export function creerAutour({ W = globalThis.window, boxion, http, position, ouv
       $('[data-au-liste]').innerHTML = vus.map(ligne).join('') || '<p class="px-sous">rien de ce genre dans cette case</p>';
     };
     pret.then(() => peindre());
+    if (V() && !balade && W.jOSVeille.etat) W.jOSVeille.etat().then(r => { if (r && r.balade && !balade) { balade = { cible: null }; peindre(); } }).catch(() => {});   // l'app relancée pendant une balade
     hote.addEventListener('click', (e) => {
       const g = e.target.closest('[data-au-genre]'); if (g) { const k = g.getAttribute('data-au-genre'); genres = genres && genres.includes(k) ? (genres.filter(x => x !== k).length ? genres.filter(x => x !== k) : null) : [...(genres || []), k]; vibrer('selection'); peindre(); return; }
       const al = e.target.closest('[data-au-aller]'); if (al) { const l = vus[+al.getAttribute('data-au-aller')]; if (l) aller(l); return; }
@@ -127,10 +147,20 @@ export function creerAutour({ W = globalThis.window, boxion, http, position, ouv
       const wc = e.target.closest('[data-au-wc],[data-au-tr]'); if (wc) { const l = tous().find(x => x.id === wc.dataset.id); if (l) aller(l); return; }
       const b = e.target.closest('[data-au]'); if (!b) return; const a = b.getAttribute('data-au');
       if (a === 'situer') situer(); else if (a === 'suivre') suivre(!suivi); else if (a === 'poser') poser('mien', ''); else if (a === 'ondes') ondes(!ondesOn);
+      else if (a === 'balade') baladeOnOff(null);
+      else if (a === 'plans' && balade && balade.cible) { const u = plansLien(balade.cible); if (ouvrirLien) ouvrirLien(u); else if (W.open) W.open(u, '_blank'); }
+      else if (a === 'sans' && balade) { const B = V(); if (B) B.cible(null).then(() => { balade.cible = null; peindre(); }).catch(() => {}); }
     });
     if (!pos) situer();
     return { unmount() { vivant = false; suivre(false); if (ondesOn) ondes(false); if (tOndes) W.clearTimeout(tOndes); W.removeEventListener('deviceorientation', boussole); if (tour) W.cancelAnimationFrame(tour); peindre = () => {}; hote.innerHTML = ''; } };
   }
   if (W) { W.jOSApps = W.jOSApps || {}; W.jOSApps.autour = { manifest: { id: 'autour', name: 'Autour', icon: '⌖' }, mount }; }
-  return { mount, pret, situer, suivre, poser, etat: () => ({ pos, lieux: tous(), etat, suivi: !!suivi, cap: cap0, vehicules: vehicules.length }), ploxion: { id: 'autour', nom: 'Autour', icone: '⌖', interne: true } };
+  /** 🎛 (0.99.43) le bouton « Toilettes » du Centre de contrôle : les plus proches, guidées depuis l'écran verrouillé (la balade) */
+  async function toilettes() {
+    await pret; if (!(await situer())) return null;
+    const wc = trier(tous(), pos, { genres: ['toilettes'], max: 1 })[0]; if (!wc) { etat = 'WC : pas de toilettes connues ici'; peindre(); return null; }
+    if (V()) await baladeOnOff(cibleDe(wc)); else aller(wc);
+    return wc;
+  }
+  return { mount, pret, situer, suivre, poser, toilettes, balade: () => balade, etat: () => ({ pos, lieux: tous(), etat, suivi: !!suivi, cap: cap0, vehicules: vehicules.length }), ploxion: { id: 'autour', nom: 'Autour', icone: '⌖', interne: true } };
 }
