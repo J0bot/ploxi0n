@@ -61,7 +61,9 @@ import { creerChercherLocal } from './app/chercher-local.js';
 import { creerVueXers } from './app/vue-xers.js';
 import { creerApercus } from './natif/apercus.js';
 import { SOCIAUX, surveillerSocial, invitationDuLien, sessionSocial, supprimerCompteSocial } from './natif/social-apple.js';
-import { PloxiApple, PloxiProche, PloxiBLE, PloxiVeille, PloxiOndes, PloxiCarPlay, PloxiAccueil, ploxiIci, plateforme } from './natif/plugins-app.js';
+import { PloxiApple, PloxiProche, PloxiBLE, PloxiVeille, PloxiOndes, PloxiCarPlay, PloxiAccueil, PloxiRegard, ploxiIci, plateforme } from './natif/plugins-app.js';
+import { creerRegardNatif } from './natif/regard-natif.js';
+import { creerRegard } from './app/regard.js';
 import { creerAccueil, brancherRetourAndroid } from './natif/accueil-natif.js';
 import { creerApplis } from './lot/applis.js';
 import { creerAgentXb } from './bions/xb-agent.js';
@@ -115,7 +117,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.45';
+const VERSION = '0.99.46';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -784,6 +786,13 @@ async function demarrer() {
     aller: (id) => routeurProxy.ouvrir(id), precedente: () => routeur.faire('precedente'), suivante: () => routeur.faire('suivante') } });
   koins.poser(); prefs.surChangement(() => koins.poser());
   window.ploxi0n = { boxion, shim, routeur, prefs, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte, koins, langue: langueApp };
+  // 👁 (0.99.46) piloter de la tête ou du regard (⚙ › Piloter de la tête) : notre suivi, PloxiRegard (ARKit) + src/bions/tete.js
+  const regard = creerRegard({ W: window, boxion, vibrer: (x) => vibrer(x), routeur, signaler: (t) => routeur.signaler(t), inverse: () => !!prefs.lire().regardInverse,
+    natif: natifLot && ploxiIci('PloxiRegard') ? creerRegardNatif({ plugin: PloxiRegard }) : null });
+  window.jOSRegard = regard.api; window.ploxi0nRegard = regard;
+  { let avant = 'non'; const suivre = () => { const m = prefs.lire().regard || 'non'; if (m === avant) return; avant = m; regard.regler(m).catch((e) => { routeur.signaler('👁 ' + ((e && e.message) || 'impossible')); avant = 'non'; prefs.regler({ regard: 'non' }).catch(() => {}); }); };
+    suivre(); prefs.surChangement(suivre); }
+  { let inv = !!prefs.lire().regardInverse; prefs.surChangement(() => { const n = !!prefs.lire().regardInverse; if (n !== inv) { inv = n; if (regard.mode() !== 'non') regard.regler(regard.mode()).catch(() => {}); } }); }
   brancherLiens({ routeur, compte, surLien: (r) => { const c = invitationDuLien(r); if (c) boxion.put('social', 'invitation', { code: c, le: Date.now() }).catch(() => {}); }, installer: (id) => routeurProxy.ouvrir(id), lecture: (c) => maintenant.commander(c), lire: (o) => lecteurNatif.ouvrir(o.url, o).catch(() => {}),
     // ☾ (0.64) ploxi0n://dodo et ploxi0n://reveil : un raccourci, le Toucher au dos, ou l'automatisation « quand Sommeil s'active » d'iOS le notent seuls
     actions: { dodo: () => tsoinNatif.dodo().then(() => routeur.signaler('☾ dodo noté')).catch(() => {}), reveil: () => tsoinNatif.reveil().catch(() => {}),

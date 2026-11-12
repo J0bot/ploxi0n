@@ -192,6 +192,13 @@ input,textarea,select{font-size:max(16px,1em)}
 /* ---- les préférences (prefs.js) ---- */
 .px-sans-grain{--grain:none}
 .px-calme *,.px-calme *::before,.px-calme *::after{transition:none !important;animation:none !important}
+/* 👁 (0.99.46) piloter de la tête : le point, l'anneau qui se remplit quand on fixe, l'éclair du toucher, les cibles du calibrage */
+.px-regard{position:fixed;left:0;top:0;width:0;height:0;z-index:2147483000;pointer-events:none;will-change:transform}
+.px-regard svg{position:absolute;left:-20px;top:-20px;width:40px;height:40px;overflow:visible}
+.px-regard-point{fill:var(--acc,#7cf);opacity:.9}
+.px-regard-anneau{fill:none;stroke:var(--acc,#7cf);stroke-width:2.5;stroke-dasharray:calc(var(--px-regard-progres,0) * 1) 1;transform:rotate(-90deg);opacity:.85}
+.px-regard-toc .px-regard-point{fill:#fff;r:8}
+.px-regard-cible{position:fixed;z-index:2147483001;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;border:3px solid var(--acc,#7cf);box-shadow:0 0 18px var(--acc,#7cf);pointer-events:none;transition:left .3s,top .3s}
 /* ♿ (0.99.44) les grandes cibles : le regard, la tête, le contrôle de sélection d'iOS visent mal sous 44 × 44 points */
 .px-grandes-cibles :is(button,a[href],[role=button],select,input:not([type=range]):not([type=hidden]):not([type=checkbox]):not([type=radio])){min-height:44px;min-width:44px;box-sizing:border-box}
 .px-grandes-cibles :is(input[type=checkbox],input[type=radio]){min-width:28px;min-height:28px;margin:8px}

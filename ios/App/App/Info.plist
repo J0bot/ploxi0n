@@ -84,7 +84,7 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>ploxi0n utilise la caméra quand un ploxion te le demande (photo, scan) ; rien ne quitte ton téléphone sans ton accord.</string>
+	<string>ploxi0n utilise la caméra quand un ploxion te le demande (photo, scan, piloter de la tête : des angles, aucune image gardée) ; rien ne quitte ton téléphone sans ton accord.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>ploxi0n ouvre tes photos quand tu choisis d'en donner une à un ploxion.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

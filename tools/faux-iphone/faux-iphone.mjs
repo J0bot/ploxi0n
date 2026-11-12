@@ -266,6 +266,14 @@ natif.PloxiVeille = {
   baladeFin: () => { const a = activitesFaux.find(x => x.genre === 'balade' && !x.finie); if (a) a.finie = true; return { metres: a ? 420 : 0, secondes: a ? 600 : 0 }; },
 };
 
+// 👁 (0.99.46) PloxiRegard : un visage de synthèse, 30 mesures par seconde, que le parcours pilote (regardFaux.visage = { lacet, tangage, … })
+const regardFaux = { actif: false, demarrages: 0, visage: { lacet: 0, tangage: 0, cligneG: 0, cligneD: 0, x: 0, y: 0 }, minuterie: null };
+natif.PloxiRegard = {
+  dispo: () => ({ dispo: true }),
+  demarrer: () => { regardFaux.actif = true; regardFaux.demarrages++; clearInterval(regardFaux.minuterie); regardFaux.minuterie = setInterval(() => emettre('PloxiRegard', 'visage', { t: Date.now(), ...regardFaux.visage }), 33); return { ok: true }; },
+  arreter: () => { regardFaux.actif = false; clearInterval(regardFaux.minuterie); return {}; },
+};
+
 // 〰 (0.99.22) les voisins du maillage : Tom (lié à l'app et à Léa) et Léa (liée à Tom seulement)
 let tom = null, lea = null, voisinsPrets = null;
 function voisinsFaux() {
@@ -352,8 +360,8 @@ const etat = await page.evaluate(() => ({
   texte: document.body.innerText.slice(0, 600),
 }));
 let resultatsEtapes = null;
-if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux, procheEnvoyes, pont, droneFaux, tailles, accueilFaux, xbFaux, trousseauFaux }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
-clearInterval(mouvementMinuteur);
+if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux, regardFaux, procheEnvoyes, pont, droneFaux, tailles, accueilFaux, xbFaux, trousseauFaux }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
+clearInterval(mouvementMinuteur); clearInterval(regardFaux.minuterie);
 const resume = { url, mode: web ? 'web' : android ? 'android' : (opts.includes('--sans-plugions') ? 'ios-sans-plugions' : 'ios'), demarre, dureeBoot, etat,
   appelsNatifs: Object.entries(appels.reduce((a, x) => { const k = x.p + '.' + x.m; a[k] = (a[k] || 0) + 1; return a; }, {})).sort((a, b) => b[1] - a[1]),
   nonSimules: [...nonSimules], journal, resultatsEtapes };

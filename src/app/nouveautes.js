@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.46', titre: 'Piloter de la tête', points: [
+    '👁 ⚙ › Piloter de la tête : la caméra de Face ID suit ta tête, un point se promène sur l\'écran. Le fixer un instant, ou cligner longtemps des deux yeux = toucher.',
+    '👁 Le mode regard : c\'est ton regard qui pointe (calibré en suivant 4 points) ; un coup de tête à gauche ou à droite change de ploxion, secouer la tête minimise.',
+    '👁 Aucune image gardée : seulement des angles, sur le moment. Les ploxions peuvent écouter tes gestes de tête (jOSRegard).',
+  ] },
   { v: '0.99.45', titre: 'Les notifications qui parlent', points: [
     '↩ Un message privé de Proche : « Répondre » directement depuis la notification, la réponse part par le maillage. Ou « ✓ Lu ».',
     '◉ « Tom est tout près » : un pote ✦ qui revient à portée de Bluetooth. « ✓ remis » : ton message passé par un coursier est enfin arrivé.',

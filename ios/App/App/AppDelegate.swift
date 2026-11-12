@@ -1286,6 +1286,65 @@ final class EcranVLC: UIViewController, VLCMediaPlayerDelegate {
 //   capturerObjet() → { nom, chemin }  (0.74) Object Capture (iOS 17, LiDAR) : ton objet réel en modèle 3D (USDZ, Documents/terrax/objets),
 //     vu en AR Quick Look et posé dans l'AR (ouvrir : objets[].modele, rot ; modeles : [{ nom, texte }] proposés quand on pose).
 #if !PLOXI0N_SANS_AR
+// 👁 (0.99.46, RS-7 : « intégrer » le Suivi du regard et de la tête d'iOS → aussi « notre suivi tête / regard ») PLOXIREGARD : ARKit et la caméra
+// frontale TrueDepth (Face ID), SANS vue et sans image gardée : seulement des nombres, ~30 par seconde, évènement « visage » :
+//   { t, lacet, tangage, roulis (radians : la tête, le monde aligné sur la gravité), cligneG, cligneD (0…1), x?, y? (le regard croisé avec le
+//   plan du téléphone, en mètres, dans les axes de la caméra : le JS calibre, src/bions/tete.js) }
+//   dispo() → { dispo }   demarrer()   arreter()   ; « etat » : { erreur } | { interrompu }
+@objc(PloxiRegard)
+public class PloxiRegard: CAPPlugin, CAPBridgedPlugin, ARSessionDelegate {
+    public let identifier = "PloxiRegard"
+    public let jsName = "PloxiRegard"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "dispo", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "demarrer", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "arreter", returnType: CAPPluginReturnPromise),
+    ]
+    private var session: ARSession? = nil
+    private var dernier: TimeInterval = 0
+
+    @objc func dispo(_ call: CAPPluginCall) { call.resolve(["dispo": ARFaceTrackingConfiguration.isSupported]) }
+    @objc func demarrer(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            guard ARFaceTrackingConfiguration.isSupported else { call.reject("il faut la caméra TrueDepth (celle de Face ID)"); return }
+            let c = ARFaceTrackingConfiguration()
+            c.isLightEstimationEnabled = false
+            c.worldAlignment = .gravity
+            let s = self.session ?? ARSession()
+            s.delegate = self
+            self.session = s
+            s.run(c, options: [.resetTracking, .removeExistingAnchors])
+            call.resolve(["ok": true])
+        }
+    }
+    @objc func arreter(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { self.session?.pause(); self.session = nil; call.resolve() }
+    }
+    public func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
+        guard let f = anchors.compactMap({ $0 as? ARFaceAnchor }).first, f.isTracked else { return }
+        let t = Date().timeIntervalSince1970
+        if t - dernier < 1.0 / 30.0 { return }
+        dernier = t
+        let m = f.transform
+        let z = m.columns.2   // l'axe qui sort du visage
+        var o: [String: Any] = ["t": t * 1000, "lacet": Double(atan2(z.x, z.z)), "tangage": Double(asin(max(-1, min(1, z.y)))),
+                                "roulis": Double(atan2(m.columns.0.y, m.columns.1.y)),
+                                "cligneG": f.blendShapes[.eyeBlinkLeft]?.doubleValue ?? 0, "cligneD": f.blendShapes[.eyeBlinkRight]?.doubleValue ?? 0]
+        if let cam = session.currentFrame?.camera {
+            let inv = cam.transform.inverse
+            let oc = inv * m.columns.3
+            let pc = inv * (m * simd_float4(f.lookAtPoint.x, f.lookAtPoint.y, f.lookAtPoint.z, 1))
+            let d = pc - oc
+            if abs(d.z) > 0.0001 { let k = -oc.z / d.z; if k > 0 { o["x"] = Double(oc.x + k * d.x); o["y"] = Double(oc.y + k * d.y) } }
+        }
+        notifyListeners("visage", data: o)
+    }
+    public func session(_ session: ARSession, didFailWithError error: Error) { notifyListeners("etat", data: ["erreur": error.localizedDescription]) }
+    public func sessionWasInterrupted(_ session: ARSession) { notifyListeners("etat", data: ["interrompu": true]) }
+}
+#endif
+
+#if !PLOXI0N_SANS_AR
 @objc(PloxiAR)
 public class PloxiAR: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "PloxiAR"
@@ -2776,6 +2835,7 @@ class PloxionVC: CAPBridgeViewController {
         #endif
         #if !PLOXI0N_SANS_AR
         bridge?.registerPluginInstance(PloxiAR())
+        bridge?.registerPluginInstance(PloxiRegard())   // 👁 (0.99.46) notre suivi tête / regard
         #endif
     }
     private var plein: Bool { UserDefaults.standard.string(forKey: "CapacitorStorage.ploxi0n.plein-ecran") == "1" }

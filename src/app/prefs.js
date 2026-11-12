@@ -9,9 +9,10 @@
 //   organiqueVu (0.94) la bascule unique vers l'organique est faite (le xer d'avant est gardé dans « mes xers », src/app/xers.js)
 //   ecriture    (0.96) comment tout s'écrit : xerboxion (forme + glyphe + nom) | texte-glyphes | glyphes (rien que) | texte (rien que) | emoji | minimal
 //               | humain (0.99.8 : zéro texte, des glyphes et des maths ; src/bions/humain.js)
+//   regard      (0.99.46) non | tete | regard : piloter de la tête ou du regard (src/app/regard.js)
 //   cibles      (0.99.44) auto | oui | non : les grandes cibles (44 points), pour le regard, la tête, le contrôle de sélection
 //   haptique    les retours haptiques (ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs…)
-export const PREFS_DEFAUT = { barreClavier: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'organique', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'xerboxion', fractale: true, pagesCote: true, bande: false, koins: false, activites: true, cibles: 'auto', organiqueVu: true, variante: 'nerfs', ecriture: 'xerboxion', police: 'mixte', langue: 'auto', taille: 1.15, peau: 'legere', policePartout: false };
+export const PREFS_DEFAUT = { barreClavier: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'organique', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'xerboxion', fractale: true, pagesCote: true, bande: false, koins: false, activites: true, cibles: 'auto', regard: 'non', regardInverse: false, organiqueVu: true, variante: 'nerfs', ecriture: 'xerboxion', police: 'mixte', langue: 'auto', taille: 1.15, peau: 'legere', policePartout: false };
 
 /** (0.96) RS-7 23.10 : « un mode texte + glyphes, un mode pur glyphes, pur texte, emoji, minimal, xerboxion : tous les modes » */
 import { POLICES, poserPolice } from '../bions/polices.js';

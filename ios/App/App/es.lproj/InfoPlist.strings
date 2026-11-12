@@ -1,5 +1,5 @@
 /* généré par tools/ios/infoplist-langues.mjs : ne pas éditer à la main */
-"NSCameraUsageDescription" = "ploxi0n usa la cámara cuando un ploxion te lo pide (foto, escaneo); nada sale de tu teléfono sin tu permiso.";
+"NSCameraUsageDescription" = "ploxi0n usa la cámara cuando un ploxion te lo pide (foto, escaneo, control con la cabeza: solo ángulos, ninguna imagen guardada); nada sale de tu teléfono sin tu permiso.";
 "NSPhotoLibraryUsageDescription" = "ploxi0n abre tus fotos cuando eliges darle una a un ploxion.";
 "NSPhotoLibraryAddUsageDescription" = "ploxi0n guarda en tus fotos lo que eliges exportar.";
 "NSMicrophoneUsageDescription" = "ploxi0n usa el micrófono cuando un ploxion graba o escucha, solo cuando tú lo pides.";

@@ -11,6 +11,7 @@
   depuis son démarrage).
 - Les capacités de l'iPhone (position, micro, caméra, Bluetooth, NFC, Santé, HomeKit, Apple Music…) ne servent qu'au moment où tu
   les utilises, après la demande d'iOS ; tu peux les retirer dans Réglages iOS › ploxi0n.
+- **Piloter de la tête ou du regard** (⚙ › Piloter de la tête, éteint par défaut) : la caméra frontale (ARKit, le suivi du visage) donne à l'app des angles et la direction du regard, 30 fois par seconde, utilisés sur le moment pour déplacer un pointeur. Aucune image, aucune donnée du visage n'est gardée, envoyée, ni utilisée pour autre chose (ni publicité, ni profil).
 
 ## Ce qui part, et seulement vers TON compte xerboxion.org
 - **Le compte** (si tu te connectes, avec xerboxion.org ou Sign in with Apple) : un identifiant et l'adresse e-mail (celle masquée
