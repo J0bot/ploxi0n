@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.42', titre: 'Le maillage a un protocole public', points: [
+    '🌐 Maille v1, le protocole de Proche, est écrit noir sur blanc (docs/protocole/MAILLE-v1.md) avec des vecteurs de test : n\'importe qui peut fabriquer un appareil qui entre dans le maillage, comme nœud (il relaie) ou comme client (il écoute et parle).',
+    '🌐 Une implémentation de référence en C (pour un ESP32, un Pi, un PC) et un nœud ESP32 à flasher.',
+    '🌐 Un appareil de demain qui invente un nouveau type de message est transporté par les téléphones d\'aujourd\'hui, sans rien perdre en route.',
+  ] },
   { v: '0.99.41', titre: 'Proche sur Android', points: [
     '〰 Proche marche maintenant sur Android, en Bluetooth : entre deux Android, avec un iPhone (sa build « ble »), avec un Pi ou un PC (xb proche). Android demande l\'autorisation « Appareils à proximité » au premier lancement.',
   ] },

@@ -35,8 +35,10 @@ test('〰 les petits bouts : Bloom, rembourrage, commandes, paquets suspects', (
   assert.equal(commande('/j').genre, 'erreur'); assert.equal(commande('/nimporte').genre, 'erreur'); assert.deepEqual(commande('  coucou '), { genre: 'texte', texte: 'coucou' });
   const bon = { m: 1, i: '0123456789abcdef', o: 'fedcba9876543210', n: 'A', h: 7, t: 1, k: 'pub', s: '#', d: { x: 'y' } };
   assert.equal(lireMaille(JSON.stringify(bon)).d.x, 'y');
-  for (const mal of [{ ...bon, h: 256 }, { ...bon, h: 2.5 }, { ...bon, h: -1 }, { ...bon, i: 'court' }, { ...bon, k: 'virus' }, { ...bon, s: 'pas-un-salon' }, { ...bon, a: 'xyz' }, { ...bon, m: 2 }])
+  for (const mal of [{ ...bon, h: 256 }, { ...bon, h: 2.5 }, { ...bon, h: -1 }, { ...bon, i: 'court' }, { ...bon, k: 'Virus!' }, { ...bon, k: 7 }, { ...bon, k: 'x' }, { ...bon, s: 'pas-un-salon' }, { ...bon, a: 'xyz' }, { ...bon, m: 2 }])
     assert.equal(lireMaille(JSON.stringify(mal)), null, JSON.stringify(mal));
+  assert.equal(lireMaille(JSON.stringify({ ...bon, k: 'pub' }, null, 1))?.k, 'pub', '(0.99.42) un paquet avec des espaces est accepté');
+  assert.equal(lireMaille(JSON.stringify({ ...bon, k: 'capteur' })).k, 'capteur', '(0.99.42) un type inconnu bien formé est accepté');
   assert.equal(lireMaille('{"m":1'), null); assert.equal(lireMaille(JSON.stringify({ v: 1, g: 'msg' })), null, 'un paquet de l\'ancienne Proche n\'est pas du maillage');
 });
 
@@ -197,4 +199,14 @@ test('◈ (0.99.37) un relais muet (relié, mais qui ne s\'annonce jamais) appar
   R.T.A.recevoir('pi-ble', vieux); await attendre(50);
   const m = R.T.A.topologie().noeuds.find(n => n.id === 'v:pi-ble');
   assert.ok(m && m.muet && m.direct); assert.equal(m.stats.relayes, 1);
+});
+
+test('🌐 (0.99.42) un type inconnu (un appareil de demain) traverse un nœud d\'aujourd\'hui ; l\'annonce dit le rôle, la version, les capacités', async () => {
+  const L = [['A', 'B'], ['B', 'C']], R = reseau(['A', 'B', 'C'], L); await allumer(R, L);
+  const capteur = JSON.stringify({ m: 1, i: '00000000000000dd', o: 'fedcba9876543210', n: 'esp32', h: TTL_MAX, t: Date.now(), k: 'capteur', z: { futur: true }, d: { temp: 21.5 } });
+  const recus = []; const r0 = R.T.C.recevoir; R.T.C.recevoir = (de, t) => { recus.push(t); return r0(de, t); };
+  R.T.B.recevoir('A', capteur); await attendre(250);
+  assert.ok(recus.some(t => /"k":"capteur"/.test(t) && /"temp":21.5/.test(t) && /"z":\{"futur":true\}/.test(t) && /"h":254/.test(t)), 'B l\'a relayé à C, intact (même un champ inconnu), h - 1');
+  const b = R.T.C.topologie().noeuds.find(n => n.id === R.T.B.moi().fp);
+  assert.equal(b.role, 'noeud'); assert.ok(b.cap.includes('relais'));
 });

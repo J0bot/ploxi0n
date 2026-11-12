@@ -35,6 +35,11 @@ export const TTL_MAX = 255, PUBLIC = '#', TAILLE_MAX = 16000, AGE_MAX = 72 * 360
 // en donne la moitié à chaque nouveau voisin croisé, et le remet au destinataire dès qu'il le croise directement. Tout reste chiffré.
 export const BOITE_PAR = 100, BOITE_GARDE = 24 * 3600e3, BOITE_ESSAIS = 8, BOITE_ECART = 20000, COPIES = 8, SACOCHE_MAX = 100, SACOCHE_GARDE = 72 * 3600e3;
 const GENRES = new Set(['ann', 'pub', 'mp', 'ack', 'sync', 'pos']);
+// (0.99.42, le protocole public v1 : docs/protocole/MAILLE-v1.md) un type INCONNU bien formé (2 à 10 lettres minuscules) est accepté, relayé
+// et gardé comme les autres, mais ignoré : un appareil inventé demain (un capteur, un ESP32) traverse les nœuds d'aujourd'hui.
+const GENRE = /^[a-z]{2,10}$/;
+// son rôle et ce qu'il sait faire, dans son annonce : un NŒUD relaie (et garde) ; un CLIENT se branche sur un nœud, ne relaie rien
+export const PROTOCOLE = 1, ROLES = ['noeud', 'client'], MES_CAPACITES = ['relais', 'stock', 'pub', 'mp', 'ack', 'pos', 'coursier', 'carte'];
 const HEX16 = /^[0-9a-f]{16}$/;
 const SALON = /^#[\p{L}\p{N}_-]{0,32}$/u;
 const GARDE = 12 * 3600e3, CACHE_MAX = 150, MESSAGES_MAX = 400, GARDE_FAVORI = 72 * 3600e3, FAVORIS_MAX = 100, POSITION_VIVE = 15 * 60e3;
@@ -104,9 +109,9 @@ export function lireCarte(texte) {
   return { cle, fp: fp || null, nom: String(q.get('n') || '').replace(/[\u0000-\u001f]/g, '').slice(0, 24) };
 }
 export function lireMaille(texte) {
-  if (typeof texte !== 'string' || texte.length > TAILLE_MAX || texte.indexOf('"m":1') < 0) return null;
+  if (typeof texte !== 'string' || texte.length > TAILLE_MAX || !/"m"\s*:\s*1\b/.test(texte)) return null;   // (0.99.42) avec ou sans espaces (un ESP32 peut en mettre)
   let o; try { o = JSON.parse(texte); } catch (e) { return null; }
-  if (!o || o.m !== 1 || !GENRES.has(o.k) || !HEX16.test(o.i) || !HEX16.test(o.o)) return null;
+  if (!o || o.m !== 1 || typeof o.k !== 'string' || !GENRE.test(o.k) || !HEX16.test(o.i) || !HEX16.test(o.o)) return null;
   if (!Number.isInteger(o.h) || o.h < 0 || o.h > TTL_MAX || !Number.isFinite(o.t)) return null;
   if (o.s != null && !(typeof o.s === 'string' && SALON.test(o.s))) return null;
   if (o.a != null && !HEX16.test(o.a)) return null;
@@ -200,17 +205,20 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
     const l = vers || [...voisins]; if (l.length) envoyer(texte, vers || null); return p;
   }
   const paquetDe = (k, extra) => ({ i: nouvelId(), o: id.fp, n: monNom, h: TTL_MAX, t: maintenant(), k, ...extra });
-  function relayer(p, de) {
+  /** (0.99.42) le paquet ORIGINAL est relayé (brut : son texte reçu) : seuls h (et c) changent ; un champ qu'on ne connaît pas (un appareil plus
+   *  récent) passe intact, au lieu de disparaître au premier saut */
+  function relayer(p, de, brut = null) {
     if (p.h <= 0) return;
     const autres = [...voisins].filter(v => v !== de); if (!autres.length) return;
-    const texte = ecrire({ ...p, h: p.h - 1, ...(p.c ? { c: 1 } : {}) });   // ✉ une copie relayée attend, elle ne se répand pas
+    let o = null; try { o = brut ? JSON.parse(brut) : null; } catch (e) { o = null; }
+    const texte = JSON.stringify({ ...(o || { m: 1, ...p }), h: p.h - 1, ...(p.c ? { c: 1 } : {}) });   // ✉ une copie relayée attend, elle ne se répand pas
     attente(10 + (alea(1)[0] % 140), () => envoyer(texte, autres.filter(v => voisins.has(v))));
   }
   // anti-déluge : 40 paquets par empreinte et par 10 s
   function tropBavard(o) { const t = maintenant(), d = debits.get(o) || { t, n: 0 }; if (t - d.t > 10000) { d.t = t; d.n = 0; } d.n++; debits.set(o, d); return d.n > 40; }
 
   const fpsDirects = () => [...pairs].filter(([, p]) => p.voisin && voisins.has(p.voisin)).map(([fp]) => fp).slice(0, 10);
-  function annoncer(vers) { if (id) emettre(paquetDe('ann', { d: { cle: b64(id.brute), v: fpsDirects() } }), vers); }
+  function annoncer(vers) { if (id) emettre(paquetDe('ann', { d: { cle: b64(id.brute), v: fpsDirects(), r: 'noeud', p: PROTOCOLE, cap: MES_CAPACITES } }), vers); }
   let finAnnonce = () => {};
 
   async function demarrer({ nom: n } = {}) {
@@ -266,7 +274,7 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
     if (neufDirect && !reannonce) { reannonce = true; attente(400, () => { reannonce = false; annoncer(); }); }   // ◈ (0.99.37) un voisin direct de plus : les autres l'apprennent (la carte)
     if (avant !== pr.nom + '|' + pr.sauts && p.k !== 'ann') changer('pairs');   // un pair nouveau, ou qui s'est rapproché
     traiter(p, sauts).catch(() => {});
-    if (!(p.a && p.a === id.fp)) relayer(p, de);   // ce qui m'est adressé s'arrête chez moi
+    if (!(p.a && p.a === id.fp)) relayer(p, de, texte);   // ce qui m'est adressé s'arrête chez moi
     return true;
   }
   async function traiter(p, sauts) {
@@ -276,6 +284,7 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
       if (await empreinte(brute) !== p.o) return;   // une clé qui ne donne pas son empreinte : un imposteur
       liens.set(p.o, { v: Array.isArray(p.d.v) ? p.d.v.filter(x => HEX16.test(x) && x !== p.o).slice(0, 10) : [], t: maintenant() });   // ◈ ses voisins directs
       if (!pr.cle || hex(pr.cle) !== hex(brute)) { pr.cle = brute; clesPartagees.delete(p.o); }
+      pr.role = ROLES.includes(p.d.r) ? p.d.r : 'noeud'; pr.cap = Array.isArray(p.d.cap) ? p.d.cap.filter(x => typeof x === 'string' && GENRE.test(x)).slice(0, 16) : null; pr.proto = Number.isInteger(p.d.p) ? p.d.p : 1;   // (0.99.42)
       changer('pairs'); return;
     }
     if (p.k === 'pub') {
@@ -473,7 +482,7 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
       for (const [fp, p] of pairs) {
         if (!vivant(p.vu) || fp === (id && id.fp)) continue;
         const direct = !!(p.voisin && voisins.has(p.voisin)); if (direct) parVoisin.set(p.voisin, fp);
-        noeuds.push({ id: fp, nom: p.nom, sauts: p.sauts, direct, stats: direct ? statDe(p.voisin) : null, favori: favoris.has(fp), bloque: bloques.has(fp) });
+        noeuds.push({ id: fp, nom: p.nom, sauts: p.sauts, direct, stats: direct ? statDe(p.voisin) : null, favori: favoris.has(fp), bloque: bloques.has(fp), role: p.role || 'noeud', cap: p.cap || null });
         if (direct && id) lier(id.fp, fp);
       }
       for (const v of voisins) if (!parVoisin.has(v)) { noeuds.push({ id: 'v:' + v, nom: '', muet: true, direct: true, sauts: 0, stats: statDe(v) }); if (id) lier(id.fp, 'v:' + v); }

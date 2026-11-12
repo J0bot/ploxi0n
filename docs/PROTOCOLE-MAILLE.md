@@ -1,5 +1,9 @@
 # Le protocole du maillage (pour `xb proche` : Linux, Windows, Pi, ESP32…)
 
+> **(0.99.42) La spec publique, normative, est [`docs/protocole/MAILLE-v1.md`](protocole/MAILLE-v1.md)** (rôles nœud / client,
+> compatibilité ascendante, vecteurs de test, implémentation de référence en C dans `ref/c/`, un nœud ESP32). Cette page reste le
+> pense-bête du dépannage (pourquoi l'iPhone ne voit pas le Pi, etc.) ; en cas de désaccord, c'est la spec qui a raison.
+
 *0.99.36. Pour qu'un appareil qui n'est pas un iPhone entre dans le maillage de Proche. Source de vérité : `src/bions/maille.js`,
 `src/bions/fragments.js`, `PloxiBLE` dans `ios/App/App/AppDelegate.swift`. Les tests : `tests/maille.test.mjs`.*
 
