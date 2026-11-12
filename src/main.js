@@ -46,7 +46,7 @@ import { creerCube } from './app/cube.js';
 import { creerLecteurNatif } from './natif/lecteur-natif.js';
 import { creerFichiersNatif } from './natif/fichiers-natif.js';
 import { creerCape } from './cape/cape.js';
-import { creerModes } from './app/modes.js';
+import { creerModes, MODES } from './app/modes.js';
 import { creerMiniDocks } from './app/minidocks.js';
 import { creerCadresLabo } from './natif/cadres-labo.js';
 import { installerGel } from './app/gel.js';
@@ -117,7 +117,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.46';
+const VERSION = '0.99.47';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -777,7 +777,14 @@ async function demarrer() {
   // en organique, les koins toujours (plus de dock) ; ailleurs, le réglage d'avant
   const koins = creerKoins({ actif: () => prefs.lire().mode === 'organique' || !!prefs.lire().koins, vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
     koins: () => (routeur.connait('xerkion-perso-koin-ion') ? routeur.ouvrir('xerkion-perso-koin-ion') : routeur.signaler('le koin du ion n\'est pas encore semé ici')),
-    temps: () => routeurProxy.ouvrir('passe'),   // ○ (0.97) le wormion : se balader dans le temps (le passé) xers: () => routeur.faire('mes-xers'), carte: () => routeur.faire('map'),   // □ portion : la map (0.90)
+    temps: () => routeurProxy.ouvrir('passe'),   // ○ (0.97) le wormion : se balader dans le temps (le passé)
+    xers: () => routeur.faire('mes-xers'), carte: () => routeur.faire('map'),   // □ portion : la map (0.90) ; (0.99.47) ces deux-là étaient avalés par le commentaire d'au-dessus
+    // ⊠ (0.99.47) la case xer : les quatre modes, sur place ; en choisir un change le xer de l'accueil
+    modes: () => MODES.map(([id, glyphe, nom]) => ({ id, glyphe, nom, on: (prefs.lire().mode || 'chill-tekk') === id })),
+    choisirMode: (id) => prefs.regler({ mode: id }).then(() => { if (!routeur.courant()) routeur.faire('accueil'); }).catch(() => {}),
+    // △ (0.99.47) le koin du ion, « ici, maintenant » (une proposition, docs/KOINS.md) : ce qui vit, qui est autour
+    sous_koins: () => { const v = routeur.vivants().length, p = (proche && proche.etat().actif && proche.maille && proche.maille()) ? proche.maille().pairs().filter(x => x.direct).length : null;
+      return [v ? v + ' vivant' + (v > 1 ? 's' : '') : 'rien ne vit', p != null ? p + ' voisin' + (p > 1 ? 's' : '') : null].filter(Boolean).join(' · '); },
     tsoin: () => tsoinNatif.ouvrir(), journal: () => routeurProxy.ouvrir('journal-tsoins'), accueil: () => routeur.faire('accueil'),
     quoi: () => { if (window.ploxi0nTuto && window.ploxi0nTuto.cestQuoi) window.ploxi0nTuto.cestQuoi(); },   // ⓘ (0.95) c'est quoi ça ?
     toi: () => routeurProxy.ouvrir('reglages-app'), retour: () => (routeur.courant() ? routeur.retour() : null), minimiser: () => routeur.faire('minimiser'),

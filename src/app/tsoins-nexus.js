@@ -1,5 +1,6 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1794452749000,"0.99.45 : notifications riches (avatar, glyphe), répondre depuis la notif, les événements du maillage"],
+export const COMMITS = [[1794453459000,"0.99.46 : piloter de la tête ou du regard (PloxiRegard, ARKit, sans image gardée)"],
+  [1794452749000,"0.99.45 : notifications riches (avatar, glyphe), répondre depuis la notif, les événements du maillage"],
   [1794452131000,"0.99.44 : Siri parle xerboxion (synonymes, anglais et français), grandes cibles pour le regard et la tête"],
   [1794451510000,"0.99.43 : la balade sur l'écran verrouillé (mappion), l'activité de Proche, trois contrôles du Centre de contrôle"],
   [1794449282000,"0.99.42 : Maille v1, le protocole public du maillage (spec, vecteurs, C de référence, nœud ESP32)"],

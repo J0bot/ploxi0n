@@ -1155,9 +1155,6 @@ html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,
 .px-koin svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linejoin:round;opacity:.8}
 .px-koin svg polygon:first-child{fill:var(--surface);stroke:var(--bord2)}
 .px-koin svg .f{fill:var(--bio);stroke:none;opacity:.7}
-.px-koin[data-etape="1"]{width:30vw;height:30vw}.px-koin[data-etape="2"]{width:47vw;height:47vw}
-.px-koin[data-etape="3"]{opacity:0;pointer-events:none}
-.px-koins-r.px-koins-ouverts .px-koin{width:76px;height:76px}
 .px-koin-voile{position:fixed;inset:0;z-index:39;background:rgba(7,5,12,.62)}
 .px-koin-cases{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);width:calc(50vw - 17px);display:grid;grid-template-rows:auto auto;gap:8px;z-index:41}
 .px-koin-cases-gauche{left:12px}.px-koin-cases-droite{right:12px}
@@ -1190,7 +1187,62 @@ html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,
 .px-koin-barre>button:active{background:var(--surface2)}
 .px-koin-barre>button .px-g{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:4}
 .px-koin-barre>button .px-g .f{fill:currentColor}
-.px-koin-cases[hidden],.px-koin-barre[hidden],.px-koin-voile[hidden]{display:none}
+.px-koin-cases[hidden],.px-koin-barre[hidden],.px-koin-voile[hidden],.px-koin-modes[hidden]{display:none}
+/* ◺◿ (0.99.47) LE KOIN QUI S'OUVRE : --k va de 0 (le petit triangle du coin) à 1 (ouvert). Le koin grandit depuis son coin et s'efface pendant
+   que les cases se révèlent dans un triangle qui s'ouvre en carré (clip-path, 4 points : le 3e glisse de l'angle vers le coin opposé) ;
+   la barre descend, le voile monte. Le doigt pilote --k au glisser (px-koins-glisse : sans transition). */
+.px-koins-r{--k:0;--kt:.46s cubic-bezier(.2,.9,.25,1)}
+.px-koins-r.px-koins-ouverts{--k:1}
+.px-koin{transform-origin:0 100%;transform:scale(calc(1 + var(--k) * 2.2));opacity:calc(1 - var(--k) * 1.1);transition:transform var(--kt),opacity .3s}
+.px-koin-droite{transform-origin:100% 100%}
+.px-koins-ouverts .px-koin{pointer-events:none}   /* ouvert, le grand triangle effacé ne doit pas manger les touchers des cases */
+.px-koin-cases{--s0:64px;transition:clip-path var(--kt),opacity .25s;opacity:calc(var(--k) * 3);
+  clip-path:polygon(0 100%,0 calc((1 - var(--k)) * (100% - var(--s0))),calc(var(--k) * 100%) calc((1 - var(--k)) * (100% - var(--s0))),calc(var(--s0) + var(--k) * (100% - var(--s0))) 100%)}
+.px-koin-cases-droite{clip-path:polygon(100% 100%,100% calc((1 - var(--k)) * (100% - var(--s0))),calc(100% - var(--k) * 100%) calc((1 - var(--k)) * (100% - var(--s0))),calc(100% - var(--s0) - var(--k) * (100% - var(--s0))) 100%)}
+.px-koin-cases>*{transform-origin:0 100%;transform:scale(calc(.82 + var(--k) * .18));transition:transform var(--kt)}
+.px-koin-cases-droite>*{transform-origin:100% 100%}
+.px-koin-cases>:first-child{transition-delay:.04s}
+.px-koin-barre{opacity:var(--k);transform:translateY(calc((1 - var(--k)) * -14px));transition:opacity .3s .08s,transform var(--kt)}
+.px-koin-voile{opacity:var(--k);transition:opacity .35s}
+.px-koins-r:not(.px-koins-ouverts):not(.px-koins-glisse) :is(.px-koin-cases,.px-koin-barre,.px-koin-voile){pointer-events:none}
+.px-koins-r.px-koins-glisse :is(.px-koin,.px-koin-cases,.px-koin-cases>*,.px-koin-barre,.px-koin-voile){transition:none}
+/* ⊠ (0.99.47) les xers (les modes) dans les cases : quatre carrés par-dessus */
+.px-koin-modes{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:43;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.px-koin-modes>button{aspect-ratio:1/1;max-height:22vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--surface) var(--grain);
+  border:var(--trait) solid var(--bord);border-radius:18px;color:var(--txt);font:600 10px/1.2 var(--mono);letter-spacing:.16em;text-transform:uppercase;animation:px-koin-mode .32s cubic-bezier(.2,.9,.25,1) both}
+.px-koin-modes>button:nth-child(2){animation-delay:.04s}.px-koin-modes>button:nth-child(3){animation-delay:.08s}.px-koin-modes>button:nth-child(4){animation-delay:.12s}
+.px-koin-modes>button .px-g{width:42%;height:42%;fill:none;stroke:var(--acc);stroke-width:3}
+.px-koin-modes>button.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc),inset 0 0 22px color-mix(in srgb,var(--acc) 18%,transparent)}
+@keyframes px-koin-mode{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}
+.px-koins-modes .px-koin-cases>*{opacity:.15}
+.px-koin-cases>button em{font:500 8px/1.3 var(--mono);letter-spacing:.08em;color:var(--grave);font-style:normal;text-transform:none;min-height:1em}
+/* ○ (0.99.47) le wormion : chaque cercle tourne à sa vitesse avec le doigt (--rot), revient en place au lâcher ; au repos, il respire */
+.px-koin-pad .px-pad-g .px-g>*{transform-box:view-box;transform-origin:50% 50%;transition:transform .5s cubic-bezier(.2,.9,.25,1)}
+.px-koin-pad-wormion .px-pad-g .px-g>:nth-child(1){transform:rotate(calc(var(--rot,0deg) * .15))}
+.px-koin-pad-wormion .px-pad-g .px-g>:nth-child(2){transform:rotate(calc(var(--rot,0deg) * .4))}
+.px-koin-pad-wormion .px-pad-g .px-g>:nth-child(3){transform:rotate(calc(var(--rot,0deg) * .75))}
+.px-koin-pad-wormion .px-pad-g .px-g>:nth-child(4){transform:rotate(calc(var(--rot,0deg) * 1.15))}
+.px-koin-pad-wormion .px-pad-g .px-g>:nth-child(5){transform:rotate(calc(var(--rot,0deg) * 1.6))}
+.px-koin-pad-wormion.px-pad-actif .px-pad-g .px-g>*{transition-duration:.12s}
+.px-koins-ouverts .px-koin-pad-wormion:not(.px-pad-actif) .px-pad-g{animation:px-respire 4.2s ease-in-out infinite}
+/* □ (0.99.47) le portion : un couloir de cadres ; les carrés du fond glissent plus (--dx, --dy), ↑ les écarte, ↓ les fait plonger (--z) */
+.px-koin-pad-portion .px-pad-g .px-g>:nth-child(1){transform:translate(calc(var(--dx,0px) * .08),calc(var(--dy,0px) * .08)) scale(calc(1 + var(--z,0) * .06))}
+.px-koin-pad-portion .px-pad-g .px-g>:nth-child(2){transform:translate(calc(var(--dx,0px) * .25),calc(var(--dy,0px) * .25)) scale(calc(1 + var(--z,0) * .2))}
+.px-koin-pad-portion .px-pad-g .px-g>:nth-child(3){transform:translate(calc(var(--dx,0px) * .45),calc(var(--dy,0px) * .45)) scale(calc(1 + var(--z,0) * .45))}
+.px-koin-pad-portion .px-pad-g .px-g>:nth-child(4){transform:translate(calc(var(--dx,0px) * .7),calc(var(--dy,0px) * .7)) scale(calc(1 + var(--z,0) * .8))}
+.px-koin-pad-portion:not([data-dir=""]) .px-pad-g .px-g>*,.px-koin-pad-portion:active .px-pad-g .px-g>*{transition-duration:.1s}
+.px-koins-ouverts .px-koin-pad-portion[data-dir=""] .px-pad-g .px-g>:nth-child(3),.px-koins-ouverts .px-koin-pad-portion[data-dir=""] .px-pad-g .px-g>:nth-child(4){animation:px-plonge 5.5s ease-in-out infinite}
+.px-koins-ouverts .px-koin-pad-portion[data-dir=""] .px-pad-g .px-g>:nth-child(4){animation-delay:-2.7s}
+@keyframes px-respire{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+@keyframes px-plonge{0%,100%{transform:scale(1)}50%{transform:scale(.82)}}
+/* l'onde d'un cran (les deux pads) */
+.px-koin-pad i[data-pad-onde]{left:50%;top:50%;width:30%;aspect-ratio:1/1;margin:-15% 0 0 -15%;border-radius:50%;border:2px solid var(--acc);opacity:0}
+.px-koin-pad-portion i[data-pad-onde]{border-radius:6px}
+.px-koin-pad i[data-pad-onde].px-onde{animation:px-onde .55s ease-out}
+@keyframes px-onde{from{opacity:.7;transform:scale(.4)}to{opacity:0;transform:scale(2.6)}}
+/* ⊠ (0.99.47) en mode koin, le xer se change dans la case xer : l'en-tête de l'accueil (le nom de l'app, les onglets des modes) s'efface */
+html.px-koins .px-tete h1,html.px-koins .px-modes{display:none}
+html.px-koins .px-tete{justify-content:flex-end;margin:6px 2px 2px}
 
 /* ▦ (0.90) la map du xerboxion en carrés (src/app/map-hubs.js) ; (0.92) en chill-tekk : des plaques usées, le hub où tu es bordé de lilas */
 .px-map{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;overflow:clip}   /* (0.99.25) clip : plus un cadre qui défile (dézoomée, la map dépassait et iOS la faisait glisser de côté, l'accueil avec) */

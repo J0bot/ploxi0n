@@ -7,6 +7,12 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.47', titre: 'Le koin qui s\'ouvre', points: [
+    '◺ Un toucher sur un koin : il grandit et s\'ouvre en carré, le wormion et le portion apparaissent dedans. Glisse vers le haut : il suit ton doigt.',
+    '○ Le wormion tourne avec ton doigt (un tunnel du temps) ; □ le portion part en couloir de cadres quand tu glisses.',
+    '⊠ En mode koin, la case « ton xer » change de xer : organique, chill-tekk, xerboxion, xerbot. Appui long : mes xers.',
+    '◇ Une nouvelle installation commence en chill-tekk, le plus simple pour prendre en main.',
+  ] },
   { v: '0.99.46', titre: 'Piloter de la tête', points: [
     '👁 ⚙ › Piloter de la tête : la caméra de Face ID suit ta tête, un point se promène sur l\'écran. Le fixer un instant, ou cligner longtemps des deux yeux = toucher.',
     '👁 Le mode regard : c\'est ton regard qui pointe (calibré en suivant 4 points) ; un coup de tête à gauche ou à droite change de ploxion, secouer la tête minimise.',
