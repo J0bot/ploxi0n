@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.45', titre: 'Les notifications qui parlent', points: [
+    '↩ Un message privé de Proche : « Répondre » directement depuis la notification, la réponse part par le maillage. Ou « ✓ Lu ».',
+    '◉ « Tom est tout près » : un pote ✦ qui revient à portée de Bluetooth. « ✓ remis » : ton message passé par un coursier est enfin arrivé.',
+    '🔔 Les notifications du labo avec l\'avatar de qui t\'écrit, en grand, ou le glyphe du ploxion (avec la build « notifs »).',
+  ] },
   { v: '0.99.44', titre: 'Siri parle xerboxion, et la tête ou le regard visent juste', points: [
     '🗣 « Open mappion in ploxion », « Open the ploxion Proche in xerboxion », « Ouvre le ploxion Autour dans ploxi0n » : Siri connaît tes ploxions et nos mots (map ion, mapion…), en anglais comme en français. Tous les ploxions, Proche et Autour compris.',
     '🗣 « ploxion » et « xerboxion » sont deux autres noms de l\'app pour Siri (ploxi0n, avec un zéro, se dit mal).',

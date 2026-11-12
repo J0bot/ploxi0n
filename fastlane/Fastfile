@@ -21,6 +21,8 @@ end
 
 WID_ID = "#{APP_ID}.widgets"
 WIDGETS = ENV["PLOXI0N_WIDGETS"] == "1"
+NOT_ID = "#{APP_ID}.notifs"
+NOTIFS = ENV["PLOXI0N_NOTIFS"] == "1"   # (0.99.45) les notifications riches (l'avatar, le glyphe) : sans lui, le build est celui d'avant
 VLC = ENV["PLOXI0N_VLC"] == "1"   # le lecteur VLC (0.49) : sans lui, le lecteur intégré n'a que le moteur d'Apple   # l'interrupteur des widgets : sans lui, le build est exactement celui d'avant
 
 # Les WIDGETS (ios/App/PloxionWidgets) : la cible d'extension est ajoutée au projet ICI, sur le Mac de la CI (gem xcodeproj, livrée avec
@@ -53,6 +55,43 @@ def ajouter_widgets
   embarquer.add_file_reference(cible.product_reference).settings = { "ATTRIBUTES" => ["RemoveHeadersOnCopy"] }
   projet.save
   UI.success("cible PloxionWidgets ajoutée (#{WID_ID}, #{version} (#{build}))")
+end
+
+# 🔔 Les NOTIFICATIONS RICHES (0.99.45, ios/App/PloxionNotifs, option PLOXI0N_NOTIFS) : la Notification Service Extension (l'avatar d'une
+# personne, le glyphe d'un ploxion), ajoutée ICI comme les widgets, idempotent, embarquée dans l'app (PlugIns), même version et même build.
+def ajouter_notifs
+  require "xcodeproj"
+  projet = Xcodeproj::Project.open(File.expand_path("../#{PROJET}", __dir__))
+  return UI.message("cible PloxionNotifs déjà là") if projet.targets.any? { |t| t.name == "PloxionNotifs" }
+  app = projet.targets.find { |t| t.name == "App" }
+  version = app.build_configurations.first.build_settings["MARKETING_VERSION"] || "1.0"
+  build = app.build_configurations.first.build_settings["CURRENT_PROJECT_VERSION"] || "1"
+  cible = projet.new_target(:app_extension, "PloxionNotifs", :ios, "17.0", nil, :swift)
+  groupe = projet.main_group.new_group("PloxionNotifs", "PloxionNotifs")
+  cible.add_file_references([groupe.new_reference("NotificationService.swift")])
+  groupe.new_reference("Info.plist")
+  cible.add_system_frameworks(%w[UserNotifications Intents])
+  cible.build_configurations.each do |c|
+    c.build_settings.merge!(
+      "PRODUCT_BUNDLE_IDENTIFIER" => NOT_ID, "PRODUCT_NAME" => "PloxionNotifs", "INFOPLIST_FILE" => "PloxionNotifs/Info.plist",
+      "SWIFT_VERSION" => "5.0", "TARGETED_DEVICE_FAMILY" => "1,2", "IPHONEOS_DEPLOYMENT_TARGET" => "17.0",
+      "MARKETING_VERSION" => version, "CURRENT_PROJECT_VERSION" => build, "GENERATE_INFOPLIST_FILE" => "NO", "SKIP_INSTALL" => "YES",
+      "DEVELOPMENT_TEAM" => ENV["APPLE_TEAM_ID"],
+      "LD_RUNPATH_SEARCH_PATHS" => ["$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks"]
+    )
+  end
+  app.add_dependency(cible)
+  embarquer = app.copy_files_build_phases.find { |ph| ph.name == "Embed Foundation Extensions" } || begin
+    ph = app.new_copy_files_build_phase("Embed Foundation Extensions"); ph.symbol_dst_subfolder_spec = :plug_ins; ph
+  end
+  embarquer.add_file_reference(cible.product_reference).settings = { "ATTRIBUTES" => ["RemoveHeadersOnCopy"] }
+  projet.save
+  UI.success("cible PloxionNotifs ajoutée (#{NOT_ID}, #{version} (#{build}))")
+end
+
+def identifiant_notifs
+  bid = asc(:get, "bundleIds?filter[identifier]=#{NOT_ID}")["data"].first
+  asc(:post, "bundleIds", { data: { type: "bundleIds", attributes: { identifier: NOT_ID, name: "ploxi0n notifs", platform: "IOS" } } }) unless bid
 end
 
 # Le MANIFESTE DE CONFIDENTIALITÉ (0.47, exigé par Apple : UserDefaults, espace disque) : ios/App/App/PrivacyInfo.xcprivacy, ajouté aux
@@ -254,14 +293,19 @@ platform :ios do
       ajouter_widgets
       identifiant_widgets
     end
-    ids = WIDGETS ? [APP_ID, WID_ID] : APP_ID
+    if NOTIFS
+      ajouter_notifs
+      identifiant_notifs
+    end
+    ids = [APP_ID] + (WIDGETS ? [WID_ID] : []) + (NOTIFS ? [NOT_ID] : [])
+    cibles = ["App"] + (WIDGETS ? ["PloxionWidgets"] : []) + (NOTIFS ? ["PloxionNotifs"] : [])
 
     if ENV["MATCH_GIT_URL"].to_s.empty?
       # signature gérée par Apple (cloud-managed) : xcodebuild s'authentifie avec la clé API, aucun dépôt de certificats
       chemin_cle = File.join(Dir.tmpdir, "AuthKey_#{ENV['ASC_KEY_ID']}.p8")
       File.write(chemin_cle, ENV["ASC_KEY_P8"])
       auth = "-allowProvisioningUpdates -authenticationKeyPath #{chemin_cle} -authenticationKeyID #{ENV['ASC_KEY_ID']} -authenticationKeyIssuerID #{ENV['ASC_ISSUER_ID']}"
-      update_code_signing_settings(path: PROJET, use_automatic_signing: true, team_id: ENV["APPLE_TEAM_ID"], targets: WIDGETS ? ["App", "PloxionWidgets"] : ["App"])
+      update_code_signing_settings(path: PROJET, use_automatic_signing: true, team_id: ENV["APPLE_TEAM_ID"], targets: cibles)
       build_app(project: PROJET, scheme: "App", configuration: "Release", output_directory: "build",
                 export_method: "app-store", xcargs: auth, export_xcargs: auth,
                 export_options: { signingStyle: "automatic", teamID: ENV["APPLE_TEAM_ID"] })
@@ -279,6 +323,11 @@ platform :ios do
         profils[WID_ID] = ENV["sigh_#{WID_ID}_appstore_profile-name"]
         update_code_signing_settings(path: PROJET, use_automatic_signing: false, team_id: ENV["APPLE_TEAM_ID"], targets: ["PloxionWidgets"],
                                      code_sign_identity: "Apple Distribution", profile_name: profils[WID_ID], build_configurations: ["Release"])
+      end
+      if NOTIFS
+        profils[NOT_ID] = ENV["sigh_#{NOT_ID}_appstore_profile-name"]
+        update_code_signing_settings(path: PROJET, use_automatic_signing: false, team_id: ENV["APPLE_TEAM_ID"], targets: ["PloxionNotifs"],
+                                     code_sign_identity: "Apple Distribution", profile_name: profils[NOT_ID], build_configurations: ["Release"])
       end
       build_app(project: PROJET, scheme: "App", configuration: "Release", output_directory: "build", export_method: "app-store",
                 export_options: { signingStyle: "manual", teamID: ENV["APPLE_TEAM_ID"], provisioningProfiles: profils })

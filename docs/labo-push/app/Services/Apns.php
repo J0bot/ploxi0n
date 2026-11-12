@@ -45,7 +45,11 @@ class Apns
 
     public static function corps(string $titre, string $texte, string $sujet, array $data = []): array
     {
-        return array_merge(['aps' => ['alert' => ['title' => mb_substr($titre, 0, 120), 'body' => mb_substr($texte, 0, 1000)], 'sound' => 'default', 'thread-id' => $sujet]], $data);
+        $aps = ['alert' => ['title' => mb_substr($titre, 0, 120), 'body' => mb_substr($texte, 0, 1000)], 'sound' => 'default', 'thread-id' => $sujet];
+        // 🔔 (ploxi0n 0.99.45) une image (le glyphe du ploxion, en https) ou un expéditeur ({ nom, avatar?, id? }) : l'extension de l'app
+        // (PloxionNotifs) enrichit la notification — l'avatar en grand, ou le glyphe joint. Elle n'est appelée qu'avec mutable-content.
+        if (! empty($data['image']) || ! empty($data['expediteur'])) { $aps['mutable-content'] = 1; }
+        return array_merge(['aps' => $aps], $data);
     }
 
     /** un envoi : [status HTTP, raison d'Apple] ; un jeton mort (410, BadDeviceToken) est effacé */

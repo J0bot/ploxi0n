@@ -118,3 +118,24 @@ Seulement les appareils du compte destinataire qui ont ce sujet.
 
 - Les Live Activities mises à jour par le labo (push-to-update) : le jeton de l'activité, `apns-push-type: liveactivity`.
 - Les notifications de communication (l'avatar de qui écrit) : l'entitlement est déjà là.
+
+## Les notifications riches (0.99.45) : l'avatar, le glyphe
+
+Comme Snapchat (demandé par xerxion1 pour RS-7). L'extension **PloxionNotifs** (une Notification Service Extension, `ios/App/PloxionNotifs`,
+option de build `notifs` : Actions › iOS TestFlight › Run workflow › cocher `notifs`, ou `[notifs]` dans le message, ou la variable du dépôt
+`PLOXI0N_NOTIFS=1`) reçoit chaque push qui porte `"mutable-content": 1` et l'enrichit avant qu'il s'affiche :
+
+```json
+{ "aps": { "alert": { "title": "💬 Tom", "body": "t'es où ?" }, "thread-id": "messages", "mutable-content": 1 },
+  "ouvrir": "social",
+  "expediteur": { "nom": "Tom", "avatar": "https://labo.j0bot.ch/avatars/42.png", "id": "42" },
+  "groupe": "coord · #push" }
+```
+- **`expediteur`** (une personne) : une **notification de communication** (INSendMessageIntent + INPerson) : l'avatar en grand, l'icône
+  de l'app en coin, le nom de la personne. `groupe` (facultatif) : le nom de la conversation. L'entitlement
+  `com.apple.developer.usernotifications.communication` et `NSUserActivityTypes: INSendMessageIntent` sont déjà dans l'app.
+- **`image`** (un ploxion) : une URL **https** vers le glyphe rendu en PNG (ou JPG, GIF) : jointe à la notification.
+- Garde-fous : https seulement, 2 Mo au plus, 8 s au plus ; sinon (ou si l'extension manque de temps) la notification d'origine, jamais rien
+  de perdu. `ouvrir` et `params` passent tels quels (toucher = ouvrir le ploxion).
+- Côté labo : `Apns::corps` (docs/labo-push/app/Services/Apns.php) pose `mutable-content: 1` tout seul dès qu'il y a `image` ou `expediteur`.
+- La première fois : fastlane crée l'identifiant `ch.j0bot.ploxi0n.notifs` (clé API) et son profil (match) ; rien à cocher dessus.

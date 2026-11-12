@@ -37,3 +37,34 @@ test('◉ un privé et une mention deviennent une notification ; un message ouve
   assert.equal(notifs.length, 2, 'les anciens ne reviennent pas');
   await A.arreter(); await B.arreter();
 });
+
+test('↩ (0.99.45) répondre depuis la notification : la réponse part par le maillage ; « ✓ Lu » ; un privé porte l\'action, un événement non', async () => {
+  const f = air();
+  const A = creerProche({ W: Wfaux(), boxion: creerMemoire(), tuyau: f(), Contexte: null }), B = creerProche({ W: Wfaux(), boxion: creerMemoire(), tuyau: f(), Contexte: null });
+  const notifs = []; A.brancherNotifier((o) => { notifs.push(o); return true; });
+  await A.demarrer({ nom: 'Léa' }); await B.demarrer({ nom: 'Tom' }); await attendre(300);
+  await B.maille().prive(A.maille().moi().fp, 'tu es où ?'); await attendre(300);
+  const salon = notifs[0].salon; assert.equal(salon, '@' + B.maille().moi().fp);
+  assert.equal(await A.repondre(salon, 'au bar, viens'), true); await attendre(400);
+  assert.ok(B.maille().fil('@' + A.maille().moi().fp).some(m => m.texte === 'au bar, viens' && !m.moi), 'Tom a reçu la réponse tapée sur l\'écran verrouillé');
+  assert.equal(await A.repondre('#inconnu', 'x'), false, 'pas un salon rejoint');
+  A.marquerLu(salon);
+  await A.arreter(); await B.arreter();
+});
+
+test('🔔 (0.99.45) les événements du maillage : un pote ✦ qui revient après 10 min sonne « tout près » ; pas ceux déjà là au démarrage', async () => {
+  const f = air(); let t = Date.now(); const horloge = () => t;
+  const A = creerProche({ W: Wfaux(), boxion: creerMemoire(), tuyau: f(), Contexte: null, maintenant: horloge });
+  const memB = creerMemoire();   // Tom garde son identité (son empreinte) d'une fois à l'autre
+  let B = creerProche({ W: Wfaux(), boxion: memB, tuyau: f(), Contexte: null, maintenant: horloge });
+  const notifs = []; A.brancherNotifier((o) => { notifs.push(o); return true; });
+  await A.demarrer({ nom: 'Léa' }); await B.demarrer({ nom: 'Tom' }); await attendre(300);
+  A.maille().favori('Tom'); await attendre(100);
+  assert.equal(notifs.filter(n => /tout près/.test(n.titre)).length, 0, 'déjà là au démarrage : rien');
+  await B.arreter(); t += 11 * 60e3; await attendre(100);
+  B = creerProche({ W: Wfaux(), boxion: memB, tuyau: f(), Contexte: null, maintenant: horloge });
+  await B.demarrer({ nom: 'Tom' }); await attendre(400);
+  const pres = notifs.filter(n => /tout près/.test(n.titre));
+  assert.equal(pres.length, 1, JSON.stringify(notifs)); assert.equal(pres[0].genre, 'evenement'); assert.match(pres[0].titre, /^◉ Tom est tout près/);
+  await A.arreter(); await B.arreter();
+});

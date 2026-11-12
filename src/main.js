@@ -115,7 +115,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.44';
+const VERSION = '0.99.45';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -636,6 +636,7 @@ async function demarrer() {
   const notifs = creerNotifs({ boxion, vibrer, envoyer: (q) => httpRelais.requete(q, fetchOrigine),
     ouvrir: (id, p) => { routeurProxy.ouvrir(id); if (id === 'proche' && p && p.salon) { proche.page('messages'); proche.voir(p.salon); } } });   // ◉ (0.99.40) une notification de Proche : la conversation
   proche.brancherNotifier((o) => notifs.proche(o).catch(() => false));
+  notifs.brancherReponse((salon, texte) => { proche.repondre(salon, texte).catch(() => {}); }, (salon) => proche.marquerLu(salon));   // ↩ (0.99.45) répondre depuis la notification
   // 🔔 (0.91) les notifications push, app fermée aussi (la clé APNs vit sur le labo : docs/PUSH.md)
   const push = creerPush({ boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id, p) => routeurProxy.ouvrir(id, p || undefined), vibrer: (x) => vibrer(x),
     signaler: (t) => routeur && routeur.signaler(t), connecte: () => !!(compteRef && compteRef.etat().connecte),

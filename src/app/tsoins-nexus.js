@@ -1,5 +1,6 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1794451510000,"0.99.43 : la balade sur l'écran verrouillé (mappion), l'activité de Proche, trois contrôles du Centre de contrôle"],
+export const COMMITS = [[1794452131000,"0.99.44 : Siri parle xerboxion (synonymes, anglais et français), grandes cibles pour le regard et la tête"],
+  [1794451510000,"0.99.43 : la balade sur l'écran verrouillé (mappion), l'activité de Proche, trois contrôles du Centre de contrôle"],
   [1794449282000,"0.99.42 : Maille v1, le protocole public du maillage (spec, vecteurs, C de référence, nœud ESP32)"],
   [1794270765000,"0.99.41 : Proche sur Android (PloxiBLE.java : le maillage Bluetooth, le même contrat que l'iPhone et xb proche)"],
   [1794238467000,"0.99.40 : les notifications de Proche, prêt pour l'App Store"],

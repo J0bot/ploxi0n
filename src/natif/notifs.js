@@ -12,10 +12,26 @@ export function creerNotifs({ W = globalThis.window, boxion, vibrer = () => {}, 
   const pret = boxion.get('reglages', 'notifs').then(v => { if (v && typeof v === 'object') reglage = { ...reglage, ...v }; }).catch(() => {});
   const garder = () => boxion.put('reglages', 'notifs', reglage).catch(() => {});
   async function LN() { return surPromesse((await charger()).LocalNotifications); }
+  // ↩ (0.99.45) répondre depuis la notification : un privé de Proche porte « Répondre » (on tape la réponse sur l'écran verrouillé, elle part
+  // par le maillage sans ouvrir l'app) et « Lu ». reponse(salon, texte) et lu(salon) : branchés par main.js sur Proche.
+  let reponse = null, lu = null, typesPoses = false;
+  function ecouter(L) {
+    if (ecoute) return; ecoute = true;
+    L.addListener('localNotificationActionPerformed', (e) => {
+      const x = (e && e.notification && e.notification.extra) || {}, a = e && e.actionId;
+      if (a === 'repondre') { const t = String((e && e.inputValue) || '').trim(); if (t && reponse && x.params && x.params.salon) { try { reponse(x.params.salon, t.slice(0, 1000)); } catch (er) { /* */ } } return; }
+      if (a === 'lu') { if (lu && x.params && x.params.salon) { try { lu(x.params.salon); } catch (er) { /* */ } } return; }
+      if (x.ouvrir) ouvrir(x.ouvrir, x.params || null);
+    }).catch(() => {});
+  }
+  async function poserTypes(L) {
+    if (typesPoses) return; typesPoses = true;
+    try { await L.registerActionTypes({ types: [{ id: 'proche-prive', actions: [{ id: 'repondre', title: '↩ Répondre', input: true, inputButtonTitle: 'Envoyer', inputPlaceholder: 'ta réponse, par le maillage' }, { id: 'lu', title: '✓ Lu' }] }] }); } catch (e) { typesPoses = false; }
+  }
   async function permission() {
     const L = await LN(); const p = await L.requestPermissions();
     if (p.display !== 'granted') throw new Error('notifications refusées : Réglages iOS › ploxi0n › Notifications');
-    if (!ecoute) { ecoute = true; L.addListener('localNotificationActionPerformed', (e) => { const x = e && e.notification && e.notification.extra; if (x && x.ouvrir) ouvrir(x.ouvrir, x.params || null); }).catch(() => {}); }
+    ecouter(L);
     return L;
   }
   async function verifierCoord() {
@@ -39,6 +55,7 @@ export function creerNotifs({ W = globalThis.window, boxion, vibrer = () => {}, 
   function demarrer() { arreter(); if (!reglage.coord) return; verifierCoord().catch(() => {}); minuterie = W.setInterval(() => verifierCoord().catch(() => {}), 60000); }
   return {
     pret, reglage: () => ({ ...reglage }), verifierCoord, demarrer, arreter,
+    brancherReponse: (f, g) => { reponse = f; lu = g || null; },
     async tester() {
       if (!natif()) throw new Error('seulement sur l\'iPhone');
       const L = await permission();
@@ -46,12 +63,13 @@ export function creerNotifs({ W = globalThis.window, boxion, vibrer = () => {}, 
     },
     /** ◉ (0.99.40) un message du maillage (Proche), app en arrière-plan ou Proche fermé : jamais de fenêtre de permission ici (on peut être
      *  en arrière-plan) ; seulement si les notifications sont déjà permises (la notification de test, coord, ou le push l'ont demandé) */
-    async proche({ titre, texte, salon, cle }) {
+    async proche({ titre, texte, salon, cle, genre = 'message' }) {
       if (!natif() || reglage.proche === false) return false;
       const L = await LN(); const p = await L.checkPermissions().catch(() => null); if (!p || p.display !== 'granted') return false;
-      if (!ecoute) { ecoute = true; L.addListener('localNotificationActionPerformed', (e) => { const x = e && e.notification && e.notification.extra; if (x && x.ouvrir) ouvrir(x.ouvrir, x.params || null); }).catch(() => {}); }
+      ecouter(L);
       let h = 0; for (const c of String(cle || salon || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-      await L.schedule({ notifications: [{ id: 710000 + (h % 80000), title: String(titre || '◉ proche').slice(0, 80), body: String(texte || '').slice(0, 220), threadIdentifier: 'proche:' + String(salon || ''), extra: { ouvrir: 'proche', params: { salon: String(salon || '') } } }] });
+      const prive = String(salon || '')[0] === '@' && genre !== 'evenement'; if (prive) await poserTypes(L);
+      await L.schedule({ notifications: [{ id: 710000 + (h % 80000), title: String(titre || '◉ proche').slice(0, 80), body: String(texte || '').slice(0, 220), threadIdentifier: 'proche:' + String(salon || ''), ...(prive ? { actionTypeId: 'proche-prive' } : {}), extra: { ouvrir: 'proche', params: { salon: String(salon || '') } } }] });
       vibrer('notification'); return true;
     },
     async regler(o) { reglage = { ...reglage, ...o }; await garder(); return { ...reglage }; },
