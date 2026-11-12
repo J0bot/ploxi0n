@@ -159,6 +159,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // que PLANIFIER une copie (regroupée, 0,6 s), et l'état écrit ne contient plus d'heure → une copie qui ne change rien n'écrit rien,
     // donc ne renotifie rien : la boucle ne peut plus exister, ni en récursion, ni en différé.
     private var copiePrevue = false
+    private var ploxionsVus: String? = nil
     private func planifierCopie() {
         if enCopie || copiePrevue { return }
         copiePrevue = true
@@ -183,6 +184,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             if v != nil && g.string(forKey: k) != v { g.set(v, forKey: k); change = true; if k == "ploxi0n.controles" { controles = true } }
         }
         if change { WidgetCenter.shared.reloadAllTimelines() }
+        // 🗣 (0.99.44) un ploxion installé, retiré ou renommé : Siri et Apple Intelligence relisent la liste (pas seulement au lancement)
+        let px = UserDefaults.standard.string(forKey: "CapacitorStorage.ploxi0n.ploxions")
+        if px != ploxionsVus { ploxionsVus = px; if #available(iOS 16.0, *) { RaccourcisPloxi0n.updateAppShortcutParameters() } }
         if controles, #available(iOS 18.0, *) { ControlCenter.shared.reloadAllControls() }   // 🎛 Proche allumé, une balade : le Centre de contrôle suit
         ecrireEtat(["groupe": true, "conteneur": conteneur, "epingles": tailles["ploxi0n.epingles"] ?? -1, "valeurs": tailles["ploxi0n.valeurs"] ?? -1,
                     "relu": g.string(forKey: "ploxi0n.epingles")?.count ?? -1])
@@ -299,6 +303,7 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
     public let jsName = "PloxiApple"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "meteo", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "assistance", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "taille", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "shazam", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "musiqueChercher", returnType: CAPPluginReturnPromise),
@@ -436,6 +441,16 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
     }
 
     // ▤ (0.88) le ploxion système (btop) : ce que seul iOS sait — l'état thermique, le mode économie, le disque, la mémoire, les cœurs
+    // ♿ (0.99.44, RS-7 : Accessibilité › Physique et motricité) les aides d'iOS qui tournent : le Suivi du regard et de la tête passent par
+    // AssistiveTouch (le pointeur, l'attente qui clique) ; la Commande vocale n'a pas d'API (les noms des boutons suffisent pour elle)
+    @objc func assistance(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            call.resolve(["voiceOver": UIAccessibility.isVoiceOverRunning, "selection": UIAccessibility.isSwitchControlRunning,
+                          "assistiveTouch": UIAccessibility.isAssistiveTouchRunning, "texteGras": UIAccessibility.isBoldTextEnabled,
+                          "mouvementReduit": UIAccessibility.isReduceMotionEnabled, "grandTexte": UIApplication.shared.preferredContentSizeCategory.isAccessibilityCategory])
+        }
+    }
+
     @objc func systeme(_ call: CAPPluginCall) {
         let p = ProcessInfo.processInfo
         let thermique: String

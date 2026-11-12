@@ -1,0 +1,27 @@
+/* Généré par tools/siri-phrases.mjs depuis Raccourcis.swift : les phrases de Siri en français. */
+"Ouvre ${ploxion} dans ${applicationName}" = "Ouvre ${ploxion} dans ${applicationName}";
+"Ouvre ${ploxion} avec ${applicationName}" = "Ouvre ${ploxion} avec ${applicationName}";
+"Launch ${ploxion} in ${applicationName}" = "Lance ${ploxion} dans ${applicationName}";
+"Open the ploxion ${ploxion} in ${applicationName}" = "Ouvre le ploxion ${ploxion} dans ${applicationName}";
+"Open the ${ploxion} ploxion in ${applicationName}" = "Ouvre le ploxion ${ploxion} sur ${applicationName}";
+"Show ${ploxion} in ${applicationName}" = "Montre ${ploxion} dans ${applicationName}";
+"Go to ${ploxion} in ${applicationName}" = "Va sur ${ploxion} dans ${applicationName}";
+"${applicationName} open ${ploxion}" = "${applicationName} lance ${ploxion}";
+"${applicationName} ${ploxion}" = "${applicationName} ${ploxion}";
+"Va dans ${ploxion} sur ${applicationName}" = "Va dans ${ploxion} sur ${applicationName}";
+"${applicationName} ouvre ${ploxion}" = "${applicationName} ouvre ${ploxion}";
+"Note un tsoin dans ${applicationName}" = "Note un tsoin dans ${applicationName}";
+"Note a tsoin in ${applicationName}" = "Note un tsoin sur ${applicationName}";
+"New tsoin in ${applicationName}" = "Nouveau tsoin dans ${applicationName}";
+"Add a tsoin to ${applicationName}" = "Ajoute un tsoin à ${applicationName}";
+"Dis à ${applicationName}" = "Dis à ${applicationName}";
+"Demande à ${applicationName}" = "Demande à ${applicationName}";
+"${applicationName} commande" = "${applicationName} commande";
+"Talk to ${applicationName}" = "Parle à ${applicationName}";
+"Hey ${applicationName}" = "Hé ${applicationName}";
+"Lis une valeur de ${applicationName}" = "Lis une valeur de ${applicationName}";
+"Que dit ${applicationName}" = "Que dit ${applicationName}";
+"Cherche un ploxion dans ${applicationName}" = "Cherche un ploxion dans ${applicationName}";
+"Search ${applicationName}" = "Cherche dans ${applicationName}";
+"Find a ploxion in ${applicationName}" = "Trouve un ploxion dans ${applicationName}";
+"Ouvre ${applicationName}" = "Ouvre ${applicationName}";

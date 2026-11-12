@@ -3,6 +3,7 @@
 //   recevoir()       au lancement et à chaque retour au premier plan : ouvre le ploxion demandé, verse les tsoins notés par raccourci,
 //                    « Envoyer à un ploxion » (l'ouvre, puis jOSPorts.emit(id, port, texte)), « Chercher un ploxion » (le marketplace)
 //   valeur(cle, titre, valeur)  une valeur pour « Lire une valeur de ploxi0n » (et les widgets) ; les ploxions : jOSRaccourcis.publierValeur
+import { synonymes } from './vocabulaire.js';
 import { surPromesse } from './plugin-sur.js';
 import { glyphePloxion } from '../app/glyphes.js';
 
@@ -34,7 +35,8 @@ export function creerRaccourcis({ W = globalThis.window, routeur, boxion, comman
   return {
     async publier(liste) {
       if (!natif()) return;
-      await (await P()).set({ key: 'ploxi0n.ploxions', value: JSON.stringify(liste.filter(p => !p.interne).map(p => ({ id: p.id, nom: p.nom, icone: p.icone }))) });
+      // (0.99.44) les internes aussi (Proche, Autour…), et les synonymes : Siri reconnaît nos mots, en français comme en anglais
+      await (await P()).set({ key: 'ploxi0n.ploxions', value: JSON.stringify(liste.filter(p => p && p.id && p.id !== 'accueil').slice(0, 200).map(p => ({ id: p.id, nom: p.nom, icone: p.icone, syn: synonymes(p) }))) });
     },
     async recevoir() {
       if (!natif()) return;

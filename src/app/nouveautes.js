@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.44', titre: 'Siri parle xerboxion, et la tête ou le regard visent juste', points: [
+    '🗣 « Open mappion in ploxion », « Open the ploxion Proche in xerboxion », « Ouvre le ploxion Autour dans ploxi0n » : Siri connaît tes ploxions et nos mots (map ion, mapion…), en anglais comme en français. Tous les ploxions, Proche et Autour compris.',
+    '🗣 « ploxion » et « xerboxion » sont deux autres noms de l\'app pour Siri (ploxi0n, avec un zéro, se dit mal).',
+    '♿ ⚙ › Grandes cibles : chaque bouton fait au moins 44 points, pour viser du regard, de la tête ou au contrôle de sélection d\'iOS. En « auto », ça s\'allume tout seul quand une de ces aides tourne.',
+  ] },
   { v: '0.99.43', titre: 'La balade sur l\'écran verrouillé', points: [
     '🏝 Autour › 🏝 balade : le chrono, la distance et ta cible sur l\'écran verrouillé et la Dynamic Island, même l\'app fermée. Touche un lieu : la flèche et les mètres t\'y mènent ; « tu y es » à l\'arrivée.',
     '🏝 Proche › potes › la boussole › 🏝 écran verrouillé : vers un pote ou le rendez-vous.',

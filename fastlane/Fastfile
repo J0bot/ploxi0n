@@ -93,6 +93,27 @@ rescue StandardError => e
   UI.important("les langues des autorisations ne sont pas ajoutées (#{e.message}) : le build continue, les autorisations restent en français")
 end
 
+# 🗣 (0.99.44) les PHRASES DE SIRI en français (fr.lproj/AppShortcuts.strings, généré par tools/siri-phrases.mjs) : la langue de base du
+# projet est l'anglais ; sans ce fichier, un Siri en français ne connaît pas les raccourcis. Idempotent, et le build continue s'il échoue.
+def ajouter_phrases_siri
+  require "xcodeproj"
+  projet = Xcodeproj::Project.open(File.expand_path("../#{PROJET}", __dir__))
+  app = projet.targets.find { |t| t.name == "App" }
+  return UI.message("AppShortcuts.strings déjà dans l'app") if app.resources_build_phase.files_references.any? { |r| r && r.respond_to?(:name) && r.name == "AppShortcuts.strings" }
+  groupe = projet.main_group.children.find { |g| g.respond_to?(:path) && g.path == "App" } || projet.main_group
+  variantes = groupe.new_variant_group("AppShortcuts.strings")
+  %w[fr].each do |l|
+    next unless File.exist?(File.expand_path("../ios/App/App/#{l}.lproj/AppShortcuts.strings", __dir__))
+    ref = variantes.new_reference("#{l}.lproj/AppShortcuts.strings")
+    ref.name = l
+  end
+  app.add_resources([variantes])
+  projet.save
+  UI.success("AppShortcuts.strings (fr) ajouté aux ressources de l'app")
+rescue StandardError => e
+  UI.important("les phrases Siri en français ne sont pas ajoutées (#{e.message}) : le build continue, Siri reste en anglais")
+end
+
 # Le LECTEUR VLC (0.49, option PLOXI0N_VLC) : le paquet SPM vlckit-spm (MobileVLCKit, LGPL) ajouté à la cible App ICI (gem xcodeproj),
 # idempotent. Le Swift (PloxiLecteur, EcranVLC) est entre #if canImport(MobileVLCKit) : sans le paquet, il n'est pas compilé.
 VLC_PAQUET = "https://github.com/tylerjonesio/vlckit-spm"
@@ -221,6 +242,7 @@ platform :ios do
     begin
       ajouter_confidentialite
       ajouter_langues
+      ajouter_phrases_siri
     rescue => e   # jamais bloquant : sans manifeste, TestFlight accepte le build (Apple prévient par e-mail, ITMS-91053)
       UI.important("PrivacyInfo.xcprivacy pas ajouté : #{e.message}")
     end

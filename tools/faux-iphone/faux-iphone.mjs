@@ -132,6 +132,7 @@ const natif = {
     register: () => { setTimeout(() => emettre('PushNotifications', 'registration', { value: 'faux-jeton-apns-0123' }), 60); return {}; }, unregister: () => ({}) },
   PloxiApple: {
     // (0.91) les Live Activities
+    assistance: () => ({ voiceOver: false, selection: false, assistiveTouch: !!globalThis.__fauxAssistiveTouch, texteGras: false, mouvementReduit: false, grandTexte: false }),   // ♿ (0.99.44)
     activiteDebut: (o) => { activitesFaux.push({ ...o, id: 'act-' + (activitesFaux.length + 1) }); return { id: 'act-' + activitesFaux.length }; },
     activiteMaj: (o) => { const a = activitesFaux.find(x => x.id === o.id); if (!a) throw new Error('activité inconnue'); Object.assign(a, o); return {}; },
     activiteFin: (o) => { const n = activitesFaux.filter(x => !o.id || x.id === o.id).length; for (const x of activitesFaux) if (!o.id || x.id === o.id) x.finie = true; return { n }; },

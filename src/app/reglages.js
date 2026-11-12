@@ -143,6 +143,7 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
           + '<div class="l"><span>◈ L\'atelier des peaux<small>la fractale des UI : zoome dans les peaux, tourne les knobs, trouve la tienne</small></span><button data-a="atelier">ouvrir</button></div>'
           + bascule('data-pb="grain"', P.grain, 'Patine', 'le grain usé des plaques')
           + bascule('data-pb="contraste"', P.contraste === 'fort', 'Contraste fort', 'textes et bords plus clairs')
+          + seg('cibles', [['auto', 'auto'], ['oui', 'oui'], ['non', 'non']], P.cibles || 'auto', '♿ Grandes cibles', 'chaque bouton fait au moins 44 points : pour viser du regard, de la tête, au contrôle de sélection (Réglages iOS › Accessibilité) ; auto : quand une de ces aides tourne')
           + bascule('data-pb="calme"', P.calme, 'Calme', 'plus aucune animation, même aux gestes')
           + bascule('data-pb="plaque"', P.plaque, 'Plaque gravée', '« cycle 7026 · … » sur l\'accueil') + '</div>') : '')
         + (haptique ? (() => { const hc = haptique.config(), noms = Object.keys(hc.motifs);

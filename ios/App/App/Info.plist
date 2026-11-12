@@ -6,6 +6,21 @@
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+	<key>INAlternativeAppNames</key>
+	<array>
+		<dict>
+			<key>INAlternativeAppName</key>
+			<string>ploxion</string>
+			<key>INAlternativeAppNamePronunciationHint</key>
+			<string>plox ion</string>
+		</dict>
+		<dict>
+			<key>INAlternativeAppName</key>
+			<string>xerboxion</string>
+			<key>INAlternativeAppNamePronunciationHint</key>
+			<string>zer box ion</string>
+		</dict>
+	</array>
 	<key>CFBundleDisplayName</key>
         <string>ploxi0n</string>
 	<key>CFBundleExecutable</key>

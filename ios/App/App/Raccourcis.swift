@@ -24,7 +24,10 @@ struct PloxionEntity: AppEntity {
     var id: String
     var nom: String
     var icone: String
-    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(icone) \(nom)") }
+    var syn: [String] = []   // (0.99.44) nos mots et leurs déformations (src/natif/vocabulaire.js, synonymes) : Siri reconnaît « mappion », « map ion »…
+    var displayRepresentation: DisplayRepresentation {
+        DisplayRepresentation(title: "\(nom)", subtitle: "\(icone) ploxion", synonyms: syn.map { LocalizedStringResource(stringLiteral: $0) })
+    }
 }
 
 @available(iOS 16.0, *)
@@ -34,7 +37,7 @@ struct PloxionQuery: EntityQuery {
               let l = try? JSONSerialization.jsonObject(with: d) as? [[String: Any]] else { return [] }
         return l.compactMap { p in
             guard let id = p["id"] as? String else { return nil }
-            return PloxionEntity(id: id, nom: (p["nom"] as? String) ?? id, icone: (p["icone"] as? String) ?? "▣")
+            return PloxionEntity(id: id, nom: (p["nom"] as? String) ?? id, icone: (p["icone"] as? String) ?? "▣", syn: Array(((p["syn"] as? [String]) ?? []).prefix(16)))
         }
     }
     func entities(for identifiers: [String]) async throws -> [PloxionEntity] { tous().filter { identifiers.contains($0.id) } }
@@ -155,7 +158,10 @@ struct OuvrirPloxi0n: AppIntent {
 @available(iOS 16.0, *)
 struct RaccourcisPloxi0n: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
-        AppShortcut(intent: OuvrirPloxion(), phrases: ["Ouvre \(\.$ploxion) dans \(.applicationName)", "Ouvre \(\.$ploxion) avec \(.applicationName)", "Open \(\.$ploxion) in \(.applicationName)", "Open \(\.$ploxion) with \(.applicationName)", "Launch \(\.$ploxion) in \(.applicationName)"],
+        AppShortcut(intent: OuvrirPloxion(), phrases: ["Ouvre \(\.$ploxion) dans \(.applicationName)", "Ouvre \(\.$ploxion) avec \(.applicationName)", "Open \(\.$ploxion) in \(.applicationName)", "Open \(\.$ploxion) with \(.applicationName)", "Launch \(\.$ploxion) in \(.applicationName)",
+                    // (0.99.44, RS-7 : « ouvre le ploxion mappion », et en anglais) ; « ploxion » et « xerboxion » sont aussi des noms de l'app (INAlternativeAppNames)
+                    "Open the ploxion \(\.$ploxion) in \(.applicationName)", "Open the \(\.$ploxion) ploxion in \(.applicationName)", "Show \(\.$ploxion) in \(.applicationName)", "Go to \(\.$ploxion) in \(.applicationName)", "\(.applicationName) open \(\.$ploxion)", "\(.applicationName) \(\.$ploxion)",
+                    "Ouvre le ploxion \(\.$ploxion) dans \(.applicationName)", "Va dans \(\.$ploxion) sur \(.applicationName)", "\(.applicationName) ouvre \(\.$ploxion)"],
                     shortTitle: "Ouvrir un ploxion", systemImageName: "square.grid.2x2")
         AppShortcut(intent: NoterTsoin(), phrases: ["Note un tsoin dans \(.applicationName)", "Note a tsoin in \(.applicationName)", "New tsoin in \(.applicationName)", "Add a tsoin to \(.applicationName)"], shortTitle: "Noter un tsoin", systemImageName: "hourglass")
         AppShortcut(intent: CommandePloxi0n(), phrases: ["Dis à \(.applicationName)", "Demande à \(.applicationName)", "\(.applicationName) commande", "Tell \(.applicationName)", "Ask \(.applicationName)", "Talk to \(.applicationName)", "Hey \(.applicationName)"], shortTitle: "Dire à ploxi0n", systemImageName: "waveform")

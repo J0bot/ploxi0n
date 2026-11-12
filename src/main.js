@@ -115,7 +115,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.43';
+const VERSION = '0.99.44';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -749,6 +749,10 @@ async function demarrer() {
   // (0.99.19) la peau « auto » : légère dès que l'iPhone passe en économie d'énergie (relu toutes les 60 s et au retour dans l'app)
   if (appleIci) { const economie = () => { if (prefs.lire().peau !== 'auto' || document.hidden) return; PloxiApple.systeme().then((x) => { const e = x && x.economie ? '1' : '0'; if (document.documentElement.getAttribute('data-px-economie') !== e) { document.documentElement.setAttribute('data-px-economie', e); prefs.appliquer(); } }).catch(() => {}); };
     economie(); setInterval(economie, 60000); document.addEventListener('visibilitychange', economie); prefs.surChangement(economie); }
+  // ♿ (0.99.44) les aides motrices d'iOS (regard, tête, contrôle de sélection, AssistiveTouch, VoiceOver) : les grandes cibles en « auto » ;
+  // au lancement et à chaque retour dans l'app (on les allume dans Réglages iOS, puis on revient). jOSNatif.assistance() pour les ploxions.
+  if (appleIci) { const assistance = () => { if (document.hidden) return; PloxiApple.assistance().then((a) => { const on = !!(a && (a.assistiveTouch || a.selection || a.voiceOver)); if (!!window.__ploxiAssistance !== on) { window.__ploxiAssistance = on; prefs.appliquer(); } }).catch(() => {}); };
+    assistance(); document.addEventListener('visibilitychange', assistance); window.jOSNatif.assistance = () => PloxiApple.assistance(); }
   if (!modeSurJs) installerTelVivant({ W: window, prefs, systeme: appleIci ? () => PloxiApple.systeme() : null, batterie: natifLot ? () => window.jOSNatif.batterie() : null });
   prefs.surChangement(() => barreHaut.mesurer());
   window.ploxi0nBarreHaut = barreHaut;
@@ -778,7 +782,7 @@ async function demarrer() {
     listeTemps: () => { const cat = routeur.catalogue(), nom = (id) => ((cat.find(p => p.id === id) || {}).nom || id); return [...routeur.vivants().slice().reverse(), ...routeur.endormis()].filter((id, i, l) => id !== routeur.courant() && l.indexOf(id) === i).slice(0, 12).map(id => ({ id, nom: nom(id) })); },
     aller: (id) => routeurProxy.ouvrir(id), precedente: () => routeur.faire('precedente'), suivante: () => routeur.faire('suivante') } });
   koins.poser(); prefs.surChangement(() => koins.poser());
-  window.ploxi0n = { boxion, shim, routeur, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte, koins, langue: langueApp };
+  window.ploxi0n = { boxion, shim, routeur, prefs, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte, koins, langue: langueApp };
   brancherLiens({ routeur, compte, surLien: (r) => { const c = invitationDuLien(r); if (c) boxion.put('social', 'invitation', { code: c, le: Date.now() }).catch(() => {}); }, installer: (id) => routeurProxy.ouvrir(id), lecture: (c) => maintenant.commander(c), lire: (o) => lecteurNatif.ouvrir(o.url, o).catch(() => {}),
     // ☾ (0.64) ploxi0n://dodo et ploxi0n://reveil : un raccourci, le Toucher au dos, ou l'automatisation « quand Sommeil s'active » d'iOS le notent seuls
     actions: { dodo: () => tsoinNatif.dodo().then(() => routeur.signaler('☾ dodo noté')).catch(() => {}), reveil: () => tsoinNatif.reveil().catch(() => {}),

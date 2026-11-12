@@ -27,6 +27,11 @@ export const MOTS = {
   'pourriture-4': ['pourriture 4', 'pourriture quatre', 'rot four', 'pourriture-4'],
   chaoxion: ['chaoxion', 'chaos ion', 'cow xion', 'kaoxion'],
   'chill-tekk': ['chill tekk', 'chill tech', 'chilltech', 'chill tek'],
+  // (0.99.44, RS-7 : « ouvre le ploxion mappion », en anglais surtout)
+  mappion: ['mappion', 'mapion', 'map ion', 'map pion', 'map yon', 'mapping', 'map eon', 'mappy on'],
+  terrax: ['terrax', 'terra x', 'tera x', 'terrex', 'terrace'],
+  proche: ['proche', 'prosh', 'posh', 'proach', 'prochet', 'nearby', 'close by'],
+  autour: ['autour', 'a tour', 'around', 'around me'],
 };
 const sansAccents = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
@@ -61,4 +66,16 @@ export function trouverPloxion(dit, liste) {
   let meilleur = null, score = Infinity;
   for (const c of cand) { const d = Math.min(distance(qson, son(c.n)), distance(qson, son(c.i))) / Math.max(3, qson.length); if (d < score) { score = d; meilleur = c.p; } }
   return score <= 0.34 ? meilleur : null;
+}
+
+/** 🗣 (0.99.44) les synonymes d'un ploxion pour Siri et Apple Intelligence (DisplayRepresentation.synonyms) : son id, son nom (avec et sans
+ * article), « ploxion <nom> », et les déformations connues des mots du xerboxion qu'il contient. Siri reconnaît alors « open mappion »,
+ * « open the map ion ploxion »… Pur. 16 au plus. */
+export function synonymes(p) {
+  const out = new Set(), base = [p && p.id, p && p.nom].filter(Boolean).map(x => sansAccents(x).replace(/[-_.]+/g, ' ').replace(/[^a-z0-9' ]/g, ' ').replace(/\s+/g, ' ').trim()).filter(Boolean);
+  for (const b of base) {
+    out.add(b); out.add(b.replace(/^(le|la|les|l'|the) ?/, '')); out.add('ploxion ' + b);
+    for (const mot of b.split(' ')) for (const v of (MOTS[mot] || MOTS[b] || [])) if (v !== mot) out.add(b === mot ? v : b.replace(mot, v));
+  }
+  return [...out].filter(x => x.length > 1).slice(0, 16);
 }
