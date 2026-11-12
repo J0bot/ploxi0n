@@ -9,11 +9,13 @@
   "langues",
   "recits",
   "xp",
-  "clickion"
+  "clickion",
+  "coord"
  ],
  "base": [
   "bother",
   "xp",
-  "clickion"
+  "clickion",
+  "coord"
  ]
 }

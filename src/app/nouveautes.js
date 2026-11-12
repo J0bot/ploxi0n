@@ -7,6 +7,9 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.42', titre: 'Coord dans l\'app', points: [
+    '📡 Coord est dans l\'app d\'office : lire la flotte, écrire, glisser des fichiers, depuis le téléphone. Il faut être connecté au labo avec le compte admin (⚙ › Compte).',
+  ] },
   { v: '0.99.41', titre: 'Proche sur Android', points: [
     '〰 Proche marche maintenant sur Android, en Bluetooth : entre deux Android, avec un iPhone (sa build « ble »), avec un Pi ou un PC (xb proche). Android demande l\'autorisation « Appareils à proximité » au premier lancement.',
   ] },
