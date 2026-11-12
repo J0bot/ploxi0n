@@ -166,6 +166,10 @@ Ce qui ne change pas : la provenance, la réversibilité, les jetons, les haptiq
 **Le banc des animations** (0.99.51, `src/lot/banc-anim.js`, le ploxion « Banc des animations ») : 39 variantes en 9 familles (ouvrir,
 fermer, passer, koin, feuille, xer, cascade, courbe, wormion), chacune jouée en boucle dans un petit téléphone ; RS-7 swipe (jOSSwipe,
 embarqué : ← non, → oui, ↑ celle-là) et « copier pour Claude » rend ses choix. Les ★ deviennent les animations de l'app.
+**(0.99.52) Les paramètres = le pokédex.** Onglet « pokédex » (la collection de jOSSwipe : filtrer, changer un verdict = ajouter ou retirer,
+▶ revoir) ; onglet « dans l'app » : par famille, celle que l'app utilise (`prefs.animations`), parmi les ♥ ★ et l'actuelle ; une ★ la choisit
+d'office, une ✕ sur la choisie revient à l'actuelle. Branchées : ouvrir et fermer (`zoom-icone.js` : `clesOuvrir`, `clesFermer`), la courbe
+(`COURBES`), la cascade (`html.px-cascade-*`). Les autres familles gardent le choix, l'app suivra (passer, koin, feuille, xer, wormion).
 
 
 Ce qui ne se voit pas sur le faux iPhone et qu'il faut sentir au doigt : la durée de la sortie de l'icône (420 ms paraît long sur iPhone ?

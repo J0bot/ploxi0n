@@ -390,6 +390,12 @@ html:not(.px-fond-partout):has(#ploxi0n.px-mode-ploxion) .px-fond{display:none}
 .px-entree .px-accueil .px-tuile:nth-child(25){animation-delay:350ms}.px-entree .px-accueil .px-tuile:nth-child(26){animation-delay:364ms}.px-entree .px-accueil .px-tuile:nth-child(27){animation-delay:378ms}.px-entree .px-accueil .px-tuile:nth-child(28){animation-delay:392ms}.px-entree .px-accueil .px-tuile:nth-child(29){animation-delay:406ms}.px-entree .px-accueil .px-tuile:nth-child(30){animation-delay:420ms}.px-entree .px-accueil .px-tuile:nth-child(31){animation-delay:434ms}.px-entree .px-accueil .px-tuile:nth-child(32){animation-delay:448ms}
 
 @keyframes px-pose{from{opacity:0;transform:translateY(10px) scale(.94)}}
+/* 🎞 (0.99.52) la cascade choisie au Banc des animations : depuis le centre, en vague, ou aucune */
+html.px-cascade-aucune .px-entree .px-accueil .px-tuile{animation:none !important}
+html.px-cascade-centre .px-entree .px-accueil .px-tuile:nth-child(-n+16){animation-name:px-pose-centre;animation-timing-function:cubic-bezier(.16,1,.3,1)}
+html.px-cascade-vague .px-entree .px-accueil .px-tuile:nth-child(-n+16){animation-name:px-pose-vague;animation-timing-function:cubic-bezier(.2,.88,.24,1)}
+@keyframes px-pose-centre{from{opacity:0;transform:scale(.4)}}
+@keyframes px-pose-vague{from{opacity:0;transform:translate(-8px,-8px) rotate(-8deg)}}
 .px-scene>.px-hote:not([hidden]){animation:px-entre .2s cubic-bezier(.2,.9,.3,1) backwards}
 .px-scene>.px-hote.px-sans-entree{animation:none}
 /* 🔍 (0.99.48) le ploxion qui se referme dans son icône : la scène reste au-dessus de l'accueil le temps du zoom, sans prendre les touchers */

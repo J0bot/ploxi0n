@@ -1,5 +1,6 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1794526222000,"docs/ANIMATIONS.md : la grammaire du mouvement (l'inventaire, les jetons et le bion proposés, le desktop, le zbeul)"],
+export const COMMITS = [[1794527327000,"0.99.51 : le Banc des animations (39 variantes à choisir au swipe, jOSSwipe embarqué)"],
+  [1794526222000,"docs/ANIMATIONS.md : la grammaire du mouvement (l'inventaire, les jetons et le bion proposés, le desktop, le zbeul)"],
   [1794526060000,"0.99.50 : package-lock aligné sur la version (coord de RS-1 intégré)"],
   [1794503241000,"0.99.50 : coord dans l'app (pack embarqué, installé d'office ; lit et écrit par le relais du mode connecté)"],
   [1794457466000,"0.99.49 : le build iPhone repart (synonymes Siri derrière iOS 17), Android vérifié"],

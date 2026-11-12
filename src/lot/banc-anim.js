@@ -8,6 +8,8 @@
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const C = { entre: 'cubic-bezier(.2,.88,.24,1)', sort: 'cubic-bezier(.4,0,.2,1)', ressort: 'cubic-bezier(.16,1,.3,1)', vivant: 'cubic-bezier(.3,1.6,.4,1)', lent: 'cubic-bezier(.45,.05,.25,1)', sec: 'cubic-bezier(.6,0,.4,1)' };
+// (0.99.52) les familles déjà branchées dans l'app (src/app/zoom-icone.js, la cascade de app.css) ; les autres : le choix est gardé, l'app suivra
+export const BRANCHEES = ['ouvrir', 'fermer', 'courbe', 'cascade'];
 export const FAMILLES = [
   ['ouvrir', 'Ouvrir un ploxion', 'toucher une icône de l\'accueil'],
   ['fermer', 'Fermer un ploxion', '▁ minimiser, ‹ revenir à l\'accueil'],
@@ -37,8 +39,9 @@ function A(el, kf, o) { if (!el || !el.animate) return Promise.resolve(); const 
 const attendre = (ms) => new Promise(r => setTimeout(r, ms));
 /** l'icône n°4 (au milieu) : son carré dans la scène, et la transformation qui ramène le ploxion sur elle (comme src/app/zoom-icone.js) */
 function versIcone(S, i = 4) {
-  const ic = S.ics[i], tr = S.T.getBoundingClientRect(), r = ic.getBoundingClientRect();
-  const L = tr.width || S.L, H = tr.height || S.H, x = r.left - tr.left, y = r.top - tr.top, c = r.width || 26, s = c / L, haut = (H - L) / 2;
+  // les mesures à l'écran, ramenées aux coordonnées de la scène (le pokédex la montre réduite : la transformation, elle, ne l'est pas)
+  const ic = S.ics[i], tr = S.T.getBoundingClientRect(), r = ic.getBoundingClientRect(), k = (tr.width && S.T.offsetWidth) ? tr.width / S.T.offsetWidth : 1;
+  const L = S.T.offsetWidth || S.L, H = S.T.offsetHeight || S.H, x = (r.left - tr.left) / k, y = (r.top - tr.top) / k, c = (r.width / k) || 26, s = c / L, haut = (H - L) / 2;
   return { x, y, c, transform: 'translate(' + (x + c / 2 - L * s / 2).toFixed(1) + 'px,' + (y + c / 2 - H * s / 2).toFixed(1) + 'px) scale(' + s.toFixed(4) + ')',
     clip: 'inset(' + haut.toFixed(1) + 'px 0px ' + haut.toFixed(1) + 'px 0px round ' + Math.round(L * 0.225) + 'px)', cx: x + c / 2, cy: y + c / 2, L, H };
 }
@@ -101,6 +104,15 @@ export const VARIANTES = [
   { id: 'wormion-spirale', famille: 'wormion', nom: 'La spirale', sous: 'les cercles s\'enroulent vers le centre, comme un trou de ver', avant: 'worm', jouer: async (S) => { await Promise.all(S.cercles.map((c, i) => A(c, [{ transform: 'rotate(0) scale(1)' }, { transform: 'rotate(' + (180 + i * 40) + 'deg) scale(' + (0.6 + i * 0.05) + ')' }, { transform: 'rotate(360deg) scale(1)' }], { duration: 1800, easing: C.lent }))); } },
 ];
 
+/** les animations de l'app : par famille, celle qu'on a choisie (« dans l'app »), sinon la dernière ★, sinon l'actuelle */
+export function actives(choix = {}, reglees = {}) {
+  const r = {};
+  for (const [f] of FAMILLES) {
+    const l = VARIANTES.filter(v => v.famille === f), ok = (id) => l.some(v => v.id === id) && choix[id] !== 'pass';
+    r[f] = ok(reglees[f]) ? reglees[f] : ((l.find(v => choix[v.id] === 'love') || l.find(v => v.actuel) || l[0]).id);
+  }
+  return r;
+}
 /** le texte à coller dans la conversation : les ★ et les ♥ par famille */
 export function resume(choix, version = '') {
   const lignes = ['Banc des animations' + (version ? ' ' + version : '') + ' :'];
@@ -131,6 +143,12 @@ const CSS = '.ba{height:100%;box-sizing:border-box;display:flex;flex-direction:c
   + '.ba-btn{position:absolute;right:16px;top:14px;width:34px;height:20px;border-radius:10px;border:0;background:var(--ac2);opacity:0;z-index:3;padding:0}'
   + '.ba-worm{position:absolute;inset:0;display:none;z-index:2;background:#0b0d14}.ba-worm i{position:absolute;left:50%;top:50%;border-radius:50%;border:2px solid var(--ac)}'
   + '.ba-worm i:nth-child(1){width:104px;height:104px;margin:-52px 0 0 -52px}.ba-worm i:nth-child(2){width:104px;height:104px;margin:-50px 0 0 -54px}.ba-worm i:nth-child(3){width:70px;height:70px;margin:-33px 0 0 -37px}.ba-worm i:nth-child(4){width:38px;height:38px;margin:-17px 0 0 -21px}.ba-worm i:nth-child(5){width:10px;height:10px;margin:-4px 0 0 -6px;background:var(--ac)}'
+  + '.ba-ong{display:flex;gap:6px;margin:0 0 6px}.ba-ong button{flex:1;min-height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#121622;color:inherit;font-weight:600;font-size:13px}.ba-ong button.on{border-color:var(--acc,#9a86ff);color:var(--acc,#9a86ff)}'
+  + '.ba [data-poke],.ba [data-app]{overflow:auto;flex:1;min-height:0}.ba [hidden]{display:none !important}'
+  + '.ba-tuile{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;font-size:12px}.ba-tuile .f{font:600 9px ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--muted,#8aa0c0)}.ba-tuile .a{font:700 8px ui-monospace,monospace;color:#7dbfb8;border:1px solid #7dbfb8;border-radius:5px;padding:0 5px}'
+  + '.ba-mini{transform:scale(.62);transform-origin:50% 0;height:150px;margin-bottom:-4px}.ba-mini:empty{height:0}.ba-voir{min-height:32px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:#151a24;color:inherit;padding:0 12px}'
+  + '.ba-fam{margin:12px 0}.ba-fam h3{margin:0;font-size:14px}.ba-fam h3 small{font:600 9px ui-monospace,monospace;color:var(--muted,#8aa0c0);letter-spacing:.1em}.ba-choix{display:flex;flex-wrap:wrap;gap:6px}'
+  + '.ba-choix button{min-height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#151a24;color:inherit;padding:6px 12px;font-size:13px;text-align:left}.ba-choix button.on{border-color:var(--acc,#9a86ff);box-shadow:0 0 0 1px var(--acc,#9a86ff);color:var(--acc,#9a86ff)}'
   + '.ba-rec{white-space:pre-wrap;font:12px/1.5 ui-monospace,monospace;background:#0d1016;border-radius:12px;padding:12px;margin:10px 0}.ba-b{display:flex;gap:8px;flex-wrap:wrap}.ba-b button{flex:1;min-height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:#151a24;color:inherit;font-weight:600}';
 
 /** prépare la scène pour une variante (ce qui doit être visible avant qu'elle joue) */
@@ -141,17 +159,50 @@ function poser(S, v) {
   for (const c of S.T.querySelectorAll('.ba-clone')) c.remove();
 }
 
-/** vibrer : (motif) → Promise ; charger() : jOSSwipe (le pack de l'app) */
-export function enregistrerBancAnim({ W = globalThis.window, boxion = null, version = '', vibrer = () => Promise.resolve(), charger = null } = {}) {
+/** vibrer : (motif) → Promise ; charger() : jOSSwipe (le pack de l'app) ; prefs : les animations de l'app (prefs.animations) */
+export function enregistrerBancAnim({ W = globalThis.window, boxion = null, version = '', vibrer = () => Promise.resolve(), charger = null, prefs = null } = {}) {
   const D = W.document;
   const swipe = () => (W.jOSSwipe ? Promise.resolve(W.jOSSwipe) : charger ? charger() : new Promise((ok, ko) => {
     const s = D.createElement('script'); s.src = 'bions/jOSSwipe.js'; s.dataset.bion = 'jOSSwipe';
     s.onload = () => (W.jOSSwipe ? ok(W.jOSSwipe) : ko(new Error('jOSSwipe'))); s.onerror = () => ko(new Error('jOSSwipe introuvable')); D.head.appendChild(s);
   }));
   function mount(hote) {
-    let vivant = true, deck = null; const choix = {};
-    hote.innerHTML = '<div class="ba"><style>' + CSS + '</style><div data-deck></div><div data-fin></div></div>';
-    const zone = hote.querySelector('[data-deck]'), fin = hote.querySelector('[data-fin]');
+    let vivant = true, deck = null, coll = null, onglet = 'swipe'; const choix = {};
+    // data-ecrit : sans-emoji.js laisse les signes tels quels (le ♥ et le ↩ de jOSSwipe, les ★ ♥ des choix ; sinon il les retire)
+    hote.innerHTML = '<div class="ba" data-ecrit><style>' + CSS + '</style><nav class="ba-ong">' + [['swipe', '🎞 swipe'], ['pokedex', '◫ pokédex'], ['app', '⚙ dans l\'app']].map(([k, n]) => '<button data-ong="' + k + '">' + n + '</button>').join('') + '</nav>'
+      + '<div data-deck></div><div data-fin></div><div data-poke hidden></div><div data-app hidden></div></div>';
+    const zone = hote.querySelector('[data-deck]'), fin = hote.querySelector('[data-fin]'), poke = hote.querySelector('[data-poke]'), zapp = hote.querySelector('[data-app]');
+    /** les verdicts : ceux de jOSSwipe (le deck et le pokédex écrivent le même store, « jsw:banc-anim ») + ceux gardés dans boxion_local */
+    const verdicts = () => { const r = { ...choix }; try { const m = JSON.parse(W.localStorage.getItem('jsw:banc-anim') || '{}') || {}; for (const k in m) if (m[k] && m[k].verdict && k.indexOf('swipe:') === 0) r[k.slice(6)] = m[k].verdict; } catch (e) { /* */ } return r; };
+    const reglees = () => ((prefs && prefs.lire().animations) || {});
+    const regler = (f, id) => { if (!prefs) return; prefs.regler({ animations: { ...reglees(), [f]: id } }).catch(() => {}); };
+    function montrer(k) {
+      onglet = k; for (const b of hote.querySelectorAll('[data-ong]')) b.classList.toggle('on', b.getAttribute('data-ong') === k);
+      zone.hidden = fin.hidden = k !== 'swipe'; poke.hidden = k !== 'pokedex'; zapp.hidden = k !== 'app';
+      if (k === 'pokedex') pokedex(); else if (coll && coll.destroy) { coll.destroy(); coll = null; }
+      if (k === 'app') peindreApp();
+    }
+    hote.querySelector('.ba-ong').addEventListener('click', (e) => { const b = e.target.closest('[data-ong]'); if (b) { vibrer('selection'); montrer(b.getAttribute('data-ong')); } });
+    // ◫ LE POKÉDEX : toutes les animations jugées (la collection de jOSSwipe : filtrer ✕ ♥ ★, toucher le verdict le change, ↻ la remet dans le deck)
+    const itemsPoke = VARIANTES.map(v => ({ id: v.id, render: (el) => {
+      const nf = (FAMILLES.find(f => f[0] === v.famille) || [])[1] || v.famille;
+      el.innerHTML = '<div class="ba-tuile"><span class="f">' + esc(nf) + '</span><b>' + esc(v.nom) + '</b>' + (v.actuel ? '<span class="a">ACTUEL</span>' : '') + '<div class="ba-mini" data-mini></div><button class="ba-voir" data-voir>▶ voir</button></div>';
+      el.querySelector('[data-voir]').addEventListener('click', async (e) => { e.stopPropagation(); const m = el.querySelector('[data-mini]'); const S = scene(m); poser(S, v); await attendre(120); try { await v.jouer(S); } catch (er) { /* */ } });
+    } }));
+    function pokedex() {
+      swipe().then((J) => { if (!vivant || onglet !== 'pokedex') return; if (coll && coll.destroy) coll.destroy(); coll = J.collection(poke, { items: itemsPoke, persistNs: 'banc-anim' }); }).catch((e) => { poke.innerHTML = '<p class="n">jOSSwipe n\'est pas là (' + esc(e.message) + ').</p>'; });
+    }
+    // ⚙ DANS L'APP : par famille, les animations attrapées (♥ ★) et l'actuelle ; toucher = c'est elle que l'app utilise
+    function peindreApp() {
+      const ch = verdicts(), act = actives(ch, reglees());
+      zapp.innerHTML = '<p class="n">Par famille, ce que l\'app utilise. Seules tes ♥ et ★ (et l\'actuelle) sont proposées : swipe ou change-les au pokédex pour en ajouter ou en retirer.</p>'
+        + FAMILLES.map(([f, nom, quand]) => {
+          const l = VARIANTES.filter(v => v.famille === f && (v.actuel || ch[v.id] === 'like' || ch[v.id] === 'love'));
+          return '<section class="ba-fam"><h3>' + esc(nom) + (BRANCHEES.includes(f) ? '' : ' <small>bientôt dans l\'app</small>') + '</h3><p class="n">' + esc(quand) + '</p><div class="ba-choix">'
+            + l.map(v => '<button data-choisir="' + f + '|' + v.id + '"' + (act[f] === v.id ? ' class="on" aria-pressed="true"' : '') + '>' + (ch[v.id] === 'love' ? '★ ' : ch[v.id] === 'like' ? '♥ ' : '') + esc(v.nom) + '</button>').join('') + '</div></section>';
+        }).join('');
+    }
+    zapp.addEventListener('click', (e) => { const b = e.target.closest('[data-choisir]'); if (!b) return; const [f, id] = b.getAttribute('data-choisir').split('|'); regler(f, id); vibrer('succes'); W.setTimeout(peindreApp, 30); });
     const garder = () => { if (boxion) boxion.put('banc', 'animations', { choix, le: Date.now(), version }).catch(() => {}); };
     if (boxion) boxion.get('banc', 'animations').then(v => { if (v && v.choix) Object.assign(choix, v.choix, { ...choix }); }).catch(() => {});
     function recap() {
@@ -177,12 +228,15 @@ export function enregistrerBancAnim({ W = globalThis.window, boxion = null, vers
       swipe().then((J) => {
         if (!vivant) return;
         deck = J.mount(zone, { items, persistNs: 'banc-anim', title: '🎞 Banc des animations', hint: VARIANTES.length + ' variantes en boucle · ← non · → oui · ↑ c\'est celle-là',
-          onVerdict: (item, verdict) => { choix[item.id] = verdict; garder(); vibrer(verdict === 'love' ? 'succes' : 'selection'); },
+          onVerdict: (item, verdict) => { choix[item.id] = verdict; garder(); vibrer(verdict === 'love' ? 'succes' : 'selection');
+            // ★ : c'est celle-là → elle devient celle de l'app pour sa famille ; ✕ sur celle qui était choisie : on revient à l'actuelle
+            const v = VARIANTES.find(x => x.id === item.id); if (!v) return;
+            if (verdict === 'love') regler(v.famille, v.id); else if (verdict === 'pass' && reglees()[v.famille] === v.id) regler(v.famille, (VARIANTES.find(x => x.famille === v.famille && x.actuel) || {}).id); },
           onDone: (res) => { if (res && typeof res === 'object') Object.assign(choix, res); garder(); recap(); } });
       }).catch((e) => { zone.innerHTML = '<p class="n">jOSSwipe n\'est pas là (' + esc(e.message) + ').</p>'; });
     }
-    lancer();
-    return { unmount() { vivant = false; try { if (deck && deck.destroy) deck.destroy(); } catch (e) { /* */ } hote.innerHTML = ''; } };
+    lancer(); montrer('swipe');
+    return { unmount() { vivant = false; try { if (deck && deck.destroy) deck.destroy(); if (coll && coll.destroy) coll.destroy(); } catch (e) { /* */ } hote.innerHTML = ''; } };
   }
   W.jOSApps = W.jOSApps || {};
   W.jOSApps['banc-anim'] = { manifest: { id: 'banc-anim', name: 'Banc des animations', icon: '🎞' }, mount };

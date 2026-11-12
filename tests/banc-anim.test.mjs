@@ -2,7 +2,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
-import { FAMILLES, VARIANTES, resume } from '../src/lot/banc-anim.js';
+import { FAMILLES, VARIANTES, resume, actives, BRANCHEES } from '../src/lot/banc-anim.js';
+import { OUVRIR, FERMER, COURBES, clesOuvrir, clesFermer } from '../src/app/zoom-icone.js';
 
 test('🎞 chaque famille a ses variantes, et exactement une « actuelle » (ce que l\'app fait aujourd\'hui) ; les id sont uniques', () => {
   const ids = new Set(VARIANTES.map(v => v.id)); assert.equal(ids.size, VARIANTES.length);
@@ -25,4 +26,25 @@ test('🎞 jOSSwipe est embarqué (le pack de l\'app), et le banc est enregistr�
   assert.ok(j.includes('window.jOSSwipe = {') && j.includes('mount: mount'));
   assert.ok(!/fetch\(|XMLHttpRequest|eval\(|new Function/.test(j), 'pas de réseau ni de code dynamique dans le bion');
   const m = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8'); assert.ok(m.includes('enregistrerBancAnim({ boxion, version: VERSION'));
+  const b = readFileSync(new URL('../src/lot/banc-anim.js', import.meta.url), 'utf8'); assert.ok(b.includes('<div class="ba" data-ecrit>'), '(0.99.52) sans-emoji.js ne retire pas le ♥ ni le ↩ de jOSSwipe');
+});
+
+test('⚙ (0.99.52) les animations de l\'app : le choix réglé, sinon la dernière ★, sinon l\'actuelle ; une ✕ ne peut pas être active', () => {
+  const a = actives({}, {}); assert.equal(a.ouvrir, 'ouvrir-ios'); assert.equal(a.cascade, 'cascade-une');
+  assert.equal(actives({ 'ouvrir-cercle': 'love' }, {}).ouvrir, 'ouvrir-cercle');
+  assert.equal(actives({ 'ouvrir-cercle': 'love', 'ouvrir-genie': 'like' }, { ouvrir: 'ouvrir-genie' }).ouvrir, 'ouvrir-genie', 'le choix réglé passe devant');
+  assert.equal(actives({ 'ouvrir-genie': 'pass' }, { ouvrir: 'ouvrir-genie' }).ouvrir, 'ouvrir-ios', 'écartée : on revient à l\'actuelle');
+});
+
+test('⚙ (0.99.52) ce que l\'app sait jouer : chaque variante d\'ouverture, de fermeture, de courbe du banc existe dans zoom-icone ; les familles branchées', () => {
+  for (const v of VARIANTES.filter(x => x.famille === 'ouvrir')) assert.ok(OUVRIR.includes(v.id), v.id);
+  for (const v of VARIANTES.filter(x => x.famille === 'fermer')) assert.ok(FERMER.includes(v.id), v.id);
+  for (const v of VARIANTES.filter(x => x.famille === 'courbe')) assert.ok(COURBES[v.id], v.id);
+  const r = { x: 40, y: 500, width: 60, height: 60 };
+  assert.equal(clesOuvrir('ouvrir-fondu', r, 390, 844, 0, 0), null, 'le fondu : le CSS s\'en charge');
+  assert.match(clesOuvrir('ouvrir-cercle', r, 390, 844, 0, 0).kf[0].clipPath, /^circle\(30\.0px at 70\.0px 530\.0px\)$/, 'le cercle part du centre de l\'icône');
+  assert.equal(clesFermer('fermer-point', null, true, 390, 844, 0, 0, 390, 844).kf.at(-1).transform, 'scale(0)');
+  assert.deepEqual(BRANCHEES, ['ouvrir', 'fermer', 'courbe', 'cascade']);
+  const css = readFileSync(new URL('../src/app/app.css', import.meta.url), 'utf8');
+  for (const k of ['aucune', 'centre', 'vague']) assert.ok(css.includes('html.px-cascade-' + k), k);
 });

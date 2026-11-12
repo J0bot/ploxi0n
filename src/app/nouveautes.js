@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.52', titre: 'Le pokédex des animations', points: [
+    '◫ Banc des animations › pokédex : toutes les animations que tu as jugées, en tuiles ; touche le verdict pour en ajouter ou en retirer, ▶ pour la revoir.',
+    '⚙ Banc des animations › dans l\'app : par famille, choisis celle que l\'app utilise. Une ★ au swipe la choisit d\'office. Déjà branchées : ouvrir, fermer, la courbe, l\'arrivée sur l\'accueil.',
+  ] },
   { v: '0.99.51', titre: 'Le banc des animations', points: [
     '🎞 Un nouveau ploxion, « Banc des animations » : 39 animations jouées en boucle dans un petit téléphone (ouvrir, fermer, passer d\'une app à l\'autre, le koin, les feuilles, changer de xer, l\'accueil, les courbes, le wormion). Swipe : ← non, → oui, ↑ c\'est celle-là.',
     '🎞 À la fin, « copier pour Claude » : tes choix, prêts à coller.',

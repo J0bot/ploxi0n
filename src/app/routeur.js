@@ -351,7 +351,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     ordre: () => ordreDeBande(), courant: () => (courant ? courant.id : null), nomDe: (id) => (parId.get(id) || {}).nom || id, vibrer: (x) => vibrer(x), calme: () => !!prefs().calme,
     aller: (id, sens) => allerA(id, { sens, arrivee: true }) });
   // 🔍 (0.99.48) le zoom d'iOS : l'icône touchée (sa place, sa taille), gardée un instant pour que le ploxion en sorte
-  const zoomIcone = creerZoomIcone({ W, calme: () => !!prefs().calme }); let origine = null;
+  const zoomIcone = creerZoomIcone({ W, calme: () => !!prefs().calme, choix: () => prefs().animations || {} }); let origine = null;   // 🎞 (0.99.52) les animations choisies
   racine.addEventListener('click', (e) => {
     const t = e.target.closest && e.target.closest('[data-id]'); if (!t || !racine.contains(t) || t.closest('.px-hote,.px-voile')) return;
     const ic = t.querySelector('.px-ic,.px-g') || t; origine = { id: t.getAttribute('data-id'), rect: ic.getBoundingClientRect(), t: Date.now() };
