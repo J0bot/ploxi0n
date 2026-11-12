@@ -391,7 +391,11 @@ html:not(.px-fond-partout):has(#ploxi0n.px-mode-ploxion) .px-fond{display:none}
 
 @keyframes px-pose{from{opacity:0;transform:translateY(10px) scale(.94)}}
 .px-scene>.px-hote:not([hidden]){animation:px-entre .2s cubic-bezier(.2,.9,.3,1) backwards}
-.px-scene>.px-hote.px-sans-entree{animation:none}   /* (0.63) l'app amenée par la fractale : pas de clignement à la fin du zoom */
+.px-scene>.px-hote.px-sans-entree{animation:none}
+/* 🔍 (0.99.48) le ploxion qui se referme dans son icône : la scène reste au-dessus de l'accueil le temps du zoom, sans prendre les touchers */
+.px-mode-accueil .px-scene.px-zoom-sortie{display:block;position:fixed;left:0;right:0;bottom:0;z-index:45;pointer-events:none;background:transparent}
+.px-scene>.px-hote.px-sortant{pointer-events:none;will-change:transform,clip-path;animation:none}
+.px-scene>.px-hote{will-change:auto}   /* (0.63) l'app amenée par la fractale : pas de clignement à la fin du zoom */
 @keyframes px-entre{from{opacity:0;transform:translateY(14px) scale(.985)}}
 .px-voile{animation:px-fondu .16s ease-out both}
 .px-voile>.px-tiroir,.px-feuille>div{animation:px-monte .24s cubic-bezier(.2,.9,.3,1.1) both}

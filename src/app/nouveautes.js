@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.48', titre: 'Les ploxions sortent de leur icône', points: [
+    '🔍 Touche une icône : le ploxion en sort et grandit jusqu\'à l\'écran, comme sur iPhone. ▁ Minimiser, ‹ ou l\'accueil : il rapetisse et rentre dans son icône.',
+    '🔍 Si son icône n\'est pas à l\'écran, il s\'efface vers le milieu. « Réduire les animations » d\'iOS (ou ⚙ › Calme) : l\'ouverture directe.',
+  ] },
   { v: '0.99.47', titre: 'Le koin qui s\'ouvre', points: [
     '◺ Un toucher sur un koin : il grandit et s\'ouvre en carré, le wormion et le portion apparaissent dedans. Glisse vers le haut : il suit ton doigt.',
     '○ Le wormion tourne avec ton doigt (un tunnel du temps) ; □ le portion part en couloir de cadres quand tu glisses.',
