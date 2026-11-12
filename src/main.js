@@ -5,6 +5,7 @@ import { installerShim } from './shim/jos.js';
 import { creerRouteur } from './app/routeur.js';
 import { enregistrerBanc } from './banc/banc.js';
 import { enregistrerTrackpad } from './banc/trackpad.js';
+import { enregistrerBancAnim } from './lot/banc-anim.js';   // 🎞 (0.99.51) le banc des animations (jOSSwipe)
 import { creerVerrou } from './natif/verrou.js';
 import { creerDepot, creerHttp, SOURCE } from './marketplace/depot.js';
 import { enregistrerMarketplace } from './marketplace/marketplace.js';
@@ -117,7 +118,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.50';
+const VERSION = '0.99.51';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -415,6 +416,7 @@ async function demarrer() {
       systeme: () => (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() ? PloxiApple.systeme() : null),
       position: () => window.jOSNatif.position() } }),
     enregistrerTrackpad({}),   // ◇ (0.60) les essais du trackpad haptique
+    enregistrerBancAnim({ boxion, version: VERSION, vibrer: (x) => vibrer(x) }),   // 🎞 (0.99.51) toutes les animations, à choisir au swipe
   ];
   let raccourcis = null;
   async function majAccueil(o) {

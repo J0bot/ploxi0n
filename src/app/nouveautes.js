@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.51', titre: 'Le banc des animations', points: [
+    '🎞 Un nouveau ploxion, « Banc des animations » : 39 animations jouées en boucle dans un petit téléphone (ouvrir, fermer, passer d\'une app à l\'autre, le koin, les feuilles, changer de xer, l\'accueil, les courbes, le wormion). Swipe : ← non, → oui, ↑ c\'est celle-là.',
+    '🎞 À la fin, « copier pour Claude » : tes choix, prêts à coller.',
+  ] },
   { v: '0.99.50', titre: 'Coord dans l\'app', points: [
     '📡 Coord est dans l\'app d\'office : lire la flotte, écrire, glisser des fichiers, depuis le téléphone. Il faut être connecté au labo avec le compte admin (⚙ › Compte).',
   ] },

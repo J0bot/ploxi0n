@@ -163,6 +163,11 @@ Ce qui ne change pas : la provenance, la réversibilité, les jetons, les haptiq
 
 ## 5. Les mesures (pour régler sur l'iPhone)
 
+**Le banc des animations** (0.99.51, `src/lot/banc-anim.js`, le ploxion « Banc des animations ») : 39 variantes en 9 familles (ouvrir,
+fermer, passer, koin, feuille, xer, cascade, courbe, wormion), chacune jouée en boucle dans un petit téléphone ; RS-7 swipe (jOSSwipe,
+embarqué : ← non, → oui, ↑ celle-là) et « copier pour Claude » rend ses choix. Les ★ deviennent les animations de l'app.
+
+
 Ce qui ne se voit pas sur le faux iPhone et qu'il faut sentir au doigt : la durée de la sortie de l'icône (420 ms paraît long sur iPhone ?
 iOS est vers 400–500 ms avec un ressort), le seuil du koin (40 %), la vitesse des cercles du wormion, si le grand triangle qui grandit avant
 de s'effacer se lit bien ou fait « flash », si le trait de lumière du glissement plaît encore. Le banc de l'app (Banc iPhone) pourra
