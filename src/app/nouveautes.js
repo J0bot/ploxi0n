@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.49', titre: 'Le build iPhone repart, Android vérifié', points: [
+    '🛠 Le build iPhone de la 0.99.48 s\'arrêtait sur les synonymes de Siri (une fonction d\'iOS 17, l\'app va jusqu\'à iOS 15) : corrigé.',
+    '🤖 Sur Android, Proche passe par le Bluetooth (le maillage, Tom, Léa, les potes, la basse) ; le réglage « Piloter de la tête » ne s\'affiche plus là où il n\'existe pas.',
+  ] },
   { v: '0.99.48', titre: 'Les ploxions sortent de leur icône', points: [
     '🔍 Touche une icône : le ploxion en sort et grandit jusqu\'à l\'écran, comme sur iPhone. ▁ Minimiser, ‹ ou l\'accueil : il rapetisse et rentre dans son icône.',
     '🔍 Si son icône n\'est pas à l\'écran, il s\'efface vers le milieu. « Réduire les animations » d\'iOS (ou ⚙ › Calme) : l\'ouverture directe.',

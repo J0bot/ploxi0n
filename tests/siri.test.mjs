@@ -30,7 +30,7 @@ test('🗣 la liste pour Siri : les internes aussi (Proche, Autour), avec leurs 
 
 test('🗣 Swift : l\'entité porte les synonymes ; « open the ploxion … » ; la liste relue quand elle change ; ploxion et xerboxion comme noms de l\'app', () => {
   const r = lire('ios/App/App/Raccourcis.swift'), app = lire('ios/App/App/AppDelegate.swift'), plist = lire('ios/App/App/Info.plist');
-  assert.match(r, /synonyms: syn\.map/); assert.match(r, /syn: Array\(\(\(p\["syn"\]/);
+  assert.match(r, /synonyms: syn\.map/); assert.match(r, /if #available\(iOS 17\.0, \*\) \{\n\s+return DisplayRepresentation\(title: "\\\(nom\)", subtitle: "\\\(icone\) ploxion", synonyms:/, '(0.99.49) les synonymes : iOS 17 seulement, l\'app va jusqu\'à iOS 15 (le build 0.99.48 a échoué là)'); assert.match(r, /syn: Array\(\(\(p\["syn"\]/);
   assert.ok(r.includes('"Open the ploxion \\(\\.$ploxion) in \\(.applicationName)"'));
   for (const p of phrases(r)) assert.ok(p.includes('${applicationName}'), 'chaque phrase nomme l\'app : ' + p);
   assert.ok(app.includes('if px != ploxionsVus') && app.includes('RaccourcisPloxi0n.updateAppShortcutParameters()'));

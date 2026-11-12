@@ -11,6 +11,7 @@ import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { execFileSync } from 'node:child_process';
 import { creerMaille } from '../../src/bions/maille.js';   // (0.99.22) Tom et Léa : de vrais maillages, avec de vraies clés
+import { decouper, creerRecolleur } from '../../src/bions/fragments.js';   // (0.99.48) le faux Android : les morceaux BLE de PloxiBLE.java
 const require = createRequire(import.meta.url);
 const { chromium } = (() => { for (const p of ['playwright', '/opt/node-tools/node_modules/playwright']) { try { return require(p); } catch (e) { /* suivant */ } } throw new Error('Playwright introuvable : npm i -g playwright'); })();
 
@@ -28,7 +29,9 @@ if (opts.includes('--sans-ploxi')) for (const k of Object.keys(plugins)) if (/^P
 // Le pont reste celui d'iOS (le contrat JS des plugins est le même) : ce qu'on vérifie, c'est le JS de l'app quand elle se croit sur Android.
 const android = opts.includes('--android');
 if (android) { for (const k of Object.keys(plugins)) if (/^Ploxi/.test(k)) delete plugins[k];
-  plugins.PloxiAccueil = ['estAccueil', 'choisir', 'applis', 'lancer', 'reglages'].map(name => ({ name, rtype: 'promise' })); }
+  plugins.PloxiAccueil = ['estAccueil', 'choisir', 'applis', 'lancer', 'reglages'].map(name => ({ name, rtype: 'promise' }));
+  // (0.99.48) PloxiBLE.java (0.99.41) : le maillage d'Android, déclaré comme le Java le déclare (demarrer, arreter, envoyer ; « pair », « message »)
+  plugins.PloxiBLE = ['demarrer', 'arreter', 'envoyer'].map(name => ({ name, rtype: 'promise' })); }
 const web = opts.includes('--web');
 const iScript = opts.indexOf('--script'); const scriptEtapes = iScript >= 0 ? opts[iScript + 1] : null;
 const bridge = readFileSync(path.join(RACINE, 'node_modules/@capacitor/ios/Capacitor/Capacitor/assets/native-bridge.js'), 'utf8');
@@ -274,13 +277,25 @@ natif.PloxiRegard = {
   arreter: () => { regardFaux.actif = false; clearInterval(regardFaux.minuterie); return {}; },
 };
 
+// (0.99.48) Tom parle à l'app : sur l'iPhone par PloxiProche (le paquet entier) ; sur le faux Android par PloxiBLE (des morceaux de 180 octets, en base64)
+let nMorceau = 1; const recolleurBle = creerRecolleur();
+function versApp(texte) {
+  if (!android) return emettre('PloxiProche', 'message', { de: 'Tom·b2c3', donnees: texte });
+  for (const m of decouper(texte, nMorceau++)) emettre('PloxiBLE', 'message', { de: 'Tom·b2c3', donnees: Buffer.from(m).toString('base64') });
+}
+natif.PloxiBLE = {
+  demarrer: () => { setTimeout(() => emettre('PloxiBLE', 'pair', { id: 'Tom·b2c3', etat: 'connecte' }), 300); voisinsFaux().then(() => { tom.voisin('app', 'connecte'); }); return {}; },
+  arreter: () => { setTimeout(() => emettre('PloxiBLE', 'pair', { id: 'Tom·b2c3', etat: 'perdu' }), 50); if (tom) tom.voisin('app', 'perdu'); return {}; },
+  envoyer: (o) => { procheEnvoyes.push(o); const t = recolleurBle.ajouter('app', new Uint8Array(Buffer.from(o.donnees, 'base64'))); if (t != null && tom && (!o.a || o.a.includes('Tom·b2c3'))) setTimeout(() => tom.recevoir('app', t), 5); return {}; },
+};
+
 // 〰 (0.99.22) les voisins du maillage : Tom (lié à l'app et à Léa) et Léa (liée à Tom seulement)
 let tom = null, lea = null, voisinsPrets = null;
 function voisinsFaux() {
   if (voisinsPrets) return voisinsPrets;
   const subtle = globalThis.crypto.subtle, alea = (n) => globalThis.crypto.getRandomValues(new Uint8Array(n)), sans = () => () => {};
   tom = creerMaille({ subtle, alea, nom: 'Tom', attente: (ms, f) => setTimeout(f, 5), repeter: sans,
-    envoyer: (texte, vers) => { if (!vers || vers.includes('app')) setTimeout(() => emettre('PloxiProche', 'message', { de: 'Tom·b2c3', donnees: texte }), 5); if (!vers || vers.includes('lea')) setTimeout(() => lea.recevoir('tom', texte), 5); } });
+    envoyer: (texte, vers) => { if (!vers || vers.includes('app')) setTimeout(() => versApp(texte), 5); if (!vers || vers.includes('lea')) setTimeout(() => lea.recevoir('tom', texte), 5); } });
   lea = creerMaille({ subtle, alea, nom: 'Léa', attente: (ms, f) => setTimeout(f, 5), repeter: sans, envoyer: (texte) => setTimeout(() => tom.recevoir('lea', texte), 5) });
   const repondu = new Set();
   voisinsPrets = (async () => {
@@ -360,7 +375,7 @@ const etat = await page.evaluate(() => ({
   texte: document.body.innerText.slice(0, 600),
 }));
 let resultatsEtapes = null;
-if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux, regardFaux, procheEnvoyes, pont, droneFaux, tailles, accueilFaux, xbFaux, trousseauFaux }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
+if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux, regardFaux, parTuyau: versApp, android, procheEnvoyes, pont, droneFaux, tailles, accueilFaux, xbFaux, trousseauFaux }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
 clearInterval(mouvementMinuteur); clearInterval(regardFaux.minuterie);
 const resume = { url, mode: web ? 'web' : android ? 'android' : (opts.includes('--sans-plugions') ? 'ios-sans-plugions' : 'ios'), demarre, dureeBoot, etat,
   appelsNatifs: Object.entries(appels.reduce((a, x) => { const k = x.p + '.' + x.m; a[k] = (a[k] || 0) + 1; return a; }, {})).sort((a, b) => b[1] - a[1]),

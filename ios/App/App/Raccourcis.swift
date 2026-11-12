@@ -26,7 +26,11 @@ struct PloxionEntity: AppEntity {
     var icone: String
     var syn: [String] = []   // (0.99.44) nos mots et leurs déformations (src/natif/vocabulaire.js, synonymes) : Siri reconnaît « mappion », « map ion »…
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(nom)", subtitle: "\(icone) ploxion", synonyms: syn.map { LocalizedStringResource(stringLiteral: $0) })
+        // les synonymes : iOS 17 et plus (l'app va jusqu'à iOS 15 : en dessous, le nom seul, comme avant la 0.99.44)
+        if #available(iOS 17.0, *) {
+            return DisplayRepresentation(title: "\(nom)", subtitle: "\(icone) ploxion", synonyms: syn.map { LocalizedStringResource(stringLiteral: $0) })
+        }
+        return DisplayRepresentation(title: "\(nom)", subtitle: "\(icone) ploxion")
     }
 }
 

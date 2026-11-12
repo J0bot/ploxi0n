@@ -1,6 +1,6 @@
 // ◉ (0.99.1) Proche, l'ultimate Bluetooth, par le vrai pont natif : démarrer (PloxiProche.demarrer), Tom arrive (l'événement « pair »),
 // l'horloge se cale (ping / pong : Tom a 3 s d'avance), un message part et l'accusé revient, une basse hébergée, puis la basse de Tom rejointe
-export default async function ({ page, ecrire, emettre, procheEnvoyes }) {
+export default async function ({ page, ecrire, emettre, procheEnvoyes, parTuyau }) {
   const r = {};
   await page.waitForSelector('[data-nv]', { timeout: 4000 }).then(() => page.evaluate(() => document.querySelector('[data-nv]').click())).catch(() => {}); await page.waitForTimeout(500);   // les nouveautés
   await page.evaluate(() => window.ploxi0n.routeur.ouvrir('proche')); await page.waitForTimeout(1200);
@@ -19,7 +19,7 @@ export default async function ({ page, ecrire, emettre, procheEnvoyes }) {
   await ecrire('03-la-basse-hebergee');
   await page.evaluate(() => document.querySelector('.px-proche [data-pr="basse-stop"]').click()); await page.waitForTimeout(300);
   // Tom héberge une basse : elle s'annonce, rien ne joue avant « rejoindre »
-  emettre('PloxiProche', 'message', { de: 'Tom·b2c3', donnees: JSON.stringify({ v: 1, g: 'basse', d: { tempo: 124, motif: 'dub', tonique: 31, gamme: 'phrygien', debut: Date.now() + 3000, volume: 0.8 }, t: Date.now() + 3000 }) });
+  parTuyau(JSON.stringify({ v: 1, g: 'basse', d: { tempo: 124, motif: 'dub', tonique: 31, gamme: 'phrygien', debut: Date.now() + 3000, volume: 0.8 }, t: Date.now() + 3000 }));
   await page.waitForTimeout(500);
   r.annonce = await page.evaluate(() => (document.querySelector('.px-proche [data-pr="basse-rejoindre"]') || {}).textContent || null);
   await ecrire('04-la-basse-de-tom');

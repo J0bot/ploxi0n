@@ -81,7 +81,7 @@ export function creerRegard({ W = globalThis.window, natif = null, boxion, vibre
     signaler('👁 le regard est calibré'); return A;
   }
   return {
-    demarrer, arreter, calibrer, mode: () => mode,
+    demarrer, arreter, calibrer, mode: () => mode, dispo: !!natif,   // (0.99.49) Android, le navigateur : pas de PloxiRegard, pas de réglage
     regler: (m) => (m === 'tete' || m === 'regard' ? demarrer(m) : arreter()),
     recentrer: () => { if (T) T.recentrer(); },
     api: {
