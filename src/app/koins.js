@@ -16,14 +16,18 @@
 // lâcher après 40 % ouvre, avant referme. Toucher ailleurs, ou une case : il se referme (l'animation à l'envers). ‹ et ▁ sont dans la barre.
 // (0.99.47) LE XER : la case ⊠ change de xer (organique, chill-tekk, xerboxion, xerbot : les modes ; en mode koin, l'en-tête de l'accueil et
 // ses onglets de modes s'effacent) ; appui long : mes xers. LE TRION (le koin du ion) : « ici, maintenant » (proposition, docs/KOINS.md).
+// (0.99.57, RS-7 : « plutôt ça l'inspi », le koin ouvert du chill-tekk du labo) : LA BANDE ENTRE LES KOINS = la barre des glyphes, toujours
+// là, en trapèze (ses bouts suivent l'hypoténuse des deux koins) : ‹ › ⧗ ○ △ □ ◇ ✕ ⓘ ▁. Dans un ploxion, elle tient lieu de sa barre (‹ retour,
+// ▁ minimiser, ◇ encadré : tu es dans un ploxion). Les koins restent dans leurs coins ; le koin ouvert = quatre cases en tunnel (des cadres
+// emboîtés), un grand glyphe chacune : △ le trion, l'hypercube du xer, ○ le wormion, □ le portion.
 import { glyphe as G } from './glyphes.js';
 import { creerPadWormion, creerPadPortion } from './pads.js';   // ○ □ (0.92) le wormion et le portion : des trackpads
 export const PADS = { wormion: true, portion: true };   // (0.92) ces cases-là sont des trackpads
 export const ETAPES = 2;   // (0.99.47) 0 fermé · 1 ouvert (une seule animation entre les deux, plus de tailles intermédiaires)
 export const OUVRIR_A = 0.4;   // glisser : au-delà de 40 % du chemin, lâcher ouvre
-export const CASES = { gauche: [['trion', 'koins'], ['wormion', 'temps']], droite: [['xer', 'xer'], ['portion', 'carte']] };
-export const BARRE = [['retour', 'retour', '‹'], ['tsoin', 'tsoin', ''], ['wormion', 'temps', ''], ['trion', 'koins', ''], ['portion', 'carte', ''], ['ploxion', 'accueil', ''], ['xeroction', 'toi', ''], ['quoi', 'quoi', 'ⓘ'], ['minimiser', 'minimiser', '▁']];
-const NOMS = { xer: 'ton xer (appui long : mes xers)', koins: 'le koin du ion', temps: 'le temps (ce que tu avais ouvert)', xers: 'mes xers', carte: 'tout le xerboxion', tsoin: 'noter un tsoin', accueil: 'les ploxions', toi: 'toi (compte, réglages)', retour: 'retour', minimiser: 'minimiser', quoi: 'c\'est quoi ça ? (touche quelque chose)' };
+export const CASES = { gauche: [['trion', 'koins'], ['wormion', 'temps']], droite: [['hypercube', 'xer'], ['portion', 'carte']] };   // (0.99.57) le xer : l'hypercube
+export const BARRE = [['retour', 'retour', '‹'], ['suivante', 'suivante', '›'], ['tsoin', 'tsoin', ''], ['wormion', 'temps', ''], ['trion', 'koins', ''], ['portion', 'carte', ''], ['ploxion', 'accueil', ''], ['xeroction', 'toi', ''], ['quoi', 'quoi', 'ⓘ'], ['minimiser', 'minimiser', '▁']];
+const NOMS = { xer: 'ton xer (appui long : mes xers)', koins: 'le koin du ion', temps: 'le temps (ce que tu avais ouvert)', xers: 'mes xers', carte: 'tout le xerboxion', tsoin: 'noter un tsoin', accueil: 'les ploxions', toi: 'toi (compte, réglages)', retour: 'retour', suivante: 'le ploxion suivant', minimiser: 'minimiser', quoi: 'c\'est quoi ça ? (touche quelque chose)' };
 // un koin de coin : un triangle rectangle (l'angle droit dans le coin de l'écran) et ses triangles emboîtés.
 // (0.99.7, RS-7 : « les koins bien collés aux coins de l'écran, ça gobe les coins ») : l'angle droit tombe PILE dans le coin de l'écran ;
 // c'est l'arrondi de l'iPhone qui le découpe (le koin gobe le coin) ; les triangles intérieurs rentrent pour rester dans l'arrondi (~55 px)
@@ -54,18 +58,16 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
     const on = !!actif();
     D.documentElement.classList.toggle('px-koins', on);
     if (!on) { D.documentElement.classList.remove('px-koins-ouv'); if (racine) { racine.remove(); racine = null; } return; }
-    if (racine) { peindreBande(); return; }
+    if (racine) return;
     racine = D.createElement('div'); racine.className = 'px-koins-r'; racine.setAttribute('data-neurones', '');   // 〰 (0.93) les cases et la barre : des neurones
     racine.innerHTML = ['gauche', 'droite'].map(c => '<button type="button" class="px-koin px-koin-' + c + '" data-koin="' + c + '" data-etape="0" aria-label="koin ' + c + '">' + TRI(c === 'droite') + '</button>'
       + '<div class="px-koin-cases px-koin-cases-' + c + '" data-cases="' + c + '" hidden>' + CASES[c].map(([g, k]) => (PADS[g]
         ? '<div class="px-koin-pad px-koin-pad-' + g + '" data-pad="' + g + '" data-neurone role="slider" aria-label="' + NOMS[k] + ' (trackpad)"><span class="px-pad-g">' + G(g) + '</span>' + (g === 'wormion' ? '<i data-pad-a></i>' : '<i data-pad-p></i>') + '<i data-pad-onde></i><b data-pad-l></b><small data-pad-s></small></div>'
         : '<button type="button" data-koin-a="' + k + '" data-neurone aria-label="' + NOMS[k] + '">' + G(g) + '<small>' + NOMS[k].split(' (')[0] + '</small><em data-koin-sous="' + k + '"></em></button>')).join('') + '</div>').join('')
       + '<div class="px-koin-modes" data-neurone hidden></div>'
-      + '<nav class="px-koin-barre" data-neurone hidden>' + BARRE.map(([g, k, t]) => '<button type="button" data-koin-a="' + k + '" data-court="' + ({ koins: 'koin', carte: 'map', quoi: 'quoi ?', minimiser: '▁' }[k] || k) + '" aria-label="' + NOMS[k] + '">' + (t || G(g)) + '</button>').join('') + '</nav>'
-      + '<div class="px-koin-voile" hidden></div>'
-      + '<button type="button" class="px-koin-bande" data-koin-bande data-neurone></button>';   // ▭ (0.99.55) la bande « xer » entre les koins
-    D.body.appendChild(racine); peindreBande();
-    racine.querySelector('[data-koin-bande]').addEventListener('click', (e) => { e.stopPropagation(); ouvrir('gauche', 1); if (actions.modes) montrerModes(true); });
+      + '<nav class="px-koin-barre" data-neurone>' + BARRE.map(([g, k, t]) => '<button type="button" data-koin-a="' + k + '" data-court="' + ({ koins: 'koin', carte: 'map', quoi: 'quoi ?', minimiser: '▁', suivante: '›' }[k] || k) + '" aria-label="' + NOMS[k] + '">' + (t || G(g)) + '</button>').join('') + '</nav>'
+      + '<div class="px-koin-voile" hidden></div>';
+    D.body.appendChild(racine);
     // un toucher : le koin s'ouvre (ou se referme) ; glisser vers le haut : il suit le doigt, lâcher décide
     for (const b of racine.querySelectorAll('[data-koin]')) {
       let y0 = null, glisse = false, k = 0;
@@ -102,17 +104,10 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
     ts.addEventListener('pointerup', () => { if (t > 0) W.clearTimeout(t); });
     ts.addEventListener('click', (e) => { if (t === -1) { e.stopPropagation(); e.preventDefault(); t = 0; } }, true);
   }
-  /** ▭ la bande entre les koins, sur l'accueil : le xer où tu es (son glyphe, son nom) */
-  function peindreBande() {
-    const b = racine && racine.querySelector('[data-koin-bande]'); if (!b) return;
-    let m = null; try { m = (actions.modes ? actions.modes() : []).find(x => x.on) || null; } catch (e) { m = null; }
-    b.innerHTML = m ? G(m.glyphe) + '<span>' + m.nom + '</span>' : G('xer') + '<span>xer</span>';
-    b.setAttribute('aria-label', 'xer ' + (m ? m.nom : '') + ' : en changer');
-  }
-  /** les cases, la barre et le voile dans le DOM (cachés à la fin de la fermeture, pour que l'animation se joue dans les deux sens) */
+  /** les cases et le voile dans le DOM (cachés à la fin de la fermeture, pour que l'animation se joue dans les deux sens) */
   function montrer(on) {
     if (cacher) { W.clearTimeout(cacher); cacher = 0; }
-    const els = [...racine.querySelectorAll('[data-cases]'), racine.querySelector('.px-koin-barre'), racine.querySelector('.px-koin-voile')];
+    const els = [...racine.querySelectorAll('[data-cases]'), racine.querySelector('.px-koin-voile')];   // (0.99.57) la barre, elle, reste : c'est la bande entre les koins
     if (on) { for (const x of els) x.hidden = false; return; }
     const fin = () => { cacher = 0; if (!racine || etape.gauche) return; for (const x of els) x.hidden = true; montrerModes(false); };
     if (calme()) fin(); else cacher = attendre(fin, 420);
@@ -122,7 +117,7 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
     if (!racine) return;
     n = n ? 1 : 0;
     etape.gauche = etape.droite = n;
-    D.documentElement.classList.toggle('px-koins-ouv', !!n);   // ▭ la bande et la barre du ploxion s'effacent pendant que le koin est ouvert
+    D.documentElement.classList.toggle('px-koins-ouv', !!n);
     for (const k of ['gauche', 'droite']) racine.querySelector('[data-koin="' + k + '"]').setAttribute('data-etape', String(n));
     if (n) {
       montrer(true);

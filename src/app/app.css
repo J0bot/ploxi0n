@@ -1160,27 +1160,10 @@ html.px-organique .px-sy-pad{--n-bord:var(--memb2)}html.px-organique .px-sy-pad.
 
 /* ◺◿ (0.89) les koins remplacent le dock et le HUD (src/app/koins.js, le carnet de RS-7 : docs/KOINS.md) ; (0.92) en chill-tekk */
 html.px-koins .px-dock{display:none}
-/* ▭ (0.99.55, RS-7 via xerxion1 : « les koins dans tous les ploxions : la barre d'un ploxion descend entre les deux koins du bas ; le carnet :
-   « ploxion » encadré, la bande « xer » entre les koins »). Plus de barre en haut : elle devient la BANDE, en bas, entre les deux triangles
-   (76 px de chaque côté, la hauteur des koins, la barre d'accueil d'iOS dessous) : retour, le nom du ploxion encadré, minimiser ; basculer
-   entre les ploxions, c'est le wormion du koin (son trackpad) ; le HUD, le cube et l'hologramme restent hors de la bande. Le koin s'ouvre : la bande s'efface, la barre du koin descend. */
-html.px-koins .px-mode-ploxion .px-ecran{order:2}
-html.px-koins #ploxi0n.px-mode-ploxion{padding-bottom:0}
-html.px-koins .px-mode-ploxion .px-ecran>.px-barre{margin:0 76px;min-height:calc(76px - env(safe-area-inset-bottom,0px));box-sizing:content-box;
-  padding:4px 6px calc(4px + env(safe-area-inset-bottom,0px));border-bottom:0;border-top:var(--trait) solid var(--bord);gap:6px;justify-content:center}
-html.px-koins .px-mode-ploxion .px-barre .px-hud-c,html.px-koins .px-mode-ploxion .px-barre .px-mini:not([data-minimiser]){display:none}
-html.px-koins .px-mode-ploxion .px-barre>span:not(.px-hud){border:var(--trait) solid var(--bord2);padding:6px 7px;flex:1 1 auto;letter-spacing:.08em;text-align:center}
-html.px-koins .px-mode-ploxion .px-barre .px-hud{margin-left:0;flex:none;overflow:visible}
-html.px-koins .px-mode-ploxion .px-barre :is(.px-retour,.px-mini){min-width:38px;width:38px;padding:0}
-html.px-koins .px-mode-ploxion .px-barre>span:not(.px-hud) .px-g{width:14px;height:14px}
-html.px-koins .px-mode-ploxion .px-ecran>.px-barre{padding-left:4px;padding-right:4px;gap:4px}
-html.px-koins.px-koins-ouv .px-mode-ploxion .px-ecran>.px-barre{visibility:hidden}
-/* sur l'accueil : la bande dit le xer (un toucher : le koin s'ouvre sur les xers) */
-.px-koin-bande{position:fixed;left:76px;right:76px;bottom:0;height:76px;box-sizing:border-box;padding:0 8px env(safe-area-inset-bottom,0px);display:flex;align-items:center;
-  justify-content:center;gap:7px;background:var(--surface) var(--grain);border:0;border-top:var(--trait) solid var(--bord);color:var(--muted);
-  font:600 11.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;z-index:41;-webkit-tap-highlight-color:transparent}
-.px-koin-bande .px-g{width:15px;height:15px;color:var(--acc)}
-#ploxi0n.px-mode-ploxion~.px-koins-r .px-koin-bande,html.px-koins-ouv .px-koin-bande{visibility:hidden}
+/* ▭ (0.99.57, RS-7 : « plutôt ça l'inspi », le koin ouvert du chill-tekk du labo) : en mode koin, la barre d'un ploxion laisse sa place à LA BANDE
+   entre les deux koins (la barre des glyphes, src/app/koins.js) ; le ploxion s'arrête au-dessus d'elle. */
+html.px-koins .px-mode-ploxion .px-ecran>.px-barre{display:none}
+html.px-koins #ploxi0n.px-mode-ploxion{padding-bottom:76px}
 html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .px-koins-r{position:fixed;inset:auto 0 0 0;height:0;z-index:40;color:var(--txt)}
 .px-koin{position:fixed;bottom:0;width:76px;height:76px;padding:0;margin:0;border:0;background:transparent;color:var(--acc);z-index:42;
@@ -1190,7 +1173,7 @@ html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,
 .px-koin svg polygon:first-child{fill:var(--surface);stroke:var(--bord2)}
 .px-koin svg .f{fill:var(--bio);stroke:none;opacity:.7}
 .px-koin-voile{position:fixed;inset:0;z-index:39;background:rgba(7,5,12,.62)}
-.px-koin-cases{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);width:calc(50vw - 17px);display:grid;grid-template-rows:auto auto;gap:8px;z-index:41}
+.px-koin-cases{position:fixed;bottom:calc(76px + 8px);width:calc(50vw - 17px);display:grid;grid-template-rows:auto auto;gap:8px;z-index:41}
 .px-koin-cases-gauche{left:12px}.px-koin-cases-droite{right:12px}
 .px-koin-cases>button,.px-koin-pad{aspect-ratio:1/1;max-height:22vh;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
   background:var(--surface) var(--grain);border:var(--trait) solid var(--bord);box-shadow:inset 0 0 0 1px var(--filet);color:var(--txt);padding:10px;font:500 9.5px/1.2 var(--mono);letter-spacing:.16em;text-transform:uppercase}
@@ -1200,6 +1183,18 @@ html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,
 .px-koin-cases>button .px-g .f{fill:var(--acc)}
 .px-koin-cases>button small{color:var(--muted)}
 .px-koin-cases>button:active{border-color:var(--acc2)}
+/* (0.99.57) les cases en tunnel, comme le koin ouvert du chill-tekk du labo : un cadre vif, un second dedans, puis des cadres qui s'enfoncent */
+html:not(.px-organique) :is(.px-koin-cases>button,.px-koin-pad){border-radius:0;border:1.5px solid var(--acc);background:var(--creux);padding:16px;
+  box-shadow:inset 0 0 0 4px var(--creux),inset 0 0 0 5.5px var(--acc),inset 0 0 0 10px var(--creux),inset 0 0 0 11px color-mix(in srgb,var(--acc) 34%,transparent),
+    inset 0 0 0 15px var(--creux),inset 0 0 0 16px color-mix(in srgb,var(--acc) 22%,transparent),inset 0 0 0 20px var(--creux),inset 0 0 0 21px color-mix(in srgb,var(--acc) 13%,transparent)}
+html:not(.px-organique) .px-koin-cases>button .px-g{width:56%;height:56%;stroke-width:3.4}
+html:not(.px-organique):not(.px-e-texte) .px-koin-cases>button small{display:none}
+html:not(.px-organique) .px-koin-pad .px-pad-g{inset:20%}
+html:not(.px-organique) .px-koin-pad .px-pad-g .px-g{stroke:var(--acc);stroke-width:3.4}
+html:not(.px-organique) .px-koin-pad .px-pad-g .px-g .f{fill:var(--acc)}
+/* le nom du trackpad et son aide : seulement pendant le geste (au repos, le glyphe seul, comme le koin du labo) */
+html:not(.px-organique):not(.px-e-texte) .px-koin-pad :is(b,small){opacity:0;transition:opacity .2s}
+html:not(.px-organique):not(.px-e-texte) :is(.px-koin-pad.px-pad-actif,.px-koin-pad-portion:not([data-dir=""])) :is(b,small){opacity:1}
 /* ○ □ (0.92) les trackpads : un creux (la surface qu'on touche), le glyphe gravé dessous, ce qui va se passer écrit dessus */
 .px-koin-pad{position:relative;overflow:hidden;background:var(--creux) var(--grain);touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}
 .px-koin-pad .px-pad-g{position:absolute;inset:12%;display:flex;align-items:center;justify-content:center;pointer-events:none}
@@ -1215,33 +1210,38 @@ html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,
 .px-koin-pad-wormion.px-pad-actif i[data-pad-a]{opacity:.7}
 .px-koin-pad-portion i[data-pad-p]{left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid var(--acc);opacity:.0}
 .px-koin-pad-portion:not([data-dir=""]) i[data-pad-p],.px-koin-pad-portion:active i[data-pad-p]{opacity:.8}
-.px-koin-barre{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px + min(44vh, 100vw - 34px) + 16px);z-index:41;display:flex;justify-content:space-between;
-  background:var(--surface) var(--grain);border:var(--trait) solid var(--bord);border-radius:16px;box-shadow:inset 0 0 0 1px var(--filet);padding:5px 4px}
-.px-koin-barre>button{flex:1;min-width:0;height:40px;border:0;border-radius:12px;background:transparent;color:var(--acc);font:600 20px/1 var(--police);display:flex;align-items:center;justify-content:center}
+.px-koin-barre{--kb:76px;--kg:5px;position:fixed;left:0;right:0;bottom:0;height:var(--kb);box-sizing:border-box;z-index:41;display:flex;align-items:center;
+  padding:0 calc(var(--kg) + 6px + (var(--kb) - env(safe-area-inset-bottom,0px)) / 2) env(safe-area-inset-bottom,0px);background:var(--acc);   /* les boutons, au milieu de la hauteur utile : là, l'hypoténuse du koin est à une demi-hauteur du bord */
+  clip-path:polygon(var(--kg) 0,calc(100% - var(--kg)) 0,calc(100% - var(--kb) - var(--kg)) 100%,calc(var(--kb) + var(--kg)) 100%)}
+.px-koin-barre::before{content:'';position:absolute;inset:0;z-index:-1;background:var(--surface) var(--grain);
+  clip-path:polygon(calc(var(--kg) + 2.2px) 1.5px,calc(100% - var(--kg) - 2.2px) 1.5px,calc(100% - var(--kb) - var(--kg) - .6px) calc(100% + 1px),calc(var(--kb) + var(--kg) + .6px) calc(100% + 1px))}
+.px-koin-barre{isolation:isolate}
+.px-koin-barre>button{flex:1;min-width:0;height:calc(var(--kb) - env(safe-area-inset-bottom,0px) - 10px);max-height:46px;border:0;border-radius:8px;background:transparent;color:var(--acc);font:600 17px/1 var(--police);display:flex;align-items:center;justify-content:center;padding:0}
 .px-koin-barre>button:active{background:var(--surface2)}
-.px-koin-barre>button .px-g{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:4}
+.px-koin-barre>button .px-g{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:4.5}
 .px-koin-barre>button .px-g .f{fill:currentColor}
-.px-koin-cases[hidden],.px-koin-barre[hidden],.px-koin-voile[hidden],.px-koin-modes[hidden]{display:none}
+.px-koin-cases[hidden],.px-koin-voile[hidden],.px-koin-modes[hidden]{display:none}
 /* ◺◿ (0.99.47) LE KOIN QUI S'OUVRE : --k va de 0 (le petit triangle du coin) à 1 (ouvert). Le koin grandit depuis son coin et s'efface pendant
    que les cases se révèlent dans un triangle qui s'ouvre en carré (clip-path, 4 points : le 3e glisse de l'angle vers le coin opposé) ;
    la barre descend, le voile monte. Le doigt pilote --k au glisser (px-koins-glisse : sans transition). */
 .px-koins-r{--k:0;--kt:.46s cubic-bezier(.2,.9,.25,1)}
 .px-koins-r.px-koins-ouverts{--k:1}
-.px-koin{transform-origin:0 100%;transform:scale(calc(1 + var(--k) * 2.2));opacity:calc(1 - var(--k) * 1.1);transition:transform var(--kt),opacity .3s}
+.px-koin{transform-origin:0 100%;transition:transform var(--kt),opacity .3s}   /* (0.99.57) il reste dans son coin ; le koin ouvert, ce sont les cases qui sortent de lui */
 .px-koin-droite{transform-origin:100% 100%}
-.px-koins-ouverts .px-koin{pointer-events:none}   /* ouvert, le grand triangle effacé ne doit pas manger les touchers des cases */
+.px-koins-ouverts .px-koin .f{opacity:1}
 .px-koin-cases{--s0:64px;transition:clip-path var(--kt),opacity .25s;opacity:calc(var(--k) * 3);
   clip-path:polygon(0 100%,0 calc((1 - var(--k)) * (100% - var(--s0))),calc(var(--k) * 100%) calc((1 - var(--k)) * (100% - var(--s0))),calc(var(--s0) + var(--k) * (100% - var(--s0))) 100%)}
 .px-koin-cases-droite{clip-path:polygon(100% 100%,100% calc((1 - var(--k)) * (100% - var(--s0))),calc(100% - var(--k) * 100%) calc((1 - var(--k)) * (100% - var(--s0))),calc(100% - var(--s0) - var(--k) * (100% - var(--s0))) 100%)}
 .px-koin-cases>*{transform-origin:0 100%;transform:scale(calc(.82 + var(--k) * .18));transition:transform var(--kt)}
 .px-koin-cases-droite>*{transform-origin:100% 100%}
 .px-koin-cases>:first-child{transition-delay:.04s}
-.px-koin-barre{opacity:var(--k);transform:translateY(calc((1 - var(--k)) * -14px));transition:opacity .3s .08s,transform var(--kt)}
+/* (0.99.57) la bande reste ; dans un ploxion, ◇ s'encadre (tu es dans un ploxion) */
+#ploxi0n.px-mode-ploxion~.px-koins-r .px-koin-barre [data-koin-a="accueil"]{box-shadow:inset 0 0 0 1.5px var(--acc);border-radius:0;background:color-mix(in srgb,var(--acc) 12%,transparent)}
 .px-koin-voile{opacity:var(--k);transition:opacity .35s}
-.px-koins-r:not(.px-koins-ouverts):not(.px-koins-glisse) :is(.px-koin-cases,.px-koin-barre,.px-koin-voile){pointer-events:none}
+.px-koins-r:not(.px-koins-ouverts):not(.px-koins-glisse) :is(.px-koin-cases,.px-koin-voile){pointer-events:none}
 .px-koins-r.px-koins-glisse :is(.px-koin,.px-koin-cases,.px-koin-cases>*,.px-koin-barre,.px-koin-voile){transition:none}
 /* ⊠ (0.99.47) les xers (les modes) dans les cases : quatre carrés par-dessus */
-.px-koin-modes{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:43;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.px-koin-modes{position:fixed;left:12px;right:12px;bottom:calc(76px + 8px);z-index:43;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .px-koin-modes>button{aspect-ratio:1/1;max-height:22vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--surface) var(--grain);
   border:var(--trait) solid var(--bord);border-radius:18px;color:var(--txt);font:600 10px/1.2 var(--mono);letter-spacing:.16em;text-transform:uppercase;animation:px-koin-mode .32s cubic-bezier(.2,.9,.25,1) both}
 .px-koin-modes>button:nth-child(2){animation-delay:.04s}.px-koin-modes>button:nth-child(3){animation-delay:.08s}.px-koin-modes>button:nth-child(4){animation-delay:.12s}

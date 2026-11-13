@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.57', titre: 'Le koin du chill-tekk', points: [
+    '▭ La bande entre les deux koins : toute la barre, toujours là. ‹ › pour revenir ou passer au ploxion suivant, ⧗ ○ △ □ ◇ ✕ ⓘ, et ▁ pour minimiser. Dans un ploxion, le ◇ s\'encadre.',
+    '▣ Le koin ouvert : quatre cases en tunnel, un grand glyphe chacune. Le trion, l\'hypercube du xer, le wormion, le portion.',
+  ] },
   { v: '0.99.56', titre: 'Plus aucun emoji', points: [
     '◇ Un emoji qu\'on ne connaît pas ne disparaît plus : il devient un glyphe du xerboxion, tiré de lui, toujours le même (une forme, un cœur, une couleur de xerkion).',
     '◇ Dans tous les ploxions maintenant, ceux du labo aussi. Ce que tu écris et ce qu\'on t\'envoie garde ses signes.',

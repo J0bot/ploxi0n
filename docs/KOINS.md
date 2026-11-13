@@ -110,3 +110,15 @@ les types de réel). Il manque un troisième axe : **ici, maintenant**. Le trion
 vivants), qui est autour (les voisins de Proche), où (Autour, la case), le tsoin en cours. Posé pour l'instant : la case dit « 3 vivants · 2
 voisins » ; un toucher ouvre toujours le hub du koin du ion (les dossiers ion, 3ion, seption, nexus, `src/terrax/koin-ion.js`). À décider :
 le trion devient-il un vrai panneau « ici » (un trackpad comme les deux autres ?), ou garde-t-il la balade entre les réels ?
+
+## 0.99.57 : le koin du chill-tekk du labo (RS-7 : « plutôt ça l'inspi »)
+
+Référence : `docs/look/references/koins-03-chill-tekk-labo.png`.
+- **La bande entre les koins** = la barre des glyphes, toujours là, fermée ou ouverte : `‹ › ⧗ ○ △ □ ◇ ✕ ⓘ ▁` (› = le ploxion suivant). Un
+  trapèze au trait : ses bouts suivent l'hypoténuse des deux koins. Dans un ploxion, elle tient lieu de sa barre (le ploxion s'arrête au-dessus)
+  et ◇ s'encadre : tu es dans un ploxion.
+- **Les koins restent dans leurs coins** (ils ne grandissent plus jusqu'à s'effacer) ; ce sont les cases qui sortent d'eux (le même clip-path
+  triangle → carré).
+- **Le koin ouvert** : quatre cases en tunnel (un cadre vif, un second dedans, des cadres qui s'enfoncent), un grand glyphe chacune, sans texte :
+  △ le trion (en haut à gauche), l'hypercube du xer (en haut à droite), ○ le wormion, □ le portion. Le nom et l'aide d'un trackpad
+  n'apparaissent que pendant le geste. En mode organique, les cases gardent leurs membranes.

@@ -27,7 +27,7 @@ test('◺◿ (0.99.47) un toucher : le koin s\'ouvre (une seule animation) ; les
     assert.equal(D.querySelector('[data-cases="gauche"]').hidden, false); assert.equal(D.querySelector('[data-cases="droite"]').hidden, false);
     assert.deepEqual([...D.querySelectorAll('[data-cases] [data-koin-a]')].map(b => b.getAttribute('data-koin-a')), ['koins', 'xer']);
     assert.deepEqual([...D.querySelectorAll('[data-cases] [data-pad]')].map(b => b.getAttribute('data-pad')), ['wormion', 'portion'], '(0.92) des trackpads');
-    assert.equal(D.querySelectorAll('.px-koin-barre [data-koin-a]').length, 9, '‹ ⧗ ○ △ □ ◇ ✕ ⓘ ▁ (0.95 : ⓘ c\'est quoi ça ?)');
+    assert.equal(D.querySelectorAll('.px-koin-barre [data-koin-a]').length, 10, '‹ › ⧗ ○ △ □ ◇ ✕ ⓘ ▁ (0.95 : ⓘ c\'est quoi ça ? ; 0.99.57 : ›)');
     // un toucher sur le portion (sans glisser) : la carte (la map)
     const pad = D.querySelector('[data-pad="portion"]');
     pad.dispatchEvent(new W.PointerEvent('pointerdown', { clientX: 50, clientY: 50, bubbles: true })); pad.dispatchEvent(new W.PointerEvent('pointerup', { clientX: 51, clientY: 50, bubbles: true }));
@@ -80,29 +80,30 @@ test('🏁 (0.99.47) chill-tekk est le mode de base à l\'installation ; en mode
   assert.match(main, /\n\s+xers: \(\) => routeur\.faire\('mes-xers'\), carte: \(\) => routeur\.faire\('map'\)/, 'les actions xers et carte ne sont plus dans un commentaire');
 });
 
-test('▭ (0.99.55) la bande « xer » entre les koins : le xer où tu es ; un toucher ouvre le koin sur les xers ; ouvert, la bande s\'efface', async () => {
+test('▭ (0.99.57) la bande entre les koins = la barre des glyphes, toujours là (fermé aussi) ; › le ploxion suivant ; le xer : l\'hypercube', async () => {
   const p = await page({ avion: true, ploxions: [] });
   try {
-    const W = p.w, D = W.document; let mode = 'chill-tekk';
-    const k = creerKoins({ W, actif: () => true, actions: {
-      modes: () => [['organique', 'neurone'], ['chill-tekk', 'chilltekk'], ['xerboxion', 'xerboxion']].map(([id, g]) => ({ id, glyphe: g, nom: id, on: id === mode })),
-      choisirMode: (id) => { mode = id; } } });
+    const W = p.w, D = W.document; const faits = [];
+    const k = creerKoins({ W, actif: () => true, actions: { suivante: () => faits.push('suivante'), retour: () => faits.push('retour'), minimiser: () => faits.push('minimiser') } });
     k.poser();
-    const b = D.querySelector('[data-koin-bande]');
-    assert.ok(b && /chill-tekk/.test(b.textContent) && b.querySelector('svg'), 'le glyphe et le nom du xer');
-    b.click();
-    assert.deepEqual(k.etape(), { gauche: 1, droite: 1 }); assert.ok(D.documentElement.classList.contains('px-koins-ouv'));
-    assert.equal(D.querySelector('.px-koin-modes').hidden, false, 'les xers, sur place');
-    D.querySelector('[data-koin-mode="xerboxion"]').click(); k.poser();
-    assert.ok(!D.documentElement.classList.contains('px-koins-ouv'));
-    assert.match(D.querySelector('[data-koin-bande]').textContent, /xerboxion/, 'la bande suit le xer choisi');
+    const b = D.querySelector('.px-koin-barre');
+    assert.equal(b.hidden, false, 'visible, koins fermés');
+    assert.deepEqual([...b.querySelectorAll('[data-koin-a]')].map(x => x.getAttribute('data-koin-a')), ['retour', 'suivante', 'tsoin', 'temps', 'koins', 'carte', 'accueil', 'toi', 'quoi', 'minimiser']);
+    b.querySelector('[data-koin-a="suivante"]').click(); b.querySelector('[data-koin-a="minimiser"]').click();
+    assert.deepEqual(faits, ['suivante', 'minimiser']); assert.deepEqual(k.etape(), { gauche: 0, droite: 0 });
+    D.querySelector('[data-koin="gauche"]').click(); await new Promise(r => setTimeout(r, 30));
+    assert.ok(D.querySelector('[data-cases] [data-koin-a="xer"] svg polygon'), 'la case xer : l\'hypercube');
+    D.querySelector('[data-koin="gauche"]').click(); await new Promise(r => setTimeout(r, 500));
+    assert.equal(b.hidden, false, 'refermé, la bande reste');
   } finally { p.fin(); }
 });
 
-test('▭ (0.99.55) en mode koin, la barre d\'un ploxion descend entre les deux koins (le CSS)', async () => {
+test('▭ (0.99.57) le CSS : la bande en trapèze entre les koins, le ploxion s\'arrête au-dessus, ◇ encadré dans un ploxion, les cases en tunnel', async () => {
   const { readFileSync } = await import('node:fs');
   const css = readFileSync(new URL('../src/app/app.css', import.meta.url), 'utf8');
-  assert.ok(!/html\.px-koins \.px-mode-ploxion \.px-ecran>\.px-barre\{display:none\}/.test(css), 'elle ne disparaît plus');
-  assert.match(css, /html\.px-koins \.px-mode-ploxion \.px-ecran\{order:2\}/);
-  assert.match(css, /html\.px-koins \.px-mode-ploxion \.px-ecran>\.px-barre\{margin:0 76px/);
+  assert.match(css, /html\.px-koins \.px-mode-ploxion \.px-ecran>\.px-barre\{display:none\}/);
+  assert.match(css, /html\.px-koins #ploxi0n\.px-mode-ploxion\{padding-bottom:76px\}/);
+  assert.match(css, /\.px-koin-barre\{--kb:76px;[^}]*clip-path:polygon\(var\(--kg\) 0,calc\(100% - var\(--kg\)\) 0,calc\(100% - var\(--kb\) - var\(--kg\)\) 100%/);
+  assert.match(css, /#ploxi0n\.px-mode-ploxion~\.px-koins-r \.px-koin-barre \[data-koin-a="accueil"\]\{box-shadow/);
+  assert.match(css, /html:not\(\.px-organique\) :is\(\.px-koin-cases>button,\.px-koin-pad\)\{border-radius:0;border:1\.5px solid var\(--acc\)/);
 });
