@@ -16,8 +16,9 @@ import { creerMoteur } from './synthe.js';
 import { creerMaille, commande, PUBLIC } from '../bions/maille.js';
 import { relatif, echelle, ECHELLES, aiguille, tourner, fraicheur, tuilesAutour, ATTRIBUTION, lisserCap, tourCourt, guidage, tendance, minutesAPied, tuilesZone, ajouterTrace } from '../bions/potes.js';
 import { creerCacheTuiles } from '../app/carte-tuiles.js';   // ◫ (0.99.29) la carte hors ligne
-import { capBoussole, metres, fleche } from '../bions/autour.js';
-import { qrSvg } from '../bions/qr.js';   // ▣ (0.99.35) la carte d'un pote en QR
+import { capBoussole, metres, fleche, distance as distanceM } from '../bions/autour.js';
+import { qrSvg } from '../bions/qr.js';
+import { rencontre, zones, noeudsCarte, cadrer, couleurQualite } from '../bions/carte-noeuds.js';   // 🗺 (0.99.53) les nœuds sur la vraie carte   // ▣ (0.99.35) la carte d'un pote en QR
 import { scannerQr } from '../natif/scanner-qr.js';
 import { lireCarte } from '../bions/maille.js';
 
@@ -27,7 +28,7 @@ export const PAGES = [['autour', '◉', 'autour'], ['messages', '≡', 'messages
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const httpsSeul = (u) => { try { const x = new URL(String(u)); return x.protocol === 'https:' ? x.href : null; } catch (e) { return null; } };
 
-export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () => {}, Contexte = W && (W.AudioContext || W.webkitAudioContext), maintenant = () => Date.now(), position = null, ouvrirLien = null }) {
+export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () => {}, Contexte = W && (W.AudioContext || W.webkitAudioContext), maintenant = () => Date.now(), position = null, ouvrirLien = null, activite = null }) {
   const e = { nom: '', salle: 'xerboxion', actif: false, moi: null, pairs: new Map(), messages: [],
     basse: null, basseHote: null, son: null, sonHote: null, ecoute: { basse: false, son: false }, erreur: '', salon: PUBLIC, info: '',
     page: null, nonLus: 0, carteEnAttente: null, scan: null };   // (0.99.35) la page ouverte (null : autour si éteint, messages sinon), ce qui est arrivé ailleurs, une carte reçue par un lien
@@ -42,11 +43,35 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     magasin: { lire: (k) => boxion.get('reglages', 'proche-' + k), ecrire: (k, v) => boxion.put('reglages', 'proche-' + k, v) } }) : null;
   if (maille) maille.surChange((q) => {
     if (q === 'mention' || q === 'messages') notifierNouveaux();   // ◉ (0.99.40) Proche pas à l'écran : une notification (privé, mention)
+    try { notifierEvenements(q); } catch (x) { /* une notification ratée ne casse pas le maillage */ }
+    if (q === 'pairs') noterRencontres().catch(() => {});   // 🗺 un nouveau voisin : une rencontre tout de suite (au plus une toutes les 20 s)
     if (q === 'mention') { vibrer('fx-arrivee'); return; }   // (0.99.22) « @ton nom »
     if (q === 'positions') { peindre('potes'); return; }
     if (q === 'messages') { const m = maille.fil(e.salon).at(-1); if (m && !m.moi) { vibrer('selection'); if (pageDe() !== 'messages') { e.nonLus++; peindre('onglets'); } } if (e.salon[0] === '@' && vue && pageDe() === 'messages') maille.lire(e.salon); }
     peindre(q === 'messages' || q === 'pairs' ? q : undefined);
+    activiteBientot();
   });
+  // 🏝 (0.99.43, RS-7 : « pour le ploxion proche, je veux aussi la partie live activity, c'est important ») tant que Proche tourne : l'écran
+  // verrouillé et la Dynamic Island disent combien de voisins, si c'est maillé, ce qui est relayé, les non-lus. JAMAIS le texte d'un message
+  // (l'écran verrouillé se lit par-dessus l'épaule). activite = { debut(o), maj(o), fin() } (main.js → src/natif/activites.js, clé « proche »).
+  let actTexte = '', actMinuteur = 0, actDebut = 0;
+  function resumeActivite() {
+    const p = maille ? maille.pairs().filter(x => !x.bloque) : [...e.pairs.values()];
+    const directs = maille ? p.filter(x => x.direct).length : p.length, loin = p.length - directs;
+    let maille2 = false;
+    if (maille) { try { const T = maille.topologie(), me = maille.moi().fp; maille2 = T.liens.some(([a, b]) => a !== me && b !== me); } catch (x) { /* */ } }
+    const bouts = [directs ? directs + ' voisin' + (directs > 1 ? 's' : '') : 'personne autour'];
+    if (loin) bouts.push('+' + loin + ' plus loin');
+    if (maille2) bouts.push('maillé');
+    if (e.nonLus) bouts.push(e.nonLus + ' non lu' + (e.nonLus > 1 ? 's' : ''));
+    if (P.partage) bouts.push('⌖ partagée');
+    return { titre: !e.salon || e.salon === '#' ? 'proche' : 'proche · ' + (e.salon[0] === '#' ? e.salon : 'privé'), sous: bouts.join(' · '), glyphe: directs ? 'antenna.radiowaves.left.and.right' : 'antenna.radiowaves.left.and.right.slash',
+      debut: actDebut || undefined, compte: directs + loin };
+  }
+  function activiteBientot() {
+    if (!activite || !e.actif || actMinuteur) return;
+    actMinuteur = W.setTimeout(() => { actMinuteur = 0; if (!e.actif) return; const r = resumeActivite(); const t = r.titre + '|' + r.sous + '|' + r.glyphe; if (t === actTexte) return; actTexte = t; activite.maj(r).catch(() => {}); }, 3000);   // au plus une mise à jour toutes les 3 s
+  }
   let vue = false;   // la page est à l'écran (les « lu » ne partent que si la conversation est vraiment ouverte)
   // ◉ (0.99.40) les notifications : un message privé ou une mention, reçus quand Proche n'est pas à l'écran (ou l'app en arrière-plan) ; une
   // fois chacun ; jamais les miens, ni un message fermé, ni le flot des salons ouverts. Le branchement : api.notifier (main.js → notifs.proche)
@@ -60,6 +85,30 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       if (cache && e.salon === m.salon) continue;
       const prive = m.salon[0] === '@'; if (!prive && !m.mention) continue;
       notifierF({ titre: (prive ? '◉ ' : '@ ') + (m.nom || 'quelqu\'un') + (prive ? '' : ' · ' + m.salon), texte: m.texte, salon: m.salon, cle: m.id });
+    }
+  }
+  // 🔔 (0.99.45) LES ÉVÉNEMENTS DU MAILLAGE en notification (Proche pas à l'écran) : « ✓ remis » quand un privé passé par la boîte d'envoi ou
+  // un coursier arrive enfin (plus d'une minute après l'envoi) ; « ◉ RS-3 est tout près » quand un pote ✦ redevient un voisin direct après
+  // 10 min sans lui (pas dans les 30 premières secondes : ceux qui sont déjà là au démarrage ne sonnent pas).
+  const etatsVus = new Map(), directVu = new Map(); let demarreLe = 0;
+  function notifierEvenements(q) {
+    if (!maille || typeof notifierF !== 'function') return;
+    const regarde = vue && !(W.document && W.document.hidden);
+    if (q === 'messages') for (const m of maille.derniers(30)) {
+      if (!m.moi || !m.salon || m.salon[0] !== '@') continue;
+      const avant = etatsVus.get(m.id); etatsVus.set(m.id, m.etat); if (etatsVus.size > 300) etatsVus.delete(etatsVus.keys().next().value);
+      if (avant && avant !== 'recu' && avant !== 'lu' && m.etat === 'recu' && maintenant() - m.t > 60000 && !regarde) {
+        const nom = (maille.pairs().find(x => '@' + x.fp === m.salon) || {}).nom || 'ton pote';
+        notifierF({ titre: '✓ remis à ' + nom, texte: String(m.texte || '').slice(0, 80), salon: m.salon, cle: 'remis:' + m.id, genre: 'evenement' });
+      }
+    }
+    if (q === 'pairs' || q === 'tout') for (const p of maille.pairs()) {
+      if (!p.favori) continue;
+      const t = maintenant(), vu = directVu.get(p.fp);
+      if (p.direct) {
+        if ((vu == null || t - vu > 10 * 60e3) && t - demarreLe > 30000 && !regarde) notifierF({ titre: '◉ ' + (p.nom || 'un pote') + ' est tout près', texte: 'à portée de Bluetooth, dans le maillage', salon: '@' + p.fp, cle: 'pres:' + p.fp + ':' + Math.floor(t / 600e3), genre: 'evenement' });
+        directVu.set(p.fp, t);
+      }
     }
   }
   const pageDe = () => e.page || (e.actif ? 'messages' : 'autour');
@@ -77,10 +126,41 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
   // Ne pas nuire : rien ne part sans « partager » ; jamais dans un salon ouvert ; ça s'arrête tout seul (1 h, 4 h) ; « ■ arrêter » efface la
   // position chez les autres ; le bandeau le dit tant que ça dure ; rien n'est gardé sur le disque.
   const P = { partage: null, moi: null, cap: null, cible: null, carte: true, devant: false, duree: 4, erreur: '', dernier: null, envoye: 0,
-    rdv: null, zoom: null, guide: true, garde: null };   // (0.99.29) mon rendez-vous, le zoom du radar à la main (null = auto), le guidage aux vibrations, la carte qu'on garde
+    rdv: null, zoom: null, guide: true, garde: null, balade: null, baladeVers: null };   // 🏝 (0.99.43) balade : l'empreinte suivie sur l'écran verrouillé ; baladeVers : la dernière position envoyée   // (0.99.29) mon rendez-vous, le zoom du radar à la main (null = auto), le guidage aux vibrations, la carte qu'on garde
   // (0.99.29, RS-7 01.11 : « améliore la map pour le Bluetooth et la boussole à amis ») : les traces des potes (leurs derniers pas, en mémoire
   // seulement), l'historique des distances (« tu te rapproches »), l'aiguille qui tourne par le plus court, le cache des tuiles
   const traces = new Map(), histos = new Map(), tuilesC = creerCacheTuiles({ W, boxion });
+  // 🗺 (0.99.53, RS-7 : « une vraie map de Proche mêlée au mappion, les positions des nodes, ou les zones de nodes avec leur vitesse de
+  // connexion ») LES RENCONTRES : toutes les ~45 s, si on l'a allumé (⌖ dans « autour »), où j'étais et quels nœuds j'entendais en direct, à
+  // quelle qualité (le ping, la distance Bluetooth, le débit). Sur ce téléphone seulement (boxion_local « reglages/proche-noeuds »), 30 jours,
+  // 3000 au plus ; « effacer » vide tout. Aucun nœud ne dit où il est, sauf un nœud fixe qui l'annonce (ann.d.pos).
+  const CN = { garder: false, rencontres: [], dernier: 0, recus: new Map(), minuteur: 0, attente: 0 };
+  boxion.get('reglages', 'proche-noeuds').then(v => { if (v && typeof v === 'object') { CN.garder = !!v.garder; CN.rencontres = Array.isArray(v.rencontres) ? v.rencontres.slice(-3000) : []; } }).catch(() => {});
+  const garderNoeuds = () => { W.clearTimeout(CN.attente); CN.attente = W.setTimeout(() => boxion.put('reglages', 'proche-noeuds', { garder: CN.garder, rencontres: CN.rencontres }).catch(() => {}), 1500); };
+  async function noterRencontres() {
+    if (!CN.garder || !maille || !e.actif || maintenant() - CN.dernier < 20000) return 0;
+    CN.dernier = maintenant();
+    let moi = P.moi && maintenant() - (P.moi.t || 0) < 60000 ? P.moi : null;
+    if (!moi && position) { try { const q = await position(); if (q && Number.isFinite(+q.lat)) moi = { lat: +q.lat, lng: +q.lng, precision: +q.precision || null }; } catch (x) { moi = null; } }
+    if (!moi) return 0;
+    const T = maille.topologie(), t = maintenant(), ondes = (W && W.jOSOndes && W.jOSOndes.appareils) ? W.jOSOndes.appareils() : [];
+    let n = 0;
+    for (const nd of T.noeuds) {
+      if (nd.moi || nd.muet || !nd.direct) continue;
+      const pr = [...e.pairs].find(([id]) => nomDe(id) === nd.nom), rtt = pr && pr[1].ecart ? pr[1].ecart.allerRetour : null;
+      const on = ondes.find(v => v.ploxi && v.nom === nd.nom), distanceM = on && Number.isFinite(+on.distance) ? +on.distance : null;
+      let debit = null; const rc = nd.stats && Number.isFinite(nd.stats.recus) ? nd.stats.recus : null, av = CN.recus.get(nd.id);
+      if (rc != null) { if (av && t > av.t) debit = Math.max(0, (rc - av.n) / ((t - av.t) / 60000)); CN.recus.set(nd.id, { n: rc, t }); }
+      const r = rencontre({ fp: nd.id, nom: nd.nom, role: nd.role, xion: nd.xion, moi, t, rtt, distanceM, debit, sauts: 0 });
+      if (r) { CN.rencontres.push(r); n++; }
+    }
+    const limite = t - 30 * 86400e3; CN.rencontres = CN.rencontres.filter(r => r.t >= limite).slice(-3000);
+    if (n) { garderNoeuds(); peindre('pairs'); }
+    return n;
+  }
+  /** pour mappion (le labo) et les autres ploxions : window.jOSMaille.noeuds() → ce que la carte dessine (zones, positions annoncées, qualité) */
+  const carteDesNoeuds = () => noeudsCarte({ topologie: maille ? maille.topologie() : { noeuds: [] }, positions: maille ? maille.positions() : [], zs: zones(CN.rencontres), moi: P.moi });
+  if (W) W.jOSMaille = { noeuds: () => carteDesNoeuds(), zones: () => zones(CN.rencontres), garde: () => CN.garder };
   let aigAff = 0, minuteurGuide = 0, derGarde = 0, cleTuiles = '';
   const hhmm = (t) => new Date(t).toTimeString().slice(0, 5);
   const lesPotes = () => (maille && P.moi ? maille.positions().map(x => ({ ...x, r: relatif(P.moi, x) })).sort((a, b) => a.r.d - b.r.d) : []);
@@ -145,6 +225,21 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     e.info = r.echecs >= r.total ? '◫ la carte ne vient pas (pas de réseau ?)' : '◫ la carte du coin est gardée (' + (r.total - r.echecs) + ' tuiles) : elle s\'affiche aussi sans réseau';
     vibrer(r.echecs >= r.total ? 'erreur' : 'succes'); peindre();
   }
+  /** 🏝 (0.99.43) la boussole sur l'écran verrouillé et la Dynamic Island (la balade de PloxiVeille) : vers le pote ou le rendez-vous choisi */
+  async function baladePote() {
+    const B = W.jOSVeille && W.jOSVeille.balade; if (!B) return;
+    const x = P.cible && [...lesPotes(), ...lesRdv()].find(y => y.fp === P.cible);
+    try {
+      if (P.balade && (!x || P.balade === x.fp)) { await B.fin(); P.balade = null; P.baladeVers = null; }
+      else if (x) {
+        const cible = { nom: (x.rdv ? '◎ ' : '') + (x.nom || '?'), lat: x.lat, lng: x.lng };
+        if (P.balade) await B.cible(cible); else await B.debut({ titre: x.rdv ? 'rendez-vous' : 'vers un pote', ploxion: 'proche', cible });
+        P.balade = x.fp; P.baladeVers = { lat: x.lat, lng: x.lng }; P.info = '';
+      }
+      vibrer('selection');
+    } catch (err) { P.erreur = '🏝 ' + ((err && err.message) || 'impossible'); W.setTimeout(() => { P.erreur = ''; peindre('potes'); }, 4000); }
+    peindre('potes');
+  }
   /** ◎ un rendez-vous là où je suis : il part avec ma position, chiffré, à ceux avec qui je la partage */
   async function poserRdv() {
     if (P.rdv) { P.rdv = null; vibrer('selection'); envoyerPosition(true); peindre('potes'); return; }
@@ -202,7 +297,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     boxion.put('reglages', 'proche', { nom: e.nom, salle: e.salle }).catch(() => {});
     e.erreur = '';
     if (maille) { try { await maille.demarrer({ nom: e.nom || 'ploxion' }); } catch (x) { e.erreur = 'le maillage ne démarre pas : ' + ((x && x.message) || x); } }
-    try { const r = await tuyau.demarrer({ nom: e.nom || 'ploxion', salle: e.salle }); e.moi = r.moi; e.actif = true; }
+    try { const r = await tuyau.demarrer({ nom: e.nom || 'ploxion', salle: e.salle }); e.moi = r.moi; e.actif = true; demarreLe = maintenant(); W.clearInterval(CN.minuteur); CN.minuteur = W.setInterval(() => { noterRencontres().catch(() => {}); }, 45000); if (activite) { actDebut = maintenant(); const a = resumeActivite(); actTexte = a.titre + '|' + a.sous + '|' + a.glyphe; activite.debut(a).catch(() => {}); } }
     catch (x) { e.erreur = (x && x.message) || 'impossible de démarrer'; e.actif = false; peindre(); return false; }
     W.clearInterval(ping); ping = W.setInterval(sonder, 4000);
     // ᛒ (0.99.20) le Bluetooth bas niveau : ce téléphone s'annonce comme un ploxi, et voit les ploxis à portée AVANT qu'ils soient connectés
@@ -217,6 +312,8 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     arreterPartage();
     if (maille) maille.arreter();
     if (W && W.jOSOndes) { W.jOSOndes.arreterAnnonce(); W.jOSOndes.arreter(); } if (offOndes) { offOndes(); offOndes = null; }
+    W.clearInterval(CN.minuteur); CN.minuteur = 0;
+    if (activite) { W.clearTimeout(actMinuteur); actMinuteur = 0; actTexte = ''; activite.fin().catch(() => {}); }
     await tuyau.arreter(); e.actif = false; e.pairs.clear(); e.basse = e.son = e.basseHote = e.sonHote = null; peindre();
   }
   // 〰 un message, ou une commande (/j #salon [mot de passe] · /m @nom texte · /w · /bloquer @nom · /debloquer · /quitter · /effacer)
@@ -384,6 +481,30 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     const moiHtml = () => { const m = maille && maille.moi(); return m ? 'ton empreinte : <b>' + m.fp.match(/.{4}/g).join(' ') + '</b> <small>(c\'est elle qui dit qui tu es, pas ton nom)</small>' : ''; };
     // ---- ⌖ (0.99.22) les potes ----
     const enLigne = () => !W.navigator || W.navigator.onLine !== false;
+    // 🗺 (0.99.53) les nœuds sur la vraie carte : les zones (où je les entendais, couleur = vitesse de connexion), les nœuds fixes à leur place,
+    // les nœuds du xion entourés, moi au milieu ; dessous, la liste. Les tuiles : celles de la page potes (gardées hors ligne, sinon le réseau).
+    let cleNoeuds = '';
+    function peindreNoeuds() {
+      const z = $('[data-pr-noeuds]'); if (!z) return;
+      const C = carteDesNoeuds(), cad = cadrer(C), ctl = '<div class="px-pr-pos-ctl"><button type="button" data-pr-noeuds-garder' + (CN.garder ? ' class="on"' : '') + '>' + (CN.garder ? '■ ne plus garder' : '● garder où j\'entends les nœuds') + '</button>' + (CN.rencontres.length ? '<button type="button" data-pr-noeuds-effacer>effacer (' + CN.rencontres.length + ')</button>' : '') + '</div>';
+      if (!cad || !C.noeuds.length) { z.innerHTML = ctl + '<p class="px-sous">' + (CN.garder ? 'les zones apparaissent quand tu croises des nœuds (Proche allumé, ta position permise)' : 'allume « garder » : ce téléphone note où il entend chaque nœud, et la qualité du lien. Ça reste ici, 30 jours.') + '</p>'; cleNoeuds = ''; return; }
+      const S = 320, mpp = (cad.rayon * 2) / S, cos = Math.cos(cad.lat * Math.PI / 180);
+      const xy = (p) => [Math.round((S / 2 + (p.lng - cad.lng) * cos * 111320 / mpp) * 10) / 10, Math.round((S / 2 - (p.lat - cad.lat) * 110540 / mpp) * 10) / 10];
+      let svg = '<svg viewBox="0 0 ' + S + ' ' + S + '" width="100%" class="px-pr-noeuds-svg" role="img" aria-label="les nœuds du maillage sur la carte">';
+      for (const n of C.noeuds) if (n.zone) { const [x, y] = xy(n.zone), cq = couleurQualite(n.q == null ? 0.5 : n.q); svg += '<circle cx="' + x + '" cy="' + y + '" r="' + Math.max(4, n.zone.rayon / mpp).toFixed(1) + '" fill="' + cq.couleur + '" fill-opacity="' + (n.absent ? 0.1 : 0.22) + '" stroke="' + cq.couleur + '" stroke-opacity=".7"' + (n.absent ? ' stroke-dasharray="3 3"' : '') + '/>'; }
+      for (const n of C.noeuds) { const p = n.pos || n.zone; if (!p) continue; const [x, y] = xy(p);
+        if (n.xion) svg += '<circle cx="' + x + '" cy="' + y + '" r="9" fill="none" stroke="#7cf3ff" stroke-width="2"/>';
+        svg += '<circle cx="' + x + '" cy="' + y + '" r="' + (n.pos ? 5 : 3) + '" fill="' + (n.pos ? (n.pos.source === 'pote' ? '#c9a2ff' : '#fff') : couleurQualite(n.q == null ? 0.5 : n.q).couleur) + '"/><text x="' + (x + 8) + '" y="' + (y + 3) + '" class="nom">' + esc(n.nom || n.fp.slice(0, 4)) + '</text>'; }
+      if (C.moi) { const [x, y] = xy(C.moi); svg += '<circle cx="' + x + '" cy="' + y + '" r="6" class="moi"/>'; }
+      svg += '</svg>';
+      const k = [cad.lat.toFixed(4), cad.lng.toFixed(4), Math.round(mpp * 100)].join('|');
+      const liste = '<ul class="px-pr-noeuds-l">' + C.noeuds.slice(0, 20).map(n => { const cq = n.q == null ? null : couleurQualite(n.q); return '<li' + (n.absent ? ' class="loin"' : '') + '><i style="background:' + (cq ? cq.couleur : 'var(--grave)') + '"></i><b>' + esc(n.nom || n.fp.slice(0, 4)) + '</b><small>' + (n.role === 'client' ? 'client' : 'nœud') + (n.xion ? ' · xion' : '') + (n.pos ? (n.pos.source === 'pote' ? ' · sa position partagée' : ' · fixe, à sa place') : n.zone ? ' · zone ~' + n.zone.rayon + ' m' : ' · pas encore placé') + (cq ? ' · ' + cq.mot : '') + (n.absent ? ' · pas là en ce moment' : '') + '</small></li>'; }).join('') + '</ul>';
+      z.innerHTML = ctl + '<div class="px-pr-noeuds-carte"><div class="px-pr-tuiles" data-pr-noeuds-tu style="width:100%;height:100%;left:0;top:0"></div>' + svg + '</div><p class="px-sous px-pr-legende">couleur = vitesse de connexion : <b style="color:#4dff9a">rapide</b> · <b style="color:#ffe14d">bon</b> · <b style="color:#ffa24d">moyen</b> · <b style="color:#ff4d6d">lent</b> · <b style="color:#7cf3ff">○ xion</b> · ● blanc : un nœud fixe · <b style="color:#c9a2ff">●</b> un pote (sa position partagée)</p>' + liste;
+      const tu = z.querySelector('[data-pr-noeuds-tu]'), L = z.querySelector('.px-pr-noeuds-carte').clientWidth || S, f = L / S;
+      tu.innerHTML = tuilesAutour(cad.lat, cad.lng, mpp / f, L, L).map(t => '<img alt="" draggable="false" onerror="this.style.display=\'none\'" data-tu="' + t.url + '" style="left:' + t.gauche + 'px;top:' + t.haut + 'px;width:' + t.cote + 'px;height:' + t.cote + 'px">').join('');
+      for (const im of tu.querySelectorAll('img[data-tu]')) { const u = im.getAttribute('data-tu'); tuilesC.src(u).then(loc => { if (loc) im.src = loc; else if (enLigne()) im.src = u; else im.style.display = 'none'; }).catch(() => { if (enLigne()) im.src = u; }); }
+      cleNoeuds = k;
+    }
     // (0.99.29) les outils de la soirée : garder la carte du coin (avant de partir, avec du réseau) ; un rendez-vous là où je suis
     const outilsHtml = () => '<div class="px-pr-seg px-pr-outils">'
       + '<button type="button" data-pr-garder' + (P.garde || !enLigne() ? ' disabled' : '') + '>' + (P.garde ? '⤓ ' + P.garde.fait + ' / ' + P.garde.total : '⤓ garder la carte du coin') + '</button>'
@@ -446,6 +567,10 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       const h = (histos.get(x.fp) || []).filter(q => maintenant() - q.t < 30000); if (!h.length || maintenant() - h[h.length - 1].t > 1500) h.push({ t: maintenant(), d: x.r.d }); histos.set(x.fp, h);
       const td = tendance(h, maintenant());
       if (P.guide && !minuteurGuide) guider();
+      // 🏝 (0.99.43) suivi sur l'écran verrouillé : la cible native suit sa position quand elle bouge de plus de 10 m (quand l'app est réveillée)
+      if (P.balade === x.fp && W.jOSVeille && W.jOSVeille.balade && (!P.baladeVers || distanceM(P.baladeVers, x) > 10)) {
+        P.baladeVers = { lat: x.lat, lng: x.lng }; W.jOSVeille.balade.cible({ nom: (x.rdv ? '◎ ' : '') + (x.nom || '?'), lat: x.lat, lng: x.lng }).catch(() => {});
+      }
       $('[data-pr-boussole]').innerHTML = '<svg viewBox="-100 -100 200 200" class="px-pr-bsvg" aria-hidden="true"><circle class="anneau" r="92"/>'
         + (P.cap != null ? '<text class="nord" x="' + Math.round(-78 * Math.sin(P.cap * Math.PI / 180)) + '" y="' + Math.round(-78 * Math.cos(P.cap * Math.PI / 180) + 4) + '" text-anchor="middle">N</text>' : '')   /* le nord, debout, là où il est */
         + '<g class="rot" style="transform:rotate(' + Math.round(aigAff) + 'deg)"><path class="aiguille" d="M0,-74 L24,14 L0,0 L-24,14 Z"/></g><circle class="moi" r="5"/></svg>'
@@ -454,7 +579,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
         + '<p class="px-pr-bn"><b>' + esc(x.nom || '?') + '</b>' + (x.rdv ? ' · rendez-vous' : ' · ' + f.texte + (x.precision ? ' · ± ' + Math.round(x.precision) + ' m' : '')) + '</p>'
         + (f.vieux && !x.rdv ? '<p class="px-sous">sa position date un peu : il a peut-être bougé (elle se met à jour quand vous êtes reliés)</p>' : '')
         + (P.cap == null ? '<p class="px-sous">pas de boussole : la flèche suppose que tu regardes le nord</p>' : '')
-        + '<div class="px-pr-seg"><button type="button" data-pr-boussole-fermer>‹ le radar</button><button type="button" data-pr-guide' + (P.guide ? ' class="on"' : '') + '>≋ guidé aux vibrations</button>' + (enLigne() ? '<button type="button" data-pr-plans="' + x.lat + ',' + x.lng + '">à pied (Plans)</button>' : '') + '</div>';
+        + '<div class="px-pr-seg"><button type="button" data-pr-boussole-fermer>‹ le radar</button><button type="button" data-pr-guide' + (P.guide ? ' class="on"' : '') + '>≋ guidé aux vibrations</button>' + (enLigne() ? '<button type="button" data-pr-plans="' + x.lat + ',' + x.lng + '">à pied (Plans)</button>' : '') + (W.jOSVeille && W.jOSVeille.balade ? '<button type="button" data-pr-balade' + (P.balade === x.fp ? ' class="on"' : '') + '>' + (P.balade === x.fp ? '■ écran verrouillé' : '🏝 écran verrouillé') + '</button>' : '') + '</div>';
     }
     const basseHtml = () => {
       if (hote === 'basse') return '<p class="px-pr-l">tu héberges la basse · ' + e.basse.tempo + ' bpm · tout le monde se cale sur toi</p>'
@@ -496,7 +621,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       // ◉ autour : qui je suis, démarrer, qui est là
       + '<section data-pr-section="autour"><div class="px-pr-id" data-neurone><input type="text" maxlength="24" placeholder="ton nom" data-pr-nom><input type="text" maxlength="40" placeholder="la salle" data-pr-salle><button type="button" data-pr="allumer"></button></div>'
       + '<p class="px-sous">les téléphones autour, sans internet : chacun relaie les messages des autres, aussi loin que le maillage va ; les privés sont chiffrés de bout en bout. Rien n\'est annoncé avant « démarrer ».</p>'
-      + '<h3 class="px-pr-t">qui est là</h3><div class="px-pr-pairs" data-pr-pairs></div><h3 class="px-pr-t">◈ la carte du maillage</h3><div data-pr-carte-maille><p class="px-sous">elle se dessine dès qu\'un voisin est relié</p></div></section>'
+      + '<h3 class="px-pr-t">qui est là</h3><div class="px-pr-pairs" data-pr-pairs></div><h3 class="px-pr-t">◈ la carte du maillage</h3><div data-pr-carte-maille><p class="px-sous">elle se dessine dès qu\'un voisin est relié</p></div><h3 class="px-pr-t">⌖ les nœuds sur la carte</h3><div data-pr-noeuds></div></section>'
       // ≡ messages
       + '<section data-pr-section="messages"><div class="px-pr-salons" data-pr-salons></div><p class="px-pr-dm" data-pr-dm hidden></p><div class="px-pr-fil" data-pr-fil data-neurone data-ecrit></div>'
       + '<div class="px-pr-glyphes" data-ecrit>' + GLYPHES_MSG.map(g => '<button type="button" data-pr-glyphe="' + esc(g) + '" aria-label="envoyer : ' + esc(NOMS_GLYPHES[g] || g) + '">' + esc(g) + '</button>').join('') + '</div>'
@@ -528,7 +653,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       if (!vivant) return;
       if (quoi === 'onglets') { $('[data-pr-onglets]').innerHTML = onglets(); return; }
       if (!quoi || quoi === 'carte' || quoi === 'pairs') { if (!e.scan || quoi === 'carte' && !$('[data-pr-video]')) $('[data-pr-carte-page]').innerHTML = carteHtml(); if (quoi === 'carte') return; }
-      if (!quoi || quoi === 'pairs' || quoi === 'messages') { $('[data-pr-pairs]').innerHTML = pairsHtml(); const cm = carteMailleHtml(); $('[data-pr-carte-maille]').innerHTML = cm || '<p class="px-sous">elle se dessine dès qu\'un voisin est relié</p>'; }
+      if (!quoi || quoi === 'pairs' || quoi === 'messages') { $('[data-pr-pairs]').innerHTML = pairsHtml(); const cm = carteMailleHtml(); $('[data-pr-carte-maille]').innerHTML = cm || '<p class="px-sous">elle se dessine dès qu\'un voisin est relié</p>'; peindreNoeuds(); }
       if (!quoi || quoi === 'messages') { const f = $('[data-pr-fil]'); f.innerHTML = messagesHtml(); f.scrollTop = f.scrollHeight; $('[data-pr-salons]').innerHTML = salonsHtml(); }
       if (!quoi || quoi === 'potes') peindreRadar();
       if (quoi) return;
@@ -576,6 +701,9 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
       if (ev.target.closest('[data-pr-zoom-auto]')) { P.zoom = null; cleTuiles = ''; vibrer('selection'); peindre('potes'); return; }
       if (ev.target.closest('[data-pr-garder]')) { garderCarte(); return; }
       if (ev.target.closest('[data-pr-rdv]')) { poserRdv(); return; }
+      if (ev.target.closest('[data-pr-balade]')) { baladePote(); return; }
+      if (ev.target.closest('[data-pr-noeuds-garder]')) { CN.garder = !CN.garder; CN.dernier = 0; garderNoeuds(); vibrer('selection'); if (CN.garder) noterRencontres().catch(() => {}); peindre('pairs'); return; }
+      if (ev.target.closest('[data-pr-noeuds-effacer]')) { CN.rencontres = []; CN.recus.clear(); garderNoeuds(); vibrer('selection'); peindre('pairs'); return; }
       if (ev.target.closest('[data-pr-guide]')) { P.guide = !P.guide; if (!P.guide) { W.clearTimeout(minuteurGuide); minuteurGuide = 0; } vibrer('selection'); peindre('potes'); return; }
       if (ev.target.closest('[data-pr-carte]')) { P.carte = !P.carte; boxion.put('reglages', 'proche-carte', P.carte).catch(() => {}); peindre('potes'); return; }
       if (ev.target.closest('[data-pr-devant]')) { P.devant = !P.devant; peindre('potes'); return; }
@@ -604,7 +732,15 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     return { unmount() { fermerScan(); vivant = false; vue = false; W.clearTimeout(minuteurGuide); minuteurGuide = 0; W.removeEventListener('deviceorientation', surCap); W.clearInterval(minuteurMoi); desabo(); peindre = () => {}; hoteEl.innerHTML = ''; }, joue: () => !!(hote || e.ecoute.basse || e.ecoute.son || P.partage) };
   }
 
-  const api = { brancherNotifier: (f) => { notifierF = f; }, ajouterCarte, page: (k) => { if (k) { e.page = k; peindre(); } return pageDe(); }, demarrer, arreter, envoyerMessage, effacerTout, partagerSon, partagerPosition, arreterPartage, potes: () => ({ partage: P.partage, moi: P.moi, cap: P.cap, rdv: P.rdv, positions: maille ? maille.positions() : [] }), fil, voir: (salon) => { e.salon = salon || PUBLIC; peindre(); }, maille: () => maille, hebergerBasse, arreterBasse, hebergerSon, pauseSon, arreterSon, rejoindre, quitter, heureDe,
+  /** ↩ (0.99.45) répondre depuis une notification (le texte tapé sur l'écran verrouillé) : un privé, ou un salon rejoint ; et « ✓ Lu » */
+  async function repondre(salon, texte) {
+    const t = String(texte || '').trim().slice(0, 1000); if (!t || !maille || !e.actif) return false;
+    if (String(salon)[0] === '@') { const id = await maille.prive(String(salon).slice(1), t); return !!id; }
+    if (maille.salons().some(s => (s && s.salon ? s.salon : s) === salon)) { maille.dire(t, salon); return true; }
+    return false;
+  }
+  function marquerLu(salon) { if (maille && String(salon)[0] === '@') { maille.lire(salon); if (e.salon === salon) e.nonLus = 0; activiteBientot(); } }
+  const api = { brancherNotifier: (f) => { notifierF = f; }, repondre, marquerLu, noterRencontres, rencontres: () => CN.rencontres.slice(), garderNoeuds: (oui) => { CN.garder = !!oui; garderNoeuds(); }, carteDesNoeuds, ajouterCarte, page: (k) => { if (k) { e.page = k; peindre(); } return pageDe(); }, demarrer, arreter, envoyerMessage, effacerTout, partagerSon, partagerPosition, arreterPartage, potes: () => ({ partage: P.partage, moi: P.moi, cap: P.cap, rdv: P.rdv, positions: maille ? maille.positions() : [] }), fil, voir: (salon) => { e.salon = salon || PUBLIC; peindre(); }, maille: () => maille, hebergerBasse, arreterBasse, hebergerSon, pauseSon, arreterSon, rejoindre, quitter, heureDe,
     etat: () => ({ actif: e.actif, moi: e.moi, salle: e.salle, hote, pairs: [...e.pairs].map(([id, p]) => ({ id, etat: p.etat, ecart: p.ecart })), messages: fil(), salon: e.salon, info: e.info, maille: maille ? { moi: maille.moi(), pairs: maille.pairs(), salons: maille.salons(), conversations: maille.conversations() } : null, basse: e.basse, basseHote: e.basseHote, son: e.son, sonHote: e.sonHote, ecoute: { ...e.ecoute }, erreur: e.erreur }) };
   if (W) { W.jOSApps = W.jOSApps || {}; W.jOSApps.proche = { manifest: { id: 'proche', name: 'Proche', icon: '◉' }, mount }; }
   return { mount, pret, ...api, ploxion: { id: 'proche', nom: 'Proche', icone: '◉', interne: true } };

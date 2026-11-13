@@ -7,6 +7,78 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.57', titre: 'Le koin du chill-tekk', points: [
+    '▭ La bande entre les deux koins : toute la barre, toujours là. ‹ › pour revenir ou passer au ploxion suivant, ⧗ ○ △ □ ◇ ✕ ⓘ, et ▁ pour minimiser. Dans un ploxion, le ◇ s\'encadre.',
+    '▣ Le koin ouvert : quatre cases en tunnel, un grand glyphe chacune. Le trion, l\'hypercube du xer, le wormion, le portion.',
+  ] },
+  { v: '0.99.56', titre: 'Plus aucun emoji', points: [
+    '◇ Un emoji qu\'on ne connaît pas ne disparaît plus : il devient un glyphe du xerboxion, tiré de lui, toujours le même (une forme, un cœur, une couleur de xerkion).',
+    '◇ Dans tous les ploxions maintenant, ceux du labo aussi. Ce que tu écris et ce qu\'on t\'envoie garde ses signes.',
+    '◇ Un ploxion sans glyphe à lui reçoit le sien de la même façon, ici comme au labo.',
+  ] },
+  { v: '0.99.55', titre: 'Les koins partout', points: [
+    '▭ En mode koin, la barre d\'un ploxion descend en bas, entre les deux koins : retour, son nom encadré, minimiser. Plus rien en haut, tout au pouce.',
+    '▭ Sur l\'accueil, la même bande dit le xer où tu es ; un toucher ouvre le koin sur les xers.',
+    '⬡ Le xer xerboxion ouvre maintenant le xer chill-tekk du labo. Ton chill-tekk à toi ne change pas.',
+  ] },
+  { v: '0.99.54', titre: 'Plus de prénoms', points: [
+    '◉ Les voisins de démonstration et les exemples n\'ont plus de prénom : RS-3, RS-4, xerion-1, xerion-2. Les tiens, tu les choisis.',
+  ] },
+  { v: '0.99.53', titre: 'Les nœuds sur la carte', points: [
+    '🗺 Proche › autour › les nœuds sur la carte : allume « garder », et ton téléphone note où il entend chaque nœud et la qualité du lien. Chaque nœud a sa zone, colorée selon sa vitesse de connexion (rapide, bon, moyen, lent). Ça reste sur ton téléphone, 30 jours, « effacer » vide tout.',
+    '🗺 Un nœud fixe (un Pi, un ESP32 relais) peut dire où il est : il apparaît à sa place. Les nœuds reliés au xion sont entourés.',
+  ] },
+  { v: '0.99.52', titre: 'Le pokédex des animations', points: [
+    '◫ Banc des animations › pokédex : toutes les animations que tu as jugées, en tuiles ; touche le verdict pour en ajouter ou en retirer, ▶ pour la revoir.',
+    '⚙ Banc des animations › dans l\'app : par famille, choisis celle que l\'app utilise. Une ★ au swipe la choisit d\'office. Déjà branchées : ouvrir, fermer, la courbe, l\'arrivée sur l\'accueil.',
+  ] },
+  { v: '0.99.51', titre: 'Le banc des animations', points: [
+    '🎞 Un nouveau ploxion, « Banc des animations » : 39 animations jouées en boucle dans un petit téléphone (ouvrir, fermer, passer d\'une app à l\'autre, le koin, les feuilles, changer de xer, l\'accueil, les courbes, le wormion). Swipe : ← non, → oui, ↑ c\'est celle-là.',
+    '🎞 À la fin, « copier pour Claude » : tes choix, prêts à coller.',
+  ] },
+  { v: '0.99.50', titre: 'Coord dans l\'app', points: [
+    '📡 Coord est dans l\'app d\'office : lire la flotte, écrire, glisser des fichiers, depuis le téléphone. Il faut être connecté au labo avec le compte admin (⚙ › Compte).',
+  ] },
+  { v: '0.99.49', titre: 'Le build iPhone repart, Android vérifié', points: [
+    '🛠 Le build iPhone de la 0.99.48 s\'arrêtait sur les synonymes de Siri (une fonction d\'iOS 17, l\'app va jusqu\'à iOS 15) : corrigé.',
+    '🤖 Sur Android, Proche passe par le Bluetooth (le maillage, RS-3, RS-4, les potes, la basse) ; le réglage « Piloter de la tête » ne s\'affiche plus là où il n\'existe pas.',
+  ] },
+  { v: '0.99.48', titre: 'Les ploxions sortent de leur icône', points: [
+    '🔍 Touche une icône : le ploxion en sort et grandit jusqu\'à l\'écran, comme sur iPhone. ▁ Minimiser, ‹ ou l\'accueil : il rapetisse et rentre dans son icône.',
+    '🔍 Si son icône n\'est pas à l\'écran, il s\'efface vers le milieu. « Réduire les animations » d\'iOS (ou ⚙ › Calme) : l\'ouverture directe.',
+  ] },
+  { v: '0.99.47', titre: 'Le koin qui s\'ouvre', points: [
+    '◺ Un toucher sur un koin : il grandit et s\'ouvre en carré, le wormion et le portion apparaissent dedans. Glisse vers le haut : il suit ton doigt.',
+    '○ Le wormion tourne avec ton doigt (un tunnel du temps) ; □ le portion part en couloir de cadres quand tu glisses.',
+    '⊠ En mode koin, la case « ton xer » change de xer : organique, chill-tekk, xerboxion, xerbot. Appui long : mes xers.',
+    '◇ Une nouvelle installation commence en chill-tekk, le plus simple pour prendre en main.',
+  ] },
+  { v: '0.99.46', titre: 'Piloter de la tête', points: [
+    '👁 ⚙ › Piloter de la tête : la caméra de Face ID suit ta tête, un point se promène sur l\'écran. Le fixer un instant, ou cligner longtemps des deux yeux = toucher.',
+    '👁 Le mode regard : c\'est ton regard qui pointe (calibré en suivant 4 points) ; un coup de tête à gauche ou à droite change de ploxion, secouer la tête minimise.',
+    '👁 Aucune image gardée : seulement des angles, sur le moment. Les ploxions peuvent écouter tes gestes de tête (jOSRegard).',
+  ] },
+  { v: '0.99.45', titre: 'Les notifications qui parlent', points: [
+    '↩ Un message privé de Proche : « Répondre » directement depuis la notification, la réponse part par le maillage. Ou « ✓ Lu ».',
+    '◉ « RS-3 est tout près » : un pote ✦ qui revient à portée de Bluetooth. « ✓ remis » : ton message passé par un coursier est enfin arrivé.',
+    '🔔 Les notifications du labo avec l\'avatar de qui t\'écrit, en grand, ou le glyphe du ploxion (avec la build « notifs »).',
+  ] },
+  { v: '0.99.44', titre: 'Siri parle xerboxion, et la tête ou le regard visent juste', points: [
+    '🗣 « Open mappion in ploxion », « Open the ploxion Proche in xerboxion », « Ouvre le ploxion Autour dans ploxi0n » : Siri connaît tes ploxions et nos mots (map ion, mapion…), en anglais comme en français. Tous les ploxions, Proche et Autour compris.',
+    '🗣 « ploxion » et « xerboxion » sont deux autres noms de l\'app pour Siri (ploxi0n, avec un zéro, se dit mal).',
+    '♿ ⚙ › Grandes cibles : chaque bouton fait au moins 44 points, pour viser du regard, de la tête ou au contrôle de sélection d\'iOS. En « auto », ça s\'allume tout seul quand une de ces aides tourne.',
+  ] },
+  { v: '0.99.43', titre: 'La balade sur l\'écran verrouillé', points: [
+    '🏝 Autour › 🏝 balade : le chrono, la distance et ta cible sur l\'écran verrouillé et la Dynamic Island, même l\'app fermée. Touche un lieu : la flèche et les mètres t\'y mènent ; « tu y es » à l\'arrivée.',
+    '🏝 Proche › potes › la boussole › 🏝 écran verrouillé : vers un pote ou le rendez-vous.',
+    '◉ Proche tient sur l\'écran verrouillé tant qu\'il tourne : tes voisins, maillé ou pas, les non-lus (jamais le texte d\'un message).',
+    '🎛 Trois nouveaux boutons pour le Centre de contrôle (iOS 18) : Proche (allumé / éteint), Balade, Toilettes. Centre de contrôle › ＋ › ploxi0n.',
+  ] },
+  { v: '0.99.42', titre: 'Le maillage a un protocole public', points: [
+    '🌐 Maille v1, le protocole de Proche, est écrit noir sur blanc (docs/protocole/MAILLE-v1.md) avec des vecteurs de test : n\'importe qui peut fabriquer un appareil qui entre dans le maillage, comme nœud (il relaie) ou comme client (il écoute et parle).',
+    '🌐 Une implémentation de référence en C (pour un ESP32, un Pi, un PC) et un nœud ESP32 à flasher.',
+    '🌐 Un appareil de demain qui invente un nouveau type de message est transporté par les téléphones d\'aujourd\'hui, sans rien perdre en route.',
+  ] },
   { v: '0.99.41', titre: 'Proche sur Android', points: [
     '〰 Proche marche maintenant sur Android, en Bluetooth : entre deux Android, avec un iPhone (sa build « ble »), avec un Pi ou un PC (xb proche). Android demande l\'autorisation « Appareils à proximité » au premier lancement.',
   ] },

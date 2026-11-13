@@ -1,5 +1,5 @@
 // 🔑 (0.83) le labo connecté tout seul, sur le chemin iPhone : un compte dans l'app → le mode xerboxion demande un passe (POST /api/app/passe,
-// le jeton en en-tête, CapacitorHttp) et son cadre ouvre /app/entrer?passe=…&vers=/home?app=ploxi0n ; le navigateur intégré aussi
+// le jeton en en-tête, CapacitorHttp) et son cadre ouvre /app/entrer?passe=…&vers=/xer/chill-tekk?app=ploxi0n ; le navigateur intégré aussi
 export default async function ({ page, ecrire, appels }) {
   await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => /passer/i.test(x.textContent)); if (b) b.click(); });
   await page.waitForTimeout(500);

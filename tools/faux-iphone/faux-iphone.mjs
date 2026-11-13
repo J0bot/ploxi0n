@@ -10,7 +10,8 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { execFileSync } from 'node:child_process';
-import { creerMaille } from '../../src/bions/maille.js';   // (0.99.22) Tom et Léa : de vrais maillages, avec de vraies clés
+import { creerMaille } from '../../src/bions/maille.js';   // (0.99.22) RS-3 et RS-4 : de vrais maillages, avec de vraies clés
+import { decouper, creerRecolleur } from '../../src/bions/fragments.js';   // (0.99.48) le faux Android : les morceaux BLE de PloxiBLE.java
 const require = createRequire(import.meta.url);
 const { chromium } = (() => { for (const p of ['playwright', '/opt/node-tools/node_modules/playwright']) { try { return require(p); } catch (e) { /* suivant */ } } throw new Error('Playwright introuvable : npm i -g playwright'); })();
 
@@ -28,7 +29,9 @@ if (opts.includes('--sans-ploxi')) for (const k of Object.keys(plugins)) if (/^P
 // Le pont reste celui d'iOS (le contrat JS des plugins est le même) : ce qu'on vérifie, c'est le JS de l'app quand elle se croit sur Android.
 const android = opts.includes('--android');
 if (android) { for (const k of Object.keys(plugins)) if (/^Ploxi/.test(k)) delete plugins[k];
-  plugins.PloxiAccueil = ['estAccueil', 'choisir', 'applis', 'lancer', 'reglages'].map(name => ({ name, rtype: 'promise' })); }
+  plugins.PloxiAccueil = ['estAccueil', 'choisir', 'applis', 'lancer', 'reglages'].map(name => ({ name, rtype: 'promise' }));
+  // (0.99.48) PloxiBLE.java (0.99.41) : le maillage d'Android, déclaré comme le Java le déclare (demarrer, arreter, envoyer ; « pair », « message »)
+  plugins.PloxiBLE = ['demarrer', 'arreter', 'envoyer'].map(name => ({ name, rtype: 'promise' })); }
 const web = opts.includes('--web');
 const iScript = opts.indexOf('--script'); const scriptEtapes = iScript >= 0 ? opts[iScript + 1] : null;
 const bridge = readFileSync(path.join(RACINE, 'node_modules/@capacitor/ios/Capacitor/Capacitor/assets/native-bridge.js'), 'utf8');
@@ -132,6 +135,7 @@ const natif = {
     register: () => { setTimeout(() => emettre('PushNotifications', 'registration', { value: 'faux-jeton-apns-0123' }), 60); return {}; }, unregister: () => ({}) },
   PloxiApple: {
     // (0.91) les Live Activities
+    assistance: () => ({ voiceOver: false, selection: false, assistiveTouch: !!globalThis.__fauxAssistiveTouch, texteGras: false, mouvementReduit: false, grandTexte: false }),   // ♿ (0.99.44)
     activiteDebut: (o) => { activitesFaux.push({ ...o, id: 'act-' + (activitesFaux.length + 1) }); return { id: 'act-' + activitesFaux.length }; },
     activiteMaj: (o) => { const a = activitesFaux.find(x => x.id === o.id); if (!a) throw new Error('activité inconnue'); Object.assign(a, o); return {}; },
     activiteFin: (o) => { const n = activitesFaux.filter(x => !o.id || x.id === o.id).length; for (const x of activitesFaux) if (!o.id || x.id === o.id) x.finie = true; return { n }; },
@@ -158,23 +162,23 @@ const natif = {
   PloxiAR: { disponible: () => ({ ar: true, lidar: true, piece: true, chambre: false, objet: true, pieces: '/var/mobile/Documents/terrax/pieces', objets: '/var/mobile/Documents/terrax/objets' }), ouvrir: () => ({ ok: true }), fermer: () => ({ ok: true }),
     capturerObjet: () => ({ nom: 'objet-2026-10-15-121500.usdz', chemin: '/var/mobile/Documents/terrax/objets/objet-2026-10-15-121500.usdz' }),
     scannerPiece: () => ({ nom: 'piece-2026-10-15-120000.usdz', chemin: '/var/mobile/Documents/terrax/pieces/piece-2026-10-15-120000.usdz' }) },
-  // ◉ (0.99.1) l'ultimate Bluetooth : un voisin simulé, « Tom », 3 s d'avance d'horloge ; il répond aux pings et accuse les messages
-  // 〰 (0.99.22) Tom (un voisin direct) et Léa (deux sauts plus loin, seulement voisine de Tom) font tourner le VRAI maillage (src/bions/maille.js) :
-  // Tom répond « ✓ » sur le même salon, Léa dit bonjour, relayée par Tom ; tous deux partagent leur position avec moi (chiffrée pour moi)
-  PloxiProche: { demarrer: (o) => { setTimeout(() => emettre('PloxiProche', 'pair', { id: 'Tom·b2c3', etat: 'connecte' }), 300); voisinsFaux().then(() => { tom.voisin('app', 'connecte'); }); return { moi: o.nom, salle: o.salle }; },
-    arreter: () => { setTimeout(() => emettre('PloxiProche', 'pair', { id: 'Tom·b2c3', etat: 'perdu' }), 50); if (tom) tom.voisin('app', 'perdu'); return {}; },
+  // ◉ (0.99.1) l'ultimate Bluetooth : un voisin simulé, « RS-3 », 3 s d'avance d'horloge ; il répond aux pings et accuse les messages
+  // 〰 (0.99.22) RS-3 (un voisin direct) et RS-4 (deux sauts plus loin, seulement voisin de RS-3) font tourner le VRAI maillage (src/bions/maille.js) :
+  // RS-3 répond « ✓ » sur le même salon, RS-4 dit bonjour, relayé par RS-3 ; tous deux partagent leur position avec moi (chiffrée pour moi)
+  PloxiProche: { demarrer: (o) => { setTimeout(() => emettre('PloxiProche', 'pair', { id: 'RS-3·b2c3', etat: 'connecte' }), 300); voisinsFaux().then(() => { rs3.voisin('app', 'connecte'); }); return { moi: o.nom, salle: o.salle }; },
+    arreter: () => { setTimeout(() => emettre('PloxiProche', 'pair', { id: 'RS-3·b2c3', etat: 'perdu' }), 50); if (rs3) rs3.voisin('app', 'perdu'); return {}; },
     envoyer: (o) => { procheEnvoyes.push(o); let m = null; try { m = JSON.parse(o.donnees); } catch (e) { throw new Error('paquet illisible'); }
-      const rep = (g, d, ms) => setTimeout(() => emettre('PloxiProche', 'message', { de: 'Tom·b2c3', donnees: JSON.stringify({ v: 1, g, d, t: Date.now() + 3000 }) }), ms);
+      const rep = (g, d, ms) => setTimeout(() => emettre('PloxiProche', 'message', { de: 'RS-3·b2c3', donnees: JSON.stringify({ v: 1, g, d, t: Date.now() + 3000 }) }), ms);
       if (m.g === 'ping') rep('pong', { t0: m.d.t0, t1: Date.now() + 3000 + 6, t2: Date.now() + 3000 + 6 }, 12);
       if (m.g === 'msg') rep('msg', { texte: '✓ ' + m.d.texte }, 250);
-      if (m.m === 1 && tom && (!o.a || o.a.includes('Tom·b2c3'))) setTimeout(() => tom.recevoir('app', o.donnees), 5);
+      if (m.m === 1 && rs3 && (!o.a || o.a.includes('RS-3·b2c3'))) setTimeout(() => rs3.recevoir('app', o.donnees), 5);
       return { envoyes: 1 }; },
-    pairs: () => ({ pairs: ['Tom·b2c3'] }) },
+    pairs: () => ({ pairs: ['RS-3·b2c3'] }) },
   PloxiLecteur: { moteurs: () => ({ apple: true, vlc: false }), ouvrir: (o) => ({ moteur: /\.mkv/.test(o.url) ? 'vlc' : 'apple' }), fermer: () => ({}) },
   PloxiVocal: { commencer: () => ({ chemin: '/tmp/vocal.m4a' }), arreter: () => ({ chemin: '/tmp/vocal.m4a', duree: 2, base64: '', type: 'audio/mp4' }), transcrire: (o) => ({ texte: 'ouvre le ploxion horloge', langue: o.langue, surLeTelephone: true }) },
   Share: { share: () => ({ activityType: 'com.apple.UIKit.activity.CopyToPasteboard' }), canShare: () => ({ value: true }) },
   // (0.84) la feuille « Se connecter avec Apple » : un jeton d'identité (le nonce haché est ignoré ici)
-  SignInWithApple: { authorize: () => ({ response: { identityToken: 'jwt.faux-apple', givenName: 'Tom', familyName: null, email: null, user: 'sub-faux' } }) },
+  SignInWithApple: { authorize: () => ({ response: { identityToken: 'jwt.faux-apple', givenName: 'RS-3', familyName: null, email: null, user: 'sub-faux' } }) },
   Browser: { open: (o) => { ouvertsBrowser.push(o.url); return {}; }, close: () => ({}) },
   ScreenOrientation: { orientation: () => ({ type: 'portrait-primary' }), lock: (o) => { verrous.push(o.orientation); return {}; }, unlock: () => ({}) },
   BluetoothLe: { initialize: () => ({}), requestDevice: () => ({ deviceId: 'AA:BB', name: 'Polar H10' }), connect: () => ({}), disconnect: () => ({}), read: () => ({ value: '5a' }), write: () => ({}), startNotifications: () => ({}), getServices: () => ({ services: [] }) },
@@ -225,7 +229,7 @@ const natif = {
     if (u.hostname === 'api.j0bot.ch' && u.pathname === '/api/v1/auth/apple' && o.method === 'POST') { const b = typeof o.data === 'string' ? JSON.parse(o.data) : (o.data || {});
       if (!b.identity_token || !b.nonce) return j(422, { message: 'jeton manquant' });
       if (!b.code) return j(403, { message: 'Cet Apple ID n\'a pas encore de compte j0bot.', invitation_requise: true });
-      return b.code === 'FAUX42' ? j(201, { token: 'bon', user: { id: 'u1', username: 'tom', identity_level: 'pseudonym' } }) : j(422, { message: 'Invitation invalide, expirée ou épuisée.' }); }
+      return b.code === 'FAUX42' ? j(201, { token: 'bon', user: { id: 'u1', username: 'rs3', identity_level: 'pseudonym' } }) : j(422, { message: 'Invitation invalide, expirée ou épuisée.' }); }
     if (u.hostname === 'api.j0bot.ch' && u.pathname === '/api/v1/me' && o.method === 'DELETE') { const b = typeof o.data === 'string' ? JSON.parse(o.data) : (o.data || {});
       return (o.headers || {}).Authorization === 'Bearer bon' && b.confirmer === 'supprimer' ? j(200, { message: 'Compte supprimé.' }) : j(401, { message: 'Unauthenticated.' }); }
     // (0.76) l'invite du social : le jeton « bon » a droit à un code
@@ -233,11 +237,11 @@ const natif = {
     throw new Error('Could not connect to the server.'); } },
   CapacitorCookies: {}, WebView: { getServerBasePath: () => ({ path: '' }) }, Console: { log: () => ({}) },
 };
-// ᛒ ◷ (0.99.30, la branche xerbot-ledfx fusionnée) le Bluetooth bas niveau et la veille, simulés : trois appareils émettent (Tom s'annonce
+// ᛒ ◷ (0.99.30, la branche xerbot-ledfx fusionnée) le Bluetooth bas niveau et la veille, simulés : trois appareils émettent (RS-3 s'annonce
 // comme un ploxi, une montre Apple, un ESP32) ; la veille rend trois points et une visite
 natif.PloxiOndes = {
   scanner: () => { setTimeout(() => {
-    emettre('PloxiOndes', 'appareil', { id: 'A1B2-TOM', nom: 'Tom', rssi: -55, connectable: true, services: ['6E1D0000-0000-4000-8000-0000000C0DE0'] });
+    emettre('PloxiOndes', 'appareil', { id: 'A1B2-RS3', nom: 'RS-3', rssi: -55, connectable: true, services: ['6E1D0000-0000-4000-8000-0000000C0DE0'] });
     emettre('PloxiOndes', 'appareil', { id: 'C3D4-MONTRE', nom: 'Watch', rssi: -70, connectable: false, services: [], fabricant: '4c000215' });
     emettre('PloxiOndes', 'appareil', { id: 'E5F6-ESP', nom: 'ESP32-LED', rssi: -82, tx: -65, connectable: true, services: [], fabricant: 'e5020102' });
   }, 200); return { etat: 'allume' }; },
@@ -259,27 +263,51 @@ natif.PloxiVeille = {
   etat: () => ({ etat: 'toujours', actif: true, fine: true, points: 3 }),
   lire: () => { const t = Date.now(); return { points: [0, 1, 2].map(i => ({ t: t - (3 - i) * 60000, la: 46.52 + i * 0.0001, lo: 6.63, acc: 8, v: 1.2 })), visites: [{ a: t - 3600e3, d: t - 1800e3, la: 46.5205, lo: 6.6301, acc: 20 }] }; },
   vider: () => ({}),
+  // 🏝 (0.99.43) la balade : une Live Activity de plus dans activitesFaux (genre balade)
+  baladeDebut: (o) => { const deja = activitesFaux.find(x => x.genre === 'balade' && !x.finie); if (deja) { Object.assign(deja, o); return { id: deja.id, deja: true }; } activitesFaux.push({ ...o, genre: 'balade', id: 'act-' + (activitesFaux.length + 1), metres: 0 }); return { id: 'act-' + activitesFaux.length }; },
+  baladeCible: (o) => { const a = activitesFaux.find(x => x.genre === 'balade' && !x.finie); if (!a) throw new Error('pas de balade en cours'); a.cible = o.cible || null; return {}; },
+  baladeFin: () => { const a = activitesFaux.find(x => x.genre === 'balade' && !x.finie); if (a) a.finie = true; return { metres: a ? 420 : 0, secondes: a ? 600 : 0 }; },
 };
 
-// 〰 (0.99.22) les voisins du maillage : Tom (lié à l'app et à Léa) et Léa (liée à Tom seulement)
-let tom = null, lea = null, voisinsPrets = null;
+// 👁 (0.99.46) PloxiRegard : un visage de synthèse, 30 mesures par seconde, que le parcours pilote (regardFaux.visage = { lacet, tangage, … })
+const regardFaux = { actif: false, demarrages: 0, visage: { lacet: 0, tangage: 0, cligneG: 0, cligneD: 0, x: 0, y: 0 }, minuterie: null };
+natif.PloxiRegard = {
+  dispo: () => ({ dispo: true }),
+  demarrer: () => { regardFaux.actif = true; regardFaux.demarrages++; clearInterval(regardFaux.minuterie); regardFaux.minuterie = setInterval(() => emettre('PloxiRegard', 'visage', { t: Date.now(), ...regardFaux.visage }), 33); return { ok: true }; },
+  arreter: () => { regardFaux.actif = false; clearInterval(regardFaux.minuterie); return {}; },
+};
+
+// (0.99.48) RS-3 parle à l'app : sur l'iPhone par PloxiProche (le paquet entier) ; sur le faux Android par PloxiBLE (des morceaux de 180 octets, en base64)
+let nMorceau = 1; const recolleurBle = creerRecolleur();
+function versApp(texte) {
+  if (!android) return emettre('PloxiProche', 'message', { de: 'RS-3·b2c3', donnees: texte });
+  for (const m of decouper(texte, nMorceau++)) emettre('PloxiBLE', 'message', { de: 'RS-3·b2c3', donnees: Buffer.from(m).toString('base64') });
+}
+natif.PloxiBLE = {
+  demarrer: () => { setTimeout(() => emettre('PloxiBLE', 'pair', { id: 'RS-3·b2c3', etat: 'connecte' }), 300); voisinsFaux().then(() => { rs3.voisin('app', 'connecte'); }); return {}; },
+  arreter: () => { setTimeout(() => emettre('PloxiBLE', 'pair', { id: 'RS-3·b2c3', etat: 'perdu' }), 50); if (rs3) rs3.voisin('app', 'perdu'); return {}; },
+  envoyer: (o) => { procheEnvoyes.push(o); const t = recolleurBle.ajouter('app', new Uint8Array(Buffer.from(o.donnees, 'base64'))); if (t != null && rs3 && (!o.a || o.a.includes('RS-3·b2c3'))) setTimeout(() => rs3.recevoir('app', t), 5); return {}; },
+};
+
+// 〰 (0.99.22) les voisins du maillage : RS-3 (lié à l'app et à RS-4) et RS-4 (lié à RS-3 seulement)
+let rs3 = null, rs4 = null, voisinsPrets = null;
 function voisinsFaux() {
   if (voisinsPrets) return voisinsPrets;
   const subtle = globalThis.crypto.subtle, alea = (n) => globalThis.crypto.getRandomValues(new Uint8Array(n)), sans = () => () => {};
-  tom = creerMaille({ subtle, alea, nom: 'Tom', attente: (ms, f) => setTimeout(f, 5), repeter: sans,
-    envoyer: (texte, vers) => { if (!vers || vers.includes('app')) setTimeout(() => emettre('PloxiProche', 'message', { de: 'Tom·b2c3', donnees: texte }), 5); if (!vers || vers.includes('lea')) setTimeout(() => lea.recevoir('tom', texte), 5); } });
-  lea = creerMaille({ subtle, alea, nom: 'Léa', attente: (ms, f) => setTimeout(f, 5), repeter: sans, envoyer: (texte) => setTimeout(() => tom.recevoir('lea', texte), 5) });
+  rs3 = creerMaille({ subtle, alea, nom: 'RS-3', attente: (ms, f) => setTimeout(f, 5), repeter: sans,
+    envoyer: (texte, vers) => { if (!vers || vers.includes('app')) setTimeout(() => versApp(texte), 5); if (!vers || vers.includes('rs4')) setTimeout(() => rs4.recevoir('rs3', texte), 5); } });
+  rs4 = creerMaille({ subtle, alea, nom: 'RS-4', attente: (ms, f) => setTimeout(f, 5), repeter: sans, envoyer: (texte) => setTimeout(() => rs3.recevoir('rs4', texte), 5) });
   const repondu = new Set();
   voisinsPrets = (async () => {
-    await tom.demarrer(); await lea.demarrer(); tom.voisin('lea', 'connecte'); lea.voisin('tom', 'connecte');
-    tom.surChange((q) => { if (q !== 'messages') return; for (const s of tom.salons()) for (const m of tom.fil(s.salon)) if (!m.moi && m.texte && m.nom !== 'Léa' && !repondu.has(m.id)) { repondu.add(m.id); setTimeout(() => tom.dire('✓ ' + m.texte, s.salon), 200); } });
-    // dès que l'app s'est annoncée : Léa dit bonjour (deux sauts) ; les deux partagent leur position avec elle, toutes les 2 s
+    await rs3.demarrer(); await rs4.demarrer(); rs3.voisin('rs4', 'connecte'); rs4.voisin('rs3', 'connecte');
+    rs3.surChange((q) => { if (q !== 'messages') return; for (const s of rs3.salons()) for (const m of rs3.fil(s.salon)) if (!m.moi && m.texte && m.nom !== 'RS-4' && !repondu.has(m.id)) { repondu.add(m.id); setTimeout(() => rs3.dire('✓ ' + m.texte, s.salon), 200); } });
+    // dès que l'app s'est annoncée : RS-4 dit bonjour (deux sauts) ; les deux partagent leur position avec elle, toutes les 2 s
     let bonjour = false;
     setInterval(() => {
-      const app = tom.pairs().find(p => p.direct && p.nom !== 'Léa' && p.cle); if (!app) return;
-      if (!bonjour) { bonjour = true; lea.dire('je suis deux sauts plus loin, Tom me relaie'); }
-      tom.partagerPosition({ lat: 46.52085, lng: 6.63095, precision: 6 }, { a: [app.fp] });   // ~110 m au nord-est
-      if (lea.pairs().some(p => p.fp === app.fp && p.cle)) lea.partagerPosition({ lat: 46.51840, lng: 6.62760, precision: 25, rdv: { lat: 46.51900, lng: 6.62900, nom: 'la fontaine' } }, { a: [app.fp] });   // ~300 m au sud-ouest ; (0.99.29) et son rendez-vous
+      const app = rs3.pairs().find(p => p.direct && p.nom !== 'RS-4' && p.cle); if (!app) return;
+      if (!bonjour) { bonjour = true; rs4.dire('je suis deux sauts plus loin, RS-3 me relaie'); }
+      rs3.partagerPosition({ lat: 46.52085, lng: 6.63095, precision: 6 }, { a: [app.fp] });   // ~110 m au nord-est
+      if (rs4.pairs().some(p => p.fp === app.fp && p.cle)) rs4.partagerPosition({ lat: 46.51840, lng: 6.62760, precision: 25, rdv: { lat: 46.51900, lng: 6.62900, nom: 'la fontaine' } }, { a: [app.fp] });   // ~300 m au sud-ouest ; (0.99.29) et son rendez-vous
     }, 2000).unref();   // ne retient pas la fin du faux iPhone
   })();
   return voisinsPrets;
@@ -347,8 +375,8 @@ const etat = await page.evaluate(() => ({
   texte: document.body.innerText.slice(0, 600),
 }));
 let resultatsEtapes = null;
-if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux, procheEnvoyes, pont, droneFaux, tailles, accueilFaux, xbFaux, trousseauFaux }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
-clearInterval(mouvementMinuteur);
+if (scriptEtapes) { const m = await import(path.resolve(scriptEtapes)); try { resultatsEtapes = await m.default({ page, ecrire, journal, appels, prefs, emettre, ouvertsBrowser, verrous, eveil, activitesFaux, pushFaux, regardFaux, parTuyau: versApp, android, procheEnvoyes, pont, droneFaux, tailles, accueilFaux, xbFaux, trousseauFaux }); } catch (e) { journal.push('PARCOURS INTERROMPU · ' + e.message.split('\n')[0]); } }
+clearInterval(mouvementMinuteur); clearInterval(regardFaux.minuterie);
 const resume = { url, mode: web ? 'web' : android ? 'android' : (opts.includes('--sans-plugions') ? 'ios-sans-plugions' : 'ios'), demarre, dureeBoot, etat,
   appelsNatifs: Object.entries(appels.reduce((a, x) => { const k = x.p + '.' + x.m; a[k] = (a[k] || 0) + 1; return a; }, {})).sort((a, b) => b[1] - a[1]),
   nonSimules: [...nonSimules], journal, resultatsEtapes };

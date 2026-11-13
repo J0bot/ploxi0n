@@ -1,8 +1,9 @@
 // ◇ SANS EMOJI (0.54, RS-7 : « les emoji, ça rend l'UI dégueu »). Dans l'interface de l'APP (le dock, les feuilles, les mini docks, et
 // ses ploxions internes : réglages, Santé, tsoins, marketplace, la blouse…), chaque emoji d'un texte devient son glyphe du xerboxion
-// (src/app/glyphes.js), ou disparaît s'il n'en a pas. Les ploxions du labo gardent leur contenu tel quel. Un seul passage au départ, puis
+// (src/app/glyphes.js), sinon son glyphe à graine (0.99.56, src/bions/glyphe-seed.js). (0.99.56) Les ploxions du labo aussi : plus aucun emoji. Un seul passage au départ, puis
 // seulement ce qui change. ⚙ › Apparence › « Les emoji du labo » coupe tout (prefs.glyphes === false).
 import { glyphe, nomDepuisEmoji } from './glyphes.js';
+import { glypheEmoji } from '../bions/glyphe-seed.js';   // ◇ (0.99.56) un emoji hors du dictionnaire : son glyphe à graine (plus rien ne disparaît)
 
 const EMOJI = /(\p{Extended_Pictographic}(?:️|‍\p{Extended_Pictographic}|\p{Emoji_Modifier})*)(\s?)/gu;
 // [data-ecrit] (0.99.1) : ce que les gens écrivent ou s'envoient (les messages de Proche, ses glyphes d'un geste) garde ses signes
@@ -11,7 +12,7 @@ const IGNORER = 'svg,script,style,textarea,input,select,option,[contenteditable]
 // (19.10, le labo) ignorer : un sélecteur de plus à laisser tel quel — ce que les gens ÉCRIVENT (posts, messages, bios) garde ses emojis
 // (19.10, le labo) inconnu(emoji) → un SVG pour un emoji hors du dictionnaire (le labo : un glyphe généré, stable) ; sans lui, il disparaît (l'app)
 // avant(el, emoji, seul) → un SVG qui passe devant tout (le labo : un emoji seul dans la case d'un ploxion = l'icône de ce ploxion)
-export function installerSansEmoji({ W = globalThis.window, interne = () => true, actif = () => true, ignorer = '', inconnu = null, avant = null } = {}) {
+export function installerSansEmoji({ W = globalThis.window, interne = () => true, actif = () => true, ignorer = '', inconnu = (e) => glypheEmoji(e), avant = null } = {}) {
   const D = W.document, IGN = IGNORER + (ignorer ? ',' + ignorer : '');
   const dansApp = (el) => { const h = el.closest('.px-hote'); return !h || interne(h.dataset.ploxion || ''); };
   function traiter(t) {

@@ -18,7 +18,7 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '
 export const ETAPES = [
   { id: 'ouvrir', cible: '.px-accueil [data-id]', texte: 'Touche un ploxion : il s\'ouvre.', fait: (r) => !!(r && r.courant && r.courant()) },
   { id: 'revenir', cible: '.px-retour, .px-koin-gauche', texte: '‹ te ramène à l\'accueil. Ton ploxion reste vivant.', sous: 'ou glisse depuis le bord gauche', fait: (r) => !!(r && r.courant && !r.courant()) },
-  { id: 'xer', cible: '.px-modes', texte: 'Ton xer : la même app, une autre allure. Organique, c\'est le vivant ; chill-tekk, celui d\'avant.', sous: 'touche « suivant » quand tu as vu', fait: null },
+  { id: 'xer', cible: '.px-modes', texte: 'Ton xer : la même app, une autre allure. Chill-tekk, le plus simple pour commencer ; organique, le vivant.', sous: 'touche « suivant » quand tu as vu', fait: null },
   { id: 'fin', cible: null, texte: 'C\'est tout. Le reste, l\'app te le montre quand tu le croises.', sous: 'perdu ? ⓘ « c\'est quoi ça ? » : touche n\'importe quoi, l\'app te dit ce que c\'est', fait: null },
 ];
 
@@ -28,7 +28,7 @@ export const ASTUCES = [
   { id: 'wormion', cible: '[data-pad="wormion"]', texte: 'Le temps : tourne ton doigt dessus, tu remontes ce que tu avais ouvert. Lâche pour y aller.' },
   { id: 'portion', cible: '[data-pad="portion"]', texte: 'Glisse dessus : ← → tes apps, ↑ la map, ↓ l\'accueil.' },
   { id: 'map', cible: '.px-map-ici', texte: 'La map : glisse pour aller au hub d\'à côté ; touche un koin pour l\'ouvrir ; ＋ crée le tien.' },
-  { id: 'modes', cible: '.px-modes', texte: 'Ton xer : organique (vivant), chill-tekk (celui d\'avant), xerboxion (le labo), xerbot (le monde physique).' },
+  { id: 'modes', cible: '.px-modes', texte: 'Ton xer : chill-tekk (le plus simple), organique (vivant), xerboxion (le labo), xerbot (le monde physique).' },
   { id: 'bande', cible: '.px-bande-suite', texte: 'La bande : l\'app suivante dépasse à droite ; touche-la pour y aller.' },
   { id: 'systeme', cible: '.px-btop', texte: 'Le système : ce que fait ton iPhone et l\'app, en direct.' },
   { id: 'ambiances', cible: '.px-ambiances [data-amb-sons]', texte: 'Monte un son : il continue quand tu changes d\'app. ‹ coupe tout.' },

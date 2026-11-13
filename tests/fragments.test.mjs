@@ -6,7 +6,7 @@ test('⧉ couper, recoller (dans le désordre, avec des doublons), oublier l\'in
   const texte = JSON.stringify({ m: 1, d: 'é🦀'.repeat(900) }), m = decouper(texte, 0xdeadbeef);
   assert.ok(m.length > 10 && m.every(x => x.length <= MORCEAU));
   const r = creerRecolleur(), melange = [...m].reverse(); melange.splice(3, 0, m[2]);   // un doublon au milieu
-  let fin = null; for (const x of melange) { const t = r.ajouter('tom', x); if (t) fin = t; }
+  let fin = null; for (const x of melange) { const t = r.ajouter('rs3', x); if (t) fin = t; }
   assert.equal(fin, texte, 'le même texte, octet pour octet (UTF-8 coupé au milieu d\'un caractère compris)');
   assert.equal(r.enCours(), 0);
   assert.equal(r.ajouter('a', decouper('court', 1)[0]), 'court', 'un seul morceau : tout de suite');
@@ -37,7 +37,7 @@ test('〰 le tuyau mixte : Multipeer + BLE ; un paquet de 3 Ko traverse le BLE e
   await A.demarrer({ nom: 'A' }); await B.demarrer({ nom: 'B' }); await new Promise(r => setTimeout(r, 5));
   assert.equal(A.ble(), true);
   bleA._emettre('pair', { id: 'c:B', etat: 'connecte' }); bleB._emettre('pair', { id: 'p:A', etat: 'connecte' });
-  assert.deepEqual(await A.pairs(), ['c:B']); assert.ok(estBle('c:B') && !estBle('Tom·a1'));
+  assert.deepEqual(await A.pairs(), ['c:B']); assert.ok(estBle('c:B') && !estBle('RS-3·a1'));
   const gros = JSON.stringify({ m: 1, d: 'x'.repeat(3000) });
   await A.envoyer(gros); await new Promise(r => setTimeout(r, 40));
   assert.equal(recusB.at(-1).donnees, gros); assert.equal(recusB.at(-1).de, 'p:A');

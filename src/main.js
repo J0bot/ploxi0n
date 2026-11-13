@@ -5,6 +5,7 @@ import { installerShim } from './shim/jos.js';
 import { creerRouteur } from './app/routeur.js';
 import { enregistrerBanc } from './banc/banc.js';
 import { enregistrerTrackpad } from './banc/trackpad.js';
+import { enregistrerBancAnim } from './lot/banc-anim.js';   // 🎞 (0.99.51) le banc des animations (jOSSwipe)
 import { creerVerrou } from './natif/verrou.js';
 import { creerDepot, creerHttp, SOURCE } from './marketplace/depot.js';
 import { enregistrerMarketplace } from './marketplace/marketplace.js';
@@ -46,7 +47,7 @@ import { creerCube } from './app/cube.js';
 import { creerLecteurNatif } from './natif/lecteur-natif.js';
 import { creerFichiersNatif } from './natif/fichiers-natif.js';
 import { creerCape } from './cape/cape.js';
-import { creerModes } from './app/modes.js';
+import { creerModes, MODES } from './app/modes.js';
 import { creerMiniDocks } from './app/minidocks.js';
 import { creerCadresLabo } from './natif/cadres-labo.js';
 import { installerGel } from './app/gel.js';
@@ -61,7 +62,9 @@ import { creerChercherLocal } from './app/chercher-local.js';
 import { creerVueXers } from './app/vue-xers.js';
 import { creerApercus } from './natif/apercus.js';
 import { SOCIAUX, surveillerSocial, invitationDuLien, sessionSocial, supprimerCompteSocial } from './natif/social-apple.js';
-import { PloxiApple, PloxiProche, PloxiBLE, PloxiVeille, PloxiOndes, PloxiCarPlay, PloxiAccueil, ploxiIci, plateforme } from './natif/plugins-app.js';
+import { PloxiApple, PloxiProche, PloxiBLE, PloxiVeille, PloxiOndes, PloxiCarPlay, PloxiAccueil, PloxiRegard, ploxiIci, plateforme } from './natif/plugins-app.js';
+import { creerRegardNatif } from './natif/regard-natif.js';
+import { creerRegard } from './app/regard.js';
 import { creerAccueil, brancherRetourAndroid } from './natif/accueil-natif.js';
 import { creerApplis } from './lot/applis.js';
 import { creerAgentXb } from './bions/xb-agent.js';
@@ -115,7 +118,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.41';
+const VERSION = '0.99.57';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -413,6 +416,7 @@ async function demarrer() {
       systeme: () => (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() ? PloxiApple.systeme() : null),
       position: () => window.jOSNatif.position() } }),
     enregistrerTrackpad({}),   // ◇ (0.60) les essais du trackpad haptique
+    enregistrerBancAnim({ boxion, version: VERSION, vibrer: (x) => vibrer(x), prefs }),   // 🎞 (0.99.51) toutes les animations, à choisir au swipe
   ];
   let raccourcis = null;
   async function majAccueil(o) {
@@ -461,6 +465,10 @@ async function demarrer() {
   const widgetsPx = creerWidgetsPloxions({ boxion, catalogue: () => (routeur ? routeur.catalogue() : []), courant: () => (routeur ? routeur.courant() : null),
     glyphePng: (p) => glyphePng(window, p),
     ecrire: async (k, v) => { if (!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) return; const { Preferences } = await import('@capacitor/preferences'); await Preferences.set({ key: k, value: v }); } });
+  // 🎛 (0.99.43) l'état des boutons du Centre de contrôle (Proche allumé, une balade en cours) : les Préférences « ploxi0n.controles » →
+  // l'AppDelegate les copie dans l'App Group et recharge les contrôles (ControlCenter) → l'extension affiche « allumé » comme le Wi-Fi
+  const etatCtl = { proche: false, balade: false };
+  const controles = (patch) => { Object.assign(etatCtl, patch); widgetsPx.ecrireBrut('ploxi0n.controles', JSON.stringify(etatCtl)); };
   window.jOSWidget = { publier: (d, id) => widgetsPx.publier(d, id), retirer: (id) => widgetsPx.retirer(id) };
   const vocal = creerVocal({ boxion, catalogue: () => (routeur ? routeur.catalogue() : []), vibrer: (x) => vibrer(x), ouvrir: (id, p) => routeurProxy.ouvrir(id, p),
     surEtat: (on) => { if (routeur) routeur.rafraichirHud(); if (on) activites.debut('vocal', { genre: 'vocal', titre: 'vocal', sous: 'j\'enregistre', glyphe: 'vocal', debut: Date.now() }); else activites.fin('vocal');
@@ -494,16 +502,19 @@ async function demarrer() {
     ploxions: () => ({ vivants: routeur ? routeur.vivants() : [], endormis: routeur && routeur.endormis ? routeur.endormis() : [] }),
     ouvrir: (id) => routeurProxy.ouvrir(id) }).ploxion);
   // ◷ ᛒ (0.99.20) la veille en arrière-plan et le Bluetooth bas niveau, pour les ploxions internes ET ceux du labo (mappion, Autour, Proche)
-  if (natifLot) { try { if (ploxiIci('PloxiVeille')) window.jOSVeille = creerVeille({ plugin: PloxiVeille }); if (ploxiIci('PloxiOndes')) window.jOSOndes = creerOndes({ plugin: PloxiOndes }); } catch (e) { /* le reste de l'app vit sans */ } }
+  if (natifLot) { try { if (ploxiIci('PloxiVeille')) window.jOSVeille = creerVeille({ plugin: PloxiVeille, activites: () => prefs.lire().activites !== false, quand: (on) => controles({ balade: on }) }); if (ploxiIci('PloxiOndes')) window.jOSOndes = creerOndes({ plugin: PloxiOndes }); } catch (e) { /* le reste de l'app vit sans */ } }
   // ◉ (0.99.1) Proche, l'ultimate Bluetooth : les téléphones autour, sans internet (MultipeerConnectivity sur l'iPhone, un BroadcastChannel ailleurs)
   tuyauProche = creerTuyauProche({ W: window, plugin: natifLot && ploxiIci('PloxiProche') ? PloxiProche : null, ble: natifLot && ploxiIci('PloxiBLE') ? PloxiBLE : null });
-  const proche = creerProche({ W: window, boxion, vibrer: (x) => vibrer(x), tuyau: tuyauProche, position: () => window.jOSNatif.position(), ouvrirLien: (u) => window.jOSNatif.ouvrirLien(u) });
+  const proche = creerProche({ W: window, boxion, vibrer: (x) => vibrer(x), tuyau: tuyauProche, position: () => window.jOSNatif.position(), ouvrirLien: (u) => window.jOSNatif.ouvrirLien(u),
+    activite: { debut: (o) => { controles({ proche: true }); return activites.debut('proche', { ...o, genre: 'proche', ploxion: 'proche' }); }, maj: (o) => activites.maj('proche', o), fin: () => { controles({ proche: false }); return activites.fin('proche'); } } });   // 🏝 (0.99.43)
+  if (window.jOSVeille) window.jOSVeille.etat().then(r => controles({ balade: !!(r && r.balade) })).catch(() => {}); else controles({});   // 🎛 l'état réel au lancement (une balade survit à l'app tuée)
   internes.push(proche.ploxion);
   // ≋ (0.99.4) le synthé : des jOSKnob, des pads, une boucle (RS-7 : « qu'on puisse commencer à faire du son avec des knobs »)
   internes.push(creerSynthe({ W: window, boxion, vibrer: (x) => vibrer(x), proche }).ploxion);   // (0.99.10) jouer à plusieurs : le son part dans Proche
   // ⌖ (0.99.9) Autour : les lieux d'OpenStreetMap autour de toi, en continu (RS-7 à Zurich : « des toilettes direct ; propositions selon mon vecteur xerion »)
-  internes.push(creerAutour({ W: window, boxion, vibrer: (x) => vibrer(x), http: { get: (u, o) => httpRelais.get(u, o) }, position: () => window.jOSNatif.position(),
-    ouvrirLien: (u) => (window.jOSNatif && window.jOSNatif.ouvrirLien ? window.jOSNatif.ouvrirLien(u) : window.open(u, '_blank')), usage: () => boxion.get('usage', 'stats') }).ploxion);
+  const autour = creerAutour({ W: window, boxion, vibrer: (x) => vibrer(x), http: { get: (u, o) => httpRelais.get(u, o) }, position: () => window.jOSNatif.position(),
+    ouvrirLien: (u) => (window.jOSNatif && window.jOSNatif.ouvrirLien ? window.jOSNatif.ouvrirLien(u) : window.open(u, '_blank')), usage: () => boxion.get('usage', 'stats') });   // 🎛 (0.99.43) gardé : le bouton « Toilettes » du Centre de contrôle
+  internes.push(autour.ploxion);
   const ambiancesApi = creerAmbiances({ W: window, boxion, vibrer: (x) => vibrer(x), activite: { debut: (o) => activites.debut('ambiances', { genre: 'minuteur', ploxion: 'ambiances', glyphe: 'ambiances', ...o }), fin: () => activites.fin('ambiances') } });
   internes.push(ambiancesApi.ploxion);
   // ⌂ (0.99.32, RS-7 : « sur Android, ploxion utilisable comme launcher ») l'écran d'accueil d'Android et les applis du téléphone (PloxiAccueil.java)
@@ -629,6 +640,7 @@ async function demarrer() {
   const notifs = creerNotifs({ boxion, vibrer, envoyer: (q) => httpRelais.requete(q, fetchOrigine),
     ouvrir: (id, p) => { routeurProxy.ouvrir(id); if (id === 'proche' && p && p.salon) { proche.page('messages'); proche.voir(p.salon); } } });   // ◉ (0.99.40) une notification de Proche : la conversation
   proche.brancherNotifier((o) => notifs.proche(o).catch(() => false));
+  notifs.brancherReponse((salon, texte) => { proche.repondre(salon, texte).catch(() => {}); }, (salon) => proche.marquerLu(salon));   // ↩ (0.99.45) répondre depuis la notification
   // 🔔 (0.91) les notifications push, app fermée aussi (la clé APNs vit sur le labo : docs/PUSH.md)
   const push = creerPush({ boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id, p) => routeurProxy.ouvrir(id, p || undefined), vibrer: (x) => vibrer(x),
     signaler: (t) => routeur && routeur.signaler(t), connecte: () => !!(compteRef && compteRef.etat().connecte),
@@ -661,7 +673,7 @@ async function demarrer() {
   window.jOSEcranAccueil = ecranAccueil;
   boot(78, 'l\'accueil');
   // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xerbot (le monde physique)
-  const modes = creerModes({ cadres, connecter: (c) => connexionLabo.adresse(c), prefs, ouvrir: (id) => routeurProxy.ouvrir(id), connait: (id) => !!(routeur && routeur.connait(id)), source: SOURCE, vibrer: (x) => vibrer(x), controleur: controleur.api });
+  const modes = creerModes({ cadres, connecter: (c) => connexionLabo.adresse(c), prefs, ouvrir: (id) => routeurProxy.ouvrir(id), connait: (id) => !!(routeur && routeur.connait(id)), source: SOURCE, chemin: '/xer/chill-tekk', vibrer: (x) => vibrer(x), controleur: controleur.api });   // ⬡ (0.99.55) le xer xerboxion = le xer chill-tekk du labo
   modes.attacher(racine);
   let coupesConnues = new Set();   // les bions coupés (⚙ › Bions), relus à chaque ouverture ; gardés pour brancher les plugions sans attendre
   routeur = creerRouteur({ habiller: (id, hote) => (XERS_PLOXIONS[id] && prefs.lire().xerPloxions !== false ? XERS_PLOXIONS[id](hote, { W: window, vibrer: (x) => vibrer(x) }) : null), sonDe: (id) => (gel ? gel.aDuSon(id) : false), surChercher: () => (chercheur ? chercheur.ouvrir() : routeur.ouvrir('marketplace', { chercher: '1' })), surXers: () => (vueXers ? vueXers.ouvrir() : routeur.carte()), panneau: () => modes.panneau(), racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id, p) => routeurProxy.ouvrir(id, p), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges, present: (b) => window[b] != null }), apresChargement: (id) => { brancherPlugions(window, coupesConnues); /* (0.99.21) avant le montage : jOSZone a sa zone dès la première ouverture */ boxion.get('reglages', 'bions-coupes').then(c => { coupesConnues = new Set(c || []); brancherPlugions(window, coupesConnues); }).catch(() => {}); socialApple(id); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
@@ -714,7 +726,8 @@ async function demarrer() {
     }
     try { routeur.endormirCaches(); } catch (er) { /* */ }
   }, true);
-  installerSansEmoji({ interne: (id) => !!(routeur.catalogue().find(p => p.id === id) || {}).interne, actif: () => prefs.lire().glyphes !== false });
+  // ◇ (0.99.56, RS-7 via xerxion1 : « plus aucun emoji ») : tous les ploxions, ceux du labo aussi ; ce que les gens écrivent ([data-ecrit], les champs) garde ses signes
+  installerSansEmoji({ interne: () => true, actif: () => prefs.lire().glyphes !== false });
   // ⟡ (0.99.14) la langue de l'app : ⚙ › Apparence › Langue, ou celle de l'iPhone ; les néologismes restent (src/bions/dire.js)
   // ⊕ (0.99.19, RS-7 : « l'entièreté du truc est trop petite ») la taille de tout. ⚙ › Apparence › Taille de tout.
   // (0.99.26, RS-7 27.10 : « aucune action avec le bord droit ne fonctionne, les menus se perdent ») le zoom de page de WebKit (pageZoom ×1,15,
@@ -742,6 +755,10 @@ async function demarrer() {
   // (0.99.19) la peau « auto » : légère dès que l'iPhone passe en économie d'énergie (relu toutes les 60 s et au retour dans l'app)
   if (appleIci) { const economie = () => { if (prefs.lire().peau !== 'auto' || document.hidden) return; PloxiApple.systeme().then((x) => { const e = x && x.economie ? '1' : '0'; if (document.documentElement.getAttribute('data-px-economie') !== e) { document.documentElement.setAttribute('data-px-economie', e); prefs.appliquer(); } }).catch(() => {}); };
     economie(); setInterval(economie, 60000); document.addEventListener('visibilitychange', economie); prefs.surChangement(economie); }
+  // ♿ (0.99.44) les aides motrices d'iOS (regard, tête, contrôle de sélection, AssistiveTouch, VoiceOver) : les grandes cibles en « auto » ;
+  // au lancement et à chaque retour dans l'app (on les allume dans Réglages iOS, puis on revient). jOSNatif.assistance() pour les ploxions.
+  if (appleIci) { const assistance = () => { if (document.hidden) return; PloxiApple.assistance().then((a) => { const on = !!(a && (a.assistiveTouch || a.selection || a.voiceOver)); if (!!window.__ploxiAssistance !== on) { window.__ploxiAssistance = on; prefs.appliquer(); } }).catch(() => {}); };
+    assistance(); document.addEventListener('visibilitychange', assistance); window.jOSNatif.assistance = () => PloxiApple.assistance(); }
   if (!modeSurJs) installerTelVivant({ W: window, prefs, systeme: appleIci ? () => PloxiApple.systeme() : null, batterie: natifLot ? () => window.jOSNatif.batterie() : null });
   prefs.surChangement(() => barreHaut.mesurer());
   window.ploxi0nBarreHaut = barreHaut;
@@ -763,7 +780,14 @@ async function demarrer() {
   // en organique, les koins toujours (plus de dock) ; ailleurs, le réglage d'avant
   const koins = creerKoins({ actif: () => prefs.lire().mode === 'organique' || !!prefs.lire().koins, vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
     koins: () => (routeur.connait('xerkion-perso-koin-ion') ? routeur.ouvrir('xerkion-perso-koin-ion') : routeur.signaler('le koin du ion n\'est pas encore semé ici')),
-    temps: () => routeurProxy.ouvrir('passe'),   // ○ (0.97) le wormion : se balader dans le temps (le passé) xers: () => routeur.faire('mes-xers'), carte: () => routeur.faire('map'),   // □ portion : la map (0.90)
+    temps: () => routeurProxy.ouvrir('passe'),   // ○ (0.97) le wormion : se balader dans le temps (le passé)
+    xers: () => routeur.faire('mes-xers'), carte: () => routeur.faire('map'),   // □ portion : la map (0.90) ; (0.99.47) ces deux-là étaient avalés par le commentaire d'au-dessus
+    // ⊠ (0.99.47) la case xer : les quatre modes, sur place ; en choisir un change le xer de l'accueil
+    modes: () => MODES.map(([id, glyphe, nom]) => ({ id, glyphe, nom, on: (prefs.lire().mode || 'chill-tekk') === id })),
+    choisirMode: (id) => prefs.regler({ mode: id }).then(() => { if (!routeur.courant()) routeur.faire('accueil'); }).catch(() => {}),
+    // △ (0.99.47) le koin du ion, « ici, maintenant » (une proposition, docs/KOINS.md) : ce qui vit, qui est autour
+    sous_koins: () => { const v = routeur.vivants().length, p = (proche && proche.etat().actif && proche.maille && proche.maille()) ? proche.maille().pairs().filter(x => x.direct).length : null;
+      return [v ? v + ' vivant' + (v > 1 ? 's' : '') : 'rien ne vit', p != null ? p + ' voisin' + (p > 1 ? 's' : '') : null].filter(Boolean).join(' · '); },
     tsoin: () => tsoinNatif.ouvrir(), journal: () => routeurProxy.ouvrir('journal-tsoins'), accueil: () => routeur.faire('accueil'),
     quoi: () => { if (window.ploxi0nTuto && window.ploxi0nTuto.cestQuoi) window.ploxi0nTuto.cestQuoi(); },   // ⓘ (0.95) c'est quoi ça ?
     toi: () => routeurProxy.ouvrir('reglages-app'), retour: () => (routeur.courant() ? routeur.retour() : null), minimiser: () => routeur.faire('minimiser'),
@@ -771,11 +795,24 @@ async function demarrer() {
     listeTemps: () => { const cat = routeur.catalogue(), nom = (id) => ((cat.find(p => p.id === id) || {}).nom || id); return [...routeur.vivants().slice().reverse(), ...routeur.endormis()].filter((id, i, l) => id !== routeur.courant() && l.indexOf(id) === i).slice(0, 12).map(id => ({ id, nom: nom(id) })); },
     aller: (id) => routeurProxy.ouvrir(id), precedente: () => routeur.faire('precedente'), suivante: () => routeur.faire('suivante') } });
   koins.poser(); prefs.surChangement(() => koins.poser());
-  window.ploxi0n = { boxion, shim, routeur, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte, koins, langue: langueApp };
+  window.ploxi0n = { boxion, shim, routeur, prefs, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte, koins, langue: langueApp };
+  // 👁 (0.99.46) piloter de la tête ou du regard (⚙ › Piloter de la tête) : notre suivi, PloxiRegard (ARKit) + src/bions/tete.js
+  const regard = creerRegard({ W: window, boxion, vibrer: (x) => vibrer(x), routeur, signaler: (t) => routeur.signaler(t), inverse: () => !!prefs.lire().regardInverse,
+    natif: natifLot && ploxiIci('PloxiRegard') ? creerRegardNatif({ plugin: PloxiRegard }) : null });
+  window.jOSRegard = regard.api; window.ploxi0nRegard = regard;
+  { let avant = 'non'; const suivre = () => { const m = prefs.lire().regard || 'non'; if (m === avant) return; avant = m; regard.regler(m).catch((e) => { routeur.signaler('👁 ' + ((e && e.message) || 'impossible')); avant = 'non'; prefs.regler({ regard: 'non' }).catch(() => {}); }); };
+    suivre(); prefs.surChangement(suivre); }
+  { let inv = !!prefs.lire().regardInverse; prefs.surChangement(() => { const n = !!prefs.lire().regardInverse; if (n !== inv) { inv = n; if (regard.mode() !== 'non') regard.regler(regard.mode()).catch(() => {}); } }); }
   brancherLiens({ routeur, compte, surLien: (r) => { const c = invitationDuLien(r); if (c) boxion.put('social', 'invitation', { code: c, le: Date.now() }).catch(() => {}); }, installer: (id) => routeurProxy.ouvrir(id), lecture: (c) => maintenant.commander(c), lire: (o) => lecteurNatif.ouvrir(o.url, o).catch(() => {}),
     // ☾ (0.64) ploxi0n://dodo et ploxi0n://reveil : un raccourci, le Toucher au dos, ou l'automatisation « quand Sommeil s'active » d'iOS le notent seuls
     actions: { dodo: () => tsoinNatif.dodo().then(() => routeur.signaler('☾ dodo noté')).catch(() => {}), reveil: () => tsoinNatif.reveil().catch(() => {}),
-      tsoin: () => tsoinNatif.ouvrir({}), vocal: () => vocal.basculer().catch(() => {}), lampe: () => window.jOSNatif.lampe().catch(() => {}) } });   // une icône de l'écran d'accueil vers un ploxion absent : installé à la volée
+      tsoin: () => tsoinNatif.ouvrir({}), vocal: () => vocal.basculer().catch(() => {}), lampe: () => window.jOSNatif.lampe().catch(() => {}),
+      // 🎛 (0.99.43) Proche (allumer / éteindre, comme le Bluetooth), la balade (la Live Activity de mappion), les toilettes guidées
+      proche: () => { if (proche.etat().actif) { proche.arreter().then(() => routeur.signaler('◉ Proche éteint')).catch(() => {}); return; } routeur.ouvrir('proche'); proche.demarrer().catch(() => {}); },
+      balade: () => { const B = window.jOSVeille && window.jOSVeille.balade; if (!B) return routeur.signaler('🏝 la balade : sur l\'iPhone seulement');
+        (etatCtl.balade ? B.fin().then(r => routeur.signaler('🏝 balade finie · ' + Math.round((r && r.metres) || 0) + ' m')) : B.debut({ titre: 'balade', ploxion: 'mappion' }).then(() => routeur.signaler('🏝 la balade est sur l\'écran verrouillé')))
+          .catch((er) => routeur.signaler('🏝 ' + ((er && er.message) || 'impossible'))); },
+      toilettes: () => { routeur.ouvrir('autour'); autour.toilettes().catch(() => {}); } } });   // une icône de l'écran d'accueil vers un ploxion absent : installé à la volée
   // « Dis à ploxi0n … » (Siri, la dictée) : une phrase → une action
   async function commande(texte) {
     const c = comprendre(texte);

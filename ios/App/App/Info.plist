@@ -6,6 +6,21 @@
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+	<key>INAlternativeAppNames</key>
+	<array>
+		<dict>
+			<key>INAlternativeAppName</key>
+			<string>ploxion</string>
+			<key>INAlternativeAppNamePronunciationHint</key>
+			<string>plox ion</string>
+		</dict>
+		<dict>
+			<key>INAlternativeAppName</key>
+			<string>xerboxion</string>
+			<key>INAlternativeAppNamePronunciationHint</key>
+			<string>zer box ion</string>
+		</dict>
+	</array>
 	<key>CFBundleDisplayName</key>
         <string>ploxi0n</string>
 	<key>CFBundleExecutable</key>
@@ -69,7 +84,7 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>ploxi0n utilise la caméra quand un ploxion te le demande (photo, scan) ; rien ne quitte ton téléphone sans ton accord.</string>
+	<string>ploxi0n utilise la caméra quand un ploxion te le demande (photo, scan, piloter de la tête : des angles, aucune image gardée) ; rien ne quitte ton téléphone sans ton accord.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>ploxi0n ouvre tes photos quand tu choisis d'en donner une à un ploxion.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

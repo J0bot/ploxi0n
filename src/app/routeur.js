@@ -17,6 +17,7 @@ import { creerFractale, glisser } from './fractale.js';
 import { lireXerbion, htmlXerbion } from './xerbion.js';
 import { creerBande, placerDansOrdre } from './bande.js';
 import { ploxionsDelegues } from '../shim/apps-a-la-demande.js';
+import { creerZoomIcone } from './zoom-icone.js';   // 🔍 (0.99.48) ouvrir depuis l'icône, refermer dans l'icône
 const R = [440, 400, 360, 320, 280, 240, 200, 160, 120, 80];
 // le logo (losanges concentriques), transparent : les espaces entre les losanges sont des trous
 const LOGO = '<svg class="px-logo" viewBox="0 0 1024 1024" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="'
@@ -77,7 +78,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
   function faire(action, { vitesse = 0, cubeFerme = false } = {}) {
     if (!action || action === 'rien') return;
     if (action === 'precedente' || action === 'suivante') { if (vivants.size) aCote(action === 'suivante' ? 1 : -1, { vitesse }); return; }
-    if (action === 'accueil') { if (courant) { cacher(courant); courant = null; } pile = []; vibrer('bord'); return accueil(); }
+    if (action === 'accueil') { const v = courant; courant = null; pile = []; vibrer('bord'); return versAccueil(v, () => cacher(v)); }   // 🔍 (0.99.48) dans son icône
     if (action === 'minimiser') return courant ? minimiser() : (flottant ? null : vibrer('fx-refus'));   // à l'accueil : déjà là
     if (action === 'etat') return cyclerEtat();
     if (action === 'bande') { if (!prefs().bande) return signaler('▥ la bande : ⚙ › Navigation'); if (bande.vueOuverte()) { bande.fermerVue(); bande.poser(); return; } return bande.ouvrirVue() ? null : signaler('ouvre d\'abord un ploxion'); }
@@ -349,6 +350,26 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
   const bande = creerBande({ W, scene, actif: () => !!prefs().bande && !holoV, vivants: () => [...vivants.values()].filter(v => !(flottant && flottant.v === v)).map(v => ({ id: v.id, hote: v.hote })),
     ordre: () => ordreDeBande(), courant: () => (courant ? courant.id : null), nomDe: (id) => (parId.get(id) || {}).nom || id, vibrer: (x) => vibrer(x), calme: () => !!prefs().calme,
     aller: (id, sens) => allerA(id, { sens, arrivee: true }) });
+  // 🔍 (0.99.48) le zoom d'iOS : l'icône touchée (sa place, sa taille), gardée un instant pour que le ploxion en sorte
+  const zoomIcone = creerZoomIcone({ W, calme: () => !!prefs().calme, choix: () => prefs().animations || {} }); let origine = null;   // 🎞 (0.99.52) les animations choisies
+  racine.addEventListener('click', (e) => {
+    const t = e.target.closest && e.target.closest('[data-id]'); if (!t || !racine.contains(t) || t.closest('.px-hote,.px-voile')) return;
+    const ic = t.querySelector('.px-ic,.px-g') || t; origine = { id: t.getAttribute('data-id'), rect: ic.getBoundingClientRect(), t: Date.now() };
+  }, true);
+  const tuileDe = (id) => { let t = null; try { t = ecran.querySelector('[data-id="' + String(id).replace(/["\\]/g, '') + '"]'); } catch (e) { t = null; } return t ? (t.querySelector('.px-ic,.px-g') || t).getBoundingClientRect() : null; };
+  /** refermer v DANS son icône de l'accueil (qu'on dessine pendant ce temps-là) ; fin() : ce qui lui arrive ensuite (caché, ou démonté) */
+  function versAccueil(v, fin) {
+    if (!v || prefs().calme || typeof v.hote.animate !== 'function') { fin(); return accueil(); }
+    const haut = scene.getBoundingClientRect().top;
+    scene.style.top = Math.round(haut) + 'px'; scene.classList.add('px-zoom-sortie'); v.hote.classList.add('px-sortant'); v.hote.hidden = false;
+    const r = accueil();
+    Promise.resolve(r).then(() => zoomIcone.fermer(v.hote, tuileDe(v.id))).then(() => {
+      v.hote.classList.remove('px-sortant');
+      if (!scene.querySelector('.px-sortant')) { scene.classList.remove('px-zoom-sortie'); scene.style.top = ''; }
+      if (courant !== v) fin();   // rouvert pendant qu'il se refermait : on le laisse
+    }).catch(() => { v.hote.classList.remove('px-sortant'); scene.classList.remove('px-zoom-sortie'); scene.style.top = ''; if (courant !== v) fin(); });
+    return r;
+  }
   const fractale = creerFractale({ W, racine, scene, vibrer, glyphe: (n) => G(n), calme: () => !!prefs().calme,
     actif: () => prefs().fractale !== false && prefs().bords !== false && !tri && !verifEnCours && !D.querySelector('.px-voile,.px-feuille,.px-tuto'),
     surVide: () => signaler('ouvre d\'abord un ploxion'), carte: (o) => ouvrirCarte(o),
@@ -787,7 +808,10 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     if (flottant && flottant.v === v) poserFlottant(null);   // le flottant revient en grand
     for (const x of vivants.values()) if (x !== v && !(flottant && flottant.v === x)) x.hote.hidden = true;
     if (cubeP && cubeP.ouvert() && cubeP.ouvert() !== v.id) fermerCube();   // ▣ le cube d'un autre ploxion (caché à l'instant) se referme
+    if (v.hote.__pxSortie) { try { v.hote.__pxSortie.cancel(); } catch (e) { /* */ } v.hote.__pxSortie = null; v.hote.classList.remove('px-sortant'); }   // 🔍 rouvert pendant qu'il se refermait
     v.hote.hidden = false; v.debut = Date.now(); v.vu = Date.now(); courant = v; majBords();
+    // 🔍 (0.99.48) ouvert d'un toucher sur son icône (il y a moins d'1,5 s) : il en sort, comme sur iOS
+    if (origine && origine.id === v.id && Date.now() - origine.t < 1500) { const r = origine.rect; origine = null; if (zoomIcone.ouvrir(v.hote, r)) v.hote.classList.add('px-sans-entree'); }
     racine.classList.toggle('px-plein-ploxion', pleins.has(v.id));
     if (surMontrer) { try { surMontrer(v.id); } catch (e) { /* */ } }   // ❄ (0.53) ses images reprennent (src/app/gel.js)
     accrochesDe(v.id, n => { if (n.hasAttribute('data-px-cache')) { n.style.display = n.getAttribute('data-px-cache'); n.removeAttribute('data-px-cache'); } });
@@ -848,12 +872,14 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
   /** « ‹ » : ferme le ploxion visible ; revient à celui d'où l'on venait (la pile), sinon à l'accueil */
   function retour() {
     vibrer('revenir');
+    const v = courant, prec = pile.some(id => vivants.has(id) && (!v || id !== v.id));
+    if (v && !prec) { compter(v); courant = null; pile = []; return versAccueil(v, () => tuer(v.id)); }   // 🔍 (0.99.48) vers l'accueil : dans son icône, puis démonté
     fermer();
     while (pile.length) { const id = pile.pop(); if (vivants.has(id)) { montrer(vivants.get(id)); return true; } }
     return accueil();
   }
   /** ▁ : le ploxion visible reste vivant, en arrière-plan ; l'accueil revient */
-  function minimiser() { vibrer('minimiser'); if (courant) { cacher(courant); courant = null; } pile = []; noterSession(); return accueil(); }
+  function minimiser() { vibrer('minimiser'); const v = courant; courant = null; pile = []; noterSession(); return versAccueil(v, () => cacher(v)); }   // 🔍 (0.99.48) dans son icône, il reste vivant
   /** ⧉ : la liste des ploxions vivants, pour passer de l'un à l'autre */
   function basculer() {
     if (miniDocks) return miniDocks.page();

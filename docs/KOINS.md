@@ -85,3 +85,40 @@ Ce que fait chaque glyphe, d'après les mots de la page. C'est **ma lecture, à 
 reliés. Chaque action de l'app est elle-même un knob. Ce qui existe pour le composer : jOSKnob (le bion du labo, embarqué), les gènes de
 l'atelier des peaux (`src/bions/genome.js`), les paliers figés du zoom (`src/bions/zoom.js`), les pads des koins (`src/app/pads.js`).
 💭 Spéculatif : un knob maître = une liste de knobs reliés avec un poids chacun.
+
+## Le koin qui s'ouvre, le xer dans la case (0.99.47, RS-7 12.11)
+
+**Voulu.** « Je veux pas trois tailles de koin, je veux une animation du koin qui s'agrandit et qui se transforme en koin ouvert pour avoir
+l'écran avec le portion et le wormion. » « Améliorer l'animation du portion et du wormion. » « Quand on est en mode koin, pas besoin d'avoir
+le nom de l'appli ploxi0n avec les sections organic, chill-tekk, xerboxion et xerbot : il faut qu'on puisse changer ça avec le truc xer. »
+« Le koin du ion, c'est un concept, mais il faut trouver l'utilité. »
+
+**Fait.**
+- **Une seule ouverture** (`src/app/koins.js`, `ETAPES = 2`) : un toucher, le triangle du coin grandit depuis son angle et s'efface pendant que
+  les cases se révèlent dans un triangle qui **s'ouvre en carré** (un clip-path à 4 points, réglé par `--k` de 0 à 1) ; la barre descend, le
+  voile monte. Glisser vers le haut : `--k` suit le doigt, lâcher après 40 % ouvre, avant referme. La fermeture rejoue l'animation à l'envers.
+- **Le wormion** tourne avec le doigt, chaque cercle à sa vitesse (le dehors lent, le cœur vite : un tunnel du temps), une onde à chaque cran,
+  retour en place au lâcher. **Le portion** : les carrés suivent le doigt en profondeur (un couloir de cadres, comme la page 2 du carnet),
+  ↑ les écarte (dézoomer, la map), ↓ les fait plonger. Au repos, les deux respirent (rien en mode calme).
+- **Le xer** : en mode koin, l'en-tête de l'accueil (le nom, les onglets des modes) s'efface ; la case ⊠ « ton xer » ouvre les quatre xers sur
+  place (organique, chill-tekk, xerboxion, xerbot), le courant en surbrillance ; en toucher un change l'accueil. Appui long : mes xers.
+- Corrigé en passant : les actions « mes xers » et « carte » étaient avalées par un commentaire dans `main.js` (la case xer et le toucher du
+  portion ne faisaient rien).
+
+**Le koin du ion : une proposition (💭, à trancher par RS-7).** Le wormion est le temps (ce qui a été), le portion la structure (la fractale,
+les types de réel). Il manque un troisième axe : **ici, maintenant**. Le trion serait le koin où tu es : ce qui vit en ce moment (les ploxions
+vivants), qui est autour (les voisins de Proche), où (Autour, la case), le tsoin en cours. Posé pour l'instant : la case dit « 3 vivants · 2
+voisins » ; un toucher ouvre toujours le hub du koin du ion (les dossiers ion, 3ion, seption, nexus, `src/terrax/koin-ion.js`). À décider :
+le trion devient-il un vrai panneau « ici » (un trackpad comme les deux autres ?), ou garde-t-il la balade entre les réels ?
+
+## 0.99.57 : le koin du chill-tekk du labo (RS-7 : « plutôt ça l'inspi »)
+
+Référence : `docs/look/references/koins-03-chill-tekk-labo.png`.
+- **La bande entre les koins** = la barre des glyphes, toujours là, fermée ou ouverte : `‹ › ⧗ ○ △ □ ◇ ✕ ⓘ ▁` (› = le ploxion suivant). Un
+  trapèze au trait : ses bouts suivent l'hypoténuse des deux koins. Dans un ploxion, elle tient lieu de sa barre (le ploxion s'arrête au-dessus)
+  et ◇ s'encadre : tu es dans un ploxion.
+- **Les koins restent dans leurs coins** (ils ne grandissent plus jusqu'à s'effacer) ; ce sont les cases qui sortent d'eux (le même clip-path
+  triangle → carré).
+- **Le koin ouvert** : quatre cases en tunnel (un cadre vif, un second dedans, des cadres qui s'enfoncent), un grand glyphe chacune, sans texte :
+  △ le trion (en haut à gauche), l'hypercube du xer (en haut à droite), ○ le wormion, □ le portion. Le nom et l'aide d'un trackpad
+  n'apparaissent que pendant le geste. En mode organique, les cases gardent leurs membranes.

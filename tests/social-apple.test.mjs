@@ -51,7 +51,7 @@ test('🎟 (0.84) l\'invitation : un lien du ploxion invite, un code collé ; le
 
 /** une fausse api.j0bot.ch : les Apple ID liés, les invitations, les comptes */
 function fausseApi() {
-  const lies = new Map([['sub-lea', { id: 'u-lea', username: 'lea' }]]), codes = new Set(['BON-CODE-1']), comptes = new Map([['tom', 'secret']]);
+  const lies = new Map([['sub-rs4', { id: 'u-rs4', username: 'rs4' }]]), codes = new Set(['BON-CODE-1']), comptes = new Map([['rs3', 'secret']]);
   const appels = [];
   const f = async (url, o = {}) => {
     const b = o.body ? JSON.parse(o.body) : {}; appels.push({ url: url.replace(API_SOCIAL, ''), methode: o.method, b, auth: (o.headers || {}).Authorization });
@@ -70,7 +70,7 @@ function fausseApi() {
   };
   return { f, appels, lies };
 }
-const feuille = (sub) => async () => ({ x: { identityToken: 'jwt.' + sub, givenName: 'Tom' }, brut: 'n0nce' });
+const feuille = (sub) => async () => ({ x: { identityToken: 'jwt.' + sub, givenName: 'RS-3' }, brut: 'n0nce' });
 
 test('🍏 (0.84) Apple ID nouveau : 403 → coller l\'invitation (sans remontrer la feuille) → le compte ; un mauvais code le dit', async () => {
   const p = await page({ avion: true, ploxions: [] });
@@ -78,7 +78,7 @@ test('🍏 (0.84) Apple ID nouveau : 403 → coller l\'invitation (sans remontre
     const W = p.w, D = W.document, hote = D.createElement('div'); D.body.appendChild(hote);
     hote.innerHTML = '<div id="so-f-login"><input id="so-login"><input id="so-pass" type="password"></div>';
     const api = fausseApi(); let feuilles = 0, remontes = 0, oublis = 0;
-    ajouterBouton({ W, hote, jetonApple: async () => { feuilles++; return feuille('sub-tom')(); }, fetch: api.f, remonter: () => remontes++, oublier: () => { oublis++; } });
+    ajouterBouton({ W, hote, jetonApple: async () => { feuilles++; return feuille('sub-rs3')(); }, fetch: api.f, remonter: () => remontes++, oublier: () => { oublis++; } });
     const plus = hote.querySelector('[data-so-apple-plus]'), msg = hote.querySelector('[data-so-apple-msg]');
     assert.equal(plus.hidden, true);
     hote.querySelector('[data-so-apple]').click(); await attendre(20);
@@ -106,21 +106,21 @@ test('🍏 (0.84) l\'invitation gardée (le lien a ouvert l\'app) part toute seu
     // déjà lié : la même porte, le code ne sert pas (et n'est pas oublié)
     const h2 = D.createElement('div'); h2.innerHTML = '<div id="so-f-login"></div>'; D.body.appendChild(h2);
     let oublis2 = 0;
-    ajouterBouton({ W, hote: h2, jetonApple: feuille('sub-lea'), fetch: api.f, invitation: async () => 'X-CODE-9', oublier: () => { oublis2++; } });
+    ajouterBouton({ W, hote: h2, jetonApple: feuille('sub-rs4'), fetch: api.f, invitation: async () => 'X-CODE-9', oublier: () => { oublis2++; } });
     h2.querySelector('[data-so-apple]').click(); await attendre(20);
-    assert.equal(W.localStorage.getItem('jos_social_token'), 'tok-lea'); assert.equal(oublis2, 0);
+    assert.equal(W.localStorage.getItem('jos_social_token'), 'tok-rs4'); assert.equal(oublis2, 0);
   } finally { p.fin(); }
 });
 
 test('🍏 (0.84) « j\'ai déjà un compte » : identifiant et mot de passe de l\'écran du social → l\'Apple ID lié ; la prochaine fois, Apple suffit', async () => {
   const api = fausseApi();
-  await assert.rejects(lierSocialApple({ jetonApple: feuille('sub-tom'), fetch: api.f, login: 'tom', password: '' }), /remplis/);
-  await assert.rejects(lierSocialApple({ jetonApple: feuille('sub-tom'), fetch: api.f, login: 'tom', password: 'faux' }), /mot de passe faux/);
-  assert.deepEqual(await lierSocialApple({ jetonApple: feuille('sub-tom'), fetch: api.f, login: 'tom', password: 'secret' }), { token: 'tok-tom', user: { username: 'tom' } });
-  assert.equal(api.appels.at(-1).auth, 'Bearer tok-tom');
-  const s = await connecterSocialApple({ jetonApple: feuille('sub-tom'), fetch: api.f });
-  assert.equal(s.token, 'tok-tom');
-  await assert.rejects(lierSocialApple({ jetonApple: feuille('sub-lea'), fetch: api.f, login: 'tom', password: 'secret' }), /déjà lié/);
+  await assert.rejects(lierSocialApple({ jetonApple: feuille('sub-rs3'), fetch: api.f, login: 'rs3', password: '' }), /remplis/);
+  await assert.rejects(lierSocialApple({ jetonApple: feuille('sub-rs3'), fetch: api.f, login: 'rs3', password: 'faux' }), /mot de passe faux/);
+  assert.deepEqual(await lierSocialApple({ jetonApple: feuille('sub-rs3'), fetch: api.f, login: 'rs3', password: 'secret' }), { token: 'tok-rs3', user: { username: 'rs3' } });
+  assert.equal(api.appels.at(-1).auth, 'Bearer tok-rs3');
+  const s = await connecterSocialApple({ jetonApple: feuille('sub-rs3'), fetch: api.f });
+  assert.equal(s.token, 'tok-rs3');
+  await assert.rejects(lierSocialApple({ jetonApple: feuille('sub-rs4'), fetch: api.f, login: 'rs3', password: 'secret' }), /déjà lié/);
 });
 
 test('🗑 (0.84) supprimer le compte du social : DELETE /me confirmé, la session part ; expirée → le dire', async () => {
@@ -132,8 +132,8 @@ test('🗑 (0.84) supprimer le compte du social : DELETE /me confirmé, la sessi
     await assert.rejects(supprimerCompteSocial({ W, fetch: api.f }), /pas de compte/);
     W.localStorage.setItem('jos_social_token', 'tok-vieux');
     await assert.rejects(supprimerCompteSocial({ W, fetch: api.f }), /expiré/);
-    W.localStorage.setItem('jos_social_token', 'tok-ok'); W.localStorage.setItem('jos_social_user', JSON.stringify({ username: 'tom' }));
-    assert.equal(sessionSocial(W).user.username, 'tom');
+    W.localStorage.setItem('jos_social_token', 'tok-ok'); W.localStorage.setItem('jos_social_user', JSON.stringify({ username: 'rs3' }));
+    assert.equal(sessionSocial(W).user.username, 'rs3');
     assert.equal(await supprimerCompteSocial({ W, fetch: api.f }), true);
     assert.equal(W.localStorage.getItem('jos_social_token'), null); assert.equal(sessionSocial(W), null);
   } finally { p.fin(); }

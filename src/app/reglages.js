@@ -143,6 +143,10 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
           + '<div class="l"><span>◈ L\'atelier des peaux<small>la fractale des UI : zoome dans les peaux, tourne les knobs, trouve la tienne</small></span><button data-a="atelier">ouvrir</button></div>'
           + bascule('data-pb="grain"', P.grain, 'Patine', 'le grain usé des plaques')
           + bascule('data-pb="contraste"', P.contraste === 'fort', 'Contraste fort', 'textes et bords plus clairs')
+          + (W.ploxi0nRegard && W.ploxi0nRegard.dispo ? seg('regard', [['non', 'non'], ['tete', 'tête'], ['regard', 'regard']], P.regard || 'non', '👁 Piloter de la tête', 'la caméra de Face ID suit ta tête (ou ton regard) : un point sur l\'écran ; le fixer ou cligner longtemps = toucher. En mode regard, un coup de tête change de ploxion, secouer minimise. Aucune image gardée.') : '')   // (0.99.49) sans PloxiRegard (Android, le navigateur) : pas de réglage
+          + ((P.regard || 'non') !== 'non' ? '<div class="l"><span>👁 Le pointeur<small>recentrer : regarde le milieu de l\'écran, puis touche ; calibrer : suis les points du regard</small></span><span><button data-a="regard-recentrer">recentrer</button>' + (P.regard === 'regard' ? '<button data-a="regard-calibrer">calibrer</button>' : '') + '</span></div>'
+            + bascule('data-pb="regardInverse"', !!P.regardInverse, '⇄ Inverser gauche et droite', 'si le point part du mauvais côté quand tu tournes la tête') : '')
+          + seg('cibles', [['auto', 'auto'], ['oui', 'oui'], ['non', 'non']], P.cibles || 'auto', '♿ Grandes cibles', 'chaque bouton fait au moins 44 points : pour viser du regard, de la tête, au contrôle de sélection (Réglages iOS › Accessibilité) ; auto : quand une de ces aides tourne')
           + bascule('data-pb="calme"', P.calme, 'Calme', 'plus aucune animation, même aux gestes')
           + bascule('data-pb="plaque"', P.plaque, 'Plaque gravée', '« cycle 7026 · … » sur l\'accueil') + '</div>') : '')
         + (haptique ? (() => { const hc = haptique.config(), noms = Object.keys(hc.motifs);
@@ -336,6 +340,8 @@ export function enregistrerReglages({ W = globalThis.window, compte, social = nu
         else if (a === 'barre-haut') { if (W.ploxi0nBarreHaut) W.ploxi0nBarreHaut.composer(); }
         else if (a === 'tuto') { if (W.ploxi0nTuto) W.ploxi0nTuto.montrer(); }
         else if (a === 'atelier') { R().ouvrir('atelier-peaux'); }
+        else if (a === 'regard-recentrer') { if (W.ploxi0nRegard) W.ploxi0nRegard.recentrer(); }
+        else if (a === 'regard-calibrer') { if (W.ploxi0nRegard) await W.ploxi0nRegard.calibrer(); }
         else if (a === 'quoi') { if (W.ploxi0nTuto && W.ploxi0nTuto.cestQuoi) W.ploxi0nTuto.cestQuoi(); }
         else if (a === 'astuces') { if (W.ploxi0nTuto && W.ploxi0nTuto.remettreAstuces) { await W.ploxi0nTuto.remettreAstuces(); b.textContent = 'c\'est fait'; } }
         else if (a === 'widgets') { if (W.ploxi0nWidgets) { await W.ploxi0nWidgets.publier(); await new Promise(r => W.setTimeout(r, 700)); } await peindre(); msg('✓ republié : regarde tes widgets (iOS peut prendre quelques secondes)'); }

@@ -37,5 +37,5 @@ export function creerWidgetsPloxions({ boxion, ecrire = async () => {}, glyphePn
     return { ...px[ident] };
   }
   async function retirer(id) { await pret; delete px[id]; await boxion.put('reglages', 'px-widgets', px).catch(() => {}); planifier(); }
-  return { pret, publier, retirer, doc, rafraichir: () => { pret.then(planifier); }, tous: () => ({ ...px }) };
+  return { pret, publier, retirer, doc, ecrireBrut: (k, v) => { ecrire(k, v).catch(() => {}); }, rafraichir: () => { pret.then(planifier); }, tous: () => ({ ...px }) };
 }

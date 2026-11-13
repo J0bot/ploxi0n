@@ -19,6 +19,7 @@ on:
       vlc: { description: "construire avec le lecteur VLC (MKV, DTS, sous-titres ; le lecteur intégré, en repli d'Apple)", type: boolean, default: false }
       carplay: { description: "construire avec CarPlay (les potes et les ambiances sur l'écran de la voiture) : il faut d'abord l'autorisation CarPlay d'Apple (docs/CARPLAY.md)", type: boolean, default: false }
       ble: { description: "construire avec le maillage en Bluetooth basse consommation (Proche comme bitchat, aussi en arrière-plan)", type: boolean, default: false }
+      notifs: { description: "construire avec les notifications riches (l'avatar d'une personne, le glyphe d'un ploxion : extension PloxionNotifs, ch.j0bot.ploxi0n.notifs)", type: boolean, default: false }
       widgets: { description: "construire avec les widgets (extension PloxionWidgets ; ch.j0bot.ploxi0n.widgets doit avoir le groupe group.ch.j0bot.ploxi0n)", type: boolean, default: false }
 concurrency:
   # seul un VRAI build annule le précédent : un push sans « [build] » (jobs sautés) a son propre groupe et ne coupe rien (13.10 : un tel
@@ -77,6 +78,8 @@ jobs:
           MATCH_FORCE: ${{ inputs.regenerer_profil }}
           # les widgets : l'entrée du lancement manuel, ou la variable du dépôt PLOXI0N_WIDGETS=1 (Settings › Variables) pour chaque push
           PLOXI0N_WIDGETS: ${{ (inputs.widgets || contains(github.event.head_commit.message, '[widgets]')) && '1' || vars.PLOXI0N_WIDGETS }}
+          # (0.99.45) les notifications riches : l'entrée du lancement manuel, « [notifs] » dans le message, ou la variable du dépôt PLOXI0N_NOTIFS=1
+          PLOXI0N_NOTIFS: ${{ (inputs.notifs || contains(github.event.head_commit.message, '[notifs]')) && '1' || vars.PLOXI0N_NOTIFS }}
           # le lecteur VLC : l'entrée du lancement manuel, ou la variable du dépôt PLOXI0N_VLC=1
           PLOXI0N_VLC: ${{ inputs.vlc && '1' || vars.PLOXI0N_VLC }}
           # (0.99.24) le maillage BLE : l'entrée du lancement manuel, ou la variable du dépôt PLOXI0N_BLE=1

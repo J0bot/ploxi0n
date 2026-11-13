@@ -29,7 +29,7 @@ test('ondes : lissage, tri du plus proche, les ploxis reconnus, l\'oubli après 
   const vus = []; O.sur(v => vus.push(v.id));
   await O.scanner(); assert.deepEqual(p.appels[0], ['scanner', { doublons: true }]);
   p.ecoutes.appareil({ id: 'a', nom: 'montre', rssi: -70, fabricant: '4c00' });
-  p.ecoutes.appareil({ id: 'b', nom: 'ploxi de Tom', rssi: -50, services: [SERVICE_XB.toLowerCase()] });
+  p.ecoutes.appareil({ id: 'b', nom: 'ploxi de RS-3', rssi: -50, services: [SERVICE_XB.toLowerCase()] });
   p.ecoutes.appareil({ id: 'a', rssi: -60 });
   const l = O.appareils();
   assert.equal(l[0].id, 'b'); assert.equal(l[0].ploxi, true); assert.equal(l[1].fabricant, 'Apple');

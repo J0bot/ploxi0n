@@ -4,29 +4,28 @@
  "base": [
   "bother",
   "xp",
-  "clickion"
+  "clickion",
+  "coord"
  ],
  "ploxions": [
   {
    "id": "bother",
    "nom": "Bother me",
    "icone": "🗯",
-   "hash": "d25fac50ff216c422cd382f7f5442f6a0d95088c8f15e596bf4b276c18e327ac",
+   "hash": "025910260b5ba9e376c1dbc6ca3b170835fdc2abd63cc40e66d0674f78dbf9fa",
    "deps": [],
    "bions": [
     "jOSGpg",
     "jOSBug"
    ],
-   "octets": 16118
+   "octets": 20248
   },
   {
    "id": "pomodoro",
    "nom": "Pomodoro",
    "icone": "🍅",
    "hash": "c77332a2c78938795d33f220dbe9ada04c5a657af650b4ecfde045cbac5d882b",
-   "deps": [
-    "minuteur"
-   ],
+   "deps": [],
    "bions": [],
    "octets": 1017
   },
@@ -70,10 +69,27 @@
    "id": "recits",
    "nom": "Récits",
    "icone": "📖",
-   "hash": "ca419da6673faf2aa0e6da5f07af1817f5c62b4d6f9426305e91fe5726c69b68",
+   "hash": "499f199cfd58dda5dc32b498dbfb9e19d4bed4ecdad0d0a6563ee88d0ff1cc50",
    "deps": [],
    "bions": [],
-   "octets": 12864
+   "octets": 12737
+  },
+  {
+   "id": "coord",
+   "nom": "Coord",
+   "icone": "📡",
+   "hash": "e95b59f79e035a3f76a9fbaacba36999102a2ad5ec54ded56be496db330bf7b3",
+   "deps": [],
+   "bions": [
+    "jOSStore",
+    "jOSFiles",
+    "jOSPartage",
+    "jOSShare",
+    "jOSSession",
+    "jOSCapturesXion",
+    "jOSXion"
+   ],
+   "octets": 101274
   },
   {
    "id": "minuteur",

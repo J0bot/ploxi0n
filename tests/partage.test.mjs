@@ -64,9 +64,9 @@ test('✉ l\'invitation du social : sans compte, avec, expirée', async () => {
   const requete = async (o) => { appels.push(o); return o.entetes.Authorization === 'Bearer bon' ? { status: 201, json: { code: 'C0DE42' } } : { status: 401, json: {} }; };
   await assert.rejects(creerInvitation({ W, requete }), (e) => e.connexion === true);
   store.set('jos_social_token', 'bon');
-  const i = await creerInvitation({ W, requete, label: 'Léa' });
+  const i = await creerInvitation({ W, requete, label: 'RS-4' });
   assert.deepEqual(i, { code: 'C0DE42', lien: 'https://labo.j0bot.ch/px/invite?code=C0DE42' });
-  assert.equal(appels[0].url, 'https://api.j0bot.ch/api/v1/invites'); assert.deepEqual(appels[0].corps, { label: 'Léa' });
+  assert.equal(appels[0].url, 'https://api.j0bot.ch/api/v1/invites'); assert.deepEqual(appels[0].corps, { label: 'RS-4' });
   store.set('jos_social_token', 'vieux');
   await assert.rejects(creerInvitation({ W, requete }), (e) => e.connexion === true && /expiré/.test(e.message));
 });

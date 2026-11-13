@@ -613,6 +613,50 @@ struct ControlePloxi0n: ControlWidget {
     }
 }
 
+// 🎛 (0.99.43, RS-7 : « des boutons que je peux presser comme le wifi ou le bluetooth ») Proche, la balade, les toilettes. L'état (allumé, en
+// balade) vient de l'app : « ploxi0n.controles » dans l'App Group, rechargé par ControlCenter quand il change. Un bouton (pas un interrupteur) :
+// allumer Proche ou lancer une balade demande l'app à l'écran (le maillage tourne dans l'app ; une Live Activity ne se lance qu'app ouverte).
+@available(iOS 18.0, *)
+struct EtatControle: ControlValueProvider {
+    let cle: String
+    var previewValue: Bool { false }
+    func currentValue() async throws -> Bool { ((lireJSON("ploxi0n.controles") as? [String: Any])?[cle] as? Bool) ?? false }
+}
+@available(iOS 18.0, *)
+struct ControleProche: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "ch.j0bot.ploxi0n.controle.proche", provider: EtatControle(cle: "proche")) { allume in
+            ControlWidgetButton(action: OpenURLIntent(URL(string: "ploxi0n://proche")!)) {
+                Label(allume ? "Proche · allumé" : "Proche · éteint", systemImage: allume ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash")
+            }
+        }
+        .displayName("Proche")
+        .description("Le maillage sans réseau : l'allumer, l'éteindre.")
+    }
+}
+@available(iOS 18.0, *)
+struct ControleBalade: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "ch.j0bot.ploxi0n.controle.balade", provider: EtatControle(cle: "balade")) { enCours in
+            ControlWidgetButton(action: OpenURLIntent(URL(string: "ploxi0n://balade")!)) {
+                Label(enCours ? "Finir la balade" : "Balade", systemImage: enCours ? "flag.checkered" : "figure.walk")
+            }
+        }
+        .displayName("Balade")
+        .description("Le chrono, la distance et ta cible sur l'écran verrouillé (mappion).")
+    }
+}
+@available(iOS 18.0, *)
+struct ControleToilettes: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "ch.j0bot.ploxi0n.controle.toilettes") {
+            ControlWidgetButton(action: OpenURLIntent(URL(string: "ploxi0n://toilettes")!)) { Label("Toilettes", systemImage: "toilet") }
+        }
+        .displayName("Toilettes")
+        .description("Les plus proches, guidées depuis l'écran verrouillé.")
+    }
+}
+
 // ---- 🏝 LES LIVE ACTIVITIES (0.91) : écran verrouillé et Dynamic Island. L'app les lance (PloxiApple.activiteDebut, AppDelegate.swift) ;
 // le MÊME type que dans l'app, au caractère près (ActivityKit les apparie par leur nom).
 struct PloxiActivite: ActivityAttributes {
@@ -623,8 +667,14 @@ struct PloxiActivite: ActivityAttributes {
         var debut: Date?            // un chrono qui monte depuis
         var fin: Date?              // un compte à rebours jusqu'à
         var progression: Double?    // 0…1
+        // 🏝 (0.99.43) la balade (PloxiVeille : mappion, Autour, la boussole des potes) ; absents = nil (les anciennes activités se lisent toujours)
+        var metres: Double? = nil   // la distance parcourue
+        var cible: String? = nil    // vers quoi : des toilettes, Tom, le rendez-vous
+        var cibleM: Double? = nil   // à combien de mètres
+        var cibleCap: Double? = nil // dans quelle direction, en degrés depuis le nord
+        var compte: Int? = nil      // un nombre à montrer dans la Dynamic Island (Proche : les voisins)
     }
-    var genre: String               // tsoin, vocal, minuteur, ploxion
+    var genre: String               // tsoin, vocal, minuteur, ploxion, balade
     var ploxion: String             // le toucher ouvre ploxi0n://px/<ploxion>
 }
 
@@ -636,6 +686,34 @@ struct TempsActivite: View {
         if let f = e.fin { Text(f, style: .timer).font(.system(size: taille, weight: .thin, design: .monospaced)).monospacedDigit().multilineTextAlignment(.trailing) }
         else if let d = e.debut { Text(d, style: .timer).font(.system(size: taille, weight: .thin, design: .monospaced)).monospacedDigit().multilineTextAlignment(.trailing) }
         else { EmptyView() }
+    }
+}
+
+// 🏝 (0.99.43) la balade : la cible, sa distance, sa direction. La flèche est « nord en haut » (comme une carte) + le point cardinal écrit :
+// l'écran verrouillé ne sait pas où le téléphone regarde, une flèche « relative à toi » mentirait.
+func texteMetres(_ m: Double) -> String { m < 1000 ? "\(Int(m.rounded())) m" : String(format: "%.1f km", m / 1000) }
+func pointCardinal(_ c: Double) -> String {
+    let n = ["N", "NE", "E", "SE", "S", "SO", "O", "NO"]
+    let i = Int(((c.truncatingRemainder(dividingBy: 360) + 360 + 22.5).truncatingRemainder(dividingBy: 360)) / 45)
+    return n[min(7, max(0, i))]
+}
+struct FlecheCible: View {
+    let cap: Double
+    var taille: CGFloat = 16
+    var body: some View { Image(systemName: "location.north.fill").font(.system(size: taille, weight: .regular)).rotationEffect(.degrees(cap)) }
+}
+struct LigneCible: View {
+    let e: PloxiActivite.ContentState
+    var body: some View {
+        if let nom = e.cible {
+            HStack(spacing: 8) {
+                if let c = e.cibleCap { FlecheCible(cap: c).foregroundColor(PEAU.acc) }
+                Text(nom).font(.system(size: 13, weight: .medium)).foregroundColor(PEAU.trait).lineLimit(1)
+                Spacer(minLength: 4)
+                if let m = e.cibleM { Text(texteMetres(m)).font(.system(size: 15, weight: .light, design: .monospaced)).foregroundColor(PEAU.trait) }
+                if let c = e.cibleCap { Text(pointCardinal(c)).font(.system(size: 11, weight: .semibold, design: .monospaced)).foregroundColor(PEAU.muet) }
+            }
+        }
     }
 }
 
@@ -655,6 +733,7 @@ struct VueActivite: View {
                 TempsActivite(e: e).foregroundColor(PEAU.trait).frame(maxWidth: 120, alignment: .trailing)
             }
             if let p = e.progression { ProgressView(value: p).tint(PEAU.acc) }
+            LigneCible(e: e)
         }
         .padding(14)
         .activityBackgroundTint(PEAU.fond0.opacity(0.92))
@@ -682,14 +761,18 @@ struct ActivitePloxi0n: Widget {
                     VStack(spacing: 6) {
                         if !ctx.state.sous.isEmpty { Text(ctx.state.sous).font(.system(size: 12)).foregroundColor(PEAU.muet).lineLimit(1) }
                         if let p = ctx.state.progression { ProgressView(value: p).tint(PEAU.acc) }
+                        LigneCible(e: ctx.state)
                     }
                 }
             } compactLeading: {
                 Image(systemName: ctx.state.glyphe).foregroundColor(PEAU.acc)
             } compactTrailing: {
-                TempsActivite(e: ctx.state, taille: 13).foregroundColor(PEAU.trait).frame(maxWidth: 52)
+                if let m = ctx.state.cibleM { Text(texteMetres(m)).font(.system(size: 13, design: .monospaced)).foregroundColor(PEAU.trait).frame(maxWidth: 60) }
+                else if let n = ctx.state.compte { HStack(spacing: 3) { Image(systemName: "person.2.fill").font(.system(size: 10)); Text("\(n)").font(.system(size: 13, design: .monospaced)) }.foregroundColor(PEAU.trait).frame(maxWidth: 52) }
+                else { TempsActivite(e: ctx.state, taille: 13).foregroundColor(PEAU.trait).frame(maxWidth: 52) }
             } minimal: {
-                Image(systemName: ctx.state.glyphe).foregroundColor(PEAU.acc)
+                if let c = ctx.state.cibleCap { FlecheCible(cap: c, taille: 13).foregroundColor(PEAU.acc) }
+                else { Image(systemName: ctx.state.glyphe).foregroundColor(PEAU.acc) }
             }
             .widgetURL(URL(string: "ploxi0n://px/\(ctx.attributes.ploxion)"))
         }
@@ -809,6 +892,9 @@ struct PloxionWidgets: WidgetBundle {
             ControleVocal()
             ControleLampe()
             ControlePloxi0n()
+            ControleProche()
+            ControleBalade()
+            ControleToilettes()
         }
     }
 }

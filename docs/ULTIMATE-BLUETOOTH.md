@@ -49,7 +49,7 @@
   ordonnanceur Web Audio à 250 ms d'avance, une scie + une sous-octave, un filtre qui claque) ; ▷ héberger un son (https seulement), pause
   pour tous, le rejoindre (chacun sa copie, recalée au-delà de 80 ms). L'hôte réannonce toutes les 3 s (les retardataires) ; ping toutes les 4 s.
 - Ne pas nuire : rien n'est annoncé avant « démarrer », rien ne joue chez quelqu'un sans son « rejoindre », textes échappés, https seulement.
-- Tests : `tests/proche.test.mjs` (deux téléphones simulés, 5 s d'écart d'horloge). Faux iPhone : `parcours-proche.mjs` (un voisin « Tom »
+- Tests : `tests/proche.test.mjs` (deux téléphones simulés, 5 s d'écart d'horloge). Faux iPhone : `parcours-proche.mjs` (un voisin « RS-3 »
   simulé dans `faux-iphone.mjs`, 3 s d'avance : il répond aux pings et aux messages, puis héberge une basse).
 - Au passage : le filtre « sans emoji » de l'app (`src/app/sans-emoji.js`) effaçait les signes « pictographiques » (♡ ♫ ▶ ◼ ✉ ❄) des
   ploxions internes ; `[data-ecrit]` garde ce que les gens s'écrivent, et l'interface utilise des signes qui passent (∿ ▷ ■ ✻).
@@ -108,8 +108,8 @@ Les anciennes Proche (0.99.1 à 0.99.20, un seul saut) sont encore lues.
 - **Avec connexion** : la **carte** sous le radar (les tuiles sombres de CARTO, OpenStreetMap), à la même échelle, qui tourne avec lui ;
   « à pied (Plans) » vers le pote.
 - `src/bions/potes.js` (pur : `relatif`, `echelle`, `aiguille`, `tourner`, `fraicheur`, les tuiles web mercator `tuile`, `zoomPour`,
-  `tuilesAutour`), tests/potes.test.mjs ; le faux iPhone fait tourner le **vrai** maillage pour Tom (voisin direct) et Léa (deux sauts,
-  relayée par Tom), avec de vraies clés : `parcours-potes.mjs` (le radar, la boussole quand on regarde l'est, devant en haut, partager
+  `tuilesAutour`), tests/potes.test.mjs ; le faux iPhone fait tourner le **vrai** maillage pour RS-3 (voisin direct) et RS-4 (deux sauts,
+  relayé par RS-3), avec de vraies clés : `parcours-potes.mjs` (le radar, la boussole quand on regarde l'est, devant en haut, partager
   chiffré, le code de sécurité).
 
 **Ce que bitchat fait et qu'on ne fait pas encore** : le Bluetooth Low Energy en arrière-plan (bitchat annonce et relaie même l'app
