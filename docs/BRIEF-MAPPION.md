@@ -74,6 +74,18 @@ là où je vais, et de la vitesse. »
   être calculées à la volée ou gardées à part ; ne pas réécrire l'historique.
 - **Composer, ne pas rebâtir** : jOSCarte (la carte, le géocodage), jOSZone, jOSVeille (la veille en arrière-plan de l'iPhone), jOSPresence
   (les amis). Si la grille de chaleur sert ailleurs (le terrax, Autour), en faire un bion (`jOSChaleur` ?) plutôt que du code dans mappion.
+- **La carte de chaleur doit être un bion commun, pas du code de mappion** (RS-7, 13.11 : « et aussi à Proche, bien sûr »). Elle servira à
+  mappion, au terrax, à Autour, et à **Proche** dans ploxi0n (`src/lot/proche.js`, la page potes et la carte du maillage) :
+  - **où le groupe passe du temps** pendant une soirée : les positions que les potes ✦ partagent déjà (chiffrées, gardées en mémoire par
+    Proche, jamais plus longtemps qu'aujourd'hui) agrégées en chaleur, pour voir où tout le monde se retrouve ;
+  - **la couverture du maillage** : là où tu as eu des voisins Bluetooth (combien, à quelle distance en sauts), pour savoir où le maillage
+    tient et où il faut un relais (un Pi, un ESP32, docs/protocole/MAILLE-v1.md) ;
+  - la vitesse pour les potes : qui marche, qui roule, sans afficher les trajets exacts.
+  Proposition de contrat, pour que ploxi0n le compose sans rien réécrire : `jOSChaleur.creer({ carte, mode: 'temps' | 'vitesse' | 'densite',
+  case: (zoom) → mètres })` → `{ ajouter(points: [{ lat, lng, t, poids?, vitesse? }]), vider(), mode(m), zones({ rayon, min }) → [{ lat, lng,
+  rayon, s, visites, heures }], detruire() }` ; pur côté calcul (les zones, l'agrégation testables sans carte), le dessin sur un canvas posé
+  sur n'importe quelle carte (Leaflet du labo, les tuiles de Proche, le radar). Le servir seul par `/px/bion-app/jOSChaleur.js`, comme
+  jOSKnob et jOSSwipe, pour que ploxi0n l'embarque.
 - **La position reste sur le téléphone** (comme aujourd'hui) ; les amis ne voient que ce qu'ils voient déjà.
 - Dans ploxi0n, `window.jOSVeille.balade` existe (0.99.43) : mappion peut lancer la Live Activity d'une balade (le chrono, la distance, une
   cible) sur l'écran verrouillé. Optionnel, mais c'est l'activité que RS-7 voulait pour mappion (docs/MAPION.md de ploxi0n).
