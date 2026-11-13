@@ -4,6 +4,7 @@
 // et ceux de l'interface dessinés dans la même grammaire (cercle = ion, triangle = koin, carré = portion, pointillé = l'intérieur).
 // Un ploxion : son glyphe par son nom (un dictionnaire de mots) ; sinon un glyphe GÉNÉRÉ, stable, tiré de son id : une forme du xerboxion
 // (ion, koin, portion, losange, hexagone) et une marque intérieure (point, pointillé, croix, trait, trois points).
+import { glypheSeed, glypheEmoji } from '../bions/glyphe-seed.js';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const P = (d) => '<path d="' + d + '"/>';
 const C = (x, y, r, plein) => '<circle cx="' + x + '" cy="' + y + '" r="' + r + '"' + (plein ? ' class="f"' : '') + '/>';
@@ -119,7 +120,7 @@ export function glyphe(nom, cls = '') {
 export function versGlyphe(x, cls = '') {
   const s = String(x == null ? '' : x).trim();
   if (GLYPHES[s] || DEPUIS_EMOJI[s] || DEPUIS_EMOJI[s.replace(/\uFE0F/g, '')]) return glyphe(DEPUIS_EMOJI[s.replace(/\uFE0F/g, '')] || s, cls);
-  if (/\p{Extended_Pictographic}/u.test(s)) return glyphe('ion', cls);   // un emoji inconnu : le point du xerboxion, jamais l'emoji
+  if (/\p{Extended_Pictographic}/u.test(s)) return glypheEmoji(s, { cls });   // un emoji inconnu : son glyphe à graine (0.99.56), jamais l'emoji
   return '<span class="px-g-t">' + esc(s) + '</span>';
 }
 
@@ -150,9 +151,6 @@ const MOTS = [
 ];
 const INTERNES = { trackpad: 'haptique', cape: 'cape', sante: 'coeur', marketplace: 'marche', banc: 'flacon', 'xer-en-ligne': 'globe', 'journal-tsoins': 'tsoin', gestion: 'boite',
   'reglages-app': 'reglages', bother: 'bulle', portion: 'portion' };
-const FORMES = [C(50, 50, 36), POLY('50,12 88,80 12,80'), R(16, 16, 68, 68, 4), POLY('50,10 90,50 50,90 10,50'), POLY('50,12 83,31 83,69 50,88 17,69 17,31')];
-const MARQUES = [C(50, 52, 7, 1), '<circle cx="50" cy="52" r="18" class="p"/>', L(38, 40, 62, 64) + L(62, 40, 38, 64), L(30, 52, 70, 52), C(36, 54, 4, 1) + C(50, 54, 4, 1) + C(64, 54, 4, 1), R(42, 44, 16, 16, 0, 1)];
-const hache = (s) => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return h; };
 /** le nom du glyphe d'un ploxion par ses mots (id, nom, catégorie), ou null */
 export function nomGlyphe(p) {
   if (!p) return null; if (INTERNES[p.id]) return INTERNES[p.id];
@@ -160,9 +158,8 @@ export function nomGlyphe(p) {
   for (const [re, n] of MOTS) if (re.test(t)) return n;
   return null;
 }
-/** le glyphe d'un ploxion (SVG inline) : connu par ses mots, sinon généré de son id (forme × marque, stable) */
+/** le glyphe d'un ploxion (SVG inline) : connu par ses mots, sinon tiré de son id (src/bions/glyphe-seed.js, stable) */
 export function glyphePloxion(p, cls = '') {
   const n = nomGlyphe(p); if (n) return glyphe(n, cls);
-  const h = hache(p && p.id);
-  return '<svg class="px-g' + (cls ? ' ' + cls : '') + '" viewBox="0 0 100 100" aria-hidden="true" focusable="false">' + FORMES[h % FORMES.length] + MARQUES[(h >>> 5) % MARQUES.length] + '</svg>';
+  return glypheSeed((p && p.id) || '', { cls });   // ◇ (0.99.56) le bion commun : la même graine, le même glyphe, ici et au labo
 }

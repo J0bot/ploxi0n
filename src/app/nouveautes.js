@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.56', titre: 'Plus aucun emoji', points: [
+    '◇ Un emoji qu\'on ne connaît pas ne disparaît plus : il devient un glyphe du xerboxion, tiré de lui, toujours le même (une forme, un cœur, une couleur de xerkion).',
+    '◇ Dans tous les ploxions maintenant, ceux du labo aussi. Ce que tu écris et ce qu\'on t\'envoie garde ses signes.',
+    '◇ Un ploxion sans glyphe à lui reçoit le sien de la même façon, ici comme au labo.',
+  ] },
   { v: '0.99.55', titre: 'Les koins partout', points: [
     '▭ En mode koin, la barre d\'un ploxion descend en bas, entre les deux koins : retour, son nom encadré, minimiser. Plus rien en haut, tout au pouce.',
     '▭ Sur l\'accueil, la même bande dit le xer où tu es ; un toucher ouvre le koin sur les xers.',

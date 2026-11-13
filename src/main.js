@@ -118,7 +118,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.55';
+const VERSION = '0.99.56';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -726,7 +726,8 @@ async function demarrer() {
     }
     try { routeur.endormirCaches(); } catch (er) { /* */ }
   }, true);
-  installerSansEmoji({ interne: (id) => !!(routeur.catalogue().find(p => p.id === id) || {}).interne, actif: () => prefs.lire().glyphes !== false });
+  // ◇ (0.99.56, RS-7 via xerxion1 : « plus aucun emoji ») : tous les ploxions, ceux du labo aussi ; ce que les gens écrivent ([data-ecrit], les champs) garde ses signes
+  installerSansEmoji({ interne: () => true, actif: () => prefs.lire().glyphes !== false });
   // ⟡ (0.99.14) la langue de l'app : ⚙ › Apparence › Langue, ou celle de l'iPhone ; les néologismes restent (src/bions/dire.js)
   // ⊕ (0.99.19, RS-7 : « l'entièreté du truc est trop petite ») la taille de tout. ⚙ › Apparence › Taille de tout.
   // (0.99.26, RS-7 27.10 : « aucune action avec le bord droit ne fonctionne, les menus se perdent ») le zoom de page de WebKit (pageZoom ×1,15,
