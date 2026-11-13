@@ -1,4 +1,4 @@
-// ≋◉ (0.99.10) jouer à plusieurs : Proche démarré (Tom, le voisin simulé), le synthé partagé dans Proche, un preset → le son repart ;
+// ≋◉ (0.99.10) jouer à plusieurs : Proche démarré (RS-3, le voisin simulé), le synthé partagé dans Proche, un preset → le son repart ;
 // et pencher l'iPhone (une inclinaison simulée) tourne deux knobs
 export default async function ({ page, ecrire, procheEnvoyes, emettre }) {
   await page.waitForSelector('[data-nv]', { timeout: 4000 }).then(() => page.evaluate(() => document.querySelector('[data-nv]').click())).catch(() => {});

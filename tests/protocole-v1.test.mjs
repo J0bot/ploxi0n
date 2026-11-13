@@ -25,7 +25,7 @@ test('🌐 d\'après la spec seule : l\'identité, l\'empreinte, l\'annonce', as
     assert.equal(pub.length, 65); assert.equal(pub[0], 4); assert.equal(hex(pub), id.cle_publique_hex);
     assert.equal(hex(new Uint8Array(await s.digest('SHA-256', pub)).slice(0, 8)), id.empreinte, 'empreinte = SHA-256(clé brute)[0..8]');
   }
-  const ann = JSON.parse(V.paquets.ann_alice);
+  const ann = JSON.parse(V.paquets.ann_x1);
   assert.equal(ann.m, 1); assert.equal(ann.k, 'ann'); assert.equal(ann.o, V.identites[0].empreinte); assert.equal(ann.h, 255);
   assert.equal(hex(b64(ann.d.cle)), V.identites[0].cle_publique_hex);
   assert.equal(ann.d.r, 'noeud'); assert.equal(ann.d.p, 1); assert.ok(ann.d.cap.includes('relais'));
@@ -46,12 +46,12 @@ test('🌐 d\'après la spec seule : ECDH → HKDF → AES-GCM (le privé, la po
   assert.equal(hex(secret), V.derivation.secret_ecdh_hex);
   const hk = await s.importKey('raw', secret, 'HKDF', false, ['deriveBits']);
   const cle = new Uint8Array(await s.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt: enc.encode('ploxi-maille-v1'), info: enc.encode([A.empreinte, B.empreinte].sort().join('|')) }, hk, 256));
-  assert.equal(hex(cle), V.derivation.cle_aes_alice_bob_hex);
-  const mp = JSON.parse(V.paquets.mp_alice_bob); assert.equal(mp.a, B.empreinte); assert.equal(mp.c, 8);
-  assert.deepEqual(await ouvrir(await cleAES(cle), mp), V.clairs.mp_alice_bob);
-  const pos = await ouvrir(await cleAES(cle), JSON.parse(V.paquets.pos_alice_bob));
-  for (const k of Object.keys(V.clairs.pos_alice_bob)) assert.deepEqual(pos[k], V.clairs.pos_alice_bob[k]);
-  const ack = JSON.parse(V.paquets.ack_bob); assert.equal(ack.d.r, mp.i, 'l\'accusé cite l\'id du message');
+  assert.equal(hex(cle), V.derivation.cle_aes_x1_x2_hex);
+  const mp = JSON.parse(V.paquets.mp_x1_x2); assert.equal(mp.a, B.empreinte); assert.equal(mp.c, 8);
+  assert.deepEqual(await ouvrir(await cleAES(cle), mp), V.clairs.mp_x1_x2);
+  const pos = await ouvrir(await cleAES(cle), JSON.parse(V.paquets.pos_x1_x2));
+  for (const k of Object.keys(V.clairs.pos_x1_x2)) assert.deepEqual(pos[k], V.clairs.pos_x1_x2[k]);
+  const ack = JSON.parse(V.paquets.ack_x2); assert.equal(ack.d.r, mp.i, 'l\'accusé cite l\'id du message');
   const mdp = await s.importKey('raw', enc.encode('lac'), 'PBKDF2', false, ['deriveBits']);
   const cs = new Uint8Array(await s.deriveBits({ name: 'PBKDF2', salt: enc.encode('ploxi-salon:#soiree'), iterations: 100000, hash: 'SHA-256' }, mdp, 256));
   assert.equal(hex(cs), V.derivation.cle_salon_hex);
@@ -67,13 +67,13 @@ test('🌐 d\'après la spec seule : les morceaux BLE se recollent en le paquet'
   assert.equal(t, V.paquets.pub_clair);
 });
 
-test('🌐 le vrai maillage (Bob) lit tous les paquets publiés', async () => {
+test('🌐 le vrai maillage (xerion-2) lit tous les paquets publiés', async () => {
   const mag = { lire: async (k) => (k === 'maille-identite' ? { ...V.identites[1].jwk } : null), ecrire: async () => {} };
-  const bob = creerMaille({ subtle: s, alea: (n) => globalThis.crypto.getRandomValues(new Uint8Array(n)), maintenant: () => HORLOGE, magasin: mag, envoyer: () => {}, attente: (ms, f) => setTimeout(f, 0), repeter: () => () => {} });
-  await bob.demarrer({ nom: 'Bob' }); await bob.rejoindre('#soiree', 'lac'); bob.voisin('Alice', 'connecte');
-  for (const k of ['ann_alice', 'pub_clair', 'pub_salon_ferme', 'mp_alice_bob', 'pos_alice_bob']) { assert.ok(lireMaille(V.paquets[k]), k); bob.recevoir('Alice', V.paquets[k]); await new Promise(r => setTimeout(r, 20)); }
-  assert.equal(bob.fil('#').at(-1).texte, 'bonjour le maillage');
-  assert.equal(bob.fil('#soiree').at(-1).texte, 'dans le salon fermé');
-  assert.equal(bob.fil('@' + V.identites[0].empreinte).at(-1).texte, 'message privé pour Bob');
-  assert.equal(bob.positions()[0].lat, 46.52);
+  const x2 = creerMaille({ subtle: s, alea: (n) => globalThis.crypto.getRandomValues(new Uint8Array(n)), maintenant: () => HORLOGE, magasin: mag, envoyer: () => {}, attente: (ms, f) => setTimeout(f, 0), repeter: () => () => {} });
+  await x2.demarrer({ nom: 'xerion-2' }); await x2.rejoindre('#soiree', 'lac'); x2.voisin('xerion-1', 'connecte');
+  for (const k of ['ann_x1', 'pub_clair', 'pub_salon_ferme', 'mp_x1_x2', 'pos_x1_x2']) { assert.ok(lireMaille(V.paquets[k]), k); x2.recevoir('xerion-1', V.paquets[k]); await new Promise(r => setTimeout(r, 20)); }
+  assert.equal(x2.fil('#').at(-1).texte, 'bonjour le maillage');
+  assert.equal(x2.fil('#soiree').at(-1).texte, 'dans le salon fermé');
+  assert.equal(x2.fil('@' + V.identites[0].empreinte).at(-1).texte, 'message privé pour xerion-2');
+  assert.equal(x2.positions()[0].lat, 46.52);
 });

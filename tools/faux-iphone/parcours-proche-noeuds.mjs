@@ -1,4 +1,4 @@
-// 🗺 (0.99.53) les nœuds sur la carte : Proche allumé, « garder où j'entends les nœuds » → une rencontre avec Tom (voisin direct) → sa zone sur
+// 🗺 (0.99.53) les nœuds sur la carte : Proche allumé, « garder où j'entends les nœuds » → une rencontre avec RS-3 (voisin direct) → sa zone sur
 // les tuiles, la liste dessous ; window.jOSMaille la rend (pour mappion)
 export default async function ({ page, ecrire }) {
   await page.waitForSelector('[data-nv]', { timeout: 4000 }).then(() => page.evaluate(() => document.querySelector('[data-nv]').click())).catch(() => {});

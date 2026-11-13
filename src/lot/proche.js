@@ -88,7 +88,7 @@ export function creerProche({ W = globalThis.window, boxion, tuyau, vibrer = () 
     }
   }
   // 🔔 (0.99.45) LES ÉVÉNEMENTS DU MAILLAGE en notification (Proche pas à l'écran) : « ✓ remis » quand un privé passé par la boîte d'envoi ou
-  // un coursier arrive enfin (plus d'une minute après l'envoi) ; « ◉ Tom est tout près » quand un pote ✦ redevient un voisin direct après
+  // un coursier arrive enfin (plus d'une minute après l'envoi) ; « ◉ RS-3 est tout près » quand un pote ✦ redevient un voisin direct après
   // 10 min sans lui (pas dans les 30 premières secondes : ceux qui sont déjà là au démarrage ne sonnent pas).
   const etatsVus = new Map(), directVu = new Map(); let demarreLe = 0;
   function notifierEvenements(q) {

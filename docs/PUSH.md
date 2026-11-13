@@ -126,9 +126,9 @@ option de build `notifs` : Actions › iOS TestFlight › Run workflow › coche
 `PLOXI0N_NOTIFS=1`) reçoit chaque push qui porte `"mutable-content": 1` et l'enrichit avant qu'il s'affiche :
 
 ```json
-{ "aps": { "alert": { "title": "💬 Tom", "body": "t'es où ?" }, "thread-id": "messages", "mutable-content": 1 },
+{ "aps": { "alert": { "title": "💬 RS-3", "body": "t'es où ?" }, "thread-id": "messages", "mutable-content": 1 },
   "ouvrir": "social",
-  "expediteur": { "nom": "Tom", "avatar": "https://labo.j0bot.ch/avatars/42.png", "id": "42" },
+  "expediteur": { "nom": "RS-3", "avatar": "https://labo.j0bot.ch/avatars/42.png", "id": "42" },
   "groupe": "coord · #push" }
 ```
 - **`expediteur`** (une personne) : une **notification de communication** (INSendMessageIntent + INPerson) : l'avatar en grand, l'icône

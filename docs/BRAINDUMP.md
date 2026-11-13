@@ -22,6 +22,6 @@ toujours chiffré comme un `mp`. Les garde-fous que j'ai proposés, à trancher 
 - seulement entre potes ✦ dont le code de sécurité a été vérifié ;
 - une demande à accepter sur le téléphone piloté, à chaque session ;
 - une session qui s'arrête toute seule (15 min, ou au verrouillage) ;
-- un bandeau toujours visible « piloté par Tom » sur le téléphone piloté, et un geste pour couper ;
+- un bandeau toujours visible « piloté par RS-3 » sur le téléphone piloté, et un geste pour couper ;
 - jamais les réglages, le trousseau, les paiements, la position, ni l'identité du maillage.
 Questions ouvertes : seulement mes appareils, ou des potes aussi ? Une liste de ce qui se pilote, ploxion par ploxion ?

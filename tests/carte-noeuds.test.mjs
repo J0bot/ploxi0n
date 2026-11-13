@@ -19,21 +19,21 @@ test('🗺 la qualité d\'un lien : rapide, lente, ce qu\'on ignore ne compte pa
 test('🗺 les rencontres font des zones : le centre penche vers là où le lien était bon ; une position floue ne compte pas', () => {
   const ici = { lat: 46.7785, lng: 6.6411 }, la = { lat: 46.7795, lng: 6.6411 };   // ~111 m plus au nord
   assert.equal(rencontre({ fp: 'a', moi: { ...ici, precision: 400 }, t: 1 }), null);
-  const r = [rencontre({ fp: 'pi', nom: 'pi-gare', moi: ici, t: 1, rtt: 20 }), rencontre({ fp: 'pi', moi: la, t: 2, rtt: 700 }), rencontre({ fp: 'tom', nom: 'Tom', moi: la, t: 3 })];
+  const r = [rencontre({ fp: 'pi', nom: 'pi-gare', moi: ici, t: 1, rtt: 20 }), rencontre({ fp: 'pi', moi: la, t: 2, rtt: 700 }), rencontre({ fp: 'rs3', nom: 'RS-3', moi: la, t: 3 })];
   const z = zones(r), pi = z.find(x => x.fp === 'pi');
-  assert.equal(z.length, 2); assert.equal(z[0].fp, 'tom', 'le plus récent d\'abord');
+  assert.equal(z.length, 2); assert.equal(z[0].fp, 'rs3', 'le plus récent d\'abord');
   assert.ok(distance(pi, ici) < distance(pi, la), 'plus près de là où le lien était rapide');
   assert.ok(pi.rayon >= 15 && pi.n === 2 && pi.qMax === 1);
   assert.equal(zones(r, { depuis: 3 }).length, 1);
 });
 
 test('🗺 la carte : un nœud fixe à sa place, un pote à sa position partagée, les autres par leur zone, ceux qu\'on n\'entend plus marqués absents', () => {
-  const T = { noeuds: [{ id: 'moi', moi: true }, { id: 'pi', nom: 'pi', direct: true, pos: { lat: 46.78, lng: 6.64 }, cap: ['relais', 'xion'] }, { id: 'tom', nom: 'Tom', direct: true }, { id: 'esp', nom: 'esp32', direct: false, sauts: 1 }] };
+  const T = { noeuds: [{ id: 'moi', moi: true }, { id: 'pi', nom: 'pi', direct: true, pos: { lat: 46.78, lng: 6.64 }, cap: ['relais', 'xion'] }, { id: 'rs3', nom: 'RS-3', direct: true }, { id: 'esp', nom: 'esp32', direct: false, sauts: 1 }] };
   const zs = zones([rencontre({ fp: 'esp', nom: 'esp32', moi: { lat: 46.781, lng: 6.642 }, t: 5 }), rencontre({ fp: 'vieux', nom: 'vieux', moi: { lat: 46.77, lng: 6.63 }, t: 1 })]);
-  const C = noeudsCarte({ topologie: T, positions: [{ fp: 'tom', lat: 46.779, lng: 6.641 }], zs, moi: { lat: 46.7785, lng: 6.6411 } });
+  const C = noeudsCarte({ topologie: T, positions: [{ fp: 'rs3', lat: 46.779, lng: 6.641 }], zs, moi: { lat: 46.7785, lng: 6.6411 } });
   const par = Object.fromEntries(C.noeuds.map(n => [n.fp, n]));
   assert.equal(par.pi.pos.source, 'annoncee'); assert.equal(par.pi.xion, true);
-  assert.equal(par.tom.pos.source, 'pote'); assert.ok(par.esp.zone && !par.esp.pos); assert.equal(par.vieux.absent, true);
+  assert.equal(par.rs3.pos.source, 'pote'); assert.ok(par.esp.zone && !par.esp.pos); assert.equal(par.vieux.absent, true);
   const c = cadrer(C); assert.ok(c.rayon > 900, 'le cadre contient tout, le vieux nœud compris : ' + c.rayon);
 });
 
@@ -63,11 +63,11 @@ test('🗺 Proche : rien n\'est noté tant qu\'on ne l\'allume pas ; allumé, ch
   const W = { setInterval: () => 0, clearInterval: () => {}, setTimeout: (f, ms) => setTimeout(f, Math.min(ms || 0, 5)), clearTimeout: (x) => clearTimeout(x), crypto: globalThis.crypto };
   const A = creerProche({ W, boxion: creerMemoire(), tuyau: tuyau(), Contexte: null, position: async () => ({ lat: 46.7785, lng: 6.6411, precision: 8 }) });
   const B = creerProche({ W: { ...W }, boxion: creerMemoire(), tuyau: tuyau(), Contexte: null });
-  await A.demarrer({ nom: 'Léa' }); await B.demarrer({ nom: 'Tom' }); await attendre(300);
+  await A.demarrer({ nom: 'RS-4' }); await B.demarrer({ nom: 'RS-3' }); await attendre(300);
   assert.equal(await A.noterRencontres(), 0, 'pas allumé : rien'); assert.equal(A.rencontres().length, 0);
   A.garderNoeuds(true); await attendre(30);
-  const n = await A.noterRencontres(); assert.equal(n, 1, 'Tom, voisin direct');
-  const r = A.rencontres()[0]; assert.equal(r.nom, 'Tom'); assert.equal(r.lat, 46.7785);
-  const C = W.jOSMaille.noeuds(); const tom = C.noeuds.find(x => x.nom === 'Tom'); assert.ok(tom && tom.zone && tom.zone.rayon >= 15);
+  const n = await A.noterRencontres(); assert.equal(n, 1, 'RS-3, voisin direct');
+  const r = A.rencontres()[0]; assert.equal(r.nom, 'RS-3'); assert.equal(r.lat, 46.7785);
+  const C = W.jOSMaille.noeuds(); const rs3 = C.noeuds.find(x => x.nom === 'RS-3'); assert.ok(rs3 && rs3.zone && rs3.zone.rayon >= 15);
   await A.arreter(); await B.arreter();
 });

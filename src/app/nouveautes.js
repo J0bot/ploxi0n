@@ -7,6 +7,9 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.54', titre: 'Plus de prénoms', points: [
+    '◉ Les voisins de démonstration et les exemples n\'ont plus de prénom : RS-3, RS-4, xerion-1, xerion-2. Les tiens, tu les choisis.',
+  ] },
   { v: '0.99.53', titre: 'Les nœuds sur la carte', points: [
     '🗺 Proche › autour › les nœuds sur la carte : allume « garder », et ton téléphone note où il entend chaque nœud et la qualité du lien. Chaque nœud a sa zone, colorée selon sa vitesse de connexion (rapide, bon, moyen, lent). Ça reste sur ton téléphone, 30 jours, « effacer » vide tout.',
     '🗺 Un nœud fixe (un Pi, un ESP32 relais) peut dire où il est : il apparaît à sa place. Les nœuds reliés au xion sont entourés.',
@@ -24,7 +27,7 @@ export const NOUVEAUTES = [
   ] },
   { v: '0.99.49', titre: 'Le build iPhone repart, Android vérifié', points: [
     '🛠 Le build iPhone de la 0.99.48 s\'arrêtait sur les synonymes de Siri (une fonction d\'iOS 17, l\'app va jusqu\'à iOS 15) : corrigé.',
-    '🤖 Sur Android, Proche passe par le Bluetooth (le maillage, Tom, Léa, les potes, la basse) ; le réglage « Piloter de la tête » ne s\'affiche plus là où il n\'existe pas.',
+    '🤖 Sur Android, Proche passe par le Bluetooth (le maillage, RS-3, RS-4, les potes, la basse) ; le réglage « Piloter de la tête » ne s\'affiche plus là où il n\'existe pas.',
   ] },
   { v: '0.99.48', titre: 'Les ploxions sortent de leur icône', points: [
     '🔍 Touche une icône : le ploxion en sort et grandit jusqu\'à l\'écran, comme sur iPhone. ▁ Minimiser, ‹ ou l\'accueil : il rapetisse et rentre dans son icône.',
@@ -43,7 +46,7 @@ export const NOUVEAUTES = [
   ] },
   { v: '0.99.45', titre: 'Les notifications qui parlent', points: [
     '↩ Un message privé de Proche : « Répondre » directement depuis la notification, la réponse part par le maillage. Ou « ✓ Lu ».',
-    '◉ « Tom est tout près » : un pote ✦ qui revient à portée de Bluetooth. « ✓ remis » : ton message passé par un coursier est enfin arrivé.',
+    '◉ « RS-3 est tout près » : un pote ✦ qui revient à portée de Bluetooth. « ✓ remis » : ton message passé par un coursier est enfin arrivé.',
     '🔔 Les notifications du labo avec l\'avatar de qui t\'écrit, en grand, ou le glyphe du ploxion (avec la build « notifs »).',
   ] },
   { v: '0.99.44', titre: 'Siri parle xerboxion, et la tête ou le regard visent juste', points: [

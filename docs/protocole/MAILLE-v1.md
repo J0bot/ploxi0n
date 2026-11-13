@@ -165,7 +165,7 @@ empreintes, le secret ECDH, la clé AES de la paire, la clé du salon `#soiree` 
 réels (`ann`, `pub` en clair, `pub` de salon fermé, `mp`, `ack`, `pos`), leurs contenus en clair et un paquet découpé en morceaux. Une
 implémentation est conforme si elle :
 1. retrouve les empreintes, le secret, les clés ;
-2. déchiffre `pub_salon_ferme`, `mp_alice_bob` et `pos_alice_bob` vers les contenus attendus ;
+2. déchiffre `pub_salon_ferme`, `mp_x1_x2` et `pos_x1_x2` vers les contenus attendus ;
 3. recolle les morceaux en `pub_clair` ;
 4. relaie un paquet de type inconnu en conservant ses champs inconnus.
 
