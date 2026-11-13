@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.53', titre: 'Les nœuds sur la carte', points: [
+    '🗺 Proche › autour › les nœuds sur la carte : allume « garder », et ton téléphone note où il entend chaque nœud et la qualité du lien. Chaque nœud a sa zone, colorée selon sa vitesse de connexion (rapide, bon, moyen, lent). Ça reste sur ton téléphone, 30 jours, « effacer » vide tout.',
+    '🗺 Un nœud fixe (un Pi, un ESP32 relais) peut dire où il est : il apparaît à sa place. Les nœuds reliés au xion sont entourés.',
+  ] },
   { v: '0.99.52', titre: 'Le pokédex des animations', points: [
     '◫ Banc des animations › pokédex : toutes les animations que tu as jugées, en tuiles ; touche le verdict pour en ajouter ou en retirer, ▶ pour la revoir.',
     '⚙ Banc des animations › dans l\'app : par famille, choisis celle que l\'app utilise. Une ★ au swipe la choisit d\'office. Déjà branchées : ouvrir, fermer, la courbe, l\'arrivée sur l\'accueil.',

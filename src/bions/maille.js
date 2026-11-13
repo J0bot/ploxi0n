@@ -218,7 +218,10 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
   function tropBavard(o) { const t = maintenant(), d = debits.get(o) || { t, n: 0 }; if (t - d.t > 10000) { d.t = t; d.n = 0; } d.n++; debits.set(o, d); return d.n > 40; }
 
   const fpsDirects = () => [...pairs].filter(([, p]) => p.voisin && voisins.has(p.voisin)).map(([fp]) => fp).slice(0, 10);
-  function annoncer(vers) { if (id) emettre(paquetDe('ann', { d: { cle: b64(id.brute), v: fpsDirects(), r: 'noeud', p: PROTOCOLE, cap: MES_CAPACITES } }), vers); }
+  // (0.99.53) un nœud FIXE (un Pi, un ESP32 relais) PEUT annoncer où il est (pos) : jamais un téléphone par défaut (ne pas nuire) ; « xion » :
+  // ce nœud est relié au xion (le runtime en ligne : une passerelle). Réglés par positionFixe(pos | null) et xion(oui).
+  let maPosFixe = null, monXion = false;
+  function annoncer(vers) { if (id) emettre(paquetDe('ann', { d: { cle: b64(id.brute), v: fpsDirects(), r: 'noeud', p: PROTOCOLE, cap: monXion ? [...MES_CAPACITES, 'xion'] : MES_CAPACITES, ...(maPosFixe ? { pos: maPosFixe } : {}) } }), vers); }
   let finAnnonce = () => {};
 
   async function demarrer({ nom: n } = {}) {
@@ -285,6 +288,7 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
       liens.set(p.o, { v: Array.isArray(p.d.v) ? p.d.v.filter(x => HEX16.test(x) && x !== p.o).slice(0, 10) : [], t: maintenant() });   // ◈ ses voisins directs
       if (!pr.cle || hex(pr.cle) !== hex(brute)) { pr.cle = brute; clesPartagees.delete(p.o); }
       pr.role = ROLES.includes(p.d.r) ? p.d.r : 'noeud'; pr.cap = Array.isArray(p.d.cap) ? p.d.cap.filter(x => typeof x === 'string' && GENRE.test(x)).slice(0, 16) : null; pr.proto = Number.isInteger(p.d.p) ? p.d.p : 1;   // (0.99.42)
+      { const q = p.d.pos; pr.pos = q && typeof q === 'object' && Number.isFinite(q.lat) && Number.isFinite(q.lng) && Math.abs(q.lat) <= 90 && Math.abs(q.lng) <= 180 ? { lat: q.lat, lng: q.lng, precision: Number.isFinite(q.precision) ? Math.min(Math.max(q.precision, 0), 100000) : null } : null; }   // (0.99.53) un nœud fixe
       changer('pairs'); return;
     }
     if (p.k === 'pub') {
@@ -467,6 +471,9 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
     demarrer, arreter, voisin, recevoir, dire, prive, rejoindre, quitter, bloquer, debloquer, effacerTout, trouver,
     favori, lire, codeSecurite, verifier, partagerPosition, carte, ajouterCarte,
     favoris: () => [...favoris].map(([fp, n]) => { const p = pairs.get(fp); return { fp, nom: (p && p.nom) || n, la: !!(p && maintenant() - p.vu < 5 * 60e3), sauts: p ? p.sauts : null, cle: !!(p && p.cle), verifie: verifies.has(fp) }; }),
+    /** (0.99.53) ce nœud est fixe et dit où il est (un relais posé) ; null : il se tait (le défaut, et toujours pour un téléphone qui bouge) */
+    positionFixe(pos) { maPosFixe = pos && Number.isFinite(+pos.lat) && Number.isFinite(+pos.lng) ? { lat: +(+pos.lat).toFixed(5), lng: +(+pos.lng).toFixed(5), ...(Number.isFinite(+pos.precision) ? { precision: Math.round(+pos.precision) } : {}) } : null; if (id) annoncer(); return maPosFixe; },
+    xion(oui) { monXion = !!oui; if (id) annoncer(); return monXion; },
     positions: () => [...positions.values()].filter(x => maintenant() - x.t < POSITION_VIVE).sort((a, b) => b.t - a.t),
     fil: (salon = PUBLIC) => messages.filter(m => m.salon === salon),
     salons: () => salons.map(s => ({ salon: s, ferme: clesSalons.has(s) })),
@@ -482,7 +489,7 @@ export function creerMaille({ subtle, alea, maintenant = () => Date.now(), envoy
       for (const [fp, p] of pairs) {
         if (!vivant(p.vu) || fp === (id && id.fp)) continue;
         const direct = !!(p.voisin && voisins.has(p.voisin)); if (direct) parVoisin.set(p.voisin, fp);
-        noeuds.push({ id: fp, nom: p.nom, sauts: p.sauts, direct, stats: direct ? statDe(p.voisin) : null, favori: favoris.has(fp), bloque: bloques.has(fp), role: p.role || 'noeud', cap: p.cap || null });
+        noeuds.push({ id: fp, nom: p.nom, sauts: p.sauts, direct, stats: direct ? statDe(p.voisin) : null, favori: favoris.has(fp), bloque: bloques.has(fp), role: p.role || 'noeud', cap: p.cap || null, pos: p.pos || null, xion: !!(p.cap && p.cap.includes('xion')) });
         if (direct && id) lier(id.fp, fp);
       }
       for (const v of voisins) if (!parVoisin.has(v)) { noeuds.push({ id: 'v:' + v, nom: '', muet: true, direct: true, sauts: 0, stats: statDe(v) }); if (id) lier(id.fp, 'v:' + v); }

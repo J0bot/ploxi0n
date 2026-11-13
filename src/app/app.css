@@ -1078,6 +1078,9 @@ html.px-calme .px-vx-t{transition:none}html.px-calme .px-vx-eclair{animation:non
 .px-pr-partage{font:600 12px/1.4 var(--mono);color:var(--bio);margin:2px 0 6px}
 .px-pr-radar{position:relative;width:100%;max-width:520px;margin:8px auto;border-radius:50%;overflow:hidden;background:radial-gradient(circle,var(--creux) 0,var(--bg) 75%);touch-action:manipulation}
 [data-pr-radar][hidden],.px-pr-boussole[hidden]{display:none}
+.px-pr-noeuds-carte{position:relative;width:100%;max-width:520px;aspect-ratio:1/1;margin:8px auto;border-radius:18px;overflow:hidden;background:var(--creux)}.px-pr-noeuds-carte>svg{position:absolute;inset:0;height:100%}
+.px-pr-noeuds-svg .nom{font:600 9px var(--mono);fill:var(--txt);paint-order:stroke;stroke:var(--bg);stroke-width:3px}.px-pr-noeuds-svg .moi{fill:var(--acc);stroke:#fff;stroke-width:2}
+.px-pr-noeuds-l{list-style:none;margin:6px 0;padding:0}.px-pr-noeuds-l li{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--filet)}.px-pr-noeuds-l li.loin{opacity:.6}.px-pr-noeuds-l i{width:10px;height:10px;border-radius:50%;flex:none}.px-pr-noeuds-l small{color:var(--grave);margin-left:auto;text-align:right}
 .px-pr-tuiles{position:absolute;transform-origin:50% 50%;opacity:.75;pointer-events:none}.px-pr-tuiles img{position:absolute;max-width:none;image-rendering:auto}
 .px-pr-radar [data-pr-radar-svg]{position:absolute;inset:0}.px-pr-radar svg{display:block;overflow:visible}
 .px-pr-radar .anneau{fill:none;stroke:var(--bord2);stroke-width:1;opacity:.7}.px-pr-radar .ech{font:500 9px var(--mono);fill:var(--grave)}

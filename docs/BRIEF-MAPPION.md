@@ -86,6 +86,15 @@ là où je vais, et de la vitesse. »
   rayon, s, visites, heures }], detruire() }` ; pur côté calcul (les zones, l'agrégation testables sans carte), le dessin sur un canvas posé
   sur n'importe quelle carte (Leaflet du labo, les tuiles de Proche, le radar). Le servir seul par `/px/bion-app/jOSChaleur.js`, comme
   jOSKnob et jOSSwipe, pour que ploxi0n l'embarque.
+- **La carte du maillage dans mappion** (RS-7, 13.11 : « une vraie map de Proche mêlée au mappion, pour voir les positions des nodes, ou les
+  zones de nodes avec leur vitesse de connexion s'ils font partie du xion »). Dans ploxi0n (0.99.53), Proche expose
+  `window.jOSMaille.noeuds()` → `{ noeuds: [{ fp, nom, role, xion, direct, sauts, pos: { lat, lng, precision, source } | null,
+  zone: { lat, lng, rayon } | null, q (0…1 : la vitesse de connexion), n, vu, absent? }], moi }` ; `jOSMaille.zones()` ; `jOSMaille.garde()`.
+  Un nœud ne dit pas où il est : sa **zone** = là où le téléphone l'entendait (si RS-7 l'a allumé dans Proche), pondérée par la qualité du lien
+  (le ping, la distance Bluetooth, le débit) ; seuls les nœuds **fixes** annoncent leur **position** (`ann.d.pos`, docs/protocole/MAILLE-v1.md) ;
+  `xion` = relié au runtime en ligne. Mappion : une **strate « maillage »** qui dessine ces zones (couleur = vitesse : vert rapide, jaune bon,
+  orange moyen, rouge lent), les nœuds fixes à leur place, un anneau cyan pour le xion ; si `window.jOSMaille` n'existe pas (le navigateur),
+  la strate ne s'affiche pas. Proche a déjà sa propre vue (« autour » › les nœuds sur la carte) ; la même donnée, deux interfaces.
 - **La position reste sur le téléphone** (comme aujourd'hui) ; les amis ne voient que ce qu'ils voient déjà.
 - Dans ploxi0n, `window.jOSVeille.balade` existe (0.99.43) : mappion peut lancer la Live Activity d'une balade (le chrono, la distance, une
   cible) sur l'écran verrouillé. Optionnel, mais c'est l'activité que RS-7 voulait pour mappion (docs/MAPION.md de ploxi0n).
