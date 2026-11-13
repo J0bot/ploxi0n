@@ -4,6 +4,8 @@
 //   ◇ chill-tekk  l'accueil de ploxi0n : tes ploxions, calme ; (0.99.47) le mode de base à l'installation, le plus simple pour commencer
 //   ⬡ xerboxion   l'UI du labo (labo.j0bot.ch) comme accueil, le dock de l'app par-dessus ; un ploxion qu'elle ouvre
 //                 (postMessage { ploxi0n: 'ouvrir', id }) s'ouvre dans l'app, en natif
+//                 (0.99.55, RS-7 via xerxion1 : « le xer xerboxion de l'app = le xer chill-tekk du labo : même thème, koins gauche = app,
+//                 droite = global, hypercube, octogone en bas, ‹ › ; + tout le natif ; ton xer chill-tekk reste le tien ») → /xer/chill-tekk
 //   🤖 xerbot     XERB0T, la couche robotique : le poste de pilotage du monde physique — la blouse (labo-cape), les appareils
 //                 Bluetooth, la maison (HomeKit), la lampe, les tags NFC (les kions dans le réel), le Wi-Fi, et le bus xerbot.cmd
 // Réglage : prefs.mode ; <html> porte px-m-<mode> (le CSS cache la grille quand un panneau la remplace).

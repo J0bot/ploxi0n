@@ -1,5 +1,5 @@
 // ◺◿ (0.89) les koins du carnet de RS-7 sur le chemin iPhone : l'accueil sans dock, les deux koins ; ils grandissent ; les cases et la barre
-// des glyphes ; dans un ploxion (sans la barre du bas) ; une case agit
+// des glyphes ; dans un ploxion (0.99.55 : sa barre descend entre les deux koins du bas) ; une case agit
 export default async function ({ page, ecrire }) {
   await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => /passer/i.test(x.textContent)); if (b) b.click(); });
   await page.waitForTimeout(500);
@@ -44,7 +44,7 @@ export default async function ({ page, ecrire }) {
   await page.click('[data-koin="gauche"]'); await page.waitForTimeout(600);
   await page.click('[data-koin-a="toi"]'); await page.waitForTimeout(900);
   const ouvert = await page.evaluate(() => window.ploxi0n.routeur.courant());
-  const barre = await page.evaluate(() => { const b = document.querySelector('.px-ecran>.px-barre'); return b ? getComputedStyle(b).display : 'absente'; });
+  const barre = await page.evaluate(() => { const b = document.querySelector('.px-ecran>.px-barre'); if (!b) return 'absente'; const r = b.getBoundingClientRect(); return getComputedStyle(b).display + (r.bottom >= innerHeight - 2 && r.left >= 70 && r.right <= innerWidth - 70 ? ' · en bas, entre les koins' : ' · PAS entre les koins'); });
   await ecrire('05-dans-un-ploxion');
   // ⊠ (0.99.47) la case xer : les quatre xers (les modes) sur place ; en choisir un change l'accueil ; l'en-tête des modes est effacé
   await page.evaluate(() => window.ploxi0n.routeur.faire('accueil')); await page.waitForTimeout(600);

@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.55', titre: 'Les koins partout', points: [
+    '▭ En mode koin, la barre d\'un ploxion descend en bas, entre les deux koins : retour, son nom encadré, minimiser. Plus rien en haut, tout au pouce.',
+    '▭ Sur l\'accueil, la même bande dit le xer où tu es ; un toucher ouvre le koin sur les xers.',
+    '⬡ Le xer xerboxion ouvre maintenant le xer chill-tekk du labo. Ton chill-tekk à toi ne change pas.',
+  ] },
   { v: '0.99.54', titre: 'Plus de prénoms', points: [
     '◉ Les voisins de démonstration et les exemples n\'ont plus de prénom : RS-3, RS-4, xerion-1, xerion-2. Les tiens, tu les choisis.',
   ] },

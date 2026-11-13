@@ -1,5 +1,7 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1794543468000,"0.99.53 : les nœuds du maillage sur la vraie carte (zones par la vitesse de connexion, nœuds fixes, xion, jOSMaille pour mappion)"],
+export const COMMITS = [[1794544828000,"ref/c : ne pas suivre le binaire du test (compilé par make test)"],
+  [1794544813000,"0.99.54 : plus de prénoms (RS-3 / RS-4 pour les voisins de Proche, xerion-1 / xerion-2 dans les vecteurs du protocole)"],
+  [1794543468000,"0.99.53 : les nœuds du maillage sur la vraie carte (zones par la vitesse de connexion, nœuds fixes, xion, jOSMaille pour mappion)"],
   [1794542971000,"docs/BRIEF-MAPPION.md : la carte de chaleur, un bion commun (jOSChaleur) aussi pour Proche (le groupe, la couverture du maillage)"],
   [1794528804000,"docs/BRIEF-MAPPION.md : le brief pour l'agent du labo (alléger mappion : zones automatiques, carte de chaleur temps / vitesse, une étiquette à la fois)"],
   [1794527954000,"0.99.52 : le pokédex des animations, et les animations choisies deviennent celles de l'app"],

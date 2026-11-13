@@ -53,8 +53,8 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
   function poser() {
     const on = !!actif();
     D.documentElement.classList.toggle('px-koins', on);
-    if (!on) { if (racine) { racine.remove(); racine = null; } return; }
-    if (racine) return;
+    if (!on) { D.documentElement.classList.remove('px-koins-ouv'); if (racine) { racine.remove(); racine = null; } return; }
+    if (racine) { peindreBande(); return; }
     racine = D.createElement('div'); racine.className = 'px-koins-r'; racine.setAttribute('data-neurones', '');   // 〰 (0.93) les cases et la barre : des neurones
     racine.innerHTML = ['gauche', 'droite'].map(c => '<button type="button" class="px-koin px-koin-' + c + '" data-koin="' + c + '" data-etape="0" aria-label="koin ' + c + '">' + TRI(c === 'droite') + '</button>'
       + '<div class="px-koin-cases px-koin-cases-' + c + '" data-cases="' + c + '" hidden>' + CASES[c].map(([g, k]) => (PADS[g]
@@ -62,8 +62,10 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
         : '<button type="button" data-koin-a="' + k + '" data-neurone aria-label="' + NOMS[k] + '">' + G(g) + '<small>' + NOMS[k].split(' (')[0] + '</small><em data-koin-sous="' + k + '"></em></button>')).join('') + '</div>').join('')
       + '<div class="px-koin-modes" data-neurone hidden></div>'
       + '<nav class="px-koin-barre" data-neurone hidden>' + BARRE.map(([g, k, t]) => '<button type="button" data-koin-a="' + k + '" data-court="' + ({ koins: 'koin', carte: 'map', quoi: 'quoi ?', minimiser: '▁' }[k] || k) + '" aria-label="' + NOMS[k] + '">' + (t || G(g)) + '</button>').join('') + '</nav>'
-      + '<div class="px-koin-voile" hidden></div>';
-    D.body.appendChild(racine);
+      + '<div class="px-koin-voile" hidden></div>'
+      + '<button type="button" class="px-koin-bande" data-koin-bande data-neurone></button>';   // ▭ (0.99.55) la bande « xer » entre les koins
+    D.body.appendChild(racine); peindreBande();
+    racine.querySelector('[data-koin-bande]').addEventListener('click', (e) => { e.stopPropagation(); ouvrir('gauche', 1); if (actions.modes) montrerModes(true); });
     // un toucher : le koin s'ouvre (ou se referme) ; glisser vers le haut : il suit le doigt, lâcher décide
     for (const b of racine.querySelectorAll('[data-koin]')) {
       let y0 = null, glisse = false, k = 0;
@@ -100,6 +102,13 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
     ts.addEventListener('pointerup', () => { if (t > 0) W.clearTimeout(t); });
     ts.addEventListener('click', (e) => { if (t === -1) { e.stopPropagation(); e.preventDefault(); t = 0; } }, true);
   }
+  /** ▭ la bande entre les koins, sur l'accueil : le xer où tu es (son glyphe, son nom) */
+  function peindreBande() {
+    const b = racine && racine.querySelector('[data-koin-bande]'); if (!b) return;
+    let m = null; try { m = (actions.modes ? actions.modes() : []).find(x => x.on) || null; } catch (e) { m = null; }
+    b.innerHTML = m ? G(m.glyphe) + '<span>' + m.nom + '</span>' : G('xer') + '<span>xer</span>';
+    b.setAttribute('aria-label', 'xer ' + (m ? m.nom : '') + ' : en changer');
+  }
   /** les cases, la barre et le voile dans le DOM (cachés à la fin de la fermeture, pour que l'animation se joue dans les deux sens) */
   function montrer(on) {
     if (cacher) { W.clearTimeout(cacher); cacher = 0; }
@@ -113,6 +122,7 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
     if (!racine) return;
     n = n ? 1 : 0;
     etape.gauche = etape.droite = n;
+    D.documentElement.classList.toggle('px-koins-ouv', !!n);   // ▭ la bande et la barre du ploxion s'effacent pendant que le koin est ouvert
     for (const k of ['gauche', 'droite']) racine.querySelector('[data-koin="' + k + '"]').setAttribute('data-etape', String(n));
     if (n) {
       montrer(true);

@@ -79,3 +79,30 @@ test('🏁 (0.99.47) chill-tekk est le mode de base à l\'installation ; en mode
   const main = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
   assert.match(main, /\n\s+xers: \(\) => routeur\.faire\('mes-xers'\), carte: \(\) => routeur\.faire\('map'\)/, 'les actions xers et carte ne sont plus dans un commentaire');
 });
+
+test('▭ (0.99.55) la bande « xer » entre les koins : le xer où tu es ; un toucher ouvre le koin sur les xers ; ouvert, la bande s\'efface', async () => {
+  const p = await page({ avion: true, ploxions: [] });
+  try {
+    const W = p.w, D = W.document; let mode = 'chill-tekk';
+    const k = creerKoins({ W, actif: () => true, actions: {
+      modes: () => [['organique', 'neurone'], ['chill-tekk', 'chilltekk'], ['xerboxion', 'xerboxion']].map(([id, g]) => ({ id, glyphe: g, nom: id, on: id === mode })),
+      choisirMode: (id) => { mode = id; } } });
+    k.poser();
+    const b = D.querySelector('[data-koin-bande]');
+    assert.ok(b && /chill-tekk/.test(b.textContent) && b.querySelector('svg'), 'le glyphe et le nom du xer');
+    b.click();
+    assert.deepEqual(k.etape(), { gauche: 1, droite: 1 }); assert.ok(D.documentElement.classList.contains('px-koins-ouv'));
+    assert.equal(D.querySelector('.px-koin-modes').hidden, false, 'les xers, sur place');
+    D.querySelector('[data-koin-mode="xerboxion"]').click(); k.poser();
+    assert.ok(!D.documentElement.classList.contains('px-koins-ouv'));
+    assert.match(D.querySelector('[data-koin-bande]').textContent, /xerboxion/, 'la bande suit le xer choisi');
+  } finally { p.fin(); }
+});
+
+test('▭ (0.99.55) en mode koin, la barre d\'un ploxion descend entre les deux koins (le CSS)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const css = readFileSync(new URL('../src/app/app.css', import.meta.url), 'utf8');
+  assert.ok(!/html\.px-koins \.px-mode-ploxion \.px-ecran>\.px-barre\{display:none\}/.test(css), 'elle ne disparaît plus');
+  assert.match(css, /html\.px-koins \.px-mode-ploxion \.px-ecran\{order:2\}/);
+  assert.match(css, /html\.px-koins \.px-mode-ploxion \.px-ecran>\.px-barre\{margin:0 76px/);
+});

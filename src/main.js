@@ -118,7 +118,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.54';
+const VERSION = '0.99.55';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -673,7 +673,7 @@ async function demarrer() {
   window.jOSEcranAccueil = ecranAccueil;
   boot(78, 'l\'accueil');
   // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xerbot (le monde physique)
-  const modes = creerModes({ cadres, connecter: (c) => connexionLabo.adresse(c), prefs, ouvrir: (id) => routeurProxy.ouvrir(id), connait: (id) => !!(routeur && routeur.connait(id)), source: SOURCE, vibrer: (x) => vibrer(x), controleur: controleur.api });
+  const modes = creerModes({ cadres, connecter: (c) => connexionLabo.adresse(c), prefs, ouvrir: (id) => routeurProxy.ouvrir(id), connait: (id) => !!(routeur && routeur.connait(id)), source: SOURCE, chemin: '/xer/chill-tekk', vibrer: (x) => vibrer(x), controleur: controleur.api });   // ⬡ (0.99.55) le xer xerboxion = le xer chill-tekk du labo
   modes.attacher(racine);
   let coupesConnues = new Set();   // les bions coupés (⚙ › Bions), relus à chaque ouverture ; gardés pour brancher les plugions sans attendre
   routeur = creerRouteur({ habiller: (id, hote) => (XERS_PLOXIONS[id] && prefs.lire().xerPloxions !== false ? XERS_PLOXIONS[id](hote, { W: window, vibrer: (x) => vibrer(x) }) : null), sonDe: (id) => (gel ? gel.aDuSon(id) : false), surChercher: () => (chercheur ? chercheur.ouvrir() : routeur.ouvrir('marketplace', { chercher: '1' })), surXers: () => (vueXers ? vueXers.ouvrir() : routeur.carte()), panneau: () => modes.panneau(), racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id, p) => routeurProxy.ouvrir(id, p), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges, present: (b) => window[b] != null }), apresChargement: (id) => { brancherPlugions(window, coupesConnues); /* (0.99.21) avant le montage : jOSZone a sa zone dès la première ouverture */ boxion.get('reglages', 'bions-coupes').then(c => { coupesConnues = new Set(c || []); brancherPlugions(window, coupesConnues); }).catch(() => {}); socialApple(id); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
