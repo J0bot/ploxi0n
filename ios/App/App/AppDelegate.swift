@@ -2344,7 +2344,8 @@ public class PloxiBLE: CAPPlugin, CAPBridgedPlugin, CBCentralManagerDelegate, CB
 //   fine : en plus, un point tous les 5 m quand tu bouges (iOS met en pause quand tu ne bouges plus : les visites comblent).
 // Tout est écrit sur le téléphone (Documents/veille.jsonl), même quand la page dort ; la page relit avec lire({ depuis }).
 //   demarrer({ fine }) → { etat }   arreter()   etat() → { etat, actif, fine, points }   lire({ depuis }) → { points, visites }   vider()
-//   événements : « position » { t, la, lo, acc, v } · « visite » { a, d?, la, lo, acc }
+//   événements : « position » { t, la, lo, acc, v, m?, c?, x?, r? } · « visite » { a, d?, la, lo, acc }
+//   (0.99.58) demarrer({ fine, capteurs }) ; pas({ depuis, jusqua? }) → { pas, metres?, etages?, descendus? } ; activites({ depuis }) → { activites }
 // Ne pas nuire : rien ne démarre sans « demarrer » ; la flèche bleue d'iOS montre que la veille tourne ; rien ne quitte le téléphone ici.
 @objc(PloxiVeille)
 public class PloxiVeille: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate {
@@ -2359,6 +2360,8 @@ public class PloxiVeille: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate
         CAPPluginMethod(name: "baladeDebut", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "baladeCible", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "baladeFin", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "pas", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "activites", returnType: CAPPluginReturnPromise),
     ]
     private let lm = CLLocationManager()
     private let file = DispatchQueue(label: "ploxi.veille")
@@ -2370,8 +2373,8 @@ public class PloxiVeille: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate
         lm.delegate = self
         // relancée par iOS (un grand déplacement, une visite) : on reprend là où on était
         if UserDefaults.standard.bool(forKey: "ploxi.veille.actif") {
-            let f = UserDefaults.standard.bool(forKey: "ploxi.veille.fine")
-            DispatchQueue.main.async { self.lancer(fine: f) }
+            let f = UserDefaults.standard.bool(forKey: "ploxi.veille.fine"), c = UserDefaults.standard.bool(forKey: "ploxi.veille.capteurs")
+            DispatchQueue.main.async { self.lancer(fine: f, capteurs: c) }
         }
         DispatchQueue.main.async { self.baladeReprendre() }
     }
@@ -2384,8 +2387,9 @@ public class PloxiVeille: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate
         default: return "a-demander"
         }
     }
-    private func lancer(fine: Bool) {
+    private func lancer(fine: Bool, capteurs: Bool = false) {
         self.fine = fine; actif = true
+        corps(true, capteurs: capteurs)
         lm.allowsBackgroundLocationUpdates = true
         lm.showsBackgroundLocationIndicator = true
         lm.pausesLocationUpdatesAutomatically = true
@@ -2397,13 +2401,14 @@ public class PloxiVeille: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate
         if fine { lm.startUpdatingLocation() } else { lm.stopUpdatingLocation() }
     }
     @objc func demarrer(_ call: CAPPluginCall) {
-        let f = call.getBool("fine") ?? true
+        let f = call.getBool("fine") ?? true, c = call.getBool("capteurs") ?? false
         DispatchQueue.main.async {
             if self.lm.authorizationStatus == .notDetermined { self.lm.requestWhenInUseAuthorization() }
             self.lm.requestAlwaysAuthorization()   // iOS propose « Toujours » après coup ; sans, la veille ne vit qu'app ouverte
             UserDefaults.standard.set(true, forKey: "ploxi.veille.actif"); UserDefaults.standard.set(f, forKey: "ploxi.veille.fine")
-            self.lancer(fine: f)
-            call.resolve(["etat": self.statut(), "fine": f])
+            UserDefaults.standard.set(c, forKey: "ploxi.veille.capteurs")
+            self.lancer(fine: f, capteurs: c)
+            call.resolve(["etat": self.statut(), "fine": f, "capteurs": c])
         }
     }
     @objc func arreter(_ call: CAPPluginCall) {
@@ -2412,12 +2417,13 @@ public class PloxiVeille: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate
             UserDefaults.standard.set(false, forKey: "ploxi.veille.actif")
             self.lm.stopUpdatingLocation(); self.lm.stopMonitoringVisits(); self.lm.stopMonitoringSignificantLocationChanges()
             self.lm.allowsBackgroundLocationUpdates = false
+            self.corps(false, capteurs: false)
             call.resolve()
         }
     }
     @objc func etat(_ call: CAPPluginCall) {
         let n = (try? String(contentsOf: fichier, encoding: .utf8))?.split(separator: "\n").count ?? 0
-        DispatchQueue.main.async { call.resolve(["etat": self.statut(), "actif": self.actif, "fine": self.fine, "points": n, "balade": self.bId != nil, "metres": self.bMetres]) }
+        DispatchQueue.main.async { call.resolve(["etat": self.statut(), "actif": self.actif, "fine": self.fine, "capteurs": self.avecCapteurs, "points": n, "balade": self.bId != nil, "metres": self.bMetres, "activite": self.mActivite]) }
     }
     @objc func lire(_ call: CAPPluginCall) {
         let depuis = call.getDouble("depuis") ?? 0
@@ -2452,8 +2458,9 @@ public class PloxiVeille: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate
     }
     public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         for l in locations where l.horizontalAccuracy >= 0 && l.horizontalAccuracy < 100 {
-            let o: [String: Any] = ["t": l.timestamp.timeIntervalSince1970 * 1000, "la": l.coordinate.latitude, "lo": l.coordinate.longitude,
+            var o: [String: Any] = ["t": l.timestamp.timeIntervalSince1970 * 1000, "la": l.coordinate.latitude, "lo": l.coordinate.longitude,
                                     "acc": l.horizontalAccuracy, "v": max(0, l.speed)]
+            if actif { ajoutCorps(&o) }   // 👣 (0.99.58) l'activité, la cadence, l'agitation, la rotation
             if actif { ecrire(o) }   // l'historique : seulement si la veille est allumée (une balade seule ne garde pas de trace)
             notifyListeners("position", data: o)
             DispatchQueue.main.async { self.baladeAvancer(l) }
@@ -2468,6 +2475,93 @@ public class PloxiVeille: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate
     }
     public func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         notifyListeners("etat", data: ["etat": statut()])
+    }
+
+    // 👣 (0.99.58, RS-7 : « la veille, ça me suit partout où je vais et ça prend mes pas, ma vitesse, le gyroscope et l'accéléromètre »)
+    // LE CORPS, pendant que la veille tourne : l'activité (CMMotionActivityManager : à pied, en courant, à vélo, en voiture, immobile), la
+    // cadence (CMPedometer, pas par seconde) et, avec « capteurs », l'accéléromètre et le gyroscope (CMMotionManager, 5 fois par seconde),
+    // RÉSUMÉS à chaque point : m (l'activité), c (pas/s), x (l'agitation moyenne, en g), r (la rotation moyenne, rad/s). La vitesse : v (GPS).
+    // iOS ne donne les capteurs qu'à une app réveillée : en veille fine, le GPS la garde réveillée quand tu bouges ; à l'arrêt, iOS la met en
+    // pause et les capteurs aussi. Les pas et l'activité, eux, iOS les garde 7 jours : pas({ depuis }) et activites({ depuis }) les relisent.
+    private let podo = CMPedometer()
+    private let activ = CMMotionActivityManager()
+    private let capteursMvt = CMMotionManager()
+    private let qCapteurs = OperationQueue()
+    private var avecCapteurs = false
+    private var mActivite = "?"
+    private var mCadence: Double = -1
+    private var mAgit: Double = 0, mRot: Double = 0, mN = 0
+    private func corps(_ on: Bool, capteurs avec: Bool) {
+        activ.stopActivityUpdates(); podo.stopUpdates()
+        if capteursMvt.isDeviceMotionActive { capteursMvt.stopDeviceMotionUpdates() }
+        avecCapteurs = false; mCadence = -1; mAgit = 0; mRot = 0; mN = 0
+        guard on else { mActivite = "?"; return }
+        if CMMotionActivityManager.isActivityAvailable() {
+            activ.startActivityUpdates(to: .main) { [weak self] a in if let a = a { self?.mActivite = PloxiVeille.nomActivite(a) } }
+        }
+        if CMPedometer.isStepCountingAvailable() {
+            podo.startUpdates(from: Date()) { [weak self] d, _ in
+                let c = d?.currentCadence?.doubleValue ?? -1
+                DispatchQueue.main.async { self?.mCadence = c }
+            }
+        }
+        if avec && capteursMvt.isDeviceMotionAvailable {
+            avecCapteurs = true
+            capteursMvt.deviceMotionUpdateInterval = 0.2
+            capteursMvt.startDeviceMotionUpdates(to: qCapteurs) { [weak self] m, _ in
+                guard let m = m else { return }
+                let u = m.userAcceleration, w = m.rotationRate
+                let a = (u.x * u.x + u.y * u.y + u.z * u.z).squareRoot(), r = (w.x * w.x + w.y * w.y + w.z * w.z).squareRoot()
+                DispatchQueue.main.async { guard let s = self else { return }; s.mAgit += a; s.mRot += r; s.mN += 1 }
+            }
+        }
+    }
+    static func nomActivite(_ a: CMMotionActivity) -> String {
+        if a.automotive { return "voiture" }
+        if a.cycling { return "velo" }
+        if a.running { return "course" }
+        if a.walking { return "pied" }
+        if a.stationary { return "immobile" }
+        return "?"
+    }
+    /// ce que le corps ajoute à un point (sur le fil principal, comme les positions) ; les moyennes repartent de zéro
+    private func ajoutCorps(_ o: inout [String: Any]) {
+        if mActivite != "?" { o["m"] = mActivite }
+        if mCadence >= 0 { o["c"] = (mCadence * 100).rounded() / 100 }
+        if avecCapteurs && mN > 0 {
+            o["x"] = (mAgit / Double(mN) * 1000).rounded() / 1000
+            o["r"] = (mRot / Double(mN) * 1000).rounded() / 1000
+            mAgit = 0; mRot = 0; mN = 0
+        }
+    }
+    /// les pas, la distance à pied et les étages entre deux instants (ms) ; iOS les garde 7 jours, même app fermée
+    @objc func pas(_ call: CAPPluginCall) {
+        guard CMPedometer.isStepCountingAvailable() else { call.reject("pas de podomètre ici"); return }
+        let a = Date(timeIntervalSince1970: (call.getDouble("depuis") ?? Calendar.current.startOfDay(for: Date()).timeIntervalSince1970 * 1000) / 1000)
+        let b = call.getDouble("jusqua").map { Date(timeIntervalSince1970: $0 / 1000) } ?? Date()
+        podo.queryPedometerData(from: a, to: b) { d, e in
+            guard let d = d else { call.reject(e?.localizedDescription ?? "podomètre muet"); return }
+            var r: [String: Any] = ["pas": d.numberOfSteps.intValue]
+            if let m = d.distance { r["metres"] = m.doubleValue }
+            if let x = d.floorsAscended { r["etages"] = x.intValue }
+            if let x = d.floorsDescended { r["descendus"] = x.intValue }
+            call.resolve(r)
+        }
+    }
+    /// les activités (à pied, en courant, à vélo, en voiture, immobile) depuis un instant (ms) : une ligne à chaque changement
+    @objc func activites(_ call: CAPPluginCall) {
+        guard CMMotionActivityManager.isActivityAvailable() else { call.reject("pas de capteur d'activité ici"); return }
+        let a = Date(timeIntervalSince1970: (call.getDouble("depuis") ?? (Date().timeIntervalSince1970 - 86400) * 1000) / 1000)
+        activ.queryActivityStarting(from: a, to: Date(), to: .main) { l, e in
+            guard let l = l else { call.reject(e?.localizedDescription ?? "activités muettes"); return }
+            var out: [[String: Any]] = [], der = ""
+            for x in l {
+                let m = PloxiVeille.nomActivite(x); if m == der || m == "?" { continue }
+                der = m
+                out.append(["t": x.startDate.timeIntervalSince1970 * 1000, "m": m, "sur": x.confidence == .high ? 2 : x.confidence == .medium ? 1 : 0])
+            }
+            call.resolve(["activites": Array(out.suffix(3000))])
+        }
     }
 
     // 🏝 (0.99.43) LA BALADE (RS-7 : « une activité pour le ploxion mappion ») : une Live Activity que le Swift met à jour LUI-MÊME à chaque
@@ -2502,7 +2596,7 @@ public class PloxiVeille: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate
             lm.startUpdatingLocation()
         } else {
             bGps = false
-            if actif { lancer(fine: fine) } else { lm.stopUpdatingLocation(); lm.allowsBackgroundLocationUpdates = false }
+            if actif { lancer(fine: fine, capteurs: avecCapteurs) } else { lm.stopUpdatingLocation(); lm.allowsBackgroundLocationUpdates = false }
         }
     }
     private func baladeGarder() {

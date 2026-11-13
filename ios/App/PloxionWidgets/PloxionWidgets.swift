@@ -572,11 +572,28 @@ struct WidgetLecture: Widget {
 
 // ---- 🎛 LES CONTRÔLES (0.49, iOS 18 : Centre de contrôle, écran verrouillé, bouton Action) ---------------------------------------------------
 // Chacun ouvre ploxi0n sur un geste (OpenURLIntent → ploxi0n://…, que l'app reçoit) : noter un tsoin, un vocal, la lampe, ploxi0n.
+// (0.99.58, RS-7 : « les trucs dans ce panel marchent pas, soit ça s'ouvre pas, soit ça marche pas ») : un OpenURLIntent posé DIRECTEMENT
+// sur le bouton s'exécute dans l'extension, et iOS n'y ouvre pas le schéma ploxi0n:// de l'app. Chaque bouton lance donc une intention qui
+// OUVRE L'APP (openAppWhenRun) ; elle est déclarée ici ET dans l'app (Raccourcis.swift, le même nom au caractère près) : c'est la copie de
+// l'app qui tourne, l'app au premier plan, et qui passe le lien au pont de Capacitor (appUrlOpen, gardé même si la page n'est pas prête).
+// Celle-ci ne sert qu'à décrire le bouton (et, au pire, rouvre le lien depuis l'extension).
+@available(iOS 18.0, *)
+struct OuvrirLienPloxi0n: AppIntent {
+    static var title: LocalizedStringResource = "Ouvrir ploxi0n"
+    static var openAppWhenRun: Bool = true
+    static var isDiscoverable: Bool = false
+    @Parameter(title: "Lien") var lien: String
+    init() {}
+    init(_ lien: String) { self.lien = lien }
+    func perform() async throws -> some IntentResult & OpensIntent {
+        .result(opensIntent: OpenURLIntent(URL(string: lien) ?? URL(string: "ploxi0n://px/accueil")!))
+    }
+}
 @available(iOS 18.0, *)
 struct ControleTsoin: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "ch.j0bot.ploxi0n.controle.tsoin") {
-            ControlWidgetButton(action: OpenURLIntent(URL(string: "ploxi0n://tsoin")!)) { Label("Noter un tsoin", systemImage: "hourglass") }
+            ControlWidgetButton(action: OuvrirLienPloxi0n("ploxi0n://tsoin")) { Label("Noter un tsoin", systemImage: "hourglass") }
         }
         .displayName("Noter un tsoin")
         .description("ploxi0n s'ouvre sur le composeur de tsoins.")
@@ -586,7 +603,7 @@ struct ControleTsoin: ControlWidget {
 struct ControleVocal: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "ch.j0bot.ploxi0n.controle.vocal") {
-            ControlWidgetButton(action: OpenURLIntent(URL(string: "ploxi0n://vocal")!)) { Label("Vocal ploxi0n", systemImage: "mic") }
+            ControlWidgetButton(action: OuvrirLienPloxi0n("ploxi0n://vocal")) { Label("Vocal ploxi0n", systemImage: "mic") }
         }
         .displayName("Vocal")
         .description("Un vocal, transcrit sur le téléphone.")
@@ -596,7 +613,7 @@ struct ControleVocal: ControlWidget {
 struct ControleLampe: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "ch.j0bot.ploxi0n.controle.lampe") {
-            ControlWidgetButton(action: OpenURLIntent(URL(string: "ploxi0n://lampe")!)) { Label("Lampe ploxi0n", systemImage: "flashlight.on.fill") }
+            ControlWidgetButton(action: OuvrirLienPloxi0n("ploxi0n://lampe")) { Label("Lampe ploxi0n", systemImage: "flashlight.on.fill") }
         }
         .displayName("Lampe")
         .description("La lampe de poche, par ploxi0n.")
@@ -606,7 +623,7 @@ struct ControleLampe: ControlWidget {
 struct ControlePloxi0n: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "ch.j0bot.ploxi0n.controle.ouvrir") {
-            ControlWidgetButton(action: OpenURLIntent(URL(string: "ploxi0n://px/accueil")!)) { Label("ploxi0n", systemImage: "square.grid.2x2") }
+            ControlWidgetButton(action: OuvrirLienPloxi0n("ploxi0n://px/accueil")) { Label("ploxi0n", systemImage: "square.grid.2x2") }
         }
         .displayName("ploxi0n")
         .description("Tes ploxions.")
@@ -626,7 +643,7 @@ struct EtatControle: ControlValueProvider {
 struct ControleProche: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "ch.j0bot.ploxi0n.controle.proche", provider: EtatControle(cle: "proche")) { allume in
-            ControlWidgetButton(action: OpenURLIntent(URL(string: "ploxi0n://proche")!)) {
+            ControlWidgetButton(action: OuvrirLienPloxi0n("ploxi0n://proche")) {
                 Label(allume ? "Proche · allumé" : "Proche · éteint", systemImage: allume ? "antenna.radiowaves.left.and.right" : "antenna.radiowaves.left.and.right.slash")
             }
         }
@@ -638,7 +655,7 @@ struct ControleProche: ControlWidget {
 struct ControleBalade: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "ch.j0bot.ploxi0n.controle.balade", provider: EtatControle(cle: "balade")) { enCours in
-            ControlWidgetButton(action: OpenURLIntent(URL(string: "ploxi0n://balade")!)) {
+            ControlWidgetButton(action: OuvrirLienPloxi0n("ploxi0n://balade")) {
                 Label(enCours ? "Finir la balade" : "Balade", systemImage: enCours ? "flag.checkered" : "figure.walk")
             }
         }
@@ -646,11 +663,25 @@ struct ControleBalade: ControlWidget {
         .description("Le chrono, la distance et ta cible sur l'écran verrouillé (mappion).")
     }
 }
+// 👣 (0.99.58, RS-7 : « un truc pour le mappion : activer la veille, ça me suit partout où je vais, mes pas, ma vitesse, le gyroscope,
+// l'accéléromètre ») : allumer / éteindre la veille (PloxiVeille), l'état vient de l'app comme Proche et la balade.
+@available(iOS 18.0, *)
+struct ControleVeille: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "ch.j0bot.ploxi0n.controle.veille", provider: EtatControle(cle: "veille")) { allumee in
+            ControlWidgetButton(action: OuvrirLienPloxi0n("ploxi0n://veille")) {
+                Label(allumee ? "Veille · allumée" : "Veille · éteinte", systemImage: allumee ? "location.fill.viewfinder" : "location.slash")
+            }
+        }
+        .displayName("Veille")
+        .description("mappion te suit : tes lieux, tes pas, ta vitesse, ton allure.")
+    }
+}
 @available(iOS 18.0, *)
 struct ControleToilettes: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "ch.j0bot.ploxi0n.controle.toilettes") {
-            ControlWidgetButton(action: OpenURLIntent(URL(string: "ploxi0n://toilettes")!)) { Label("Toilettes", systemImage: "toilet") }
+            ControlWidgetButton(action: OuvrirLienPloxi0n("ploxi0n://toilettes")) { Label("Toilettes", systemImage: "toilet") }
         }
         .displayName("Toilettes")
         .description("Les plus proches, guidées depuis l'écran verrouillé.")
@@ -894,6 +925,7 @@ struct PloxionWidgets: WidgetBundle {
             ControlePloxi0n()
             ControleProche()
             ControleBalade()
+            ControleVeille()
             ControleToilettes()
         }
     }

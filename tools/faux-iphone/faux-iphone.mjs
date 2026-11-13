@@ -258,10 +258,15 @@ natif.PloxiAccueil = { estAccueil: () => ({ accueil: accueilFaux.accueil, peut: 
   applis: () => ({ applis: [{ paquet: 'com.google.android.dialer', activite: 'D', nom: 'Téléphone', icone: PNG1 }, { paquet: 'com.android.settings', activite: 'S', nom: 'Paramètres', icone: PNG1 }, { paquet: 'org.mozilla.firefox', nom: 'Firefox' }] }),
   lancer: (o) => { accueilFaux.lances.push(o); return {}; }, reglages: (o) => { accueilFaux.reglages.push(o); return {}; } };
 globalThis.androidRetour = () => emettre('App', 'backButton', { canGoBack: false });
+// 👣 (0.99.58) une veille qui se souvient si elle tourne (le bouton du Centre de contrôle l'allume et l'éteint), les pas, les activités
+const veilleFaux = { actif: true, fine: true, capteurs: false, demarrages: 0 };
 natif.PloxiVeille = {
-  demarrer: (o) => ({ etat: 'toujours', fine: o.fine !== false }), arreter: () => ({}),
-  etat: () => ({ etat: 'toujours', actif: true, fine: true, points: 3 }),
-  lire: () => { const t = Date.now(); return { points: [0, 1, 2].map(i => ({ t: t - (3 - i) * 60000, la: 46.52 + i * 0.0001, lo: 6.63, acc: 8, v: 1.2 })), visites: [{ a: t - 3600e3, d: t - 1800e3, la: 46.5205, lo: 6.6301, acc: 20 }] }; },
+  demarrer: (o) => { Object.assign(veilleFaux, { actif: true, fine: o.fine !== false, capteurs: !!o.capteurs }); veilleFaux.demarrages++; return { etat: 'toujours', fine: veilleFaux.fine, capteurs: veilleFaux.capteurs }; },
+  arreter: () => { veilleFaux.actif = false; return {}; },
+  etat: () => ({ etat: 'toujours', actif: veilleFaux.actif, fine: veilleFaux.fine, capteurs: veilleFaux.capteurs, points: 3, activite: 'pied' }),
+  lire: () => { const t = Date.now(); return { points: [0, 1, 2].map(i => ({ t: t - (3 - i) * 60000, la: 46.52 + i * 0.0001, lo: 6.63, acc: 8, v: 1.2, m: 'pied', c: 1.8, ...(veilleFaux.capteurs ? { x: 0.12, r: 0.4 } : {}) })), visites: [{ a: t - 3600e3, d: t - 1800e3, la: 46.5205, lo: 6.6301, acc: 20 }] }; },
+  pas: () => ({ pas: 6868, metres: 5120.5, etages: 4, descendus: 3 }),
+  activites: () => { const t = Date.now(); return { activites: [{ t: t - 7200e3, m: 'immobile', sur: 2 }, { t: t - 3600e3, m: 'pied', sur: 2 }, { t: t - 1200e3, m: 'voiture', sur: 1 }] }; },
   vider: () => ({}),
   // 🏝 (0.99.43) la balade : une Live Activity de plus dans activitesFaux (genre balade)
   baladeDebut: (o) => { const deja = activitesFaux.find(x => x.genre === 'balade' && !x.finie); if (deja) { Object.assign(deja, o); return { id: deja.id, deja: true }; } activitesFaux.push({ ...o, genre: 'balade', id: 'act-' + (activitesFaux.length + 1), metres: 0 }); return { id: 'act-' + activitesFaux.length }; },

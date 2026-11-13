@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.58', titre: 'Les boutons du Centre de contrôle, réparés', points: [
+    '🎛 Les boutons de ploxi0n dans le Centre de contrôle ouvrent maintenant l\'app et font ce qu\'ils disent : tsoin, vocal, lampe, ploxi0n, Proche, balade, toilettes.',
+    '◷ Un nouveau bouton, Veille : mappion te suit partout (tes lieux, tes pas, ta vitesse, ton allure : à pied, à vélo, en voiture), et tu l\'éteins d\'un geste.',
+    '👣 La veille note aussi tes pas et l\'accéléromètre et le gyroscope pendant que tu bouges ; les ploxions peuvent relire tes pas et tes activités des 7 derniers jours.',
+  ] },
   { v: '0.99.57', titre: 'Le koin du chill-tekk', points: [
     '▭ La bande entre les deux koins : toute la barre, toujours là. ‹ › pour revenir ou passer au ploxion suivant, ⧗ ○ △ □ ◇ ✕ ⓘ, et ▁ pour minimiser. Dans un ploxion, le ◇ s\'encadre.',
     '▣ Le koin ouvert : quatre cases en tunnel, un grand glyphe chacune. Le trion, l\'hypercube du xer, le wormion, le portion.',
