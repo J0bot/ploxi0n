@@ -1894,3 +1894,22 @@ html.px-m-xerboxion .px-accueil:has(.px-xbx)>:is(.px-grille,.px-cat,h2,.px-plaqu
 .px-nt-n.neuve{border-color:var(--acc)}.px-nt-t{display:flex;justify-content:space-between;gap:8px;font:600 14px var(--police)}.px-nt-t small{flex:none;font:500 11px var(--mono);color:var(--muted)}
 .px-nt-x{font:400 13px/1.35 var(--police);color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
 .px-nt-b{display:flex;gap:8px;margin-top:10px}.px-nt-b button{flex:1;min-height:40px}
+
+/* 🧹 (0.99.65, RS-7 : « bref, faut régler les problèmes de UI ») ce que les captures montraient :
+   - le clavier ouvert (coord) : la bande des koins restait au-dessus et mangeait l'écran → cachée tant que le clavier est là (html.px-clavier) ;
+   - une feuille ouverte depuis un ploxion (la barre du haut, le tuto…) vit dans l'hôte du ploxion, SOUS la bande : son bas disparaissait
+     derrière → la bande s'efface tant qu'une feuille est ouverte ;
+   - le contenu transparaissait dans les coins, entre les koins et la bande (« ∞ ga… ») → un fond plein sous toute la bande ;
+   - le « ? » flottant du labo (#jos-aide-btn) recouvrait les boutons des ploxions (l'envoi de coord, mappion) : en mode koin, ⓘ de la bande le remplace. */
+html.px-clavier .px-koins-r,body:has(.px-voile:not([hidden]),.px-feuille:not([hidden])) .px-koins-r{display:none}
+html.px-koins.px-clavier #ploxi0n.px-mode-ploxion{padding-bottom:0}
+.px-koins-r::before{content:'';position:fixed;left:0;right:0;bottom:0;height:var(--kbande);background:var(--bg,#07060c);z-index:40;pointer-events:none}
+html.px-koins.px-koins-ouv .px-koins-r::before{background:transparent}
+html.px-koins #jos-aide-btn{display:none !important}
+/* 🧹 (0.99.65) l'accueil en mode koin : le crayon (seul dans l'en-tête, le titre est caché) au bout de la ligne du sous-titre, le sous-titre sur
+   une ligne : les icônes commencent plus haut (« prendre le plus de place possible sur l'écran ») */
+html.px-koins #ploxi0n .px-accueil{position:relative}
+html.px-koins .px-accueil>.px-tete{position:absolute;right:2px;top:calc(var(--px-haut) + 18px);margin:0;z-index:2}
+html.px-koins .px-accueil>.px-tete .px-modif{min-height:34px;padding:0 10px}
+html.px-koins .px-accueil>.px-sous{margin:8px 0 10px;padding-right:58px;min-height:34px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.px-koins .px-accueil>.px-vues{margin-bottom:12px}

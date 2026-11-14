@@ -121,7 +121,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.64';
+const VERSION = '0.99.65';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -828,6 +828,10 @@ async function demarrer() {
     // ▭ (0.99.60) le ploxion où tu es, pour la bande (◇ prend son glyphe)
     courant: () => { const id = routeur.courant(); if (!id) return null; const p = routeur.catalogue().find(x => x.id === id) || { id }; return { id, nom: p.nom || id, svg: glyphePloxion(p) }; } } });
   koins.poser(); prefs.surChangement(() => koins.poser());
+  // 🧹 (0.99.65) le clavier ouvert : html.px-clavier (la bande des koins s'efface) ; le plugin Keyboard sur l'iPhone, la hauteur visible ailleurs
+  { const cl = (on) => document.documentElement.classList.toggle('px-clavier', !!on);
+    if (natifLot) import('@capacitor/keyboard').then(({ Keyboard }) => { Keyboard.addListener('keyboardWillShow', () => cl(true)); Keyboard.addListener('keyboardWillHide', () => cl(false)); }).catch(() => {});
+    const vv = window.visualViewport; if (vv) { const h0 = () => window.innerHeight || 0; vv.addEventListener('resize', () => cl(vv.height < h0() - 140)); } }
   window.ploxi0n = { boxion, shim, routeur, prefs, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte, koins, langue: langueApp };
   // 👁 (0.99.46) piloter de la tête ou du regard (⚙ › Piloter de la tête) : notre suivi, PloxiRegard (ARKit) + src/bions/tete.js
   const regard = creerRegard({ W: window, boxion, vibrer: (x) => vibrer(x), routeur, signaler: (t) => routeur.signaler(t), inverse: () => !!prefs.lire().regardInverse,

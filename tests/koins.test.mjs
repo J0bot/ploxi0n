@@ -126,3 +126,12 @@ test('▭ (0.99.60) la bande, barre d\'accueil : ◇ prend le glyphe du ploxion 
     cour = null; W.dispatchEvent(new W.CustomEvent('ploxi0n:courant')); assert.ok(!ac().classList.contains('px-kb-dans'), 'revenu à l\'accueil : ◇');
   } finally { p.fin(); }
 });
+
+test('🧹 (0.99.65) la bande s\'efface avec le clavier ou une feuille ouverte ; un fond plein sous les coins ; le « ? » du labo caché en mode koin', async () => {
+  const { readFileSync } = await import('node:fs');
+  const css = readFileSync(new URL('../src/app/app.css', import.meta.url), 'utf8'), m = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
+  assert.match(css, /html\.px-clavier \.px-koins-r,body:has\(\.px-voile:not\(\[hidden\]\),\.px-feuille:not\(\[hidden\]\)\) \.px-koins-r\{display:none\}/);
+  assert.match(css, /\.px-koins-r::before\{content:'';position:fixed;left:0;right:0;bottom:0;height:var\(--kbande\);background:var\(--bg,#07060c\)/);
+  assert.match(css, /html\.px-koins #jos-aide-btn\{display:none !important\}/);
+  assert.match(m, /Keyboard\.addListener\('keyboardWillShow', \(\) => cl\(true\)\)/);
+});

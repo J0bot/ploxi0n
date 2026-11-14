@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.65', titre: 'L\'écran, nettoyé', points: [
+    '🧹 Le clavier ouvert, la bande des koins s\'efface : tout l\'écran pour écrire (coord, messages).',
+    '🧹 Une feuille ouverte dans un ploxion passe devant la bande, son bas n\'est plus caché ; plus rien ne transparaît dans les coins.',
+    '🧹 Le « ? » flottant du labo ne recouvre plus les boutons des ploxions en mode koin (ⓘ de la bande fait la même chose) ; l\'accueil commence plus haut.',
+  ] },
   { v: '0.99.64', titre: 'Le ploxion Notifs', points: [
     '🔔 Un ploxion Notifs : toutes tes notifications au même endroit, par jour, celles de coord, de Proche, les push, et celles arrivées pendant que l\'app dormait.',
     '🔔 Choisis les mots à cacher (la notif disparaît, et ploxi0n ne la pose même plus) ou les seuls mots à voir.',

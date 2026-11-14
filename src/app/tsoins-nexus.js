@@ -1,5 +1,7 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1794638985000,"0.99.63 : le xer xerboxion natif (le chill-tekk du labo dessiné dans l'app : Home, onglets Bureau, Labo, Capteurs & bions, Quêtes, Xers ; thème cyan ; koins)"],
+export const COMMITS = [[1794639366000,"docs/CONTACTS-ET-PARTAGE.md : les contacts de toutes les plateformes (ce qu'on peut vraiment importer), la feuille de partage d'iOS, le partage au rang xerboxio"],
+  [1794639322000,"0.99.64 : le ploxion Notifs (le journal de toutes les notifications, les mots à voir ou à cacher, le nouveau build ; le sujet push « build » et les mots pour le"],
+  [1794638985000,"0.99.63 : le xer xerboxion natif (le chill-tekk du labo dessiné dans l'app : Home, onglets Bureau, Labo, Capteurs & bions, Quêtes, Xers ; thème cyan ; koins)"],
   [1794638651000,"0.99.62 : le dézoom en 3 × 3 (la vue des xers : huit voisins, diagonales comprises, cases carrées, glisser en biais)"],
   [1794638437000,"0.99.61 : coord envoie de nouveau (le multipart du mode connecté partait vide : sans Content-Type, Capacitor n'écrit pas le corps), le verrou de coord se réessa"],
   [1794615752000,"0.99.60 : la bande des koins, barre d'accueil (le glyphe du ploxion où tu es, glisser pour minimiser ou changer de ploxion), la lueur du koin du labo"],
