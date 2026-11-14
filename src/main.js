@@ -31,7 +31,8 @@ import { installerClavierIos, barreClavier, comprendre } from './natif/clavier-i
 import { trouverPloxion } from './natif/vocabulaire.js';
 import { creerVocal } from './natif/vocal.js';
 import { creerGuide } from './app/guide.js';   // 🧭 (0.95) le guide remplace les neuf cartes (onboarding.js)
-import { creerNouveautes } from './app/nouveautes.js';
+import { creerNouveautes, NOUVEAUTES } from './app/nouveautes.js';
+import { creerNotifsPx } from './lot/notifs-px.js';   // 🔔 (0.99.64) le ploxion Notifs
 import { creerTsoinNatif } from './natif/tsoin-natif.js';
 import { creerBarreHaut } from './app/barre-haut.js';
 import { creerSante } from './natif/sante.js';
@@ -120,7 +121,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.63';
+const VERSION = '0.99.64';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -652,15 +653,22 @@ async function demarrer() {
   boot(70, 'HUD · dock');
   // ⚙ les réglages : un ploxion interne, au bout du ⚙ de l'accueil (jamais retirable)
   // les notifications (test, et les messages de coord tant que l'app est au premier plan ; la vraie « app fermée » demande APNs)
-  const notifs = creerNotifs({ boxion, vibrer, envoyer: (q) => httpRelais.requete(q, fetchOrigine),
+  // 🔔 (0.99.64) le ploxion Notifs : le journal de toutes les notifications, les mots à voir ou à cacher (repartent au labo avec le jeton push)
+  let pushRef = null;
+  const notifsPx = creerNotifsPx({ W: window, boxion, vibrer: (x) => vibrer(x), ouvrir: (id, p) => routeurProxy.ouvrir(id, p || undefined), surMots: () => { if (pushRef) pushRef.redeclarer(); } });
+  internes.push(notifsPx.ploxion);
+  // un nouveau build installé (une version jamais vue ici) : dans le journal, sujet « build »
+  boxion.get('reglages', 'notifs-version').then(async (v) => { if (v === VERSION) return; await boxion.put('reglages', 'notifs-version', VERSION).catch(() => {}); if (!v) return;
+    const n = NOUVEAUTES.find(x => x.v === VERSION); await notifsPx.noter({ titre: '◇ ploxi0n ' + VERSION + ' installé', texte: n ? n.titre : 'un nouveau build', source: 'app', sujet: 'build', ouvrir: 'reglages-app', cle: 'build:' + VERSION }); }).catch(() => {});
+  const notifs = creerNotifs({ boxion, vibrer, journal: notifsPx, envoyer: (q) => httpRelais.requete(q, fetchOrigine),
     ouvrir: (id, p) => { routeurProxy.ouvrir(id); if (id === 'proche' && p && p.salon) { proche.page('messages'); proche.voir(p.salon); } } });   // ◉ (0.99.40) une notification de Proche : la conversation
   proche.brancherNotifier((o) => notifs.proche(o).catch(() => false));
   notifs.brancherReponse((salon, texte) => { proche.repondre(salon, texte).catch(() => {}); }, (salon) => proche.marquerLu(salon));   // ↩ (0.99.45) répondre depuis la notification
   // 🔔 (0.91) les notifications push, app fermée aussi (la clé APNs vit sur le labo : docs/PUSH.md)
-  const push = creerPush({ boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id, p) => routeurProxy.ouvrir(id, p || undefined), vibrer: (x) => vibrer(x),
+  const push = creerPush({ boxion, journal: notifsPx, envoyer: (q) => httpRelais.requete(q, fetchOrigine), ouvrir: (id, p) => routeurProxy.ouvrir(id, p || undefined), vibrer: (x) => vibrer(x),
     signaler: (t) => routeur && routeur.signaler(t), connecte: () => !!(compteRef && compteRef.etat().connecte),
     natif: () => plateforme() === 'ios' });   // (0.99.32) Android : le push passe par Firebase (google-services.json) ; sans lui, register() tue l'app
-  notifs.push = push;
+  notifs.push = push; pushRef = push;
   await notifs.pret;
   boot(73, 'notifications');
   internes.push(enregistrerReglages({ compte, social, remontee, hud, routeur: () => routeur, depot, boxion, modeConnecte: reglerModeConnecte, notifs, prefs, vibrer, haptique, lecteur, lecteurNatif, sante, cube, valeurs: () => (raccourcis ? raccourcis.toutes() : {}), version: VERSION, maj }));
@@ -961,7 +969,7 @@ async function demarrer() {
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
     // Face ID (0.55) : en arrière-plan, les ploxions verrouillés se referment ; au retour, celui qui était à l'écran redemande le visage
     import('@capacitor/app').then(({ App }) => { let aReprendre = null; App.addListener('pause', () => { aReprendre = routeur.reverrouiller(); }); App.addListener('resume', () => { const id = aReprendre; aReprendre = null; if (id) routeur.redemander(id).catch(() => {}); }); }).catch(() => {});
-    import('@capacitor/app').then(({ App }) => App.addListener('appStateChange', (e) => { if (e.isActive) { raccourcis.recevoir().catch(() => {}); carteWidget(); notifs.demarrer(); sante.synchroniser().catch(() => {}); } else { notifs.arreter(); publierValeurs().catch(() => {}); dossier.synchroniser().catch(() => {}); couperVideosArrierePlan(); } })).catch(() => {});
+    import('@capacitor/app').then(({ App }) => App.addListener('appStateChange', (e) => { if (e.isActive) { raccourcis.recevoir().catch(() => {}); carteWidget(); push.releverLivrees().catch(() => {}); notifs.demarrer(); sante.synchroniser().catch(() => {}); } else { notifs.arreter(); publierValeurs().catch(() => {}); dossier.synchroniser().catch(() => {}); couperVideosArrierePlan(); } })).catch(() => {});
   }
 }
 // (0.69) jamais un écran mort : la raison, ce qu'on peut y faire, et « réessayer » (la base fermée par iOS se rouvre une fois l'iPhone déverrouillé)

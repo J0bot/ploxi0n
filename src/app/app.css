@@ -1881,3 +1881,16 @@ html.px-m-xerboxion .px-accueil:has(.px-xbx)>:is(.px-grille,.px-cat,h2,.px-plaqu
 .px-xbx-vide{margin:6px 4px;font:600 12px var(--mono);color:rgba(150,220,230,.5)}
 .px-xbx-lien{width:100%;min-height:46px;border-radius:14px;border:1.5px dashed color-mix(in srgb,var(--acc) 45%,transparent);background:none;color:#9ff3f9;font:600 13px var(--police)}
 @media (max-width:360px){.px-xbx-g{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* 🔔 (0.99.64) le ploxion Notifs (src/lot/notifs-px.js) */
+.px-nt-mots{display:grid;gap:8px;margin:6px 0 10px}.px-nt-mots>div{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px;border-radius:14px;border:var(--trait) solid var(--bord);background:var(--surface)}
+.px-nt-mots b{font:600 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);width:100%}
+.px-nt-mots input{flex:1 1 140px;min-height:36px;padding:6px 10px;border-radius:10px;border:var(--trait) solid var(--bord);background:var(--creux);color:var(--txt);font:500 14px var(--police)}
+.px-nt-mot{min-height:30px;padding:4px 10px;border-radius:15px;border:var(--trait) solid var(--acc);background:none;color:var(--txt);font:600 12px var(--police)}
+.px-nt-puces{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:8px}.px-nt-puces button{flex:none;min-height:34px;padding:4px 12px;border-radius:17px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--muted);font:600 12px var(--police)}
+.px-nt-puces button.on{border-color:var(--acc);color:var(--txt)}
+.px-nt-liste h3{margin:12px 2px 6px;font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.px-nt-n{display:flex;flex-direction:column;align-items:stretch;gap:4px;width:100%;text-align:left;margin:0 0 6px;padding:10px 12px;border-radius:14px;border:var(--trait) solid var(--bord);background:var(--surface);color:var(--txt)}
+.px-nt-n.neuve{border-color:var(--acc)}.px-nt-t{display:flex;justify-content:space-between;gap:8px;font:600 14px var(--police)}.px-nt-t small{flex:none;font:500 11px var(--mono);color:var(--muted)}
+.px-nt-x{font:400 13px/1.35 var(--police);color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.px-nt-b{display:flex;gap:8px;margin-top:10px}.px-nt-b button{flex:1;min-height:40px}

@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.64', titre: 'Le ploxion Notifs', points: [
+    '🔔 Un ploxion Notifs : toutes tes notifications au même endroit, par jour, celles de coord, de Proche, les push, et celles arrivées pendant que l\'app dormait.',
+    '🔔 Choisis les mots à cacher (la notif disparaît, et ploxi0n ne la pose même plus) ou les seuls mots à voir.',
+    '🔔 Un nouveau build installé s\'y note ; et le sujet « build » est prêt pour que le labo te prévienne dès qu\'il est sur TestFlight.',
+  ] },
   { v: '0.99.63', titre: 'Le xer xerboxion, dans l\'app', points: [
     '⬡ Le mode xerboxion est maintenant dessiné dans l\'app : le chill-tekk du labo, cyan, sans attendre le serveur ni se reconnecter. Hors ligne aussi.',
     '⬡ Home · tes ploxions et ceux du labo · filtrer ; les onglets Bureau, Labo (tout le catalogue, un toucher l\'installe), Capteurs & bions (le natif de l\'iPhone), Quêtes, Xers.',
