@@ -273,15 +273,15 @@ html.px-koins.px-telecommande .rg-tete,html.px-koins.px-telecommande .mk-top{pad
      position:absolute et son défilement restent sous la bande, exactement comme avant ; son fond, lu sur la racine du ploxion par
      barre-haut.js, la remplit : --px-hote-fond, --px-hote-image) ;
    - un ploxion clair (html.px-haut-clair, posé par barre-haut.js) : le voile blanchit, l'encre fonce (la nôtre ; celle d'iOS par SystemBars). */
-:root{--px-haut:env(safe-area-inset-top,0px)}
+:root{--px-haut:env(safe-area-inset-top,0px);--kbande:calc(56px + env(safe-area-inset-bottom,0px) * .35)}   /* (0.99.61) la hauteur de la bande des koins (et des koins) : fine, la barre d'accueil d'iOS mord un peu dessous */
 html.px-haut-on{--px-haut:max(env(safe-area-inset-top,0px),22px)}
-.px-haut{position:fixed;top:0;left:0;right:0;z-index:60;height:var(--px-haut);display:flex;align-items:flex-end;justify-content:space-between;padding:0 max(18px,env(safe-area-inset-left,0px)) 6px;box-sizing:border-box;background:none;font:600 12px/1 var(--mono);letter-spacing:.06em;color:rgba(228,222,240,.88);text-shadow:0 1px 2px rgba(0,0,0,.6);text-transform:lowercase;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.px-haut{position:fixed;top:0;left:0;right:0;z-index:60;height:var(--px-haut);display:flex;align-items:center;justify-content:space-between;padding:2px max(22px,env(safe-area-inset-left,0px)) 0;box-sizing:border-box;background:none;font:600 12px/1 var(--mono);letter-spacing:.06em;color:rgba(228,222,240,.88);text-shadow:0 1px 2px rgba(0,0,0,.6);text-transform:lowercase;-webkit-user-select:none;user-select:none;touch-action:manipulation}
 .px-haut::before{content:"";position:absolute;left:0;right:0;top:0;bottom:-16px;z-index:-1;pointer-events:none;background:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,0))}
 .px-haut[hidden]{display:none}
 .px-haut-vide{pointer-events:none}
 .px-haut .g,.px-haut .d{display:flex;gap:10px;align-items:center;min-width:0;white-space:nowrap;overflow:hidden}
 .px-haut .g{flex:1}.px-haut .d{flex:1;justify-content:flex-end}
-.px-haut .ile{flex:0 0 130px}
+.px-haut .ile{flex:0 0 min(44vw,172px)}   /* (0.99.61, RS-7 : « la barre du haut vraiment en haut, je suis sur iPhone 14 ») : centrée dans les oreilles, de part et d'autre de l'encoche (ou de l'île), comme l'heure d'iOS */
 .px-haut [data-k="heure"]{color:#f1ecfa;font-size:14px;letter-spacing:.04em}
 .px-haut [data-k="tsoins"]{color:var(--bio)}
 .px-haut .bas{color:#f0a090}
@@ -1163,17 +1163,17 @@ html.px-koins .px-dock{display:none}
 /* ▭ (0.99.57, RS-7 : « plutôt ça l'inspi », le koin ouvert du chill-tekk du labo) : en mode koin, la barre d'un ploxion laisse sa place à LA BANDE
    entre les deux koins (la barre des glyphes, src/app/koins.js) ; le ploxion s'arrête au-dessus d'elle. */
 html.px-koins .px-mode-ploxion .px-ecran>.px-barre{display:none}
-html.px-koins #ploxi0n.px-mode-ploxion{padding-bottom:76px}
-html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+html.px-koins #ploxi0n.px-mode-ploxion{padding-bottom:var(--kbande)}
+html.px-koins .px-accueil{padding-bottom:calc(var(--kbande) + 10px)}
 .px-koins-r{position:fixed;inset:auto 0 0 0;height:0;z-index:40;color:var(--txt)}
-.px-koin{position:fixed;bottom:0;width:76px;height:76px;padding:0;margin:0;border:0;background:transparent;color:var(--acc);z-index:42;
+.px-koin{position:fixed;bottom:0;width:var(--kbande);height:var(--kbande);padding:0;margin:0;border:0;background:transparent;color:var(--acc);z-index:42;
   transition:width .26s cubic-bezier(.2,.9,.3,1),height .26s cubic-bezier(.2,.9,.3,1),opacity .2s;-webkit-tap-highlight-color:transparent}
 .px-koin-gauche{left:0}.px-koin-droite{right:0}   /* (0.99.7) collés au coin : l'arrondi de l'écran les découpe */
 .px-koin svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linejoin:round;opacity:.8}
 .px-koin svg polygon:first-child{fill:var(--surface);stroke:var(--bord2)}
 .px-koin svg .f{fill:var(--bio);stroke:none;opacity:.7}
 .px-koin-voile{position:fixed;inset:0;z-index:39;background:rgba(7,5,12,.62)}
-.px-koin-cases{position:fixed;bottom:calc(76px + 8px);width:calc(50vw - 17px);display:grid;grid-template-rows:auto auto;gap:8px;z-index:41}
+.px-koin-cases{position:fixed;bottom:calc(var(--kbande) + 8px);width:calc(50vw - 17px);display:grid;grid-template-rows:auto auto;gap:8px;z-index:41}
 .px-koin-cases-gauche{left:12px}.px-koin-cases-droite{right:12px}
 .px-koin-cases>button,.px-koin-pad{aspect-ratio:1/1;max-height:22vh;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
   background:var(--surface) var(--grain);border:var(--trait) solid var(--bord);box-shadow:inset 0 0 0 1px var(--filet);color:var(--txt);padding:10px;font:500 9.5px/1.2 var(--mono);letter-spacing:.16em;text-transform:uppercase}
@@ -1210,15 +1210,15 @@ html:not(.px-organique):not(.px-e-texte) :is(.px-koin-pad.px-pad-actif,.px-koin-
 .px-koin-pad-wormion.px-pad-actif i[data-pad-a]{opacity:.7}
 .px-koin-pad-portion i[data-pad-p]{left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid var(--acc);opacity:.0}
 .px-koin-pad-portion:not([data-dir=""]) i[data-pad-p],.px-koin-pad-portion:active i[data-pad-p]{opacity:.8}
-.px-koin-barre{--kb:76px;--kg:5px;position:fixed;left:0;right:0;bottom:0;height:var(--kb);box-sizing:border-box;z-index:41;display:flex;align-items:center;
-  padding:0 calc(var(--kg) + 6px + (var(--kb) - env(safe-area-inset-bottom,0px)) / 2) env(safe-area-inset-bottom,0px);background:var(--acc);   /* les boutons, au milieu de la hauteur utile : là, l'hypoténuse du koin est à une demi-hauteur du bord */
+.px-koin-barre{--kb:var(--kbande);--kg:4px;position:fixed;left:0;right:0;bottom:0;height:var(--kb);box-sizing:border-box;z-index:41;display:flex;align-items:center;
+  padding:0 calc(var(--kg) + 4px + (var(--kb) - env(safe-area-inset-bottom,0px) * .35) / 2) calc(env(safe-area-inset-bottom,0px) * .35);background:var(--acc);   /* les boutons, au milieu de la hauteur utile : là, l'hypoténuse du koin est à une demi-hauteur du bord */
   clip-path:polygon(var(--kg) 0,calc(100% - var(--kg)) 0,calc(100% - var(--kb) - var(--kg)) 100%,calc(var(--kb) + var(--kg)) 100%)}
 .px-koin-barre::before{content:'';position:absolute;inset:0;z-index:-1;background:var(--surface) var(--grain);
   clip-path:polygon(calc(var(--kg) + 2.2px) 1.5px,calc(100% - var(--kg) - 2.2px) 1.5px,calc(100% - var(--kb) - var(--kg) - .6px) calc(100% + 1px),calc(var(--kb) + var(--kg) + .6px) calc(100% + 1px))}
 .px-koin-barre{isolation:isolate}
-.px-koin-barre>button{flex:1;min-width:0;height:calc(var(--kb) - env(safe-area-inset-bottom,0px) - 10px);max-height:46px;border:0;border-radius:8px;background:transparent;color:var(--acc);font:600 17px/1 var(--police);display:flex;align-items:center;justify-content:center;padding:0}
+.px-koin-barre>button{flex:1;min-width:0;height:calc(var(--kb) - env(safe-area-inset-bottom,0px) * .35 - 8px);max-height:50px;border:0;border-radius:8px;background:transparent;color:var(--acc);font:600 22px/1 var(--police);display:flex;align-items:center;justify-content:center;padding:0}
 .px-koin-barre>button:active{background:var(--surface2)}
-.px-koin-barre>button .px-g{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:4.5}
+.px-koin-barre>button .px-g{width:min(27px,6.4vw);height:min(27px,6.4vw);fill:none;stroke:currentColor;stroke-width:4.5}
 .px-koin-barre>button .px-g .f{fill:currentColor}
 .px-koin-cases[hidden],.px-koin-voile[hidden],.px-koin-modes[hidden]{display:none}
 /* ◺◿ (0.99.47) LE KOIN QUI S'OUVRE : --k va de 0 (le petit triangle du coin) à 1 (ouvert). Le koin grandit depuis son coin et s'efface pendant
@@ -1245,7 +1245,7 @@ html:not(.px-calme) .px-koin svg{filter:drop-shadow(0 0 3px color-mix(in srgb,va
 .px-koins-r:not(.px-koins-ouverts):not(.px-koins-glisse) :is(.px-koin-cases,.px-koin-voile){pointer-events:none}
 .px-koins-r.px-koins-glisse :is(.px-koin,.px-koin-cases,.px-koin-cases>*,.px-koin-barre,.px-koin-voile){transition:none}
 /* ⊠ (0.99.47) les xers (les modes) dans les cases : quatre carrés par-dessus */
-.px-koin-modes{position:fixed;left:12px;right:12px;bottom:calc(76px + 8px);z-index:43;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.px-koin-modes{position:fixed;left:12px;right:12px;bottom:calc(var(--kbande) + 8px);z-index:43;display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .px-koin-modes>button{aspect-ratio:1/1;max-height:22vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--surface) var(--grain);
   border:var(--trait) solid var(--bord);border-radius:18px;color:var(--txt);font:600 10px/1.2 var(--mono);letter-spacing:.16em;text-transform:uppercase;animation:px-koin-mode .32s cubic-bezier(.2,.9,.25,1) both}
 .px-koin-modes>button:nth-child(2){animation-delay:.04s}.px-koin-modes>button:nth-child(3){animation-delay:.08s}.px-koin-modes>button:nth-child(4){animation-delay:.12s}

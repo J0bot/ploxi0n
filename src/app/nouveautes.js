@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.61', titre: 'Coord envoie, la bande s\'affine', points: [
+    '🛰 Coord envoie de nouveau : le texte partait vide par le mode connecté (« rien à envoyer »). Les fichiers envoyés au labo (les photos vers ton boxion) passaient par le même trou : réparé aussi.',
+    '🛰 Le verrou de coord se rouvre tout seul : il réessaie après quelques secondes, puis chaque minute, et quand tu reviens dans l\'app.',
+    '▭ La bande des koins est plus fine, ses glyphes plus grands, sans le vide dessous ; la barre du haut se place dans les oreilles de l\'encoche, comme l\'heure d\'iOS.',
+  ] },
   { v: '0.99.60', titre: 'La bande, barre d\'accueil', points: [
     '▭ Dans un ploxion, la case ◇ de la bande prend son glyphe, encadré : tu sais toujours où tu es.',
     '▭ Glisse vers le haut sur la bande pour minimiser, à droite pour le ploxion d\'avant, à gauche pour le suivant, comme la barre d\'accueil de l\'iPhone.',

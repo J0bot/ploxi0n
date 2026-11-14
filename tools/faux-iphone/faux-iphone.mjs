@@ -187,6 +187,16 @@ const natif = {
   // (0.81) le labo simulé pour les ploxions composés (le vrai ultimate-social, ses onglets) et le wiki (le vrai article « xerboxion »)
   CapacitorHttp: { get: (o) => laboFaux(o.url),
     request: (o) => { const u = new URL(o.url); const j = (status, data) => ({ status, data: JSON.stringify(data), headers: { 'Content-Type': 'application/json' }, url: o.url });
+    // (0.99.61) comme le Swift de Capacitor (CapacitorUrlRequest.setRequestBody) : sans Content-Type (insensible à la casse), le corps n'est PAS écrit
+    if (o.data != null && o.method !== 'GET' && !Object.keys(o.headers || {}).some(k => k.toLowerCase() === 'content-type')) o = { ...o, data: undefined, dataType: undefined };
+    // 🛰 (0.99.61) le fil coord du labo (admin, avec un jeton) : le fil, et l'envoi multipart (le texte dans « content »)
+    if (u.hostname === 'labo.j0bot.ch' && u.pathname === '/coord/feed.json') { if (!/^Bearer .+/.test((o.headers || {}).Authorization || '')) return { status: 302, data: '<html>login</html>', headers: { 'Content-Type': 'text/html' }, url: 'https://labo.j0bot.ch/login' };
+      return j(200, { messages: coordFaux.map((m, i) => ({ id: i + 1, agent: m.agent, content: m.content, created_at: new Date().toISOString() })), pieces_actif: true }); }
+    if (u.hostname === 'labo.j0bot.ch' && u.pathname === '/coord/pieces' && o.method === 'POST') {
+      const champs = o.dataType === 'formData' && Array.isArray(o.data) ? o.data : [];
+      const content = (champs.find(x => x.key === 'content') || {}).value || '', pieces = JSON.parse((champs.find(x => x.key === 'pieces') || {}).value || '[]');
+      if (!String(content).trim() && !pieces.length) return j(422, { ok: false, message: 'rien à envoyer : un texte ou une pièce' });
+      coordFaux.push({ agent: (champs.find(x => x.key === 'agent') || {}).value || 'rs-7', content }); return j(201, { ok: true }); }
     // (0.99.6) le changelog du labo (rien n'a changé) et un labo qui limite le débit des bions (429) : pour mesurer le démarrage chargé
     if (u.hostname === 'labo.j0bot.ch' && u.pathname === '/px/changelog.json') return j(200, { head: 'faux', par_ploxion: {} });
     if (u.hostname === 'labo.j0bot.ch' && u.pathname.startsWith('/px/bion-app/')) return { status: 429, headers: { 'retry-after': '1' }, data: 'Too Many Requests', url: o.url };
@@ -260,6 +270,7 @@ natif.PloxiAccueil = { estAccueil: () => ({ accueil: accueilFaux.accueil, peut: 
 globalThis.androidRetour = () => emettre('App', 'backButton', { canGoBack: false });
 // 👣 (0.99.58) une veille qui se souvient si elle tourne (le bouton du Centre de contrôle l'allume et l'éteint), les pas, les activités
 const veilleFaux = { actif: true, fine: true, capteurs: false, demarrages: 0 };
+const coordFaux = [{ agent: 'xerxion1', content: 'bonjour la flotte' }];
 natif.PloxiVeille = {
   demarrer: (o) => { Object.assign(veilleFaux, { actif: true, fine: o.fine !== false, capteurs: !!o.capteurs }); veilleFaux.demarrages++; return { etat: 'toujours', fine: veilleFaux.fine, capteurs: veilleFaux.capteurs }; },
   arreter: () => { veilleFaux.actif = false; return {}; },

@@ -1,5 +1,6 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1794615203000,"docs/BANQUE-EMOJI.md : la banque d'emoji à construire avec xerxion1 (657 emoji dans les ploxions du labo, 34 % déjà couverts ; 150 glyphes → 84 %), tools/compte"],
+export const COMMITS = [[1794615752000,"0.99.60 : la bande des koins, barre d'accueil (le glyphe du ploxion où tu es, glisser pour minimiser ou changer de ploxion), la lueur du koin du labo"],
+  [1794615203000,"docs/BANQUE-EMOJI.md : la banque d'emoji à construire avec xerxion1 (657 emoji dans les ploxions du labo, 34 % déjà couverts ; 150 glyphes → 84 %), tools/compte"],
   [1794615009000,"0.99.59 : la mini-carte de mappion dans son widget (les zones de la veille sur MapKit), les fiches du xerploxion et les xers dans les widgets, Autour en direct "],
   [1794614298000,"0.99.58 : les boutons du Centre de contrôle réparés (une intention qui ouvre l'app, dans l'app et l'extension), le bouton Veille, la veille suit le corps (activ"],
   [1794598076000,"0.99.57 : le koin du chill-tekk du labo (la bande entre les koins = la barre des glyphes en trapèze, toujours là ; les cases en tunnel ; l'hypercube du xer)"],

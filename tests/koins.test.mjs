@@ -102,8 +102,8 @@ test('▭ (0.99.57) le CSS : la bande en trapèze entre les koins, le ploxion s\
   const { readFileSync } = await import('node:fs');
   const css = readFileSync(new URL('../src/app/app.css', import.meta.url), 'utf8');
   assert.match(css, /html\.px-koins \.px-mode-ploxion \.px-ecran>\.px-barre\{display:none\}/);
-  assert.match(css, /html\.px-koins #ploxi0n\.px-mode-ploxion\{padding-bottom:76px\}/);
-  assert.match(css, /\.px-koin-barre\{--kb:76px;[^}]*clip-path:polygon\(var\(--kg\) 0,calc\(100% - var\(--kg\)\) 0,calc\(100% - var\(--kb\) - var\(--kg\)\) 100%/);
+  assert.match(css, /html\.px-koins #ploxi0n\.px-mode-ploxion\{padding-bottom:var\(--kbande\)\}/); assert.match(css, /--kbande:calc\(56px \+ env\(safe-area-inset-bottom,0px\) \* \.35\)/, '(0.99.61) une bande fine');
+  assert.match(css, /\.px-koin-barre\{--kb:var\(--kbande\);[^}]*clip-path:polygon\(var\(--kg\) 0,calc\(100% - var\(--kg\)\) 0,calc\(100% - var\(--kb\) - var\(--kg\)\) 100%/);
   assert.match(css, /#ploxi0n\.px-mode-ploxion~\.px-koins-r \.px-koin-barre \[data-koin-a="accueil"\],\.px-koin-barre \.px-kb-dans\{box-shadow/);
   assert.match(css, /html:not\(\.px-organique\) :is\(\.px-koin-cases>button,\.px-koin-pad\)\{border-radius:0;border:1\.5px solid var\(--acc\)/);
 });
