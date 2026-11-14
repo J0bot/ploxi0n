@@ -1,5 +1,6 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1794598076000,"0.99.57 : le koin du chill-tekk du labo (la bande entre les koins = la barre des glyphes en trapèze, toujours là ; les cases en tunnel ; l'hypercube du xer)"],
+export const COMMITS = [[1794614298000,"0.99.58 : les boutons du Centre de contrôle réparés (une intention qui ouvre l'app, dans l'app et l'extension), le bouton Veille, la veille suit le corps (activ"],
+  [1794598076000,"0.99.57 : le koin du chill-tekk du labo (la bande entre les koins = la barre des glyphes en trapèze, toujours là ; les cases en tunnel ; l'hypercube du xer)"],
   [1794595788000,"0.99.56 : plus aucun emoji (jOSGlyphe : un glyphe à graine, tiré comme un xerkion du labo, pour les emoji inconnus et les ploxions sans glyphe ; sans-emoji dans"],
   [1794595402000,"0.99.55 : les koins partout (la barre d'un ploxion descend entre les deux koins, la bande « xer » sur l'accueil), le xer xerboxion = le chill-tekk du labo, docs"],
   [1794544828000,"ref/c : ne pas suivre le binaire du test (compilé par make test)"],

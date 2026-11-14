@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.59', titre: 'La mini-carte, les fiches, Autour en direct', points: [
+    '🗺 Le widget « Un ploxion » réglé sur mappion montre une vraie carte, sombre, avec tes zones autour (là où tu passes du temps, d\'après la veille) et toi au milieu.',
+    '◈ Un ploxion qui ne publie rien montre sa fiche dans son widget : ce qu\'il fait, sa catégorie, ses bions. Les quatre xers se choisissent aussi : un toucher t\'y amène.',
+    '◉ Autour › en direct : une activité sur l\'écran verrouillé avec les lieux les plus proches, si tu partages ta position, et le pote le plus proche, sa distance et sa direction.',
+  ] },
   { v: '0.99.58', titre: 'Les boutons du Centre de contrôle, réparés', points: [
     '🎛 Les boutons de ploxi0n dans le Centre de contrôle ouvrent maintenant l\'app et font ce qu\'ils disent : tsoin, vocal, lampe, ploxi0n, Proche, balade, toilettes.',
     '◷ Un nouveau bouton, Veille : mappion te suit partout (tes lieux, tes pas, ta vitesse, ton allure : à pied, à vélo, en voiture), et tu l\'éteins d\'un geste.',

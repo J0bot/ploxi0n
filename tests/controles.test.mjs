@@ -35,3 +35,9 @@ test('👣 PloxiVeille déclare pas et activites (le Swift), et le faux iPhone a
   assert.match(f, /\n  pas: \(\) => \(/); assert.match(f, /\n  activites: \(\) => \{/);
   assert.match(d, /if actif \{ ajoutCorps\(&o\) \}/); assert.match(d, /UserDefaults\.standard\.set\(c, forKey: "ploxi\.veille\.capteurs"\)/);
 });
+
+test('◉ (0.99.59) le Swift lit la cible d\'une activité lancée par le JS (Autour en direct)', () => {
+  const d = lire('ios/App/App/AppDelegate.swift');
+  assert.match(d, /cible: call\.getString\("cible"\)\.map \{ String\(\$0\.prefix\(40\)\) \}, cibleM: call\.getDouble\("cibleM"\)\.map \{ max\(0, \$0\) \},\n\s+cibleCap: call\.getDouble\("cibleCap"\),/);
+  assert.ok(!/\bTom\b|Léa/.test(d + lire('ios/App/PloxionWidgets/PloxionWidgets.swift')), 'pas de prénoms');
+});

@@ -14,6 +14,7 @@ import { brancherLiens } from './natif/liens.js';
 import { creerRaccourcis, glyphePng } from './natif/raccourcis.js';
 import { creerActivites } from './natif/activites.js';
 import { creerWidgetsPloxions } from './natif/widgets-ploxions.js';
+import { zonesVeille } from './bions/zones-veille.js';   // 🗺 (0.99.59) la mini-carte du widget mappion
 import { creerPush, SUJETS as SUJETS_PUSH } from './natif/push.js';
 import { creerCompte } from './natif/compte.js';
 import { creerEcranAccueil, specPerso } from './natif/ecran-accueil.js';
@@ -118,7 +119,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.58';
+const VERSION = '0.99.59';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -508,12 +509,25 @@ async function demarrer() {
   const proche = creerProche({ W: window, boxion, vibrer: (x) => vibrer(x), tuyau: tuyauProche, position: () => window.jOSNatif.position(), ouvrirLien: (u) => window.jOSNatif.ouvrirLien(u),
     activite: { debut: (o) => { controles({ proche: true }); return activites.debut('proche', { ...o, genre: 'proche', ploxion: 'proche' }); }, maj: (o) => activites.maj('proche', o), fin: () => { controles({ proche: false }); return activites.fin('proche'); } } });   // 🏝 (0.99.43)
   if (window.jOSVeille) window.jOSVeille.etat().then(r => controles({ balade: !!(r && r.balade), veille: !!(r && r.actif) })).catch(() => {}); else controles({});   // 🎛 l'état réel au lancement (une balade survit à l'app tuée)
+  // 🗺 (0.99.59, RS-7 : « pour le mappion, la mini map pour voir les zones autour ») : les zones de la veille → « ploxi0n.carte » (l'App Group) →
+  // le widget de mappion les dessine sur une vraie carte (MKMapSnapshotter). Au lancement, au retour dans l'app, à chaque visite notée.
+  const carteWidget = (() => { let der = 0; return (force) => {
+    const V = window.jOSVeille; if (!V || (!force && Date.now() - der < 10 * 60e3)) return; der = Date.now();
+    V.lire(Date.now() - 60 * 864e5).then(({ points, visites }) => {
+      const r = zonesVeille({ visites, points: points.slice(-50), maintenant: Date.now() }); if (!r.moi && !r.zones.length) return;
+      widgetsPx.ecrireBrut('ploxi0n.carte', JSON.stringify({ ...r, le: Date.now() }));
+    }).catch(() => {});
+  }; })();
+  if (window.jOSVeille) { carteWidget(true); window.jOSVeille.sur('visite', () => carteWidget(true)); }
   internes.push(proche.ploxion);
   // ≋ (0.99.4) le synthé : des jOSKnob, des pads, une boucle (RS-7 : « qu'on puisse commencer à faire du son avec des knobs »)
   internes.push(creerSynthe({ W: window, boxion, vibrer: (x) => vibrer(x), proche }).ploxion);   // (0.99.10) jouer à plusieurs : le son part dans Proche
   // ⌖ (0.99.9) Autour : les lieux d'OpenStreetMap autour de toi, en continu (RS-7 à Zurich : « des toilettes direct ; propositions selon mon vecteur xerion »)
   const autour = creerAutour({ W: window, boxion, vibrer: (x) => vibrer(x), http: { get: (u, o) => httpRelais.get(u, o) }, position: () => window.jOSNatif.position(),
-    ouvrirLien: (u) => (window.jOSNatif && window.jOSNatif.ouvrirLien ? window.jOSNatif.ouvrirLien(u) : window.open(u, '_blank')), usage: () => boxion.get('usage', 'stats') });   // 🎛 (0.99.43) gardé : le bouton « Toilettes » du Centre de contrôle
+    ouvrirLien: (u) => (window.jOSNatif && window.jOSNatif.ouvrirLien ? window.jOSNatif.ouvrirLien(u) : window.open(u, '_blank')), usage: () => boxion.get('usage', 'stats'),   // 🎛 (0.99.43) gardé : le bouton « Toilettes » du Centre de contrôle
+    // ◉ (0.99.59) Autour en direct : sa Live Activity, et les potes de Proche (qui partage, à quelle distance)
+    activite: { debut: (o) => activites.debut('autour', { ...o, genre: 'autour', ploxion: 'autour' }), maj: (o) => activites.maj('autour', o), fin: () => activites.fin('autour') },
+    potes: () => { const x = proche.potes(); return { partage: !!x.partage, positions: x.positions || [] }; } });
   internes.push(autour.ploxion);
   const ambiancesApi = creerAmbiances({ W: window, boxion, vibrer: (x) => vibrer(x), activite: { debut: (o) => activites.debut('ambiances', { genre: 'minuteur', ploxion: 'ambiances', glyphe: 'ambiances', ...o }), fin: () => activites.fin('ambiances') } });
   internes.push(ambiancesApi.ploxion);
@@ -813,6 +827,8 @@ async function demarrer() {
         (etatCtl.balade ? B.fin().then(r => routeur.signaler('🏝 balade finie · ' + Math.round((r && r.metres) || 0) + ' m')) : B.debut({ titre: 'balade', ploxion: 'mappion' }).then(() => routeur.signaler('🏝 la balade est sur l\'écran verrouillé')))
           .catch((er) => routeur.signaler('🏝 ' + ((er && er.message) || 'impossible'))); },
       toilettes: () => { routeur.ouvrir('autour'); autour.toilettes().catch(() => {}); },
+      // ◈ (0.99.59) ploxi0n://xer/<mode> : le widget d'un xer t'y amène
+      xer: (u) => { const m = decodeURIComponent(String(u.pathname || '').replace(/^\/+/, '').split('/')[0]); if (MODES.some(x => x[0] === m)) prefs.regler({ mode: m }).then(() => routeur.accueil()).catch(() => {}); else routeur.accueil(); },
       // 👣 (0.99.58) la veille de mappion depuis le Centre de contrôle : elle te suit (lieux, pas, vitesse, allure, capteurs) ou s'arrête
       veille: () => { const V = window.jOSVeille; if (!V) return routeur.signaler('◷ la veille : sur l\'iPhone seulement');
         V.etat().then(r => (r && r.actif
@@ -934,7 +950,7 @@ async function demarrer() {
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
     // Face ID (0.55) : en arrière-plan, les ploxions verrouillés se referment ; au retour, celui qui était à l'écran redemande le visage
     import('@capacitor/app').then(({ App }) => { let aReprendre = null; App.addListener('pause', () => { aReprendre = routeur.reverrouiller(); }); App.addListener('resume', () => { const id = aReprendre; aReprendre = null; if (id) routeur.redemander(id).catch(() => {}); }); }).catch(() => {});
-    import('@capacitor/app').then(({ App }) => App.addListener('appStateChange', (e) => { if (e.isActive) { raccourcis.recevoir().catch(() => {}); notifs.demarrer(); sante.synchroniser().catch(() => {}); } else { notifs.arreter(); publierValeurs().catch(() => {}); dossier.synchroniser().catch(() => {}); couperVideosArrierePlan(); } })).catch(() => {});
+    import('@capacitor/app').then(({ App }) => App.addListener('appStateChange', (e) => { if (e.isActive) { raccourcis.recevoir().catch(() => {}); carteWidget(); notifs.demarrer(); sante.synchroniser().catch(() => {}); } else { notifs.arreter(); publierValeurs().catch(() => {}); dossier.synchroniser().catch(() => {}); couperVideosArrierePlan(); } })).catch(() => {});
   }
 }
 // (0.69) jamais un écran mort : la raison, ce qu'on peut y faire, et « réessayer » (la base fermée par iOS se rouvre une fois l'iPhone déverrouillé)

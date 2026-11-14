@@ -11,7 +11,9 @@ const nettoyer = (o = {}) => {
   const g = String(o.glyphe || '');
   return { titre: String(o.titre || 'ploxi0n').slice(0, 60), sous: String(o.sous || '').slice(0, 80), glyphe: GLYPHES_SF[g] || (/^[a-z0-9]+(\.[a-z0-9]+)*$/.test(g) && g.length <= 40 ? g : 'hourglass'),
     debut: d(o.debut), fin: d(o.fin), progression: n(o.progression),
-    ...(Number.isInteger(o.compte) && o.compte >= 0 ? { compte: Math.min(o.compte, 9999) } : {}) };   // (0.99.43) un nombre à montrer (Proche : les voisins)
+    ...(Number.isInteger(o.compte) && o.compte >= 0 ? { compte: Math.min(o.compte, 9999) } : {}),   // (0.99.43) un nombre à montrer (Proche : les voisins)
+    // ◉ (0.99.59) une cible (Autour en direct : le pote le plus proche) : son nom, sa distance, sa direction
+    ...(o.cible ? { cible: String(o.cible).slice(0, 40) } : {}), ...(n(o.cibleM) != null ? { cibleM: Math.max(0, n(o.cibleM)) } : {}), ...(n(o.cibleCap) != null ? { cibleCap: ((n(o.cibleCap) % 360) + 360) % 360 } : {}) };
 };
 
 /** plugin = PloxiApple ; actif() : le réglage (⚙ › Notifications › Activités en direct) */

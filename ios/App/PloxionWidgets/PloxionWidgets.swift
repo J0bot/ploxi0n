@@ -13,6 +13,7 @@ import SwiftUI
 import UIKit
 import AppIntents
 import ActivityKit
+import MapKit   // 🗺 (0.99.59) la mini-carte de mappion
 
 private let GROUPE = "group.ch.j0bot.ploxi0n"
 private func lireJSON(_ cle: String) -> Any? {
@@ -700,7 +701,7 @@ struct PloxiActivite: ActivityAttributes {
         var progression: Double?    // 0…1
         // 🏝 (0.99.43) la balade (PloxiVeille : mappion, Autour, la boussole des potes) ; absents = nil (les anciennes activités se lisent toujours)
         var metres: Double? = nil   // la distance parcourue
-        var cible: String? = nil    // vers quoi : des toilettes, Tom, le rendez-vous
+        var cible: String? = nil    // vers quoi : des toilettes, RS-3, le rendez-vous
         var cibleM: Double? = nil   // à combien de mètres
         var cibleCap: Double? = nil // dans quelle direction, en degrés depuis le nord
         var compte: Int? = nil      // un nombre à montrer dans la Dynamic Island (Proche : les voisins)
@@ -837,6 +838,67 @@ struct ChoisirPloxion: WidgetConfigurationIntent {
 struct PxEntree: TimelineEntry {
     let date: Date; let id: String; let nom: String; let valeur: String; let unite: String; let sous: String
     let serie: [Double]; let boutonTitre: String?; let boutonUrl: URL?; let img: UIImage?; let le: Date?
+    var fiche: String = ""; var ligne: String = ""   // ◈ (0.99.59) la fiche du xerploxion : sa description ; sa catégorie et ses bions
+    var carte: UIImage? = nil; var carteSous: String = ""   // 🗺 (0.99.59) mappion : la mini-carte de tes zones
+    var lien: URL? { id.hasPrefix("xer:") ? URL(string: "ploxi0n://xer/" + id.dropFirst(4)) : URL(string: "ploxi0n://px/\(id)") }
+}
+
+// 🗺 (0.99.59, RS-7 : « pour le mappion, je veux la mini map pour voir les zones autour ») : tes zones (« ploxi0n.carte », que l'app tire de
+// la veille : src/bions/zones-veille.js) dessinées sur une vraie carte, sombre, sans lieux d'intérêt (MKMapSnapshotter, dans l'extension).
+// Une zone = un disque, sa couleur dit son niveau (lieu, zone, zone habituelle, vraie zone) ; toi = un point blanc cerclé.
+private func coordCarte(_ d: [String: Any]?) -> CLLocationCoordinate2D? {
+    guard let d = d, let la = d["lat"] as? Double, let lo = d["lng"] as? Double else { return nil }
+    return CLLocationCoordinate2D(latitude: la, longitude: lo)
+}
+func miniCarte(_ taille: CGSize) async -> (UIImage?, String) {
+    guard let o = lireJSON("ploxi0n.carte") as? [String: Any] else { return (nil, "") }
+    let zones = (o["zones"] as? [[String: Any]]) ?? []
+    let moi = coordCarte(o["moi"] as? [String: Any])
+    guard let centre = moi ?? coordCarte(zones.first) else { return (nil, "") }
+    let ici = CLLocation(latitude: centre.latitude, longitude: centre.longitude)
+    var rayon: Double = 600   // le cadre : les zones à moins de 3 km de toi, 600 m au moins
+    for z in zones {
+        guard let c = coordCarte(z) else { continue }
+        let d = ici.distance(from: CLLocation(latitude: c.latitude, longitude: c.longitude)) + ((z["rayon"] as? Double) ?? 50)
+        if d < 3000 { rayon = max(rayon, d * 1.15) }
+    }
+    let w = Double(max(taille.width, 120)), h = Double(max(taille.height, 120))
+    let latM = h >= w ? rayon * 2 * h / w : rayon * 2, lonM = w > h ? rayon * 2 * w / h : rayon * 2
+    let opts = MKMapSnapshotter.Options()
+    opts.region = MKCoordinateRegion(center: centre, latitudinalMeters: latM, longitudinalMeters: lonM)
+    opts.size = CGSize(width: w, height: h)
+    opts.mapType = .mutedStandard
+    opts.pointOfInterestFilter = .excludingAll
+    opts.showsBuildings = false
+    opts.traitCollection = UITraitCollection(userInterfaceStyle: .dark)
+    let sn = MKMapSnapshotter(options: opts)   // gardé vivant par la fermeture jusqu'à la fin du dessin
+    let snap: MKMapSnapshotter.Snapshot? = await withCheckedContinuation { k in
+        sn.start { s, _ in _ = sn; k.resume(returning: s) }
+    }
+    guard let s = snap else { return (nil, "") }
+    let mpp = latM / h   // mètres par point
+    let couleurs: [UIColor] = [UIColor(red: 0.30, green: 0.55, blue: 1.0, alpha: 1), UIColor(red: 0.25, green: 0.88, blue: 0.82, alpha: 1),
+                               UIColor(red: 1.0, green: 0.84, blue: 0.30, alpha: 1), UIColor(red: 1.0, green: 0.42, blue: 0.30, alpha: 1)]
+    let format = UIGraphicsImageRendererFormat(); format.scale = s.image.scale
+    let img = UIGraphicsImageRenderer(size: opts.size, format: format).image { _ in
+        s.image.draw(at: .zero)
+        for z in zones.reversed() {
+            guard let c = coordCarte(z) else { continue }
+            let p = s.point(for: c), r = CGFloat(max(4, ((z["rayon"] as? Double) ?? 50) / mpp))
+            let col = couleurs[min(3, max(0, (z["niveau"] as? Int) ?? 0))]
+            let disque = UIBezierPath(ovalIn: CGRect(x: p.x - r, y: p.y - r, width: 2 * r, height: 2 * r))
+            col.withAlphaComponent(0.30).setFill(); disque.fill()
+            col.withAlphaComponent(0.95).setStroke(); disque.lineWidth = 1.2; disque.stroke()
+        }
+        if let m = moi {
+            let p = s.point(for: m)
+            UIColor.white.setFill(); UIBezierPath(ovalIn: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)).fill()
+            let anneau = UIBezierPath(ovalIn: CGRect(x: p.x - 8, y: p.y - 8, width: 16, height: 16))
+            couleurs[1].setStroke(); anneau.lineWidth = 1.5; anneau.stroke()
+        }
+    }
+    let n = zones.count
+    return (img, n == 0 ? "toi, ici" : "\(n) zone" + (n > 1 ? "s" : "") + " autour")
 }
 struct FournisseurPx: AppIntentTimelineProvider {
     func lire(_ id: String?) -> PxEntree {
@@ -848,15 +910,29 @@ struct FournisseurPx: AppIntentTimelineProvider {
         let b = d["bouton"] as? [String: Any]
         let lien = (b?["lien"] as? String).flatMap { URL(string: $0) }
         let img = (d["g64"] as? String).flatMap { Data(base64Encoded: $0) }.flatMap { UIImage(data: $0) }
-        return PxEntree(date: Date(), id: ident, nom: nom, valeur: (d["valeur"] as? String) ?? "", unite: (d["unite"] as? String) ?? "", sous: (d["sous"] as? String) ?? "",
+        var e = PxEntree(date: Date(), id: ident, nom: nom, valeur: (d["valeur"] as? String) ?? "", unite: (d["unite"] as? String) ?? "", sous: (d["sous"] as? String) ?? "",
                         serie: (d["serie"] as? [Double]) ?? [], boutonTitre: b?["titre"] as? String, boutonUrl: lien,
                         img: img, le: (d["le"] as? Double).map { Date(timeIntervalSince1970: $0 / 1000) })
+        if let f = (o["fiche"] as? [String: Any])?[ident] as? [String: Any] {
+            e.fiche = (f["d"] as? String) ?? ""
+            e.ligne = ([(f["c"] as? String) ?? ""] + ((f["b"] as? [String]) ?? [])).filter { !$0.isEmpty }.joined(separator: " · ")
+        }
+        return e
     }
     func placeholder(in context: Context) -> PxEntree {
         PxEntree(date: Date(), id: "systeme", nom: "Système", valeur: "60", unite: "img/s", sous: "la fluidité", serie: [40, 55, 60, 58, 60, 60, 52, 60], boutonTitre: nil, boutonUrl: nil, img: nil, le: nil)
     }
     func snapshot(for configuration: ChoisirPloxion, in context: Context) async -> PxEntree { context.isPreview ? placeholder(in: context) : lire(configuration.ploxion?.id) }
-    func timeline(for configuration: ChoisirPloxion, in context: Context) async -> Timeline<PxEntree> { Timeline(entries: [lire(configuration.ploxion?.id)], policy: .never) }
+    func timeline(for configuration: ChoisirPloxion, in context: Context) async -> Timeline<PxEntree> {
+        var e = lire(configuration.ploxion?.id)
+        // 🗺 mappion : la mini-carte (sauf sur l'écran verrouillé), redessinée toutes les 30 min et quand l'app republie
+        if ["mappion", "mapion"].contains(e.id) && context.family != .accessoryRectangular {
+            let (img, sous) = await miniCarte(context.displaySize)
+            e.carte = img; e.carteSous = sous
+            if img != nil { return Timeline(entries: [e], policy: .after(Date().addingTimeInterval(1800))) }
+        }
+        return Timeline(entries: [e], policy: .never)
+    }
 }
 /** une courbe au trait, à partir d'une série */
 struct Courbe: Shape {
@@ -882,7 +958,15 @@ struct VuePx: View {
             }
             Spacer(minLength: 0)
             if e.valeur.isEmpty {
-                Text("ouvrir").font(.system(size: 13, design: .monospaced)).foregroundColor(PEAU.muet)
+                if e.carte != nil {
+                    Text(e.carteSous).font(.system(size: 10, design: .monospaced)).foregroundColor(PEAU.trait).shadow(color: .black, radius: 3)
+                } else if !e.fiche.isEmpty {
+                    Text(e.fiche).font(.system(size: famille == .accessoryRectangular ? 10 : 11)).foregroundColor(PEAU.trait.opacity(0.88))
+                        .lineLimit(famille == .systemMedium ? 3 : 4).fixedSize(horizontal: false, vertical: true)
+                    if !e.ligne.isEmpty && famille != .accessoryRectangular { Text(e.ligne).font(.system(size: 9, design: .monospaced)).foregroundColor(PEAU.muet).lineLimit(1) }
+                } else {
+                    Text("ouvrir").font(.system(size: 13, design: .monospaced)).foregroundColor(PEAU.muet)
+                }
             } else {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(e.valeur).font(.system(size: famille == .accessoryRectangular ? 20 : 34, weight: .thin, design: .monospaced)).foregroundColor(PEAU.trait).lineLimit(1).minimumScaleFactor(0.4)
@@ -895,16 +979,28 @@ struct VuePx: View {
                 Link(destination: u) { Text(t).font(.system(size: 11, weight: .semibold, design: .monospaced)).foregroundColor(PEAU.trait).padding(.horizontal, 10).padding(.vertical, 4).overlay(Rectangle().stroke(PEAU.acc, lineWidth: 1)) }
             }
         }
-        .widgetURL(URL(string: "ploxi0n://px/\(e.id)"))
+        .widgetURL(e.lien)
+    }
+}
+/** le fond : la mini-carte de mappion (bord à bord, assombrie en haut et en bas pour le texte), sinon le HUD */
+struct FondPx: View {
+    let e: PxEntree
+    var body: some View {
+        if let c = e.carte {
+            ZStack {
+                Image(uiImage: c).resizable().scaledToFill()
+                LinearGradient(colors: [Color.black.opacity(0.6), Color.clear, Color.black.opacity(0.55)], startPoint: .top, endPoint: .bottom)
+            }
+        } else { FondHUD() }
     }
 }
 struct WidgetUnPloxion: Widget {
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: "un-ploxion", intent: ChoisirPloxion.self, provider: FournisseurPx()) { e in
-            VuePx(e: e).containerBackground(for: .widget) { FondHUD() }
+            VuePx(e: e).containerBackground(for: .widget) { FondPx(e: e) }
         }
         .configurationDisplayName("Un ploxion")
-        .description("Ce qu'un ploxion publie : une valeur, une courbe, un bouton. Appui long › Modifier pour le choisir.")
+        .description("Ce qu'un ploxion publie, sinon sa fiche ; mappion : la carte de tes zones ; un xer. Appui long › Modifier pour le choisir.")
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular])
     }
 }

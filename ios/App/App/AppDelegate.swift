@@ -52,7 +52,7 @@ struct PloxiActivite: ActivityAttributes {
         var progression: Double?    // 0…1
         // 🏝 (0.99.43) la balade (PloxiVeille : mappion, Autour, la boussole des potes) ; absents = nil (les anciennes activités se lisent toujours)
         var metres: Double? = nil   // la distance parcourue
-        var cible: String? = nil    // vers quoi : des toilettes, Tom, le rendez-vous
+        var cible: String? = nil    // vers quoi : des toilettes, RS-3, le rendez-vous
         var cibleM: Double? = nil   // à combien de mètres
         var cibleCap: Double? = nil // dans quelle direction, en degrés depuis le nord
         var compte: Int? = nil      // un nombre à montrer dans la Dynamic Island (Proche : les voisins)
@@ -178,7 +178,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let conteneur = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.ch.j0bot.ploxi0n") != nil
         var change = false, tailles: [String: Int] = [:]
         var controles = false
-        for k in ["ploxi0n.epingles", "ploxi0n.valeurs", "ploxi0n.lecture", "ploxi0n.cube", "ploxi0n.px-widgets", "ploxi0n.controles"] {   // (0.91) le widget « un ploxion » ; (0.99.43) l'état des contrôles
+        for k in ["ploxi0n.epingles", "ploxi0n.valeurs", "ploxi0n.lecture", "ploxi0n.cube", "ploxi0n.px-widgets", "ploxi0n.controles", "ploxi0n.carte"] {   // (0.91) le widget « un ploxion » ; (0.99.43) l'état des contrôles ; (0.99.59) la mini-carte de mappion
             let v = UserDefaults.standard.string(forKey: "CapacitorStorage." + k)
             tailles[k] = v?.count ?? -1
             if v != nil && g.string(forKey: k) != v { g.set(v, forKey: k); change = true; if k == "ploxi0n.controles" { controles = true } }
@@ -519,6 +519,8 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
         return PloxiActivite.ContentState(titre: String((call.getString("titre") ?? "ploxi0n").prefix(60)), sous: String((call.getString("sous") ?? "").prefix(80)),
                                           glyphe: call.getString("glyphe") ?? "hourglass", debut: date("debut"), fin: date("fin"),
                                           progression: call.getDouble("progression").map { min(1, max(0, $0)) },
+                                          cible: call.getString("cible").map { String($0.prefix(40)) }, cibleM: call.getDouble("cibleM").map { max(0, $0) },
+                                          cibleCap: call.getDouble("cibleCap"),   // ◉ (0.99.59) Autour en direct : le pote le plus proche
                                           compte: call.getInt("compte").map { min(9999, max(0, $0)) })
     }
     #endif
