@@ -1,6 +1,6 @@
 {
   "name": "ploxi0n",
-  "version": "0.99.59",
+  "version": "0.99.60",
   "private": true,
   "type": "module",
   "description": "ploxi0n v1 : les ploxions du xerboxion sur iOS, 100 % hors ligne (Capacitor + boxion_local)",

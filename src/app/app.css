@@ -1218,7 +1218,7 @@ html:not(.px-organique):not(.px-e-texte) :is(.px-koin-pad.px-pad-actif,.px-koin-
 .px-koin-barre{isolation:isolate}
 .px-koin-barre>button{flex:1;min-width:0;height:calc(var(--kb) - env(safe-area-inset-bottom,0px) - 10px);max-height:46px;border:0;border-radius:8px;background:transparent;color:var(--acc);font:600 17px/1 var(--police);display:flex;align-items:center;justify-content:center;padding:0}
 .px-koin-barre>button:active{background:var(--surface2)}
-.px-koin-barre>button .px-g{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:4.5}
+.px-koin-barre>button .px-g{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:4.5}
 .px-koin-barre>button .px-g .f{fill:currentColor}
 .px-koin-cases[hidden],.px-koin-voile[hidden],.px-koin-modes[hidden]{display:none}
 /* ◺◿ (0.99.47) LE KOIN QUI S'OUVRE : --k va de 0 (le petit triangle du coin) à 1 (ouvert). Le koin grandit depuis son coin et s'efface pendant
@@ -1236,7 +1236,11 @@ html:not(.px-organique):not(.px-e-texte) :is(.px-koin-pad.px-pad-actif,.px-koin-
 .px-koin-cases-droite>*{transform-origin:100% 100%}
 .px-koin-cases>:first-child{transition-delay:.04s}
 /* (0.99.57) la bande reste ; dans un ploxion, ◇ s'encadre (tu es dans un ploxion) */
-#ploxi0n.px-mode-ploxion~.px-koins-r .px-koin-barre [data-koin-a="accueil"]{box-shadow:inset 0 0 0 1.5px var(--acc);border-radius:0;background:color-mix(in srgb,var(--acc) 12%,transparent)}
+#ploxi0n.px-mode-ploxion~.px-koins-r .px-koin-barre [data-koin-a="accueil"],.px-koin-barre .px-kb-dans{box-shadow:inset 0 0 0 1.5px var(--acc),0 0 10px color-mix(in srgb,var(--acc) 35%,transparent);border-radius:0;background:color-mix(in srgb,var(--acc) 14%,transparent)}
+/* (0.99.60) la lueur du koin du labo : le trait de la bande et ses glyphes brillent un peu (pas en mode Calme) */
+html:not(.px-calme) .px-koin-barre>button .px-g{filter:drop-shadow(0 0 2.5px color-mix(in srgb,var(--acc) 70%,transparent))}
+html:not(.px-calme) .px-koin svg{filter:drop-shadow(0 0 3px color-mix(in srgb,var(--acc) 45%,transparent))}
+.px-koin-barre{touch-action:none}
 .px-koin-voile{opacity:var(--k);transition:opacity .35s}
 .px-koins-r:not(.px-koins-ouverts):not(.px-koins-glisse) :is(.px-koin-cases,.px-koin-voile){pointer-events:none}
 .px-koins-r.px-koins-glisse :is(.px-koin,.px-koin-cases,.px-koin-cases>*,.px-koin-barre,.px-koin-voile){transition:none}

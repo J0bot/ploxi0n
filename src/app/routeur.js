@@ -473,7 +473,8 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     surAccueil = true;
     racine.classList.add('px-mode-accueil'); racine.classList.remove('px-mode-ploxion', 'px-plein-ploxion'); majBords();
   }
-  function majBords() { racine.classList.toggle('px-a-vivants', vivants.size + endormis.length > 0); noterSession(); if (miniDocks) { try { miniDocks.surVivants(); } catch (e) { /* */ } } }
+  function majBords() { racine.classList.toggle('px-a-vivants', vivants.size + endormis.length > 0); noterSession(); try { W.dispatchEvent(new W.CustomEvent('ploxi0n:courant', { detail: courant ? courant.id : null })); } catch (e) { /* */ }   // ▭ (0.99.60) la bande des koins suit le ploxion où tu es
+    if (miniDocks) { try { miniDocks.surVivants(); } catch (e) { /* */ } } }
   /** un endormi (restauré de la dernière session) : monté maintenant, avec ses paramètres */
   function reveiller(id) { const e = endormis.find(x => x.id === id); endormis = endormis.filter(x => x.id !== id); return ouvrir(id, e ? e.params : null); }
   function arriere() {

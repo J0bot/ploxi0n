@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.60', titre: 'La bande, barre d\'accueil', points: [
+    '▭ Dans un ploxion, la case ◇ de la bande prend son glyphe, encadré : tu sais toujours où tu es.',
+    '▭ Glisse vers le haut sur la bande pour minimiser, à droite pour le ploxion d\'avant, à gauche pour le suivant, comme la barre d\'accueil de l\'iPhone.',
+    '▭ Le trait des koins et de la bande brille un peu, comme le koin du labo (rien en mode Calme).',
+  ] },
   { v: '0.99.59', titre: 'La mini-carte, les fiches, Autour en direct', points: [
     '🗺 Le widget « Un ploxion » réglé sur mappion montre une vraie carte, sombre, avec tes zones autour (là où tu passes du temps, d\'après la veille) et toi au milieu.',
     '◈ Un ploxion qui ne publie rien montre sa fiche dans son widget : ce qu\'il fait, sa catégorie, ses bions. Les quatre xers se choisissent aussi : un toucher t\'y amène.',

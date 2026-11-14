@@ -119,7 +119,7 @@ import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.59';
+const VERSION = '0.99.60';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -807,7 +807,9 @@ async function demarrer() {
     toi: () => routeurProxy.ouvrir('reglages-app'), retour: () => (routeur.courant() ? routeur.retour() : null), minimiser: () => routeur.faire('minimiser'),
     // ○ □ (0.92) les trackpads : le temps (le plus récent d'abord), et les directions du portion
     listeTemps: () => { const cat = routeur.catalogue(), nom = (id) => ((cat.find(p => p.id === id) || {}).nom || id); return [...routeur.vivants().slice().reverse(), ...routeur.endormis()].filter((id, i, l) => id !== routeur.courant() && l.indexOf(id) === i).slice(0, 12).map(id => ({ id, nom: nom(id) })); },
-    aller: (id) => routeurProxy.ouvrir(id), precedente: () => routeur.faire('precedente'), suivante: () => routeur.faire('suivante') } });
+    aller: (id) => routeurProxy.ouvrir(id), precedente: () => routeur.faire('precedente'), suivante: () => routeur.faire('suivante'),
+    // ▭ (0.99.60) le ploxion où tu es, pour la bande (◇ prend son glyphe)
+    courant: () => { const id = routeur.courant(); if (!id) return null; const p = routeur.catalogue().find(x => x.id === id) || { id }; return { id, nom: p.nom || id, svg: glyphePloxion(p) }; } } });
   koins.poser(); prefs.surChangement(() => koins.poser());
   window.ploxi0n = { boxion, shim, routeur, prefs, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte, koins, langue: langueApp };
   // 👁 (0.99.46) piloter de la tête ou du regard (⚙ › Piloter de la tête) : notre suivi, PloxiRegard (ARKit) + src/bions/tete.js

@@ -38,6 +38,16 @@ const TRI = (g) => '<svg viewBox="0 0 100 100" aria-hidden="true">' + (g ? '<g t
 export function creerKoins({ W = globalThis.window, actif = () => false, actions = {}, vibrer = () => {}, calme = () => false }) {
   const D = W.document;
   let racine = null, etape = { gauche: 0, droite: 0 }, cacher = 0, modesOuverts = false;
+  let obs = null, courantPeint;
+  /** ◇ dans la bande : le glyphe du ploxion ouvert (encadré par le CSS), sinon celui des ploxions ; actions.courant() → { id, nom, svg } | null */
+  function peindreCourant() {
+    const b = racine && racine.querySelector('.px-koin-barre [data-koin-a="accueil"]'); if (!b) return;
+    let c = null; try { c = actions.courant ? actions.courant() : null; } catch (e) { c = null; }
+    const k = c ? c.id : ''; if (k === courantPeint) return; courantPeint = k;
+    b.innerHTML = c && c.svg ? c.svg : G('ploxion');
+    b.classList.toggle('px-kb-dans', !!c);
+    b.setAttribute('aria-label', c ? (c.nom || c.id) + ' · l\'accueil' : NOMS.accueil);
+  }
   const attendre = (f, ms) => (W.setTimeout ? W.setTimeout(f, ms) : setTimeout(f, ms));
   function faire(k) {
     if (k === 'xer') { if (actions.modes) { montrerModes(!modesOuverts); return; } k = 'xers'; }   // la case xer : les xers (les modes), sur place ; sinon mes xers
@@ -57,7 +67,7 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
   function poser() {
     const on = !!actif();
     D.documentElement.classList.toggle('px-koins', on);
-    if (!on) { D.documentElement.classList.remove('px-koins-ouv'); if (racine) { racine.remove(); racine = null; } return; }
+    if (!on) { D.documentElement.classList.remove('px-koins-ouv'); if (obs) { obs.disconnect(); obs = null; } W.removeEventListener('ploxi0n:courant', peindreCourant); if (racine) { racine.remove(); racine = null; } return; }
     if (racine) return;
     racine = D.createElement('div'); racine.className = 'px-koins-r'; racine.setAttribute('data-neurones', '');   // 〰 (0.93) les cases et la barre : des neurones
     racine.innerHTML = ['gauche', 'droite'].map(c => '<button type="button" class="px-koin px-koin-' + c + '" data-koin="' + c + '" data-etape="0" aria-label="koin ' + c + '">' + TRI(c === 'droite') + '</button>'
@@ -68,6 +78,22 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
       + '<nav class="px-koin-barre" data-neurone>' + BARRE.map(([g, k, t]) => '<button type="button" data-koin-a="' + k + '" data-court="' + ({ koins: 'koin', carte: 'map', quoi: 'quoi ?', minimiser: '▁', suivante: '›' }[k] || k) + '" aria-label="' + NOMS[k] + '">' + (t || G(g)) + '</button>').join('') + '</nav>'
       + '<div class="px-koin-voile" hidden></div>';
     D.body.appendChild(racine);
+    // ▭ (0.99.60, RS-7 : « améliore le xer ») LA BANDE, BARRE D'ACCUEIL : ◇ montre le ploxion où tu es (son glyphe, encadré) ; glisser vers le
+    // haut sur la bande = minimiser (comme la barre d'accueil d'iOS), vers la droite = le ploxion d'avant, vers la gauche = le suivant
+    peindreCourant();
+    const R = D.getElementById('ploxi0n'); if (R && W.MutationObserver) { obs = new W.MutationObserver(() => peindreCourant()); obs.observe(R, { attributes: true, attributeFilter: ['class'] }); }
+    W.addEventListener('ploxi0n:courant', peindreCourant);
+    const nav = racine.querySelector('.px-koin-barre'); let g0 = null, glisseBande = false;
+    // la fin du geste peut tomber hors de la bande (le doigt monte) : écoutée sur la fenêtre, sans capturer le pointeur (les boutons gardent leur toucher)
+    const finGeste = (e) => {
+      if (!g0) return; const dx = e.clientX - g0.x, dy = e.clientY - g0.y; g0 = null;
+      const geste = -dy > 28 && -dy > Math.abs(dx) ? 'minimiser' : Math.abs(dx) > 44 && Math.abs(dx) > Math.abs(dy) * 1.4 ? (dx > 0 ? 'precedente' : 'suivante') : null;
+      if (!geste) return; glisseBande = true; replier(); vibrer(geste === 'minimiser' ? 'fx-arrivee' : 'selection');
+      const f = actions[geste]; if (f) { try { f(); } catch (er) { /* */ } }
+    };
+    nav.addEventListener('pointerdown', (e) => { g0 = { x: e.clientX, y: e.clientY }; glisseBande = false; W.addEventListener('pointerup', finGeste, { once: true }); });
+    nav.addEventListener('pointercancel', () => { g0 = null; });
+    nav.addEventListener('click', (e) => { if (glisseBande) { glisseBande = false; e.stopPropagation(); e.preventDefault(); } }, true);
     // un toucher : le koin s'ouvre (ou se referme) ; glisser vers le haut : il suit le doigt, lâcher décide
     for (const b of racine.querySelectorAll('[data-koin]')) {
       let y0 = null, glisse = false, k = 0;
@@ -100,8 +126,12 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
       faire: (d) => { replier(); const f = { gauche: actions.precedente, droite: actions.suivante, haut: actions.carte, bas: actions.accueil }[d]; if (f) { vibrer('fx-arrivee'); try { f(); } catch (e) { /* */ } } } });
     // l'appui long sur le tsoin de la barre : le journal (record → rejouer)
     const ts = racine.querySelector('.px-koin-barre [data-koin-a="tsoin"]'); let t = 0;
-    ts.addEventListener('pointerdown', () => { t = W.setTimeout(() => { t = -1; replier(); vibrer('appui'); if (actions.journal) actions.journal(); }, 520); });
-    ts.addEventListener('pointerup', () => { if (t > 0) W.clearTimeout(t); });
+    let ts0 = null;
+    ts.addEventListener('pointerdown', (e) => { ts0 = { x: e.clientX, y: e.clientY }; t = W.setTimeout(() => { t = -1; replier(); vibrer('appui'); if (actions.journal) actions.journal(); }, 520); });
+    // (0.99.60) l'appui long s'annule dès que le doigt bouge (un glissement sur la bande) ou quitte le bouton, pas seulement au relâcher dessus
+    const annulerTs = () => { if (t > 0) { W.clearTimeout(t); t = 0; } };
+    ts.addEventListener('pointerup', annulerTs); ts.addEventListener('pointerleave', annulerTs); ts.addEventListener('pointercancel', annulerTs);
+    ts.addEventListener('pointermove', (e) => { if (ts0 && Math.hypot(e.clientX - ts0.x, e.clientY - ts0.y) > 12) annulerTs(); });
     ts.addEventListener('click', (e) => { if (t === -1) { e.stopPropagation(); e.preventDefault(); t = 0; } }, true);
   }
   /** les cases et le voile dans le DOM (cachés à la fin de la fermeture, pour que l'animation se joue dans les deux sens) */

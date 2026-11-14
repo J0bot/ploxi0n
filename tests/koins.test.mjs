@@ -104,6 +104,25 @@ test('▭ (0.99.57) le CSS : la bande en trapèze entre les koins, le ploxion s\
   assert.match(css, /html\.px-koins \.px-mode-ploxion \.px-ecran>\.px-barre\{display:none\}/);
   assert.match(css, /html\.px-koins #ploxi0n\.px-mode-ploxion\{padding-bottom:76px\}/);
   assert.match(css, /\.px-koin-barre\{--kb:76px;[^}]*clip-path:polygon\(var\(--kg\) 0,calc\(100% - var\(--kg\)\) 0,calc\(100% - var\(--kb\) - var\(--kg\)\) 100%/);
-  assert.match(css, /#ploxi0n\.px-mode-ploxion~\.px-koins-r \.px-koin-barre \[data-koin-a="accueil"\]\{box-shadow/);
+  assert.match(css, /#ploxi0n\.px-mode-ploxion~\.px-koins-r \.px-koin-barre \[data-koin-a="accueil"\],\.px-koin-barre \.px-kb-dans\{box-shadow/);
   assert.match(css, /html:not\(\.px-organique\) :is\(\.px-koin-cases>button,\.px-koin-pad\)\{border-radius:0;border:1\.5px solid var\(--acc\)/);
+});
+
+test('▭ (0.99.60) la bande, barre d\'accueil : ◇ prend le glyphe du ploxion où tu es ; glisser vers le haut minimise, de côté change de ploxion', async () => {
+  const p = await page({ avion: true, ploxions: [] });
+  try {
+    const W = p.w, D = W.document; const faits = []; let cour = null;
+    const k = creerKoins({ W, actif: () => true, actions: { minimiser: () => faits.push('minimiser'), precedente: () => faits.push('precedente'), suivante: () => faits.push('suivante'),
+      accueil: () => faits.push('accueil'), courant: () => cour } });
+    k.poser();
+    const ac = () => D.querySelector('.px-koin-barre [data-koin-a="accueil"]');
+    assert.ok(!ac().classList.contains('px-kb-dans'));
+    cour = { id: 'mappion', nom: 'mappion', svg: '<svg class="px-g" data-test="mappion"></svg>' }; W.dispatchEvent(new W.CustomEvent('ploxi0n:courant'));
+    assert.ok(ac().classList.contains('px-kb-dans') && ac().querySelector('[data-test="mappion"]'), 'le glyphe du ploxion, encadré'); assert.match(ac().getAttribute('aria-label'), /^mappion/);
+    const b = D.querySelector('.px-koin-barre [data-koin-a="tsoin"]');
+    const geste = (x0, y0, x1, y1) => { b.dispatchEvent(new W.PointerEvent('pointerdown', { bubbles: true, clientX: x0, clientY: y0 })); W.dispatchEvent(new W.PointerEvent('pointerup', { bubbles: true, clientX: x1, clientY: y1 })); b.click(); };
+    geste(200, 800, 205, 740); assert.deepEqual(faits, ['minimiser'], 'vers le haut : minimiser, et le toucher du bouton est avalé');
+    geste(100, 800, 200, 805); geste(250, 800, 150, 798); assert.deepEqual(faits, ['minimiser', 'precedente', 'suivante']);
+    cour = null; W.dispatchEvent(new W.CustomEvent('ploxi0n:courant')); assert.ok(!ac().classList.contains('px-kb-dans'), 'revenu à l\'accueil : ◇');
+  } finally { p.fin(); }
 });
