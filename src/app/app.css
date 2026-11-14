@@ -864,13 +864,17 @@ html.px-calme .ci-prise{animation:none}
 .px-vx-ap>.ci-cliche{position:absolute;inset:0}
 .px-vx-carte{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#ecebe9;text-align:center;padding:12px}
 .px-vx-ic{width:44%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:44px}.px-vx-ic .xki,.px-vx-ic .px-g{width:100%;height:100%}
-.px-vx-carte b{font:600 17px var(--police)}.px-vx-carte small{font:600 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(236,235,233,.55)}
+.px-vx-carte b{font:600 14px/1.2 var(--police)}.px-vx-carte small{font:600 8.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:rgba(236,235,233,.5)}   /* (0.99.61) des cases plus petites (le 3 × 3) */
+.px-vx-carte{gap:6px;padding:10px}.px-vx-ic{width:40%}
 .px-vx-clip{position:absolute;inset:0;border-radius:26px;overflow:hidden}
 .px-vx-nom{position:absolute;left:6px;top:-28px;max-width:calc(100% - 12px);padding:4px 10px;border-radius:12px;background:rgba(7,6,12,.78);color:#ecebe9;font:600 11px var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .px-vx-dirs{position:absolute;inset:0;pointer-events:none}
 .px-vx-d{position:absolute;width:8px;height:8px;border-radius:50%;background:#ecebe9;opacity:.8}.px-vx-d.px-vx-vide{opacity:.15}
 .px-vx-d-haut{left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);margin-left:-4px}.px-vx-d-bas{left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);margin-left:-4px}
 .px-vx-d-gauche{left:8px;top:50%;margin-top:-4px}.px-vx-d-droite{right:8px;top:50%;margin-top:-4px}
+.px-vx-d-haut-gauche{left:10px;top:calc(env(safe-area-inset-top,0px) + 10px)}.px-vx-d-haut-droite{right:10px;top:calc(env(safe-area-inset-top,0px) + 10px)}   /* (0.99.61) les coins */
+.px-vx-d-bas-gauche{left:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}.px-vx-d-bas-droite{right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
+.px-vx-t,.px-vx-clip{border-radius:20px}
 .px-vx-x{position:absolute;right:14px;top:calc(env(safe-area-inset-top,0px) + 12px);width:40px;height:40px;min-height:0;border-radius:50%;border:1.5px solid rgba(236,235,233,.6);background:rgba(7,6,12,.7);color:#ecebe9;font-size:16px}
 .px-vx-aide{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 22px);margin:0;padding:6px 12px;border-radius:14px;background:rgba(7,6,12,.85);width:max-content;max-width:calc(100vw - 32px);text-align:center;font:600 10px var(--mono);letter-spacing:.06em;color:rgba(236,235,233,.65);pointer-events:none;animation:px-vx-aide 4s ease forwards}
 @keyframes px-vx-aide{0%,70%{opacity:1}100%{opacity:0}}

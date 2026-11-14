@@ -7,6 +7,10 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.62', titre: 'Le dézoom en 3 × 3', points: [
+    '⊡ La vue des xers (le premier dézoom) montre neuf ploxions au lieu de cinq : le tien au milieu et les huit autour, diagonales comprises. Les cases sont carrées.',
+    '⊡ Glisse en biais pour aller dans un coin ; d\'où tu viens reste toujours derrière toi.',
+  ] },
   { v: '0.99.61', titre: 'Coord envoie, la bande s\'affine', points: [
     '🛰 Coord envoie de nouveau : le texte partait vide par le mode connecté (« rien à envoyer »). Les fichiers envoyés au labo (les photos vers ton boxion) passaient par le même trou : réparé aussi.',
     '🛰 Le verrou de coord se rouvre tout seul : il réessaie après quelques secondes, puis chaque minute, et quand tu reviens dans l\'app.',
