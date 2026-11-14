@@ -7,6 +7,11 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.63', titre: 'Le xer xerboxion, dans l\'app', points: [
+    '⬡ Le mode xerboxion est maintenant dessiné dans l\'app : le chill-tekk du labo, cyan, sans attendre le serveur ni se reconnecter. Hors ligne aussi.',
+    '⬡ Home · tes ploxions et ceux du labo · filtrer ; les onglets Bureau, Labo (tout le catalogue, un toucher l\'installe), Capteurs & bions (le natif de l\'iPhone), Quêtes, Xers.',
+    '⬡ Les koins sont toujours là en xerboxion ; la page du labo reste à un toucher (Xers › le xer du labo, en ligne).',
+  ] },
   { v: '0.99.62', titre: 'Le dézoom en 3 × 3', points: [
     '⊡ La vue des xers (le premier dézoom) montre neuf ploxions au lieu de cinq : le tien au milieu et les huit autour, diagonales comprises. Les cases sont carrées.',
     '⊡ Glisse en biais pour aller dans un coin ; d\'où tu viens reste toujours derrière toi.',

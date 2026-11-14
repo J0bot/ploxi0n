@@ -13,7 +13,7 @@ import { enregistrerXerEnLigne } from './app/xer-en-ligne.js';
 import { brancherLiens } from './natif/liens.js';
 import { creerRaccourcis, glyphePng } from './natif/raccourcis.js';
 import { creerActivites } from './natif/activites.js';
-import { creerWidgetsPloxions } from './natif/widgets-ploxions.js';
+import { creerWidgetsPloxions, XERS_WIDGET } from './natif/widgets-ploxions.js';
 import { zonesVeille } from './bions/zones-veille.js';   // 🗺 (0.99.59) la mini-carte du widget mappion
 import { creerPush, SUJETS as SUJETS_PUSH } from './natif/push.js';
 import { creerCompte } from './natif/compte.js';
@@ -115,11 +115,12 @@ import { creerConnexionLabo } from './natif/connexion-labo.js';
 import { creerControleur } from './xerbot/controleur.js';
 import { semerKoinIon } from './terrax/koin-ion.js';
 import { svgXerkion } from './app/xerkion-icone.js';
+import { creerXerXerboxion } from './app/xer-xerboxion.js';   // ⬡ (0.99.63) le xer xerboxion natif
 import { creerChillSynth } from './chill/chill-synth.js';
 import { creerTutoHud } from './app/tuto-hud.js';
 import { glyphe as G, glyphePloxion } from './app/glyphes.js';
 
-const VERSION = '0.99.62';
+const VERSION = '0.99.63';
 
 // plus de zooms bizarres : la balise viewport est fixée (index.html) ; un bion qui la réécrit est remis en place aussitôt
 // (0.99.26) la taille de tout passe ici : à ×z, la page est mise en page à (largeur de l'écran / z) puis agrandie ×z par la balise viewport,
@@ -687,7 +688,14 @@ async function demarrer() {
   window.jOSEcranAccueil = ecranAccueil;
   boot(78, 'l\'accueil');
   // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xerbot (le monde physique)
-  const modes = creerModes({ cadres, connecter: (c) => connexionLabo.adresse(c), prefs, ouvrir: (id) => routeurProxy.ouvrir(id), connait: (id) => !!(routeur && routeur.connait(id)), source: SOURCE, chemin: '/xer/chill-tekk', vibrer: (x) => vibrer(x), controleur: controleur.api });   // ⬡ (0.99.55) le xer xerboxion = le xer chill-tekk du labo
+  // ⬡ (0.99.63) le xer xerboxion natif (src/app/xer-xerboxion.js) : le catalogue du labo (le cache du dépôt), tes ploxions, le natif, les xers
+  const xerXbx = creerXerXerboxion({ W: window, installes: () => (routeur ? routeur.catalogue() : []), labo: () => depot.catalogue({ reseau: false }).then(c => (c && c.items) || []),
+    icone: (p) => svgXerkion(p, { seul: prefs.lire().styleIcones === 'glyphe' }), ouvrir: (id) => routeurProxy.ouvrir(id), vibrer: (x) => vibrer(x),
+    choisirMode: (id) => prefs.regler({ mode: id }).then(() => routeur && routeur.accueil()).catch(() => {}),
+    modes: () => MODES.map(([id, , nom]) => ({ id, nom, on: (prefs.lire().mode || 'chill-tekk') === id, description: (XERS_WIDGET.find(x => x[0] === id) || [])[2] || '' })),
+    usage: () => boxion.get('usage', 'stats').then(u => (u && u.px) || {}).catch(() => ({})),
+    enLigne: () => { if (window.jOSNatif && window.jOSNatif.navigateur) window.jOSNatif.navigateur(SOURCE + '/xer/chill-tekk?app=ploxi0n'); else window.open(SOURCE + '/xer/chill-tekk', '_blank'); } });
+  const modes = creerModes({ cadres, connecter: (c) => connexionLabo.adresse(c), prefs, ouvrir: (id) => routeurProxy.ouvrir(id), connait: (id) => !!(routeur && routeur.connait(id)), source: SOURCE, chemin: '/xer/chill-tekk', vibrer: (x) => vibrer(x), controleur: controleur.api, xerboxion: xerXbx });   // ⬡ (0.99.55) le xer xerboxion = le xer chill-tekk du labo
   modes.attacher(racine);
   let coupesConnues = new Set();   // les bions coupés (⚙ › Bions), relus à chaque ouverture ; gardés pour brancher les plugions sans attendre
   routeur = creerRouteur({ habiller: (id, hote) => (XERS_PLOXIONS[id] && prefs.lire().xerPloxions !== false ? XERS_PLOXIONS[id](hote, { W: window, vibrer: (x) => vibrer(x) }) : null), sonDe: (id) => (gel ? gel.aDuSon(id) : false), surChercher: () => (chercheur ? chercheur.ouvrir() : routeur.ouvrir('marketplace', { chercher: '1' })), surXers: () => (vueXers ? vueXers.ouvrir() : routeur.carte()), panneau: () => modes.panneau(), racine, catalogue: internes, boxion, vibrer, doubleBord: () => routeurProxy.ouvrir('portion'), surVocal: () => vocal.basculer(), ouvrirExterne: (id, p) => routeurProxy.ouvrir(id, p), prefs: () => prefs.lire(), usage: () => boxion.get('usage', 'stats'), retirer: async (id) => { await depot.retirer(id); await majAccueil(); }, verrou: window.jOSVerrou, bundleLocal: (id) => depot.bundle(id, { deja: bionsCharges, present: (b) => window[b] != null }), apresChargement: (id) => { brancherPlugions(window, coupesConnues); /* (0.99.21) avant le montage : jOSZone a sa zone dès la première ouverture */ boxion.get('reglages', 'bions-coupes').then(c => { coupesConnues = new Set(c || []); brancherPlugions(window, coupesConnues); }).catch(() => {}); socialApple(id); }, hud, ecranAccueil, surUsage: (id, s) => surUsage(id, s).catch(() => {}),
@@ -792,7 +800,8 @@ async function demarrer() {
   // ◺◿ (0.89) les koins remplacent le dock et le HUD (le carnet de RS-7, docs/KOINS.md) : ⚙ › HUD et dock › Les koins
   // ◺◿ (0.97, RS-7 : « pourquoi besoin d'un dock quand on a des koins » — « mais la suppression du dock, c'est pour le mode organique ») :
   // en organique, les koins toujours (plus de dock) ; ailleurs, le réglage d'avant
-  const koins = creerKoins({ actif: () => prefs.lire().mode === 'organique' || !!prefs.lire().koins, vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
+  const koins = creerKoins({ actif: () => prefs.lire().mode === 'organique' || prefs.lire().mode === 'xerboxion' || !!prefs.lire().koins,   // ⬡ (0.99.63) le xer xerboxion : les koins du chill-tekk du labo
+    vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
     koins: () => (routeur.connait('xerkion-perso-koin-ion') ? routeur.ouvrir('xerkion-perso-koin-ion') : routeur.signaler('le koin du ion n\'est pas encore semé ici')),
     temps: () => routeurProxy.ouvrir('passe'),   // ○ (0.97) le wormion : se balader dans le temps (le passé)
     xers: () => routeur.faire('mes-xers'), carte: () => routeur.faire('map'),   // □ portion : la map (0.90) ; (0.99.47) ces deux-là étaient avalés par le commentaire d'au-dessus

@@ -20,7 +20,7 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '
 import { glyphe as G, versGlyphe } from './glyphes.js';   // ◇ (0.54) des glyphes, plus d'emoji
 export const MODES = [['organique', 'neurone', 'organique'], ['chill-tekk', 'chilltekk', 'chill-tekk'], ['xerboxion', 'xerboxion', 'xerboxion'], ['xerbot', 'xerbot', 'xerbot']];
 
-export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, connait = () => false, source = 'https://labo.j0bot.ch', chemin = '/home', vibrer = () => {}, cadres = null, controleur = null, connecter = null }) {
+export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, connait = () => false, source = 'https://labo.j0bot.ch', chemin = '/home', vibrer = () => {}, cadres = null, controleur = null, connecter = null, xerboxion = null }) {
   const D = W.document, N = () => W.jOSNatif || {};
   const mode = () => (MODES.some(m => m[0] === (prefs.lire().mode || '')) ? prefs.lire().mode : 'chill-tekk');   // (0.99.47) le mode de base : chill-tekk
   const appliquer = () => { for (const [m] of MODES) D.documentElement.classList.toggle('px-m-' + m, mode() === m); };
@@ -97,8 +97,13 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
     if (!hoteMap) { hoteMap = D.createElement('div'); hoteMap.className = 'px-org-map-h'; try { W.jOSApps.map.mount(hoteMap, {}); } catch (e) { hoteMap = null; return; } }
     if (hoteMap.parentNode !== place) place.appendChild(hoteMap);
   }
+  // ⬡ (0.99.63, RS-7 : « Prio 1 : xer xerboxion », le choix « natif ») le xer xerboxion dessiné ici (src/app/xer-xerboxion.js) ; la page
+  // du labo dans un cadre reste possible (prefs.xerboxionLabo), et à un toucher dans l'onglet Xers
+  const natifXbx = () => !!xerboxion && prefs.lire().xerboxionLabo !== true;
+  function monterXbx() { const place = D.querySelector('.px-accueil [data-xbx-place]'); if (place && xerboxion) xerboxion.monter(place); }
   function panneau() {
     const m = mode();
+    if (m === 'xerboxion' && natifXbx()) { W.setTimeout(monterXbx, 0); return puces() + '<div class="px-mode-p px-xbx-place" data-xbx-place></div>'; }
     if (m === 'xerboxion') sonder();
     if (m === 'organique') W.setTimeout(monterMap, 0);
     return puces() + (m === 'xerboxion' ? panneauXerboxion() : m === 'xerbot' ? panneauXerbot() : m === 'organique' ? '<div class="px-mode-p px-org-map" data-org-map></div>' : '');
