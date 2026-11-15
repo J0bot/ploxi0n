@@ -1,71 +1,115 @@
 # ploxi0n
 
-Les ploxions du xerboxion sur iOS, **100 % hors ligne** : les données vivent sur le téléphone (un mini-Boxion embarqué, `boxion_local`), et un Boxion distant s'ajoute en option. La porte d'entrée la plus simple de l'écosystème : on installe l'app, on a ses ploxions.
+**Le xerboxion dans ta poche.** ploxi0n est l'app iPhone (et Android) qui fait tourner les ploxions du xerboxion en natif, hors ligne d'abord :
+tes données vivent sur le téléphone, le labo (labo.j0bot.ch) s'ajoute quand tu es connecté. Version : voir `package.json` (0.99.65 au 14.11.2026).
 
-Le brief de référence est « ploxi0n — brief agents v1 iOS » (11.10.2026). Ce dépôt en suit les décisions actées : Capacitor, CI GitHub Actions sur runner macOS, TestFlight, agents sur le Boxion.
+Ce fichier est la carte. Le détail de chaque chantier vit dans `docs/` ; l'historique, dans `docs/FEUILLE-DE-ROUTE.md` (une entrée par
+version) et dans les commits (chaque commit est un tsoin du nexus).
 
-## Comment ça marche
+---
 
-```
-iPhone · Capacitor + WKWebView
-  ploxions JS (classe A)  ── mount / unmount, droit au silence
-        │
-  shim jOS                ── jOSApps, jOSPorts, jOSTsoin, jOSBoxion, jOSb, jOS.openPloxion, isDesktop()=false, fetch local
-        │
-  boxion_local            ── SQLite chiffré sur l'iPhone · IndexedDB en dev · mémoire en test
-        ├── HealthKit (jour 2+)          ── tsoin_sante, lecture seule, sur accord
-        └── Boxion distant (option)      ── pull/apply signé, plus tard
-```
+## 1. Le vocabulaire en trente secondes
 
-- **`src/boxion-local/`** : l'interface unique `get / put / del / list / watch / append / lire`. Les journaux `xion` et `tsoins` sont append-only et horodatés : ils deviennent la file de sync quand un Boxion est appairé.
-- **`src/shim/jos.js`** : ce qu'un ploxion du labo attend, réimplémenté en local. Le bus `jOSPorts` livre tout de suite et journalise dans `xion`. `jOSTsoin.mark` et `POST /chat {kind:tsoin}` écrivent dans `tsoins`. `/xion/snapshot` est reconstruit depuis le journal. `jOSBoxion` garde l'API du labo (111 ploxions s'en servent). Le `localStorage` est recopié dans `boxion_local` et restauré au démarrage, parce qu'iOS peut purger celui de la WebView. L'identité est locale. Toute autre route du serveur répond `503 {horsLigne:true}` **sans toucher le réseau** et s'inscrit dans le journal `manques`. Une URL externe part sur le réseau : ce sont les ploxions « online only ».
-- **`src/app/routeur.js`** : l'accueil, ouvrir un ploxion, revenir. Un seul ploxion monté à la fois ; revenir appelle `unmount`.
-- **`public/ploxions/<id>/`** : les ploxions embarqués, extraits du labo en bundles statiques (degré D3). **`public/vendor/jOSb.js`** : le vrai runtime partagé des ploxions, copié du labo.
+| mot | dans l'app |
+|---|---|
+| **ploxion** | une app du xerboxion (mappion, coord, Proche, Autour…) : un module JS monté dans l'app (`mount` / `unmount`) |
+| **bion** | un bloc réutilisable, pur quand c'est possible (`src/bions/`, ceux du labo dans `public/bions/`) |
+| **xer** | une façon d'habiter l'app : organique, chill-tekk (par défaut), xerboxion, xerbot (`src/app/modes.js`) |
+| **koin** | les triangles des coins du bas : un toucher les ouvre en quatre cases (trion, hypercube, wormion, portion) ; entre eux, la bande des glyphes `‹ › ⧗ ○ △ □ ◇ ✕ ⓘ ▁` (`src/app/koins.js`, `docs/KOINS.md`) |
+| **tsoin** | une trace : ce que tu fais, ce que tu notes ; le journal (`docs/TSOINS.md`) |
+| **boxion** | le stockage : `boxion_local` sur le téléphone (SQLite chiffré), ton boxion au labo en mode connecté |
+| **Proche / le maillage** | les téléphones autour, sans internet (Bluetooth), le protocole public Maille v1 (`docs/protocole/MAILLE-v1.md`) |
+| **xerion** | une personne, un compte (RS-7, RS-3…) ; jamais de prénoms dans le code ni les docs |
 
-## Les outils (lecture seule du labo)
-
-| Commande | Effet |
-| --- | --- |
-| `npm run audit` | le tri des ~560 ploxions : type, degré, Blade restant, appels réseau, bions, classe A/B/C → `ploxions-audit.csv`, `ploxions-audit.md` (top des routes appelées par les B, candidats A) |
-| `node tools/compat-ploxions.mjs` | monte VRAIMENT chaque candidat dans le shim, en mode avion, puis démonte et mesure : erreurs, fuites (droit au silence), réseau, bions absents → `ploxions-compat.csv`, `ploxions-compat.md` |
-| `npm run extraire` | du labo vers `public/ploxions/` : les ploxions de `ploxions.embarques.json` (refuse un ploxion qui contient encore du Blade) |
-
-## Tests
-
-`npm test` (Node 22) :
-
-- **contrat de `boxion_local`** : la même suite sur la mémoire, IndexedDB (`fake-indexeddb`) et SQLite. Le SQL de l'iPhone est exécuté par `node:sqlite`.
-- **contrat du shim** (jsdom) : le bus, les tsoins, `/xion/snapshot`, les routes manquantes sans réseau, l'identité, `jOSBoxion`, et le **test hors ligne de référence simulé**. On écrit en mode avion, on tue l'app, iOS purge le localStorage, on relance : la donnée, le tsoin et le bus sont là.
-- **montage** : chaque ploxion embarqué monte, vit et se démonte sans rien laisser (intervalles, rAF, écouteurs, blobs), sans aucune requête sortante.
-
-Le test sur appareil (TestFlight, mode avion, HealthKit) se fait sur l'iPhone.
-
-## Développer
+## 2. Comment c'est construit
 
 ```
-nvm use 22            # Node 22 (Capacitor 8) ; sur le Boxion : ~/.local/opt/node22/bin
-npm ci
-npm run dev           # le web dans un navigateur (boxion_local = IndexedDB)
-npm test
-npm run build && npx cap sync ios
+iPhone / Android · Capacitor 8 · une WebView
+  ├── l'app (src/main.js)            le démarrage : prefs, boxion, routeur, koins, modes, natif, ploxions internes
+  ├── le routeur (src/app/routeur.js) ouvrir, minimiser, basculer les ploxions ; les animations (zoom depuis l'icône)
+  ├── le shim jOS (src/shim/)        ce qu'un ploxion du labo attend (jOSApps, jOSPorts, jOSBoxion, fetch…) ; en mode connecté,
+  │                                  ses appels serveur partent au labo par le relais HTTP natif (src/marketplace/depot.js)
+  ├── boxion_local (src/boxion-local/) get / put / del / list / append : SQLite chiffré sur l'iPhone, IndexedDB en dev, mémoire en test
+  └── le natif (src/natif/ + ios/App/App/AppDelegate.swift)
+        plugins maison : PloxiApple (Live Activities, Siri…), PloxiVeille (position, pas, capteurs), PloxiProche / PloxiBLE (maillage),
+        PloxiRegard (suivi de la tête), PloxiOndes… ; extensions : PloxionWidgets (widgets, Live Activities, Centre de contrôle),
+        PloxionNotifs (notifications riches)
 ```
 
-## Publier sur TestFlight (CI)
+Les ploxions viennent de trois endroits : **internes** (écrits ici, `src/lot/`, `src/app/…` : Proche, Autour, Notifs, réglages…),
+**embarqués** (`public/ploxions/` : coord, bother, clickion… copiés du labo, marchent hors ligne), et **installés** depuis le catalogue du
+labo (le marketplace, gardés sur le téléphone).
 
-Un push sur `main` lance `.github/workflows/ios.yml`. Les tests tournent sur Linux ; s'ils passent, le build se fait sur macOS et `fastlane beta` envoie sur TestFlight.
+## 3. Où est quoi
 
-À faire une fois, par RS-7 :
+| dossier | contenu |
+|---|---|
+| `src/main.js` | le démarrage, et le câblage de tout (lire ses commentaires : chaque bloc dit d'où il vient) |
+| `src/app/` | l'interface : routeur, koins, modes (les xers), xer xerboxion natif, vue des xers (le dézoom 3 × 3), carte, glyphes, nouveautés, CSS (`app.css`) |
+| `src/lot/` | les ploxions internes : Proche, Autour, Notifs, synthé, banc des animations, système, ambiances… |
+| `src/bions/` | les bions purs et testés : maille (le protocole), carte des nœuds, zones de la veille, glyphe à graine (jOSGlyphe), potes, autour… |
+| `src/natif/` | les ponts vers le natif : veille, activités, notifications, push, raccourcis, widgets… (un plugin Capacitor est un Proxy : `surPromesse`) |
+| `src/shim/` | le shim jOS et le relais (fetch, XHR, fichiers) |
+| `src/marketplace/` | le dépôt : catalogue du labo, installation, HTTP natif |
+| `public/` | les ploxions embarqués et les bions du labo servis tels quels |
+| `ios/` | le projet Xcode : `App/App/AppDelegate.swift` (tous les plugins), `PloxionWidgets/`, `PloxionNotifs/`, `Raccourcis.swift` (Siri) |
+| `android/` | le projet Android (PloxiBLE.java pour le maillage) |
+| `ref/c/` | l'implémentation C de référence du maillage (et un nœud ESP32) |
+| `tests/` | ~490 tests (node --test, jsdom) |
+| `tools/` | le faux iPhone (`tools/faux-iphone/`), les vecteurs du protocole, le nexus des tsoins, les audits |
+| `docs/` | tout le reste (§ 6) |
+| `fastlane/`, `.github/workflows/` | la CI : build iOS sur un Mac de GitHub, TestFlight, l'APK Android |
 
-1. Dans App Store Connect, créer l'app : bundle id `ch.j0bot.ploxi0n`, nom « ploxi0n ».
-2. Créer une clé API App Store Connect (rôle Admin ou App Manager, avec accès aux certificats) et télécharger le `.p8`.
-3. Dans les secrets du dépôt GitHub, poser `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` (le contenu du fichier) et `APPLE_TEAM_ID`. Ces secrets ne vont jamais sur le Boxion ni dans un agent.
-4. La signature (fastlane `match`) : `MATCH_PASSWORD` (une phrase de passe que tu choisis : elle chiffre les certificats) et `MATCH_PAT` (un jeton GitHub « fine-grained » limité au dépôt privé `J0bot/ploxi0n-certificats`, permission Contents en lecture et écriture). Le premier build crée le certificat de distribution et le profil App Store et les y range, chiffrés ; les suivants les réutilisent. Aucun iPhone à enregistrer.
+## 4. Travailler dessus
 
-En dépôt privé (GitHub Pro), une minute macOS compte pour 10. Il faut compter environ 300 minutes macOS par mois, et un build iOS en prend 10 à 15.
+```bash
+npm ci                 # une fois
+npm test               # les tests (~490), quelques minutes
+npm run build          # le bundle (dist/)
+npx vite preview --port 4173 &
+node tools/faux-iphone/faux-iphone.mjs http://localhost:4173/ build/fi --script tools/faux-iphone/parcours-koins.mjs
+```
 
-## Points ouverts
+- **Le faux iPhone** charge l'app avec le vrai `native-bridge.js` de Capacitor et les plugins tels que le Swift les déclare : il voit les bugs
+  du pont natif que le navigateur ne voit pas. Un parcours par chantier (`tools/faux-iphone/parcours-*.mjs`), `--android` pour Android.
+- **Une version** : `package.json` (+ le lock), `VERSION` dans `src/main.js`, une entrée dans `src/app/nouveautes.js`, la ligne « Dernière mise
+  à jour » de `docs/FEUILLE-DE-ROUTE.md`, puis `node tools/tsoins-nexus.mjs`.
+- **Le Swift ne se compile pas sans Mac** : du Swift minimal, derrière `#available` / `#if canImport` ; le `.pbxproj` ne se modifie que par
+  fastlane ; un nouveau fichier Swift de l'app va dans `AppDelegate.swift`. Les règles complètes : `CLAUDE.md`.
 
-- La licence du dépôt (MIT comme anatomie-ploxion, ou AGPL comme la plupart des papiers).
-- Les 3 à 5 ploxions à embarquer : RS-7 les choisit dans `ploxions-compat.md`.
-- La conformité export de l'app (le chiffrement local de SQLite) : App Store Connect pose la question à chaque build tant que `ITSAppUsesNonExemptEncryption` n'est pas dans l'Info.plist. C'est une déclaration légale : à trancher par RS-7.
-- Jour 2 et suivants : la piste santé (HealthKit, `tsoin_sante`), l'installation depuis le marketplace, l'appairage d'un Boxion distant, le shim WASM.
+## 5. Lancer un build
+
+- **iOS (TestFlight)** : GitHub › Actions › le workflow iOS › « Run workflow » sur la branche voulue. Les options :
+  - `widgets` : widgets, Live Activities, boutons du Centre de contrôle ;
+  - `notifs` : notifications riches ;
+  - `ble` : le maillage en arrière-plan ;
+  - `carplay` ;
+  - `vlc` : le lecteur VLC ;
+  - `regenerer_profil` : après un changement de capabilities.
+
+  Le détail : `docs/TESTFLIGHT.md`, `docs/PUBLIER.md`.
+- **Android** : l'APK se construit à chaque push (`docs/ANDROID.md`).
+- **Les clés** (APNs `.p8`, certificats) ne sont jamais dans le dépôt : secrets de la CI et serveur du labo seulement.
+
+## 6. Les docs, par sujet
+
+| sujet | docs |
+|---|---|
+| état et passation | `docs/CONTEXTE.md`, `docs/FEUILLE-DE-ROUTE.md`, `docs/plan-suite.md`, `docs/BRAINDUMP.md` |
+| vision, look | `docs/VISION-ORIGINELLE.md`, `docs/LOOK.md`, `docs/KOINS.md`, `docs/ANIMATIONS.md` |
+| le maillage | `docs/protocole/MAILLE-v1.md`, `docs/PROTOCOLE-MAILLE.md`, `docs/ULTIMATE-BLUETOOTH.md`, `docs/PROCHE-SECTION.md` |
+| cartes et lieux | `docs/MAPION.md`, `docs/BRIEF-MAPPION.md`, `docs/TERRAX.md`, `docs/MES-APPAREILS.md` |
+| labo, compte, partage | `docs/CONNEXION-LABO.md`, `docs/SOCIAL-APPLE.md`, `docs/CONTACTS-ET-PARTAGE.md`, `docs/MISSIONS-ADMIN.md` |
+| notifications | `docs/PUSH.md` (le contrat avec le labo) |
+| emoji et glyphes | `docs/BANQUE-EMOJI.md` |
+| natif | `docs/SANTE.md`, `docs/CARPLAY.md`, `docs/LECTEUR.md`, `docs/XERBOT.md`, `docs/DRONE.md`, `docs/LANGUES.md` |
+| publier | `docs/APP-STORE.md`, `docs/PUBLIER.md`, `docs/TESTFLIGHT.md`, `docs/CONFIDENTIALITE.md` |
+
+## 7. Ce qui attend (au 15.11)
+
+- confirmer sur l'iPhone le Swift des versions 0.99.58 à 0.99.65 (Centre de contrôle, mini-carte, veille), build avec `widgets` ;
+- côté labo : la route push « build », le verrou de coord, la banque d'emoji (xerxion1), les droits au rang xerboxion ;
+- le ploxion Contacts et l'extension de partage (deux décisions dans `docs/CONTACTS-ET-PARTAGE.md`) ;
+- brancher les animations choisies au banc (passer, koin, feuille, xer) et refaire le wormion.
+
+*Ne pas nuire.*
