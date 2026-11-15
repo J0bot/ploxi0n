@@ -1158,6 +1158,12 @@ html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,
 .px-koin-gauche{left:0}.px-koin-droite{right:0}
 /* (15.11) la zone de toucher = le triangle du koin (fermé) : l'autre moitié de la cellule revient au ploxion (son koin lié) */
 .px-koin-gauche[data-etape="0"]{clip-path:polygon(0 0,0 100%,100% 100%)}.px-koin-droite[data-etape="0"]{clip-path:polygon(100% 0,100% 100%,0 100%)}
+.px-koins-r[data-ouvert="compact"] .px-koin-cases{grid-template-rows:auto;grid-template-columns:1fr 1fr}
+.px-koins-r[data-ouvert="compact"] .px-koin-cases>button,.px-koins-r[data-ouvert="compact"] .px-koin-pad{max-height:none}
+.px-koins-r[data-ouvert="compact"] .px-koin-cases>button small,.px-koins-r[data-ouvert="compact"] .px-koin-cases>button em{display:none}
+.px-koins-r[data-ouvert="compact"] .px-koin-barre{bottom:calc(env(safe-area-inset-bottom,0px) + 12px + (50vw - 25px) / 2 + 16px)}
+.px-koins-r:is([data-ouvert="bande"],[data-ouvert="mini"]) .px-koin-cases{display:none!important}
+.px-koins-r:is([data-ouvert="bande"],[data-ouvert="mini"]) .px-koin-barre{bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}
 .px-koin-xerkoin{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px + min(44vh, 100vw - 34px) + 70px);z-index:41;display:flex;justify-content:center}
 .px-koin-xerkoin .xk__b{border:2px solid var(--acc);border-radius:6px;padding:4px;display:flex;background:var(--surface)}
 .px-koin-xerkoin svg{display:block;width:64px;height:64px;fill:none;stroke:var(--acc);stroke-width:2.2;stroke-linejoin:round}

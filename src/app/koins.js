@@ -118,6 +118,9 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
     etape.gauche = etape.droite = n;
     for (const k of ['gauche', 'droite']) racine.querySelector('[data-koin="' + k + '"]').setAttribute('data-etape', String(n));
     if (n) {
+      // (15.11, RS-7 : « le xerkoin c'est aussi la partie qu'on voit quand on ouvre un koin… optimiser selon l'app, pas besoin de prendre autant de
+      // place ») : le FORMAT du koin ouvert, choisi par app dans le xerkoin : grand (2×2) · compact (une rangée) · bande (le xerkoin + la barre) · mini (la barre)
+      let mode = 'grand'; try { mode = (actions.ouvert && actions.ouvert()) || 'grand'; } catch (e) { mode = 'grand'; } racine.setAttribute('data-ouvert', mode);
       montrer(true);
       for (const em of racine.querySelectorAll('[data-koin-sous]')) { const f = actions['sous_' + em.getAttribute('data-koin-sous')]; let t = ''; try { t = f ? String(f() || '') : ''; } catch (e) { t = ''; } em.textContent = t; }
       // la classe au tour suivant : les cases viennent d'apparaître, la transition (triangle → carré) part de --k = 0
@@ -125,7 +128,7 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
       // ◩ (15.11, RS-7 : « une symbiose entre les koins de xer et les koins de ploxion, un koin c'est un koin ») : le xerkoin du ploxion
       // courant (sa bande, ses actions en koins liés : bion jOSXerkoin) juste au-dessus des cases ; un toucher lance l'action
       if (actions.xerkoin) { const z = racine.querySelector('.px-koin-xerkoin'); Promise.resolve(actions.xerkoin()).then((x) => { if (!z || !racine || !etape.gauche) return; if (!x || !x.html) { z.hidden = true; return; }
-        z.innerHTML = x.html; z.hidden = false; z.__x = x; const c0 = racine.querySelector('[data-cases]'); const r = c0 ? c0.getBoundingClientRect() : null; if (r && r.top > 0) z.style.bottom = Math.round((W.innerHeight || 800) - r.top + 10) + 'px'; }).catch(() => {}); }
+        z.innerHTML = x.html; z.hidden = false; z.__x = x; const m0 = racine.getAttribute('data-ouvert'); if (m0 === 'mini') { z.hidden = true; return; } const c0 = (m0 === 'bande') ? racine.querySelector('.px-koin-barre') : racine.querySelector('[data-cases]'); const r = c0 ? c0.getBoundingClientRect() : null; if (r && r.top > 0) z.style.bottom = Math.round((W.innerHeight || 800) - r.top + 10) + 'px'; }).catch(() => {}); }
       if (!arrets.length) for (const g of Object.keys(fonds)) { const el = racine.querySelector('[data-pad="' + g + '"]') || racine.querySelector('[data-cases] [data-koin-a="' + g + '"]'); if (el && typeof fonds[g] === 'function') { try { arrets.push(fonds[g](el)); } catch (e) { /* */ } } }
     } else { racine.classList.remove('px-koins-ouverts'); montrer(false); const zx = racine.querySelector('.px-koin-xerkoin'); if (zx) zx.hidden = true; for (const a of arrets) { try { if (a) a(); } catch (e) { /* */ } } arrets = []; }
     vibrer(n ? 'fx-cran' : 'selection');
