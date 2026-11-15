@@ -1816,3 +1816,6 @@ html:not(.px-organique) .px-tel-vivant{display:none}
    (le bion jOSHud) : un ploxion du labo le charge, il pose son calque plein écran (#xhud-layer, z 100058) et son bouton de secours (le mode
    nu : #monui-rescue) sur toute l'app, et ils restent après le ploxion. Dans ploxi0n, la sortie, ce sont les koins et les bords : jamais ce calque. */
 body > #xhud-layer, body > #monui-rescue, body > #xhud-bar, body > #xhud-palette { display: none !important; }
+
+/* (15.11, RS-7 : « les ploxions en plein écran, on leur tej le titre automatiquement ») : le nom est dans la barre de ploxi0n */
+.px-ecran [class$="__hd"] > h1,.px-ecran [class$="__hd"] > h2,.px-ecran [class*="__hd "] > h1,.px-ecran [class*="__hd "] > h2{display:none!important}
