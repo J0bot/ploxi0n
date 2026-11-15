@@ -110,3 +110,14 @@ les types de réel). Il manque un troisième axe : **ici, maintenant**. Le trion
 vivants), qui est autour (les voisins de Proche), où (Autour, la case), le tsoin en cours. Posé pour l'instant : la case dit « 3 vivants · 2
 voisins » ; un toucher ouvre toujours le hub du koin du ion (les dossiers ion, 3ion, seption, nexus, `src/terrax/koin-ion.js`). À décider :
 le trion devient-il un vrai panneau « ici » (un trackpad comme les deux autres ?), ou garde-t-il la balade entre les réels ?
+
+## Les xers de koins (RS-7, 15.11.2026) — `look/references/koins-03-xers-de-koins.jpg`, `koins-04-telecommande-et-villes.jpg`
+
+« C'est ça les exemples de xer de koins. » La bande du bas d'un xer = des CELLULES carrées posées côte à côte, chacune avec 2-3 contours
+imbriqués. Les cellules de la page : ◎ wormion (cercles imbriqués), ▣ portion (carrés imbriqués, ou quatre petits carrés), et des koins
+LIÉS — 2 triangles opposés = un carré coupé en diagonale, 4 = un X, un sablier (avec un point au centre) ou un losange ; un koin seul
+n'existe pas (il est instable, il se lie). Les arrangements : wormion | koins liés | portion ; trois koins liés en X ; des cercles qui
+débordent dans la cellule voisine (sablier entre deux arcs). Les écrans : l'écran au-dessus, la bande de cellules en bas (3 cellules,
+2 cellules, ou koins liés + petits carrés). La télécommande (page 2) : carrés de koins aux deux bouts, au centre un trapèze avec l'onde
+du son et ◁◁ ‖ ▷▷. Posé : le sélecteur du trippion ferme le carré des koins de coin (labo 899868d83) ; les cases acceptent des modules
+de fond (la fractale dans le portion, 95a0b85).
