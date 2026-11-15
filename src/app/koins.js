@@ -31,9 +31,11 @@ const TRI = (g) => '<svg viewBox="0 0 100 100" aria-hidden="true">' + (g ? '<g t
   + '<polygon points="0,100 0,0 100,100"/><polygon points="26,74 26,42 58,74"/><polygon points="34,66 34,55 45,66" class="f"/></g></svg>';
 
 /** actions = { koins, temps, xers, carte, tsoin, accueil, toi, retour, minimiser, journal } → fonctions ; actif() : l'option est choisie */
-export function creerKoins({ W = globalThis.window, actif = () => false, actions = {}, vibrer = () => {}, calme = () => false }) {
+// (15.11.2026, RS-7 : « mon système de glyphes doit être modulaire ») fonds = { portion: (el) => arreter, wormion: … } : un MODULE posé derrière
+// une case (la fractale du trippion dans le portion) ; monté à l'ouverture du koin, arrêté à la fermeture.
+export function creerKoins({ W = globalThis.window, actif = () => false, actions = {}, vibrer = () => {}, calme = () => false, fonds = {} }) {
   const D = W.document;
-  let racine = null, etape = { gauche: 0, droite: 0 }, cacher = 0, modesOuverts = false;
+  let racine = null, etape = { gauche: 0, droite: 0 }, cacher = 0, modesOuverts = false, arrets = [];
   const attendre = (f, ms) => (W.setTimeout ? W.setTimeout(f, ms) : setTimeout(f, ms));
   function faire(k) {
     if (k === 'xer') { if (actions.modes) { montrerModes(!modesOuverts); return; } k = 'xers'; }   // la case xer : les xers (les modes), sur place ; sinon mes xers
@@ -119,7 +121,8 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
       for (const em of racine.querySelectorAll('[data-koin-sous]')) { const f = actions['sous_' + em.getAttribute('data-koin-sous')]; let t = ''; try { t = f ? String(f() || '') : ''; } catch (e) { t = ''; } em.textContent = t; }
       // la classe au tour suivant : les cases viennent d'apparaître, la transition (triangle → carré) part de --k = 0
       attendre(() => { if (racine && etape.gauche) racine.classList.add('px-koins-ouverts'); }, 16);
-    } else { racine.classList.remove('px-koins-ouverts'); montrer(false); }
+      if (!arrets.length) for (const g of Object.keys(fonds)) { const el = racine.querySelector('[data-pad="' + g + '"]') || racine.querySelector('[data-cases] [data-koin-a="' + g + '"]'); if (el && typeof fonds[g] === 'function') { try { arrets.push(fonds[g](el)); } catch (e) { /* */ } } }
+    } else { racine.classList.remove('px-koins-ouverts'); montrer(false); for (const a of arrets) { try { if (a) a(); } catch (e) { /* */ } } arrets = []; }
     vibrer(n ? 'fx-cran' : 'selection');
   }
   function replier() { if (racine && (etape.gauche || etape.droite)) ouvrir('gauche', 0); else if (modesOuverts) montrerModes(false); }

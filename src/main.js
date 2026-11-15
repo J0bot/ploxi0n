@@ -90,6 +90,7 @@ import { creerMisesAJour } from './marketplace/mises-a-jour.js';
 import { creerRemontee } from './app/remontee-tsoins.js';
 import { creerSysteme } from './lot/systeme.js';
 import { creerKoins } from './app/koins.js';
+import { fondFractale } from './app/koin-fractale.js';   // ✺ (15.11) la fractale du trippion dans le portion
 import { creerNeurones } from './app/neurones.js';
 import { creerAtelier } from './lot/atelier-peaux.js';
 import { creerPasse } from './lot/passe.js';   // ○ (0.97) le passé : le zoom de temps
@@ -775,7 +776,7 @@ async function demarrer() {
   // ◺◿ (0.89) les koins remplacent le dock et le HUD (le carnet de RS-7, docs/KOINS.md) : ⚙ › HUD et dock › Les koins
   // ◺◿ (0.97, RS-7 : « pourquoi besoin d'un dock quand on a des koins » — « mais la suppression du dock, c'est pour le mode organique ») :
   // en organique, les koins toujours (plus de dock) ; ailleurs, le réglage d'avant
-  const koins = creerKoins({ actif: () => prefs.lire().mode === 'organique' || !!prefs.lire().koins, vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
+  const koins = creerKoins({ fonds: { portion: fondFractale({ W: window }) }, actif: () => prefs.lire().mode === 'organique' || !!prefs.lire().koins, vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
     koins: () => (routeur.connait('xerkion-perso-koin-ion') ? routeur.ouvrir('xerkion-perso-koin-ion') : routeur.signaler('le koin du ion n\'est pas encore semé ici')),
     temps: () => routeurProxy.ouvrir('passe'),   // ○ (0.97) le wormion : se balader dans le temps (le passé)
     xers: () => routeur.faire('mes-xers'), carte: () => routeur.faire('map'),   // □ portion : la map (0.90) ; (0.99.47) ces deux-là étaient avalés par le commentaire d'au-dessus

@@ -1172,7 +1172,8 @@ html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,
 .px-koin-cases>button:active{border-color:var(--acc2)}
 /* ○ □ (0.92) les trackpads : un creux (la surface qu'on touche), le glyphe gravé dessous, ce qui va se passer écrit dessus */
 .px-koin-pad{position:relative;overflow:hidden;background:var(--creux) var(--grain);touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}
-.px-koin-pad .px-pad-g{position:absolute;inset:12%;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.px-koin-fond{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.6;pointer-events:none;border-radius:inherit;will-change:transform}
+.px-koin-pad .px-pad-g{position:absolute;inset:12%;z-index:1;display:flex;align-items:center;justify-content:center;pointer-events:none}
 .px-koin-pad .px-pad-g .px-g{width:100%;height:100%;fill:none;stroke:var(--bord2);stroke-width:2}
 .px-koin-pad .px-pad-g .px-g .f{fill:var(--bord2)}
 .px-koin-pad b{position:relative;font:600 11px/1.25 var(--mono);letter-spacing:.14em;color:var(--txt);text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
