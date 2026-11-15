@@ -776,8 +776,13 @@ async function demarrer() {
   // ◺◿ (0.89) les koins remplacent le dock et le HUD (le carnet de RS-7, docs/KOINS.md) : ⚙ › HUD et dock › Les koins
   // ◺◿ (0.97, RS-7 : « pourquoi besoin d'un dock quand on a des koins » — « mais la suppression du dock, c'est pour le mode organique ») :
   // en organique, les koins toujours (plus de dock) ; ailleurs, le réglage d'avant
+  // ◩ (15.11) le xerkoin du ploxion courant dans les koins ouverts : le bion jOSXerkoin du labo (chargé s'il manque) lit son describe()
+  let xkCharge = null;
+  const xerkoinBion = () => window.jOSXerkoin ? Promise.resolve(window.jOSXerkoin) : (xkCharge || (xkCharge = new Promise((ok, ko) => { const s = document.createElement('script'); s.src = 'https://labo.j0bot.ch/px/bion-app/jOSXerkoin.js'; s.onload = () => (window.jOSXerkoin ? ok(window.jOSXerkoin) : ko(new Error('bion'))); s.onerror = () => { xkCharge = null; ko(new Error('réseau')); }; document.head.appendChild(s); })));
+  const xerkoinCourant = () => { const id = routeur.courant(); if (!id) return null; return xerkoinBion().then((X) => { const x = X.pour(id); return { html: X.bande(x.cells, { t: 64, acts: x.acts }), lancer: (i) => X.lancer(id, x.acts[i]) }; }).catch(() => null); };
   const koins = creerKoins({ fonds: { portion: fondFractale({ W: window }) }, actif: () => prefs.lire().mode === 'organique' || !!prefs.lire().koins, vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
     koins: () => (routeur.connait('xerkion-perso-koin-ion') ? routeur.ouvrir('xerkion-perso-koin-ion') : routeur.signaler('le koin du ion n\'est pas encore semé ici')),
+    xerkoin: xerkoinCourant,
     temps: () => routeurProxy.ouvrir('passe'),   // ○ (0.97) le wormion : se balader dans le temps (le passé)
     xers: () => routeur.faire('mes-xers'), carte: () => routeur.faire('map'),   // □ portion : la map (0.90) ; (0.99.47) ces deux-là étaient avalés par le commentaire d'au-dessus
     // ⊠ (0.99.47) la case xer : les quatre modes, sur place ; en choisir un change le xer de l'accueil

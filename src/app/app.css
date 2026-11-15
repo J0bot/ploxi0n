@@ -1155,7 +1155,14 @@ html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,
 .px-koins-r{position:fixed;inset:auto 0 0 0;height:0;z-index:40;color:var(--txt)}
 .px-koin{position:fixed;bottom:0;width:76px;height:76px;padding:0;margin:0;border:0;background:transparent;color:var(--acc);z-index:42;
   transition:width .26s cubic-bezier(.2,.9,.3,1),height .26s cubic-bezier(.2,.9,.3,1),opacity .2s;-webkit-tap-highlight-color:transparent}
-.px-koin-gauche{left:0}.px-koin-droite{right:0}   /* (0.99.7) collés au coin : l'arrondi de l'écran les découpe */
+.px-koin-gauche{left:0}.px-koin-droite{right:0}
+/* (15.11) la zone de toucher = le triangle du koin (fermé) : l'autre moitié de la cellule revient au ploxion (son koin lié) */
+.px-koin-gauche[data-etape="0"]{clip-path:polygon(0 0,0 100%,100% 100%)}.px-koin-droite[data-etape="0"]{clip-path:polygon(100% 0,100% 100%,0 100%)}
+.px-koin-xerkoin{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px + min(44vh, 100vw - 34px) + 70px);z-index:41;display:flex;justify-content:center}
+.px-koin-xerkoin .xk__b{border:2px solid var(--acc);border-radius:6px;padding:4px;display:flex;background:var(--surface)}
+.px-koin-xerkoin svg{display:block;width:64px;height:64px;fill:none;stroke:var(--acc);stroke-width:2.2;stroke-linejoin:round}
+.px-koin-xerkoin svg .i{stroke-width:1.5;opacity:.75}.px-koin-xerkoin svg .p{fill:var(--acc);stroke:none;opacity:.75}
+.px-koin-xerkoin svg [data-a]{fill:rgba(0,229,255,.08);cursor:pointer}.px-koin-xerkoin svg .vide{opacity:.35}   /* (0.99.7) collés au coin : l'arrondi de l'écran les découpe */
 .px-koin svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linejoin:round;opacity:.8}
 .px-koin svg polygon:first-child{fill:var(--surface);stroke:var(--bord2)}
 .px-koin svg .f{fill:var(--bio);stroke:none;opacity:.7}
