@@ -221,3 +221,10 @@ Des pistes, de la plus proche à la plus folle. Aucune n'est voulue tant que RS-
 5. **Le son** des mouvements : oui, non, en option ?
 6. **Ce qui te choque aujourd'hui** sur l'iPhone, en mouvement : ce qui saute, ce qui est trop lent, ce qui « flashe ». C'est par là qu'on
   commence la phase 3.
+
+## Les choix de RS-7 au banc (15.11, banc 0.99.64)
+
+Ouvrir : ♥ ouvrir-ios, ouvrir-ios-rebond, ouvrir-couloir · Fermer : ♥ fermer-ios · Passer : ♥ passer-3d, passer-cube, passer-pile · Koin :
+♥ koin-ouvre, koin-eventail · Feuille : ♥ feuille-bouton · Xer : ♥ xer-fondu, xer-flip · Accueil : ♥ cascade-une · Courbe : ♥ courbe-ios,
+courbe-rebond, courbe-seche · Wormion : rien ne plaît → à refaire. RS-7 : « faudra me donner plus d'animations ».
+À brancher ensuite : passer, koin, feuille, xer (seules ouvrir, fermer, courbe, cascade le sont) ; de nouvelles variantes pour le wormion.
