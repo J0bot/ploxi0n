@@ -214,7 +214,7 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]
   -webkit-user-select:text !important;user-select:text !important;-webkit-touch-callout:default !important;pointer-events:auto}
 
 /* la bulle de message (Face ID…) */
-.px-bulle{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:60;padding:12px 16px;border-radius:14px;background:var(--surface2) var(--grain);border:var(--trait) solid var(--bord2);color:var(--txt);font:600 13.5px var(--police);box-shadow:0 12px 30px -10px rgba(0,0,0,.8)}
+.px-bulle{position:fixed;left:16px;right:16px;top:calc(env(safe-area-inset-top,0px) + 64px);z-index:60;padding:12px 16px;border-radius:14px;background:var(--surface2) var(--grain);border:var(--trait) solid var(--bord2);color:var(--txt);font:600 13.5px var(--police);box-shadow:0 12px 30px -10px rgba(0,0,0,.8)}
 .px-bulle[hidden]{display:none}
 .px-hote{-webkit-touch-callout:none}
 
@@ -231,7 +231,7 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]
 .px-telecommande .rg-tete{top:auto;bottom:0;border-bottom:0;border-top:1px solid var(--bord)}
 /* (0.99.27) sans la barre du ploxion (les koins la remplacent), ces barres touchent le bas de l'écran : elles laissent la place de l'indicateur d'accueil */
 html.px-koins.px-telecommande .rg-tete,html.px-koins.px-telecommande .mk-top{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
-.px-telecommande .px-bulle{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
+.px-telecommande .px-bulle{top:calc(env(safe-area-inset-top,0px) + 64px)}   /* (15.11, RS-7 : « les notifs viennent d'en haut ») */
 .px-telecommande .mk{padding:0;min-height:100%;box-sizing:border-box}
 .px-telecommande .mk>div[data-c]{flex:1}
 .px-telecommande .rg{padding-bottom:0;min-height:100%;box-sizing:border-box}
@@ -408,7 +408,7 @@ html.px-cascade-vague .px-entree .px-accueil .px-tuile:nth-child(-n+16){animatio
 @keyframes px-fondu{from{background-color:transparent}}
 @keyframes px-monte{from{opacity:.4;transform:translateY(48px)}}
 .px-bulle{animation:px-bulle .22s cubic-bezier(.2,.9,.3,1.2) both}
-@keyframes px-bulle{from{opacity:0;transform:translateY(12px) scale(.96)}}
+@keyframes px-bulle{from{opacity:0;transform:translateY(-12px) scale(.96)}}
 .px-barre{animation:px-fondu-barre .18s ease-out both}
 @keyframes px-fondu-barre{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){.px-entree .px-accueil .px-tuile,.px-scene>.px-hote,.px-voile,.px-voile>.px-tiroir,.px-feuille>div,.px-bulle,.px-barre{animation:none}}
@@ -1172,7 +1172,21 @@ html.px-koins .px-accueil{padding-bottom:calc(var(--kbande) + 10px)}
 .px-koins-r{position:fixed;inset:auto 0 0 0;height:0;z-index:40;color:var(--txt)}
 .px-koin{position:fixed;bottom:0;width:var(--kbande);height:var(--kbande);padding:0;margin:0;border:0;background:transparent;color:var(--acc);z-index:42;
   transition:width .26s cubic-bezier(.2,.9,.3,1),height .26s cubic-bezier(.2,.9,.3,1),opacity .2s;-webkit-tap-highlight-color:transparent}
-.px-koin-gauche{left:0}.px-koin-droite{right:0}   /* (0.99.7) collés au coin : l'arrondi de l'écran les découpe */
+.px-koin-gauche{left:0}.px-koin-droite{right:0}
+/* (15.11) la zone de toucher = le triangle du koin (fermé) : l'autre moitié de la cellule revient au ploxion (son koin lié) */
+.px-koin-gauche[data-etape="0"]{clip-path:polygon(0 0,0 100%,100% 100%)}.px-koin-droite[data-etape="0"]{clip-path:polygon(100% 0,100% 100%,0 100%)}
+.px-koins-r[data-ouvert="compact"] .px-koin-cases{grid-template-rows:auto;grid-template-columns:1fr 1fr}
+.px-koins-r[data-ouvert="compact"] .px-koin-cases>button,.px-koins-r[data-ouvert="compact"] .px-koin-pad{max-height:none}
+.px-koins-r[data-ouvert="compact"] .px-koin-cases>button small,.px-koins-r[data-ouvert="compact"] .px-koin-cases>button em{display:none}
+.px-koins-r[data-ouvert="compact"] .px-koin-barre{bottom:calc(env(safe-area-inset-bottom,0px) + 12px + (50vw - 25px) / 2 + 16px)}
+.px-koins-r:is([data-ouvert="bande"],[data-ouvert="mini"]) .px-koin-cases{display:none!important}
+.px-koins-r:is([data-ouvert="bande"],[data-ouvert="mini"]) .px-koin-barre{bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}
+.px-koin-xerkoin[hidden]{display:none!important}
+.px-koin-xerkoin{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px + min(44vh, 100vw - 34px) + 70px);z-index:41;display:flex;justify-content:center}
+.px-koin-xerkoin .xk__b{border:2px solid var(--acc);border-radius:6px;padding:4px;display:flex;background:var(--surface)}
+.px-koin-xerkoin svg{display:block;width:64px;height:64px;fill:none;stroke:var(--acc);stroke-width:2.2;stroke-linejoin:round}
+.px-koin-xerkoin svg .i{stroke-width:1.5;opacity:.75}.px-koin-xerkoin svg .p{fill:var(--acc);stroke:none;opacity:.75}
+.px-koin-xerkoin svg [data-a]{fill:rgba(0,229,255,.08);cursor:pointer}.px-koin-xerkoin svg .vide{opacity:.35}   /* (0.99.7) collés au coin : l'arrondi de l'écran les découpe */
 .px-koin svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linejoin:round;opacity:.8}
 .px-koin svg polygon:first-child{fill:var(--surface);stroke:var(--bord2)}
 .px-koin svg .f{fill:var(--bio);stroke:none;opacity:.7}
@@ -1201,7 +1215,8 @@ html:not(.px-organique):not(.px-e-texte) .px-koin-pad :is(b,small){opacity:0;tra
 html:not(.px-organique):not(.px-e-texte) :is(.px-koin-pad.px-pad-actif,.px-koin-pad-portion:not([data-dir=""])) :is(b,small){opacity:1}
 /* ○ □ (0.92) les trackpads : un creux (la surface qu'on touche), le glyphe gravé dessous, ce qui va se passer écrit dessus */
 .px-koin-pad{position:relative;overflow:hidden;background:var(--creux) var(--grain);touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none}
-.px-koin-pad .px-pad-g{position:absolute;inset:12%;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.px-koin-fond{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.6;pointer-events:none;border-radius:inherit;will-change:transform}
+.px-koin-pad .px-pad-g{position:absolute;inset:12%;z-index:1;display:flex;align-items:center;justify-content:center;pointer-events:none}
 .px-koin-pad .px-pad-g .px-g{width:100%;height:100%;fill:none;stroke:var(--bord2);stroke-width:2}
 .px-koin-pad .px-pad-g .px-g .f{fill:var(--bord2)}
 .px-koin-pad b{position:relative;font:600 11px/1.25 var(--mono);letter-spacing:.14em;color:var(--txt);text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1855,6 +1870,8 @@ html:not(.px-organique) .px-tel-vivant{display:none}
    nu : #monui-rescue) sur toute l'app, et ils restent après le ploxion. Dans ploxi0n, la sortie, ce sont les koins et les bords : jamais ce calque. */
 body > #xhud-layer, body > #monui-rescue, body > #xhud-bar, body > #xhud-palette { display: none !important; }
 
+/* (15.11, RS-7 : « les ploxions en plein écran, on leur tej le titre automatiquement ») : le nom est dans la barre de ploxi0n */
+.px-ecran [class$="__hd"] > h1,.px-ecran [class$="__hd"] > h2,.px-ecran [class*="__hd "] > h1,.px-ecran [class*="__hd "] > h2{display:none!important}
 /* ⬡ (0.99.63) LE XER XERBOXION, EN NATIF (src/app/xer-xerboxion.js) : le chill-tekk du labo, cyan au trait, des tuiles à l'octogone. Le panneau
    remplace l'accueil (la grille, les catégories) ; les koins sont toujours là (koins.js, actif en mode xerboxion). */
 html.px-m-xerboxion{--acc:#22e3ef;--acc2:#7af4fb;--bio:#22e3ef}

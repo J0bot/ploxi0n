@@ -93,6 +93,7 @@ import { creerMisesAJour } from './marketplace/mises-a-jour.js';
 import { creerRemontee } from './app/remontee-tsoins.js';
 import { creerSysteme } from './lot/systeme.js';
 import { creerKoins } from './app/koins.js';
+import { fondFractale } from './app/koin-fractale.js';   // ✺ (15.11) la fractale du trippion dans le portion
 import { creerNeurones } from './app/neurones.js';
 import { creerAtelier } from './lot/atelier-peaux.js';
 import { creerPasse } from './lot/passe.js';   // ○ (0.97) le passé : le zoom de temps
@@ -808,9 +809,13 @@ async function demarrer() {
   // ◺◿ (0.89) les koins remplacent le dock et le HUD (le carnet de RS-7, docs/KOINS.md) : ⚙ › HUD et dock › Les koins
   // ◺◿ (0.97, RS-7 : « pourquoi besoin d'un dock quand on a des koins » — « mais la suppression du dock, c'est pour le mode organique ») :
   // en organique, les koins toujours (plus de dock) ; ailleurs, le réglage d'avant
-  const koins = creerKoins({ actif: () => prefs.lire().mode === 'organique' || prefs.lire().mode === 'xerboxion' || !!prefs.lire().koins,   // ⬡ (0.99.63) le xer xerboxion : les koins du chill-tekk du labo
-    vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
+  // ◩ (15.11) le xerkoin du ploxion courant dans les koins ouverts : le bion jOSXerkoin du labo (chargé s'il manque) lit son describe()
+  let xkCharge = null;
+  const xerkoinBion = () => window.jOSXerkoin ? Promise.resolve(window.jOSXerkoin) : (xkCharge || (xkCharge = new Promise((ok, ko) => { const s = document.createElement('script'); s.src = 'https://labo.j0bot.ch/px/bion-app/jOSXerkoin.js'; s.onload = () => (window.jOSXerkoin ? ok(window.jOSXerkoin) : ko(new Error('bion'))); s.onerror = () => { xkCharge = null; ko(new Error('réseau')); }; document.head.appendChild(s); })));
+  const xerkoinCourant = () => { const id = routeur.courant(); if (!id) return null; return xerkoinBion().then((X) => { const x = X.pour(id); return { html: X.bande(x.cells, { t: 64, acts: x.acts }), lancer: (i) => X.lancer(id, x.acts[i]) }; }).catch(() => null); };
+  const koins = creerKoins({ fonds: { portion: fondFractale({ W: window }) }, actif: () => prefs.lire().mode === 'organique' || !!prefs.lire().koins, vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
     koins: () => (routeur.connait('xerkion-perso-koin-ion') ? routeur.ouvrir('xerkion-perso-koin-ion') : routeur.signaler('le koin du ion n\'est pas encore semé ici')),
+    ouvert: () => { const id = routeur.courant(); if (!id) return 'grand'; try { const v = (JSON.parse(localStorage.getItem('xerkoin:valid') || '{}') || {})[id] || {}; return v.ouvert || 'compact'; } catch (e) { return 'compact'; } },
     temps: () => routeurProxy.ouvrir('passe'),   // ○ (0.97) le wormion : se balader dans le temps (le passé)
     xers: () => routeur.faire('mes-xers'), carte: () => routeur.faire('map'),   // □ portion : la map (0.90) ; (0.99.47) ces deux-là étaient avalés par le commentaire d'au-dessus
     // ⊠ (0.99.47) la case xer : les quatre modes, sur place ; en choisir un change le xer de l'accueil

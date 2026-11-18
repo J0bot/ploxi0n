@@ -127,7 +127,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if !sur && d.string(forKey: "CapacitorStorage.ploxi0n.clavier-libre") != "off" { AppDelegate.clavierSansGeste() }
         // LE SON (RS-7 12.10 : « améliorer le lecteur, utiliser les trucs natifs ») : la catégorie « lecture » d'iOS — le son des ploxions
         // continue écran verrouillé et joue même en mode silencieux, comme une vraie app de musique ou de vidéo (avec UIBackgroundModes audio)
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [.allowAirPlay])
+        // (15.11.2026, RS-7 : « quand j'écoute un son sur l'app Spotify, je veux plus que le son s'arrête pour chaque ploxion ») : .mixWithOthers,
+        // ploxi0n ne coupe plus jamais la musique des autres apps (un clic, un « +1 XP », une vidéo jouent PAR-DESSUS)
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers, .allowAirPlay])
         // les WIDGETS (extension PloxionWidgets) lisent l'App Group : chaque fois que l'app réécrit ses Préférences, on y recopie les
         // ploxions épinglés et les valeurs, et on redessine les widgets seulement si quelque chose a changé
         // hors du chemin critique du lancement (le premier dessin d'abord) ; jamais en mode sûr
@@ -243,7 +245,7 @@ public class PloxiVocal: CAPPlugin, CAPBridgedPlugin {
             guard ok else { call.reject("micro refusé : Réglages iOS › ploxi0n › Micro"); return }
             DispatchQueue.main.async {
                 do {
-                    try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+                    try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers])
                     try AVAudioSession.sharedInstance().setActive(true)
                     let url = FileManager.default.temporaryDirectory.appendingPathComponent("vocal-\(Int(Date().timeIntervalSince1970)).m4a")
                     let r = try AVAudioRecorder(url: url, settings: [AVFormatIDKey: Int(kAudioFormatMPEG4AAC), AVSampleRateKey: 44100, AVNumberOfChannelsKey: 1, AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue])
@@ -257,7 +259,7 @@ public class PloxiVocal: CAPPlugin, CAPBridgedPlugin {
     @objc func arreter(_ call: CAPPluginCall) {
         guard let r = enregistreur else { call.reject("aucun enregistrement en cours"); return }
         r.stop(); enregistreur = nil
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [.allowAirPlay])
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers, .allowAirPlay])
         let data = (try? Data(contentsOf: r.url)) ?? Data()
         call.resolve(["chemin": r.url.path, "duree": Date().timeIntervalSince(debut), "base64": data.base64EncodedString(), "type": "audio/mp4"])
     }
@@ -877,7 +879,7 @@ public class PloxiApple: CAPPlugin, CAPBridgedPlugin, HMHomeManagerDelegate, QLP
             try? AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
             let session = SHManagedSession()
             let r = await session.result()
-            try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [.allowAirPlay])
+            try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers, .allowAirPlay])
             switch r {
             case .match(let m):
                 let i = m.mediaItems.first
@@ -1036,7 +1038,7 @@ public class PloxiLecteur: CAPPlugin, CAPBridgedPlugin, AVPlayerViewControllerDe
         vc.allowsPictureInPicturePlayback = true
         vc.canStartPictureInPictureAutomaticallyFromInline = true   // (0.54) le PiP automatique en quittant l'app
         vc.updatesNowPlayingInfoCenter = true
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [.allowAirPlay])
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers, .allowAirPlay])
         try? AVAudioSession.sharedInstance().setActive(true)   // sans session active, ni PiP ni son en arrière-plan
         vc.modalPresentationStyle = .fullScreen
         appleVC = vc

@@ -35,9 +35,11 @@ const TRI = (g) => '<svg viewBox="0 0 100 100" aria-hidden="true">' + (g ? '<g t
   + '<polygon points="0,100 0,0 100,100"/><polygon points="26,74 26,42 58,74"/><polygon points="34,66 34,55 45,66" class="f"/></g></svg>';
 
 /** actions = { koins, temps, xers, carte, tsoin, accueil, toi, retour, minimiser, journal } → fonctions ; actif() : l'option est choisie */
-export function creerKoins({ W = globalThis.window, actif = () => false, actions = {}, vibrer = () => {}, calme = () => false }) {
+// (15.11.2026, RS-7 : « mon système de glyphes doit être modulaire ») fonds = { portion: (el) => arreter, wormion: … } : un MODULE posé derrière
+// une case (la fractale du trippion dans le portion) ; monté à l'ouverture du koin, arrêté à la fermeture.
+export function creerKoins({ W = globalThis.window, actif = () => false, actions = {}, vibrer = () => {}, calme = () => false, fonds = {} }) {
   const D = W.document;
-  let racine = null, etape = { gauche: 0, droite: 0 }, cacher = 0, modesOuverts = false;
+  let racine = null, etape = { gauche: 0, droite: 0 }, cacher = 0, modesOuverts = false, arrets = [];
   let obs = null, courantPeint;
   /** ◇ dans la bande : le glyphe du ploxion ouvert (encadré par le CSS), sinon celui des ploxions ; actions.courant() → { id, nom, svg } | null */
   function peindreCourant() {
@@ -74,8 +76,8 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
       + '<div class="px-koin-cases px-koin-cases-' + c + '" data-cases="' + c + '" hidden>' + CASES[c].map(([g, k]) => (PADS[g]
         ? '<div class="px-koin-pad px-koin-pad-' + g + '" data-pad="' + g + '" data-neurone role="slider" aria-label="' + NOMS[k] + ' (trackpad)"><span class="px-pad-g">' + G(g) + '</span>' + (g === 'wormion' ? '<i data-pad-a></i>' : '<i data-pad-p></i>') + '<i data-pad-onde></i><b data-pad-l></b><small data-pad-s></small></div>'
         : '<button type="button" data-koin-a="' + k + '" data-neurone aria-label="' + NOMS[k] + '">' + G(g) + '<small>' + NOMS[k].split(' (')[0] + '</small><em data-koin-sous="' + k + '"></em></button>')).join('') + '</div>').join('')
-      + '<div class="px-koin-modes" data-neurone hidden></div>'
-      + '<nav class="px-koin-barre" data-neurone>' + BARRE.map(([g, k, t]) => '<button type="button" data-koin-a="' + k + '" data-court="' + ({ koins: 'koin', carte: 'map', quoi: 'quoi ?', minimiser: '▁', suivante: '›' }[k] || k) + '" aria-label="' + NOMS[k] + '">' + (t || G(g)) + '</button>').join('') + '</nav>'
+      + '<div class="px-koin-modes" data-neurone hidden></div><div class="px-koin-xerkoin" data-neurone hidden></div>'
+      + '<nav class="px-koin-barre" data-neurone hidden>' + BARRE.map(([g, k, t]) => '<button type="button" data-koin-a="' + k + '" data-court="' + ({ koins: 'koin', carte: 'map', quoi: 'quoi ?', minimiser: '▁' }[k] || k) + '" aria-label="' + NOMS[k] + '">' + (t || G(g)) + '</button>').join('') + '</nav>'
       + '<div class="px-koin-voile" hidden></div>';
     D.body.appendChild(racine);
     // ▭ (0.99.60, RS-7 : « améliore le xer ») LA BANDE, BARRE D'ACCUEIL : ◇ montre le ploxion où tu es (son glyphe, encadré) ; glisser vers le
@@ -109,6 +111,7 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
     }
     racine.addEventListener('click', (e) => {
       const m = e.target.closest('[data-koin-mode]'); if (m) { e.stopPropagation(); const id = m.getAttribute('data-koin-mode'); montrerModes(false); replier(); vibrer('selection'); if (actions.choisirMode) { try { actions.choisirMode(id); } catch (er) { /* */ } } return; }
+      const xa = e.target.closest('.px-koin-xerkoin [data-a]'); if (xa) { e.stopPropagation(); const z = racine.querySelector('.px-koin-xerkoin'); if (z && z.__x && z.__x.lancer) { vibrer('selection'); z.__x.lancer(+xa.getAttribute('data-a')); } replier(); return; }
       const a = e.target.closest('[data-koin-a]'); if (a) { e.stopPropagation(); if (a.dataset.appuiLong === '1') { a.dataset.appuiLong = ''; return; } faire(a.getAttribute('data-koin-a')); }
     });
     // ⊠ l'appui long sur la case xer : mes xers
@@ -150,11 +153,19 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
     D.documentElement.classList.toggle('px-koins-ouv', !!n);
     for (const k of ['gauche', 'droite']) racine.querySelector('[data-koin="' + k + '"]').setAttribute('data-etape', String(n));
     if (n) {
+      // (15.11, RS-7 : « le xerkoin c'est aussi la partie qu'on voit quand on ouvre un koin… optimiser selon l'app, pas besoin de prendre autant de
+      // place ») : le FORMAT du koin ouvert, choisi par app dans le xerkoin : grand (2×2) · compact (une rangée) · bande (le xerkoin + la barre) · mini (la barre)
+      let mode = 'grand'; try { mode = (actions.ouvert && actions.ouvert()) || 'grand'; } catch (e) { mode = 'grand'; } racine.setAttribute('data-ouvert', mode);
       montrer(true);
       for (const em of racine.querySelectorAll('[data-koin-sous]')) { const f = actions['sous_' + em.getAttribute('data-koin-sous')]; let t = ''; try { t = f ? String(f() || '') : ''; } catch (e) { t = ''; } em.textContent = t; }
       // la classe au tour suivant : les cases viennent d'apparaître, la transition (triangle → carré) part de --k = 0
       attendre(() => { if (racine && etape.gauche) racine.classList.add('px-koins-ouverts'); }, 16);
-    } else { racine.classList.remove('px-koins-ouverts'); montrer(false); }
+      // ◩ (15.11, RS-7 : « une symbiose entre les koins de xer et les koins de ploxion, un koin c'est un koin ») : le xerkoin du ploxion
+      // courant (sa bande, ses actions en koins liés : bion jOSXerkoin) juste au-dessus des cases ; un toucher lance l'action
+      if (actions.xerkoin) { const z = racine.querySelector('.px-koin-xerkoin'); Promise.resolve(actions.xerkoin()).then((x) => { if (!z || !racine || !etape.gauche) return; if (!x || !x.html) { z.hidden = true; return; }
+        z.innerHTML = x.html; z.hidden = false; z.__x = x; const m0 = racine.getAttribute('data-ouvert'); if (m0 === 'mini') { z.hidden = true; return; } const c0 = (m0 === 'bande') ? racine.querySelector('.px-koin-barre') : racine.querySelector('[data-cases]'); const r = c0 ? c0.getBoundingClientRect() : null; if (r && r.top > 0) z.style.bottom = Math.round((W.innerHeight || 800) - r.top + 10) + 'px'; }).catch(() => {}); }
+      if (!arrets.length) for (const g of Object.keys(fonds)) { const el = racine.querySelector('[data-pad="' + g + '"]') || racine.querySelector('[data-cases] [data-koin-a="' + g + '"]'); if (el && typeof fonds[g] === 'function') { try { arrets.push(fonds[g](el)); } catch (e) { /* */ } } }
+    } else { racine.classList.remove('px-koins-ouverts'); montrer(false); const zx = racine.querySelector('.px-koin-xerkoin'); if (zx) zx.hidden = true; for (const a of arrets) { try { if (a) a(); } catch (e) { /* */ } } arrets = []; }
     vibrer(n ? 'fx-cran' : 'selection');
   }
   function replier() { if (racine && (etape.gauche || etape.droite)) ouvrir('gauche', 0); else if (modesOuverts) montrerModes(false); }

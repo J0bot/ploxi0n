@@ -392,6 +392,10 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
   // tout se reverrouille (reverrouiller), et un ploxion vivant mais verrouillé ne se remontre plus sans le visage (montrer, aCote, la pile).
   const deverrouilles = new Set(); let verifEnCours = 0;
   const bloque = (id) => verrous.has(id) && !deverrouilles.has(id);
+  // ◌ (14.11, RS-7 : « utiliser mappion sans déverrouiller mon téléphone, pour montrer des trucs sans voir mes trucs perso ») : un ploxion
+  // qui a une VITRINE (seulement le public) s'ouvre verrouillé sans le visage, en vitrine (params.vitrine = 1) ; le ploxion en sort lui-même
+  // avec jOSVerrou.ouvrir. En arrière-plan, il est démonté (rien de perso ne reste en mémoire d'écran) et rouvert en vitrine au retour.
+  const VITRINES = new Set(['mappion']), enVitrine = new Set();
   async function demanderVisage(id, p) {
     if (!verrou) return false;
     verifEnCours++;
@@ -805,7 +809,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
   }
   function montrer(v) {
     if (fractale.etat() !== 'repos') fractale.effacer();   // (0.63) une navigation venue d'ailleurs (mini dock, Siri, un lien) : la fractale se range
-    if (bloque(v.id)) { for (const x of vivants.values()) if (!x.hote.hidden) cacher(x); courant = null; ecranVerrou(v.id, parId.get(v.id)); ouvrir(v.id); return; }
+    if (bloque(v.id) && !enVitrine.has(v.id)) { for (const x of vivants.values()) if (!x.hote.hidden) cacher(x); courant = null; ecranVerrou(v.id, parId.get(v.id)); ouvrir(v.id); return; }
     if (flottant && flottant.v === v) poserFlottant(null);   // le flottant revient en grand
     for (const x of vivants.values()) if (x !== v && !(flottant && flottant.v === x)) x.hote.hidden = true;
     if (cubeP && cubeP.ouvert() && cubeP.ouvert() !== v.id) fermerCube();   // ▣ le cube d'un autre ploxion (caché à l'instant) se referme
@@ -829,10 +833,11 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     const p = parId.get(id), depuis = courant ? courant.id : null;
     if (courant && courant.id === id && !params) return true;
     endormis = endormis.filter(x => x.id !== id);
-    if (bloque(id)) {
+    if (bloque(id) && VITRINES.has(id)) { params = Object.assign({}, params || {}, { vitrine: 1 }); enVitrine.add(id); }
+    else if (bloque(id)) {
       if (verifEnCours) return false;   // une demande est déjà à l'écran
       if (!(await demanderVisage(id, p))) { if (!courant) ecranVerrou(id, p); return false; }
-    }
+    } else enVitrine.delete(id);
     // ouvert DEPUIS un ploxion : celui-ci reste vivant, en dessous (la pile) ; « ‹ » y reviendra
     if (courant && courant.id !== id) { pile = pile.filter(x => x !== courant.id && x !== id); pile.push(courant.id); cacher(courant); courant = null; }
     // déjà vivant (minimisé, ou dans la pile) : on le reprend tel quel ; avec une demande (params), on le remonte frais
@@ -955,11 +960,11 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
       fractale.effacer(); fractale.freefall(false);   // (0.63) jamais une carte vivante dans l'aperçu du sélecteur d'iOS ; le gyroscope se tait
       if (flottant && verrous.has(flottant.v.id)) { const v = flottant.v; poserFlottant(null); cacher(v); }   // ni en PiP
       deverrouilles.clear();
-      if (courant && verrous.has(courant.id)) { const v = courant; cacher(v); courant = null; ecranVerrou(v.id, parId.get(v.id)); return v.id; }
+      if (courant && verrous.has(courant.id)) { const v = courant; cacher(v); courant = null; if (VITRINES.has(v.id)) { tuer(v.id); enVitrine.delete(v.id); } ecranVerrou(v.id, parId.get(v.id)); return v.id; }
       return null;
     },
     /** au retour : le ploxion verrouillé qui était à l'écran redemande le visage */
-    redemander(id) { if (id && vivants.has(id) && bloque(id)) return ouvrir(id); return Promise.resolve(false); },
+    redemander(id) { if (id && VITRINES.has(id) && bloque(id)) return ouvrir(id); if (id && vivants.has(id) && bloque(id)) return ouvrir(id); return Promise.resolve(false); },
     /** retirer un verrou Face ID (il faut le visage) */
     async deverrouiller(id) { if (!verrous.has(id)) return true; if (!(verrou && await verrou.ouvrir('Retirer le verrou de ' + ((parId.get(id) || {}).nom || id)))) return false; verrous.delete(id); garder(); return true; },
     /** l'accueil d'origine : plus de dossiers ni de pages */
