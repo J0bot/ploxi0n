@@ -6,7 +6,7 @@ export default async function ({ page, ecrire, appels }) {
   await page.evaluate(() => localStorage.setItem('jos_social_token', 'bon'));
   await page.evaluate(() => window.ploxi0nRouteur.ouvrir('inviter')); await page.waitForTimeout(1200);
   await ecrire('01-inviter');
-  await page.evaluate(() => { document.querySelector('[data-iv-label]').value = 'Léa'; document.querySelector('[data-iv="inviter"]').click(); });
+  await page.evaluate(() => { document.querySelector('[data-iv-label]').value = 'RS-4'; document.querySelector('[data-iv="inviter"]').click(); });
   await page.waitForTimeout(1500);
   await ecrire('02-invitation');
   const lienInvitation = await page.evaluate(() => (document.querySelector('.px-partage .px-pt-lien') || {}).value);

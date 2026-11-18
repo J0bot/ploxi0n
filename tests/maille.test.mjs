@@ -30,7 +30,7 @@ test('〰 les petits bouts : Bloom, rembourrage, commandes, paquets suspects', (
   assert.equal(remplir(new Uint8Array(300)).length, 512); assert.equal(vider(new Uint8Array(2)), null);
   assert.deepEqual(commande('/j #Zurich secret'), { genre: 'rejoindre', salon: '#zurich', mdp: 'secret' });
   assert.deepEqual(commande('/join lac'), { genre: 'rejoindre', salon: '#lac', mdp: null });
-  assert.deepEqual(commande('/m @Tom on se voit ?'), { genre: 'mp', a: 'Tom', texte: 'on se voit ?' });
+  assert.deepEqual(commande('/m @RS-3 on se voit ?'), { genre: 'mp', a: 'RS-3', texte: 'on se voit ?' });
   assert.equal(commande('/w').genre, 'qui'); assert.equal(commande('/bloquer @x').genre, 'bloquer'); assert.equal(commande('/clear').genre, 'effacer');
   assert.equal(commande('/j').genre, 'erreur'); assert.equal(commande('/nimporte').genre, 'erreur'); assert.deepEqual(commande('  coucou '), { genre: 'texte', texte: 'coucou' });
   const bon = { m: 1, i: '0123456789abcdef', o: 'fedcba9876543210', n: 'A', h: 7, t: 1, k: 'pub', s: '#', d: { x: 'y' } };
@@ -136,7 +136,7 @@ test('〰 l\'identité et les messages tiennent au redémarrage (le magasin)', a
 
 test('★ (0.99.22) favoris gardés 72 h, « lu », le code de sécurité (le même des deux côtés), les mentions', async () => {
   const L = [['A', 'B']], R = reseau(['A', 'B', 'C'], L); await allumer(R, L);
-  assert.deepEqual(commande('/fav @Tom'), { genre: 'favori', a: 'Tom', oui: true }); assert.equal(commande('/code @Tom').genre, 'code');
+  assert.deepEqual(commande('/fav @RS-3'), { genre: 'favori', a: 'RS-3', oui: true }); assert.equal(commande('/code @RS-3').genre, 'code');
   const fpB = R.T.B.moi().fp, fpA = R.T.A.moi().fp;
   assert.equal(R.T.A.favori('B'), fpB); assert.ok(R.T.A.pairs().find(p => p.fp === fpB).favori); assert.equal(R.T.A.favoris()[0].nom, 'B');
   // lu : B ouvre la conversation, l'accusé de lecture revient
@@ -150,7 +150,7 @@ test('★ (0.99.22) favoris gardés 72 h, « lu », le code de sécurité (le m�
   R.T.A.verifier(fpB); assert.ok(R.T.A.favoris()[0].verifie);
   // les mentions
   let mention = 0; R.T.B.surChange(q => { if (q === 'mention') mention++; });
-  await R.T.A.dire('@Bob tu viens ?'); await attendre(60); assert.ok(!R.T.B.fil().at(-1).mention, '@Bob n\'est pas @B');
+  await R.T.A.dire('@B2 tu viens ?'); await attendre(60); assert.ok(!R.T.B.fil().at(-1).mention, '@B2 n\'est pas @B');
   await R.T.A.dire('hé @B viens'); await attendre(60);
   assert.ok(R.T.B.fil().at(-1).mention); assert.equal(mention, 1);
 });

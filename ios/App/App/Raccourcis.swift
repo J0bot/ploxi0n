@@ -12,6 +12,8 @@
 // L'app et ces intents se parlent par UserDefaults.standard, avec le préfixe du plugin Préférences de Capacitor.
 import AppIntents
 import Foundation
+import UIKit
+import Capacitor
 
 private let PREFIXE = "CapacitorStorage."
 private func lire(_ cle: String) -> String? { UserDefaults.standard.string(forKey: PREFIXE + cle) }
@@ -172,5 +174,24 @@ struct RaccourcisPloxi0n: AppShortcutsProvider {
         AppShortcut(intent: LireValeur(), phrases: ["Lis une valeur de \(.applicationName)", "Que dit \(.applicationName)", "Read a value from \(.applicationName)", "What does \(.applicationName) say"], shortTitle: "Lire une valeur", systemImageName: "text.bubble")
         AppShortcut(intent: ChercherPloxion(), phrases: ["Cherche un ploxion dans \(.applicationName)", "Search \(.applicationName)", "Find a ploxion in \(.applicationName)"], shortTitle: "Chercher un ploxion", systemImageName: "magnifyingglass")
         AppShortcut(intent: OuvrirPloxi0n(), phrases: ["Ouvre \(.applicationName)", "Open \(.applicationName)"], shortTitle: "Ouvrir ploxi0n", systemImageName: "diamond")
+    }
+}
+
+// 🎛 (0.99.58) les boutons du Centre de contrôle (PloxionWidgets.swift : le même type, au caractère près). openAppWhenRun : iOS ouvre l'app et
+// exécute CETTE copie, ici ; le lien passe par le pont de Capacitor comme un vrai lien ploxi0n:// (appUrlOpen ; au démarrage à froid, le pont
+// le garde, ApplicationDelegateProxy.lastURL, jusqu'à ce que la page écoute).
+@available(iOS 16.0, *)
+struct OuvrirLienPloxi0n: AppIntent {
+    static var title: LocalizedStringResource = "Ouvrir ploxi0n"
+    static var openAppWhenRun: Bool = true
+    static var isDiscoverable: Bool = false
+    @Parameter(title: "Lien") var lien: String
+    init() {}
+    init(_ lien: String) { self.lien = lien }
+    @MainActor func perform() async throws -> some IntentResult {
+        if let u = URL(string: lien), u.scheme == "ploxi0n" {
+            _ = ApplicationDelegateProxy.shared.application(UIApplication.shared, open: u, options: [:])
+        }
+        return .result()
     }
 }

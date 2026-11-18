@@ -191,7 +191,7 @@ test('〰 ♫ un son partagé dans le maillage : il voyage avec le message, l\'a
   const Wf = () => ({ setInterval: () => 0, clearInterval: () => {}, setTimeout: (f) => setTimeout(f, 0), clearTimeout: () => {} });
   const A = creerProche({ W: Wf(), boxion: creerMemoire(), tuyau: fab('A'), Contexte: null }), B = creerProche({ W: Wf(), boxion: creerMemoire(), tuyau: fab('B'), Contexte: null });
   const sA = creerSynthe({ W: Wf(), boxion: creerMemoire(), Contexte: null, proche: A }); await sA.pret;
-  await A.demarrer({ nom: 'RS-7' }); await B.demarrer({ nom: 'Tom' }); await new Promise(r => setTimeout(r, 60));
+  await A.demarrer({ nom: 'RS-7' }); await B.demarrer({ nom: 'RS-3' }); await new Promise(r => setTimeout(r, 60));
   sA.style('acidcore');
   assert.ok(A.partagerSon(sA.etatSon('acide du lac')));
   await new Promise(r => setTimeout(r, 60));

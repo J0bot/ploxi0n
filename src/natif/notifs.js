@@ -6,7 +6,8 @@
 //   toucher une notification de coord ouvre le ploxion 📡 coord
 // Réglages : boxion_local « reglages/notifs » = { coord: bool, dernierCoord: id }. Rien au premier passage (on ne réveille pas l'historique).
 import { surPromesse } from './plugin-sur.js';
-export function creerNotifs({ W = globalThis.window, boxion, vibrer = () => {}, envoyer, source = 'https://labo.j0bot.ch', ouvrir = () => {}, charger = () => import('@capacitor/local-notifications') }) {
+// 🔔 (0.99.64) journal : le ploxion Notifs (src/lot/notifs-px.js) ; chaque notification y est notée, et une notification dont un mot est « à cacher » n'est pas posée
+export function creerNotifs({ W = globalThis.window, boxion, vibrer = () => {}, envoyer, source = 'https://labo.j0bot.ch', ouvrir = () => {}, charger = () => import('@capacitor/local-notifications'), journal = null }) {
   const natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform());
   let reglage = { coord: false, dernierCoord: 0, proche: true }, minuterie = null, ecoute = false;   // (0.99.40) proche : les messages du maillage
   const pret = boxion.get('reglages', 'notifs').then(v => { if (v && typeof v === 'object') reglage = { ...reglage, ...v }; }).catch(() => {});
@@ -39,10 +40,13 @@ export function creerNotifs({ W = globalThis.window, boxion, vibrer = () => {}, 
     const r = await envoyer({ methode: 'GET', url: source + '/coord/feed.json?since=' + (reglage.dernierCoord || 0), headers: { Accept: 'application/json' } });
     if (r.status === 401 || r.status === 403) throw new Error('coord : il faut être connecté avec le compte admin');
     if (r.status !== 200) throw new Error('coord : HTTP ' + r.status);
-    const d = JSON.parse(r.texte || '{}'), l = Array.isArray(d.messages) ? d.messages : [];
+    const d = JSON.parse(r.texte || '{}'); let l = Array.isArray(d.messages) ? d.messages : [];
     const premier = !reglage.dernierCoord;
     if (l.length) { reglage.dernierCoord = Math.max(reglage.dernierCoord || 0, ...l.map(m => +m.id || 0)); await garder(); }
     if (premier || !l.length) return [];
+    const titreDe = (m) => '📡 ' + String(m.agent || 'coord') + (m.topic ? ' · #' + m.topic : '');
+    if (journal) { for (const m of l) await journal.noter({ titre: titreDe(m), texte: String(m.content || '').slice(0, 400), source: 'app', sujet: 'coord', ouvrir: 'coord', cle: 'coord:' + m.id }).catch(() => null);
+      l = l.filter(m => !journal.masquee({ titre: titreDe(m), texte: m.content, sujet: 'coord' })); if (!l.length) return []; }
     const L = await permission();
     vibrer('notification');   // le motif « notification » (inventable, ⚙ › Haptique)
     const montrer = l.length > 3 ? [...l.slice(-2), null] : l;
@@ -65,6 +69,8 @@ export function creerNotifs({ W = globalThis.window, boxion, vibrer = () => {}, 
      *  en arrière-plan) ; seulement si les notifications sont déjà permises (la notification de test, coord, ou le push l'ont demandé) */
     async proche({ titre, texte, salon, cle, genre = 'message' }) {
       if (!natif() || reglage.proche === false) return false;
+      if (journal) { await journal.noter({ titre: String(titre || '◉ proche'), texte: String(texte || ''), source: 'app', sujet: 'proche', ouvrir: 'proche', params: salon ? { salon } : null, cle: cle ? 'proche:' + cle : null }).catch(() => null);
+        if (journal.masquee({ titre, texte, sujet: 'proche' })) return false; }
       const L = await LN(); const p = await L.checkPermissions().catch(() => null); if (!p || p.display !== 'granted') return false;
       ecouter(L);
       let h = 0; for (const c of String(cle || salon || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0;

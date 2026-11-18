@@ -1,4 +1,4 @@
-// ᛒ (0.99.30, la branche xerbot-ledfx fusionnée) Autour › les ondes : le scan Bluetooth bas niveau (PloxiOndes, simulé : Tom qui s'annonce
+// ᛒ (0.99.30, la branche xerbot-ledfx fusionnée) Autour › les ondes : le scan Bluetooth bas niveau (PloxiOndes, simulé : RS-3 qui s'annonce
 // comme ploxi, une montre Apple, un ESP32), du plus proche au plus loin, avec le fabricant ; et window.jOSVeille (la veille) répond
 export default async function ({ page, appels }) {
   for (let i = 0; i < 3; i++) { await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => /^(ok|plus tard|passer)$/i.test(x.textContent.trim())); if (b) b.click(); }); await page.waitForTimeout(250); }

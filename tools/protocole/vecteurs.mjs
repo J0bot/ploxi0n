@@ -19,23 +19,23 @@ export function hasard(graine = 0x9e3779b9) { let x = graine >>> 0; return (n) =
 
 export async function genererVecteurs() {
   const emis = [], magasins = CLES_DE_TEST.map(j => ({ lire: async (k) => (k === 'maille-identite' ? { ...j } : null), ecrire: async () => {} }));
-  const noms = ['Alice', 'Bob'], M = {};
+  const noms = ['xerion-1', 'xerion-2'], M = {};
   const attente = (ms, f) => { attentes.push(f); }, attentes = [];
   const vider = async () => { for (let k = 0; k < 20 && attentes.length; k++) { const l = attentes.splice(0); for (const f of l) f(); await new Promise(r => setTimeout(r, 0)); } };
   noms.forEach((n, i) => {
     M[n] = creerMaille({ subtle: s, alea: hasard(0x1000 + i), maintenant: () => HORLOGE, nom: n, magasin: magasins[i], attente, repeter: () => () => {},
-      envoyer: (texte, vers) => { emis.push({ de: n, texte }); const autre = n === 'Alice' ? 'Bob' : 'Alice'; if (!vers || vers.includes(autre)) attentes.push(() => M[autre].recevoir(n, texte)); } });
+      envoyer: (texte, vers) => { emis.push({ de: n, texte }); const autre = n === 'xerion-1' ? 'xerion-2' : 'xerion-1'; if (!vers || vers.includes(autre)) attentes.push(() => M[autre].recevoir(n, texte)); } });
   });
-  await M.Alice.demarrer({ nom: 'Alice' }); await M.Bob.demarrer({ nom: 'Bob' });
-  M.Alice.voisin('Bob', 'connecte'); M.Bob.voisin('Alice', 'connecte'); await vider();
-  await M.Alice.dire('bonjour le maillage'); await vider();
-  await M.Alice.rejoindre('#soiree', 'lac'); await M.Bob.rejoindre('#soiree', 'lac');
-  await M.Alice.dire('dans le salon fermé', '#soiree'); await vider();
-  await M.Alice.prive(M.Bob.moi().fp, 'message privé pour Bob'); await vider();
-  await M.Alice.partagerPosition({ lat: 46.52, lng: 6.63, precision: 8 }, { a: [M.Bob.moi().fp] }); await vider();
+  await M['xerion-1'].demarrer({ nom: 'xerion-1' }); await M['xerion-2'].demarrer({ nom: 'xerion-2' });
+  M['xerion-1'].voisin('xerion-2', 'connecte'); M['xerion-2'].voisin('xerion-1', 'connecte'); await vider();
+  await M['xerion-1'].dire('bonjour le maillage'); await vider();
+  await M['xerion-1'].rejoindre('#soiree', 'lac'); await M['xerion-2'].rejoindre('#soiree', 'lac');
+  await M['xerion-1'].dire('dans le salon fermé', '#soiree'); await vider();
+  await M['xerion-1'].prive(M['xerion-2'].moi().fp, 'message privé pour xerion-2'); await vider();
+  await M['xerion-1'].partagerPosition({ lat: 46.52, lng: 6.63, precision: 8 }, { a: [M['xerion-2'].moi().fp] }); await vider();
   const trouver = (de, k) => { const e = emis.find(x => x.de === de && JSON.parse(x.texte).k === k && (k !== 'ann' || true)); return e ? e.texte : null; };
-  const pubClair = emis.find(x => x.de === 'Alice' && /"k":"pub"/.test(x.texte) && /bonjour le maillage/.test(x.texte)).texte;
-  const pubFerme = emis.find(x => x.de === 'Alice' && /"k":"pub"/.test(x.texte) && /"s":"#soiree"/.test(x.texte)).texte;
+  const pubClair = emis.find(x => x.de === 'xerion-1' && /"k":"pub"/.test(x.texte) && /bonjour le maillage/.test(x.texte)).texte;
+  const pubFerme = emis.find(x => x.de === 'xerion-1' && /"k":"pub"/.test(x.texte) && /"s":"#soiree"/.test(x.texte)).texte;
 
   // les valeurs intermédiaires, calculées À PART (WebCrypto seul, d'après la spec) : si elles déchiffrent les paquets du maillage, la spec dit vrai
   const brut = async (j) => new Uint8Array(await s.exportKey('raw', await s.importKey('jwk', { kty: j.kty, crv: j.crv, x: j.x, y: j.y, ext: true }, { name: 'ECDH', namedCurve: 'P-256' }, true, [])));
@@ -52,14 +52,14 @@ export async function genererVecteurs() {
   return {
     protocole: PROTOCOLE, horloge: HORLOGE,
     note: 'clés de TEST, publiques : ne jamais les utiliser pour de vrai',
-    identites: [{ nom: 'Alice', jwk: CLES_DE_TEST[0], cle_publique_hex: hex(pubA), empreinte: fpA }, { nom: 'Bob', jwk: CLES_DE_TEST[1], cle_publique_hex: hex(pubB), empreinte: fpB }],
-    derivation: { secret_ecdh_hex: hex(secret), hkdf_sel: 'ploxi-maille-v1', hkdf_info: [fpA, fpB].sort().join('|'), cle_aes_alice_bob_hex: hex(cleAB),
+    identites: [{ nom: 'xerion-1', jwk: CLES_DE_TEST[0], cle_publique_hex: hex(pubA), empreinte: fpA }, { nom: 'xerion-2', jwk: CLES_DE_TEST[1], cle_publique_hex: hex(pubB), empreinte: fpB }],
+    derivation: { secret_ecdh_hex: hex(secret), hkdf_sel: 'ploxi-maille-v1', hkdf_info: [fpA, fpB].sort().join('|'), cle_aes_x1_x2_hex: hex(cleAB),
       salon: '#soiree', mot_de_passe: 'lac', pbkdf2_sel: 'ploxi-salon:#soiree', pbkdf2_iterations: 100000, cle_salon_hex: hex(cleSalon) },
     rembourrage: { clair_hex: hex(enc.encode('salut')), rembourre_prefixe_hex: hex(remplir(enc.encode('salut'), (n) => new Uint8Array(n)).slice(0, 12)), longueur: 256 },
     paquets: {
-      ann_alice: trouver('Alice', 'ann'), pub_clair: pubClair, pub_salon_ferme: pubFerme, mp_alice_bob: trouver('Alice', 'mp'), ack_bob: trouver('Bob', 'ack'), pos_alice_bob: trouver('Alice', 'pos'),
+      ann_x1: trouver('xerion-1', 'ann'), pub_clair: pubClair, pub_salon_ferme: pubFerme, mp_x1_x2: trouver('xerion-1', 'mp'), ack_x2: trouver('xerion-2', 'ack'), pos_x1_x2: trouver('xerion-1', 'pos'),
     },
-    clairs: { pub_salon_ferme: { x: 'dans le salon fermé' }, mp_alice_bob: { x: 'message privé pour Bob' }, pos_alice_bob: { lat: 46.52, lng: 6.63, precision: 8, cap: null } },
+    clairs: { pub_salon_ferme: { x: 'dans le salon fermé' }, mp_x1_x2: { x: 'message privé pour xerion-2' }, pos_x1_x2: { lat: 46.52, lng: 6.63, precision: 8, cap: null } },
     morceaux_ble: { id: '01020304', taille: 180, paquet: 'pub_clair', hex: morceaux },
   };
 }

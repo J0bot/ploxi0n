@@ -16,9 +16,9 @@ function maille(envois = [], mag = magasin(), nom = '') {
 }
 
 test('▣ le QR : la carte du pote se relit à l\'identique (jsQR)', async () => {
-  const a = maille(); await a.demarrer({ nom: 'Léa' });
+  const a = maille(); await a.demarrer({ nom: 'RS-4' });
   const c = a.carte();
-  assert.match(c, /^ploxi0n:\/\/pote\?k=[A-Za-z0-9_-]{87}&f=[0-9a-f]{16}&n=L%C3%A9a$/);
+  assert.match(c, /^ploxi0n:\/\/pote\?k=[A-Za-z0-9_-]{87}&f=[0-9a-f]{16}&n=RS-4$/);
   const m = qrModules(c), n = m.length, z = 4, cote = (n + 2 * z) * 4, px = new Uint8ClampedArray(cote * cote * 4);
   for (let y = 0; y < cote; y++) for (let x = 0; x < cote; x++) { const my = Math.floor(y / 4) - z, mx = Math.floor(x / 4) - z, noir = my >= 0 && mx >= 0 && my < n && mx < n && m[my][mx], i = (y * cote + x) * 4; px[i] = px[i + 1] = px[i + 2] = noir ? 0 : 255; px[i + 3] = 255; }
   const lu = jsQR(px, cote, cote); assert.ok(lu, 'jsQR lit le QR'); assert.equal(lu.data, c);
@@ -29,34 +29,34 @@ test('▣ lire une carte : bornée, suspecte', () => {
   assert.equal(lireCarte('https://exemple.ch'), null); assert.equal(lireCarte('ploxi0n://pote?k=AAAA'), null);
   assert.equal(lireCarte('ploxi0n://pote?k=' + 'A'.repeat(500)), null);
   const cle = new Uint8Array(65); cle[0] = 4;
-  const l = lienCarte({ cle, nom: 'Tom\u0007\u0000', fp: 'zz' }); assert.equal(lireCarte(l), null, 'une empreinte qui n\'est pas hex');
-  const ok = lireCarte(lienCarte({ cle, nom: 'Tom\u0007' })); assert.equal(ok.cle.length, 65); assert.equal(ok.nom, 'Tom'); assert.equal(ok.fp, null);
+  const l = lienCarte({ cle, nom: 'RS-3\u0007\u0000', fp: 'zz' }); assert.equal(lireCarte(l), null, 'une empreinte qui n\'est pas hex');
+  const ok = lireCarte(lienCarte({ cle, nom: 'RS-3\u0007' })); assert.equal(ok.cle.length, 65); assert.equal(ok.nom, 'RS-3'); assert.equal(ok.fp, null);
 });
 
 test('▣ scanner la carte d\'un pote : vérifié, sa clé tout de suite, le privé chiffré part ; une carte trafiquée ou la sienne refusées', async () => {
-  const lea = maille([], magasin(), 'Léa'), tom = maille(), tomEnvois = [], magTom = magasin();
-  await lea.demarrer({ nom: 'Léa' });
-  const t = maille(tomEnvois, magTom); await t.demarrer({ nom: 'Tom' });
-  const r = await t.ajouterCarte(lea.carte());
-  assert.equal(r.nom, 'Léa'); assert.equal(r.fp, lea.moi().fp);
-  const f = t.favoris().find(x => x.fp === lea.moi().fp); assert.ok(f && f.cle && f.verifie, 'pote ✦, vérifié, avec sa clé');
-  assert.ok(await t.codeSecurite(lea.moi().fp), 'le code de sécurité se calcule déjà');
-  const id = await t.prive(lea.moi().fp, 'on se voit au lac'); assert.ok(id, 'le message privé part, chiffré, sans l\'avoir jamais vue dans le maillage');
-  assert.ok(!tomEnvois.some(e => /on se voit au lac/.test(e.t)), 'jamais en clair');
-  // trafiquée : la clé d'un autre sous l'empreinte de Léa
+  const rs4 = maille([], magasin(), 'RS-4'), rs3 = maille(), rs3Envois = [], magRs3 = magasin();
+  await rs4.demarrer({ nom: 'RS-4' });
+  const t = maille(rs3Envois, magRs3); await t.demarrer({ nom: 'RS-3' });
+  const r = await t.ajouterCarte(rs4.carte());
+  assert.equal(r.nom, 'RS-4'); assert.equal(r.fp, rs4.moi().fp);
+  const f = t.favoris().find(x => x.fp === rs4.moi().fp); assert.ok(f && f.cle && f.verifie, 'pote ✦, vérifié, avec sa clé');
+  assert.ok(await t.codeSecurite(rs4.moi().fp), 'le code de sécurité se calcule déjà');
+  const id = await t.prive(rs4.moi().fp, 'on se voit au lac'); assert.ok(id, 'le message privé part, chiffré, sans l\'avoir jamais vue dans le maillage');
+  assert.ok(!rs3Envois.some(e => /on se voit au lac/.test(e.t)), 'jamais en clair');
+  // trafiquée : la clé d'un autre sous l'empreinte de RS-4
   const autre = maille(); await autre.demarrer({ nom: 'X' });
   const k = new URL(autre.carte().replace('ploxi0n://', 'http://x/')).searchParams.get('k');
-  assert.match((await t.ajouterCarte('ploxi0n://pote?k=' + k + '&f=' + lea.moi().fp + '&n=L%C3%A9a')).erreur, /trafiquée/);
+  assert.match((await t.ajouterCarte('ploxi0n://pote?k=' + k + '&f=' + rs4.moi().fp + '&n=RS-4')).erreur, /trafiquée/);
   assert.match((await t.ajouterCarte(t.carte())).erreur, /ta propre carte/);
   assert.match((await t.ajouterCarte('ploxi0n://px/xion')).erreur, /pas une carte/);
   // redémarrer : le pote et sa clé reviennent du disque
-  const t2 = maille([], magTom); await t2.demarrer({ nom: 'Tom' });
-  const f2 = t2.favoris().find(x => x.fp === lea.moi().fp); assert.ok(f2 && f2.cle && f2.verifie);
-  assert.ok(await t2.prive(lea.moi().fp, 'toujours là ?'));
+  const t2 = maille([], magRs3); await t2.demarrer({ nom: 'RS-3' });
+  const f2 = t2.favoris().find(x => x.fp === rs4.moi().fp); assert.ok(f2 && f2.cle && f2.verifie);
+  assert.ok(await t2.prive(rs4.moi().fp, 'toujours là ?'));
   // tout effacer : plus de pote
   await t2.effacerTout(); assert.equal(t2.favoris().length, 0);
-  const t3 = maille([], magTom); await t3.demarrer({}); assert.equal(t3.favoris().length, 0);
-  void tom;
+  const t3 = maille([], magRs3); await t3.demarrer({}); assert.equal(t3.favoris().length, 0);
+  void rs3;
 });
 
 const Wpage = () => { const dom = new JSDOM('<!doctype html><body><div id="h"></div></body>', { pretendToBeVisual: true }); const W = dom.window; Object.defineProperty(W, 'crypto', { value: C }); return W; };
@@ -82,13 +82,13 @@ test('◉ Proche en pages : cinq onglets, une seule page visible ; éteint → a
 });
 
 test('◉ un lien ploxi0n://pote… ouvre Proche sur la carte et ajoute le pote (en attente tant que Proche est éteint)', async () => {
-  const lea = maille(); await lea.demarrer({ nom: 'Léa' });
+  const rs4 = maille(); await rs4.demarrer({ nom: 'RS-4' });
   const W = Wpage(), h = W.document.getElementById('h');
   const p = creerProche({ W, boxion: creerMemoire(), tuyau: tuyauNul(), Contexte: null });
-  p.mount(h, { params: { lien: '?carte=' + encodeURIComponent(lea.carte()) } }); await new Promise(r => setTimeout(r, 20));
+  p.mount(h, { params: { lien: '?carte=' + encodeURIComponent(rs4.carte()) } }); await new Promise(r => setTimeout(r, 20));
   assert.equal(p.page(), 'carte'); assert.match(h.textContent, /une carte de pote attend/);
-  await p.demarrer({ nom: 'Tom' }); await new Promise(r => setTimeout(r, 60));
-  assert.ok(p.maille().favoris().some(f => f.fp === lea.moi().fp && f.verifie), 'ajoutée au démarrage');
-  assert.match(h.textContent, /Léa/);
+  await p.demarrer({ nom: 'RS-3' }); await new Promise(r => setTimeout(r, 60));
+  assert.ok(p.maille().favoris().some(f => f.fp === rs4.moi().fp && f.verifie), 'ajoutée au démarrage');
+  assert.match(h.textContent, /RS-4/);
   await p.arreter(); W.close();
 });

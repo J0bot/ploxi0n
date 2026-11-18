@@ -425,7 +425,10 @@ export function creerHttp(W = globalThis.window, enTetes = async () => ({})) {
         const { CapacitorHttp } = await import('@capacitor/core');
         let data; if (corps && !fichier) { try { data = JSON.parse(corps); } catch (e) { data = corps; } }
         const he = { ...(await enTetes()), ...headers };
-        if (fichier) { for (const k of Object.keys(he)) if (k.toLowerCase() === 'content-type') delete he[k]; if (fichier.dataType === 'file') he['Content-Type'] = fichier.type || 'application/octet-stream'; }
+        if (fichier) { for (const k of Object.keys(he)) if (k.toLowerCase() === 'content-type') delete he[k]; if (fichier.dataType === 'file') he['Content-Type'] = fichier.type || 'application/octet-stream';
+          // (0.99.61, RS-7 : coord « rien à envoyer » avec du texte) SANS Content-Type, le pont de Capacitor (CapacitorUrlRequest.setRequestBody)
+          // n'écrit PAS le corps : la requête partait vide. « multipart/form-data » sans boundary : il en tire un et réécrit l'en-tête
+          if (fichier.dataType === 'formData') he['Content-Type'] = 'multipart/form-data'; }
         const r = await CapacitorHttp.request({ method: methode, url, headers: he, data: fichier ? fichier.data : data, ...(fichier ? { dataType: fichier.dataType } : {}), responseType: 'text' });
         const h = {}; for (const k in (r.headers || {})) h[k.toLowerCase()] = r.headers[k];
         return { status: r.status, texte: typeof r.data === 'string' ? r.data : JSON.stringify(r.data), entetes: h };

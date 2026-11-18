@@ -1,0 +1,7346 @@
+[
+ {
+  "e": "▶",
+  "n": 440,
+  "glyphe": "lecture",
+  "ploxions": [
+   "admin-missions-guides.json",
+   "admin-missions.json",
+   "alternatives.json",
+   "app-importers.json",
+   "changelog.json",
+   "fractal-actifs.json",
+   "fractal-audit.json",
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "⚠",
+  "n": 324,
+  "glyphe": null,
+  "ploxions": [
+   "admin-missions.json",
+   "app-importers.json",
+   "changelog.json",
+   "chaoxion-triage.json",
+   "experiments.json",
+   "histoire-canon.json",
+   "io-taxonomy.json",
+   "public-apis.json"
+  ]
+ },
+ {
+  "e": "🔌",
+  "n": 218,
+  "glyphe": "bion",
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "chaoxion-aryeth.json",
+   "chaoxion-stars.json",
+   "chaoxion-triage.json",
+   "embedded-bions.json",
+   "forge-datacats.json",
+   "fractal-audit.json"
+  ]
+ },
+ {
+  "e": "🌀",
+  "n": 175,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "cartes-modes.json",
+   "changelog.json",
+   "chaoxion-aryeth.json",
+   "chaoxion-quantique.json",
+   "device-bions.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "↔",
+  "n": 172,
+  "glyphe": null,
+  "ploxions": [
+   "admin-missions.json",
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "chaoxion-triage.json",
+   "civilization-seed.json",
+   "histoire-canon.json",
+   "io-taxonomy.json",
+   "object-bions.json"
+  ]
+ },
+ {
+  "e": "↗",
+  "n": 172,
+  "glyphe": "partager",
+  "ploxions": [
+   "changelog.json",
+   "fractal-audit.json",
+   "quetes.json",
+   "xerboxion-escapes.json",
+   "amis",
+   "apis",
+   "appart",
+   "appel"
+  ]
+ },
+ {
+  "e": "⚙",
+  "n": 154,
+  "glyphe": "reglages",
+  "ploxions": [
+   "admin-missions-guides.json",
+   "blocks.json",
+   "cartes-modes.json",
+   "changelog.json",
+   "commandes.json",
+   "confidentialite-ploxi0n.md",
+   "forge-recettes.json",
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "⚡",
+  "n": 134,
+  "glyphe": "bion",
+  "ploxions": [
+   "changelog.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "ploxion-io.json",
+   "quetes.json",
+   "universal-suit.json",
+   "xerkions.json",
+   "bd"
+  ]
+ },
+ {
+  "e": "🧊",
+  "n": 132,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "chaoxion-stars.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "ploxion-ideas.json",
+   "quetes.json"
+  ]
+ },
+ {
+  "e": "🛰",
+  "n": 130,
+  "glyphe": null,
+  "ploxions": [
+   "cartes-modes.json",
+   "changelog.json",
+   "chaoxion-aryeth.json",
+   "chaoxion-stars.json",
+   "chaoxion-triage.json",
+   "embedded-bions.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "📦",
+  "n": 122,
+  "glyphe": "boite",
+  "ploxions": [
+   "app-importers.json",
+   "blocks.json",
+   "boxions.json",
+   "changelog.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "ploxion-ideas.json"
+  ]
+ },
+ {
+  "e": "⬇",
+  "n": 122,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-triage.json",
+   "embedded-bions.json",
+   "forge-datacats.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerboxion-escapes.json",
+   "xerkions.json"
+  ]
+ },
+ {
+  "e": "🗺",
+  "n": 121,
+  "glyphe": "globe",
+  "ploxions": [
+   "alternatives.json",
+   "app-importers.json",
+   "changelog.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "projets-phares.json",
+   "quetes.json",
+   "xerkions.json"
+  ]
+ },
+ {
+  "e": "🎮",
+  "n": 119,
+  "glyphe": "manette",
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "chaoxion-aryeth.json",
+   "chaoxion-stars.json",
+   "device-bions.json",
+   "io-taxonomy.json",
+   "projets-phares.json",
+   "quetes.json"
+  ]
+ },
+ {
+  "e": "🧠",
+  "n": 117,
+  "glyphe": null,
+  "ploxions": [
+   "admin-missions.json",
+   "blocks.json",
+   "changelog.json",
+   "chaoxion-stars.json",
+   "chaoxion-triage.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "object-bions.json"
+  ]
+ },
+ {
+  "e": "🌐",
+  "n": 116,
+  "glyphe": "globe",
+  "ploxions": [
+   "alternatives.json",
+   "changelog.json",
+   "chaoxion-aryeth.json",
+   "chaoxion-raven.json",
+   "chaoxion-stars.json",
+   "chaoxion-triage.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json"
+  ]
+ },
+ {
+  "e": "👁",
+  "n": 108,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-triage.json",
+   "io-taxonomy.json",
+   "veille-scenes.json",
+   "xerax.json",
+   "xerkions.json",
+   "bd",
+   "chaoxion-nexus"
+  ]
+ },
+ {
+  "e": "💾",
+  "n": 105,
+  "glyphe": "donnees",
+  "ploxions": [
+   "changelog.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "yunohost-digest.json",
+   "archive-org",
+   "atelier",
+   "blocs"
+  ]
+ },
+ {
+  "e": "🛠",
+  "n": 103,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-raven.json",
+   "chaoxion-stars.json",
+   "inspirations-ploxions.json",
+   "quetes.json",
+   "xerkions.json",
+   "xerploxions.json",
+   "atelier"
+  ]
+ },
+ {
+  "e": "🔊",
+  "n": 102,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "chaoxion-raven.json",
+   "chaoxion-stars.json",
+   "embedded-bions.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "📖",
+  "n": 102,
+  "glyphe": "livre",
+  "ploxions": [
+   "changelog.json",
+   "cubion-wires.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "projets-phares.json",
+   "quetes.json",
+   "xerkions.json",
+   "actuariat"
+  ]
+ },
+ {
+  "e": "📡",
+  "n": 101,
+  "glyphe": "wifi",
+  "ploxions": [
+   "admin-missions.json",
+   "changelog.json",
+   "chaoxion-triage.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "xerkions.json"
+  ]
+ },
+ {
+  "e": "🎬",
+  "n": 101,
+  "glyphe": "video",
+  "ploxions": [
+   "app-importers.json",
+   "changelog.json",
+   "chaoxion-aryeth.json",
+   "chaoxion-stars.json",
+   "chaoxion-triage.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json"
+  ]
+ },
+ {
+  "e": "🎛",
+  "n": 101,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "embedded-bions.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "quetes.json",
+   "xerkions.json"
+  ]
+ },
+ {
+  "e": "🚀",
+  "n": 99,
+  "glyphe": null,
+  "ploxions": [
+   "cartes-modes.json",
+   "changelog.json",
+   "chaoxion-stars.json",
+   "forge-recettes.json",
+   "io-taxonomy.json",
+   "ploxion-io.json",
+   "projets-phares.json",
+   "quetes.json"
+  ]
+ },
+ {
+  "e": "🔷",
+  "n": 96,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "bd",
+   "dimensions",
+   "kion-3d",
+   "marche"
+  ]
+ },
+ {
+  "e": "🖥",
+  "n": 94,
+  "glyphe": "terminal",
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "chaoxion-aryeth.json",
+   "chaoxion-raven.json",
+   "embedded-bions.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "object-bions.json"
+  ]
+ },
+ {
+  "e": "⏳",
+  "n": 93,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "forge-recettes.json",
+   "io-taxonomy.json",
+   "projets-phares.json",
+   "xerkions.json",
+   "alternatives",
+   "antoine-daniel",
+   "archive-org"
+  ]
+ },
+ {
+  "e": "📄",
+  "n": 92,
+  "glyphe": "dossier",
+  "ploxions": [
+   "alternatives.json",
+   "changelog.json",
+   "chaoxion-stars.json",
+   "chaoxion-triage.json",
+   "io-taxonomy.json",
+   "projets-phares.json",
+   "quetes.json",
+   "themes.json"
+  ]
+ },
+ {
+  "e": "💬",
+  "n": 91,
+  "glyphe": "bulle",
+  "ploxions": [
+   "alternatives.json",
+   "app-importers.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "ploxion-io.json",
+   "quetes.json",
+   "xerkions.json",
+   "amis"
+  ]
+ },
+ {
+  "e": "📍",
+  "n": 91,
+  "glyphe": "lieu",
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "device-bions.json",
+   "io-taxonomy.json",
+   "projets-phares.json",
+   "quetes.json",
+   "capture-lieu",
+   "carte"
+  ]
+ },
+ {
+  "e": "💡",
+  "n": 90,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "quetes.json",
+   "xerkions.json",
+   "banc-test"
+  ]
+ },
+ {
+  "e": "↩",
+  "n": 88,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "ploxion-io.json",
+   "themes.json",
+   "banc-test",
+   "barrow",
+   "compositeur",
+   "fes-main",
+   "frontieres"
+  ]
+ },
+ {
+  "e": "🤖",
+  "n": 87,
+  "glyphe": "xerbot",
+  "ploxions": [
+   "admin-missions.json",
+   "app-importers.json",
+   "blocks.json",
+   "changelog.json",
+   "chaoxion-aryeth.json",
+   "chaoxion-stars.json",
+   "idees.json",
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🌌",
+  "n": 87,
+  "glyphe": null,
+  "ploxions": [
+   "boxions.json",
+   "changelog.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "projets-phares.json",
+   "quetes.json",
+   "themes.json"
+  ]
+ },
+ {
+  "e": "🔗",
+  "n": 84,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "quetes.json",
+   "revision-heig.json"
+  ]
+ },
+ {
+  "e": "✅",
+  "n": 84,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "actuariat",
+   "apis",
+   "asd",
+   "ask",
+   "atelier",
+   "auberge"
+  ]
+ },
+ {
+  "e": "🧩",
+  "n": 83,
+  "glyphe": "dock",
+  "ploxions": [
+   "changelog.json",
+   "fractal-audit.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "universal-suit.json",
+   "xerkions.json",
+   "_template"
+  ]
+ },
+ {
+  "e": "⚒",
+  "n": 82,
+  "glyphe": null,
+  "ploxions": [
+   "cartes-modes.json",
+   "changelog.json",
+   "commandes.json",
+   "forge-recettes.json",
+   "xerkions.json",
+   "xerploxions.json",
+   "banc-test",
+   "clickion"
+  ]
+ },
+ {
+  "e": "🖼",
+  "n": 76,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "xerkions.json",
+   "apparence",
+   "archive-org",
+   "boxion-files"
+  ]
+ },
+ {
+  "e": "🎯",
+  "n": 74,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "io-taxonomy.json",
+   "projets-phares.json",
+   "quetes.json",
+   "xerkions.json",
+   "xerploxions.json",
+   "admin-quetes"
+  ]
+ },
+ {
+  "e": "🔎",
+  "n": 74,
+  "glyphe": "chercher",
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "universal-suit.json",
+   "xerkions.json",
+   "xerploxions.json",
+   "alternatives",
+   "amis"
+  ]
+ },
+ {
+  "e": "🔒",
+  "n": 74,
+  "glyphe": "verrou",
+  "ploxions": [
+   "changelog.json",
+   "histoire-canon.json",
+   "quetes.json",
+   "apis",
+   "archive-org",
+   "audio-convert",
+   "bother",
+   "boxions"
+  ]
+ },
+ {
+  "e": "📊",
+  "n": 72,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-aryeth.json",
+   "chaoxion-stars.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "xerkions.json",
+   "actuariat"
+  ]
+ },
+ {
+  "e": "🔑",
+  "n": 70,
+  "glyphe": "verrou",
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "apis",
+   "chaoxion-nexus",
+   "chat",
+   "coffre"
+  ]
+ },
+ {
+  "e": "🗂",
+  "n": 69,
+  "glyphe": "dossier",
+  "ploxions": [
+   "admin-missions.json",
+   "alternatives.json",
+   "changelog.json",
+   "chaoxion-triage.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "archive-org"
+  ]
+ },
+ {
+  "e": "🔬",
+  "n": 67,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-aryeth.json",
+   "chaoxion-stars.json",
+   "forge-datacats.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "themes.json"
+  ]
+ },
+ {
+  "e": "✨",
+  "n": 66,
+  "glyphe": null,
+  "ploxions": [
+   "boutons-ui.json",
+   "chaoxion-stars.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "universal-suit.json",
+   "atelier",
+   "bd"
+  ]
+ },
+ {
+  "e": "📋",
+  "n": 66,
+  "glyphe": "liste",
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "xerkions.json",
+   "admin-quetes",
+   "amis",
+   "apis"
+  ]
+ },
+ {
+  "e": "📚",
+  "n": 65,
+  "glyphe": "livre",
+  "ploxions": [
+   "cartes-modes.json",
+   "changelog.json",
+   "chaoxion-triage.json",
+   "forge-recettes.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "xerploxions.json"
+  ]
+ },
+ {
+  "e": "🗑",
+  "n": 65,
+  "glyphe": null,
+  "ploxions": [
+   "ploxion-io.json",
+   "admin-quetes",
+   "analyse",
+   "boxion-files",
+   "boxions",
+   "cahier-rs7",
+   "chaoxion",
+   "cluster"
+  ]
+ },
+ {
+  "e": "🧬",
+  "n": 63,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "projets-phares.json",
+   "quetes.json",
+   "universal-suit.json",
+   "xerkions.json"
+  ]
+ },
+ {
+  "e": "🌱",
+  "n": 63,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-triage.json",
+   "device-bions.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "cockpit"
+  ]
+ },
+ {
+  "e": "🎨",
+  "n": 62,
+  "glyphe": "palette",
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-stars.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "themes.json",
+   "xerkions.json",
+   "banc-test"
+  ]
+ },
+ {
+  "e": "⏸",
+  "n": 62,
+  "glyphe": "pause",
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "analyse",
+   "attracteurs",
+   "beats",
+   "bt-player",
+   "caisson",
+   "chrono"
+  ]
+ },
+ {
+  "e": "📱",
+  "n": 60,
+  "glyphe": "iphone",
+  "ploxions": [
+   "admin-missions.json",
+   "blocks.json",
+   "changelog.json",
+   "forge-recettes.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "projets-phares.json",
+   "quetes.json"
+  ]
+ },
+ {
+  "e": "⌨",
+  "n": 59,
+  "glyphe": "clavier",
+  "ploxions": [
+   "alternatives.json",
+   "bions-physiques.json",
+   "blocks.json",
+   "changelog.json",
+   "device-bions.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "object-bions.json"
+  ]
+ },
+ {
+  "e": "🎞",
+  "n": 59,
+  "glyphe": "video",
+  "ploxions": [
+   "alternatives.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "xerkions.json",
+   "_player_bion.blade.php",
+   "cine"
+  ]
+ },
+ {
+  "e": "⭐",
+  "n": 59,
+  "glyphe": null,
+  "ploxions": [
+   "awesome-catalog.json",
+   "changelog.json",
+   "inspirations-ploxions.json",
+   "revision-heig.json",
+   "xerkions.json",
+   "antoine-daniel",
+   "apis",
+   "archive-org"
+  ]
+ },
+ {
+  "e": "💧",
+  "n": 58,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "_sensor_bion.blade.php",
+   "compagnon",
+   "compteurs",
+   "couleurs",
+   "flo"
+  ]
+ },
+ {
+  "e": "🔮",
+  "n": 58,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "projets-phares.json",
+   "quetes.json",
+   "xerax.json",
+   "xerkions.json",
+   "blocs"
+  ]
+ },
+ {
+  "e": "🧪",
+  "n": 57,
+  "glyphe": "flacon",
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "xerkions.json",
+   "banc",
+   "banc-test",
+   "cave"
+  ]
+ },
+ {
+  "e": "❓",
+  "n": 57,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-raven.json",
+   "chaoxion-stars.json",
+   "inspirations-ploxions.json",
+   "xerkions.json",
+   "math",
+   "room-map",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🎚",
+  "n": 56,
+  "glyphe": null,
+  "ploxions": [
+   "cartes-modes.json",
+   "changelog.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "xerkions.json",
+   "audio-convert"
+  ]
+ },
+ {
+  "e": "🔐",
+  "n": 55,
+  "glyphe": "verrou",
+  "ploxions": [
+   "admin-missions.json",
+   "alternatives.json",
+   "changelog.json",
+   "chaoxion-aryeth.json",
+   "chaoxion-raven.json",
+   "chaoxion-stars.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json"
+  ]
+ },
+ {
+  "e": "🎵",
+  "n": 55,
+  "glyphe": "musique",
+  "ploxions": [
+   "app-importers.json",
+   "changelog.json",
+   "chaoxion-aryeth.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "bluetooth",
+   "bob-lennon"
+  ]
+ },
+ {
+  "e": "🕸",
+  "n": 55,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "chaoxion-aryeth.json",
+   "chaoxion-triage.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "quetes.json",
+   "revision-heig.json"
+  ]
+ },
+ {
+  "e": "📥",
+  "n": 55,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "projets-phares.json",
+   "quetes.json",
+   "xerkions.json",
+   "blocs",
+   "bother",
+   "builder"
+  ]
+ },
+ {
+  "e": "🗄",
+  "n": 55,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-triage.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "xerkions.json",
+   "xerploxions.json"
+  ]
+ },
+ {
+  "e": "🌿",
+  "n": 55,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "inspirations-ploxions.json",
+   "projets-phares.json",
+   "themes.json",
+   "xerkions.json",
+   "branches",
+   "cave",
+   "compagnon"
+  ]
+ },
+ {
+  "e": "🛸",
+  "n": 55,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "forge-recettes.json",
+   "inspirations-ploxions.json",
+   "object-bions.json",
+   "projets-phares.json",
+   "quetes.json",
+   "universal-suit.json",
+   "xerbot-contract.json"
+  ]
+ },
+ {
+  "e": "🍽",
+  "n": 54,
+  "glyphe": null,
+  "ploxions": [
+   "awesome-catalog.json",
+   "changelog.json",
+   "xerkions.json",
+   "xerploxions.json",
+   "bouffe",
+   "boxion-designer",
+   "carte",
+   "chaoxion"
+  ]
+ },
+ {
+  "e": "🔥",
+  "n": 53,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-stars.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "_sensor_bion.blade.php",
+   "archive",
+   "bob-lennon",
+   "carte"
+  ]
+ },
+ {
+  "e": "📤",
+  "n": 53,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "ploxion-io.json",
+   "quetes.json",
+   "blocs",
+   "builder",
+   "carte",
+   "compositeur"
+  ]
+ },
+ {
+  "e": "🌍",
+  "n": 52,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "ploxion-io.json",
+   "quetes.json",
+   "themes.json",
+   "veille-scenes.json",
+   "veille-sources.json",
+   "xerkions.json"
+  ]
+ },
+ {
+  "e": "📷",
+  "n": 51,
+  "glyphe": "photo",
+  "ploxions": [
+   "admin-missions.json",
+   "app-importers.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "xerkions.json",
+   "amis"
+  ]
+ },
+ {
+  "e": "🧭",
+  "n": 49,
+  "glyphe": "navigation",
+  "ploxions": [
+   "cartes-modes.json",
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "chaoxion-triage.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "carte"
+  ]
+ },
+ {
+  "e": "🧱",
+  "n": 49,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "security-kb.json",
+   "xerkions.json"
+  ]
+ },
+ {
+  "e": "📝",
+  "n": 48,
+  "glyphe": null,
+  "ploxions": [
+   "admin-missions.json",
+   "changelog.json",
+   "chaoxion-triage.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "banc-test",
+   "boxion-files"
+  ]
+ },
+ {
+  "e": "🪐",
+  "n": 47,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "projets-phares.json",
+   "xerkions.json",
+   "xerploxions.json",
+   "forge",
+   "phares"
+  ]
+ },
+ {
+  "e": "📁",
+  "n": 47,
+  "glyphe": "dossier",
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "auberge",
+   "boxions",
+   "code",
+   "coffre"
+  ]
+ },
+ {
+  "e": "🧿",
+  "n": 45,
+  "glyphe": null,
+  "ploxions": [
+   "admin-missions.json",
+   "cartes-modes.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "mappion",
+   "mega-forge",
+   "rocq"
+  ]
+ },
+ {
+  "e": "👥",
+  "n": 45,
+  "glyphe": null,
+  "ploxions": [
+   "app-importers.json",
+   "changelog.json",
+   "forge-recettes.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "projets-phares.json",
+   "quetes.json",
+   "xerkions.json"
+  ]
+ },
+ {
+  "e": "⏱",
+  "n": 45,
+  "glyphe": "usage",
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "xerax.json",
+   "xerkions.json",
+   "asd",
+   "chemin",
+   "chrono",
+   "clickion"
+  ]
+ },
+ {
+  "e": "🫧",
+  "n": 44,
+  "glyphe": "haptique",
+  "ploxions": [
+   "alternatives.json",
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "quetes.json",
+   "themes.json",
+   "xerkions.json",
+   "chat",
+   "civ"
+  ]
+ },
+ {
+  "e": "🎉",
+  "n": 44,
+  "glyphe": null,
+  "ploxions": [
+   "alternatives.json",
+   "cartes-modes.json",
+   "changelog.json",
+   "quetes.json",
+   "xerkions.json",
+   "dedup",
+   "ideas-map",
+   "implant"
+  ]
+ },
+ {
+  "e": "🔧",
+  "n": 42,
+  "glyphe": null,
+  "ploxions": [
+   "admin-missions.json",
+   "cartes-modes.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "xerploxions.json",
+   "atelier",
+   "blocs"
+  ]
+ },
+ {
+  "e": "📜",
+  "n": 41,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-triage.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "themes.json",
+   "xerkions.json",
+   "bd",
+   "changelog"
+  ]
+ },
+ {
+  "e": "🌳",
+  "n": 40,
+  "glyphe": null,
+  "ploxions": [
+   "admin-missions.json",
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "revision-heig.json",
+   "xerkions.json"
+  ]
+ },
+ {
+  "e": "🪟",
+  "n": 40,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "themes.json",
+   "xerkions.json",
+   "dl",
+   "graphe",
+   "installer"
+  ]
+ },
+ {
+  "e": "⏺",
+  "n": 40,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "ploxion-io.json",
+   "quetes.json",
+   "xerkions.json",
+   "blocs",
+   "bras-sim"
+  ]
+ },
+ {
+  "e": "🧮",
+  "n": 39,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "projets-phares.json",
+   "quetes.json",
+   "xerkions.json",
+   "actuariat",
+   "asd"
+  ]
+ },
+ {
+  "e": "⚛",
+  "n": 39,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-triage.json",
+   "forge-recettes.json",
+   "quetes.json",
+   "structures.json",
+   "xerkions.json",
+   "higgs",
+   "hoffman"
+  ]
+ },
+ {
+  "e": "☁",
+  "n": 39,
+  "glyphe": "spherion",
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "confidentialite-ploxi0n.md",
+   "io-taxonomy.json",
+   "quetes.json",
+   "themes.json",
+   "camera",
+   "cave"
+  ]
+ },
+ {
+  "e": "🎧",
+  "n": 38,
+  "glyphe": "musique",
+  "ploxions": [
+   "app-importers.json",
+   "changelog.json",
+   "chaoxion-stars.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "antoine-daniel",
+   "archive-org",
+   "carte"
+  ]
+ },
+ {
+  "e": "🌊",
+  "n": 38,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "chaoxion-triage.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerax.json",
+   "xerkions.json",
+   "caisson"
+  ]
+ },
+ {
+  "e": "📎",
+  "n": 38,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "quetes.json",
+   "chat",
+   "coord",
+   "discord",
+   "documents",
+   "makelab",
+   "multivers"
+  ]
+ },
+ {
+  "e": "🏠",
+  "n": 37,
+  "glyphe": "maison",
+  "ploxions": [
+   "admin-missions.json",
+   "boxions.json",
+   "cartes-modes.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "ploxion-io.json",
+   "universal-suit.json",
+   "xerkions.json"
+  ]
+ },
+ {
+  "e": "➕",
+  "n": 37,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "quetes.json",
+   "admin-quetes",
+   "archive",
+   "carte",
+   "chaoxion",
+   "chemin",
+   "coffre"
+  ]
+ },
+ {
+  "e": "🔁",
+  "n": 35,
+  "glyphe": null,
+  "ploxions": [
+   "alternatives.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "revision-heig.json",
+   "boxions",
+   "finances"
+  ]
+ },
+ {
+  "e": "🛒",
+  "n": 35,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "xerkions.json",
+   "xerploxions.json",
+   "bouffe",
+   "civ",
+   "courses"
+  ]
+ },
+ {
+  "e": "🕳",
+  "n": 34,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "xerkions.json",
+   "dico",
+   "frontieres",
+   "installer"
+  ]
+ },
+ {
+  "e": "🧲",
+  "n": 33,
+  "glyphe": "navigation",
+  "ploxions": [
+   "awesome-catalog.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerax.json",
+   "xerkions.json",
+   "alternatives",
+   "forge-apps"
+  ]
+ },
+ {
+  "e": "❄",
+  "n": 33,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "xerploxions.json",
+   "_sensor_bion.blade.php",
+   "bouffe",
+   "cluster"
+  ]
+ },
+ {
+  "e": "🎶",
+  "n": 32,
+  "glyphe": null,
+  "ploxions": [
+   "admin-missions.json",
+   "alternatives.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "arbre-a-son",
+   "clavier",
+   "mappion"
+  ]
+ },
+ {
+  "e": "🔍",
+  "n": 32,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-aryeth.json",
+   "chaoxion-quantique.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "atelier",
+   "bluetooth"
+  ]
+ },
+ {
+  "e": "⬆",
+  "n": 32,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "dedup",
+   "files",
+   "plugion",
+   "recherches",
+   "reglages"
+  ]
+ },
+ {
+  "e": "⏭",
+  "n": 32,
+  "glyphe": "suivant",
+  "ploxions": [
+   "changelog.json",
+   "ploxion-io.json",
+   "archive-org",
+   "compagnon",
+   "epsylaeu",
+   "evolution",
+   "machine",
+   "machine-a-tsoins"
+  ]
+ },
+ {
+  "e": "📂",
+  "n": 32,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-stars.json",
+   "audio-convert",
+   "bt-eq",
+   "bt-player",
+   "bt-surround",
+   "excel",
+   "files",
+   "mega-forge"
+  ]
+ },
+ {
+  "e": "📅",
+  "n": 31,
+  "glyphe": null,
+  "ploxions": [
+   "alternatives.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "xerploxions.json",
+   "bouffe",
+   "calendar",
+   "dataset"
+  ]
+ },
+ {
+  "e": "✉",
+  "n": 31,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "xerkions.json",
+   "contacts",
+   "etoiles"
+  ]
+ },
+ {
+  "e": "👤",
+  "n": 31,
+  "glyphe": "compte",
+  "ploxions": [
+   "changelog.json",
+   "ploxion-io.json",
+   "xerkions.json",
+   "dashboard",
+   "foot",
+   "implant",
+   "profil",
+   "reglages"
+  ]
+ },
+ {
+  "e": "🔴",
+  "n": 31,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "quetes.json",
+   "xerkions.json",
+   "atelier",
+   "changelog",
+   "imprimante",
+   "live",
+   "mapper"
+  ]
+ },
+ {
+  "e": "📌",
+  "n": 30,
+  "glyphe": null,
+  "ploxions": [
+   "alternatives.json",
+   "changelog.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "cubmap",
+   "murion",
+   "post-it"
+  ]
+ },
+ {
+  "e": "📻",
+  "n": 30,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "ploxion-io.json",
+   "veille-sources.json",
+   "xerkions.json",
+   "clyde-vanilla",
+   "fil"
+  ]
+ },
+ {
+  "e": "🎲",
+  "n": 30,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "revision-heig.json",
+   "xerkions.json",
+   "bob-lennon",
+   "bouffe",
+   "cuisine",
+   "evolution"
+  ]
+ },
+ {
+  "e": "🏆",
+  "n": 30,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "quetes.json",
+   "antoine-daniel",
+   "changelog",
+   "decouverte",
+   "hasard",
+   "higgs",
+   "jeux"
+  ]
+ },
+ {
+  "e": "✋",
+  "n": 29,
+  "glyphe": null,
+  "ploxions": [
+   "bions-physiques.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "chemin",
+   "extrapole",
+   "fes-main",
+   "flow",
+   "onenote"
+  ]
+ },
+ {
+  "e": "🎙",
+  "n": 28,
+  "glyphe": "vocal",
+  "ploxions": [
+   "admin-missions.json",
+   "blocks.json",
+   "changelog.json",
+   "device-bions.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "bob-lennon",
+   "boxion"
+  ]
+ },
+ {
+  "e": "🔺",
+  "n": 28,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "glyphes-editor",
+   "mega-forge",
+   "shipyard"
+  ]
+ },
+ {
+  "e": "📞",
+  "n": 28,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "amis",
+   "appel",
+   "chation",
+   "contacts"
+  ]
+ },
+ {
+  "e": "🌡",
+  "n": 28,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "universal-suit.json",
+   "convertisseur",
+   "flo",
+   "meteo",
+   "tendance-meteo"
+  ]
+ },
+ {
+  "e": "🍳",
+  "n": 27,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "xerkions.json",
+   "xerploxions.json",
+   "bouffe",
+   "cuisine",
+   "frigo",
+   "inventaire",
+   "nature"
+  ]
+ },
+ {
+  "e": "🐛",
+  "n": 27,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "xerploxions.json",
+   "repoverse",
+   "rv-chat",
+   "rv-code"
+  ]
+ },
+ {
+  "e": "📸",
+  "n": 27,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "ideas-map",
+   "instagram",
+   "mappion",
+   "nature",
+   "scan-reel"
+  ]
+ },
+ {
+  "e": "✏",
+  "n": 27,
+  "glyphe": null,
+  "ploxions": [
+   "atelier",
+   "carte",
+   "coffre",
+   "compositeur",
+   "live",
+   "monui",
+   "onenote",
+   "pupitre"
+  ]
+ },
+ {
+  "e": "📐",
+  "n": 26,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "chaoxion-triage.json",
+   "device-bions.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "quetes.json"
+  ]
+ },
+ {
+  "e": "〰",
+  "n": 26,
+  "glyphe": "vague",
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "themes.json",
+   "xerkions.json",
+   "mappion"
+  ]
+ },
+ {
+  "e": "🚜",
+  "n": 26,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "projets-phares.json",
+   "quetes.json",
+   "xerkions.json",
+   "xerploxions.json",
+   "phares",
+   "presentation",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🔓",
+  "n": 26,
+  "glyphe": "deverrou",
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "chat",
+   "coffre",
+   "decouverte",
+   "files",
+   "glyphqr"
+  ]
+ },
+ {
+  "e": "📓",
+  "n": 26,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "fractal-audit.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "cahier-rs7",
+   "flo"
+  ]
+ },
+ {
+  "e": "🔤",
+  "n": 26,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "projets-phares.json",
+   "quetes.json",
+   "xerkions.json",
+   "carte",
+   "dataset"
+  ]
+ },
+ {
+  "e": "⏮",
+  "n": 26,
+  "glyphe": "precedent",
+  "ploxions": [
+   "changelog.json",
+   "forge-recettes.json",
+   "ploxion-io.json",
+   "archive-org",
+   "compagnon",
+   "machine-a-tsoins",
+   "mixer",
+   "montage"
+  ]
+ },
+ {
+  "e": "🎥",
+  "n": 26,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-stars.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "amis",
+   "appel",
+   "capture-lieu",
+   "chation",
+   "lanceur"
+  ]
+ },
+ {
+  "e": "♥",
+  "n": 26,
+  "glyphe": null,
+  "ploxions": [
+   "ploxion-io.json",
+   "revision-heig.json",
+   "rs.json",
+   "banc-test",
+   "cuisine",
+   "glyphed",
+   "kion-galerie",
+   "miroir"
+  ]
+ },
+ {
+  "e": "🖨",
+  "n": 25,
+  "glyphe": null,
+  "ploxions": [
+   "admin-missions.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "impression",
+   "imprimante",
+   "makelab"
+  ]
+ },
+ {
+  "e": "🎒",
+  "n": 25,
+  "glyphe": null,
+  "ploxions": [
+   "admin-missions.json",
+   "boxions.json",
+   "changelog.json",
+   "chaoxion-triage.json",
+   "compagnon",
+   "hotbar",
+   "lanceur",
+   "survie"
+  ]
+ },
+ {
+  "e": "🚪",
+  "n": 25,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "object-bions.json",
+   "quetes.json",
+   "antoine-daniel",
+   "clyde-vanilla",
+   "filesystem",
+   "instagram"
+  ]
+ },
+ {
+  "e": "🏛",
+  "n": 25,
+  "glyphe": null,
+  "ploxions": [
+   "boxions.json",
+   "changelog.json",
+   "chaoxion-triage.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "archive-org",
+   "boxion-designer"
+  ]
+ },
+ {
+  "e": "🎓",
+  "n": 25,
+  "glyphe": null,
+  "ploxions": [
+   "cartes-modes.json",
+   "changelog.json",
+   "inspirations-ploxions.json",
+   "projets-phares.json",
+   "xerkions.json",
+   "asd",
+   "dev-ploxions",
+   "evolution"
+  ]
+ },
+ {
+  "e": "🔢",
+  "n": 25,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "builder",
+   "compteurs",
+   "dataset",
+   "forge",
+   "hasard"
+  ]
+ },
+ {
+  "e": "🌸",
+  "n": 24,
+  "glyphe": "coeur",
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "object-bions.json",
+   "themes.json",
+   "xerkions.json",
+   "compagnon",
+   "dashboard",
+   "flo"
+  ]
+ },
+ {
+  "e": "⏹",
+  "n": 24,
+  "glyphe": null,
+  "ploxions": [
+   "ploxion-io.json",
+   "audio-convert",
+   "bt-tones",
+   "machine-a-tsoins",
+   "mc-admin",
+   "mega-forge",
+   "photion",
+   "pourriture-4"
+  ]
+ },
+ {
+  "e": "🔀",
+  "n": 23,
+  "glyphe": null,
+  "ploxions": [
+   "alternatives.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "asd",
+   "forge-flow",
+   "rv-issues"
+  ]
+ },
+ {
+  "e": "📈",
+  "n": 23,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "bord",
+   "changelog",
+   "endo"
+  ]
+ },
+ {
+  "e": "🛡",
+  "n": 22,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "quetes.json",
+   "xerkions.json",
+   "certitude"
+  ]
+ },
+ {
+  "e": "⚽",
+  "n": 22,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "xerkions.json",
+   "foot",
+   "mondial",
+   "pronostic",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "📺",
+  "n": 22,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "xerkions.json",
+   "fil",
+   "player",
+   "sessions",
+   "stremio"
+  ]
+ },
+ {
+  "e": "🔇",
+  "n": 22,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "fractal-actifs.json",
+   "fractal-audit.json",
+   "carte",
+   "math",
+   "player",
+   "reglages",
+   "stremio"
+  ]
+ },
+ {
+  "e": "🎤",
+  "n": 21,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "object-bions.json",
+   "xerkions.json",
+   "fractale-reel",
+   "presentation",
+   "vald",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "⚗",
+  "n": 21,
+  "glyphe": null,
+  "ploxions": [
+   "cartes-modes.json",
+   "changelog.json",
+   "ploxion-io.json",
+   "quetes.json",
+   "rs.json",
+   "caisson",
+   "concept",
+   "craft"
+  ]
+ },
+ {
+  "e": "🎴",
+  "n": 21,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "xerkions.json",
+   "histoire",
+   "kion-galerie",
+   "math",
+   "miroir",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🏭",
+  "n": 20,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "forge-apps",
+   "pcb",
+   "usine",
+   "xerfarm",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "⬛",
+  "n": 20,
+  "glyphe": null,
+  "ploxions": [
+   "embedded-bions.json",
+   "fibre",
+   "glyphes",
+   "mega-forge"
+  ]
+ },
+ {
+  "e": "🔲",
+  "n": 20,
+  "glyphe": null,
+  "ploxions": [
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "themes.json",
+   "minecraft",
+   "ui-mobile"
+  ]
+ },
+ {
+  "e": "✖",
+  "n": 20,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-nexus",
+   "code",
+   "enrolements",
+   "logique-classique"
+  ]
+ },
+ {
+  "e": "⛏",
+  "n": 19,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "quetes.json",
+   "xerkions.json",
+   "bob-lennon",
+   "cubion",
+   "decouverte",
+   "fuzeiii",
+   "minecraft"
+  ]
+ },
+ {
+  "e": "🕘",
+  "n": 19,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "apparence",
+   "cuisine",
+   "mdpi",
+   "player",
+   "ultimate-files",
+   "web",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "♾",
+  "n": 19,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "xerkions.json",
+   "hoffman",
+   "physique",
+   "rocq",
+   "timeline",
+   "von-neumann",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🍦",
+  "n": 19,
+  "glyphe": null,
+  "ploxions": [
+   "xerkions.json",
+   "antoine-daniel",
+   "clyde-vanilla",
+   "saga-mp3",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🥁",
+  "n": 18,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "inspirations-ploxions.json",
+   "object-bions.json",
+   "xerkions.json",
+   "beats",
+   "flow",
+   "kion-3d"
+  ]
+ },
+ {
+  "e": "🗃",
+  "n": 18,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "xerkions.json",
+   "blocs",
+   "boxion-files",
+   "montage"
+  ]
+ },
+ {
+  "e": "📲",
+  "n": 18,
+  "glyphe": "iphone",
+  "ploxions": [
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "xerkions.json",
+   "installer",
+   "invitation",
+   "invite",
+   "ios",
+   "reglages"
+  ]
+ },
+ {
+  "e": "🤝",
+  "n": 18,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "quetes.json",
+   "amis",
+   "contacts",
+   "invite",
+   "repoverse",
+   "ultimate-social",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🟢",
+  "n": 18,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "apis",
+   "atelier",
+   "cuisine",
+   "flo",
+   "geste",
+   "mc-admin",
+   "rv-issues"
+  ]
+ },
+ {
+  "e": "🔩",
+  "n": 17,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "cartes-modes.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "physique",
+   "space-cubion",
+   "xerax"
+  ]
+ },
+ {
+  "e": "🕹",
+  "n": 17,
+  "glyphe": null,
+  "ploxions": [
+   "cartes-modes.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "forge-engine",
+   "jeux",
+   "reglages",
+   "xerbot"
+  ]
+ },
+ {
+  "e": "❤",
+  "n": 17,
+  "glyphe": "coeur",
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "compagnon",
+   "doomion",
+   "flo",
+   "flow",
+   "mappion",
+   "miroir"
+  ]
+ },
+ {
+  "e": "⚖",
+  "n": 17,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "structures.json",
+   "universal-suit.json",
+   "convertisseur",
+   "space-cubion",
+   "steam-quest",
+   "survie",
+   "trou-noir"
+  ]
+ },
+ {
+  "e": "💻",
+  "n": 17,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "themes.json",
+   "code",
+   "mega-forge",
+   "pieces",
+   "repoverse",
+   "rv-chat"
+  ]
+ },
+ {
+  "e": "🚶",
+  "n": 16,
+  "glyphe": null,
+  "ploxions": [
+   "admin-missions.json",
+   "chaoxion-quantique.json",
+   "io-taxonomy.json",
+   "carte",
+   "pourriture-4",
+   "spiderion-sim",
+   "timeline",
+   "transport"
+  ]
+ },
+ {
+  "e": "🦀",
+  "n": 16,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "object-bions.json",
+   "alternatives",
+   "timeline",
+   "ultimate-boxion"
+  ]
+ },
+ {
+  "e": "🔉",
+  "n": 16,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "ploxion-io.json",
+   "xerkions.json",
+   "caisson",
+   "makelab"
+  ]
+ },
+ {
+  "e": "✍",
+  "n": 16,
+  "glyphe": null,
+  "ploxions": [
+   "cartes-modes.json",
+   "io-taxonomy.json",
+   "chation",
+   "histoire",
+   "mail",
+   "socialion",
+   "ui-mobile",
+   "word-import"
+  ]
+ },
+ {
+  "e": "⛰",
+  "n": 16,
+  "glyphe": null,
+  "ploxions": [
+   "cartes-modes.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "revision-heig.json",
+   "xerkions.json",
+   "cockpit",
+   "evolution",
+   "fuzeiii"
+  ]
+ },
+ {
+  "e": "📣",
+  "n": 16,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "changelog",
+   "share",
+   "space-cubion",
+   "survie"
+  ]
+ },
+ {
+  "e": "🔳",
+  "n": 16,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "evolution",
+   "glyphqr",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🟩",
+  "n": 16,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "fuzeiii",
+   "minecraft",
+   "nexus3d",
+   "tsoinfini"
+  ]
+ },
+ {
+  "e": "🔵",
+  "n": 16,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "ploxion-io.json",
+   "xerkions.json",
+   "bluetooth",
+   "bt-surround"
+  ]
+ },
+ {
+  "e": "✂",
+  "n": 16,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "revision-heig.json",
+   "image-convert",
+   "logisim",
+   "machine",
+   "math",
+   "montage",
+   "pdf-outils"
+  ]
+ },
+ {
+  "e": "🌧",
+  "n": 16,
+  "glyphe": null,
+  "ploxions": [
+   "_sensor_bion.blade.php",
+   "meteo",
+   "nexusmap",
+   "universal-suit",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "❌",
+  "n": 16,
+  "glyphe": null,
+  "ploxions": [
+   "asd",
+   "boxions",
+   "math",
+   "mdpi",
+   "mondial",
+   "quetes",
+   "rocq",
+   "xerbot"
+  ]
+ },
+ {
+  "e": "🌦",
+  "n": 16,
+  "glyphe": null,
+  "ploxions": [
+   "meteo",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🎹",
+  "n": 15,
+  "glyphe": null,
+  "ploxions": [
+   "admin-missions.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "piano",
+   "sequenceur",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🦾",
+  "n": 15,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "xerkions.json",
+   "bras",
+   "xerbot",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🏪",
+  "n": 15,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "compositeur",
+   "marche",
+   "marketplace",
+   "steam-quest"
+  ]
+ },
+ {
+  "e": "😈",
+  "n": 15,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "xerkions.json",
+   "doom",
+   "doomion",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🌤",
+  "n": 15,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "xerkions.json",
+   "xerploxions.json",
+   "carte",
+   "mappion",
+   "mesures",
+   "meteo",
+   "nexusmap"
+  ]
+ },
+ {
+  "e": "✴",
+  "n": 15,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "xerkions.json",
+   "claude",
+   "qfractale",
+   "xerkions",
+   "xp"
+  ]
+ },
+ {
+  "e": "🪜",
+  "n": 15,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "xerkions.json",
+   "invitation",
+   "onboarding",
+   "space-cubion",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🔔",
+  "n": 15,
+  "glyphe": "notifs",
+  "ploxions": [
+   "io-taxonomy.json",
+   "coord",
+   "forge",
+   "ios",
+   "nature",
+   "premier-ploxion",
+   "socialion"
+  ]
+ },
+ {
+  "e": "📟",
+  "n": 15,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "themes.json",
+   "reglages",
+   "sessions",
+   "themes",
+   "xerploxions"
+  ]
+ },
+ {
+  "e": "🐙",
+  "n": 15,
+  "glyphe": null,
+  "ploxions": [
+   "xerkions.json",
+   "antoine-daniel",
+   "clyde-vanilla",
+   "saga-mp3",
+   "web",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "💰",
+  "n": 15,
+  "glyphe": null,
+  "ploxions": [
+   "cadeau",
+   "finances",
+   "nolan",
+   "ultimate-boxion",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🍺",
+  "n": 15,
+  "glyphe": null,
+  "ploxions": [
+   "carte",
+   "cave",
+   "map-amis",
+   "soiree"
+  ]
+ },
+ {
+  "e": "📶",
+  "n": 14,
+  "glyphe": "reseau",
+  "ploxions": [
+   "blocks.json",
+   "device-bions.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "compteurs",
+   "contacts",
+   "convertisseur"
+  ]
+ },
+ {
+  "e": "🧵",
+  "n": 14,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "xerax.json",
+   "fil",
+   "stremio"
+  ]
+ },
+ {
+  "e": "🪞",
+  "n": 14,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "quetes.json",
+   "xerkions.json",
+   "files",
+   "miroir",
+   "pokedex",
+   "survie"
+  ]
+ },
+ {
+  "e": "🖐",
+  "n": 14,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "quetes.json",
+   "universal-suit.json",
+   "xerax.json",
+   "xerkions.json",
+   "geste",
+   "universal-suit",
+   "xerbot"
+  ]
+ },
+ {
+  "e": "📕",
+  "n": 14,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "explorateur",
+   "files",
+   "fuzeiii",
+   "pdf-outils",
+   "pokedex"
+  ]
+ },
+ {
+  "e": "◀",
+  "n": 14,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "ploxion-io.json",
+   "asd",
+   "cahier-rs7",
+   "forge",
+   "surfaces",
+   "tsoin-images"
+  ]
+ },
+ {
+  "e": "🌾",
+  "n": 14,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "cave",
+   "frigo",
+   "timeline",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "☠",
+  "n": 14,
+  "glyphe": null,
+  "ploxions": [
+   "rs.json",
+   "contacts",
+   "doomion",
+   "nature"
+  ]
+ },
+ {
+  "e": "☀",
+  "n": 13,
+  "glyphe": null,
+  "ploxions": [
+   "bions-physiques.json",
+   "inspirations-ploxions.json",
+   "hasard",
+   "ios",
+   "meteo",
+   "nexusmap",
+   "space-cubion",
+   "theme"
+  ]
+ },
+ {
+  "e": "🖱",
+  "n": 13,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "device-bions.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "souris",
+   "trion",
+   "tsoin"
+  ]
+ },
+ {
+  "e": "🔋",
+  "n": 13,
+  "glyphe": "reseau",
+  "ploxions": [
+   "blocks.json",
+   "device-bions.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "universal-suit.json",
+   "convertisseur"
+  ]
+ },
+ {
+  "e": "🧟",
+  "n": 13,
+  "glyphe": null,
+  "ploxions": [
+   "cartes-modes.json",
+   "changelog.json",
+   "xerkions.json",
+   "xerploxions.json",
+   "pourriture-4",
+   "xerkions",
+   "xerploxions"
+  ]
+ },
+ {
+  "e": "🖊",
+  "n": 13,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "files",
+   "onenote",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🍷",
+  "n": 13,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "xerkions.json",
+   "cave",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🎭",
+  "n": 13,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "ploxion-io.json",
+   "blocs",
+   "reglages",
+   "soiree",
+   "space-cubion",
+   "themes"
+  ]
+ },
+ {
+  "e": "👍",
+  "n": 13,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "ploxion-io.json",
+   "coffre",
+   "craftion",
+   "motivation",
+   "placeholder",
+   "ui-mobile",
+   "zone"
+  ]
+ },
+ {
+  "e": "📇",
+  "n": 13,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "contacts",
+   "invitation"
+  ]
+ },
+ {
+  "e": "🙂",
+  "n": 13,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "carte",
+   "map-amis",
+   "mappion",
+   "socialion",
+   "taches",
+   "ultimate-social"
+  ]
+ },
+ {
+  "e": "🔨",
+  "n": 13,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "quetes.json",
+   "apis",
+   "forge-apps",
+   "lorion",
+   "quests",
+   "usine"
+  ]
+ },
+ {
+  "e": "🕰",
+  "n": 13,
+  "glyphe": null,
+  "ploxions": [
+   "archive-org",
+   "machine-a-tsoins",
+   "physique",
+   "space-cubion",
+   "wayback"
+  ]
+ },
+ {
+  "e": "🍎",
+  "n": 12,
+  "glyphe": null,
+  "ploxions": [
+   "app-importers.json",
+   "themes.json",
+   "dl",
+   "frigo",
+   "installer",
+   "inventaire",
+   "kion",
+   "themes"
+  ]
+ },
+ {
+  "e": "🔄",
+  "n": 12,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "films",
+   "mondial",
+   "pdf-outils"
+  ]
+ },
+ {
+  "e": "🐣",
+  "n": 12,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "changelog",
+   "compagnon",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "♻",
+  "n": 12,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "ploxion-ideas.json",
+   "xerkions.json",
+   "atelier",
+   "boxion-designer",
+   "changelog",
+   "dedup",
+   "premier-ploxion"
+  ]
+ },
+ {
+  "e": "🧰",
+  "n": 12,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "quetes.json",
+   "xerkions.json",
+   "blocs",
+   "boxion-designer",
+   "chaoxion",
+   "documents",
+   "mega-forge"
+  ]
+ },
+ {
+  "e": "🍏",
+  "n": 12,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "quetes.json",
+   "themes.json",
+   "xerkions.json",
+   "dl",
+   "installer",
+   "ios",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "⚓",
+  "n": 12,
+  "glyphe": null,
+  "ploxions": [
+   "forge-recettes.json",
+   "themes.json",
+   "plugions",
+   "reglages",
+   "shipyard",
+   "theme",
+   "ui-desktop"
+  ]
+ },
+ {
+  "e": "🎈",
+  "n": 12,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "xerkions.json",
+   "convertisseur",
+   "jules-verne",
+   "multivers",
+   "pokedex",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "📨",
+  "n": 12,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "instagram",
+   "mail",
+   "recherches",
+   "social",
+   "socialion"
+  ]
+ },
+ {
+  "e": "🌙",
+  "n": 12,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "quetes.json",
+   "compagnon",
+   "hasard",
+   "makelab",
+   "nexusmap",
+   "pokedex",
+   "theme"
+  ]
+ },
+ {
+  "e": "☑",
+  "n": 12,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "builder",
+   "documents",
+   "etoiles",
+   "flo",
+   "taches",
+   "tsoinion"
+  ]
+ },
+ {
+  "e": "🧺",
+  "n": 12,
+  "glyphe": null,
+  "ploxions": [
+   "bouffe",
+   "cuisine",
+   "pieces",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "💿",
+  "n": 12,
+  "glyphe": null,
+  "ploxions": [
+   "clyde-vanilla",
+   "dl",
+   "installer",
+   "vald"
+  ]
+ },
+ {
+  "e": "💜",
+  "n": 12,
+  "glyphe": null,
+  "ploxions": [
+   "lorion",
+   "zlorbion"
+  ]
+ },
+ {
+  "e": "🦿",
+  "n": 11,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "xerkions.json",
+   "bras-sim",
+   "multivers",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🏗",
+  "n": 11,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "xerkions.json",
+   "forge-engine",
+   "tsoin",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🕷",
+  "n": 11,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-stars.json",
+   "object-bions.json",
+   "xerkions.json",
+   "kion-3d",
+   "spiderion-sim",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "📽",
+  "n": 11,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "files",
+   "powerpoint",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🏁",
+  "n": 11,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "xerkions.json",
+   "carte",
+   "nexus-live",
+   "speedrun",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🚲",
+  "n": 11,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "carte",
+   "velo"
+  ]
+ },
+ {
+  "e": "🗣",
+  "n": 11,
+  "glyphe": "vocal",
+  "ploxions": [
+   "io-taxonomy.json",
+   "quetes.json",
+   "xerkions.json",
+   "connexions",
+   "voix",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "⚪",
+  "n": 11,
+  "glyphe": null,
+  "ploxions": [
+   "themes.json",
+   "bt-scan",
+   "cublumiere",
+   "mega-forge",
+   "post-it",
+   "sessions",
+   "speedrun",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🍄",
+  "n": 11,
+  "glyphe": null,
+  "ploxions": [
+   "_sensor_bion.blade.php",
+   "nature",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "☝",
+  "n": 11,
+  "glyphe": null,
+  "ploxions": [
+   "amis",
+   "cave",
+   "chation",
+   "craft",
+   "forge",
+   "invite",
+   "logisim",
+   "social"
+  ]
+ },
+ {
+  "e": "💥",
+  "n": 11,
+  "glyphe": null,
+  "ploxions": [
+   "antoine-daniel",
+   "higgs",
+   "jeux",
+   "mega-forge",
+   "shipyard"
+  ]
+ },
+ {
+  "e": "🛋",
+  "n": 11,
+  "glyphe": null,
+  "ploxions": [
+   "demenagement",
+   "pieces",
+   "room-map"
+  ]
+ },
+ {
+  "e": "⌚",
+  "n": 10,
+  "glyphe": "horloge",
+  "ploxions": [
+   "admin-missions-guides.json",
+   "admin-missions.json",
+   "xerax.json",
+   "atelier",
+   "kion",
+   "sessions",
+   "xerax"
+  ]
+ },
+ {
+  "e": "⬜",
+  "n": 10,
+  "glyphe": null,
+  "ploxions": [
+   "admin-missions.json",
+   "blocks.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "quetes.json",
+   "demenagement",
+   "pourriture-4"
+  ]
+ },
+ {
+  "e": "▫",
+  "n": 10,
+  "glyphe": null,
+  "ploxions": [
+   "bions-physiques.json",
+   "atelier-cubion",
+   "code",
+   "compositeur",
+   "mega-forge",
+   "onenote",
+   "wayback"
+  ]
+ },
+ {
+  "e": "✳",
+  "n": 10,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "changelog.json",
+   "forge-recettes.json",
+   "object-bions.json",
+   "xerkions.json",
+   "fractale",
+   "glyphqr",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🎁",
+  "n": 10,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "cadeau",
+   "soiree",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "⛺",
+  "n": 10,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "xerkions.json",
+   "survie",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "📮",
+  "n": 10,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "mapper",
+   "telexion",
+   "tsoin",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🧥",
+  "n": 10,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "universal-suit.json",
+   "xerkions.json",
+   "universal-suit",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "⏯",
+  "n": 10,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "ploxion-io.json",
+   "bt-player",
+   "musique",
+   "player",
+   "youtube-music"
+  ]
+ },
+ {
+  "e": "🌫",
+  "n": 10,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-quantique.json",
+   "io-taxonomy.json",
+   "quetes.json",
+   "flo",
+   "meteo",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🚌",
+  "n": 10,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "carte",
+   "transport",
+   "velo"
+  ]
+ },
+ {
+  "e": "🪖",
+  "n": 10,
+  "glyphe": null,
+  "ploxions": [
+   "ploxion-io.json",
+   "veille-sources.json",
+   "veille-avions-mil",
+   "veille-bases-mil"
+  ]
+ },
+ {
+  "e": "🟡",
+  "n": 10,
+  "glyphe": null,
+  "ploxions": [
+   "quetes.json",
+   "cave",
+   "jeux",
+   "speedrun",
+   "stremio",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "👑",
+  "n": 10,
+  "glyphe": null,
+  "ploxions": [
+   "asimov",
+   "installer",
+   "math",
+   "quetes",
+   "reglages"
+  ]
+ },
+ {
+  "e": "🧹",
+  "n": 10,
+  "glyphe": null,
+  "ploxions": [
+   "claude",
+   "code",
+   "contacts",
+   "reglages",
+   "stockage",
+   "ui-mobile",
+   "xerbot"
+  ]
+ },
+ {
+  "e": "🌨",
+  "n": 10,
+  "glyphe": null,
+  "ploxions": [
+   "meteo",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "▪",
+  "n": 9,
+  "glyphe": "compacte",
+  "ploxions": [
+   "blocks.json",
+   "device-bions.json",
+   "embedded-bions.json",
+   "lanceur",
+   "mega-forge",
+   "nexus",
+   "pcb",
+   "post-it"
+  ]
+ },
+ {
+  "e": "⭕",
+  "n": 9,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "geste",
+   "xerbot"
+  ]
+ },
+ {
+  "e": "🪲",
+  "n": 9,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-triage.json",
+   "embedded-bions.json",
+   "security-kb.json",
+   "xerkions.json",
+   "owasp",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🌷",
+  "n": 9,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "xerkions.json",
+   "compagnon",
+   "endo",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🎰",
+  "n": 9,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "xerkions.json",
+   "forge-jeu",
+   "sessions",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🚻",
+  "n": 9,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "carte",
+   "wc"
+  ]
+ },
+ {
+  "e": "😌",
+  "n": 9,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "compositeur",
+   "reglages",
+   "theme",
+   "tsoinmachine"
+  ]
+ },
+ {
+  "e": "🔘",
+  "n": 9,
+  "glyphe": null,
+  "ploxions": [
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "builder",
+   "premier-ploxion",
+   "xerax"
+  ]
+ },
+ {
+  "e": "👋",
+  "n": 9,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "chat",
+   "courses",
+   "premier-ploxion",
+   "presence",
+   "social",
+   "zone"
+  ]
+ },
+ {
+  "e": "📰",
+  "n": 9,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "quetes.json",
+   "themes.json",
+   "socialion",
+   "ultimate-social"
+  ]
+ },
+ {
+  "e": "🏷",
+  "n": 9,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "boxion-files",
+   "chaoxion",
+   "socialion",
+   "vald"
+  ]
+ },
+ {
+  "e": "🧾",
+  "n": 9,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "documents",
+   "files",
+   "finances",
+   "taches"
+  ]
+ },
+ {
+  "e": "🩺",
+  "n": 9,
+  "glyphe": null,
+  "ploxions": [
+   "coffre",
+   "contacts",
+   "decouverte",
+   "flo",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "💎",
+  "n": 9,
+  "glyphe": null,
+  "ploxions": [
+   "concept",
+   "craft",
+   "math",
+   "minecraft",
+   "squeezie"
+  ]
+ },
+ {
+  "e": "🐦",
+  "n": 8,
+  "glyphe": null,
+  "ploxions": [
+   "app-importers.json",
+   "nature",
+   "theme"
+  ]
+ },
+ {
+  "e": "🕐",
+  "n": 8,
+  "glyphe": "horloge",
+  "ploxions": [
+   "changelog.json",
+   "xerkions.json",
+   "builder",
+   "horloge",
+   "lanceur",
+   "mondial",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "📉",
+  "n": 8,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "chaoxion-quantique.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "moniteur-serie",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🍻",
+  "n": 8,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "xerkions.json",
+   "soiree",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🪙",
+  "n": 8,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "io-taxonomy.json",
+   "xerkions.json",
+   "appart",
+   "finance",
+   "hasard",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🍅",
+  "n": 8,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "frigo",
+   "pomodoro",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "↘",
+  "n": 8,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "asd",
+   "builder",
+   "montage",
+   "monui",
+   "trion",
+   "xerbot",
+   "xerkion"
+  ]
+ },
+ {
+  "e": "😎",
+  "n": 8,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-aryeth.json",
+   "chaoxion-stars.json",
+   "chaoxion-triage.json",
+   "carte",
+   "map-amis"
+  ]
+ },
+ {
+  "e": "🚗",
+  "n": 8,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "themes.json",
+   "carte",
+   "themes"
+  ]
+ },
+ {
+  "e": "⏰",
+  "n": 8,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "cuisine",
+   "xerfarm",
+   "zone"
+  ]
+ },
+ {
+  "e": "🎟",
+  "n": 8,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "ploxion-ideas.json",
+   "quetes.json",
+   "social"
+  ]
+ },
+ {
+  "e": "💗",
+  "n": 8,
+  "glyphe": null,
+  "ploxions": [
+   "xerkions.json",
+   "flo",
+   "pink-guy",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🌲",
+  "n": 8,
+  "glyphe": null,
+  "ploxions": [
+   "fuzeiii",
+   "nature",
+   "survie"
+  ]
+ },
+ {
+  "e": "⛈",
+  "n": 8,
+  "glyphe": null,
+  "ploxions": [
+   "meteo",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🗒",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "alternatives.json",
+   "changelog.json",
+   "xerkions.json",
+   "builder",
+   "notes",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🪝",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "io-taxonomy.json",
+   "object-bions.json"
+  ]
+ },
+ {
+  "e": "📏",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "universal-suit.json",
+   "convertisseur"
+  ]
+ },
+ {
+  "e": "💨",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "_sensor_bion.blade.php",
+   "convertisseur",
+   "meteo"
+  ]
+ },
+ {
+  "e": "🟦",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "jeux",
+   "minecraft"
+  ]
+ },
+ {
+  "e": "🗯",
+  "n": 7,
+  "glyphe": "bulle",
+  "ploxions": [
+   "changelog.json",
+   "xerkions.json",
+   "bother",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "👎",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "ploxion-io.json",
+   "craftion",
+   "motivation"
+  ]
+ },
+ {
+  "e": "🧽",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-quantique.json",
+   "room-map",
+   "taches"
+  ]
+ },
+ {
+  "e": "🙋",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-triage.json",
+   "ask"
+  ]
+ },
+ {
+  "e": "🗝",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-triage.json",
+   "io-taxonomy.json",
+   "coffre",
+   "tsoin"
+  ]
+ },
+ {
+  "e": "🔻",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "quetes.json"
+  ]
+ },
+ {
+  "e": "⛓",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "extrapole",
+   "mega-forge",
+   "xp"
+  ]
+ },
+ {
+  "e": "📳",
+  "n": 7,
+  "glyphe": "haptique",
+  "ploxions": [
+   "io-taxonomy.json",
+   "connexions",
+   "ios"
+  ]
+ },
+ {
+  "e": "🐾",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "object-bions.json",
+   "decouverte",
+   "mappion",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🚫",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "ploxion-ideas.json",
+   "flo",
+   "nature",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "✈",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "ploxion-io.json",
+   "veille-scenes.json",
+   "veille-sources.json",
+   "multivers",
+   "veille-avions"
+  ]
+ },
+ {
+  "e": "🚢",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "xerkions.json",
+   "sillage",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🏴‍☠",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "xerkions.json",
+   "one-piece",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🍥",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "xerkions.json",
+   "naruto",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "✔",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "antoine-daniel",
+   "dataset",
+   "nolan",
+   "pourriture-4",
+   "saga-mp3",
+   "survie",
+   "web"
+  ]
+ },
+ {
+  "e": "⚔",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "clyde-vanilla",
+   "decouverte",
+   "evolution",
+   "fuzeiii"
+  ]
+ },
+ {
+  "e": "🌟",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "compagnon",
+   "quests",
+   "shipyard",
+   "timeline"
+  ]
+ },
+ {
+  "e": "⬅",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "forge-engine",
+   "mega-forge",
+   "xerbot"
+  ]
+ },
+ {
+  "e": "🧻",
+  "n": 7,
+  "glyphe": null,
+  "ploxions": [
+   "stock"
+  ]
+ },
+ {
+  "e": "🥚",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "object-bions.json",
+   "flo",
+   "frigo"
+  ]
+ },
+ {
+  "e": "🎡",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "object-bions.json",
+   "math",
+   "soiree"
+  ]
+ },
+ {
+  "e": "🛞",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "io-taxonomy.json",
+   "object-bions.json"
+  ]
+ },
+ {
+  "e": "🗜",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "boxion-files",
+   "files"
+  ]
+ },
+ {
+  "e": "⏲",
+  "n": 6,
+  "glyphe": "horloge",
+  "ploxions": [
+   "boutons-ui.json",
+   "builder",
+   "designer",
+   "machine-a-tsoins",
+   "reglages"
+  ]
+ },
+ {
+  "e": "➗",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "projets-phares.json",
+   "xerkions.json",
+   "math",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "👉",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-stars.json",
+   "carte",
+   "geste",
+   "roadmap",
+   "soiree"
+  ]
+ },
+ {
+  "e": "⚫",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "cave",
+   "mc-admin",
+   "nature"
+  ]
+ },
+ {
+  "e": "👆",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "builder",
+   "geste",
+   "theme"
+  ]
+ },
+ {
+  "e": "🫀",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "universal-suit.json",
+   "mappion",
+   "universal-suit"
+  ]
+ },
+ {
+  "e": "🐝",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🧅",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "frigo",
+   "quests",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🪪",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "coffre",
+   "documents",
+   "premier-ploxion"
+  ]
+ },
+ {
+  "e": "🕶",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "quetes.json",
+   "universal-suit.json",
+   "compagnon",
+   "universal-suit"
+  ]
+ },
+ {
+  "e": "🪨",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "convertisseur",
+   "higgs",
+   "minecraft",
+   "multivers",
+   "space-cubion"
+  ]
+ },
+ {
+  "e": "🏕",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "quetes.json",
+   "survie"
+  ]
+ },
+ {
+  "e": "🌑",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "quetes.json",
+   "carte"
+  ]
+ },
+ {
+  "e": "☣",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "rs.json",
+   "fuzeiii",
+   "securite",
+   "shlag"
+  ]
+ },
+ {
+  "e": "⤵",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "designer",
+   "sessions",
+   "youtube-music"
+  ]
+ },
+ {
+  "e": "⤴",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "designer",
+   "glyphed",
+   "sessions",
+   "ui-desktop"
+  ]
+ },
+ {
+  "e": "🐧",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "dl",
+   "installer",
+   "kion",
+   "ultimate-boxion"
+  ]
+ },
+ {
+  "e": "ℹ",
+  "n": 6,
+  "glyphe": null,
+  "ploxions": [
+   "flo",
+   "monui",
+   "web",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "©",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "app-importers.json",
+   "veille-sources.json",
+   "logisim",
+   "vald",
+   "veille"
+  ]
+ },
+ {
+  "e": "🏺",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "object-bions.json",
+   "themes.json"
+  ]
+ },
+ {
+  "e": "📢",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "embedded-bions.json",
+   "io-taxonomy.json",
+   "object-bions.json",
+   "pokedex"
+  ]
+ },
+ {
+  "e": "🌴",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "cartes-modes.json",
+   "themes.json",
+   "themes"
+  ]
+ },
+ {
+  "e": "🧑‍🚀",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "xerkions.json",
+   "clyde-vanilla",
+   "shipyard",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🚆",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "transport"
+  ]
+ },
+ {
+  "e": "↖",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "asd",
+   "trion",
+   "xerbot",
+   "xerkion"
+  ]
+ },
+ {
+  "e": "🌈",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "inspirations-ploxions.json",
+   "io-taxonomy.json",
+   "carte",
+   "map-amis"
+  ]
+ },
+ {
+  "e": "💭",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "decouverte"
+  ]
+ },
+ {
+  "e": "🩸",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "xerax.json",
+   "flo"
+  ]
+ },
+ {
+  "e": "🥽",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "universal-suit.json",
+   "hud"
+  ]
+ },
+ {
+  "e": "🚧",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "ask",
+   "math"
+  ]
+ },
+ {
+  "e": "🟥",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "quetes.json",
+   "themes.json",
+   "mondial"
+  ]
+ },
+ {
+  "e": "🚁",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "spiderion-sim"
+  ]
+ },
+ {
+  "e": "🍴",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "quetes.json",
+   "repoverse",
+   "rv-code"
+  ]
+ },
+ {
+  "e": "🟠",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "themes.json",
+   "atelier",
+   "cuisine",
+   "themes",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🧫",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "xerax.json",
+   "evolution",
+   "space-cubion"
+  ]
+ },
+ {
+  "e": "❔",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion",
+   "xerbot"
+  ]
+ },
+ {
+  "e": "🧨",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "coffre",
+   "fuzeiii",
+   "minecraft",
+   "shipyard"
+  ]
+ },
+ {
+  "e": "🌼",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "compagnon",
+   "nature",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "💊",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "contacts",
+   "flo",
+   "survie"
+  ]
+ },
+ {
+  "e": "🍚",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "frigo",
+   "survie"
+  ]
+ },
+ {
+  "e": "🟪",
+  "n": 5,
+  "glyphe": null,
+  "ploxions": [
+   "lanceur",
+   "minecraft",
+   "stash",
+   "tsoinfini"
+  ]
+ },
+ {
+  "e": "📧",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "app-importers.json",
+   "io-taxonomy.json",
+   "socialion",
+   "web"
+  ]
+ },
+ {
+  "e": "🥤",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "object-bions.json",
+   "cuisine",
+   "frigo"
+  ]
+ },
+ {
+  "e": "🛏",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "object-bions.json",
+   "pieces",
+   "room-map"
+  ]
+ },
+ {
+  "e": "🥕",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "frigo",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "↙",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "trion",
+   "xerbot",
+   "xerkion"
+  ]
+ },
+ {
+  "e": "☄",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-triage.json",
+   "inspirations-ploxions.json"
+  ]
+ },
+ {
+  "e": "🍓",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "embedded-bions.json",
+   "sessions",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🐜",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "embedded-bions.json"
+  ]
+ },
+ {
+  "e": "🟫",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "embedded-bions.json",
+   "minecraft",
+   "tsoinfini"
+  ]
+ },
+ {
+  "e": "◼",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "embedded-bions.json",
+   "evolution",
+   "glyphqr"
+  ]
+ },
+ {
+  "e": "🔈",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "inspirations-ploxions.json",
+   "dashboard",
+   "mixer",
+   "radio"
+  ]
+ },
+ {
+  "e": "🎖",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "inspirations-ploxions.json",
+   "pokedex",
+   "survie"
+  ]
+ },
+ {
+  "e": "🤫",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "multivers",
+   "pokedex"
+  ]
+ },
+ {
+  "e": "💳",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "coffre",
+   "documents"
+  ]
+ },
+ {
+  "e": "🚨",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "contacts"
+  ]
+ },
+ {
+  "e": "📹",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "rv-chat",
+   "youtube-dl"
+  ]
+ },
+ {
+  "e": "🕒",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "ploxion-io.json",
+   "git",
+   "quetes"
+  ]
+ },
+ {
+  "e": "🧍",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "quetes.json",
+   "forge-engine",
+   "universal-suit"
+  ]
+ },
+ {
+  "e": "📼",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "themes.json",
+   "antoine-daniel",
+   "saga-mp3",
+   "themes"
+  ]
+ },
+ {
+  "e": "🛎",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "auberge",
+   "xerxion"
+  ]
+ },
+ {
+  "e": "🅿",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "carte",
+   "velo"
+  ]
+ },
+ {
+  "e": "🍸",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "cave"
+  ]
+ },
+ {
+  "e": "⏪",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "chemin",
+   "compositeur",
+   "machine-a-tsoins"
+  ]
+ },
+ {
+  "e": "💛",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "compagnon"
+  ]
+ },
+ {
+  "e": "◻",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "cosmos",
+   "glyphed"
+  ]
+ },
+ {
+  "e": "🥫",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "cuisine",
+   "stock"
+  ]
+ },
+ {
+  "e": "🪁",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "forge-kion",
+   "shipyard"
+  ]
+ },
+ {
+  "e": "🪵",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "graphe",
+   "makelab",
+   "minecraft"
+  ]
+ },
+ {
+  "e": "📔",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "stremio",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🥬",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🐄",
+  "n": 4,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "👾",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "app-importers.json",
+   "inspirations-ploxions.json",
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "👽",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "app-importers.json",
+   "carte",
+   "map-amis"
+  ]
+ },
+ {
+  "e": "🌬",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "io-taxonomy.json",
+   "object-bions.json"
+  ]
+ },
+ {
+  "e": "💤",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "bob-lennon",
+   "theme"
+  ]
+ },
+ {
+  "e": "🪭",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "kion",
+   "xerkion"
+  ]
+ },
+ {
+  "e": "🖤",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "embedded-bions.json"
+  ]
+ },
+ {
+  "e": "🟨",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "embedded-bions.json",
+   "themes.json",
+   "mondial"
+  ]
+ },
+ {
+  "e": "🌄",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "inspirations-ploxions.json",
+   "ideas-map",
+   "mappion"
+  ]
+ },
+ {
+  "e": "😉",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "social",
+   "xerax"
+  ]
+ },
+ {
+  "e": "🗿",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "squeezie"
+  ]
+ },
+ {
+  "e": "🗓",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🧷",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "⌛",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "xerbot",
+   "xp"
+  ]
+ },
+ {
+  "e": "🏢",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "contacts"
+  ]
+ },
+ {
+  "e": "✒",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "♿",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "wc"
+  ]
+ },
+ {
+  "e": "🩹",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "flo",
+   "onenote"
+  ]
+ },
+ {
+  "e": "💽",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "projets-phares.json",
+   "phares",
+   "presentation"
+  ]
+ },
+ {
+  "e": "⛔",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "quetes.json",
+   "appel",
+   "chation"
+  ]
+ },
+ {
+  "e": "🔠",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "themes.json",
+   "reglages",
+   "theme"
+  ]
+ },
+ {
+  "e": "🏋",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "universal-suit.json",
+   "universal-suit"
+  ]
+ },
+ {
+  "e": "🍔",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "xerkions.json",
+   "bouffe",
+   "xerkions"
+  ]
+ },
+ {
+  "e": "🟣",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "antoine-daniel",
+   "rv-issues",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🏨",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "auberge"
+  ]
+ },
+ {
+  "e": "🐞",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "bother"
+  ]
+ },
+ {
+  "e": "🚴",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "carte"
+  ]
+ },
+ {
+  "e": "🥃",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "cave"
+  ]
+ },
+ {
+  "e": "🙈",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-nexus",
+   "coffre",
+   "reglages"
+  ]
+ },
+ {
+  "e": "🆕",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "coffre",
+   "lanceur",
+   "live"
+  ]
+ },
+ {
+  "e": "🪑",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "cublumiere",
+   "pieces"
+  ]
+ },
+ {
+  "e": "🥗",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "cuisine",
+   "frigo"
+  ]
+ },
+ {
+  "e": "💵",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "finances"
+  ]
+ },
+ {
+  "e": "☕",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "frigo",
+   "minuteur"
+  ]
+ },
+ {
+  "e": "🏳",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "fuzeiii",
+   "pays"
+  ]
+ },
+ {
+  "e": "💣",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "jeux"
+  ]
+ },
+ {
+  "e": "🏴",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "langues"
+  ]
+ },
+ {
+  "e": "🌒",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "mappion"
+  ]
+ },
+ {
+  "e": "🛟",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "monui"
+  ]
+ },
+ {
+  "e": "🫐",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "nature"
+  ]
+ },
+ {
+  "e": "🪂",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "physique",
+   "shipyard"
+  ]
+ },
+ {
+  "e": "💚",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "spotify",
+   "xerbot"
+  ]
+ },
+ {
+  "e": "🏎",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "squeezie"
+  ]
+ },
+ {
+  "e": "🔖",
+  "n": 3,
+  "glyphe": null,
+  "ploxions": [
+   "web"
+  ]
+ },
+ {
+  "e": "🏃",
+  "n": 2,
+  "glyphe": "coeur",
+  "ploxions": [
+   "app-importers.json",
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🎱",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "object-bions.json"
+  ]
+ },
+ {
+  "e": "🪛",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "object-bions.json"
+  ]
+ },
+ {
+  "e": "🚙",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "object-bions.json"
+  ]
+ },
+ {
+  "e": "🪓",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "object-bions.json"
+  ]
+ },
+ {
+  "e": "📯",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "object-bions.json"
+  ]
+ },
+ {
+  "e": "🧳",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "blocks.json",
+   "object-bions.json"
+  ]
+ },
+ {
+  "e": "🏡",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "cartes-modes.json",
+   "ploxion-ideas.json"
+  ]
+ },
+ {
+  "e": "🔜",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "changelog.json",
+   "vision"
+  ]
+ },
+ {
+  "e": "🤗",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-stars.json",
+   "compagnon"
+  ]
+ },
+ {
+  "e": "🎼",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "inspirations-ploxions.json",
+   "quetes.json"
+  ]
+ },
+ {
+  "e": "🏙",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "inspirations-ploxions.json",
+   "veille-scenes.json"
+  ]
+ },
+ {
+  "e": "💪",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "☎",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🏹",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "decouverte"
+  ]
+ },
+ {
+  "e": "🕵",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "squeezie"
+  ]
+ },
+ {
+  "e": "📆",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🆔",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "steam-quest"
+  ]
+ },
+ {
+  "e": "📃",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "💓",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "quetes.json"
+  ]
+ },
+ {
+  "e": "👂",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "premier-ploxion"
+  ]
+ },
+ {
+  "e": "🍞",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "frigo"
+  ]
+ },
+ {
+  "e": "🦷",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🔆",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "shipyard"
+  ]
+ },
+ {
+  "e": "🪚",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json",
+   "imprimante"
+  ]
+ },
+ {
+  "e": "🔦",
+  "n": 2,
+  "glyphe": "lampe",
+  "ploxions": [
+   "io-taxonomy.json",
+   "multivers"
+  ]
+ },
+ {
+  "e": "🎫",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🔪",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "ploxion-ideas.json",
+   "quetes.json"
+  ]
+ },
+ {
+  "e": "🔣",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "quetes.json",
+   "admin-quetes"
+  ]
+ },
+ {
+  "e": "🚦",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "quetes.json",
+   "mega-forge"
+  ]
+ },
+ {
+  "e": "🌋",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "quetes.json",
+   "bob-lennon"
+  ]
+ },
+ {
+  "e": "🃏",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "revision-heig.json",
+   "banc-test"
+  ]
+ },
+ {
+  "e": "🌓",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "themes.json",
+   "theme"
+  ]
+ },
+ {
+  "e": "♂",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "actuariat"
+  ]
+ },
+ {
+  "e": "♀",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "actuariat"
+  ]
+ },
+ {
+  "e": "🐉",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "bob-lennon",
+   "histoire"
+  ]
+ },
+ {
+  "e": "🛵",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "bouffe"
+  ]
+ },
+ {
+  "e": "🥇",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "boxion-designer",
+   "hasard"
+  ]
+ },
+ {
+  "e": "🕑",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "browser",
+   "wc"
+  ]
+ },
+ {
+  "e": "🧑‍🤝‍🧑",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "carte"
+  ]
+ },
+ {
+  "e": "🚩",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "carte",
+   "jeux"
+  ]
+ },
+ {
+  "e": "🦊",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "carte",
+   "map-amis"
+  ]
+ },
+ {
+  "e": "🐸",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "carte",
+   "map-amis"
+  ]
+ },
+ {
+  "e": "🍬",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "compagnon"
+  ]
+ },
+ {
+  "e": "🏘",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "contacts"
+  ]
+ },
+ {
+  "e": "🥔",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "cuisine",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🐳",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "dl",
+   "installer"
+  ]
+ },
+ {
+  "e": "🐆",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "evolution"
+  ]
+ },
+ {
+  "e": "🥛",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "frigo"
+  ]
+ },
+ {
+  "e": "🍝",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "frigo"
+  ]
+ },
+ {
+  "e": "🧄",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "frigo",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "👇",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "geste",
+   "rv-chat"
+  ]
+ },
+ {
+  "e": "🌗",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "globe",
+   "theme"
+  ]
+ },
+ {
+  "e": "🐍",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "jeux"
+  ]
+ },
+ {
+  "e": "🏓",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "jeux"
+  ]
+ },
+ {
+  "e": "👻",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "jeux"
+  ]
+ },
+ {
+  "e": "⛅",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "meteo",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🏜",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "multivers"
+  ]
+ },
+ {
+  "e": "🌰",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "nature"
+  ]
+ },
+ {
+  "e": "🔝",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "nexus3d"
+  ]
+ },
+ {
+  "e": "🟰",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "nexus3d"
+  ]
+ },
+ {
+  "e": "🎌",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "pays"
+  ]
+ },
+ {
+  "e": "👩‍🚀",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "rockets",
+   "survivaure"
+  ]
+ },
+ {
+  "e": "🛢",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "shipyard"
+  ]
+ },
+ {
+  "e": "🥵",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "soiree",
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🙊",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "soiree"
+  ]
+ },
+ {
+  "e": "🛖",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "survie",
+   "timeline"
+  ]
+ },
+ {
+  "e": "🪴",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🥒",
+  "n": 2,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "💼",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "app-importers.json"
+  ]
+ },
+ {
+  "e": "💞",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "cartes-modes.json"
+  ]
+ },
+ {
+  "e": "🍩",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-aryeth.json"
+  ]
+ },
+ {
+  "e": "🐈",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-quantique.json"
+  ]
+ },
+ {
+  "e": "🐬",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-stars.json"
+  ]
+ },
+ {
+  "e": "🆙",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-stars.json"
+  ]
+ },
+ {
+  "e": "🍐",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-stars.json"
+  ]
+ },
+ {
+  "e": "🙃",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-stars.json"
+  ]
+ },
+ {
+  "e": "🎇",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "chaoxion-triage.json"
+  ]
+ },
+ {
+  "e": "🔹",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "embedded-bions.json"
+  ]
+ },
+ {
+  "e": "🪫",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "embedded-bions.json"
+  ]
+ },
+ {
+  "e": "➖",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "embedded-bions.json"
+  ]
+ },
+ {
+  "e": "🏮",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "idees.json"
+  ]
+ },
+ {
+  "e": "🌞",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "inspirations-ploxions.json"
+  ]
+ },
+ {
+  "e": "🏰",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "inspirations-ploxions.json"
+  ]
+ },
+ {
+  "e": "✌",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🦶",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "😀",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🕺",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🤟",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🧤",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🤸",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🦇",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "☢",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🤏",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🧼",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🐰",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🩵",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🪡",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🟧",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🕯",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "💹",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🫳",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🛜",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🌅",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🕗",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🔭",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "👛",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🍪",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "👨‍💻",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "📬",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "☯",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "📑",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🚰",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🦞",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🪶",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🐘",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🗞",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🔶",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "io-taxonomy.json"
+  ]
+ },
+ {
+  "e": "🦵",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "object-bions.json"
+  ]
+ },
+ {
+  "e": "🧑‍🔬",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "quetes.json"
+  ]
+ },
+ {
+  "e": "🏞",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "quetes.json"
+  ]
+ },
+ {
+  "e": "🌹",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "quetes.json"
+  ]
+ },
+ {
+  "e": "🗳",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "quetes.json"
+  ]
+ },
+ {
+  "e": "🌠",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "quetes.json"
+  ]
+ },
+ {
+  "e": "♠",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "revision-heig.json"
+  ]
+ },
+ {
+  "e": "♦",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "revision-heig.json"
+  ]
+ },
+ {
+  "e": "♣",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "revision-heig.json"
+  ]
+ },
+ {
+  "e": "🛩",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "themes.json"
+  ]
+ },
+ {
+  "e": "🌆",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "themes.json"
+  ]
+ },
+ {
+  "e": "🌇",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "themes.json"
+  ]
+ },
+ {
+  "e": "👄",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "universal-suit.json"
+  ]
+ },
+ {
+  "e": "📛",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "universal-suit.json"
+  ]
+ },
+ {
+  "e": "🎸",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "archive-org"
+  ]
+ },
+ {
+  "e": "🔟",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "builder"
+  ]
+ },
+ {
+  "e": "⛽",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "carte"
+  ]
+ },
+ {
+  "e": "🚘",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "carte"
+  ]
+ },
+ {
+  "e": "🚕",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "carte"
+  ]
+ },
+ {
+  "e": "🍶",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "cave"
+  ]
+ },
+ {
+  "e": "🟤",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "cave"
+  ]
+ },
+ {
+  "e": "🍊",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "cave"
+  ]
+ },
+ {
+  "e": "🍋",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "cave"
+  ]
+ },
+ {
+  "e": "🫚",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "cave"
+  ]
+ },
+ {
+  "e": "🍨",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "clyde-vanilla"
+  ]
+ },
+ {
+  "e": "👨‍✈",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "clyde-vanilla"
+  ]
+ },
+ {
+  "e": "🔏",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "coffre"
+  ]
+ },
+ {
+  "e": "🎩",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "compagnon"
+  ]
+ },
+ {
+  "e": "🎀",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "compagnon"
+  ]
+ },
+ {
+  "e": "⏩",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "compositeur"
+  ]
+ },
+ {
+  "e": "🚿",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "compteurs"
+  ]
+ },
+ {
+  "e": "👮",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "contacts"
+  ]
+ },
+ {
+  "e": "🚒",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "contacts"
+  ]
+ },
+ {
+  "e": "🚑",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "contacts"
+  ]
+ },
+ {
+  "e": "🍰",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "cuisine"
+  ]
+ },
+ {
+  "e": "🥣",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "cuisine"
+  ]
+ },
+ {
+  "e": "🥐",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "cuisine"
+  ]
+ },
+ {
+  "e": "🫒",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "cuisine"
+  ]
+ },
+ {
+  "e": "👨‍🍳",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "cuisine"
+  ]
+ },
+ {
+  "e": "📘",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "documents"
+  ]
+ },
+ {
+  "e": "🍃",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "endo"
+  ]
+ },
+ {
+  "e": "🦠",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "experiences"
+  ]
+ },
+ {
+  "e": "🏦",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "finances"
+  ]
+ },
+ {
+  "e": "💸",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "finances"
+  ]
+ },
+ {
+  "e": "🤰",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "flo"
+  ]
+ },
+ {
+  "e": "😰",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "flo"
+  ]
+ },
+ {
+  "e": "🧈",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "frigo"
+  ]
+ },
+ {
+  "e": "🧂",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "frigo"
+  ]
+ },
+ {
+  "e": "🧀",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "frigo"
+  ]
+ },
+ {
+  "e": "🍗",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "frigo"
+  ]
+ },
+ {
+  "e": "🥓",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "frigo"
+  ]
+ },
+ {
+  "e": "🐟",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "frigo"
+  ]
+ },
+ {
+  "e": "🍌",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "frigo"
+  ]
+ },
+ {
+  "e": "🍫",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "frigo"
+  ]
+ },
+ {
+  "e": "🍵",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "frigo"
+  ]
+ },
+ {
+  "e": "👈",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "geste"
+  ]
+ },
+ {
+  "e": "🥈",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "hasard"
+  ]
+ },
+ {
+  "e": "🥉",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "hasard"
+  ]
+ },
+ {
+  "e": "🧑",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "histoire"
+  ]
+ },
+ {
+  "e": "💀",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "instances"
+  ]
+ },
+ {
+  "e": "🍜",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "mappion"
+  ]
+ },
+ {
+  "e": "🥅",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "mondial"
+  ]
+ },
+ {
+  "e": "🐢",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "noyau"
+  ]
+ },
+ {
+  "e": "🛁",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "pieces"
+  ]
+ },
+ {
+  "e": "🚽",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "pieces"
+  ]
+ },
+ {
+  "e": "👕",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "pieces"
+  ]
+ },
+ {
+  "e": "📀",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "pink-guy"
+  ]
+ },
+ {
+  "e": "🌏",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "pink-guy"
+  ]
+ },
+ {
+  "e": "🖌",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "reglages"
+  ]
+ },
+ {
+  "e": "🛍",
+  "n": 1,
+  "glyphe": "marche",
+  "ploxions": [
+   "socialion"
+  ]
+ },
+ {
+  "e": "👀",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "soiree"
+  ]
+ },
+ {
+  "e": "😅",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "soiree"
+  ]
+ },
+ {
+  "e": "😱",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "squeezie"
+  ]
+ },
+ {
+  "e": "🥾",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "survie"
+  ]
+ },
+ {
+  "e": "🍂",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "survie"
+  ]
+ },
+ {
+  "e": "🧃",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "survie"
+  ]
+ },
+ {
+  "e": "🥶",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "survie"
+  ]
+ },
+ {
+  "e": "🏔",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "timeline"
+  ]
+ },
+ {
+  "e": "🚶‍♂",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "timeline"
+  ]
+ },
+ {
+  "e": "🧙",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "timeline"
+  ]
+ },
+ {
+  "e": "🚊",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "transport"
+  ]
+ },
+ {
+  "e": "⛴",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "transport"
+  ]
+ },
+ {
+  "e": "🚡",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "transport"
+  ]
+ },
+ {
+  "e": "🚇",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "transport"
+  ]
+ },
+ {
+  "e": "💫",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "tsoin"
+  ]
+ },
+ {
+  "e": "🌉",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "universal-suit"
+  ]
+ },
+ {
+  "e": "🏟",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "vald"
+  ]
+ },
+ {
+  "e": "😬",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "wc"
+  ]
+ },
+ {
+  "e": "😕",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "wc"
+  ]
+ },
+ {
+  "e": "😵",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "web"
+  ]
+ },
+ {
+  "e": "➡",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerbot"
+  ]
+ },
+ {
+  "e": "🛫",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerbot"
+  ]
+ },
+ {
+  "e": "🛬",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerbot"
+  ]
+ },
+ {
+  "e": "💔",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerbot"
+  ]
+ },
+ {
+  "e": "🫑",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🍆",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🫘",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🥦",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🎃",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🌽",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🌻",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🫛",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🍇",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🐑",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🐐",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🐔",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🐖",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🐴",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🐇",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "xerfarm"
+  ]
+ },
+ {
+  "e": "🔂",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "youtube-music"
+  ]
+ },
+ {
+  "e": "🍹",
+  "n": 1,
+  "glyphe": null,
+  "ploxions": [
+   "zone"
+  ]
+ }
+]

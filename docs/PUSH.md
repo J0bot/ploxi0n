@@ -126,9 +126,9 @@ option de build `notifs` : Actions › iOS TestFlight › Run workflow › coche
 `PLOXI0N_NOTIFS=1`) reçoit chaque push qui porte `"mutable-content": 1` et l'enrichit avant qu'il s'affiche :
 
 ```json
-{ "aps": { "alert": { "title": "💬 Tom", "body": "t'es où ?" }, "thread-id": "messages", "mutable-content": 1 },
+{ "aps": { "alert": { "title": "💬 RS-3", "body": "t'es où ?" }, "thread-id": "messages", "mutable-content": 1 },
   "ouvrir": "social",
-  "expediteur": { "nom": "Tom", "avatar": "https://labo.j0bot.ch/avatars/42.png", "id": "42" },
+  "expediteur": { "nom": "RS-3", "avatar": "https://labo.j0bot.ch/avatars/42.png", "id": "42" },
   "groupe": "coord · #push" }
 ```
 - **`expediteur`** (une personne) : une **notification de communication** (INSendMessageIntent + INPerson) : l'avatar en grand, l'icône
@@ -139,3 +139,20 @@ option de build `notifs` : Actions › iOS TestFlight › Run workflow › coche
   de perdu. `ouvrir` et `params` passent tels quels (toucher = ouvrir le ploxion).
 - Côté labo : `Apns::corps` (docs/labo-push/app/Services/Apns.php) pose `mutable-content: 1` tout seul dès qu'il y a `image` ou `expediteur`.
 - La première fois : fastlane crée l'identifiant `ch.j0bot.ploxi0n.notifs` (clé API) et son profil (match) ; rien à cocher dessus.
+
+## 0.99.64 : le sujet « build » et les mots (le ploxion Notifs)
+
+RS-7 : « quand il y a un nouveau build, il faut une notif, et pouvoir choisir quels mots on veut voir ou pas ».
+
+- **`sujets`** gagne `build` (en tête, allumé par défaut) : « un nouveau build de ploxi0n est sur TestFlight ».
+  - Proposition pour la CI (`.github/workflows/ios.yml`, après l'envoi à TestFlight) : un `POST` au labo, sur une route protégée par un
+    secret de la CI (jamais dans une adresse), par exemple `POST /api/app/push/build` `{ "version": "0.99.64", "titre": "…" }`.
+  - Le labo envoie alors la notification à tous les jetons qui ont le sujet `build` :
+    `{ "aps": { "alert": { "title": "◇ ploxi0n 0.99.64", "body": "<le titre des nouveautés>" } }, "sujet": "build", "ouvrir": "notifs" }`.
+- **`mots`** part avec le jeton (`POST /api/app/push`, et de nouveau à chaque changement) : `{ "voir": ["…"], "cacher": ["…"] }`, en
+  minuscules et sans accents. Avant d'envoyer, le labo DEVRAIT jeter une notification dont le titre ou le corps contient un mot `cacher`, et,
+  si `voir` n'est pas vide, une notification qui n'en contient aucun.
+  - L'app applique les mêmes règles à ce qu'elle voit (le journal, les notifications locales).
+  - Une push déjà livrée par iOS ne peut pas être retirée par l'app : c'est au labo de filtrer.
+- **Le champ `sujet`** dans les données d'une push (`"sujet": "coord"`) range la notification dans le journal du ploxion Notifs. Sans lui,
+  c'est `ouvrir` qui sert de sujet.

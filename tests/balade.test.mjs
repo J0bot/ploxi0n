@@ -21,7 +21,7 @@ test('🏝 jOSVeille.balade : le natif reçoit titre, ploxion, cible ; coupée d
   assert.deepEqual(await V.balade.debut({ cible: { nom: '🚻 WC', lat: 46.5, lng: 6.6 } }), { id: 'a1' });
   assert.deepEqual(appels[0], ['debut', { titre: 'balade', ploxion: 'mappion', notifier: true, cible: { nom: '🚻 WC', lat: 46.5, lng: 6.6 } }]);
   await V.balade.cible(null); assert.deepEqual(appels[1], ['cible', {}]);
-  await V.balade.cible({ nom: 'Tom', lat: 1, lng: 2 }); assert.deepEqual(appels[2][1], { cible: { nom: 'Tom', lat: 1, lng: 2 } });
+  await V.balade.cible({ nom: 'RS-3', lat: 1, lng: 2 }); assert.deepEqual(appels[2][1], { cible: { nom: 'RS-3', lat: 1, lng: 2 } });
   assert.equal((await V.balade.fin()).metres, 420);
   assert.deepEqual(etats, [true, false]);
   on = false; await assert.rejects(V.balade.debut({}), /coupées/); assert.equal(appels.filter(a => a[0] === 'debut').length, 1);
@@ -47,9 +47,9 @@ test('🏝 Proche : l\'activité démarre avec le maillage, dit les voisins sans
   const journal = [];
   const activite = { debut: async (o) => { journal.push(['debut', o]); }, maj: async (o) => { journal.push(['maj', o]); }, fin: async () => { journal.push(['fin']); } };
   const A = creerProche({ W, boxion: creerMemoire(), tuyau: tuyau(), Contexte: null, activite }), B = creerProche({ W: { ...W }, boxion: creerMemoire(), tuyau: tuyau(), Contexte: null });
-  await A.demarrer({ nom: 'Léa' });
+  await A.demarrer({ nom: 'RS-4' });
   assert.equal(journal[0][0], 'debut'); assert.match(journal[0][1].sous, /personne autour/); assert.ok(journal[0][1].debut > 0);
-  await B.demarrer({ nom: 'Tom' }); await attendre(300);
+  await B.demarrer({ nom: 'RS-3' }); await attendre(300);
   await B.maille().prive(A.maille().moi().fp, 'mon code secret 1234'); await attendre(300);
   const majs = journal.filter(j => j[0] === 'maj');
   assert.ok(majs.length >= 1, JSON.stringify(journal));

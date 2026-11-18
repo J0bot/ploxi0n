@@ -1,4 +1,4 @@
-// 🚗 (0.99.31, RS-7 : « ploxion sur CarPlay ») : Proche démarre (Tom et Léa partagent leur position, Léa un rendez-vous) ; la voiture se branche ;
+// 🚗 (0.99.31, RS-7 : « ploxion sur CarPlay ») : Proche démarre (RS-3 et RS-4 partagent leur position, RS-4 un rendez-vous) ; la voiture se branche ;
 // le modèle envoyé au Swift a les deux onglets (potes : les plus proches d'abord, l'itinéraire dans Plans ; ambiances) ; toucher « pluie » la
 // lance sans l'écran des Ambiances (un hôte caché), le modèle le dit (« joue · 60 % ») ; « tout couper » la coupe.
 export default async function ({ page }) {

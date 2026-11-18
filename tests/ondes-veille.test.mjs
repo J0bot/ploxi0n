@@ -7,7 +7,7 @@ import { creerVeille } from '../src/natif/veille-natif.js';
 function fauxPlugin(rep = {}) {
   const ecoutes = {}; const appels = [];
   const p = { addListener: (ev, f) => { ecoutes[ev] = f; return { remove() {} }; }, appels, ecoutes };
-  for (const m of ['scanner', 'arreterScan', 'annoncer', 'arreterAnnonce', 'demarrer', 'arreter', 'etat', 'lire', 'vider']) p[m] = async (o) => { appels.push([m, o]); return rep[m] || {}; };
+  for (const m of ['scanner', 'arreterScan', 'annoncer', 'arreterAnnonce', 'demarrer', 'arreter', 'etat', 'lire', 'vider', 'pas', 'activites']) p[m] = async (o) => { appels.push([m, o]); return rep[m] || {}; };
   return p;
 }
 
@@ -29,7 +29,7 @@ test('ondes : lissage, tri du plus proche, les ploxis reconnus, l\'oubli après 
   const vus = []; O.sur(v => vus.push(v.id));
   await O.scanner(); assert.deepEqual(p.appels[0], ['scanner', { doublons: true }]);
   p.ecoutes.appareil({ id: 'a', nom: 'montre', rssi: -70, fabricant: '4c00' });
-  p.ecoutes.appareil({ id: 'b', nom: 'ploxi de Tom', rssi: -50, services: [SERVICE_XB.toLowerCase()] });
+  p.ecoutes.appareil({ id: 'b', nom: 'ploxi de RS-3', rssi: -50, services: [SERVICE_XB.toLowerCase()] });
   p.ecoutes.appareil({ id: 'a', rssi: -60 });
   const l = O.appareils();
   assert.equal(l[0].id, 'b'); assert.equal(l[0].ploxi, true); assert.equal(l[1].fabricant, 'Apple');
@@ -42,7 +42,17 @@ test('veille : demarrer fine par défaut, lire depuis, null hors iPhone', async 
   assert.equal(creerVeille({}), null); assert.equal(creerOndes({}), null);
   const p = fauxPlugin({ lire: { points: [{ t: 5, la: 46.7, lo: 6.6, acc: 5 }], visites: [{ a: 1, d: 9, la: 46.7, lo: 6.6 }] } });
   const V = creerVeille({ plugin: p });
-  await V.demarrer(); assert.deepEqual(p.appels[0], ['demarrer', { fine: true }]);
-  await V.demarrer({ fine: false }); assert.deepEqual(p.appels[1], ['demarrer', { fine: false }]);
+  await V.demarrer(); assert.deepEqual(p.appels[0], ['demarrer', { fine: true, capteurs: false }]);
+  await V.demarrer({ fine: false }); assert.deepEqual(p.appels[1], ['demarrer', { fine: false, capteurs: false }]);
   const r = await V.lire(3); assert.deepEqual(p.appels[2], ['lire', { depuis: 3 }]); assert.equal(r.points.length, 1); assert.equal(r.visites[0].d, 9);
+});
+
+test('👣 (0.99.58) la veille suit le corps : capteurs, les pas, les activités ; le bouton du Centre de contrôle sait si elle tourne', async () => {
+  const p = fauxPlugin({ pas: { pas: 6868, metres: 5120 }, activites: { activites: [{ t: 1, m: 'pied', sur: 2 }] } }); const vu = [];
+  const V = creerVeille({ plugin: p, quandVeille: (on) => vu.push(on) });
+  await V.demarrer({ capteurs: true }); assert.deepEqual(p.appels.at(-1), ['demarrer', { fine: true, capteurs: true }]);
+  await V.arreter(); assert.deepEqual(vu, [true, false], 'allumée puis éteinte : l\'état part au Centre de contrôle');
+  assert.equal((await V.pas({ depuis: 100 })).pas, 6868); assert.deepEqual(p.appels.at(-1), ['pas', { depuis: 100 }]);
+  await V.pas(); assert.deepEqual(p.appels.at(-1), ['pas', {}], 'sans depuis : depuis minuit (le Swift)');
+  assert.deepEqual(await V.activites({ depuis: 5 }), [{ t: 1, m: 'pied', sur: 2 }]); assert.deepEqual(p.appels.at(-1), ['activites', { depuis: 5 }]);
 });

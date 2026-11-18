@@ -136,3 +136,25 @@ export function lireVehicules(json) {
   }
   return out;
 }
+
+/**
+ * ◉ (0.99.59, RS-7 : « pour Autour, le truc live comme Proche : toujours savoir ce qu'il y a autour, voir quand je partage ma position avec mes
+ * potes, et la distance de mes potes ») : le résumé de la Live Activity d'Autour.
+ *   pos : ma position · lieux : ceux d'Autour · potes : leurs positions partagées [{ nom, lat, lng, t }] · partage : je partage la mienne ?
+ * → { titre, sous, glyphe, compte, cible?, cibleM?, cibleCap? } : le pote le plus proche (frais : moins de 15 min) est la cible ; sinon le lieu
+ * le plus proche ; « sous » dit les deux lieux les plus proches et si tu partages.
+ */
+export function resumeAutour({ pos, lieux = [], potes = [], partage = false, maintenant, frais = 15 * 60e3 } = {}) {
+  const ok = (x) => x && Number.isFinite(+x.lat) && Number.isFinite(+x.lng);
+  const titre = partage ? 'autour · ⌖ partagée' : 'autour';
+  if (!ok(pos)) return { titre, sous: partage ? 'tu partages ta position · où es-tu ?' : 'où es-tu ?', glyphe: 'location.circle', compte: 0 };
+  const ps = (potes || []).filter(p => ok(p) && (!Number.isFinite(+p.t) || maintenant - +p.t < frais))
+    .map(p => ({ nom: String(p.nom || '?').slice(0, 24), d: distance(pos, p), cap: cap(pos, p) })).sort((a, b) => a.d - b.d);
+  const ls = trier((lieux || []).filter(ok), pos, { max: 2 });
+  const bouts = ls.map(l => String(l.nom || l.genre || 'un lieu').slice(0, 22) + ' ' + metres(l.d));
+  if (partage) bouts.unshift('⌖ tu partages');
+  if (ps.length > 1) bouts.push(ps.length + ' potes');
+  const cible = ps[0] ? { cible: ps[0].nom, cibleM: Math.round(ps[0].d), cibleCap: Math.round(ps[0].cap) }
+    : ls[0] ? { cible: String(ls[0].nom || 'un lieu').slice(0, 40), cibleM: Math.round(ls[0].d), cibleCap: Math.round(ls[0].cap) } : {};
+  return { titre, sous: bouts.join(' · ') || 'rien de connu autour', glyphe: ps.length ? 'person.2.wave.2' : 'location.circle', compte: ps.length, ...cible };
+}

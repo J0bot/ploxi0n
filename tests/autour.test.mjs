@@ -90,3 +90,40 @@ test('⌖ sharedmobility.ch : lu avec tolérance ; les voitures et ce qui est pr
   assert.ok(l.every(x => x.genre === 'velo' && x.direct));
   assert.deepEqual(lireVehicules(null), []); assert.deepEqual(lireVehicules({ results: 'x' }), []);
 });
+
+// ---- ◉ (0.99.59) Autour en direct : la Live Activity (les lieux, le partage, le pote le plus proche) ----
+import { resumeAutour } from '../src/bions/autour.js';
+import { creerActivites } from '../src/natif/activites.js';
+
+test('◉ le résumé : le pote le plus proche est la cible (frais), sinon le lieu ; tu partages ; deux lieux dans « sous »', () => {
+  const T = 1e12, lieux = [{ id: 'a', nom: 'WC Paradeplatz', genre: 'toilettes', lat: 47.3725, lng: 8.5392 }, { id: 'b', nom: 'Café', genre: 'cafe', lat: 47.3730, lng: 8.5392 }, { id: 'c', nom: 'loin', lat: 47.40, lng: 8.54 }];
+  const potes = [{ nom: 'RS-4', lat: 47.3740, lng: 8.5392, t: T - 60e3 }, { nom: 'RS-3', lat: 47.3732, lng: 8.5402, t: T - 30e3 }, { nom: 'vieux', lat: 47.37225, lng: 8.5392, t: T - 3600e3 }];
+  const r = resumeAutour({ pos: ICI, lieux, potes, partage: true, maintenant: T });
+  assert.equal(r.titre, 'autour · ⌖ partagée'); assert.equal(r.cible, 'RS-3', 'le plus proche des potes frais (pas le vieux)');
+  assert.ok(r.cibleM > 100 && r.cibleM < 160); assert.ok(r.cibleCap > 20 && r.cibleCap < 70, 'au nord-est');
+  assert.equal(r.compte, 2); assert.match(r.sous, /^⌖ tu partages · WC Paradeplatz 30 m · Café 90 m · 2 potes$/); assert.equal(r.glyphe, 'person.2.wave.2');
+  const s = resumeAutour({ pos: ICI, lieux, potes: [], partage: false, maintenant: T });
+  assert.equal(s.titre, 'autour'); assert.equal(s.cible, 'WC Paradeplatz', 'sans pote : le lieu le plus proche'); assert.equal(s.compte, 0);
+  assert.equal(resumeAutour({ pos: null, maintenant: T }).sous, 'où es-tu ?');
+});
+
+test('◉ le ploxion : « en direct » lance l\'activité, la met à jour quand ça change, l\'arrête ; la cible passe jusqu\'au plugin', async () => {
+  const boxion = creerMemoire(), act = [], minuteurs = [];
+  const http = { async get() { return { status: 200, texte: JSON.stringify(OVERPASS_ZURICH) }; } };
+  const W = { setInterval: (f) => { minuteurs.push(f); return minuteurs.length; }, clearInterval: () => {}, setTimeout: () => 0, open: () => {} };
+  let potes = { partage: false, positions: [] };
+  const a = creerAutour({ W, boxion, http, position: async () => ({ ...ICI, precision: 12 }), potes: () => potes,
+    activite: { debut: async (o) => act.push(['debut', o]), maj: async (o) => act.push(['maj', o]), fin: async () => act.push(['fin']) } });
+  await a.pret;
+  assert.equal(await a.enDirect(true), true); assert.equal(act[0][0], 'debut'); assert.equal(act[0][1].titre, 'autour'); assert.ok(act[0][1].cible, 'le lieu le plus proche');
+  assert.equal(await boxion.get('reglages', 'autour-direct'), true);
+  potes = { partage: true, positions: [{ nom: 'RS-3', lat: 47.3732, lng: 8.5402, t: Date.now() }] };
+  await minuteurs.at(-1)(); await new Promise(r => setTimeout(r, 20));
+  const m = act.find(x => x[0] === 'maj'); assert.ok(m, 'mis à jour'); assert.equal(m[1].cible, 'RS-3'); assert.equal(m[1].titre, 'autour · ⌖ partagée');
+  const n = act.length; await minuteurs.at(-1)(); await new Promise(r => setTimeout(r, 20)); assert.equal(act.length, n, 'rien de changé : pas de mise à jour');
+  await a.enDirect(false); assert.deepEqual(act.at(-1), ['fin']);
+  // jusqu'au plugin : cible, cibleM, cibleCap nettoyés
+  const appels = []; const A = creerActivites({ plugin: { activiteDebut: async (o) => { appels.push(o); return { id: 'x' }; } }, natif: () => true });
+  await A.debut('autour', { genre: 'autour', ploxion: 'autour', titre: 'autour', cible: 'RS-3', cibleM: 120.4, cibleCap: -30 });
+  assert.equal(appels[0].cible, 'RS-3'); assert.equal(appels[0].cibleM, 120.4); assert.equal(appels[0].cibleCap, 330);
+});

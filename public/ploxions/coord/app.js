@@ -271,7 +271,16 @@
       clearError();
       updateLive(true);
       majCompo();
+      // (ploxi0n 0.99.61, RS-7 : « des fois ça verrouille alors que je suis connecté ») un refus peut n'être qu'un passage : le jeton qui se
+      // renouvelle, le relais de l'app qui renvoie la page de connexion le temps d'un réseau faible. Le verrou se réessaie tout seul (4 s,
+      // 12 s, 30 s, puis chaque minute) et au retour dans l'app ; dès que le fil répond, il s'ouvre.
+      if (regateT) clearTimeout(regateT);
+      var d = [4000, 12000, 30000][Math.min(regateN, 2)] || 60000; regateN++;
+      regateT = setTimeout(function () { regateT = null; if (alive && gated) load('init'); }, regateN > 3 ? 60000 : d);
     }
+    var regateT = null, regateN = 0;
+    function surVisible() { if (alive && gated && !document.hidden) load('init'); }
+    document.addEventListener('visibilitychange', surVisible);
 
     function load(mode) {   // mode : 'init' (derniers ~50) | 'poll' (delta depuis maxId)
       if (!alive) return;
@@ -288,6 +297,7 @@
         })
         .then(function (d) {
           if (!alive || !d) return;
+          if (gated) { gated = false; regateN = 0; if (regateT) { clearTimeout(regateT); regateT = null; } if (!timer) timer = setInterval(function () { if (alive && !gated) load(maxId ? 'poll' : 'init'); }, POLL_MS); updateLive(false); }
           gated = false;
           // (26.09) le serveur dit si l'envoi de pièces est ouvert, et ses bornes
           srvActif = !!d.pieces_actif;
@@ -1058,6 +1068,7 @@
     LIVE = { messages: function () { return messages; }, attente: function () { return pend.length; } };
     return {
       unmount: function () {
+        try { document.removeEventListener('visibilitychange', surVisible); if (regateT) clearTimeout(regateT); } catch (e) {}
         LIVE = null;
         alive = false;
         if (timer) clearInterval(timer);

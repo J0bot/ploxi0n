@@ -66,3 +66,20 @@ test('📤 XMLHttpRequest vers une route du serveur → le fetch du shim, avec l
     assert.equal(envois.length, 1, 'l\'externe ne passe pas par le relais');
   } finally { p.fin(); }
 });
+
+test('📤 (0.99.61) le multipart par le pont natif : un Content-Type « multipart/form-data », sinon Capacitor n\'écrit pas le corps (coord « rien à envoyer »)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const d = readFileSync(new URL('../src/marketplace/depot.js', import.meta.url), 'utf8');
+  assert.match(d, /if \(fichier\.dataType === 'formData'\) he\['Content-Type'\] = 'multipart\/form-data';/);
+  // le Swift de Capacitor installé : setRequestBody ne fait rien sans Content-Type ; le formData tire son boundary s'il manque
+  let s = ''; try { s = readFileSync(new URL('../node_modules/@capacitor/ios/Capacitor/Capacitor/Plugins/CapacitorUrlRequest.swift', import.meta.url), 'utf8'); } catch (e) { return; }
+  assert.match(s, /if contentType != nil \{\s*request\.httpBody = try getRequestData\(body, contentType!, dataType\)/);
+  assert.match(s, /if contentType\.contains\("boundary="\)[\s\S]{0,120}else \{\s*overrideContentType\(boundary\)/);
+});
+
+test('🛰 (0.99.61) coord : le verrou se réessaie tout seul et au retour dans l\'app', async () => {
+  const { readFileSync } = await import('node:fs');
+  const c = readFileSync(new URL('../public/ploxions/coord/app.js', import.meta.url), 'utf8');
+  assert.match(c, /regateT = setTimeout\(function \(\) \{ regateT = null; if \(alive && gated\) load\('init'\); \}/);
+  assert.match(c, /document\.addEventListener\('visibilitychange', surVisible\)/); assert.match(c, /document\.removeEventListener\('visibilitychange', surVisible\)/);
+});

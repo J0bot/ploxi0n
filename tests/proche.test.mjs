@@ -65,7 +65,7 @@ test('◉ deux téléphones : les messages, l\'horloge de l\'hôte, la basse ann
   const B = creerProche({ W: Wfaux(), boxion: creerMemoire(), tuyau: f(), Contexte: null, maintenant: () => Date.now() + 5000 });   // B a 5 s d'avance
   assert.equal(A.ploxion.id, 'proche');
   assert.equal(A.envoyerMessage('rien'), false, 'éteint : rien ne part');
-  assert.ok(await A.demarrer({ nom: 'RS-7', salle: 'zurich' })); assert.ok(await B.demarrer({ nom: 'Tom', salle: 'zurich' }));
+  assert.ok(await A.demarrer({ nom: 'RS-7', salle: 'zurich' })); assert.ok(await B.demarrer({ nom: 'RS-3', salle: 'zurich' }));
   await attendre(60);
   assert.equal(A.etat().pairs.length, 1); assert.equal(A.etat().pairs[0].etat, 'connecte');
   const ea = A.etat().pairs[0].ecart; assert.ok(ea && Math.abs(ea.decalage - 5000) < 30, 'A voit l\'avance de B : ' + (ea && ea.decalage));
@@ -113,25 +113,25 @@ test('〰 (0.99.21) Proche en maillage : A–B–C en ligne ; /j #salon, /m @nom
       pairs: () => Promise.resolve([]), surPair: (f) => pair.add(f), surMessage: (f) => msg.add(f), _pair: (e) => { for (const f of pair) f(e); }, _msg: (e) => { for (const f of msg) f(e); } };
     return t; };
   const P = {}; for (const n of ['A', 'B', 'C']) P[n] = creerProche({ W: Wfaux(), boxion: creerMemoire(), tuyau: fab(n), Contexte: null });
-  await P.A.demarrer({ nom: 'RS-7' }); await P.B.demarrer({ nom: 'Tom' });
-  assert.ok(P.A.envoyerMessage('avant que Léa arrive')); await attendre(60);
-  await P.C.demarrer({ nom: 'Léa' }); await attendre(200);
-  assert.equal(P.C.etat().messages.at(-1).texte, 'avant que Léa arrive', 'gardé par Tom, livré à Léa quand elle arrive');
+  await P.A.demarrer({ nom: 'RS-7' }); await P.B.demarrer({ nom: 'RS-3' });
+  assert.ok(P.A.envoyerMessage('avant que RS-4 arrive')); await attendre(60);
+  await P.C.demarrer({ nom: 'RS-4' }); await attendre(200);
+  assert.equal(P.C.etat().messages.at(-1).texte, 'avant que RS-4 arrive', 'gardé par RS-3, livré à RS-4 quand elle arrive');
   assert.equal(P.C.etat().messages.at(-1).sauts, 1);
-  const rs7 = P.C.etat().maille.pairs.find(p => p.nom === 'RS-7'); assert.ok(rs7 && rs7.sauts === 1 && rs7.cle, 'Léa voit RS-7 à un saut');
+  const rs7 = P.C.etat().maille.pairs.find(p => p.nom === 'RS-7'); assert.ok(rs7 && rs7.sauts === 1 && rs7.cle, 'RS-4 voit RS-7 à un saut');
   // un salon, que A et C rejoignent ; B relaie sans le voir
   P.A.envoyerMessage('/j #lac'); P.C.envoyerMessage('/j #lac'); await attendre(30);
   assert.equal(P.A.etat().salon, '#lac');
   P.A.envoyerMessage('baignade 18 h'); await attendre(80);
   assert.equal(P.C.fil('#lac').at(-1).texte, 'baignade 18 h'); assert.equal(P.B.fil('#lac').length, 0);
-  // /m @Léa : chiffré, et l'accusé revient
-  P.A.envoyerMessage('/m @Léa le code : 4417'); await attendre(250);
+  // /m @RS-4 : chiffré, et l'accusé revient
+  P.A.envoyerMessage('/m @RS-4 le code : 4417'); await attendre(250);
   const fpC = P.C.etat().maille.moi.fp, fpA = P.A.etat().maille.moi.fp;
   assert.equal(P.A.etat().salon, '@' + fpC);
   assert.equal(P.C.fil('@' + fpA).at(-1).texte, 'le code : 4417');
   assert.equal(P.A.fil('@' + fpC).at(-1).etat, 'recu');
   assert.equal(P.A.envoyerMessage('/m @Personne x'), false); assert.match(P.A.etat().info, /Personne/);
-  P.A.envoyerMessage('/w'); assert.match(P.A.etat().info, /Tom#[0-9a-f]{4} \(direct\)/); assert.match(P.A.etat().info, /Léa#[0-9a-f]{4} \(1 saut\)/);
+  P.A.envoyerMessage('/w'); assert.match(P.A.etat().info, /RS-3#[0-9a-f]{4} \(direct\)/); assert.match(P.A.etat().info, /RS-4#[0-9a-f]{4} \(1 saut\)/);
   // tout effacer
   await P.A.effacerTout();
   assert.notEqual(P.A.etat().maille.moi.fp, fpA); assert.equal(P.A.etat().messages.length, 0); assert.equal(P.A.etat().salon, '#');
@@ -146,9 +146,9 @@ test('⌖ (0.99.22) Proche : partager sa position avec ses potes ★ (chiffrée)
   const W = () => ({ setInterval: () => 0, clearInterval: () => {}, setTimeout: (f) => setTimeout(f, 0), clearTimeout: () => {} });
   const A = creerProche({ W: W(), boxion: creerMemoire(), tuyau: fab('A'), Contexte: null, position: async () => ({ lat: 46.5201, lng: 6.6301, precision: 6 }) });
   const B = creerProche({ W: W(), boxion: creerMemoire(), tuyau: fab('B'), Contexte: null, position: async () => ({ lat: 46.52, lng: 6.63, precision: 9 }) });
-  await A.demarrer({ nom: 'RS-7' }); await B.demarrer({ nom: 'Tom' }); await attendre(80);
+  await A.demarrer({ nom: 'RS-7' }); await B.demarrer({ nom: 'RS-3' }); await attendre(80);
   assert.equal(A.partagerPosition('salon'), false, 'pas de salon fermé ouvert : refusé'); assert.match(A.etat().info, /FERMÉ/);
-  A.envoyerMessage('/fav @Tom'); assert.match(A.etat().info, /✦ Tom/);
+  A.envoyerMessage('/fav @RS-3'); assert.match(A.etat().info, /✦ RS-3/);
   assert.ok(A.partagerPosition('potes', 1)); await attendre(120);
   const p = B.potes().positions; assert.equal(p.length, 1); assert.equal(p[0].nom, 'RS-7'); assert.equal(p[0].lat, 46.5201);
   assert.ok(A.potes().partage.jusqua - Date.now() > 3500e3, 'une heure');
