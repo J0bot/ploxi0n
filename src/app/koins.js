@@ -27,15 +27,36 @@ const NOMS = { xer: 'ton xer (appui long : mes xers)', koins: 'le koin du ion', 
 // un koin de coin : un triangle rectangle (l'angle droit dans le coin de l'écran) et ses triangles emboîtés.
 // (0.99.7, RS-7 : « les koins bien collés aux coins de l'écran, ça gobe les coins ») : l'angle droit tombe PILE dans le coin de l'écran ;
 // c'est l'arrondi de l'iPhone qui le découpe (le koin gobe le coin) ; les triangles intérieurs rentrent pour rester dans l'arrondi (~55 px)
-const TRI = (g) => '<svg viewBox="0 0 100 100" aria-hidden="true">' + (g ? '<g transform="translate(100 0) scale(-1 1)">' : '<g>')
-  + '<polygon points="0,100 0,0 100,100"/><polygon points="26,74 26,42 58,74"/><polygon points="34,66 34,55 45,66" class="f"/></g></svg>';
+// (20.11, mode xerboxion) avec les réglages des glyphes de l'alien (gl, voir glyphesAlien) : les contours imbriqués du bion jOSXerkoin (le koin
+// k1, l'intérieur k2, le centre k3, réduits vers le centre du triangle ; le trait et le trait dedans), les mêmes partout dans le xer
+const COIN = [[0, 100], [0, 0], [100, 100]], CENTRE = [100 / 3, 200 / 3];
+const VERS = (k) => COIN.map(([x, y]) => (CENTRE[0] + (x - CENTRE[0]) * k).toFixed(2) + ',' + (CENTRE[1] + (y - CENTRE[1]) * k).toFixed(2)).join(' ');
+export const TRI = (g, gl = null) => '<svg viewBox="0 0 100 100" aria-hidden="true">' + (g ? '<g transform="translate(100 0) scale(-1 1)">' : '<g>')
+  + (gl ? '<polygon points="' + VERS(gl.k1) + '" stroke-width="' + gl.trait + '"/><polygon class="i" points="' + VERS(gl.k2) + '" stroke-width="' + gl.traitI + '"/>' + (gl.k3 > 0.01 ? '<polygon points="' + VERS(gl.k3) + '" class="f"/>' : '')
+    : '<polygon points="0,100 0,0 100,100"/><polygon points="26,74 26,42 58,74"/><polygon points="34,66 34,55 45,66" class="f"/>') + '</g></svg>';
+/** (20.11) les réglages des glyphes faits dans le ploxion alien (localStorage xb:alien:glyphes, comme jOSXerkoin.regler) ; null s'il n'y en a pas */
+export function glyphesAlien(W = globalThis.window) {
+  let p = null; try { p = JSON.parse(W.localStorage.getItem('xb:alien:glyphes') || 'null'); } catch (e) { p = null; }
+  if (!p || typeof p !== 'object') return null;
+  const n = (v, a, b, d) => { v = +v; return isFinite(v) ? Math.max(a, Math.min(b, v)) : d; };   // les bornes et les défauts de jOSXerkoin.regler
+  return { k1: n(p.k1, 0.6, 0.99, 0.92), k2: n(p.k2, 0.2, 0.9, 0.55), k3: n(p.k3, 0, 0.5, 0.2), rond: n(p.rond, 0, 30, 3), trait: n(p.trait, 0.6, 5, 2.2), traitI: n(p.traitI, 0.3, 4, 1.5) };
+}
 
 /** actions = { koins, temps, xers, carte, tsoin, accueil, toi, retour, minimiser, journal } → fonctions ; actif() : l'option est choisie */
 // (15.11.2026, RS-7 : « mon système de glyphes doit être modulaire ») fonds = { portion: (el) => arreter, wormion: … } : un MODULE posé derrière
 // une case (la fractale du trippion dans le portion) ; monté à l'ouverture du koin, arrêté à la fermeture.
-export function creerKoins({ W = globalThis.window, actif = () => false, actions = {}, vibrer = () => {}, calme = () => false, fonds = {} }) {
+// (20.11) glyphes() : les réglages de l'alien à prendre pour dessiner les deux koins (main.js : en mode xerboxion), ou null (le dessin d'avant) ;
+// relus à chaque poser() : un réglage changé dans l'alien redessine les koins au retour
+export function creerKoins({ W = globalThis.window, actif = () => false, actions = {}, vibrer = () => {}, calme = () => false, fonds = {}, glyphes = () => null }) {
   const D = W.document;
-  let racine = null, etape = { gauche: 0, droite: 0 }, cacher = 0, modesOuverts = false, arrets = [];
+  let racine = null, etape = { gauche: 0, droite: 0 }, cacher = 0, modesOuverts = false, arrets = [], dessin = '';
+  const lireGlyphes = () => { try { return glyphes() || null; } catch (e) { return null; } };
+  /** les deux koins redessinés si les réglages des glyphes ont changé */
+  function peindreKoins() {
+    const gl = lireGlyphes(), d = gl ? JSON.stringify(gl) : '';
+    if (!racine || d === dessin) return; dessin = d;
+    for (const c of ['gauche', 'droite']) { const b = racine.querySelector('[data-koin="' + c + '"]'); if (b) b.innerHTML = TRI(c === 'droite', gl); }
+  }
   const attendre = (f, ms) => (W.setTimeout ? W.setTimeout(f, ms) : setTimeout(f, ms));
   function faire(k) {
     if (k === 'xer') { if (actions.modes) { montrerModes(!modesOuverts); return; } k = 'xers'; }   // la case xer : les xers (les modes), sur place ; sinon mes xers
@@ -56,9 +77,10 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
     const on = !!actif();
     D.documentElement.classList.toggle('px-koins', on);
     if (!on) { if (racine) { racine.remove(); racine = null; } return; }
-    if (racine) return;
+    if (racine) { peindreKoins(); return; }
+    const gl = lireGlyphes(); dessin = gl ? JSON.stringify(gl) : '';
     racine = D.createElement('div'); racine.className = 'px-koins-r'; racine.setAttribute('data-neurones', '');   // 〰 (0.93) les cases et la barre : des neurones
-    racine.innerHTML = ['gauche', 'droite'].map(c => '<button type="button" class="px-koin px-koin-' + c + '" data-koin="' + c + '" data-etape="0" aria-label="koin ' + c + '">' + TRI(c === 'droite') + '</button>'
+    racine.innerHTML = ['gauche', 'droite'].map(c => '<button type="button" class="px-koin px-koin-' + c + '" data-koin="' + c + '" data-etape="0" aria-label="koin ' + c + '">' + TRI(c === 'droite', gl) + '</button>'
       + '<div class="px-koin-cases px-koin-cases-' + c + '" data-cases="' + c + '" hidden>' + CASES[c].map(([g, k]) => (PADS[g]
         ? '<div class="px-koin-pad px-koin-pad-' + g + '" data-pad="' + g + '" data-neurone role="slider" aria-label="' + NOMS[k] + ' (trackpad)"><span class="px-pad-g">' + G(g) + '</span>' + (g === 'wormion' ? '<i data-pad-a></i>' : '<i data-pad-p></i>') + '<i data-pad-onde></i><b data-pad-l></b><small data-pad-s></small></div>'
         : '<button type="button" data-koin-a="' + k + '" data-neurone aria-label="' + NOMS[k] + '">' + G(g) + '<small>' + NOMS[k].split(' (')[0] + '</small><em data-koin-sous="' + k + '"></em></button>')).join('') + '</div>').join('')

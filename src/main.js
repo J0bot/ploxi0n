@@ -89,7 +89,8 @@ import { creerClickerNatif, toucherRapide } from './jeu/clicker-natif.js';
 import { creerMisesAJour } from './marketplace/mises-a-jour.js';
 import { creerRemontee } from './app/remontee-tsoins.js';
 import { creerSysteme } from './lot/systeme.js';
-import { creerKoins } from './app/koins.js';
+import { creerKoins, glyphesAlien } from './app/koins.js';
+import { creerTrou } from './app/koin-trou.js';   // ◺ (20.11) le mode xerboxion : le trou entre les deux koins du bas toujours comblé
 import { fondFractale } from './app/koin-fractale.js';   // ✺ (15.11) la fractale du trippion dans le portion
 import { creerNeurones } from './app/neurones.js';
 import { creerAtelier } from './lot/atelier-peaux.js';
@@ -780,7 +781,10 @@ async function demarrer() {
   let xkCharge = null;
   const xerkoinBion = () => window.jOSXerkoin ? Promise.resolve(window.jOSXerkoin) : (xkCharge || (xkCharge = new Promise((ok, ko) => { const s = document.createElement('script'); s.src = 'https://labo.j0bot.ch/px/bion-app/jOSXerkoin.js'; s.onload = () => (window.jOSXerkoin ? ok(window.jOSXerkoin) : ko(new Error('bion'))); s.onerror = () => { xkCharge = null; ko(new Error('réseau')); }; document.head.appendChild(s); })));
   const xerkoinCourant = () => { const id = routeur.courant(); if (!id) return null; return xerkoinBion().then((X) => { const x = X.pour(id); return { html: X.bande(x.cells, { t: 64, acts: x.acts }), lancer: (i) => X.lancer(id, x.acts[i]) }; }).catch(() => null); };
-  const koins = creerKoins({ fonds: { portion: fondFractale({ W: window }) }, actif: () => prefs.lire().mode === 'organique' || !!prefs.lire().koins, vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
+  // ◺ (20.11, RS-7 coord #2120 : « intégrer tout le xer des koins dans le mode xerboxion, pck chill-tekk c'est pour chiller, xerboxion pour essayer
+  // d'arriver aussi loin que moi ») : en xerboxion aussi, les koins toujours ; dessinés avec les réglages des glyphes de l'alien (xb:alien:glyphes)
+  const koins = creerKoins({ fonds: { portion: fondFractale({ W: window }) }, actif: () => prefs.lire().mode === 'organique' || prefs.lire().mode === 'xerboxion' || !!prefs.lire().koins,
+    glyphes: () => (prefs.lire().mode === 'xerboxion' ? glyphesAlien(window) : null), vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
     koins: () => (routeur.connait('xerkion-perso-koin-ion') ? routeur.ouvrir('xerkion-perso-koin-ion') : routeur.signaler('le koin du ion n\'est pas encore semé ici')),
     ouvert: () => { const id = routeur.courant(); if (!id) return 'grand'; try { const v = (JSON.parse(localStorage.getItem('xerkoin:valid') || '{}') || {})[id] || {}; return v.ouvert || 'compact'; } catch (e) { return 'compact'; } },
     temps: () => routeurProxy.ouvrir('passe'),   // ○ (0.97) le wormion : se balader dans le temps (le passé)
@@ -797,8 +801,12 @@ async function demarrer() {
     // ○ □ (0.92) les trackpads : le temps (le plus récent d'abord), et les directions du portion
     listeTemps: () => { const cat = routeur.catalogue(), nom = (id) => ((cat.find(p => p.id === id) || {}).nom || id); return [...routeur.vivants().slice().reverse(), ...routeur.endormis()].filter((id, i, l) => id !== routeur.courant() && l.indexOf(id) === i).slice(0, 12).map(id => ({ id, nom: nom(id) })); },
     aller: (id) => routeurProxy.ouvrir(id), precedente: () => routeur.faire('precedente'), suivante: () => routeur.faire('suivante') } });
-  koins.poser(); prefs.surChangement(() => koins.poser());
-  window.ploxi0n = { boxion, shim, routeur, prefs, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte, koins, langue: langueApp };
+  // ◺ (20.11) le trou entre les deux koins du bas, en mode xerboxion : la bande du ploxion ouvert (la sienne s'il la pose, jOSTsoins ; sinon sa bande
+  // auto, jOSXerkoin), à l'accueil le wormion adapté ; un ploxion qui change relit les glyphes de l'alien (koins.poser)
+  const trou = creerTrou({ W: window, actif: () => prefs.lire().mode === 'xerboxion' && koins.actif(), courant: () => routeur.courant(), xerkoin: xerkoinBion,
+    ouvrirKoins: () => koins.ouvrir('gauche', 1), vibrer: (x) => vibrer(x), glyphes: () => glyphesAlien(window), surNav: () => koins.poser() });
+  koins.poser(); trou.maj(); prefs.surChangement(() => { koins.poser(); trou.maj(); });
+  window.ploxi0n = { boxion, shim, routeur, prefs, depot, compte, version: VERSION, modeConnecte: reglerModeConnecte, koins, trou, langue: langueApp };
   // 👁 (0.99.46) piloter de la tête ou du regard (⚙ › Piloter de la tête) : notre suivi, PloxiRegard (ARKit) + src/bions/tete.js
   const regard = creerRegard({ W: window, boxion, vibrer: (x) => vibrer(x), routeur, signaler: (t) => routeur.signaler(t), inverse: () => !!prefs.lire().regardInverse,
     natif: natifLot && ploxiIci('PloxiRegard') ? creerRegardNatif({ plugin: PloxiRegard }) : null });

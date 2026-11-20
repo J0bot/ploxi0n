@@ -478,6 +478,7 @@ html.px-m-xerboxion .px-accueil>.px-vues,html.px-m-xerboxion .px-accueil>.px-pag
 html.px-m-xerbot .px-accueil>.px-vues,html.px-m-xerbot .px-accueil>.px-pages,html.px-m-xerbot .px-accueil>.px-plat,html.px-m-xerbot .px-accueil>.px-points,html.px-m-xerbot .px-accueil>.px-sous{display:none}
 .px-labo{position:relative;height:calc(100vh - 230px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:360px;border-radius:18px;overflow:hidden;border:var(--trait) solid var(--bord);background:#07050c}
 .px-labo iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.px-mode-l{margin:0 4px 10px;font:500 12px/1.35 var(--police);color:var(--muted)}   /* (20.11) ce que fait le mode, en une ligne */
 .px-xb-c{display:flex;align-items:center;gap:10px;padding:10px 12px;margin:6px 0;border-radius:14px;border:var(--trait) solid var(--bord);background:var(--surface)}
 .px-xb-c .ic{font-size:1.2rem;width:30px;text-align:center}.px-xb-c>span:nth-child(2){flex:1;min-width:0}.px-xb-c b{font:600 14px var(--police)}.px-xb-c small{display:block;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .px-xb-c .act{display:flex;gap:6px}.px-xb-c button,.px-xb-bus button{min-height:34px;padding:0 10px;border-radius:10px;border:var(--trait) solid var(--bord);background:var(--surface2);color:var(--txt);font:600 12px var(--police)}
@@ -1262,6 +1263,33 @@ html.px-koins .px-accueil{padding-bottom:calc(84px + env(safe-area-inset-bottom,
 /* ⊠ (0.99.47) en mode koin, le xer se change dans la case xer : l'en-tête de l'accueil (le nom de l'app, les onglets des modes) s'efface */
 html.px-koins .px-tete h1,html.px-koins .px-modes{display:none}
 html.px-koins .px-tete{justify-content:flex-end;margin:6px 2px 2px}
+/* ◺ (20.11, RS-7 coord #2120) LE TROU entre les deux koins du bas, en mode xerboxion (src/app/koin-trou.js) : le dessin du bion jOSTsoins (le trapèze
+   renversé à trapèzes emboîtés, la hauteur des koins, ses couleurs) ; sous les koins (z 39 : ils s'ouvrent par-dessus) et il s'efface quand ils s'ouvrent */
+.px-trou{position:fixed;left:0;right:0;z-index:39;color:var(--xr-accent,var(--acc));background-color:#05070d;background-image:linear-gradient(var(--xr-bg,transparent),var(--xr-bg,transparent));
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;transition:opacity .2s}
+.px-trou[hidden]{display:none}
+.px-trou[data-ouvert]{opacity:0;pointer-events:none}
+.px-trou-f svg{display:block;position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:currentColor;stroke-linejoin:round;pointer-events:none}
+.px-trou-f svg .o{stroke-width:var(--px-trait,2.2);opacity:.9}
+.px-trou-f svg .i{stroke-width:var(--px-trait-i,1.4);opacity:.45}
+.px-trou-f svg .pt{fill:transparent;stroke-width:2;opacity:.65}
+.px-trou[data-bande] .px-trou-f svg .pt{display:none}
+.px-trou-b{position:absolute;left:0;right:0;bottom:4px;display:flex;justify-content:center;z-index:1;pointer-events:none}
+/* la bande : comme celle de jOSTsoins dans le trou (le cadre et les traits du bion jOSXerkoin, redits ici s'il arrivait sans son style) */
+.px-trou-b .xk__b{display:flex;width:max-content;max-width:100%;pointer-events:auto;background:#05070d;padding:2px;border:2px solid var(--xr-accent,var(--acc));border-radius:6px}
+.px-trou-b .xk__b svg{display:block;width:var(--t,40px);height:var(--t,40px);fill:none;stroke:var(--xr-accent,var(--acc));stroke-width:var(--xk-trait,2.2);stroke-linejoin:round;stroke-linecap:round}
+.px-trou-b .xk__b svg .i{stroke-width:var(--xk-trait-i,1.5);opacity:.75}
+.px-trou-b .xk__b svg .p{fill:var(--xr-accent,var(--acc));stroke:none;opacity:.75}
+.px-trou-b .xk__b svg [data-slot]{fill:color-mix(in srgb,var(--xr-accent,var(--acc)) 8%,transparent)}
+.px-trou-b .xk__b svg [data-slot].vide{fill:none;opacity:.35}
+.px-trou-b .xk__b svg [data-a]{cursor:pointer}
+.px-trou-b .xk__b svg [data-a]:active{fill:color-mix(in srgb,var(--xr-accent,var(--acc)) 40%,transparent)}
+/* la bande qu'un ploxion pose lui-même dans le trou (jOSTsoins, coord), en xerboxion : sous les koins comme celle de l'app ; cachée pendant qu'ils
+   s'ouvrent et tant qu'elle n'a pas repris leur taille (jOSTsoins mesure le koin, agrandi par l'ouverture) */
+html.px-m-xerboxion .tsk-trou{z-index:39!important}
+html.px-m-xerboxion .tsk-trou[data-px-attend]{visibility:hidden}
+/* un ploxion qui reçoit la bande auto s'arrête au-dessus du trou (--px-trou : mesuré par koin-trou.js) */
+html.px-trou-bande .px-mode-ploxion .px-scene>.px-hote:not(.px-flottant){bottom:var(--px-trou,0px)}
 
 /* ▦ (0.90) la map du xerboxion en carrés (src/app/map-hubs.js) ; (0.92) en chill-tekk : des plaques usées, le hub où tu es bordé de lilas */
 .px-map{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;overflow:clip}   /* (0.99.25) clip : plus un cadre qui défile (dézoomée, la map dépassait et iOS la faisait glisser de côté, l'accueil avec) */
