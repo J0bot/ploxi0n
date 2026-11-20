@@ -20,6 +20,13 @@ Mis de côté (`4e61e6d`) : le relais `24ec99a`, déjà dans la 0.99.61 ; le mod
 
 ## Pour un prochain build
 
+### Le prochain lot (à préparer sur le dernier origin, voir plus haut)
+- Le mode xerboxion du 20.11 (`c5fbad1`, mis de côté) réconcilié avec la bande entre les koins de la 0.99.57 / 0.99.60 : une seule bande, le trou comblé.
+- Les réglages en koins depuis le koin gauche (#2203, la capture des réglages de ploxi0n).
+- Le mode xerbot devient le mode xeroction (#2221 : « le mode xerbot de ploxi0n c'est le mode xeroction »).
+- Les sons créés en `new Audio('/…')` par les ploxions du labo (#2114).
+
+
 ### Changer l'icône depuis ploxi0n (#2127 : « je veux changer l'icône de l'application depuis ploxi0n, pck je suis un xeroction »)
 Pas dans le lot du 21.11 : iOS ne le permet que par `UIApplication.setAlternateIconName`, donc du Swift, qu'on ne compile pas ici. La marche à suivre, en un seul lot :
 1. Les icônes : dans `ios/App/App/Assets.xcassets/`, un jeu par icône alternative, de la même forme que `AppIcon.appiconset` (un Contents.json à trois images 1024 × 1024 : la base en RGB sans alpha, la sombre, la teintée). Par exemple `AppIcon-Losange.appiconset` = l'ancienne icône (les trois PNG d'avant `4ff1962` : `git show 4ff1962^:ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png`, idem pour `AppIcon-sombre.png` et `AppIcon-teinte.png`). Une nouvelle icône : une page HTML de 1024 × 1024 (fond plein, le SVG centré) passée à la balade (`--taille 1024x1024 --capture …`) ; la sombre et la teintée : la même page rendue sur noir et sur blanc, puis la transparence calculée pixel par pixel (alpha = 255 − (blanc − noir), couleur = noir × 255 / alpha).
