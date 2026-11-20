@@ -3,7 +3,9 @@
 //   texte : majuscule en début de phrase, correction, orthographe (un textarea comme un message) ; recherche : « Rechercher » ;
 //   e-mail / URL / nombre / téléphone : le bon clavier ; identifiant / mot de passe : le remplissage du trousseau (Mots de passe d'iOS) ;
 //   un code reçu par SMS : autocomplete one-time-code. La dictée (le micro du clavier) marche dans tous ces champs.
-// La barre au-dessus du clavier (QuickType, mots de passe, « OK ») : visible (Capacitor la cache par défaut) — barreClavier().
+// La barre ∧ ∨ ✓ au-dessus du clavier (la barre d'accessoires de WebKit) : COUPÉE de base depuis le 20.11 (RS-7 #2128 : sur iOS 26 elle
+// flotte par-dessus les koins du bas, « je ne peux pas utiliser les koins là ») ; ⚙ › Navigation la rallume — barreClavier().
+// Les suggestions (QuickType) et la dictée font partie du clavier lui-même : elles restent.
 const TEXTE = 'input:not([type]),input[type=text],input[type=search],input[type=email],input[type=url],input[type=tel],input[type=number],input[type=password],textarea';
 export function regler(el) {
   if (!el || !el.matches || !el.matches(TEXTE) || el.hasAttribute('data-clavier-ios')) return;
@@ -30,9 +32,16 @@ export function installerClavierIos({ W = globalThis.window } = {}) {
   try { new W.MutationObserver((l) => { for (const m of l) for (const n of m.addedNodes) balayer(n); }).observe(D.body, { childList: true, subtree: true }); } catch (e) { /* */ }
 }
 
-/** la barre au-dessus du clavier : QuickType, le remplissage des mots de passe, « OK » */
-export async function barreClavier(visible = true) {
-  try { const { Keyboard } = await import('@capacitor/keyboard'); await Keyboard.setAccessoryBarVisible({ isVisible: !!visible }); } catch (e) { /* hors iPhone */ }
+/** la barre ∧ ∨ ✓ au-dessus du clavier : coupée de base. Le plugin Keyboard la coupe déjà à son chargement (Keyboard.m, hideFormAccessoryBar),
+ *  il n'existe pas de clé de capacitor.config pour elle : on ne la rallume que si on le demande. Natif seulement, jamais d'erreur.
+ *  Rend true si l'iPhone a reçu l'ordre. (Le plugin n'est jamais rendu d'une fonction async : seul le module l'est, le piège du proxy.) */
+export async function barreClavier(visible = false, { W = globalThis.window, charger = () => import('@capacitor/keyboard') } = {}) {
+  try {
+    if (!(W && W.Capacitor && typeof W.Capacitor.isNativePlatform === 'function' && W.Capacitor.isNativePlatform())) return false;
+    const { Keyboard } = await charger();
+    await Keyboard.setAccessoryBarVisible({ isVisible: visible === true });
+    return true;
+  } catch (e) { return false; }   // hors iPhone, ou un plugin absent
 }
 
 import { corriger } from './vocabulaire.js';

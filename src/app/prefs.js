@@ -13,7 +13,9 @@
 //   regard      (0.99.46) non | tete | regard : piloter de la tête ou du regard (src/app/regard.js)
 //   cibles      (0.99.44) auto | oui | non : les grandes cibles (44 points), pour le regard, la tête, le contrôle de sélection
 //   haptique    les retours haptiques (ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs…)
-export const PREFS_DEFAUT = { barreClavier: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'chill-tekk', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'xerboxion', fractale: true, pagesCote: true, bande: false, koins: false, activites: true, cibles: 'auto', regard: 'non', regardInverse: false, organiqueVu: true, variante: 'nerfs', ecriture: 'xerboxion', police: 'mixte', langue: 'auto', taille: 1.15, peau: 'legere', policePartout: false };
+//   barreClavier (20.11) la barre ∧ ∨ ✓ du clavier : coupée de base (RS-7 #2128 : sur iOS 26 elle flottait sur les koins du bas) ;
+//               barreClavierVue : la bascule unique vers « coupée » est faite (plus bas) ; l'ordre à l'iPhone : src/natif/clavier-ios.js
+export const PREFS_DEFAUT = { barreClavier: false, barreClavierVue: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'chill-tekk', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'xerboxion', fractale: true, pagesCote: true, bande: false, koins: false, activites: true, cibles: 'auto', regard: 'non', regardInverse: false, organiqueVu: true, variante: 'nerfs', ecriture: 'xerboxion', police: 'mixte', langue: 'auto', taille: 1.15, peau: 'legere', policePartout: false };
 
 /** (0.96) RS-7 23.10 : « un mode texte + glyphes, un mode pur glyphes, pur texte, emoji, minimal, xerboxion : tous les modes » */
 import { POLICES, poserPolice } from '../bions/polices.js';
@@ -33,7 +35,12 @@ export function creerPrefs({ W = globalThis.window, boxion }) {
     // 〰 (0.94, RS-7 : « avant on avait le xer ploxi0n, maintenant c'est le xer chill-tekk ; le truc de base, c'est ce qu'on fait maintenant ») :
     // une fois, le chill-tekk d'avant passe à l'organique ; son snapshot reste dans « mes xers » (xers.js), on y revient d'un toucher
     // (0.99.47) chill-tekk est redevenu le mode de base : la bascule ne change plus le mode, elle pose seulement la marque
-    if (!v.organiqueVu) { p.organiqueVu = true; boxion.put('reglages', 'app', p).catch(() => {}); }
+    let ecrire = false;
+    if (!v.organiqueVu) { p.organiqueVu = true; ecrire = true; }
+    // ⌨ (20.11, RS-7 #2128) la barre ∧ ∨ ✓ était allumée de base et rangée avec tous les réglages : une fois, elle repasse à coupée
+    // (la rallumer dans ⚙ › Navigation reste possible : la marque est posée, la bascule ne revient plus)
+    if (!v.barreClavierVue) { p.barreClavier = false; p.barreClavierVue = true; ecrire = true; }
+    if (ecrire) boxion.put('reglages', 'app', p).catch(() => {});
   }).catch(() => {});
   function appliquer() {
     const h = W.document.documentElement;
