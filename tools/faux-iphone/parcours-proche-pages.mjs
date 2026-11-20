@@ -1,5 +1,5 @@
 // ◉ (0.99.35, RS-7 : « encore ultra bloat : des sections distinctes, des pages différentes » ; « de meshlink, seulement le code QR ») :
-// Proche démarre (Tom et Léa arrivent), puis chaque page à l'écran : messages, autour, potes, son, ▣ carte (mon QR). L'ajout d'une carte
+// Proche démarre (RS-3 et RS-4 arrivent), puis chaque page à l'écran : messages, autour, potes, son, ▣ carte (mon QR). L'ajout d'une carte
 // (scannée ou par un lien ploxi0n://pote…) : tests/proche-carte.test.mjs.
 export default async function ({ page, ecrire }) {
   const r = {};

@@ -4,6 +4,8 @@
 //   ◇ chill-tekk  l'accueil de ploxi0n : tes ploxions, calme ; (0.99.47) le mode de base à l'installation, le plus simple pour commencer
 //   ⬡ xerboxion   l'UI du labo (labo.j0bot.ch) comme accueil, le dock de l'app par-dessus ; un ploxion qu'elle ouvre
 //                 (postMessage { ploxi0n: 'ouvrir', id }) s'ouvre dans l'app, en natif
+//                 (0.99.55, RS-7 via xerxion1 : « le xer xerboxion de l'app = le xer chill-tekk du labo : même thème, koins gauche = app,
+//                 droite = global, hypercube, octogone en bas, ‹ › ; + tout le natif ; ton xer chill-tekk reste le tien ») → /xer/chill-tekk
 //   🤖 xerbot     XERB0T, la couche robotique : le poste de pilotage du monde physique — la blouse (labo-cape), les appareils
 //                 Bluetooth, la maison (HomeKit), la lampe, les tags NFC (les kions dans le réel), le Wi-Fi, et le bus xerbot.cmd
 // Réglage : prefs.mode ; <html> porte px-m-<mode> (le CSS cache la grille quand un panneau la remplace).
@@ -18,7 +20,7 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '
 import { glyphe as G, versGlyphe } from './glyphes.js';   // ◇ (0.54) des glyphes, plus d'emoji
 export const MODES = [['organique', 'neurone', 'organique'], ['chill-tekk', 'chilltekk', 'chill-tekk'], ['xerboxion', 'xerboxion', 'xerboxion'], ['xerbot', 'xerbot', 'xerbot']];
 
-export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, connait = () => false, source = 'https://labo.j0bot.ch', chemin = '/home', vibrer = () => {}, cadres = null, controleur = null, connecter = null }) {
+export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, connait = () => false, source = 'https://labo.j0bot.ch', chemin = '/home', vibrer = () => {}, cadres = null, controleur = null, connecter = null, xerboxion = null }) {
   const D = W.document, N = () => W.jOSNatif || {};
   const mode = () => (MODES.some(m => m[0] === (prefs.lire().mode || '')) ? prefs.lire().mode : 'chill-tekk');   // (0.99.47) le mode de base : chill-tekk
   const appliquer = () => { for (const [m] of MODES) D.documentElement.classList.toggle('px-m-' + m, mode() === m); };
@@ -95,8 +97,13 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
     if (!hoteMap) { hoteMap = D.createElement('div'); hoteMap.className = 'px-org-map-h'; try { W.jOSApps.map.mount(hoteMap, {}); } catch (e) { hoteMap = null; return; } }
     if (hoteMap.parentNode !== place) place.appendChild(hoteMap);
   }
+  // ⬡ (0.99.63, RS-7 : « Prio 1 : xer xerboxion », le choix « natif ») le xer xerboxion dessiné ici (src/app/xer-xerboxion.js) ; la page
+  // du labo dans un cadre reste possible (prefs.xerboxionLabo), et à un toucher dans l'onglet Xers
+  const natifXbx = () => !!xerboxion && prefs.lire().xerboxionLabo !== true;
+  function monterXbx() { const place = D.querySelector('.px-accueil [data-xbx-place]'); if (place && xerboxion) xerboxion.monter(place); }
   function panneau() {
     const m = mode();
+    if (m === 'xerboxion' && natifXbx()) { W.setTimeout(monterXbx, 0); return puces() + '<div class="px-mode-p px-xbx-place" data-xbx-place></div>'; }
     if (m === 'xerboxion') sonder();
     if (m === 'organique') W.setTimeout(monterMap, 0);
     return puces() + (m === 'xerboxion' ? panneauXerboxion() : m === 'xerbot' ? panneauXerbot() : m === 'organique' ? '<div class="px-mode-p px-org-map" data-org-map></div>' : '');

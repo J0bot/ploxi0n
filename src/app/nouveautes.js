@@ -7,12 +7,84 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.66', titre: 'L\'icône du xeroction', points: [
+    '◇ L\'icône de l\'app devient le logo du xeroction.',
+    '▭ La barre ∧ ∨ ✓ du clavier est coupée de base : elle ne flotte plus sur les koins du bas (⚙ › Navigation la rallume).',
+  ] },
+  { v: '0.99.65', titre: 'L\'écran, nettoyé', points: [
+    '🧹 Le clavier ouvert, la bande des koins s\'efface : tout l\'écran pour écrire (coord, messages).',
+    '🧹 Une feuille ouverte dans un ploxion passe devant la bande, son bas n\'est plus caché ; plus rien ne transparaît dans les coins.',
+    '🧹 Le « ? » flottant du labo ne recouvre plus les boutons des ploxions en mode koin (ⓘ de la bande fait la même chose) ; l\'accueil commence plus haut.',
+  ] },
+  { v: '0.99.64', titre: 'Le ploxion Notifs', points: [
+    '🔔 Un ploxion Notifs : toutes tes notifications au même endroit, par jour, celles de coord, de Proche, les push, et celles arrivées pendant que l\'app dormait.',
+    '🔔 Choisis les mots à cacher (la notif disparaît, et ploxi0n ne la pose même plus) ou les seuls mots à voir.',
+    '🔔 Un nouveau build installé s\'y note ; et le sujet « build » est prêt pour que le labo te prévienne dès qu\'il est sur TestFlight.',
+  ] },
+  { v: '0.99.63', titre: 'Le xer xerboxion, dans l\'app', points: [
+    '⬡ Le mode xerboxion est maintenant dessiné dans l\'app : le chill-tekk du labo, cyan, sans attendre le serveur ni se reconnecter. Hors ligne aussi.',
+    '⬡ Home · tes ploxions et ceux du labo · filtrer ; les onglets Bureau, Labo (tout le catalogue, un toucher l\'installe), Capteurs & bions (le natif de l\'iPhone), Quêtes, Xers.',
+    '⬡ Les koins sont toujours là en xerboxion ; la page du labo reste à un toucher (Xers › le xer du labo, en ligne).',
+  ] },
+  { v: '0.99.62', titre: 'Le dézoom en 3 × 3', points: [
+    '⊡ La vue des xers (le premier dézoom) montre neuf ploxions au lieu de cinq : le tien au milieu et les huit autour, diagonales comprises. Les cases sont carrées.',
+    '⊡ Glisse en biais pour aller dans un coin ; d\'où tu viens reste toujours derrière toi.',
+  ] },
+  { v: '0.99.61', titre: 'Coord envoie, la bande s\'affine', points: [
+    '🛰 Coord envoie de nouveau : le texte partait vide par le mode connecté (« rien à envoyer »). Les fichiers envoyés au labo (les photos vers ton boxion) passaient par le même trou : réparé aussi.',
+    '🛰 Le verrou de coord se rouvre tout seul : il réessaie après quelques secondes, puis chaque minute, et quand tu reviens dans l\'app.',
+    '▭ La bande des koins est plus fine, ses glyphes plus grands, sans le vide dessous ; la barre du haut se place dans les oreilles de l\'encoche, comme l\'heure d\'iOS.',
+  ] },
+  { v: '0.99.60', titre: 'La bande, barre d\'accueil', points: [
+    '▭ Dans un ploxion, la case ◇ de la bande prend son glyphe, encadré : tu sais toujours où tu es.',
+    '▭ Glisse vers le haut sur la bande pour minimiser, à droite pour le ploxion d\'avant, à gauche pour le suivant, comme la barre d\'accueil de l\'iPhone.',
+    '▭ Le trait des koins et de la bande brille un peu, comme le koin du labo (rien en mode Calme).',
+  ] },
+  { v: '0.99.59', titre: 'La mini-carte, les fiches, Autour en direct', points: [
+    '🗺 Le widget « Un ploxion » réglé sur mappion montre une vraie carte, sombre, avec tes zones autour (là où tu passes du temps, d\'après la veille) et toi au milieu.',
+    '◈ Un ploxion qui ne publie rien montre sa fiche dans son widget : ce qu\'il fait, sa catégorie, ses bions. Les quatre xers se choisissent aussi : un toucher t\'y amène.',
+    '◉ Autour › en direct : une activité sur l\'écran verrouillé avec les lieux les plus proches, si tu partages ta position, et le pote le plus proche, sa distance et sa direction.',
+  ] },
+  { v: '0.99.58', titre: 'Les boutons du Centre de contrôle, réparés', points: [
+    '🎛 Les boutons de ploxi0n dans le Centre de contrôle ouvrent maintenant l\'app et font ce qu\'ils disent : tsoin, vocal, lampe, ploxi0n, Proche, balade, toilettes.',
+    '◷ Un nouveau bouton, Veille : mappion te suit partout (tes lieux, tes pas, ta vitesse, ton allure : à pied, à vélo, en voiture), et tu l\'éteins d\'un geste.',
+    '👣 La veille note aussi tes pas et l\'accéléromètre et le gyroscope pendant que tu bouges ; les ploxions peuvent relire tes pas et tes activités des 7 derniers jours.',
+  ] },
+  { v: '0.99.57', titre: 'Le koin du chill-tekk', points: [
+    '▭ La bande entre les deux koins : toute la barre, toujours là. ‹ › pour revenir ou passer au ploxion suivant, ⧗ ○ △ □ ◇ ✕ ⓘ, et ▁ pour minimiser. Dans un ploxion, le ◇ s\'encadre.',
+    '▣ Le koin ouvert : quatre cases en tunnel, un grand glyphe chacune. Le trion, l\'hypercube du xer, le wormion, le portion.',
+  ] },
+  { v: '0.99.56', titre: 'Plus aucun emoji', points: [
+    '◇ Un emoji qu\'on ne connaît pas ne disparaît plus : il devient un glyphe du xerboxion, tiré de lui, toujours le même (une forme, un cœur, une couleur de xerkion).',
+    '◇ Dans tous les ploxions maintenant, ceux du labo aussi. Ce que tu écris et ce qu\'on t\'envoie garde ses signes.',
+    '◇ Un ploxion sans glyphe à lui reçoit le sien de la même façon, ici comme au labo.',
+  ] },
+  { v: '0.99.55', titre: 'Les koins partout', points: [
+    '▭ En mode koin, la barre d\'un ploxion descend en bas, entre les deux koins : retour, son nom encadré, minimiser. Plus rien en haut, tout au pouce.',
+    '▭ Sur l\'accueil, la même bande dit le xer où tu es ; un toucher ouvre le koin sur les xers.',
+    '⬡ Le xer xerboxion ouvre maintenant le xer chill-tekk du labo. Ton chill-tekk à toi ne change pas.',
+  ] },
+  { v: '0.99.54', titre: 'Plus de prénoms', points: [
+    '◉ Les voisins de démonstration et les exemples n\'ont plus de prénom : RS-3, RS-4, xerion-1, xerion-2. Les tiens, tu les choisis.',
+  ] },
+  { v: '0.99.53', titre: 'Les nœuds sur la carte', points: [
+    '🗺 Proche › autour › les nœuds sur la carte : allume « garder », et ton téléphone note où il entend chaque nœud et la qualité du lien. Chaque nœud a sa zone, colorée selon sa vitesse de connexion (rapide, bon, moyen, lent). Ça reste sur ton téléphone, 30 jours, « effacer » vide tout.',
+    '🗺 Un nœud fixe (un Pi, un ESP32 relais) peut dire où il est : il apparaît à sa place. Les nœuds reliés au xion sont entourés.',
+  ] },
+  { v: '0.99.52', titre: 'Le pokédex des animations', points: [
+    '◫ Banc des animations › pokédex : toutes les animations que tu as jugées, en tuiles ; touche le verdict pour en ajouter ou en retirer, ▶ pour la revoir.',
+    '⚙ Banc des animations › dans l\'app : par famille, choisis celle que l\'app utilise. Une ★ au swipe la choisit d\'office. Déjà branchées : ouvrir, fermer, la courbe, l\'arrivée sur l\'accueil.',
+  ] },
+  { v: '0.99.51', titre: 'Le banc des animations', points: [
+    '🎞 Un nouveau ploxion, « Banc des animations » : 39 animations jouées en boucle dans un petit téléphone (ouvrir, fermer, passer d\'une app à l\'autre, le koin, les feuilles, changer de xer, l\'accueil, les courbes, le wormion). Swipe : ← non, → oui, ↑ c\'est celle-là.',
+    '🎞 À la fin, « copier pour Claude » : tes choix, prêts à coller.',
+  ] },
   { v: '0.99.50', titre: 'Coord dans l\'app', points: [
     '📡 Coord est dans l\'app d\'office : lire la flotte, écrire, glisser des fichiers, depuis le téléphone. Il faut être connecté au labo avec le compte admin (⚙ › Compte).',
   ] },
   { v: '0.99.49', titre: 'Le build iPhone repart, Android vérifié', points: [
     '🛠 Le build iPhone de la 0.99.48 s\'arrêtait sur les synonymes de Siri (une fonction d\'iOS 17, l\'app va jusqu\'à iOS 15) : corrigé.',
-    '🤖 Sur Android, Proche passe par le Bluetooth (le maillage, Tom, Léa, les potes, la basse) ; le réglage « Piloter de la tête » ne s\'affiche plus là où il n\'existe pas.',
+    '🤖 Sur Android, Proche passe par le Bluetooth (le maillage, RS-3, RS-4, les potes, la basse) ; le réglage « Piloter de la tête » ne s\'affiche plus là où il n\'existe pas.',
   ] },
   { v: '0.99.48', titre: 'Les ploxions sortent de leur icône', points: [
     '🔍 Touche une icône : le ploxion en sort et grandit jusqu\'à l\'écran, comme sur iPhone. ▁ Minimiser, ‹ ou l\'accueil : il rapetisse et rentre dans son icône.',
@@ -31,7 +103,7 @@ export const NOUVEAUTES = [
   ] },
   { v: '0.99.45', titre: 'Les notifications qui parlent', points: [
     '↩ Un message privé de Proche : « Répondre » directement depuis la notification, la réponse part par le maillage. Ou « ✓ Lu ».',
-    '◉ « Tom est tout près » : un pote ✦ qui revient à portée de Bluetooth. « ✓ remis » : ton message passé par un coursier est enfin arrivé.',
+    '◉ « RS-3 est tout près » : un pote ✦ qui revient à portée de Bluetooth. « ✓ remis » : ton message passé par un coursier est enfin arrivé.',
     '🔔 Les notifications du labo avec l\'avatar de qui t\'écrit, en grand, ou le glyphe du ploxion (avec la build « notifs »).',
   ] },
   { v: '0.99.44', titre: 'Siri parle xerboxion, et la tête ou le regard visent juste', points: [

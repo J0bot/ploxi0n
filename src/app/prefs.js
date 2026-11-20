@@ -15,7 +15,7 @@
 //   haptique    les retours haptiques (ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs…)
 //   barreClavier (20.11) la barre ∧ ∨ ✓ du clavier : coupée de base (RS-7 #2128 : sur iOS 26 elle flottait sur les koins du bas) ;
 //               barreClavierVue : la bascule unique vers « coupée » est faite (plus bas) ; l'ordre à l'iPhone : src/natif/clavier-ios.js
-export const PREFS_DEFAUT = { barreClavier: false, barreClavierVue: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'chill-tekk', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'xerboxion', fractale: true, pagesCote: true, bande: false, koins: false, activites: true, cibles: 'auto', regard: 'non', regardInverse: false, organiqueVu: true, variante: 'nerfs', ecriture: 'xerboxion', police: 'mixte', langue: 'auto', taille: 1.15, peau: 'legere', policePartout: false };
+export const PREFS_DEFAUT = { barreClavier: false, barreClavierVue: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'chill-tekk', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'xerboxion', fractale: true, pagesCote: true, bande: false, koins: false, activites: true, cibles: 'auto', regard: 'non', animations: {}, regardInverse: false, organiqueVu: true, variante: 'nerfs', ecriture: 'xerboxion', police: 'mixte', langue: 'auto', taille: 1.15, peau: 'legere', policePartout: false };
 
 /** (0.96) RS-7 23.10 : « un mode texte + glyphes, un mode pur glyphes, pur texte, emoji, minimal, xerboxion : tous les modes » */
 import { POLICES, poserPolice } from '../bions/polices.js';
@@ -50,6 +50,8 @@ export function creerPrefs({ W = globalThis.window, boxion }) {
     h.classList.toggle('px-contraste', p.contraste === 'fort');
     // ♿ (0.99.44) les grandes cibles (44 × 44 points au moins) : pour le Suivi du regard, de la tête, le Contrôle de sélection, AssistiveTouch
     // d'iOS. auto : seulement quand iOS dit qu'une de ces aides tourne (W.__ploxiAssistance, posé par main.js) ; oui ; non
+    // 🎞 (0.99.52) la cascade de l'accueil choisie au Banc des animations (prefs.animations.cascade)
+    { const ca = (p.animations && p.animations.cascade) || 'cascade-une'; for (const k of ['centre', 'vague', 'aucune']) h.classList.toggle('px-cascade-' + k, ca === 'cascade-' + k); }
     h.classList.toggle('px-grandes-cibles', p.cibles === 'oui' || (p.cibles !== 'non' && !!W.__ploxiAssistance));
     for (const t of ['petites', 'normales', 'grandes']) h.classList.toggle('px-icones-' + t, p.icones === t);
     h.classList.toggle('px-sans-dock', !p.dock);

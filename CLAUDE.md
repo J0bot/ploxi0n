@@ -27,6 +27,8 @@ français, dans le vocabulaire du xerboxion (ploxion, bion, tsoin, boxion, xer, 
   `data-rg-retour`, `data-rg-aller`) ; une classe posée sur `<html>` ne doit pas être celle d'un composant (`px-vivant` → `px-anime`).
 - Vite + Capacitor : pas de `this` global dans un module ; pas d'`import … .json` (les tests Node ne le lisent pas : exporter un objet JS).
 - PowerShell 5 (Windows de RS-7) : `>` écrit en UTF-16.
+- **Pas de prénoms** (RS-7, 13.11) : voisins simulés, tests, exemples de doc, textes de l'app → des identifiants neutres (RS-3, RS-4,
+  xerion-1, xerion-2), jamais « Tom » ou « Léa ».
 
 ## Git
 

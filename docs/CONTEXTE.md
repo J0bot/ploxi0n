@@ -14,7 +14,7 @@ Le détail est dans la feuille de route (une entrée par version). L'essentiel p
   `public/marketplace/compat.json` (ip = ok | attend | casse) : le badge du marketplace.
 - **Proche = un maillage façon bitchat** (`src/bions/maille.js`, docs/ULTIMATE-BLUETOOTH.md) : multi-sauts, Bloom, stocker-relayer, ECDH +
   AES-GCM, salons fermés, potes ✦, « lu », code de sécurité, positions chiffrées ; **les potes** (`src/bions/potes.js`) : radar hors ligne,
-  boussole, carte CARTO. Le faux iPhone fait tourner le VRAI maillage pour Tom et Léa (`parcours-potes.mjs`).
+  boussole, carte CARTO. Le faux iPhone fait tourner le VRAI maillage pour RS-3 et RS-4 (`parcours-potes.mjs`).
 - **La peau légère par défaut** (`html.px-leger`, aucune couche SVG) ; **la taille de tout** (`PloxiApple.taille` → `pageZoom`, grande
   par défaut) ; **la police** n'habille que le xer (`.px-hote-labo`) ; **une zone « chez moi »** par défaut (le plugion jOSZone).
 - **Le synthé psy** (psytrance, tribe, acidcore, mentalcore, le kick) et le partage des sons (maillage, code `ploxi-son:`). Le cœur Rust

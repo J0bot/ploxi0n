@@ -5,23 +5,33 @@
 // Le contrat du labo : docs/PUSH.md. ⚙ › Notifications › « Même app fermée » : on choisit les sujets ; couper retire le jeton du labo.
 // boxion_local « reglages/push » = { actif, sujets, jeton, envoye, erreur }.
 import { surPromesse } from './plugin-sur.js';
-export const SUJETS = [['coord', 'coord (les messages des agents)'], ['messages', 'tes messages (le social, le chat)'], ['bother', 'bother me (les réponses)'], ['ploxions', 'tes ploxions (ce qu\'ils te signalent)']];
+export const SUJETS = [['build', 'un nouveau build de ploxi0n (TestFlight)'], ['coord', 'coord (les messages des agents)'], ['messages', 'tes messages (le social, le chat)'], ['bother', 'bother me (les réponses)'], ['ploxions', 'tes ploxions (ce qu\'ils te signalent)']];
 
 /** envoyer(q) : le HTTP natif AVEC le jeton du compte ; connecte() : un compte dans l'app */
 export function creerPush({ W = globalThis.window, boxion, envoyer, source = 'https://labo.j0bot.ch', ouvrir = () => {}, signaler = () => {}, vibrer = () => {}, connecte = () => false,
-  natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform()), charger = () => import('@capacitor/push-notifications') }) {
-  let r = { actif: false, sujets: ['coord', 'messages', 'bother'], jeton: null, envoye: 0, erreur: null }, ecoute = false;
+  natif = () => !!(W.Capacitor && W.Capacitor.isNativePlatform && W.Capacitor.isNativePlatform()), charger = () => import('@capacitor/push-notifications'), journal = null }) {
+  let r = { actif: false, sujets: ['build', 'coord', 'messages', 'bother'], jeton: null, envoye: 0, erreur: null }, ecoute = false;
   const pret = boxion.get('reglages', 'push').then(v => { if (v && typeof v === 'object') r = { ...r, ...v }; }).catch(() => {});
   const garder = () => boxion.put('reglages', 'push', r).catch(() => {});
   async function PN() { return surPromesse((await charger()).PushNotifications); }   // le plugin est un Proxy : jamais rendu tel quel d'un async
 
   async function declarer(jeton) {
     const q = await envoyer({ methode: 'POST', url: source + '/api/app/push', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      corps: JSON.stringify({ jeton, plateforme: 'ios', environnement: 'production', app: 'ch.j0bot.ploxi0n', sujets: r.sujets }) });
+      corps: JSON.stringify({ jeton, plateforme: 'ios', environnement: 'production', app: 'ch.j0bot.ploxi0n', sujets: r.sujets, ...(journal ? { mots: journal.mots() } : {}) }) });   // (0.99.64) les mots : le labo filtre avant d'envoyer
     if (q.status === 404 || q.status === 405) throw new Error('le labo n\'a pas encore la route des notifications (docs/PUSH.md)');
     if (q.status === 401 || q.status === 403) throw new Error('connecte-toi d\'abord (⚙ › Compte)');
     if (q.status < 200 || q.status >= 300) throw new Error('le labo répond ' + q.status);
     r = { ...r, jeton, envoye: Date.now(), erreur: null }; await garder();
+  }
+  /** 🔔 (0.99.64) une push dans le journal (une fois : son id) */
+  function noterPush(n) {
+    if (!journal || !n) return; const d = n.data || {};
+    journal.noter({ titre: n.title || '', texte: n.body || '', source: 'push', sujet: String(d.sujet || d.ouvrir || ''), ouvrir: d.ouvrir || d.ploxion || null, params: d.params && typeof d.params === 'object' ? d.params : null, cle: 'push:' + (n.id || (n.title || '') + '|' + (n.body || '')) }).catch(() => null);
+  }
+  /** au retour dans l'app : les push restées dans le centre de notifications pendant qu'elle dormait */
+  async function releverLivrees() {
+    if (!journal || !natif() || !r.actif) return 0;
+    try { const P = await PN(); const l = ((await P.getDeliveredNotifications()) || {}).notifications || []; for (const n of l) noterPush(n); return l.length; } catch (e) { return 0; }
   }
   async function brancher(P) {
     if (ecoute) return; ecoute = true;
@@ -30,9 +40,9 @@ export function creerPush({ W = globalThis.window, boxion, envoyer, source = 'ht
     await P.addListener('registration', (t) => { const j = t && t.value; if (!j) return; r = { ...r, jeton: j }; garder(); declarer(j).catch((e) => { r.erreur = e.message; garder(); }); });
     await P.addListener('registrationError', (e) => { r.erreur = 'iOS refuse : ' + ((e && e.error) || 'inconnu'); garder(); });
     // reçue app ouverte : un signal discret (iOS ne l'affiche pas lui-même)
-    await P.addListener('pushNotificationReceived', (n) => { vibrer('notification'); signaler('🔔 ' + ((n && n.title) || '') + (n && n.body ? ' · ' + n.body : '')); });
+    await P.addListener('pushNotificationReceived', (n) => { noterPush(n); if (journal && journal.masquee({ titre: n && n.title, texte: n && n.body, sujet: n && n.data && n.data.sujet })) return; vibrer('notification'); signaler('🔔 ' + ((n && n.title) || '') + (n && n.body ? ' · ' + n.body : '')); });
     // touchée : le ploxion de son « ouvrir » (ou ce que le labo a mis dans data)
-    await P.addListener('pushNotificationActionPerformed', (a) => { const d = (a && a.notification && a.notification.data) || {}; const id = d.ouvrir || d.ploxion; if (id) ouvrir(String(id), d.params && typeof d.params === 'object' ? d.params : null); });
+    await P.addListener('pushNotificationActionPerformed', (a) => { if (a && a.notification) noterPush(a.notification); const d = (a && a.notification && a.notification.data) || {}; const id = d.ouvrir || d.ploxion; if (id) ouvrir(String(id), d.params && typeof d.params === 'object' ? d.params : null); });
   }
   /** allumer : la permission d'iOS, puis le jeton → le labo */
   async function activer(sujets = null) {
@@ -61,5 +71,5 @@ export function creerPush({ W = globalThis.window, boxion, envoyer, source = 'ht
     await pret; if (!r.actif || !natif()) return;
     try { const P = await PN(); await brancher(P); if (connecte()) await P.register(); } catch (e) { r.erreur = e.message; garder(); }
   }
-  return { pret, activer, couper, sujets, demarrer, reglage: () => ({ ...r }) };
+  return { pret, activer, couper, sujets, demarrer, releverLivrees, redeclarer: () => (r.actif && r.jeton ? declarer(r.jeton).catch(() => {}) : Promise.resolve()), reglage: () => ({ ...r }) };
 }

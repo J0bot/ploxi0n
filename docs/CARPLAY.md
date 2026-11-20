@@ -15,7 +15,7 @@ Deux onglets, rien que des listes (ce que les catégories audio ET tâche de con
 
 | onglet | ce qu'on y voit | toucher |
 | --- | --- | --- |
-| **Potes** | les rendez-vous, puis les potes de Proche qui partagent leur position : « Tom · 120 m au nord-est · à l'instant », les plus proches d'abord | l'itinéraire en voiture dans **Plans, sur l'écran de la voiture** |
+| **Potes** | les rendez-vous, puis les potes de Proche qui partagent leur position : « RS-3 · 120 m au nord-est · à l'instant », les plus proches d'abord | l'itinéraire en voiture dans **Plans, sur l'écran de la voiture** |
 | **Ambiances** | pluie, vent, vagues, feu, orage, ruisseau, bruits rose et brun ; « ■ tout couper » quand quelque chose joue | lancer / couper le son (l'iPhone peut rester verrouillé) |
 
 - Le modèle est fait en JS (`src/bions/carplay.js`, testé), poussé au Swift (`src/natif/carplay-natif.js` : toutes les 8 s quand la voiture est

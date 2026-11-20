@@ -14,33 +14,36 @@
 // nexus) aux bords de la carte ; la capture gardée comme un tsoin (la photo du xer à ce moment-là).
 import { photographier } from './cube-pages.js';
 
-export const DIRECTIONS = { haut: [0, -1], bas: [0, 1], gauche: [-1, 0], droite: [1, 0] };
+// (0.99.61, RS-7 : « le xer du dézoom 1 carré tout le temps, et les ploxions en diagonale aussi : au lieu de 4 autres ploxions, 9 ») : huit
+// voisins, les diagonales en plus ; des cases CARRÉES ; glisser en biais amène la case du coin.
+export const DIRECTIONS = { haut: [0, -1], bas: [0, 1], gauche: [-1, 0], droite: [1, 0], 'haut-gauche': [-1, -1], 'haut-droite': [1, -1], 'bas-gauche': [-1, 1], 'bas-droite': [1, 1] };
+const unite = (d) => { const [x, y] = DIRECTIONS[d] || d, n = Math.hypot(x, y) || 1; return [x / n, y / n]; };
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const ACCUEIL = '·';
 
 /** le voisin d'une case dans une direction : le plus proche dans un cône de 45° (la distance le long de la direction, puis l'écart) */
 export function voisin(places, de, dir, exclus = null) {
-  const [dx, dy] = DIRECTIONS[dir] || dir, o = places[de] || [0, 0];
+  const [dx, dy] = unite(dir), o = places[de] || [0, 0];
   let mieux = null, score = Infinity;
   for (const [id, p] of Object.entries(places)) {
     if (id === de || (exclus && exclus.has(id))) continue;
     const vx = p[0] - o[0], vy = p[1] - o[1], le = vx * dx + vy * dy, ecart = Math.abs(vx * dy - vy * dx);
-    if (le <= 0 || ecart > le) continue;
+    if (le <= 1e-9 || ecart > le + 1e-9) continue;
     const s = le + ecart * 1.5;
     if (s < score || (s === score && id < mieux)) { score = s; mieux = id; }
   }
   return mieux;
 }
 
-const ecartDe = (places, de, id, dir) => { const [dx, dy] = DIRECTIONS[dir], o = places[de] || [0, 0], p = places[id]; return Math.abs((p[0] - o[0]) * dy - (p[1] - o[1]) * dx); };
-const OPPOSE = { haut: 'bas', bas: 'haut', gauche: 'droite', droite: 'gauche' };
-/** les quatre voisins : un ploxion n'est que dans UNE direction (la plus alignée) ; et d'où l'on vient est toujours derrière soi
+const ecartDe = (places, de, id, dir) => { const [dx, dy] = unite(dir), o = places[de] || [0, 0], p = places[id]; return Math.abs((p[0] - o[0]) * dy - (p[1] - o[1]) * dx); };
+const OPPOSE = { haut: 'bas', bas: 'haut', gauche: 'droite', droite: 'gauche', 'haut-gauche': 'bas-droite', 'bas-droite': 'haut-gauche', 'haut-droite': 'bas-gauche', 'bas-gauche': 'haut-droite' };
+/** les huit voisins : un ploxion n'est que dans UNE direction (la plus alignée) ; et d'où l'on vient est toujours derrière soi
  *  (`venu` : { id, dir } — glisser à droite puis à gauche ramène là où l'on était : la mémoire musculaire) */
 export function voisins(places, de, venu = null) {
   const r = {}, pris = new Set();
   if (venu && venu.id != null && places[venu.id]) { r[OPPOSE[venu.dir]] = venu.id; pris.add(venu.id); }
   const restent = Object.keys(DIRECTIONS).filter(d => !(d in r));
-  for (let tour = 0; tour < 4 && restent.length; tour++) {
+  for (let tour = 0; tour < 8 && restent.length; tour++) {
     const c = restent.map(d => ({ d, id: voisin(places, de, d, pris) })).filter(x => x.id);
     if (!c.length) break;
     c.sort((a, b) => ecartDe(places, de, a.id, a.d) - ecartDe(places, de, b.id, b.d));
@@ -55,7 +58,7 @@ export function creerVueXers({ W = globalThis.window, racine, liste = () => [], 
   const D = W.document;
   let el = null, plan = null, centre = null, cases = null, photos = new Map(), geste = null, anim = false, lesPlaces = {}, venu = null;
   const ecran = () => ({ w: W.innerWidth || 390, h: W.innerHeight || 844 });
-  const taille = () => { const { w, h } = ecran(); const tw = Math.round(w * 0.62); return { tw, th: Math.round(tw * h / w), gap: Math.round(w * 0.07) }; };
+  const taille = () => { const { w, h } = ecran(); const tw = Math.round(Math.min(w * 0.44, h * 0.3)); return { tw, th: tw, gap: Math.round(w * 0.05), gapY: Math.max(Math.round(w * 0.05), 36) }; };   // (0.99.61) carrées : le 3 × 3 tient, les voisins dépassent des bords
   /** les places, l'accueil compris (au centre de la carte) */
   const toutes = () => ({ [ACCUEIL]: [0, 0], ...lesPlaces });
   const nomDe = (id) => { if (id === ACCUEIL) return 'l\'accueil'; const p = liste().find(x => x.id === id); return p ? (p.nom || p.id) : id; };
@@ -89,14 +92,14 @@ export function creerVueXers({ W = globalThis.window, racine, liste = () => [], 
     return t;
   }
   function peindre() {
-    const P = toutes(), { tw, th, gap } = taille();
+    const P = toutes(), { tw, th, gap, gapY } = taille();
     plan.textContent = ''; plan.style.transition = 'none'; plan.style.transform = '';
     cases = { centre, ...voisins(P, centre, venu) };
     plan.appendChild(tuile(centre, null));
     for (const dir of Object.keys(DIRECTIONS)) {
       const v = cases[dir]; if (!v) continue;
       const t = tuile(v, dir), [dx, dy] = DIRECTIONS[dir];
-      t.style.setProperty('--vx-x', (dx * (tw + gap)) + 'px'); t.style.setProperty('--vx-y', (dy * (th + gap)) + 'px');
+      t.style.setProperty('--vx-x', (dx * (tw + gap)) + 'px'); t.style.setProperty('--vx-y', (dy * (th + gapY)) + 'px');   // la place du nom au-dessus de chaque case
       plan.appendChild(t);
     }
     const ch = el.querySelector('.px-vx-dirs');
@@ -106,12 +109,12 @@ export function creerVueXers({ W = globalThis.window, racine, liste = () => [], 
   function aller1(dir) {
     if (!el || anim) return false;
     const v = cases && cases[dir]; if (!v) { vibrer('fx-butee'); return false; }
-    const { tw, th, gap } = taille(), [dx, dy] = DIRECTIONS[dir];
+    const { tw, th, gap, gapY } = taille(), [dx, dy] = DIRECTIONS[dir];
     anim = true; vibrer('fx-case');
     const fin = () => { anim = false; venu = { id: centre, dir }; centre = v; peindre(); };
     if (calme()) { fin(); return true; }
     plan.style.transition = 'transform .26s cubic-bezier(.2,.8,.2,1)';
-    plan.style.transform = 'translate3d(' + (-dx * (tw + gap)) + 'px,' + (-dy * (th + gap)) + 'px,0)';
+    plan.style.transform = 'translate3d(' + (-dx * (tw + gap)) + 'px,' + (-dy * (th + gapY)) + 'px,0)';
     W.setTimeout(fin, 270);
     return true;
   }
@@ -128,6 +131,12 @@ export function creerVueXers({ W = globalThis.window, racine, liste = () => [], 
   }
   function fermer() { if (!el) return; el.remove(); el = plan = null; photos = new Map(); cases = null; geste = null; anim = false; }
   // ---- les doigts : glisser (une direction), toucher (entrer / revenir), pincer (la carte) ----
+  /** le doigt (dx, dy) → la case qui arrive : il part à gauche, celle de droite vient ; en biais (les deux axes à moins d'un facteur 2), un coin */
+  function dirDe(dx, dy) {
+    const ax = Math.abs(dx), ay = Math.abs(dy), v = dy < 0 ? 'bas' : 'haut', h = dx < 0 ? 'droite' : 'gauche';
+    if (Math.min(ax, ay) > Math.max(ax, ay) * 0.5) return v + '-' + h;
+    return ax >= ay ? h : v;
+  }
   const doigts = new Map();
   function bas(e) {
     doigts.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -142,8 +151,8 @@ export function creerVueXers({ W = globalThis.window, racine, liste = () => [], 
     if (anim) return;
     const dx = e.clientX - geste.x0, dy = e.clientY - geste.y0;
     // le plan suit le doigt sur l'axe dominant (un peu freiné s'il n'y a rien par là)
-    const h = Math.abs(dx) >= Math.abs(dy), d = h ? (dx < 0 ? 'droite' : 'gauche') : (dy < 0 ? 'bas' : 'haut'), frein = cases && cases[d] ? 1 : 0.25;
-    plan.style.transition = 'none'; plan.style.transform = 'translate3d(' + (h ? dx * frein : 0) + 'px,' + (h ? 0 : dy * frein) + 'px,0)';
+    const d = dirDe(dx, dy), [ux, uy] = DIRECTIONS[d], frein = cases && cases[d] ? 1 : 0.25;
+    plan.style.transition = 'none'; plan.style.transform = 'translate3d(' + (ux ? dx * frein : 0) + 'px,' + (uy ? dy * frein : 0) + 'px,0)';
   }
   function haut(e) {
     if (!doigts.has(e.pointerId)) return; doigts.delete(e.pointerId);
@@ -158,7 +167,7 @@ export function creerVueXers({ W = globalThis.window, racine, liste = () => [], 
       return;
     }
     // le doigt va vers la gauche : on va vers la DROITE (le voisin de droite arrive), comme on tourne une page
-    const h = Math.abs(dx) >= Math.abs(dy), d = h ? (dx < 0 ? 'droite' : 'gauche') : (dy < 0 ? 'bas' : 'haut');
+    const d = dirDe(dx, dy);
     if (Math.max(Math.abs(dx), Math.abs(dy)) > 70 || v > 0.45) { if (!aller1(d)) { plan.style.transition = 'transform .2s'; plan.style.transform = ''; } }
     else { plan.style.transition = 'transform .2s'; plan.style.transform = ''; }
   }
@@ -170,7 +179,7 @@ export function creerVueXers({ W = globalThis.window, racine, liste = () => [], 
     centre = depuis !== undefined ? (depuis == null ? ACCUEIL : depuis) : (courant() || ACCUEIL); venu = null;
     el = D.createElement('div'); el.className = 'px-vx' + (capture ? ' px-vx-capture' : '');
     el.innerHTML = '<div class="px-vx-plan"></div><div class="px-vx-dirs" aria-hidden="true"></div><button type="button" class="px-vx-x" data-vx-fermer aria-label="revenir">✕</button>'
-      + '<p class="px-vx-aide">↔ ↕ l\'app d\'à côté · touche : entre · pince : la carte</p>' + (capture ? '<i class="px-vx-eclair"></i>' : '');
+      + '<p class="px-vx-aide">↔ ↕ ⤡ les 8 d\'à côté · touche : entre · pince : la carte</p>' + (capture ? '<i class="px-vx-eclair"></i>' : '');
     racine.appendChild(el); plan = el.querySelector('.px-vx-plan');
     el.addEventListener('pointerdown', bas); el.addEventListener('pointermove', bouge); el.addEventListener('pointerup', haut);
     el.addEventListener('pointercancel', (e) => { doigts.delete(e.pointerId); geste = null; if (plan) { plan.style.transition = 'transform .2s'; plan.style.transform = ''; } });

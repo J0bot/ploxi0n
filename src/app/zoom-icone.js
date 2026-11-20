@@ -36,11 +36,38 @@ export function rectVisible(r, L, H) {
   return { x: r.x, y: r.y, width: r.width, height: r.height };
 }
 
+// 🎞 (0.99.52) LES ANIMATIONS CHOISIES (le Banc des animations, src/lot/banc-anim.js : « nos paramètres, en ajoutant ou supprimant des
+// animations ») : prefs.animations = { ouvrir, fermer, courbe, … } → l'id d'une variante. La courbe règle la durée et l'easing des deux.
+export const COURBES = { 'courbe-ios': [COURBE, DUREE_OUVRIR], 'courbe-rebond': ['cubic-bezier(.3,1.6,.4,1)', 520], 'courbe-lente': ['cubic-bezier(.45,.05,.25,1)', 650], 'courbe-seche': ['cubic-bezier(.6,0,.4,1)', 240] };
+export const OUVRIR = ['ouvrir-ios', 'ouvrir-ios-rebond', 'ouvrir-fondu', 'ouvrir-cercle', 'ouvrir-genie', 'ouvrir-couloir', 'ouvrir-ion'];
+export const FERMER = ['fermer-ios', 'fermer-bas', 'fermer-dissout', 'fermer-point'];
+/** les clés d'une ouverture (de → plein) ; null = pas d'animation ici (le fondu du CSS prend le relais) */
+export function clesOuvrir(id, v, L, H, ox, oy) {
+  const cx = v.x + v.width / 2 - ox, cy = v.y + v.height / 2 - oy;
+  switch (id) {
+    case 'ouvrir-fondu': return null;
+    case 'ouvrir-cercle': return { kf: [{ clipPath: 'circle(' + (v.width / 2).toFixed(1) + 'px at ' + cx.toFixed(1) + 'px ' + cy.toFixed(1) + 'px)' }, { clipPath: 'circle(' + Math.ceil(Math.hypot(L, H)) + 'px at ' + cx.toFixed(1) + 'px ' + cy.toFixed(1) + 'px)' }], origine: '0 0' };
+    case 'ouvrir-genie': return { kf: [{ transform: 'scale(.12,.04)', opacity: 0.3 }, { transform: 'scale(.5,1.05)', opacity: 1, offset: 0.45 }, { transform: 'scale(1,1)', opacity: 1 }], origine: cx.toFixed(1) + 'px ' + cy.toFixed(1) + 'px' };
+    case 'ouvrir-couloir': return { kf: [{ transform: 'perspective(900px) rotateX(70deg) scale(.15)', opacity: 0 }, { transform: 'perspective(900px) rotateX(0deg) scale(1)', opacity: 1 }], origine: cx.toFixed(1) + 'px ' + cy.toFixed(1) + 'px' };
+    case 'ouvrir-ion': return { kf: [{ filter: 'blur(14px)', transform: 'scale(1.18)', opacity: 0 }, { filter: 'blur(0px)', transform: 'scale(1)', opacity: 1 }], origine: '50% 50%' };
+    default: return { kf: [{ ...cleIcone(v, L, H, ox, oy), opacity: 0.55 }, { opacity: 1, offset: 0.3 }, { ...CLE_PLEIN, opacity: 1 }], origine: '0 0' };   // ouvrir-ios (et le rebond : la courbe)
+  }
+}
+/** les clés d'une fermeture (plein → fin) */
+export function clesFermer(id, v, sansIcone, L, H, ox, oy, L0, H0) {
+  switch (id) {
+    case 'fermer-bas': return { kf: [{ transform: 'none', opacity: 1 }, { transform: 'translateY(105%) scale(.92)', opacity: 0.6 }], origine: '50% 50%' };
+    case 'fermer-dissout': return { kf: [{ filter: 'blur(0px)', transform: 'scale(1)', opacity: 1 }, { filter: 'blur(14px)', transform: 'scale(1.12)', opacity: 0 }], origine: '50% 50%' };
+    case 'fermer-point': return { kf: [{ transform: 'scale(1)', opacity: 1, borderRadius: '0px' }, { transform: 'scale(.06)', opacity: 0.9, borderRadius: '50%', offset: 0.85 }, { transform: 'scale(0)', opacity: 0, borderRadius: '50%' }], origine: '50% 50%' };
+    default: return { kf: [{ ...CLE_PLEIN, opacity: 1 }, { ...cleIcone(v || carreMilieu(L0, H0), L, H, ox, oy), opacity: sansIcone ? 0 : 0.35 }], origine: '0 0' };
+  }
+}
+
 /**
  * le zoom, sur un élément plein écran (le hôte d'un ploxion).
  * → { ouvrir(el, r) → Animation|null, fermer(el, r|null) → Promise (résolue à la fin, ou tout de suite sans animation) }
  */
-export function creerZoomIcone({ W = globalThis.window, calme = () => false } = {}) {
+export function creerZoomIcone({ W = globalThis.window, calme = () => false, choix = () => ({}) } = {}) {
   const peut = (el) => !calme() && el && typeof el.animate === 'function';
   const ecran = () => [W.innerWidth || 390, W.innerHeight || 844];
   /** le cadre réel de l'élément (le hôte d'un ploxion n'est pas toujours tout l'écran : la barre du haut) */
@@ -48,20 +75,22 @@ export function creerZoomIcone({ W = globalThis.window, calme = () => false } = 
   function ouvrir(el, r) {
     const [L0, H0] = ecran(), v = rectVisible(r, L0, H0);
     if (!peut(el) || !v) return null;
-    const [L, H, ox, oy] = cadre(el);
-    el.style.transformOrigin = '0 0';
+    const [L, H, ox, oy] = cadre(el), c = choix() || {}, id = OUVRIR.includes(c.ouvrir) ? c.ouvrir : 'ouvrir-ios';
+    const k = clesOuvrir(id, v, L, H, ox, oy); if (!k) return null;
+    const [easing, duree] = id === 'ouvrir-ios-rebond' ? COURBES['courbe-rebond'] : (COURBES[c.courbe] || COURBES['courbe-ios']);
+    el.style.transformOrigin = k.origine;
     // l'opacité arrive vite (le contenu se lit dès le premier tiers), la forme suit la courbe jusqu'au bout
-    const a = el.animate([{ ...cleIcone(v, L, H, ox, oy), opacity: 0.55 }, { opacity: 1, offset: 0.3 }, { ...CLE_PLEIN, opacity: 1 }], { duration: DUREE_OUVRIR, easing: COURBE });
+    const a = el.animate(k.kf, { duration: duree, easing });
     a.onfinish = a.oncancel = () => { el.style.transformOrigin = ''; };
     return a;
   }
   function fermer(el, r) {
     const [L0, H0] = ecran(), v = rectVisible(r, L0, H0), sansIcone = !v;
     if (!peut(el)) return Promise.resolve(false);
-    const [L, H, ox, oy] = cadre(el);
-    el.style.transformOrigin = '0 0';
-    const fin = { ...cleIcone(v || carreMilieu(L0, H0), L, H, ox, oy), opacity: sansIcone ? 0 : 0.35 };
-    const a = el.animate([{ ...CLE_PLEIN, opacity: 1 }, fin], { duration: DUREE_FERMER, easing: COURBE, fill: 'forwards' });
+    const [L, H, ox, oy] = cadre(el), c = choix() || {}, id = FERMER.includes(c.fermer) ? c.fermer : 'fermer-ios';
+    const k = clesFermer(id, v, sansIcone, L, H, ox, oy, L0, H0), [easing, d] = COURBES[c.courbe] || COURBES['courbe-ios'];
+    el.style.transformOrigin = k.origine;
+    const a = el.animate(k.kf, { duration: Math.round(d * DUREE_FERMER / DUREE_OUVRIR), easing: id === 'fermer-ios' ? easing : 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
     return new Promise((res) => {
       // l'appelant cache le hôte dans la foulée (même tâche) ; l'état final tient jusque-là (fill), puis on libère l'élément
       const finir = (ok) => { res(ok); (W.setTimeout || setTimeout)(() => { try { a.cancel(); } catch (e) { /* */ } el.style.transformOrigin = ''; el.__pxSortie = null; }, 60); };

@@ -351,7 +351,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     ordre: () => ordreDeBande(), courant: () => (courant ? courant.id : null), nomDe: (id) => (parId.get(id) || {}).nom || id, vibrer: (x) => vibrer(x), calme: () => !!prefs().calme,
     aller: (id, sens) => allerA(id, { sens, arrivee: true }) });
   // 🔍 (0.99.48) le zoom d'iOS : l'icône touchée (sa place, sa taille), gardée un instant pour que le ploxion en sorte
-  const zoomIcone = creerZoomIcone({ W, calme: () => !!prefs().calme }); let origine = null;
+  const zoomIcone = creerZoomIcone({ W, calme: () => !!prefs().calme, choix: () => prefs().animations || {} }); let origine = null;   // 🎞 (0.99.52) les animations choisies
   racine.addEventListener('click', (e) => {
     const t = e.target.closest && e.target.closest('[data-id]'); if (!t || !racine.contains(t) || t.closest('.px-hote,.px-voile')) return;
     const ic = t.querySelector('.px-ic,.px-g') || t; origine = { id: t.getAttribute('data-id'), rect: ic.getBoundingClientRect(), t: Date.now() };
@@ -477,7 +477,8 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     surAccueil = true;
     racine.classList.add('px-mode-accueil'); racine.classList.remove('px-mode-ploxion', 'px-plein-ploxion'); majBords();
   }
-  function majBords() { racine.classList.toggle('px-a-vivants', vivants.size + endormis.length > 0); noterSession(); if (miniDocks) { try { miniDocks.surVivants(); } catch (e) { /* */ } } }
+  function majBords() { racine.classList.toggle('px-a-vivants', vivants.size + endormis.length > 0); noterSession(); try { W.dispatchEvent(new W.CustomEvent('ploxi0n:courant', { detail: courant ? courant.id : null })); } catch (e) { /* */ }   // ▭ (0.99.60) la bande des koins suit le ploxion où tu es
+    if (miniDocks) { try { miniDocks.surVivants(); } catch (e) { /* */ } } }
   /** un endormi (restauré de la dernière session) : monté maintenant, avec ses paramètres */
   function reveiller(id) { const e = endormis.find(x => x.id === id); endormis = endormis.filter(x => x.id !== id); return ouvrir(id, e ? e.params : null); }
   function arriere() {

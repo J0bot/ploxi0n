@@ -15,7 +15,7 @@ test('⌁ les formes : adresses, SSE, couleurs, la commande legacy du contrat v1
   assert.equal(normaliser('https://ha.exemple.ch', 8123), 'https://ha.exemple.ch', 'https : pas de port ajouté');
   assert.deepEqual(lireSSE(['event: ping', 'data: {"title":"x"}', 'event: state', 'data: {"id":"switch/Relais","value":true}']).map(x => x.event), ['ping', 'state']);
   assert.equal(hex([255, 128, 0]), '#ff8000'); assert.deepEqual(rgb('#ff8000'), [255, 128, 0]);
-  assert.deepEqual(commandeLegacy('avance 1.5'), { cmd: 'avance', d: 1.5, src: 'ploxi0n', ts: commandeLegacy('avance 1.5').ts });
+  const cl = commandeLegacy('avance 1.5'); assert.deepEqual(cl, { cmd: 'avance', d: 1.5, src: 'ploxi0n', ts: cl.ts });   // un seul Date.now() : deux appels pouvaient tomber sur deux millisecondes
   assert.equal(commandeLegacy('tourne 90').deg, 90); assert.equal(commandeLegacy('stop').d, undefined);
 });
 

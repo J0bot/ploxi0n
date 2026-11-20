@@ -5,19 +5,48 @@
 // Ne pas nuire : seule la case part sur le réseau (son centre), jamais ta position ; « suivre » s'arrête quand on quitte le ploxion.
 // (0.99.15) la boussole : les flèches tournent avec toi (deviceorientation, la boussole de CoreMotion via web-natif) ; les trottinettes et les
 // vélos en direct en Suisse (sharedmobility.ch, la même case ; une minute de fraîcheur, gardés en mémoire seulement).
-import { CATEGORIES, cellule, requete, lire, trier, proposer, fleche, metres, plansLien, distance, capBoussole, enSuisse, requeteVehicules, lireVehicules } from '../bions/autour.js';
+import { CATEGORIES, cellule, requete, lire, trier, proposer, fleche, metres, plansLien, distance, capBoussole, enSuisse, requeteVehicules, lireVehicules, resumeAutour } from '../bions/autour.js';
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 export const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
 const GARDE = 3 * 864e5;
 
-export function creerAutour({ W = globalThis.window, boxion, http, position, ouvrirLien = null, usage = async () => null, vibrer = () => {}, maintenant = () => Date.now() }) {
+// ◉ (0.99.59, RS-7 : « pour Autour, le truc live comme Proche : toujours savoir ce qu'il y a autour, voir quand je partage ma position avec mes
+// potes, et la distance de mes potes ») EN DIRECT : une Live Activity (écran verrouillé, Dynamic Island) : les lieux les plus proches, si tu
+// partages ta position, le pote le plus proche avec sa distance et sa direction (sinon le lieu le plus proche). Elle se met à jour quand l'app
+// est réveillée (toutes les 30 s ; en arrière-plan, quand Proche ou la veille la gardent éveillée). activite = { debut, maj, fin } ;
+// potes() → { partage, positions } (Proche).
+export function creerAutour({ W = globalThis.window, boxion, http, position, ouvrirLien = null, usage = async () => null, vibrer = () => {}, maintenant = () => Date.now(), activite = null, potes = () => null }) {
   let pos = null, lieux = new Map(), miens = [], genres = null, etat = '', suivi = 0, enCours = new Set(), peindre = () => {};
   let vehicules = [], vehCase = '', vehLe = 0, cap0 = null;
   // 🏝 (0.99.43) la balade : la Live Activity de PloxiVeille (écran verrouillé, Dynamic Island) ; pendant une balade, toucher un lieu en fait la cible
   let balade = null;   // null, ou { cible: { id, nom, lat, lng } | null }
   const V = () => (W.jOSVeille && W.jOSVeille.balade) || null;
   const pret = boxion.get('reglages', 'autour-miens').then(l => { if (Array.isArray(l)) miens = l.slice(0, 500); }).catch(() => {});
+  // ◉ en direct
+  let direct = false, tDirect = 0, texteDirect = '';
+  function resumeDirect() {
+    let pt = null; try { pt = potes(); } catch (e) { pt = null; }
+    return resumeAutour({ pos, lieux: tous(), potes: (pt && pt.positions) || [], partage: !!(pt && pt.partage), maintenant: maintenant() });
+  }
+  async function majDirect(premier = false) {
+    if (!direct || !activite) return;
+    if (!premier) await situer();
+    const r = resumeDirect(), t = JSON.stringify(r);
+    if (premier) { texteDirect = t; await activite.debut(r).catch(() => {}); return; }
+    if (t !== texteDirect) { texteDirect = t; activite.maj(r).catch(() => {}); }
+  }
+  async function enDirect(oui) {
+    if (!activite) return false;
+    direct = !!oui; W.clearInterval(tDirect); tDirect = 0;
+    await boxion.put('reglages', 'autour-direct', direct).catch(() => {});
+    if (direct) { if (!pos) await situer(); await majDirect(true); tDirect = W.setInterval(() => { majDirect(); }, 30000); etat = '◉ autour est sur l\'écran verrouillé'; }
+    else { texteDirect = ''; await activite.fin().catch(() => {}); etat = '◉ plus en direct'; }
+    vibrer('selection'); peindre(); W.setTimeout(() => { etat = ''; peindre(); }, 3500);
+    return direct;
+  }
+  // relancée : le direct reprend s'il était allumé (l'activité d'iOS, elle, a survécu ou non)
+  boxion.get('reglages', 'autour-direct').then(v => { if (v === true && activite) { direct = true; pret.then(() => situer()).then(() => majDirect(true)).catch(() => {}); tDirect = W.setInterval(() => { majDirect(); }, 30000); } }).catch(() => {});
 
   /** une case : le cache (3 jours), sinon Overpass (le miroir si le premier est occupé) */
   async function charger(c) {
@@ -89,7 +118,7 @@ export function creerAutour({ W = globalThis.window, boxion, http, position, ouv
     let vivant = true, vus = [];
     hote.innerHTML = '<div class="px-page px-autour" data-neurones="fin"><p class="px-grave">⌖ autour</p>'
       + '<p class="px-sous">Ce qu\'il y a autour de toi (OpenStreetMap), du plus proche au plus loin. Ta position ne part pas : seulement le centre d\'une case d\'un kilomètre.</p>'
-      + '<div class="px-au-b"><button type="button" data-au="situer">◎ me situer</button><button type="button" data-au="suivre"></button><button type="button" data-au="poser">＋ poser ici</button>' + (V() ? '<button type="button" data-au="balade"></button>' : '') + '</div>'
+      + '<div class="px-au-b"><button type="button" data-au="situer">◎ me situer</button><button type="button" data-au="suivre"></button><button type="button" data-au="poser">＋ poser ici</button>' + (activite ? '<button type="button" data-au="direct"></button>' : '') + (V() ? '<button type="button" data-au="balade"></button>' : '') + '</div>'
       + '<div class="px-au-b px-au-balade" data-au-bal hidden></div>'
       + '<p class="px-au-etat" data-au-etat></p>'
       + '<button type="button" class="px-au-wc" data-neurone data-au-wc></button>'
@@ -122,6 +151,7 @@ export function creerAutour({ W = globalThis.window, boxion, http, position, ouv
       if (!vivant) return;
       peindreOndes();
       $('[data-au="suivre"]').textContent = suivi ? '■ ne plus suivre' : '◉ suivre en marchant'; $('[data-au="suivre"]').classList.toggle('on', !!suivi);
+      const bd = $('[data-au="direct"]'); if (bd) { bd.textContent = direct ? '■ plus en direct' : '◉ en direct'; bd.classList.toggle('on', direct); }
       const bb = $('[data-au="balade"]'); if (bb) { bb.textContent = balade ? '■ finir la balade' : '🏝 balade'; bb.classList.toggle('on', !!balade); }
       const bl = $('[data-au-bal]'); if (bl) { bl.hidden = !balade; bl.innerHTML = balade ? '<span class="px-sous">🏝 ' + (balade.cible ? 'vers ' + esc(balade.cible.nom) : 'touche un lieu : il te guide depuis l\'écran verrouillé') + '</span>' + (balade.cible ? '<button type="button" data-au="plans">↗ Plans</button><button type="button" data-au="sans">✕ cible</button>' : '') : ''; }
       $('[data-au-etat]').textContent = etat || (pos ? ((lieux.size + vehicules.length) + ' lieux autour' + (suivi ? ' · je te suis' : '') + (cap0 != null ? ' · boussole' : '')) : 'touche « me situer »');
@@ -148,6 +178,7 @@ export function creerAutour({ W = globalThis.window, boxion, http, position, ouv
       const b = e.target.closest('[data-au]'); if (!b) return; const a = b.getAttribute('data-au');
       if (a === 'situer') situer(); else if (a === 'suivre') suivre(!suivi); else if (a === 'poser') poser('mien', ''); else if (a === 'ondes') ondes(!ondesOn);
       else if (a === 'balade') baladeOnOff(null);
+      else if (a === 'direct') enDirect(!direct);
       else if (a === 'plans' && balade && balade.cible) { const u = plansLien(balade.cible); if (ouvrirLien) ouvrirLien(u); else if (W.open) W.open(u, '_blank'); }
       else if (a === 'sans' && balade) { const B = V(); if (B) B.cible(null).then(() => { balade.cible = null; peindre(); }).catch(() => {}); }
     });
@@ -162,5 +193,5 @@ export function creerAutour({ W = globalThis.window, boxion, http, position, ouv
     if (V()) await baladeOnOff(cibleDe(wc)); else aller(wc);
     return wc;
   }
-  return { mount, pret, situer, suivre, poser, toilettes, balade: () => balade, etat: () => ({ pos, lieux: tous(), etat, suivi: !!suivi, cap: cap0, vehicules: vehicules.length }), ploxion: { id: 'autour', nom: 'Autour', icone: '⌖', interne: true } };
+  return { mount, pret, situer, suivre, poser, toilettes, balade: () => balade, enDirect, direct: () => direct, resumeDirect, etat: () => ({ pos, lieux: tous(), etat, suivi: !!suivi, cap: cap0, vehicules: vehicules.length }), ploxion: { id: 'autour', nom: 'Autour', icone: '⌖', interne: true } };
 }

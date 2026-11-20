@@ -4,6 +4,7 @@
 // et ceux de l'interface dessinés dans la même grammaire (cercle = ion, triangle = koin, carré = portion, pointillé = l'intérieur).
 // Un ploxion : son glyphe par son nom (un dictionnaire de mots) ; sinon un glyphe GÉNÉRÉ, stable, tiré de son id : une forme du xerboxion
 // (ion, koin, portion, losange, hexagone) et une marque intérieure (point, pointillé, croix, trait, trois points).
+import { glypheSeed, glypheEmoji } from '../bions/glyphe-seed.js';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const P = (d) => '<path d="' + d + '"/>';
 const C = (x, y, r, plein) => '<circle cx="' + x + '" cy="' + y + '" r="' + r + '"' + (plein ? ' class="f"' : '') + '/>';
@@ -28,6 +29,9 @@ export const GLYPHES = {
   coeur: P('M50 84 16 50a17 17 0 0 1 34-24 17 17 0 0 1 34 24z'),
   xeroction: P('M12 20Q48 46 80 88M20 12Q54 52 88 80') + P('M88 20Q52 46 20 88M80 12Q46 52 12 80') + P('M12 20 20 12M80 88 88 80M88 20 80 12M20 88 12 80') + C(50, 50, 4, 1),
   ploxion: POLY('50,8 92,50 50,92 8,50') + POLY('50,24 76,50 50,76 24,50') + POLY('50,38 62,50 50,62 38,50') + C(50, 50, 3, 1),
+  // (0.99.57) l'hypercube du xer (le koin ouvert du chill-tekk du labo) : un cube en fil, un cube plus petit dedans
+  hypercube: POLY('22,36 62,30 70,70 30,78') + POLY('36,20 76,14 84,54 70,70 62,30') + L(22, 36, 36, 20) + L(62, 30, 76, 14) + L(30, 78, 44, 62) + L(44, 62, 84, 54) + L(44, 62, 36, 20)
+    + '<g opacity=".5">' + POLY('40,44 58,41 61,59 43,62') + POLY('46,36 64,33 67,51 61,59 58,41') + L(40, 44, 46, 36) + L(58, 41, 64, 33) + '</g>',
   xer: R(14, 14, 72, 72) + R(34, 34, 32, 32) + L(14, 14, 34, 34) + L(86, 14, 66, 34) + L(14, 86, 34, 66) + L(86, 86, 66, 66),
   // ---- l'interface ----
   chercher: C(44, 44, 26) + L(63, 63, 86, 86),
@@ -119,7 +123,7 @@ export function glyphe(nom, cls = '') {
 export function versGlyphe(x, cls = '') {
   const s = String(x == null ? '' : x).trim();
   if (GLYPHES[s] || DEPUIS_EMOJI[s] || DEPUIS_EMOJI[s.replace(/\uFE0F/g, '')]) return glyphe(DEPUIS_EMOJI[s.replace(/\uFE0F/g, '')] || s, cls);
-  if (/\p{Extended_Pictographic}/u.test(s)) return glyphe('ion', cls);   // un emoji inconnu : le point du xerboxion, jamais l'emoji
+  if (/\p{Extended_Pictographic}/u.test(s)) return glypheEmoji(s, { cls });   // un emoji inconnu : son glyphe à graine (0.99.56), jamais l'emoji
   return '<span class="px-g-t">' + esc(s) + '</span>';
 }
 
@@ -150,9 +154,6 @@ const MOTS = [
 ];
 const INTERNES = { trackpad: 'haptique', cape: 'cape', sante: 'coeur', marketplace: 'marche', banc: 'flacon', 'xer-en-ligne': 'globe', 'journal-tsoins': 'tsoin', gestion: 'boite',
   'reglages-app': 'reglages', bother: 'bulle', portion: 'portion' };
-const FORMES = [C(50, 50, 36), POLY('50,12 88,80 12,80'), R(16, 16, 68, 68, 4), POLY('50,10 90,50 50,90 10,50'), POLY('50,12 83,31 83,69 50,88 17,69 17,31')];
-const MARQUES = [C(50, 52, 7, 1), '<circle cx="50" cy="52" r="18" class="p"/>', L(38, 40, 62, 64) + L(62, 40, 38, 64), L(30, 52, 70, 52), C(36, 54, 4, 1) + C(50, 54, 4, 1) + C(64, 54, 4, 1), R(42, 44, 16, 16, 0, 1)];
-const hache = (s) => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return h; };
 /** le nom du glyphe d'un ploxion par ses mots (id, nom, catégorie), ou null */
 export function nomGlyphe(p) {
   if (!p) return null; if (INTERNES[p.id]) return INTERNES[p.id];
@@ -160,9 +161,8 @@ export function nomGlyphe(p) {
   for (const [re, n] of MOTS) if (re.test(t)) return n;
   return null;
 }
-/** le glyphe d'un ploxion (SVG inline) : connu par ses mots, sinon généré de son id (forme × marque, stable) */
+/** le glyphe d'un ploxion (SVG inline) : connu par ses mots, sinon tiré de son id (src/bions/glyphe-seed.js, stable) */
 export function glyphePloxion(p, cls = '') {
   const n = nomGlyphe(p); if (n) return glyphe(n, cls);
-  const h = hache(p && p.id);
-  return '<svg class="px-g' + (cls ? ' ' + cls : '') + '" viewBox="0 0 100 100" aria-hidden="true" focusable="false">' + FORMES[h % FORMES.length] + MARQUES[(h >>> 5) % MARQUES.length] + '</svg>';
+  return glypheSeed((p && p.id) || '', { cls });   // ◇ (0.99.56) le bion commun : la même graine, le même glyphe, ici et au labo
 }

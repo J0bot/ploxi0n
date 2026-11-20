@@ -14,7 +14,10 @@ test('⊡ voisin : le plus proche dans un cône de 45°, la distance d\'abord', 
   assert.equal(voisin(PLACES, '·', 'gauche'), 'e', 'à 45° pile : encore dans le cône');
   assert.equal(voisin(PLACES, 'b', 'droite'), null, 'rien par là');
   const diag = { '·': [0, 0], m: [1, 1] };
-  const v = voisins(diag, '·'); assert.equal([v.bas, v.droite].filter(Boolean).length, 1, 'en diagonale : une seule direction');
+  const v = voisins(diag, '·'); assert.equal(v['bas-droite'], 'm', '(0.99.61) en diagonale : le coin'); assert.equal([v.bas, v.droite].filter(Boolean).length, 0, 'et une seule direction');
+  // (0.99.61) le 3 × 3 : les huit autour
+  const neuf = { '·': [0, 0], n: [0, -1], s: [0, 1], o: [-1, 0], e: [1, 0], no: [-1, -1], ne: [1, -1], so: [-1, 1], se: [1, 1] };
+  assert.deepEqual(voisins(neuf, '·'), { haut: 'n', bas: 's', gauche: 'o', droite: 'e', 'haut-gauche': 'no', 'haut-droite': 'ne', 'bas-gauche': 'so', 'bas-droite': 'se' });
   assert.equal(voisins(PLACES, 'b', { id: 'a', dir: 'droite' }).gauche, 'a', 'd\'où l\'on vient est derrière soi');
 });
 
@@ -37,5 +40,21 @@ test('⊡ la vue : centrée sur l\'app ouverte, ses voisins ; glisser à droite 
     // la capture d'écran d'iOS (AppDelegate → « ploxi0n-capture ») : la vue s'ouvre comme une image
     await v.ouvrir({ capture: true }); assert.ok(racine.querySelector('.px-vx-capture .px-vx-eclair'));
     v.fermer(); void carte;
+  } finally { p.fin(); }
+});
+
+test('⊡ (0.99.61) le 3 × 3 : des cases carrées, huit voisins posés autour, un coin se rejoint d\'un geste en biais', async () => {
+  const p = await page({ avion: true, ploxions: [] });
+  try {
+    const W = p.w, D = W.document, racine = D.createElement('div'); D.body.appendChild(racine);
+    const places = { n: [0, -1], s: [0, 1], o: [-1, 0], e: [1, 0], no: [-1, -1], ne: [1, -1], so: [-1, 1], se: [1, 1], loin: [2, 2] };
+    const v = creerVueXers({ W, racine, liste: () => Object.keys(places).map(id => ({ id, nom: id.toUpperCase() })), places: async () => places, courant: () => null, calme: () => true });
+    const el = await v.ouvrir();
+    const ts = [...el.querySelectorAll('.px-vx-t')]; assert.equal(ts.length, 9, 'le centre et ses huit voisins');
+    assert.ok(ts.every(t => t.style.width === t.style.height), 'carrées');
+    const se = el.querySelector('[data-dir="bas-droite"]'); assert.ok(se); assert.ok(parseFloat(se.style.getPropertyValue('--vx-x')) > 0 && parseFloat(se.style.getPropertyValue('--vx-y')) > 0, 'en bas à droite');
+    assert.equal(el.querySelectorAll('.px-vx-d').length, 8);
+    assert.ok(v.aller('bas-droite')); assert.equal(v.centre(), 'se'); assert.equal(v.cases()['haut-gauche'], '·', 'd\'où l\'on vient : le coin opposé'); assert.equal(v.cases()['bas-droite'], 'loin');
+    v.fermer();
   } finally { p.fin(); }
 });

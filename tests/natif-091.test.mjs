@@ -31,14 +31,17 @@ test('🏝 une activité par clé : la redemander la met à jour ; fin ; coupée
 test('▦ un widget par ploxion : publier (id du ploxion devant), la liste du widget, le bouton → ploxi0n://px/<id>?…, les Préférences', async () => {
   const ecrits = []; const boxion = creerMemoire(); let devant = 'systeme';
   const w = creerWidgetsPloxions({ boxion, ecrire: async (k, v) => ecrits.push([k, JSON.parse(v)]), glyphePng: async () => 'PNG64', courant: () => devant,
-    catalogue: () => [{ id: 'systeme', nom: 'Système', interne: true }, { id: 'xp', nom: 'Jeu' }, { id: 'wiki', nom: 'Wiki' }], maintenant: () => 1234 });
+    catalogue: () => [{ id: 'systeme', nom: 'Système', interne: true }, { id: 'xp', nom: 'Jeu', description: 'un jeu de cartes, au pouce', categorie: 'jeux', bions: ['jOSKnob', 'jOSSwipe'] }, { id: 'wiki', nom: 'Wiki' }], maintenant: () => 1234 });
   const d = await w.publier({ valeur: 60, unite: 'img/s', sous: 'fluide', serie: [1, 2, 'x', 3, ...Array(40).fill(5)], bouton: { titre: 'mesurer', params: { onglet: 'app' } } });
   assert.deepEqual({ ...d, serie: d.serie.length }, { nom: 'Système', valeur: '60', unite: 'img/s', sous: 'fluide', serie: 24, bouton: { titre: 'mesurer', lien: 'ploxi0n://px/systeme?onglet=app' }, g64: 'PNG64', le: 1234 });
   devant = null; await assert.rejects(w.publier({ valeur: 1 }), /quel ploxion/);
   await w.publier({ valeur: 'x' }, 'xp');
   await new Promise(r => setTimeout(r, 450));
   const [cle, doc] = ecrits.at(-1); assert.equal(cle, 'ploxi0n.px-widgets');
-  assert.deepEqual(doc.liste.map(x => x.id), ['systeme', 'xp', 'wiki'], 'ceux qui publient d\'abord, puis les installés (les internes seulement s\'ils publient)');
+  assert.deepEqual(doc.liste.map(x => x.id).filter(i => !i.startsWith('xer:')), ['systeme', 'xp', 'wiki'], 'ceux qui publient d\'abord, puis les installés (les internes seulement s\'ils publient)');
+  assert.deepEqual(doc.liste.filter(x => x.id.startsWith('xer:')).map(x => x.id), ['xer:organique', 'xer:chill-tekk', 'xer:xerboxion', 'xer:xerbot'], '(0.99.59) les xers, au bout');
+  assert.equal(doc.fiche['xer:xerbot'].c, 'xer');
+  assert.deepEqual(doc.fiche.xp, { d: 'un jeu de cartes, au pouce', c: 'jeux', b: ['jOSKnob', 'jOSSwipe'] }, '◈ la fiche du xerploxion : description, catégorie, bions'); assert.equal(doc.fiche.wiki, undefined);
   assert.equal(doc.px.xp.valeur, 'x');
   await w.retirer('xp'); assert.equal(w.tous().xp, undefined);
 });

@@ -89,7 +89,7 @@ quand on relaie** (c'est ce qui permet d'étendre le protocole sans casser les a
 
 | `k` | contenu `d` | |
 |---|---|---|
-| `ann` | `{ cle, v?, r?, p?, cap? }` | l'annonce : la clé publique brute en base64 (`cle`) ; les empreintes de ses voisins directs (`v`, 10 au plus) ; le rôle (`r` : `noeud` ou `client`) ; la version du protocole (`p` : `1`) ; ce qu'il sait faire (`cap` : `relais`, `stock`, `pub`, `mp`, `ack`, `pos`, `coursier`, `carte`…) |
+| `ann` | `{ cle, v?, r?, p?, cap?, pos? }` | l'annonce : la clé publique brute en base64 (`cle`) ; les empreintes de ses voisins directs (`v`, 10 au plus) ; le rôle (`r` : `noeud` ou `client`) ; la version du protocole (`p` : `1`) ; ce qu'il sait faire (`cap` : `relais`, `stock`, `pub`, `mp`, `ack`, `pos`, `coursier`, `carte`, `xion`…) ; (0.99.53) **`pos`** : `{ lat, lng, precision? }`, seulement pour un nœud **fixe** qui accepte de dire où il est (un relais posé : un Pi, un ESP32), arrondi à 5 décimales (~1 m) ; un appareil qui bouge (un téléphone) NE DEVRAIT PAS l'envoyer. **`xion`** dans `cap` : ce nœud est relié au xion (le runtime en ligne : une passerelle) |
 | `pub` | `{ x }` en clair, ou chiffré (§7.3) | un message dans un salon (`s`) |
 | `mp` | chiffré (§7.2) : `{ x, m? }` | un message privé pour `a` |
 | `ack` | `{ r, l? }` | l'accusé d'un privé : `r` = l'id du message, `l: 1` = lu |
@@ -165,7 +165,7 @@ empreintes, le secret ECDH, la clé AES de la paire, la clé du salon `#soiree` 
 réels (`ann`, `pub` en clair, `pub` de salon fermé, `mp`, `ack`, `pos`), leurs contenus en clair et un paquet découpé en morceaux. Une
 implémentation est conforme si elle :
 1. retrouve les empreintes, le secret, les clés ;
-2. déchiffre `pub_salon_ferme`, `mp_alice_bob` et `pos_alice_bob` vers les contenus attendus ;
+2. déchiffre `pub_salon_ferme`, `mp_x1_x2` et `pos_x1_x2` vers les contenus attendus ;
 3. recolle les morceaux en `pub_clair` ;
 4. relaie un paquet de type inconnu en conservant ses champs inconnus.
 

@@ -27,10 +27,10 @@ int main(void) {
     int bon = maille_lire(V_PAQUETS[k], strlen(V_PAQUETS[k]), &p);
     OK(bon, V_NOMS[k]);
     OK(p.m == 1 && p.h == 255 && p.t == (double)V_HORLOGE, "m, h, t");
-    OK(maille_tranche_egale(p.o, strstr(V_NOMS[k], "bob") && strstr(V_NOMS[k], "ack") ? V_BOB : (strcmp(V_NOMS[k], "ack_bob") == 0 ? V_BOB : V_ALICE)), "o");
+    OK(maille_tranche_egale(p.o, strstr(V_NOMS[k], "x2") && strstr(V_NOMS[k], "ack") ? V_X2 : (strcmp(V_NOMS[k], "ack_x2") == 0 ? V_X2 : V_X1)), "o");
   }
   maille_lire(V_PAQUETS[3], strlen(V_PAQUETS[3]), &p);
-  OK(maille_tranche_egale(p.k, "mp") && maille_tranche_egale(p.a, V_BOB), "mp : k et a");
+  OK(maille_tranche_egale(p.k, "mp") && maille_tranche_egale(p.a, V_X2), "mp : k et a");
   maille_lire(V_PAQUETS[2], strlen(V_PAQUETS[2]), &p);
   OK(maille_tranche_egale(p.s, "#soiree"), "salon fermé : s");
 
@@ -90,7 +90,7 @@ int main(void) {
     }
   }
 
-  /* §5 : le relais (un nœud Charlie, empreinte 00..01) */
+  /* §5 : le relais (un nœud xerion-3, empreinte 00..01) */
   maille_noeud_init(&nd, "0000000000000001");
   for (k = 0; k < V_NB; k++) {
     const char *pq = V_PAQUETS[k]; size_t lp = strlen(pq);
@@ -101,12 +101,12 @@ int main(void) {
     OK(strcmp(sortie, attendu) == 0, "relayé : h - 1, le reste à l'octet près"); if (strcmp(sortie, attendu)) printf("%s\n%s\n%s\n", V_NOMS[k], sortie, attendu);
     OK(maille_noeud_recevoir(&nd, pq, lp, V_HORLOGE + 1000, sortie, sizeof(sortie), &l) == MAILLE_JETER, "le doublon est jeté");
   }
-  /* Bob reçoit le mp qui lui est adressé : pour lui, pas relayé */
-  maille_noeud_init(&nd, V_BOB);
+  /* xerion-2 reçoit le mp qui lui est adressé : pour lui, pas relayé */
+  maille_noeud_init(&nd, V_X2);
   d = maille_noeud_recevoir(&nd, V_PAQUETS[3], strlen(V_PAQUETS[3]), V_HORLOGE, sortie, sizeof(sortie), &l);
   OK(d == MAILLE_POUR_MOI && l == 0, "mp pour moi : pas relayé");
-  /* Alice entend son propre écho */
-  maille_noeud_init(&nd, V_ALICE);
+  /* xerion-1 entend son propre écho */
+  maille_noeud_init(&nd, V_X1);
   OK(maille_noeud_recevoir(&nd, V_PAQUETS[1], strlen(V_PAQUETS[1]), V_HORLOGE, sortie, sizeof(sortie), &l) == MAILLE_JETER, "mon écho");
   /* trop vieux, trop en avance ; sans heure : accepté */
   maille_noeud_init(&nd, "0000000000000001");
