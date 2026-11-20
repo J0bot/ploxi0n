@@ -2,10 +2,8 @@
 // labo »). Trois façons d'habiter l'app, un toucher en haut de l'accueil :
 //   〰 organique   (0.94, RS-7 : « que tout le UI entier ait l'air vivant ») l'accueil de ploxi0n, en membranes et en neurones
 //   ◇ chill-tekk  l'accueil de ploxi0n : tes ploxions, calme ; (0.99.47) le mode de base à l'installation, le plus simple pour commencer
-//   ⬡ xerboxion   l'UI du labo (labo.j0bot.ch) comme accueil ; un ploxion qu'elle ouvre (postMessage { ploxi0n: 'ouvrir', id }) s'ouvre
-//                 dans l'app, en natif. (20.11, RS-7 coord #2120 : « chill-tekk c'est pour chiller, xerboxion pour essayer d'arriver aussi loin
-//                 que moi ») tout le xer des koins : les koins à la place du dock, la bande du ploxion ouvert dans le trou entre eux
-//                 (src/app/koin-trou.js), les koins dessinés avec les glyphes réglés dans l'alien
+//   ⬡ xerboxion   l'UI du labo (labo.j0bot.ch) comme accueil, le dock de l'app par-dessus ; un ploxion qu'elle ouvre
+//                 (postMessage { ploxi0n: 'ouvrir', id }) s'ouvre dans l'app, en natif
 //   🤖 xerbot     XERB0T, la couche robotique : le poste de pilotage du monde physique — la blouse (labo-cape), les appareils
 //                 Bluetooth, la maison (HomeKit), la lampe, les tags NFC (les kions dans le réel), le Wi-Fi, et le bus xerbot.cmd
 // Réglage : prefs.mode ; <html> porte px-m-<mode> (le CSS cache la grille quand un panneau la remplace).
@@ -19,8 +17,6 @@ export function commandeLegacy(t) {
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 import { glyphe as G, versGlyphe } from './glyphes.js';   // ◇ (0.54) des glyphes, plus d'emoji
 export const MODES = [['organique', 'neurone', 'organique'], ['chill-tekk', 'chilltekk', 'chill-tekk'], ['xerboxion', 'xerboxion', 'xerboxion'], ['xerbot', 'xerbot', 'xerbot']];
-/** (20.11) ce que fait le mode xerboxion, en une ligne (au-dessus de l'UI du labo) */
-export const LIGNE_XB = '<p class="px-mode-l">◺◿ le xer des koins : les koins remplacent le dock, la bande du ploxion ouvert vit entre eux</p>';
 
 export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, connait = () => false, source = 'https://labo.j0bot.ch', chemin = '/home', vibrer = () => {}, cadres = null, controleur = null, connecter = null }) {
   const D = W.document, N = () => W.jOSNatif || {};
@@ -46,9 +42,9 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
 
   const puces = () => '<div class="px-modes" role="tablist" data-neurones="fin" data-neurones-cellules="button">' + MODES.map(([k, i, n]) => '<button data-mode="' + k + '" class="' + (k === mode() ? 'on' : '') + '">' + G(i) + ' ' + n + '</button>').join('') + '</div>';
   function panneauXerboxion() {
-    if (W.navigator.onLine === false) return LIGNE_XB + '<div class="px-mode-p"><p class="px-grave">⬡ xerboxion</p><p>L\'UI du labo demande le réseau. Hors ligne : ◇ chill-tekk.</p></div>';
+    if (W.navigator.onLine === false) return '<div class="px-mode-p"><p class="px-grave">⬡ xerboxion</p><p>L\'UI du labo demande le réseau. Hors ligne : ◇ chill-tekk.</p></div>';
     // (0.52) l'iframe reste invisible tant que l'UI du labo n'est pas là (plus de grand rectangle blanc) ; dessous, « ça arrive »
-    return LIGNE_XB + '<div class="px-mode-p px-labo"><p class="px-labo-attente">⬡ l\'UI du labo arrive…</p><iframe onload="this.dataset.charge=1;if(this.dataset.ok&&this.getAttribute(\'src\')!==\'about:blank\')this.style.opacity=1" style="opacity:0" title="xerboxion" src="about:blank" data-vers="' + esc(chemin) + '?app=ploxi0n" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; geolocation" referrerpolicy="origin"></iframe></div>';
+    return '<div class="px-mode-p px-labo"><p class="px-labo-attente">⬡ l\'UI du labo arrive…</p><iframe onload="this.dataset.charge=1;if(this.dataset.ok&&this.getAttribute(\'src\')!==\'about:blank\')this.style.opacity=1" style="opacity:0" title="xerboxion" src="about:blank" data-vers="' + esc(chemin) + '?app=ploxi0n" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; geolocation" referrerpolicy="origin"></iframe></div>';
   }
   const carte = (ic, titre, sous, actions) => '<div class="px-xb-c"><span class="ic">' + versGlyphe(ic) + '</span><span><b>' + esc(titre) + '</b><small>' + sous + '</small></span><span class="act">' + actions + '</span></div>';
   function panneauXerbot() {

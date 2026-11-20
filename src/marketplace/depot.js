@@ -425,10 +425,7 @@ export function creerHttp(W = globalThis.window, enTetes = async () => ({})) {
         const { CapacitorHttp } = await import('@capacitor/core');
         let data; if (corps && !fichier) { try { data = JSON.parse(corps); } catch (e) { data = corps; } }
         const he = { ...(await enTetes()), ...headers };
-        // (20.11, RS-7 #1987 / #2099 « rien à envoyer » dans coord) : le HTTP natif (Capacitor 8, CapacitorUrlRequest.setRequestBody) ne pose le corps
-        // QUE s'il y a un Content-Type ; sans lui, un FormData partait VIDE (coord, les originaux de la galerie). « multipart/form-data » sans boundary :
-        // le natif fabrique le sien et réécrit l'en-tête (getRequestDataFromFormData → overrideContentType)
-        if (fichier) { for (const k of Object.keys(he)) if (k.toLowerCase() === 'content-type') delete he[k]; he['Content-Type'] = fichier.dataType === 'file' ? (fichier.type || 'application/octet-stream') : 'multipart/form-data'; }
+        if (fichier) { for (const k of Object.keys(he)) if (k.toLowerCase() === 'content-type') delete he[k]; if (fichier.dataType === 'file') he['Content-Type'] = fichier.type || 'application/octet-stream'; }
         const r = await CapacitorHttp.request({ method: methode, url, headers: he, data: fichier ? fichier.data : data, ...(fichier ? { dataType: fichier.dataType } : {}), responseType: 'text' });
         const h = {}; for (const k in (r.headers || {})) h[k.toLowerCase()] = r.headers[k];
         return { status: r.status, texte: typeof r.data === 'string' ? r.data : JSON.stringify(r.data), entetes: h };
