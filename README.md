@@ -87,7 +87,8 @@ node tools/faux-iphone/faux-iphone.mjs http://localhost:4173/ build/fi --script 
   - `vlc` : le lecteur VLC ;
   - `regenerer_profil` : après un changement de capabilities.
 
-  Le détail : `docs/TESTFLIGHT.md`, `docs/PUBLIER.md`.
+  Sans le droit de lancer le workflow, un commit poussé avec `[build]` dans son message le lance aussi (`[widgets]`, `[notifs]` : avec ces
+  extensions) ; RS-1 construit un « lot du jour » chaque soir. Le détail : `docs/TESTFLIGHT.md`, `docs/PUBLIER.md`.
 - **Android** : l'APK se construit à chaque push (`docs/ANDROID.md`).
 - **Les clés** (APNs `.p8`, certificats) ne sont jamais dans le dépôt : secrets de la CI et serveur du labo seulement.
 
