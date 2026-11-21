@@ -4,7 +4,7 @@
 //   <img src|srcset>, <source>, <video poster>, style="background-image:url(/…)" en chemin du site → https://labo.j0bot.ch/… ;
 //   une image qui refuse quand même (une route qui exige le compte : 401/403/404 sans cookie) → récupérée AVEC le jeton (CapacitorHttp)
 //   et posée en data: URL. Les fichiers de l'app (/assets, /ploxions, /bions, /vendor, /icons, /marketplace) ne bougent pas.
-const LOCAL = /^\/(assets|ploxions|bions|vendor|icons|marketplace|fonts)\//;
+const LOCAL = /^\/(assets|ploxions|bions|vendor|icons|marketplace|fonts|coeur|_capacitor_file_|_capacitor_content_)\//;   // (0.99.67) le cœur, les fichiers de l'iPhone
 // (12.10) les MÉDIAS DU BOXION (/fs/read, /chaoxion/read, /coord/img|piece) : une adresse SIGNÉE (signer(chemins) → { chemin: url }, labo
 // AppMediaController) — une vidéo se lit en flux dans le lecteur natif d'iOS, une image sans détour ; gardée 90 min.
 const SIGNABLE = /^\/(fs\/read\?path=|chaoxion\/read\?path=|coord\/img\/\d+$|coord\/piece\/\d+$)/;
@@ -52,6 +52,23 @@ export function installerImages({ W = globalThis.window, source = 'https://labo.
     if (n.querySelectorAll) for (const x of n.querySelectorAll('img,source,video,audio,iframe,[style*="url("]')) img(x);
   }
   balayer(D.body);
+  // ♫ (0.99.67, RS-7 coord #2114) LES SONS hors de la page : un ploxion du labo crée son son en new Audio('/sons/…'), ou pose audio.src = '/…'
+  // sur un élément qu'il n'ajoute jamais à la page (le balayage ne le voit pas) ; dans l'app, ce chemin du site visait capacitor://localhost :
+  // aucun son. Même règle que les images : le site (https://labo.j0bot.ch/…) ; les fichiers de l'app et les adresses complètes ne bougent pas.
+  sons();
+  function sons() {
+    const M = W.HTMLMediaElement && W.HTMLMediaElement.prototype, d = M && Object.getOwnPropertyDescriptor(M, 'src');
+    if (d && d.set && d.get && !d.set.__pxSon) {
+      const poser = function (v) { return d.set.call(this, distant(v) ? abs(v) : v); }; poser.__pxSon = true;
+      Object.defineProperty(M, 'src', { configurable: true, enumerable: d.enumerable, get: d.get, set: poser });
+    }
+    const V = W.Audio;
+    if (typeof V === 'function' && !V.__pxSon) {
+      const A = function Audio(src) { return src === undefined ? new V() : new V(distant(src) ? abs(src) : src); };
+      A.prototype = V.prototype; A.__pxSon = true; A.vrai = V;   // instanceof Audio / HTMLAudioElement marchent comme avant
+      W.Audio = A;
+    }
+  }
   // (0.63) les styles écrits par l'app à chaque image (la fractale, les bords, le fantôme, le parallaxe) ne sont plus relus : un
   // style ne compte que s'il porte une url(…) ; un élément vu une fois par lot ; getPropertyValue lit une propriété sans tout sérialiser
   const APP = '.px-hote,.px-fx-icone,.px-fx-cible,.px-fx-voile,.px-fx-dessus,.px-fantome,.px-bord,.px-fond i,.px-pages,.px-plat,.px-scene,.px-fx-calque,.px-fx-curseur';
