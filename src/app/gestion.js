@@ -5,7 +5,8 @@
 import { ko } from './installation.js';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-export function enregistrerGestion({ W = globalThis.window, depot, ouvrir = () => {}, retirer = async () => {}, vibrer = () => {} }) {
+// (0.99.67) icone(p) : l'icône du ploxion (son carré à l'Apple, main.js) ; sans elle, l'icône du labo en texte
+export function enregistrerGestion({ W = globalThis.window, depot, ouvrir = () => {}, retirer = async () => {}, vibrer = () => {}, icone = null }) {
   function mount(hote) {
     let vivant = true, tri = 'poids', ouvert = null, msg = '';
     const dessiner = async () => {
@@ -16,7 +17,7 @@ export function enregistrerGestion({ W = globalThis.window, depot, ouvrir = () =
         + '<div class="px-sante-tuiles"><div class="px-sante-t"><small>en tout</small><b>' + ko(T.tout) + '</b></div><div class="px-sante-t"><small>ploxions</small><b>' + ko(T.bundles) + '</b></div><div class="px-sante-t"><small>bions · ' + inv.bions.length + '</small><b>' + ko(T.bions) + '</b></div>'
         + (T.orphelins.length ? '<div class="px-sante-t"><small>orphelins · ' + T.orphelins.length + '</small><b>' + ko(T.orphelins.reduce((a, b) => a + b.octets, 0)) + '</b></div>' : '') + '</div>'
         + (msg ? '<p class="px-sous">' + esc(msg) + '</p>' : '')
-        + liste.map(p => '<div class="px-gest-l' + (ouvert === p.id ? ' on' : '') + '" data-p="' + esc(p.id) + '"><div class="px-gest-h"><span class="g">' + esc(p.icone || '▣') + '</span><div><b>' + esc(p.nom || p.id) + '</b>'
+        + liste.map(p => '<div class="px-gest-l' + (ouvert === p.id ? ' on' : '') + '" data-p="' + esc(p.id) + '"><div class="px-gest-h"><span class="g">' + (icone ? icone(p) : esc(p.icone || '▣')) + '</span><div><b>' + esc(p.nom || p.id) + '</b>'
           + '<small>' + ko(p.total) + ' · ' + p.deps.length + ' bion(s)' + (p.origine === 'pack' ? ' · de base' : '') + ' · libère ' + ko(p.liberable) + '</small>'
           + '<span class="px-gest-jauge"><i style="width:' + (p.bundle / max * 100).toFixed(1) + '%"></i><i class="b" style="width:' + ((p.total - p.bundle) / max * 100).toFixed(1) + '%"></i></span></div></div>'
           + (ouvert === p.id ? '<div class="px-gest-deps">' + (p.deps.length ? p.deps.slice().sort((a, b) => b.octets - a.octets).map(d => '<span class="px-puce' + (d.partage > 1 ? '' : ' seul') + '">⬡ ' + esc(d.nom) + ' · ' + ko(d.octets) + (d.partage > 1 ? ' · ×' + d.partage : ' · à lui seul') + (d.coupe ? ' · coupé' : '') + '</span>').join('') : '<span class="px-sous">aucun bion</span>')

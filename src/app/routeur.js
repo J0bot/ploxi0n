@@ -460,7 +460,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
   const texte = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   // ◇ (0.54) un ploxion a son GLYPHE (src/app/glyphes.js : le trait du xerboxion) ; ⚙ › Apparence › « Les emoji du labo » pour les garder
   // ⬡ (0.55) l'icône d'un ploxion = son xerkion (src/app/xerkion-icone.js) ; ⚙ › Apparence peut revenir au glyphe seul, ou aux emoji du labo
-  const icone = (p) => (prefs().glyphes === false ? texte((p && p.icone) || '▣') : svgXerkion(p, { seul: prefs().styleIcones === 'glyphe' }));
+  const icone = (p) => (prefs().glyphes === false ? texte((p && p.icone) || '▣') : svgXerkion(p, { style: prefs().styleIcones }));
   const G = (n) => glyphe(n);
   // la teinte d'un ploxion (chill-tekk : chaque icône de verre a sa couleur, stable, tirée de son id)
   const teinte = (id) => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return 160 + (h % 160); };

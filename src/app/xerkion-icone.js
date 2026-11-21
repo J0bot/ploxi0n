@@ -25,8 +25,29 @@ export const GPAL = [
   { bg: '#0d0b14', a: '#8e7dbf', b: '#c695ac', f: '#6d59a6', n: 'violet' },
 ];
 export const CENTRES = ['wormion', 'portion', 'kion'];
-/** (0.56, RS-7 : « avoir que le glyphe de base, et aussi le glyphe xerboxion ») le style : la forme du type, ou le glyphe seul, en grand */
-export const STYLES = ['xerboxion', 'glyphe'];
+/** (0.56, RS-7 : « avoir que le glyphe de base, et aussi le glyphe xerboxion ») le style : la forme du type, ou le glyphe seul, en grand.
+ *  (0.99.67, RS-7 coord #2227-2229 : « quand on installe des ploxions avec ploxi0n, ils ont le logo à l'Apple comme celui du xeroction ou du
+ *  tsoin », « ça doit donner feeling comme si c'était l'OS de base d'Apple d'un iPhone ») apple, LE STYLE DE BASE : le carré arrondi d'Apple
+ *  (la super-ellipse), un fond sombre, le glyphe au centre dessiné au trait des xers du Figma, dans sa couleur. Les deux autres restent au choix. */
+export const STYLES = ['apple', 'xerboxion', 'glyphe'];
+export const STYLE_BASE = 'apple';
+const NOMS_STYLES = { apple: 'à l\'Apple', xerboxion: 'xerboxion', glyphe: 'glyphe seul' };
+/** le nom d'un style, pour les réglages et l'atelier */
+export const nomStyle = (s) => NOMS_STYLES[s] || s;
+
+/** (0.99.67) la super-ellipse d'Apple dans une viewBox de W : le carré aux coins continus, rayon R (22,37 % du côté, comme les icônes d'iOS),
+ *  le lissage des coins à la Figma (0,6 : la courbe entre dans le côté avant l'arc). Un chemin (M… c… a… Z), sans id ni filtre. */
+export function cheminSquircle(W = 100, R = W * 0.2237, lissage = 0.6) {
+  const rad = (x) => x * Math.PI / 180, f = (n) => String(+n.toFixed(2));
+  const p = Math.min(W / 2, (1 + lissage) * R), arcM = 90 * (1 - lissage), arc = Math.sin(rad(arcM / 2)) * R * Math.SQRT2;
+  const q = R * Math.tan(rad((90 - arcM) / 4)), be = 45 * lissage, c = q * Math.cos(rad(be)), d = c * Math.tan(rad(be)), b = (p - arc - c - d) / 3, a = 2 * b;
+  const A = 'a' + f(R) + ' ' + f(R) + ' 0 0 1 ';
+  return 'M' + f(W - p) + ' 0c' + f(a) + ' 0 ' + f(a + b) + ' 0 ' + f(a + b + c) + ' ' + f(d) + A + f(arc) + ' ' + f(arc) + 'c' + f(d) + ' ' + f(c) + ' ' + f(d) + ' ' + f(b + c) + ' ' + f(d) + ' ' + f(a + b + c)
+    + 'L' + f(W) + ' ' + f(W - p) + 'c0 ' + f(a) + ' 0 ' + f(a + b) + ' ' + f(-d) + ' ' + f(a + b + c) + A + f(-arc) + ' ' + f(arc) + 'c' + f(-c) + ' ' + f(d) + ' ' + f(-(b + c)) + ' ' + f(d) + ' ' + f(-(a + b + c)) + ' ' + f(d)
+    + 'L' + f(p) + ' ' + f(W) + 'c' + f(-a) + ' 0 ' + f(-(a + b)) + ' 0 ' + f(-(a + b + c)) + ' ' + f(-d) + A + f(-arc) + ' ' + f(-arc) + 'c' + f(-d) + ' ' + f(-c) + ' ' + f(-d) + ' ' + f(-(b + c)) + ' ' + f(-d) + ' ' + f(-(a + b + c))
+    + 'L0 ' + f(p) + 'c0 ' + f(-a) + ' 0 ' + f(-(a + b)) + ' ' + f(d) + ' ' + f(-(a + b + c)) + A + f(arc) + ' ' + f(-arc) + 'c' + f(c) + ' ' + f(-d) + ' ' + f(b + c) + ' ' + f(-d) + ' ' + f(a + b + c) + ' ' + f(-d) + 'Z';
+}
+export const SQUIRCLE = cheminSquircle();
 export const TYPES = ['ploxion', 'xerkion', 'xer', 'cubion', 'kion', 'koin', 'wormion', 'spherion', 'portion', 'bion', 'boxion'];
 /** la forme de chaque type, en mots (la légende) */
 export const FORMES = { ploxion: 'losange', xerkion: 'polygone à N koins', xer: 'octogone double', cubion: 'cube', kion: 'carré à 4 koins', koin: 'triangle',
@@ -152,17 +173,53 @@ function interieur(p, nom) {
   const m = /^<svg[^>]*>([\s\S]*)<\/svg>$/.exec(s); return m ? m[1] : '';
 }
 
+// ---- (0.99.67) LE STYLE APPLE : le carré d'iOS, un fond sombre, le glyphe au trait du Figma ----
+const hex = (c) => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+const melange = (c1, c2, t) => '#' + hex(c1).map((v, i) => Math.round(v + (hex(c2)[i] - v) * t).toString(16).padStart(2, '0')).join('');
+/** les couleurs d'une icône à l'Apple, par palette : le fond (sombre, à peine teinté) et le trait (la couleur de la palette, pâlie) */
+export const IOS = GPAL.map(P => ({ fond: melange(P.bg, P.a, 0.12), trait: melange(P.a, '#ffffff', 0.42) }));
+/** un glyphe fait seulement de formes fermées (cercles, carrés, polygones, ellipses, chemins fermés) ? */
+export function glypheFerme(corps) {
+  const s = String(corps || '');
+  return !/<(line|polyline)\b/.test(s) && [...s.matchAll(/<path\b[^>]*?\sd="([^"]*)"/g)].every(m => /z\s*$/i.test(m[1].trim()));
+}
+/**
+ * (0.99.67, RS-7 21.11 : « les glyphes du Figma = la base ») un glyphe au trait des xers du Figma (la galerie du trikion) : des traits fins et
+ * pâles, des contours emboîtés parallèles, jamais de remplissage ni de gros néon. Un glyphe de formes fermées (un cœur, une bulle, un triangle)
+ * se répète vers son centre, cinq contours emboîtés au plus (moins s'il en a déjà : le wormion, le portion, les glyphes à graine) ; un glyphe
+ * à traits ouverts (une note, une manette) garde son trait et prend deux contours parallèles autour (l'union des traits, élargie puis
+ * recreusée dans la couleur du fond : de simples attributs, le même SVG pour le DOM et le canvas).
+ * corps : l'intérieur du glyphe (viewBox 100) ; rend des <g> à poser dans un groupe stroke=trait fill=none.
+ */
+export function traitFigma(corps, { trait = 2.1, fond = '#000', ecart = 3.6 } = {}) {
+  const g = String(corps || '').replace(/ class="[fp]"/g, '').replace(/ fill="(?!none)[^"]*"/g, '');   // jamais de remplissage
+  if (glypheFerme(corps)) {
+    const formes = (g.match(/<(circle|ellipse|rect|polygon|path)\b/g) || []).length;
+    const n = Math.max(1, Math.min(5, 6 - formes)), K = [1, 0.8, 0.62, 0.46, 0.32], OP = [1, 0.85, 0.72, 0.6, 0.5];
+    return K.slice(0, n).map((k, i) => '<g' + (k === 1 ? '' : ' transform="translate(50 50) scale(' + k + ') translate(-50 -50)"') + ' stroke-width="' + (trait / k).toFixed(2) + '"' + (i ? ' stroke-opacity="' + OP[i] + '"' : '') + '>' + g + '</g>').join('');
+  }
+  let s = '';
+  for (const [i, op] of [[2, 0.5], [1, 0.75]]) {
+    const w = trait + 2 * ecart * i;
+    s += '<g stroke-width="' + w.toFixed(1) + '" stroke-opacity="' + op + '">' + g + '</g><g stroke="' + fond + '" stroke-width="' + (w - 2 * trait).toFixed(1) + '">' + g + '</g>';
+  }
+  return s + '<g stroke-width="' + trait + '">' + g + '</g>';
+}
+
 const memo = new Map();
 /**
  * l'icône d'un ploxion (ou d'un xerkion, d'un cubion…), en SVG.
  * @param {object} p        { id, nom, categorie, cat, type?, koins?, centre?, xerkion? }
  * @param {object} [o]      { perso: { pal, centre, glyphe, style }, fond: true, photo: dataURL (à la place du glyphe), cls,
- *                          seul: le style par défaut est « glyphe seul » (⚙ › Apparence) ; le style d'une perso passe devant }
+ *                          style: celui de l'app (⚙ › Apparence : apple, xerboxion, glyphe ; apple de base) ; le style d'une perso passe devant ;
+ *                          seul (l'ancien réglage) : vrai = « glyphe seul » ; masque: false = le carré plein (un clip d'iOS : iOS pose son masque) }
  */
-export function svgXerkion(p, { perso = null, fond = true, photo = null, cls = 'xki', seul = false } = {}) {
-  const k = !photo && JSON.stringify([p && p.id, p && p.nom, p && p.categorie, p && p.cat, p && p.type, p && p.koins, p && p.centre, p && p.xerkion, perso, fond, cls, seul]);
+export function svgXerkion(p, { perso = null, fond = true, photo = null, cls = 'xki', seul = false, style = null, masque = true } = {}) {
+  const k = !photo && JSON.stringify([p && p.id, p && p.nom, p && p.categorie, p && p.cat, p && p.type, p && p.koins, p && p.centre, p && p.xerkion, perso, fond, cls, seul, style, masque]);
   if (k && memo.has(k)) return memo.get(k);
-  const s = specXerkion(p, perso), P = GPAL[s.pal], glypheSeul = s.style ? s.style === 'glyphe' : !!seul;
+  const s = specXerkion(p, perso), P = GPAL[s.pal], st = s.style || (STYLES.includes(style) ? style : seul ? 'glyphe' : STYLE_BASE);
+  if (st === 'apple') { const a = svgApple(p, s, { fond, photo, cls, masque }); if (k) { if (memo.size > 800) memo.clear(); memo.set(k, a); } return a; }
+  const glypheSeul = st === 'glyphe';
   // glyphe seul : la forme du type, pleine, et le glyphe découpé dessus ; sinon la forme au trait et le glyphe dans son disque
   const [corps, cx, cy, t] = glypheSeul ? formePleine(s, P) : forme(s, P), e = glypheSeul ? t : t * 1.62, r = glypheSeul ? t / 2 : t, z = e / 100;
   const encre = glypheSeul ? P.bg : P.a;   // la couleur du glyphe : sombre sur la forme pleine, néon dans le disque
@@ -181,8 +238,20 @@ export function svgXerkion(p, { perso = null, fond = true, photo = null, cls = '
   return sortie;
 }
 
-/** le PNG (base64 sans préfixe) d'une icône, pour les clips de l'écran d'accueil ; null sans canvas */
-export function pngXerkion(W, p, { taille = 180, perso = null, photo = null, seul = false } = {}) {
+/** (0.99.67) l'icône à l'Apple : la super-ellipse (ou le carré plein d'un clip, masque: false), le fond sombre, le glyphe au trait du Figma au
+ *  centre, dans la couleur de sa palette ; une photo remplit la super-ellipse */
+function svgApple(p, s, { fond = true, photo = null, cls = 'xki', masque = true } = {}) {
+  const C = IOS[s.pal], corps = interieur(p, s.glyphe), z = glypheFerme(corps) ? 0.66 : 0.6, o = f1(50 - 50 * z);
+  const forme = masque ? '<path d="' + SQUIRCLE + '" fill="' + C.fond + '"/>' : '<rect width="100" height="100" fill="' + C.fond + '"/>';
+  const centre = photo
+    ? (masque ? '<clipPath id="xkq"><path d="' + SQUIRCLE + '"/></clipPath>' : '') + '<image href="' + photo + '" x="0" y="0" width="100" height="100" preserveAspectRatio="xMidYMid slice"' + (masque ? ' clip-path="url(#xkq)"' : '') + '/>'
+    : '<g transform="translate(' + o + ' ' + o + ') scale(' + z + ')" fill="none" stroke="' + C.trait + '" stroke-linecap="round" stroke-linejoin="round">' + traitFigma(corps, { fond: C.fond }) + '</g>';
+  return '<svg class="' + cls + '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" aria-hidden="true" focusable="false" data-type="' + s.type + '" data-style="apple">' + (fond ? forme : '') + centre + '</svg>';
+}
+
+/** le PNG (base64 sans préfixe) d'une icône, pour les clips de l'écran d'accueil ; null sans canvas.
+ *  (0.99.67) à l'Apple, le carré plein : iOS pose lui-même son masque sur un clip */
+export function pngXerkion(W, p, { taille = 180, perso = null, photo = null, seul = false, style = null } = {}) {
   return new Promise((res) => {
     try {
       const c = W.document.createElement('canvas'); c.width = c.height = taille;
@@ -191,7 +260,7 @@ export function pngXerkion(W, p, { taille = 180, perso = null, photo = null, seu
       const rendre = (v) => { if (fini) return; fini = true; W.clearTimeout(t); res(v); };
       img.onload = () => { try { x.drawImage(img, 0, 0, taille, taille); const u = c.toDataURL('image/png'); rendre(u && u.startsWith('data:image/png;base64,') ? u.slice(22) : null); } catch (e) { rendre(null); } };
       img.onerror = () => rendre(null);
-      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgXerkion(p, { perso, photo, cls: 'xki', seul }));
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgXerkion(p, { perso, photo, cls: 'xki', seul, style, masque: false }));
     } catch (e) { res(null); }
   });
 }

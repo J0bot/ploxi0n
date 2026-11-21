@@ -15,7 +15,8 @@
 //   haptique    les retours haptiques (ouvrir, revenir, minimiser, les bords, les pages, les interrupteurs…)
 //   barreClavier (20.11) la barre ∧ ∨ ✓ du clavier : coupée de base (RS-7 #2128 : sur iOS 26 elle flottait sur les koins du bas) ;
 //               barreClavierVue : la bascule unique vers « coupée » est faite (plus bas) ; l'ordre à l'iPhone : src/natif/clavier-ios.js
-export const PREFS_DEFAUT = { barreClavier: false, barreClavierVue: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'chill-tekk', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'xerboxion', fractale: true, pagesCote: true, bande: false, koins: false, activites: true, cibles: 'auto', regard: 'non', animations: {}, regardInverse: false, organiqueVu: true, variante: 'nerfs', ecriture: 'xerboxion', police: 'mixte', langue: 'auto', taille: 1.15, peau: 'legere', policePartout: false };
+//   styleIcones (0.99.67) apple (de base : le carré d'Apple, RS-7 #2227) | xerboxion | glyphe ; iconesAppleVu : la bascule unique est faite
+export const PREFS_DEFAUT = { barreClavier: false, barreClavierVue: true, telecommande: true, pleinEcran: false, clicDroit: true, gestes: {}, haptique: true, grain: true, calme: false, icones: 'normales', contraste: 'normal', bords: true, appuiLong: true, maxVivants: 12, sommeil: 5, dock: true, plaque: true, barreHaut: true, reprendre: true, themeVivant: true, webNatif: true, mode: 'chill-tekk', miniDocks: 2, pxChill: true, glyphes: true, styleIcones: 'apple', iconesAppleVu: true, fractale: true, pagesCote: true, bande: false, koins: false, activites: true, cibles: 'auto', regard: 'non', animations: {}, regardInverse: false, organiqueVu: true, variante: 'nerfs', ecriture: 'xerboxion', police: 'mixte', langue: 'auto', taille: 1.15, peau: 'legere', policePartout: false };
 
 /** (0.96) RS-7 23.10 : « un mode texte + glyphes, un mode pur glyphes, pur texte, emoji, minimal, xerboxion : tous les modes » */
 import { POLICES, poserPolice } from '../bions/polices.js';
@@ -40,8 +41,13 @@ export function creerPrefs({ W = globalThis.window, boxion }) {
     // ⌨ (20.11, RS-7 #2128) la barre ∧ ∨ ✓ était allumée de base et rangée avec tous les réglages : une fois, elle repasse à coupée
     // (la rallumer dans ⚙ › Navigation reste possible : la marque est posée, la bascule ne revient plus)
     if (!v.barreClavierVue) { p.barreClavier = false; p.barreClavierVue = true; ecrire = true; }
+    // ▢ (0.99.67, RS-7 #2227-2229 : « le logo à l'Apple ») les icônes à l'Apple deviennent la base : une fois, le xerboxion d'avant (l'ancienne base,
+    // rangée avec tous les réglages) passe à apple ; « glyphe seul », choisi exprès, reste ; ⚙ › Apparence ramène le xerboxion
+    if (!v.iconesAppleVu) { if (!v.styleIcones || v.styleIcones === 'xerboxion') p.styleIcones = 'apple'; p.iconesAppleVu = true; ecrire = true; }
     if (ecrire) boxion.put('reglages', 'app', p).catch(() => {});
   }).catch(() => {});
+  /** le style des icônes vraiment affiché : l'écriture peut imposer le glyphe seul (texte + glyphes, glyphes, humain), l'emoji n'en montre aucun */
+  function styleEffectif() { const e = p.ecriture || 'xerboxion'; return e === 'emoji' || (e === 'xerboxion' && p.glyphes === false) ? 'aucun' : e === 'texte-glyphes' || e === 'glyphes' || e === 'humain' ? 'glyphe' : (p.styleIcones || 'apple'); }
   function appliquer() {
     const h = W.document.documentElement;
     h.classList.toggle('px-sans-grain', !p.grain);
@@ -59,6 +65,8 @@ export function creerPrefs({ W = globalThis.window, boxion }) {
     h.classList.toggle('px-sans-bords', !p.bords);
     h.classList.toggle('px-telecommande', p.telecommande !== false);
     h.classList.toggle('px-organique', p.mode === 'organique');
+    // ▢ (0.99.67) les icônes à l'Apple : la grille et les noms comme l'écran d'accueil d'un iPhone (app.css)
+    h.classList.toggle('px-icones-apple', styleEffectif() === 'apple');
     // (0.99.19) la peau légère : les cellules en CSS, sans la couche SVG des membranes (trop lourde sur l'iPhone) ; auto = légère en économie d'énergie
     h.classList.toggle('px-leger', p.peau === 'pleine' ? false : p.peau === 'auto' ? h.getAttribute('data-px-economie') === '1' : true);
     for (const e of ECRITURES) h.classList.toggle('px-e-' + e[0], (p.ecriture || 'xerboxion') === e[0]);   // (0.96) l'écriture

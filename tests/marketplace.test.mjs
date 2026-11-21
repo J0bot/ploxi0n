@@ -304,7 +304,9 @@ test('📲 tes ploxions en apps : la feuille coche, le labo reçoit des PNG et d
     assert.equal(env.url, 'https://labo.j0bot.ch/api/app/accueil');
     assert.deepEqual(corps.apps.map(a => a.id), ['pomo', 'marketplace', 'carnet']); assert.ok(corps.apps.every(a => a.icone === 'iVBORw0KGgo='));
     assert.equal(corps.apps[0].nom, 'Focus', 'le nom choisi'); assert.equal(corps.apps[0].mode, 'seul');
-    assert.ok(svgs.some(s => s.includes('#bfa97d')), 'l\'icône dessinée a la palette choisie (ambre)');
+    // (0.99.67) l'icône à l'Apple, le style de base : l'ambre de la palette, pâli pour le trait
+    const { IOS } = await import('../src/app/xerkion-icone.js');
+    assert.ok(svgs.some(s => s.includes(IOS[2].trait)), 'l\'icône dessinée a la palette choisie (ambre)');
     // (0.55) Face ID : un ploxion verrouillé ne devient jamais une icône « seule » (en ligne, sans visage)
     assert.deepEqual([corps.apps[2].mode, corps.apps[2].verrou, corps.apps[2].url], ['app', true, 'ploxi0n://px/carnet']);
     assert.deepEqual(ouverts, ['https://labo.j0bot.ch/app/accueil/' + 'a'.repeat(40)], 'Safari s\'ouvre sur le profil');

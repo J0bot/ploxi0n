@@ -69,7 +69,7 @@ export function chercher(items, q, sec = new Map()) {
   return out.sort((a, b) => b[0] - a[0] || (sec.get(b[1].id) || 0) - (sec.get(a[1].id) || 0) || a[1].nom.localeCompare(b[1].nom)).map(e => e[1]);
 }
 
-const CSS = '.mk-tuile.mk-xk{background:none !important;box-shadow:none !important;border-radius:0 !important}.mk-tuile.mk-xk .xki,.mk-tuile.mk-xk .px-g{width:100%;height:100%}'
+const CSS = '.mk-tuile.mk-xk{background:none !important;box-shadow:none !important;border-radius:0 !important}.mk-tuile.mk-xk:has(.xki[data-style="apple"]){border:0 !important}.mk-tuile.mk-xk .xki,.mk-tuile.mk-xk .px-g{width:100%;height:100%}'
   + '.mk-portees{margin-top:-4px}.mk-p-partout{color:#7dbfb8}.mk-p-natif{color:var(--bio,#7fe0b0)}.mk-p-nexus{color:#4677b5}.mk-p-externe{color:#d8b04a}.mk-p-partiel{color:var(--muted,#8aa0c0)}'
   + '.mk{padding:0 0 70px;--a:var(--acc,#a597cf);--n:var(--muted,#8aa0c0);--l:var(--bord,#272036)}.mk .n{color:var(--n);font-size:.82rem;margin:6px 16px}'
   + '.mk-top{position:sticky;top:0;z-index:4;background:var(--surface,#0f0b18) var(--grain,none);padding:10px 14px 8px;border-bottom:var(--trait,2px) solid var(--l)}'

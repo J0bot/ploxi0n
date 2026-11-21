@@ -354,7 +354,7 @@ html.px-telecommande .px-scene>.px-hote:not(.px-flottant):not(.px-pip):not(.px-c
 .px-gestion{padding:12px 14px 110px}
 .px-gest-l{border-bottom:1px solid var(--filet)}
 .px-gest-h{display:flex;gap:10px;padding:11px 0;align-items:flex-start}
-.px-gest-h .g{width:26px;text-align:center;flex:none;font-size:1.2rem}
+.px-gest-h .g{width:26px;text-align:center;flex:none;font-size:1.2rem}.px-gest-h .g .xki{width:30px;height:30px;display:block}.px-gest-h .g:has(.xki){width:30px}
 .px-gest-h div{flex:1;min-width:0}.px-gest-h small{display:block;color:var(--muted);font:600 11px var(--mono);margin-top:2px}
 .px-gest-jauge{display:flex;height:4px;border-radius:2px;background:var(--creux);margin-top:7px;overflow:hidden}
 .px-gest-jauge i{display:block;height:100%;background:var(--acc)}.px-gest-jauge i.b{background:var(--bord2)}
@@ -1940,3 +1940,21 @@ html.px-koins .px-md,html.px-koins .px-maintenant{bottom:calc(var(--kbande) + 10
 html.px-koins .px-bulle{top:auto;bottom:calc(var(--kbande) + 12px);animation-name:px-bulle-bas}
 html.px-koins .px-mode-accueil .px-bulle{bottom:calc(var(--kbande) + 12px + var(--px-md,0px))}
 @keyframes px-bulle-bas{from{opacity:0;transform:translateY(12px) scale(.96)}}
+/* ▢ (0.99.67, RS-7 coord #2227-2229 : « le logo à l'Apple comme celui du xeroction ou du tsoin », « comme si c'était l'OS de base d'Apple d'un
+   iPhone ») LES ICÔNES À L'APPLE, le style de base (src/app/xerkion-icone.js, svgApple) : le SVG dessine lui-même la super-ellipse, ses coins
+   restent transparents. Les cadres qui portaient une icône (fond, arrondi « blob », ombre carrée) s'effacent autour d'elle. */
+.xki[data-style="apple"]{border-radius:0}
+:root :is(.px-ic,.px-h-b,.px-md-ic,.px-at-apercu,.px-fx-tete i):has(.xki[data-style="apple"]){background:none;border:0;box-shadow:none;border-radius:0;overflow:visible}
+:root .px-tuile:active .px-ic:has(.xki[data-style="apple"]){filter:brightness(.7)}   /* iOS : l'icône touchée s'assombrit */
+:root .px-tuile.px-cible .px-ic:has(.xki[data-style="apple"]){filter:brightness(1.3) drop-shadow(0 0 7px var(--glow))}   /* la cible d'un glisser (un dossier) */
+/* l'écran d'accueil d'un iPhone : des colonnes de 60 px, des noms sur une ligne, à la police du système, blancs */
+html.px-icones-apple .px-grille{grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:22px 4px}
+html.px-icones-apple .px-tuile{gap:6px}
+html.px-icones-apple .px-tuile .px-ic{width:60px;height:60px}
+html.px-icones-apple .px-tuile>span:last-child{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:400 12px/1.25 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;letter-spacing:0;color:#f5f5f7;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+html.px-icones-apple .px-vue-compacte .px-grille{grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:16px 2px}
+html.px-icones-apple .px-vue-compacte .px-tuile .px-ic{width:48px;height:48px}
+html.px-icones-apple .px-vue-compacte .px-tuile>span:last-child{font-size:10.5px}
+html.px-icones-apple.px-icones-petites .px-grille{grid-template-columns:repeat(auto-fill,minmax(62px,1fr))}html.px-icones-apple.px-icones-petites .px-accueil .px-tuile .px-ic{width:50px;height:50px}
+html.px-icones-apple.px-icones-grandes .px-grille{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}html.px-icones-apple.px-icones-grandes .px-accueil .px-tuile .px-ic{width:74px;height:74px}
+html.px-icones-apple .px-ligne-t b{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif}

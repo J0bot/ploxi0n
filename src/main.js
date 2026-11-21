@@ -413,7 +413,7 @@ async function demarrer() {
   let tuyauProche = null;   // (0.99.24) le tuyau de Proche, partagé avec le banc (sa sonde « Proche en vrai »)
   const internes = [
     // (0.67) les icônes comme dans le xer (le xerkion), et les ploxions natifs de l'app dans le marketplace (leur portée : natif)
-    enregistrerMarketplace({ depot, vibrer, icone: (x) => svgXerkion(x, { seul: prefs.lire().styleIcones === 'glyphe' }), internes: () => (routeur ? routeur.catalogue().filter(p => p.interne) : []), surChangement: () => majAccueil(), usage: () => boxion.get('usage', 'stats'), prefs: { lire: () => boxion.get('reglages', 'marketplace'), ecrire: (v) => boxion.put('reglages', 'marketplace', v) } }),
+    enregistrerMarketplace({ depot, vibrer, icone: (x) => svgXerkion(x, { style: prefs.lire().styleIcones }), internes: () => (routeur ? routeur.catalogue().filter(p => p.interne) : []), surChangement: () => majAccueil(), usage: () => boxion.get('usage', 'stats'), prefs: { lire: () => boxion.get('reglages', 'marketplace'), ecrire: (v) => boxion.put('reglages', 'marketplace', v) } }),
     enregistrerXerEnLigne({}),
     enregistrerBanc({ boxion, version: VERSION, extras: {   // (0.99.24) les sondes des nouveaux bions : la radio, le vrai état de l'iPhone, le GPS
       tuyau: () => tuyauProche,
@@ -602,7 +602,7 @@ async function demarrer() {
     proposer: ({ minutes }) => miniDocks.publier({ cle: 'tsoin-session', titre: 'un tsoin de ta session ?', icone: '⧗', sous: minutes + ' min dans l\'app, juste avant ta pause', ouvrir: () => { miniDocks.retirer('tsoin-session'); tsoinNatif.ouvrir({ texte: '' }); },
       actions: [{ id: 'noter', icone: '⧗', nom: 'noter', faire: () => { miniDocks.retirer('tsoin-session'); tsoinNatif.ouvrir({ texte: '' }); } }] }) });
   // 📦 le gestionnaire : les ploxions installés, leur place, leurs bions
-  internes.push(enregistrerGestion({ depot, vibrer: (x) => vibrer(x), ouvrir: (id) => routeurProxy.ouvrir(id), retirer: async (id) => { await routeur.retirerPloxion(id); await majAccueil(); } }));
+  internes.push(enregistrerGestion({ depot, vibrer: (x) => vibrer(x), icone: (p) => svgXerkion(p, { style: prefs.lire().styleIcones }), ouvrir: (id) => routeurProxy.ouvrir(id), retirer: async (id) => { await routeur.retirerPloxion(id); await majAccueil(); } }));
   // ❤ la santé : Apple Santé lue sur le téléphone (le ploxion « Santé ») ; jOSNatif.sante pour les ploxions, sur accord
   const sante = creerSante({ boxion, vibrer: (x) => vibrer(x), courant: () => (routeur ? routeur.courant() : null),
     distant: () => (compte.etat().connecte && modeConnecte && navigator.onLine !== false ? window.jOSBoxion : null),   // ☁ le résumé sur ton boxion (si activé)
@@ -613,7 +613,7 @@ async function demarrer() {
   internes.push(creerChillSynth({ boxion, vibrer: (x) => vibrer(x) }).ploxion);
   // ▣ (0.67) dans le cube : l'écran est la face ouverte ; les cinq autres, des xers ; l'intérieur, à peupler
   internes.push(creerCubeInterieur({ boxion, vibrer: (x) => vibrer(x), liste: () => (routeur ? routeur.listeCarte() : []), vivants: () => (routeur ? routeur.vivants() : []), tsoins: () => tsoinNatif.liste(8),
-    aller: (id) => routeurProxy.ouvrir(id), icone: (p) => p.icone || svgXerkion(p, { seul: prefs.lire().styleIcones === 'glyphe' }), glyphe: (n) => G(n) }).ploxion);   // ≋ (0.64) chill-synth, phase 1 : le son en arrière-plan
+    aller: (id) => routeurProxy.ouvrir(id), icone: (p) => p.icone || svgXerkion(p, { style: prefs.lire().styleIcones }), glyphe: (n) => G(n) }).ploxion);   // ≋ (0.64) chill-synth, phase 1 : le son en arrière-plan
   // 🥼 labo-cape (0.50, lot L1) : la blouse RS-7 en BLE, ou sa simulation (le moteur de cape-core)
   internes.push(creerCape({ boxion, vibrer: (x) => vibrer(x) }).ploxion);
   // ◬ (0.71) le koin du ion : ses dossiers (ion, 3ion, seption, nexus) semés dans les hubs perso du labo, la balade entre les réels
@@ -693,13 +693,13 @@ async function demarrer() {
   // un ploxion sur l'écran d'accueil de l'iPhone (via Raccourcis) : depuis l'édition de l'accueil et la fiche du marketplace
   // (0.55) les verrous Face ID (un ploxion verrouillé passe par l'app), le jeton du compte (les propositions d'icônes), l'atelier → l'accueil
   const ecranAccueil = creerEcranAccueil({ trouver: (id) => routeur.catalogue().find(p => p.id === id), liste: () => routeur.catalogue(), boxion, envoyer: (q) => httpRelais.requete(q, fetchOrigine), source: SOURCE,
-    verrous: () => (routeur ? routeur.verrous() : []), jeton: () => boxion.get('compte', 'courant').then(c => (c && c.jeton) || null), surPerso: () => { majAccueil({ redessiner: true }).catch(() => {}); }, seul: () => prefs.lire().styleIcones === 'glyphe' });
+    verrous: () => (routeur ? routeur.verrous() : []), jeton: () => boxion.get('compte', 'courant').then(c => (c && c.jeton) || null), surPerso: () => { majAccueil({ redessiner: true }).catch(() => {}); }, style: () => prefs.lire().styleIcones });
   window.jOSEcranAccueil = ecranAccueil;
   boot(78, 'l\'accueil');
   // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xerbot (le monde physique)
   // ⬡ (0.99.63) le xer xerboxion natif (src/app/xer-xerboxion.js) : le catalogue du labo (le cache du dépôt), tes ploxions, le natif, les xers
   const xerXbx = creerXerXerboxion({ W: window, installes: () => (routeur ? routeur.catalogue() : []), labo: () => depot.catalogue({ reseau: false }).then(c => (c && c.items) || []),
-    icone: (p) => svgXerkion(p, { seul: prefs.lire().styleIcones === 'glyphe' }), ouvrir: (id) => routeurProxy.ouvrir(id), vibrer: (x) => vibrer(x),
+    icone: (p) => svgXerkion(p, { style: prefs.lire().styleIcones }), ouvrir: (id) => routeurProxy.ouvrir(id), vibrer: (x) => vibrer(x),
     choisirMode: (id) => prefs.regler({ mode: id }).then(() => routeur && routeur.accueil()).catch(() => {}),
     modes: () => MODES.map(([id, , nom]) => ({ id, nom, on: (prefs.lire().mode || 'chill-tekk') === id, description: (XERS_WIDGET.find(x => x[0] === id) || [])[2] || '' })),
     usage: () => boxion.get('usage', 'stats').then(u => (u && u.px) || {}).catch(() => ({})),
@@ -724,17 +724,17 @@ async function demarrer() {
   // 🔍 (0.69) chercher d'abord chez soi : les ploxions installés, puis le marketplace ; ↻ tout mettre à jour (src/app/chercher-local.js)
   chercheur = creerChercherLocal({ racine, liste: () => routeur.catalogue(), vivants: () => routeur.vivants(), ouvrir: (id) => routeurProxy.ouvrir(id), vibrer: (x, i) => vibrer(x, i),
     marketplace: (q) => routeur.ouvrir('marketplace', q ? { chercher: '1', q } : { chercher: '1' }), majTout: async () => { const r = await depot.aJour(); await majAccueil().catch(() => {}); return r; },
-    icone: (p) => p.icone || svgXerkion(p, { seul: prefs.lire().styleIcones === 'glyphe' }) });
+    icone: (p) => p.icone || svgXerkion(p, { style: prefs.lire().styleIcones }) });
   // ▣ (0.68) le cube des pages : ▣ dans la barre d'un ploxion (src/app/cube-pages.js)
   routeur.brancherCube(creerCubePages({ W: window, boxion, vibrer: (x) => vibrer(x), liste: () => routeur.listeCarte(), vivants: () => routeur.vivants(), tsoins: () => tsoinNatif.liste(8),
-    aller: (id) => routeurProxy.ouvrir(id), icone: (p) => p.icone || svgXerkion(p, { seul: prefs.lire().styleIcones === 'glyphe' }), glyphe: (n) => G(n) }));
+    aller: (id) => routeurProxy.ouvrir(id), icone: (p) => p.icone || svgXerkion(p, { style: prefs.lire().styleIcones }), glyphe: (n) => G(n) }));
   const carteXer = creerCarteXer({ racine: document.body, liste: () => routeur.listeCarte(), courant: () => routeur.courant(), aller: (id) => routeur.aller(id), vibrer, boxion, calme: () => !!prefs.lire().calme, glyphe: (n) => G(n) });
   routeur.brancherCarte(carteXer);
   // ⊡ (0.70) la vue des xers : le xer en image, ses voisins de la carte autour (glisser dans 4 directions) ; la capture d'écran d'iOS l'ouvre
   const apercus = creerApercus({ W: window, boxion, plugin: PloxiApple }); apercus.lire().catch(() => {});
   vueXers = creerVueXers({ racine, photo: (id) => apercus.src(id), oublierPhoto: (id) => apercus.oublier(id), liste: () => routeur.listeCarte(), places: () => carteXer.placesAJour(), courant: () => routeur.courant(),
     hoteDe: (id) => document.querySelector('.px-scene>.px-hote[data-ploxion="' + CSS.escape(id) + '"]'), aller: (id) => routeur.aller(id), accueil: () => routeur.accueil(),
-    carte: () => routeur.carte(), vibrer: (x, i) => vibrer(x, i), calme: () => !!prefs.lire().calme, icone: (p) => p.icone || svgXerkion(p, { seul: prefs.lire().styleIcones === 'glyphe' }) });
+    carte: () => routeur.carte(), vibrer: (x, i) => vibrer(x, i), calme: () => !!prefs.lire().calme, icone: (p) => p.icone || svgXerkion(p, { style: prefs.lire().styleIcones }) });
   // 📸 (0.72) la capture d'écran : d'abord la photo du xer, gardée par le téléphone (Caches/xers) ; ensuite seulement la vue (sinon on la photographierait)
   window.addEventListener('ploxi0n-capture', async () => {
     if (vueXers.ouverte()) return;

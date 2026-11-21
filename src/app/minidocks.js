@@ -60,7 +60,7 @@ export function creerMiniDocks({ W = globalThis.window, routeur = () => null, pr
   const trouver = (cle) => liste().find(m => m.cle === cle) || null;
 
   // ---- dessiner ------------------------------------------------------------------------------------------------------------------------
-  const icone = (m) => (m.image ? '<img alt="" src="' + esc(m.image) + '">' : '<span class="px-md-g">' + (m.auto && m.ploxion ? svgXerkion({ id: m.ploxion, nom: m.titre }, { seul: prefs().styleIcones === 'glyphe' }) : versGlyphe(m.icone || 'ion')) + '</span>');   // ◇ (0.54) des glyphes
+  const icone = (m) => (m.image ? '<img alt="" src="' + esc(m.image) + '">' : '<span class="px-md-g">' + (m.auto && m.ploxion ? svgXerkion({ id: m.ploxion, nom: m.titre }, { style: prefs().styleIcones }) : versGlyphe(m.icone || 'ion')) + '</span>');   // ◇ (0.54) des glyphes
   function carte(m, complet) {
     const acts = complet ? m.actions : m.actions.slice(0, MAX_ACTIONS_PILE);
     return '<div class="px-md-c' + (m.enCours ? ' joue' : '') + (m.endormi ? ' dort' : '') + (m.ici ? ' ici' : '') + (!complet && !connus.has(m.cle) ? ' neuf' : '') + '" data-md="' + esc(m.cle) + '" style="--t:' + teinte(m.ploxion || m.cle) + '" role="group" aria-label="' + esc(m.titre) + '">'

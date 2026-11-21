@@ -49,7 +49,7 @@ export function creerHud({ W = globalThis.window, compte, boxion = null, trouver
     chercher: () => '<button class="px-h-b" data-chercher aria-label="chercher un ploxion">' + G('chercher') + '</button>',
     tsoin: () => '<button class="px-h-b" data-tsoin aria-label="noter un tsoin">' + G('tsoin') + '</button>',
     vocal: () => '<button class="px-h-b' + (vocalEnCours() ? ' px-rec' : '') + '" data-vocal aria-label="vocal">' + (vocalEnCours() ? '■' : G('vocal')) + '</button>',
-    epingles: () => config.epingles.map(id => { const p = trouver(id); return p ? '<button class="px-h-b" data-hud-px="' + esc(id) + '" aria-label="' + esc(p.nom || id) + '" style="--t:' + teinte(id) + '">' + svgXerkion(p, { seul: prefs().styleIcones === 'glyphe' }) + '</button>' : ''; }).join(''),
+    epingles: () => config.epingles.map(id => { const p = trouver(id); return p ? '<button class="px-h-b" data-hud-px="' + esc(id) + '" aria-label="' + esc(p.nom || id) + '" style="--t:' + teinte(id) + '">' + svgXerkion(p, { style: prefs().styleIcones }) + '</button>' : ''; }).join(''),
   };
   return {
     pret,

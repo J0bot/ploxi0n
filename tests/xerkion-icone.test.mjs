@@ -16,7 +16,7 @@ test('un xerkion a autant de côtés que de koins (3 à 12), sans koins l\'octog
   assert.equal(specXerkion({ id: 'xerkion-x', koins: 16 }).cotes, 12);
   assert.equal(specXerkion({ id: 'xerkion-01', koins: 0 }).cotes, 8);
   assert.equal(specXerkion({ id: 'xerkion-son', koins: 5 }).glyphe, 'musique', 'xerkion-son → musique, pas « kion »');
-  const svg = svgXerkion({ id: 'xerkion-son', koins: 5 });
+  const svg = svgXerkion({ id: 'xerkion-son', koins: 5 }, { style: 'xerboxion' });
   assert.match(svg, /data-type="xerkion"/); assert.equal((svg.match(/<line /g) || []).length, 5, 'un rayon par koin');
   assert.equal(specXerkion({ id: 'xerkion-son' }).pal, hHash('xerkion-son') % 6, 'la palette du labo (son id)');
 });
@@ -31,14 +31,14 @@ test('la catégorie donne la couleur et le glyphe de secours ; « maison » n\'e
 });
 
 test('le SVG se suffit (ni classe à styler, ni id, ni filtre) et se met en cache', () => {
-  const svg = svgXerkion({ id: 'pomodoro', nom: 'Pomodoro' });
+  const svg = svgXerkion({ id: 'pomodoro', nom: 'Pomodoro' }, { style: 'xerboxion' });
   assert.ok(!/ class="(f|p)"/.test(svg)); assert.ok(!/ id=/.test(svg)); assert.ok(!/filter/.test(svg));
   assert.match(svg, /data-type="ploxion"/); assert.match(svg, /points="50.0,6.0 94.0,50.0 50.0,94.0 6.0,50.0"/, "le losange");
-  assert.equal(svgXerkion({ id: 'pomodoro', nom: 'Pomodoro' }), svg);
+  assert.equal(svgXerkion({ id: 'pomodoro', nom: 'Pomodoro' }, { style: 'xerboxion' }), svg);
 });
 
 test('(0.56) le glyphe seul, en grand ; le style d\'une app passe devant celui de l\'app', () => {
-  const x = svgXerkion({ id: 'pomodoro', nom: 'Pomodoro' }), g = svgXerkion({ id: 'pomodoro', nom: 'Pomodoro' }, { seul: true });
+  const x = svgXerkion({ id: 'pomodoro', nom: 'Pomodoro' }, { style: 'xerboxion' }), g = svgXerkion({ id: 'pomodoro', nom: 'Pomodoro' }, { seul: true });
   assert.match(x, /data-style="xerboxion"/); assert.match(g, /data-style="glyphe"/);
   assert.match(g, /<polygon points="50,4 96,50 50,96 4,50" fill="#59a69e"/, '(0.57) le losange, plein'); assert.match(g, /scale\(0\.480\)/, 'le glyphe, en grand');
   assert.match(g, /stroke="#0a0f13" stroke-width="9"/, 'le glyphe découpé (sombre) sur la forme pleine');

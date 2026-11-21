@@ -153,7 +153,9 @@ const MOTS = [
   [/maison|home|accueil|domotique/i, 'maison'], [/notif|alerte|cloche/i, 'notifs'], [/math|actuariat|calcul|excel|tableur/i, 'grille'],
 ];
 const INTERNES = { trackpad: 'haptique', cape: 'cape', sante: 'coeur', marketplace: 'marche', banc: 'flacon', 'xer-en-ligne': 'globe', 'journal-tsoins': 'tsoin', gestion: 'boite',
-  'reglages-app': 'reglages', bother: 'bulle', portion: 'portion' };
+  'reglages-app': 'reglages', bother: 'bulle', portion: 'portion',
+  // (0.99.67) les icônes à l'Apple : chaque ploxion de l'app a son glyphe (ils tombaient tous sur le téléphone de la catégorie ploxi0n)
+  passe: 'wormion', systeme: 'terminal', proche: 'proche', autour: 'lieu', ambiances: 'vague', inviter: 'partager' };
 /** le nom du glyphe d'un ploxion par ses mots (id, nom, catégorie), ou null */
 export function nomGlyphe(p) {
   if (!p) return null; if (INTERNES[p.id]) return INTERNES[p.id];
