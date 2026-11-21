@@ -229,8 +229,9 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]
 .px-telecommande .mk-sec{top:0}
 .px-telecommande .rg{display:flex;flex-direction:column-reverse}
 .px-telecommande .rg-tete{top:auto;bottom:0;border-bottom:0;border-top:1px solid var(--bord)}
-/* (0.99.27) sans la barre du ploxion (les koins la remplacent), ces barres touchent le bas de l'écran : elles laissent la place de l'indicateur d'accueil */
-html.px-koins.px-telecommande .rg-tete,html.px-koins.px-telecommande .mk-top{padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+/* (0.99.27) sans la barre du ploxion (les koins la remplacent), ces barres touchent le bas de l'écran : elles laissent la place de l'indicateur d'accueil.
+   (22.11, coord #2234) la bande des koins est dessous et compte déjà l'indicateur : 8 px suffisent (le champ « chercher un réglage » restait à 50 pt de la bande) */
+html.px-koins.px-telecommande .rg-tete,html.px-koins.px-telecommande .mk-top{padding-bottom:8px}
 .px-telecommande .px-bulle{top:calc(env(safe-area-inset-top,0px) + 64px)}   /* (15.11, RS-7 : « les notifs viennent d'en haut ») */
 .px-telecommande .mk{padding:0;min-height:100%;box-sizing:border-box}
 .px-telecommande .mk>div[data-c]{flex:1}
@@ -1167,8 +1168,9 @@ html.px-koins .px-dock{display:none}
 /* ▭ (0.99.57, RS-7 : « plutôt ça l'inspi », le koin ouvert du chill-tekk du labo) : en mode koin, la barre d'un ploxion laisse sa place à LA BANDE
    entre les deux koins (la barre des glyphes, src/app/koins.js) ; le ploxion s'arrête au-dessus d'elle. */
 html.px-koins .px-mode-ploxion .px-ecran>.px-barre{display:none}
-html.px-koins #ploxi0n.px-mode-ploxion{padding-bottom:var(--kbande)}
-html.px-koins .px-accueil{padding-bottom:calc(var(--kbande) + 10px)}
+/* (22.11, RS-7 coord #2234) l'accueil aussi : chaque vue s'arrête au-dessus de la bande (avant, l'accueil comptait l'indicateur d'accueil deux fois) */
+html.px-koins #ploxi0n.px-mode-accueil,html.px-koins #ploxi0n.px-mode-ploxion{padding-bottom:var(--kbande)}
+html.px-koins .px-accueil{padding-bottom:calc(10px + var(--px-md,0px))}
 .px-koins-r{position:fixed;inset:auto 0 0 0;height:0;z-index:40;color:var(--txt)}
 .px-koin{position:fixed;bottom:0;width:var(--kbande);height:var(--kbande);padding:0;margin:0;border:0;background:transparent;color:var(--acc);z-index:42;
   transition:width .26s cubic-bezier(.2,.9,.3,1),height .26s cubic-bezier(.2,.9,.3,1),opacity .2s;-webkit-tap-highlight-color:transparent}
@@ -1178,9 +1180,9 @@ html.px-koins .px-accueil{padding-bottom:calc(var(--kbande) + 10px)}
 .px-koins-r[data-ouvert="compact"] .px-koin-cases{grid-template-rows:auto;grid-template-columns:1fr 1fr}
 .px-koins-r[data-ouvert="compact"] .px-koin-cases>button,.px-koins-r[data-ouvert="compact"] .px-koin-pad{max-height:none}
 .px-koins-r[data-ouvert="compact"] .px-koin-cases>button small,.px-koins-r[data-ouvert="compact"] .px-koin-cases>button em{display:none}
-.px-koins-r[data-ouvert="compact"] .px-koin-barre{bottom:calc(env(safe-area-inset-bottom,0px) + 12px + (50vw - 25px) / 2 + 16px)}
+.px-koins-r.px-koins-ouverts[data-ouvert="compact"] .px-koin-barre{bottom:calc(env(safe-area-inset-bottom,0px) + 12px + (50vw - 25px) / 2 + 16px)}
 .px-koins-r:is([data-ouvert="bande"],[data-ouvert="mini"]) .px-koin-cases{display:none!important}
-.px-koins-r:is([data-ouvert="bande"],[data-ouvert="mini"]) .px-koin-barre{bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}
+.px-koins-r.px-koins-ouverts:is([data-ouvert="bande"],[data-ouvert="mini"]) .px-koin-barre{bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}
 .px-koin-xerkoin[hidden]{display:none!important}
 .px-koin-xerkoin{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px + min(44vh, 100vw - 34px) + 70px);z-index:41;display:flex;justify-content:center}
 .px-koin-xerkoin .xk__b{border:2px solid var(--acc);border-radius:6px;padding:4px;display:flex;background:var(--surface)}
@@ -1607,7 +1609,8 @@ html.px-organique :is(.px-map-hg,.px-map-hd,.px-map-bg,.px-map-bd){opacity:.5}
 html.px-organique .px-map-temps-on .px-map-k:not(.px-map-vu):not(.px-map-k-hub){opacity:.38}
 html.px-organique .px-map-k[data-quand]:not([data-quand=""])::after{font-size:7px;color:var(--muted);text-shadow:0 1px 2px #000}
 /* la réglette du temps : entre les deux koins du bas, plus dessous */
-html.px-koins .px-map-temps,html.px-organique .px-map-temps{padding:4px 82px calc(14px + env(safe-area-inset-bottom,0px))}
+html.px-organique:not(.px-koins) .px-map-temps{padding:4px 82px calc(14px + env(safe-area-inset-bottom,0px))}
+html.px-koins .px-map-temps{padding:4px 16px 8px}   /* (22.11, coord #2234) la map s'arrête au-dessus de la bande : les koins ne sont plus à côté du curseur */
 /* la règle du zoom, plus étroite : elle ne mange plus les tuiles */
 .px-map-z .px-map-zb,.px-map-figes button{min-width:0;width:30px;height:30px;min-height:30px;padding:0;border-radius:50%;font:600 14px/1 var(--police);letter-spacing:0;align-self:flex-end;justify-content:center}
 .px-map-figes button{font:600 11px/1 var(--ct);color:var(--acc2)}
@@ -1919,7 +1922,7 @@ html.px-m-xerboxion .px-accueil:has(.px-xbx)>:is(.px-grille,.px-cat,h2,.px-plaqu
    - le contenu transparaissait dans les coins, entre les koins et la bande (« ∞ ga… ») → un fond plein sous toute la bande ;
    - le « ? » flottant du labo (#jos-aide-btn) recouvrait les boutons des ploxions (l'envoi de coord, mappion) : en mode koin, ⓘ de la bande le remplace. */
 html.px-clavier .px-koins-r,body:has(.px-voile:not([hidden]),.px-feuille:not([hidden])) .px-koins-r{display:none}
-html.px-koins.px-clavier #ploxi0n.px-mode-ploxion{padding-bottom:0}
+html.px-koins.px-clavier #ploxi0n.px-mode-accueil,html.px-koins.px-clavier #ploxi0n.px-mode-ploxion{padding-bottom:0}
 .px-koins-r::before{content:'';position:fixed;left:0;right:0;bottom:0;height:var(--kbande);background:var(--bg,#07060c);z-index:40;pointer-events:none}
 html.px-koins.px-koins-ouv .px-koins-r::before{background:transparent}
 html.px-koins #jos-aide-btn{display:none !important}
@@ -1930,3 +1933,10 @@ html.px-koins .px-accueil>.px-tete{position:absolute;right:2px;top:calc(var(--px
 html.px-koins .px-accueil>.px-tete .px-modif{min-height:34px;padding:0 10px}
 html.px-koins .px-accueil>.px-sous{margin:8px 0 10px;padding-right:58px;min-height:34px;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html.px-koins .px-accueil>.px-vues{margin-bottom:12px}
+/* ▭ (22.11, RS-7 coord #2234 « truc à régler pour ploxi0n ») en mode koin, la bande est collée au bas, entre les deux koins :
+   - ce qui flotte au-dessus d'elle à l'accueil (les mini docks, « à l'écoute ») s'y pose juste au-dessus ;
+   - les bulles (un message, « △ : pas encore de koin pour cette vue ») se posent au-dessus de la bande, près du doigt, jamais sur l'en-tête */
+html.px-koins .px-md,html.px-koins .px-maintenant{bottom:calc(var(--kbande) + 10px)}
+html.px-koins .px-bulle{top:auto;bottom:calc(var(--kbande) + 12px);animation-name:px-bulle-bas}
+html.px-koins .px-mode-accueil .px-bulle{bottom:calc(var(--kbande) + 12px + var(--px-md,0px))}
+@keyframes px-bulle-bas{from{opacity:0;transform:translateY(12px) scale(.96)}}

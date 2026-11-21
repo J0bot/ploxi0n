@@ -142,7 +142,9 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
     if (cacher) { W.clearTimeout(cacher); cacher = 0; }
     const els = [...racine.querySelectorAll('[data-cases]'), racine.querySelector('.px-koin-voile')];   // (0.99.57) la barre, elle, reste : c'est la bande entre les koins
     if (on) { for (const x of els) x.hidden = false; return; }
-    const fin = () => { cacher = 0; if (!racine || etape.gauche) return; for (const x of els) x.hidden = true; montrerModes(false); };
+    // (22.11, RS-7 coord #2234) le format du koin ouvert (data-ouvert) part avec lui : resté posé, « compact » gardait la bande montée au-dessus
+    // du bas, koins fermés (la bande flottait sur l'accueil et les réglages, un fond noir vide dessous)
+    const fin = () => { cacher = 0; if (!racine || etape.gauche) return; for (const x of els) x.hidden = true; racine.removeAttribute('data-ouvert'); montrerModes(false); };
     if (calme()) fin(); else cacher = attendre(fin, 420);
   }
   /** ouvrir (1) ou fermer (0) les koins : les deux s'ouvrent ensemble en deux carrés */
