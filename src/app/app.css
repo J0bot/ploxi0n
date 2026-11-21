@@ -1958,3 +1958,7 @@ html.px-icones-apple .px-vue-compacte .px-tuile>span:last-child{font-size:10.5px
 html.px-icones-apple.px-icones-petites .px-grille{grid-template-columns:repeat(auto-fill,minmax(62px,1fr))}html.px-icones-apple.px-icones-petites .px-accueil .px-tuile .px-ic{width:50px;height:50px}
 html.px-icones-apple.px-icones-grandes .px-grille{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}html.px-icones-apple.px-icones-grandes .px-accueil .px-tuile .px-ic{width:74px;height:74px}
 html.px-icones-apple .px-ligne-t b{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif}
+/* ◺ (0.99.67, le mode xerboxion du 20.11 réconcilié, RS-7 coord #2120) en mode koin (organique, xerboxion, l'option), UNE SEULE BANDE entre les deux
+   koins du bas : celle de l'app (.px-koin-barre, 0.99.57). La bande qu'un ploxion du labo pose dans ce trou (jOSTsoins, coord : .tsk-trou) se
+   posait au même endroit et grandissait avec les koins ouverts : elle s'efface ; les actions du ploxion restent dans le koin ouvert (son xerkoin). */
+html.px-koins .tsk-trou{display:none!important}

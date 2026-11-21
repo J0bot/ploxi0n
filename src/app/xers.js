@@ -24,7 +24,7 @@ const ID = /^[A-Za-z0-9._-]{1,80}$/;
 export const MODELES = [
   { id: 'epure', nom: 'Épuré', icone: '▢', desc: 'une seule barre, rien qui bouge : l\'essentiel', prefs: { plaque: false, themeVivant: false, fractale: false, pagesCote: false, grain: false, miniDocks: 0, pxChill: false } },
   { id: 'xeroction', nom: 'xeroction', icone: '✕', desc: 'le poste de pilotage du monde physique (l\'ancien XERB0T)', prefs: { mode: 'xeroction' }, epingler: ['controleur'] },
-  { id: 'xerboxion', nom: 'xerboxion', icone: '⬡', desc: 'l\'UI du labo comme accueil, le dock de l\'app par-dessus', prefs: { mode: 'xerboxion' } },
+  { id: 'xerboxion', nom: 'xerboxion', icone: '⬡', desc: 'le xer du labo et tout le xer des koins (plus de dock)', prefs: { mode: 'xerboxion' } },
   { id: 'organique', nom: 'organique', icone: '〰', desc: 'le xer vivant : des membranes, des neurones, tout se zoome', prefs: { mode: 'organique', themeVivant: true, grain: true } },
   { id: 'chill-tekk', nom: 'chill-tekk', icone: '◇', desc: 'le xer classique, calme (celui d\'avant la 0.94)', prefs: { mode: 'chill-tekk', themeVivant: true, grain: true } },
 ];

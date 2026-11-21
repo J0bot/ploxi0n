@@ -92,7 +92,7 @@ import { creerClickerNatif, toucherRapide } from './jeu/clicker-natif.js';
 import { creerMisesAJour } from './marketplace/mises-a-jour.js';
 import { creerRemontee } from './app/remontee-tsoins.js';
 import { creerSysteme } from './lot/systeme.js';
-import { creerKoins } from './app/koins.js';
+import { creerKoins, glyphesAlien } from './app/koins.js';
 import { fondFractale } from './app/koin-fractale.js';   // ✺ (15.11) la fractale du trippion dans le portion
 import { creerNeurones } from './app/neurones.js';
 import { creerAtelier } from './lot/atelier-peaux.js';
@@ -813,7 +813,11 @@ async function demarrer() {
   let xkCharge = null;
   const xerkoinBion = () => window.jOSXerkoin ? Promise.resolve(window.jOSXerkoin) : (xkCharge || (xkCharge = new Promise((ok, ko) => { const s = document.createElement('script'); s.src = 'https://labo.j0bot.ch/px/bion-app/jOSXerkoin.js'; s.onload = () => (window.jOSXerkoin ? ok(window.jOSXerkoin) : ko(new Error('bion'))); s.onerror = () => { xkCharge = null; ko(new Error('réseau')); }; document.head.appendChild(s); })));
   const xerkoinCourant = () => { const id = routeur.courant(); if (!id) return null; return xerkoinBion().then((X) => { const x = X.pour(id); return { html: X.bande(x.cells, { t: 64, acts: x.acts }), lancer: (i) => X.lancer(id, x.acts[i]) }; }).catch(() => null); };
-  const koins = creerKoins({ fonds: { portion: fondFractale({ W: window }) }, actif: () => prefs.lire().mode === 'organique' || !!prefs.lire().koins, vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
+  // ◺ (0.99.67, le mode xerboxion du 20.11 réconcilié, RS-7 coord #2120 : « intégrer tout le xer des koins dans le mode xerboxion, pck chill-tekk
+  // c'est pour chiller, xerboxion pour essayer d'arriver aussi loin que moi ») : en xerboxion aussi, les koins toujours (le dock s'efface), dessinés
+  // avec les réglages des glyphes de l'alien (xb:alien:glyphes) ; une seule bande entre eux, celle de l'app (app.css : celle d'un ploxion s'efface)
+  const koins = creerKoins({ fonds: { portion: fondFractale({ W: window }) }, actif: () => prefs.lire().mode === 'organique' || prefs.lire().mode === 'xerboxion' || !!prefs.lire().koins,
+    glyphes: () => (prefs.lire().mode === 'xerboxion' ? glyphesAlien(window) : null), vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
     // (22.11, RS-7 coord #2234) un message qui dit où on en est (« pas encore semé ici » était obscur), posé au-dessus de la bande (app.css)
     koins: () => (routeur.connait('xerkion-perso-koin-ion') ? routeur.ouvrir('xerkion-perso-koin-ion') : routeur.signaler('△ : pas encore de koin pour cette vue')),
     ouvert: () => { const id = routeur.courant(); if (!id) return 'grand'; try { const v = (JSON.parse(localStorage.getItem('xerkoin:valid') || '{}') || {})[id] || {}; return v.ouvert || 'compact'; } catch (e) { return 'compact'; } },

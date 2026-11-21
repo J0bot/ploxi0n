@@ -6,6 +6,8 @@
 //                 (postMessage { ploxi0n: 'ouvrir', id }) s'ouvre dans l'app, en natif
 //                 (0.99.55, RS-7 via xerxion1 : « le xer xerboxion de l'app = le xer chill-tekk du labo : même thème, koins gauche = app,
 //                 droite = global, hypercube, octogone en bas, ‹ › ; + tout le natif ; ton xer chill-tekk reste le tien ») → /xer/chill-tekk
+//                 (0.99.67, RS-7 #2120 : « chill-tekk c'est pour chiller, xerboxion pour essayer d'arriver aussi loin que moi ») tout le xer des
+//                 koins : les koins toujours (le dock s'efface), dessinés avec les glyphes de l'alien, une seule bande entre eux (main.js, app.css)
 //   ✕ xeroction  (0.99.67, RS-7 coord #2221 : « le mode xerbot de ploxi0n c'est le mode xeroction ») l'ancien mode xerbot, le même : XERB0T,
 //                 la couche robotique, le poste de pilotage du monde physique — la blouse (labo-cape), les appareils Bluetooth, la maison
 //                 (HomeKit), la lampe, les tags NFC (les kions dans le réel), le Wi-Fi, et le bus xerbot.cmd ; « xerbot » rangé → xeroction
