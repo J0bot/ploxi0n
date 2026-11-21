@@ -14,6 +14,8 @@ export const NOUVEAUTES = [
     '✕ Le mode xerbot s\'appelle xeroction : le même monde physique (la blouse, le Bluetooth, la maison, le bus).',
     '⬡ En xerboxion, tout le xer des koins : les koins toujours, plus de dock, une seule bande ; les koins prennent les glyphes de l\'alien.',
     '∿ Les sons des ploxions du labo jouent dans l\'app.',
+    '⇄ Un lien CFF collé dans ⌕ chercher (ou partagé vers ploxi0n://cff) : le trajet va dans ton calendrier, et une notif te dit quand partir.',
+    '◇ Le chill-tekk, plus fin et plus vivant : des traits plus fins, une lueur douce, les koins et le ploxion où tu es respirent lentement (rien en mode Calme).',
   ] },
   { v: '0.99.66', titre: 'L\'icône du xeroction', points: [
     '◇ L\'icône de l\'app devient le logo du xeroction.',

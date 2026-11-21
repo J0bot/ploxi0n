@@ -1,5 +1,8 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1795231342000,"sons des ploxions du labo (coord #2114) : un new Audio('/…') ou un audio.src = '/…' hors de la page vise labo.j0bot.ch dans l'app, comme les images (il visait c"],
+export const COMMITS = [[1795232094000,"chill-tekk plus fin et plus vivant (coord #2243) : les traits de la bande et des koins affinés (le trait du Figma), la lueur adoucie, une respiration lente en C"],
+  [1795232018000,"les liens CFF (coord #2258) : un lien a.sbbmobile.ch/s/… (ou le texte partagé par l'app CFF) collé dans ⌕ chercher ou reçu par ploxi0n://cff?lien=… devient un é"],
+  [1795231587000,"0.99.67 : le lot du 22.11 (les icônes à l'Apple, la bande des koins collée au bas, les réglages en koins, le mode xeroction, le mode xerboxion réconcilié, les s"],
+  [1795231342000,"sons des ploxions du labo (coord #2114) : un new Audio('/…') ou un audio.src = '/…' hors de la page vise labo.j0bot.ch dans l'app, comme les images (il visait c"],
   [1795231172000,"réglages en koins depuis le koin gauche (coord #2203) : une case ⊞ sous le trion et le wormion ouvre une grille de koins qu'un toucher bascule (à jour tout seul"],
   [1795230775000,"mode xerboxion du 20.11 réconcilié (coord #2120, c5fbad1 sans son trou) : en xerboxion tout le xer des koins, les koins toujours, le dock s'efface, les koins de"],
   [1795230512000,"le mode xerbot devient le mode xeroction (coord #2221) : un seul mode, qui garde le monde physique de xerbot (le contrôleur, la blouse, le Bluetooth, la maison,"],
