@@ -49,14 +49,17 @@ test('🌍 le ploxion : poser au centre (un tsoin), la chambre à soi ; ses quat
     h.querySelector('[data-tx="poser-centre"]').click();
     [...h.querySelectorAll('[data-tx-e]')].find(b => b.dataset.txE === '🌳').click();   // (jsdom ne sait pas chercher un emoji dans un sélecteur)
     h.querySelector('[data-tx-texte]').value = 'un arbre dans le parc chiant';
-    h.querySelector('[data-tx="graver"]').click(); await attendre(30);
+    h.querySelector('[data-tx="graver"]').click();
+    // (0.99.67) attendre que l'objet soit gravé et marqué, pas 30 ms fixes (sous la charge de toute la suite, la marque arrivait après)
+    for (let t0 = Date.now(); !(h.querySelector('.tx-m') && ((await p.boxion.get('terrax', 'objets')) || []).length) && Date.now() - t0 < 2000;) await attendre(15);
     const objets = await p.boxion.get('terrax', 'objets');
     assert.equal(objets.length, 1); assert.equal(objets[0].emoji, '🌳'); assert.ok(objets[0].lat != null && !objets[0].partage, 'à toi par défaut');
     assert.ok(h.querySelector('.tx-m'), 'sa marque sur la carte');
     const ts = await p.boxion.lire('tsoins'); assert.ok(ts.some(x => x.entry.kind === 'terrax' && x.entry.action === 'poser'));
     inst.allerPage('chambre'); h.querySelector('[data-tx="poser-chambre"]').click();
     assert.ok(!h.querySelector('[data-tx-partage]'), 'la chambre : jamais au nexus');
-    h.querySelector('[data-tx-texte]').value = 'mon robot'; h.querySelector('[data-tx="graver"]').click(); await attendre(30);
+    h.querySelector('[data-tx-texte]').value = 'mon robot'; h.querySelector('[data-tx="graver"]').click();
+    for (let t0 = Date.now(); !/mon robot/.test((h.querySelector('.tx-chambre') || {}).textContent || '') && Date.now() - t0 < 2000;) await attendre(15);
     assert.match(h.querySelector('.tx-chambre').textContent, /mon robot/);
     inst.allerPage('quetes'); assert.match(h.querySelector('.tx-quetes').textContent, /✓Pose ton premier objet/);
     assert.match(h.querySelector('.tx-quetes').textContent, /ar-arkit/);

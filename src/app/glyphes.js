@@ -36,6 +36,8 @@ export const GLYPHES = {
   // ---- l'interface ----
   chercher: C(44, 44, 26) + L(63, 63, 86, 86),
   reglages: POLY('50,12 83,31 83,69 50,88 17,69 17,31') + C(50, 50, 13),
+  // ⊞ (0.99.67) les réglages en koins : quatre portions (le glyphe des koins du labo, partials/_koins_bion.blade.php)
+  portions: R(10, 10, 36, 36) + R(54, 10, 36, 36) + R(10, 54, 36, 36) + R(54, 54, 36, 36) + R(22, 22, 12, 12) + R(66, 66, 12, 12) + C(50, 50, 3, 1),
   vocal: R(38, 14, 24, 44, 12) + P('M24 46a26 26 0 0 0 52 0M50 72v14M36 86h28'),
   compte: C(50, 36, 16) + P('M18 86a32 26 0 0 1 64 0'),
   reseau: L(22, 80, 22, 66) + L(40, 80, 40, 52) + L(58, 80, 58, 38) + L(76, 80, 76, 22),

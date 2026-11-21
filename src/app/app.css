@@ -1962,3 +1962,24 @@ html.px-icones-apple .px-ligne-t b{font-family:-apple-system,BlinkMacSystemFont,
    koins du bas : celle de l'app (.px-koin-barre, 0.99.57). La bande qu'un ploxion du labo pose dans ce trou (jOSTsoins, coord : .tsk-trou) se
    posait au même endroit et grandissait avec les koins ouverts : elle s'efface ; les actions du ploxion restent dans le koin ouvert (son xerkoin). */
 html.px-koins .tsk-trou{display:none!important}
+/* ⊞ (0.99.67, RS-7 coord #2203 « les réglages en koins accessibles partout depuis le koin gauche ») la case réglages : une bande basse sous le
+   trion et le wormion (au pouce, juste au-dessus du koin) ; elle ouvre la grille des koins de réglages (src/app/reglages-koins.js) */
+.px-koin-cases>[data-koin-a="reglages"]{aspect-ratio:auto;max-height:none;min-height:0;height:48px;flex-direction:row;gap:10px;padding:6px 12px}
+.px-koin-cases>[data-koin-a="reglages"] .px-g{width:24px;height:24px}
+html:not(.px-organique) .px-koin-cases>[data-koin-a="reglages"]{padding:6px 12px;box-shadow:inset 0 0 0 3px var(--creux),inset 0 0 0 4px color-mix(in srgb,var(--acc) 40%,transparent)}
+html:not(.px-organique) .px-koin-cases>[data-koin-a="reglages"] .px-g{width:24px;height:24px}
+html:not(.px-organique):not(.px-e-texte) .px-koin-cases>[data-koin-a="reglages"] small{display:inline;font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.px-koins-r[data-ouvert="compact"] .px-koin-cases>[data-koin-a="reglages"]{grid-column:1/-1}
+.px-koin-reglages[hidden]{display:none}
+.px-koin-reglages{position:fixed;left:12px;right:12px;bottom:calc(var(--kbande) + 8px);z-index:43;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-height:64vh;overflow:auto;overscroll-behavior:contain}
+.px-koin-reglages>button{min-height:78px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 4px;margin:0;background:var(--surface) var(--grain);
+  border:var(--trait) solid var(--bord);border-radius:14px;color:var(--txt);font:600 10px/1.2 var(--mono);letter-spacing:.04em;animation:px-koin-mode .28s cubic-bezier(.2,.9,.25,1) both}
+.px-koin-reglages>button .px-g{width:26px;height:26px;fill:none;stroke:var(--acc);stroke-width:4}
+.px-koin-reglages>button .px-g .f{fill:var(--acc)}
+.px-koin-reglages>button small{text-align:center}
+.px-koin-reglages>button em{font:500 9.5px var(--mono);font-style:normal;color:var(--muted)}
+.px-koin-reglages>button.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc),inset 0 0 18px color-mix(in srgb,var(--acc) 16%,transparent)}
+.px-koin-reglages>button.on em{color:var(--acc)}
+.px-koin-reglages>[data-koin-reg="tout"]{border-style:dashed}
+html:not(.px-organique) .px-koin-reglages>button{border-radius:0}
+.px-koins-reglages .px-koin-cases{visibility:hidden}

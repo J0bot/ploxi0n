@@ -25,9 +25,9 @@ import { creerPadWormion, creerPadPortion } from './pads.js';   // ○ □ (0.92
 export const PADS = { wormion: true, portion: true };   // (0.92) ces cases-là sont des trackpads
 export const ETAPES = 2;   // (0.99.47) 0 fermé · 1 ouvert (une seule animation entre les deux, plus de tailles intermédiaires)
 export const OUVRIR_A = 0.4;   // glisser : au-delà de 40 % du chemin, lâcher ouvre
-export const CASES = { gauche: [['trion', 'koins'], ['wormion', 'temps']], droite: [['hypercube', 'xer'], ['portion', 'carte']] };   // (0.99.57) le xer : l'hypercube
+export const CASES = { gauche: [['trion', 'koins'], ['wormion', 'temps'], ['portions', 'reglages']], droite: [['hypercube', 'xer'], ['portion', 'carte']] };   // (0.99.57) le xer : l'hypercube ; (0.99.67) ⊞ les réglages en koins
 export const BARRE = [['retour', 'retour', '‹'], ['suivante', 'suivante', '›'], ['tsoin', 'tsoin', ''], ['wormion', 'temps', ''], ['trion', 'koins', ''], ['portion', 'carte', ''], ['ploxion', 'accueil', ''], ['xeroction', 'toi', ''], ['quoi', 'quoi', 'ⓘ'], ['minimiser', 'minimiser', '▁']];
-const NOMS = { xer: 'ton xer (appui long : mes xers)', koins: 'le koin du ion', temps: 'le temps (ce que tu avais ouvert)', xers: 'mes xers', carte: 'tout le xerboxion', tsoin: 'noter un tsoin', accueil: 'les ploxions', toi: 'toi (compte, réglages)', retour: 'retour', suivante: 'le ploxion suivant', minimiser: 'minimiser', quoi: 'c\'est quoi ça ? (touche quelque chose)' };
+const NOMS = { xer: 'ton xer (appui long : mes xers)', koins: 'le koin du ion', temps: 'le temps (ce que tu avais ouvert)', xers: 'mes xers', carte: 'tout le xerboxion', tsoin: 'noter un tsoin', accueil: 'les ploxions', toi: 'toi (compte, réglages)', retour: 'retour', suivante: 'le ploxion suivant', minimiser: 'minimiser', quoi: 'c\'est quoi ça ? (touche quelque chose)', reglages: 'réglages (les réglages en koins)' };
 // un koin de coin : un triangle rectangle (l'angle droit dans le coin de l'écran) et ses triangles emboîtés.
 // (0.99.7, RS-7 : « les koins bien collés aux coins de l'écran, ça gobe les coins ») : l'angle droit tombe PILE dans le coin de l'écran ;
 // c'est l'arrondi de l'iPhone qui le découpe (le koin gobe le coin) ; les triangles intérieurs rentrent pour rester dans l'arrondi (~55 px)
@@ -53,7 +53,7 @@ export function glyphesAlien(W = globalThis.window) {
 // à chaque poser() et à chaque changement de ploxion : un réglage changé dans l'alien redessine les koins au retour
 export function creerKoins({ W = globalThis.window, actif = () => false, actions = {}, vibrer = () => {}, calme = () => false, fonds = {}, glyphes = () => null }) {
   const D = W.document;
-  let racine = null, etape = { gauche: 0, droite: 0 }, cacher = 0, modesOuverts = false, arrets = [], dessin = '';
+  let racine = null, etape = { gauche: 0, droite: 0 }, cacher = 0, modesOuverts = false, reglagesOuverts = false, arrets = [], dessin = '';
   let obs = null, courantPeint;
   const lireGlyphes = () => { try { return glyphes() || null; } catch (e) { return null; } };
   /** les deux koins redessinés si les réglages des glyphes ont changé */
@@ -75,6 +75,7 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
   const attendre = (f, ms) => (W.setTimeout ? W.setTimeout(f, ms) : setTimeout(f, ms));
   function faire(k) {
     if (k === 'xer') { if (actions.modes) { montrerModes(!modesOuverts); return; } k = 'xers'; }   // la case xer : les xers (les modes), sur place ; sinon mes xers
+    if (k === 'reglages' && actions.reglages) { montrerReglages(!reglagesOuverts); return; }   // ⊞ (0.99.67) la case réglages : les réglages en koins, sur place
     const f = actions[k]; replier(); if (f) { vibrer('selection'); try { f(); } catch (e) { /* */ } }
   }
   /** ⊠ les xers dans les cases : un toucher change de mode ; la case xer referme */
@@ -88,6 +89,18 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
     }
     z.hidden = !on; racine.classList.toggle('px-koins-modes', !!on);
   }
+  /** ⊞ (0.99.67, RS-7 coord #2203) les réglages en koins : une grille de koins (actions.reglages() → [{ id, glyphe, nom, on, etat }]) qu'un toucher
+   *  bascule (actions.basculerReglage(id) → 'fermer' quand il ouvre une page) ; ⊞ tous les réglages au bout */
+  function montrerReglages(on) {
+    if (!racine) return; reglagesOuverts = !!on;
+    const z = racine.querySelector('.px-koin-reglages'); if (!z) return;
+    if (on) {
+      if (modesOuverts) montrerModes(false);
+      let l = []; try { l = actions.reglages() || []; } catch (e) { l = []; }
+      z.innerHTML = l.map(r => '<button type="button" data-koin-reg="' + r.id + '" data-neurone' + (r.on ? ' class="on" aria-pressed="true"' : '') + ' aria-label="' + r.nom + (r.etat ? ' : ' + r.etat : '') + '">' + G(r.glyphe) + '<small>' + r.nom + '</small>' + (r.etat ? '<em>' + r.etat + '</em>' : '') + '</button>').join('');
+    }
+    z.hidden = !on; racine.classList.toggle('px-koins-reglages', !!on);
+  }
   function poser() {
     const on = !!actif();
     D.documentElement.classList.toggle('px-koins', on);
@@ -96,10 +109,10 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
     const gl = lireGlyphes(); dessin = gl ? JSON.stringify(gl) : '';
     racine = D.createElement('div'); racine.className = 'px-koins-r'; racine.setAttribute('data-neurones', '');   // 〰 (0.93) les cases et la barre : des neurones
     racine.innerHTML = ['gauche', 'droite'].map(c => '<button type="button" class="px-koin px-koin-' + c + '" data-koin="' + c + '" data-etape="0" aria-label="koin ' + c + '">' + TRI(c === 'droite', gl) + '</button>'
-      + '<div class="px-koin-cases px-koin-cases-' + c + '" data-cases="' + c + '" hidden>' + CASES[c].map(([g, k]) => (PADS[g]
+      + '<div class="px-koin-cases px-koin-cases-' + c + '" data-cases="' + c + '" hidden>' + CASES[c].filter(([, k]) => k !== 'reglages' || actions.reglages).map(([g, k]) => (PADS[g]
         ? '<div class="px-koin-pad px-koin-pad-' + g + '" data-pad="' + g + '" data-neurone role="slider" aria-label="' + NOMS[k] + ' (trackpad)"><span class="px-pad-g">' + G(g) + '</span>' + (g === 'wormion' ? '<i data-pad-a></i>' : '<i data-pad-p></i>') + '<i data-pad-onde></i><b data-pad-l></b><small data-pad-s></small></div>'
         : '<button type="button" data-koin-a="' + k + '" data-neurone aria-label="' + NOMS[k] + '">' + G(g) + '<small>' + NOMS[k].split(' (')[0] + '</small><em data-koin-sous="' + k + '"></em></button>')).join('') + '</div>').join('')
-      + '<div class="px-koin-modes" data-neurone hidden></div><div class="px-koin-xerkoin" data-neurone hidden></div>'
+      + '<div class="px-koin-modes" data-neurone hidden></div><div class="px-koin-reglages" data-neurone hidden></div><div class="px-koin-xerkoin" data-neurone hidden></div>'
       + '<nav class="px-koin-barre" data-neurone>' + BARRE.map(([g, k, t]) => '<button type="button" data-koin-a="' + k + '" data-court="' + ({ koins: 'koin', carte: 'map', quoi: 'quoi ?', minimiser: '▁' }[k] || k) + '" aria-label="' + NOMS[k] + '">' + (t || G(g)) + '</button>').join('') + '</nav>'
       + '<div class="px-koin-voile" hidden></div>';
     D.body.appendChild(racine);
@@ -133,6 +146,15 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
       b.addEventListener('click', (e) => { e.stopPropagation(); if (glisse) { glisse = false; return; } const c = b.getAttribute('data-koin'); ouvrir(c, etape[c] ? 0 : 1); });
     }
     racine.addEventListener('click', (e) => {
+      const rg = e.target.closest('[data-koin-reg]');
+      if (rg) {
+        e.stopPropagation(); vibrer('selection');
+        let res = null; try { res = actions.basculerReglage ? actions.basculerReglage(rg.getAttribute('data-koin-reg')) : null; } catch (er) { res = null; }
+        if (reglagesOuverts) montrerReglages(true);   // tout de suite (« vérifier » : … le temps de la réponse), puis à la fin
+        Promise.resolve(res).then((r) => { if (r === 'fermer') { montrerReglages(false); replier(); } else if (reglagesOuverts) montrerReglages(true); })
+          .catch(() => { if (reglagesOuverts) montrerReglages(true); });
+        return;
+      }
       const m = e.target.closest('[data-koin-mode]'); if (m) { e.stopPropagation(); const id = m.getAttribute('data-koin-mode'); montrerModes(false); replier(); vibrer('selection'); if (actions.choisirMode) { try { actions.choisirMode(id); } catch (er) { /* */ } } return; }
       const xa = e.target.closest('.px-koin-xerkoin [data-a]'); if (xa) { e.stopPropagation(); const z = racine.querySelector('.px-koin-xerkoin'); if (z && z.__x && z.__x.lancer) { vibrer('selection'); z.__x.lancer(+xa.getAttribute('data-a')); } replier(); return; }
       const a = e.target.closest('[data-koin-a]'); if (a) { e.stopPropagation(); if (a.dataset.appuiLong === '1') { a.dataset.appuiLong = ''; return; } faire(a.getAttribute('data-koin-a')); }
@@ -167,7 +189,7 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
     if (on) { for (const x of els) x.hidden = false; return; }
     // (22.11, RS-7 coord #2234) le format du koin ouvert (data-ouvert) part avec lui : resté posé, « compact » gardait la bande montée au-dessus
     // du bas, koins fermés (la bande flottait sur l'accueil et les réglages, un fond noir vide dessous)
-    const fin = () => { cacher = 0; if (!racine || etape.gauche) return; for (const x of els) x.hidden = true; racine.removeAttribute('data-ouvert'); montrerModes(false); };
+    const fin = () => { cacher = 0; if (!racine || etape.gauche) return; for (const x of els) x.hidden = true; racine.removeAttribute('data-ouvert'); montrerModes(false); montrerReglages(false); };
     if (calme()) fin(); else cacher = attendre(fin, 420);
   }
   /** ouvrir (1) ou fermer (0) les koins : les deux s'ouvrent ensemble en deux carrés */
@@ -193,6 +215,6 @@ export function creerKoins({ W = globalThis.window, actif = () => false, actions
     } else { racine.classList.remove('px-koins-ouverts'); montrer(false); const zx = racine.querySelector('.px-koin-xerkoin'); if (zx) zx.hidden = true; for (const a of arrets) { try { if (a) a(); } catch (e) { /* */ } } arrets = []; }
     vibrer(n ? 'fx-cran' : 'selection');
   }
-  function replier() { if (racine && (etape.gauche || etape.droite)) ouvrir('gauche', 0); else if (modesOuverts) montrerModes(false); }
+  function replier() { if (racine && (etape.gauche || etape.droite)) ouvrir('gauche', 0); else { if (modesOuverts) montrerModes(false); if (reglagesOuverts) montrerReglages(false); } }
   return { poser, ouvrir, replier, etape: () => ({ ...etape }), actif: () => !!racine };
 }

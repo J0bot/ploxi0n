@@ -93,6 +93,7 @@ import { creerMisesAJour } from './marketplace/mises-a-jour.js';
 import { creerRemontee } from './app/remontee-tsoins.js';
 import { creerSysteme } from './lot/systeme.js';
 import { creerKoins, glyphesAlien } from './app/koins.js';
+import { creerReglagesKoins } from './app/reglages-koins.js';   // ⊞ (0.99.67) les réglages en koins (le koin gauche)
 import { fondFractale } from './app/koin-fractale.js';   // ✺ (15.11) la fractale du trippion dans le portion
 import { creerNeurones } from './app/neurones.js';
 import { creerAtelier } from './lot/atelier-peaux.js';
@@ -811,6 +812,7 @@ async function demarrer() {
   // en organique, les koins toujours (plus de dock) ; ailleurs, le réglage d'avant
   // ◩ (15.11) le xerkoin du ploxion courant dans les koins ouverts : le bion jOSXerkoin du labo (chargé s'il manque) lit son describe()
   let xkCharge = null;
+  const reglagesKoins = creerReglagesKoins({ prefs, maj, ouvrir: (id) => routeurProxy.ouvrir(id) });
   const xerkoinBion = () => window.jOSXerkoin ? Promise.resolve(window.jOSXerkoin) : (xkCharge || (xkCharge = new Promise((ok, ko) => { const s = document.createElement('script'); s.src = 'https://labo.j0bot.ch/px/bion-app/jOSXerkoin.js'; s.onload = () => (window.jOSXerkoin ? ok(window.jOSXerkoin) : ko(new Error('bion'))); s.onerror = () => { xkCharge = null; ko(new Error('réseau')); }; document.head.appendChild(s); })));
   const xerkoinCourant = () => { const id = routeur.courant(); if (!id) return null; return xerkoinBion().then((X) => { const x = X.pour(id); return { html: X.bande(x.cells, { t: 64, acts: x.acts }), lancer: (i) => X.lancer(id, x.acts[i]) }; }).catch(() => null); };
   // ◺ (0.99.67, le mode xerboxion du 20.11 réconcilié, RS-7 coord #2120 : « intégrer tout le xer des koins dans le mode xerboxion, pck chill-tekk
@@ -818,6 +820,9 @@ async function demarrer() {
   // avec les réglages des glyphes de l'alien (xb:alien:glyphes) ; une seule bande entre eux, celle de l'app (app.css : celle d'un ploxion s'efface)
   const koins = creerKoins({ fonds: { portion: fondFractale({ W: window }) }, actif: () => prefs.lire().mode === 'organique' || prefs.lire().mode === 'xerboxion' || !!prefs.lire().koins,
     glyphes: () => (prefs.lire().mode === 'xerboxion' ? glyphesAlien(window) : null), vibrer: (x) => vibrer(x), calme: () => !!prefs.lire().calme, actions: {
+    // ⊞ (0.99.67, RS-7 coord #2203) les réglages en koins depuis le koin gauche : les mises à jour (la capture : à jour tout seul, fréquence, les
+    // bions aussi, vérifier), l'haptique, le calme…, installés, ⊞ tous les réglages
+    reglages: () => reglagesKoins.liste(), basculerReglage: (id) => reglagesKoins.basculer(id),
     // (22.11, RS-7 coord #2234) un message qui dit où on en est (« pas encore semé ici » était obscur), posé au-dessus de la bande (app.css)
     koins: () => (routeur.connait('xerkion-perso-koin-ion') ? routeur.ouvrir('xerkion-perso-koin-ion') : routeur.signaler('△ : pas encore de koin pour cette vue')),
     ouvert: () => { const id = routeur.courant(); if (!id) return 'grand'; try { const v = (JSON.parse(localStorage.getItem('xerkoin:valid') || '{}') || {})[id] || {}; return v.ouvert || 'compact'; } catch (e) { return 'compact'; } },
