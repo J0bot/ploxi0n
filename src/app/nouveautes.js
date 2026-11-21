@@ -8,6 +8,7 @@
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
   { v: '0.99.67', titre: 'Les icônes à l\'Apple', points: [
+    '∿ En trippion, tout se met à jour tout seul : dès le départ du voyage, puis toutes les 15 min, sans rien te dire, même si l\'automatique est éteint. La redescente rend tes réglages.',
     '▢ Tes ploxions ont leur icône à l\'Apple : le carré arrondi d\'iOS, un fond sombre, leur glyphe au trait du Figma. La grille et les noms comme l\'écran d\'accueil d\'un iPhone (⚙ › Apparence garde xerboxion et glyphe seul).',
     '▭ La bande des koins reste collée en bas, entre les deux koins ; l\'accueil, les réglages et la map s\'arrêtent juste au-dessus. Les messages se posent au-dessus d\'elle.',
     '⊞ Les réglages en koins : la case ⊞ du koin gauche, un toucher bascule (à jour tout seul, fréquence, les bions, vérifier, l\'haptique, le calme…).',

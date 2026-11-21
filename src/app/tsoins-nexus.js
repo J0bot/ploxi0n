@@ -1,5 +1,10 @@
 // ⧗ LES TSOINS DU NEXUS : les commits de ploxi0n (écrit par tools/tsoins-nexus.mjs, ne pas éditer à la main). [date (ms), sujet], le plus récent d'abord.
-export const COMMITS = [[1795232094000,"chill-tekk plus fin et plus vivant (coord #2243) : les traits de la bande et des koins affinés (le trait du Figma), la lueur adoucie, une respiration lente en C"],
+export const COMMITS = [[1795239711000,"en trippion, tout se met à jour tout seul (#2291) : dès le départ du voyage puis toutes les 15 min, sans bandeau [widgets] [notifs] RS-1"],
+  [1795239231000,"0.99.66 avec les widgets et les notifs riches : le README dit comment lancer un build par un commit [widgets] [notifs]"],
+  [1795239195000,"lot 0.99.67 lancé sur le go de RS-7 : 520 tests, vite build RS-1"],
+  [1795232519000,"liens CFF : le vrai lien court de l'app (le jeton HAFAS seul) est déplié par le labo (/px/sbb/trajet) ; la gare de départ et sa position servent au rappel ; 520"],
+  [1795232251000,"lot du 22.11 complété : les liens CFF et le chill-tekk plus fin dans les nouveautés de la 0.99.67, la feuille de route et docs/LOT-DU-JOUR.md (519 tests deux fo"],
+  [1795232094000,"chill-tekk plus fin et plus vivant (coord #2243) : les traits de la bande et des koins affinés (le trait du Figma), la lueur adoucie, une respiration lente en C"],
   [1795232018000,"les liens CFF (coord #2258) : un lien a.sbbmobile.ch/s/… (ou le texte partagé par l'app CFF) collé dans ⌕ chercher ou reçu par ploxi0n://cff?lien=… devient un é"],
   [1795231587000,"0.99.67 : le lot du 22.11 (les icônes à l'Apple, la bande des koins collée au bas, les réglages en koins, le mode xeroction, le mode xerboxion réconcilié, les s"],
   [1795231342000,"sons des ploxions du labo (coord #2114) : un new Audio('/…') ou un audio.src = '/…' hors de la page vise labo.j0bot.ch dans l'app, comme les images (il visait c"],

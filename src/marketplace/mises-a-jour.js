@@ -8,16 +8,25 @@
 // la page (routeur.oublier) : la prochaine ouverture lit sa nouvelle version, sans redémarrer l'app.
 // boxion_local « reglages/maj » = { auto, bions, heures } ; « reglages/maj-etat » = { le, mis: [ids], erreurs: [ids], bions }.
 export const MAJ_DEFAUT = { auto: true, bions: true, heures: 6 };
+// ∿ EN TRIPPION, TOUT EST AUTOMATIQUE (0.99.68, RS-7 #2291 : « tout est automatique et tout se fait sans [rien faire] quand t'es dans le
+// trippion, c'est la machine à tsoins qui se synchronise au LSDION, c'est ça le concept »). Pendant un voyage (« xb:trip » a un t0, posé par le
+// ploxion trip au départ, retiré à la redescente) : l'automatique est forcé (même éteint dans les réglages), la fréquence passe à 15 min, une
+// vérification part dès le départ (un t0 plus récent que la dernière vérification, ou l'évent « xb:trip:depart »), et rien ne s'annonce :
+// le voyage n'est pas dérangé, le bilan reste dans les réglages.
+export const TRIP_MINUTES = 15;
+export function tripEnCours(W = globalThis.window) {
+  try { const c = JSON.parse(W.localStorage.getItem('xb:trip') || 'null'); return c && +c.t0 > 0 ? +c.t0 : 0; } catch (e) { return 0; }
+}
 export const FREQUENCES = [[1, 'toutes les heures'], [6, 'toutes les 6 h'], [24, 'une fois par jour']];
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-export function creerMisesAJour({ W = globalThis.window, depot, boxion, routeur = () => null, signaler = () => {}, apres = async () => {}, enLigne = () => W.navigator.onLine !== false, maintenant = () => Date.now(), completer = null }) {
+export function creerMisesAJour({ W = globalThis.window, depot, boxion, routeur = () => null, signaler = () => {}, apres = async () => {}, enLigne = () => W.navigator.onLine !== false, maintenant = () => Date.now(), enTrip = () => tripEnCours(W), completer = null }) {
   let r = { ...MAJ_DEFAUT }, etat = null, enCours = null, minuteur = null;
   const pret = Promise.all([boxion.get('reglages', 'maj').catch(() => null), boxion.get('reglages', 'maj-etat').catch(() => null)])
     .then(([a, b]) => { if (a && typeof a === 'object') r = { ...MAJ_DEFAUT, ...a }; if (b && typeof b === 'object') etat = b; });
 
   /** tout vérifier ; rend { mis, erreurs, aJour, bions, le } ; une seule vérification à la fois */
-  function verifier({ auto = false, progres = null } = {}) {
+  function verifier({ auto = false, progres = null, calme = false } = {}) {
     if (enCours) return enCours;
     enCours = (async () => {
       await pret;
@@ -33,8 +42,8 @@ export function creerMisesAJour({ W = globalThis.window, depot, boxion, routeur 
       etat = { le: maintenant(), mis, erreurs, bions, ajoutes, aJour: res.length - mis.length - erreurs.length };
       await boxion.put('reglages', 'maj-etat', etat).catch(() => {});
       if (mis.length) { try { await apres(mis); } catch (e) { /* l'accueil se redessine */ } }
-      if (auto && ajoutes.length) signaler('⧉ ' + ajoutes.length + ' ploxion' + (ajoutes.length > 1 ? 's' : '') + ' dont tes ploxions ont besoin : ' + ajoutes.slice(0, 4).join(', ') + (ajoutes.length > 4 ? '…' : ''));
-      if (auto && (mis.length || bions)) {
+      if (auto && !calme && ajoutes.length) signaler('⧉ ' + ajoutes.length + ' ploxion' + (ajoutes.length > 1 ? 's' : '') + ' dont tes ploxions ont besoin : ' + ajoutes.slice(0, 4).join(', ') + (ajoutes.length > 4 ? '…' : ''));
+      if (auto && !calme && (mis.length || bions)) {
         const att = routeur() && routeur().enAttenteDeMaj ? routeur().enAttenteDeMaj() : [];
         signaler('↻ ' + (mis.length ? mis.length + ' ploxion' + (mis.length > 1 ? 's' : '') + ' à jour (' + mis.slice(0, 3).join(', ') + (mis.length > 3 ? '…' : '') + ')' : '') + (mis.length && bions ? ' · ' : '') + (bions ? bions + ' bion' + (bions > 1 ? 's' : '') + ' au prochain lancement' : '') + (att.length ? ' · ' + att.join(', ') + ' : à sa fermeture' : ''));
       }
@@ -42,13 +51,14 @@ export function creerMisesAJour({ W = globalThis.window, depot, boxion, routeur 
     })().finally(() => { enCours = null; });
     return enCours;
   }
-  const duree = () => Math.max(1, +r.heures || 6) * 3600e3;
-  const due = () => !etat || !etat.le || maintenant() - etat.le >= duree();
+  const duree = () => (enTrip() ? TRIP_MINUTES * 60e3 : Math.max(1, +r.heures || 6) * 3600e3);
+  const due = () => { const t = enTrip(); return !etat || !etat.le || (t > 0 && etat.le < t) || maintenant() - etat.le >= duree(); };
   /** l'automatique : au lancement (après `attente`), puis à la fréquence ; au retour dans l'app si c'est l'heure */
   function demarrer({ attente = 20000 } = {}) {
-    const tic = () => { if (r.auto && !W.document.hidden && due()) verifier({ auto: true }).catch(() => {}); };
+    const tic = () => { const t = enTrip(); if ((r.auto || t) && !W.document.hidden && due()) verifier({ auto: true, calme: t > 0 }).catch(() => {}); };
     W.setTimeout(tic, attente);
-    minuteur = W.setInterval(tic, 15 * 60e3);
+    minuteur = W.setInterval(tic, 5 * 60e3);   // (0.99.68) 5 min : le départ d'un trippion est vu vite ; hors voyage, due() garde la fréquence choisie
+    W.addEventListener('xb:trip:depart', () => W.setTimeout(tic, 2000));
     W.document.addEventListener('visibilitychange', () => { if (!W.document.hidden) W.setTimeout(tic, 3000); });
   }
   async function regler(p) { await pret; r = { ...r, ...p }; await boxion.put('reglages', 'maj', r).catch(() => {}); return { ...r }; }
@@ -57,7 +67,9 @@ export function creerMisesAJour({ W = globalThis.window, depot, boxion, routeur 
   function html() {
     const quand = etat && etat.le ? new Date(etat.le).toLocaleString('fr-CH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'jamais';
     const bilan = etat && etat.le ? (etat.mis.length ? etat.mis.length + ' mis à jour (' + esc(etat.mis.slice(0, 4).join(', ')) + (etat.mis.length > 4 ? '…' : '') + ')' : 'tout était à jour') + (etat.erreurs.length ? ' · ' + etat.erreurs.length + ' en erreur' : '') : '';
+    const t = enTrip();
     return '<div class="bloc px-maj">'
+      + (t ? '<div class="l" data-maj-trip><span>∿ en trippion<small>tout se met à jour tout seul, dès le départ puis toutes les ' + TRIP_MINUTES + ' min, sans rien te dire</small></span></div>' : '')
       + '<label class="l"><span>Mettre à jour tout seul<small>au lancement, puis ' + esc((FREQUENCES.find(f => f[0] === +r.heures) || FREQUENCES[1])[1]) + ', en ligne seulement</small></span><input type="checkbox" data-maj-auto' + (r.auto ? ' checked' : '') + '></label>'
       + '<div class="l ls"><span>Fréquence</span><div class="seg">' + FREQUENCES.map(([h]) => '<button data-maj-heures="' + h + '"' + (+r.heures === h ? ' class="on"' : '') + '>' + h + ' h</button>').join('') + '</div></div>'
       + '<label class="l"><span>Les bions aussi<small>ils se chargent au prochain lancement de l\'app</small></span><input type="checkbox" data-maj-bions' + (r.bions ? ' checked' : '') + '></label>'
@@ -80,5 +92,5 @@ export function creerMisesAJour({ W = globalThis.window, depot, boxion, routeur 
         : (x.mis.length ? '✓ ' + x.mis.length + ' mis à jour : ' + x.mis.join(', ') : '✓ tout est à jour') + (x.ajoutes && x.ajoutes.length ? ' · ajoutés (dépendances) : ' + x.ajoutes.join(', ') : '') + (x.bions ? ' · ' + x.bions + ' bion(s) au prochain lancement' : '') + (x.erreurs.length ? ' · en erreur (labo injoignable, ou ploxion retiré du labo) : ' + x.erreurs.join(', ') : '');
     });
   }
-  return { pret, verifier, demarrer, regler, reglage: () => ({ ...r }), etat: () => (etat ? { ...etat } : null), html, brancher, arreter: () => W.clearInterval(minuteur) };
+  return { pret, verifier, demarrer, regler, enTrip, reglage: () => ({ ...r }), etat: () => (etat ? { ...etat } : null), html, brancher, arreter: () => W.clearInterval(minuteur) };
 }

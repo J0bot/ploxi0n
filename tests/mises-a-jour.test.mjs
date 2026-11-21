@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { creerMemoire } from '../src/boxion-local/memoire.js';
 import { creerDepot } from '../src/marketplace/depot.js';
-import { creerMisesAJour, MAJ_DEFAUT } from '../src/marketplace/mises-a-jour.js';
+import { creerMisesAJour, MAJ_DEFAUT, tripEnCours } from '../src/marketplace/mises-a-jour.js';
 import { page, attendre } from './aide.mjs';
 
 const BUNDLE = (id, txt) => `window.jOSApps=window.jOSApps||{};window.jOSApps[${JSON.stringify(id)}]={manifest:{id:${JSON.stringify(id)}},mount(h){h.innerHTML='<b>${txt}</b>';return{unmount(){h.innerHTML=''}}}};`;
@@ -71,6 +71,32 @@ test('↻ l\'automatique (par défaut) : au lancement, puis à la fréquence ; d
     t += 3600e3; W.document.dispatchEvent(new W.Event('visibilitychange')); await attendre(50);
     assert.equal(appels, 1, 'pas encore l\'heure (6 h)');
     enLigne = false; const x = await m.verifier(); assert.equal(x.horsLigne, true); assert.equal(appels, 1);
+    m.arreter();
+  } finally { p.fin(); }
+});
+
+test('∿ en trippion (#2291) : l\'automatique forcé, dès le départ puis toutes les 15 min, sans rien dire ; la ligne dans les réglages', async () => {
+  const p = await page({ avion: true, ploxions: [] });
+  try {
+    const W = p.w, boxion = creerMemoire(), dits = []; let appels = 0, t = 1e12;
+    await boxion.put('reglages', 'maj', { auto: false, bions: true, heures: 24 });
+    const depot = { aJour: async () => { appels++; return [{ id: 'a', etat: 'mis-a-jour' }]; }, bions: async () => [], majBion: async () => 'a-jour' };
+    const m = creerMisesAJour({ W, depot, boxion, signaler: (x) => dits.push(x), enLigne: () => true, maintenant: () => t });
+    await m.pret; assert.equal(tripEnCours(W), 0); assert.doesNotMatch(m.html(), /data-maj-trip/);
+    m.demarrer({ attente: 10 }); await attendre(40);
+    assert.equal(appels, 0, 'hors voyage, l\'automatique éteint ne vérifie rien');
+    W.localStorage.setItem('xb:trip', JSON.stringify({ t0: t - 1000, dim: 'lsdion' }));
+    assert.equal(tripEnCours(W), t - 1000);
+    W.dispatchEvent(new W.Event('xb:trip:depart')); await attendre(2100);
+    assert.equal(appels, 1, 'le départ du voyage lance une vérification, même l\'automatique éteint');
+    assert.equal(dits.length, 0, 'rien ne s\'annonce pendant le voyage');
+    t += 10 * 60e3; W.document.dispatchEvent(new W.Event('visibilitychange')); await attendre(3100);
+    assert.equal(appels, 1, 'pas encore 15 min');
+    t += 6 * 60e3; W.document.dispatchEvent(new W.Event('visibilitychange')); await attendre(3100);
+    assert.equal(appels, 2, '15 min plus tard, encore (et non 24 h)');
+    assert.match(m.html(), /data-maj-trip[^]*15 min/);
+    W.localStorage.removeItem('xb:trip'); t += 20 * 60e3; W.document.dispatchEvent(new W.Event('visibilitychange')); await attendre(3100);
+    assert.equal(appels, 2, 'la redescente rend les réglages (automatique éteint)');
     m.arreter();
   } finally { p.fin(); }
 });
