@@ -1983,3 +1983,17 @@ html:not(.px-organique):not(.px-e-texte) .px-koin-cases>[data-koin-a="reglages"]
 .px-koin-reglages>[data-koin-reg="tout"]{border-style:dashed}
 html:not(.px-organique) .px-koin-reglages>button{border-radius:0}
 .px-koins-reglages .px-koin-cases{visibility:hidden}
+/* ◇ (0.99.67, RS-7 coord #2243 « faut améliorer le xer de ploxi0n, pck je suis en mode chill-tekk et j'adore ») LE CHILL-TEKK, PLUS FIN ET PLUS
+   VIVANT, son esprit gardé : le trait des glyphes de la bande et des koins affiné (le trait des xers du Figma : fin et pâle), la lueur adoucie
+   (jamais de gros néon) ; une respiration lente sur les deux koins et sur le ploxion où tu es (de l'opacité, en CSS : aucune boucle JS, le Pi 4
+   suit) ; rien en mode Calme ni avec « Réduire les animations » d'iOS. */
+html.px-m-chill-tekk .px-koin-barre>button .px-g{stroke-width:3.4}
+html.px-m-chill-tekk:not(.px-calme) .px-koin-barre>button .px-g{filter:drop-shadow(0 0 1.6px color-mix(in srgb,var(--acc) 45%,transparent))}
+html.px-m-chill-tekk .px-koin svg{stroke-width:2}
+html.px-m-chill-tekk :is(.px-koin-cases>button,.px-koin-pad) .px-g,html.px-m-chill-tekk .px-koin-pad .px-pad-g .px-g{stroke-width:2.6}
+@media (prefers-reduced-motion:no-preference){
+  html.px-m-chill-tekk:not(.px-calme) .px-koin>svg{animation:px-ct-souffle 6s ease-in-out infinite}
+  html.px-m-chill-tekk:not(.px-calme) .px-koin-droite>svg{animation-delay:-3s}
+  html.px-m-chill-tekk:not(.px-calme) .px-koin-barre .px-kb-dans>svg{animation:px-ct-souffle 4.5s ease-in-out infinite}
+}
+@keyframes px-ct-souffle{0%,100%{opacity:.62}50%{opacity:1}}
