@@ -91,14 +91,25 @@ export function creerCff({ W = globalThis.window, fetch: f = (u, o) => W.fetch(u
     return { titre, gare: Number.isFinite(+ev.lat) && Number.isFinite(+ev.lng) && ev.lat !== null ? { lat: +ev.lat, lng: +ev.lng } : null };
   }
   /** un texte ou un lien des CFF → l'évènement et le rappel ; rend { trajet, calendrier: bool, rappel: Date | null } ou null */
+  async function trajetDuLabo(lien) {
+    const r = await f('/px/sbb/trajet?lien=' + encodeURIComponent(lien), { headers: { Accept: 'application/json' } });
+    if (!r.ok) return null; const j = await r.json().catch(() => null), x = j && j.ok && j.trajet; if (!x || !x.depart) return null;
+    const tr = (x.etapes || []).filter(e => e && e.type === 'transport')[0], g = tr && tr.de;
+    return { lien, de: (g && g.nom) || x.de || null, a: x.vers || null, depart: new Date(x.depart), arrivee: x.arrivee ? new Date(x.arrivee) : null,
+      gare: g && Number.isFinite(+g.lat) && Number.isFinite(+g.lng) ? { lat: +g.lat, lng: +g.lng } : null, ligne: (tr && tr.ligne) || x.ligne || '' };
+  }
   async function ajouter(texte) {
     const s = String(texte || '').slice(0, 4000), lien = trouverLienCff(s);
     let t = lireTrajet(s, { maintenant: maintenant() });
     if (!t && lien) { const long = await Promise.resolve(deplier(lien)).catch(() => null); if (long) t = lireTrajet(s + '\n' + long, { maintenant: maintenant() }); }
+    // (21.11, RS-1 avec le vrai lien de RS-7) le lien court de l'app ne porte que le jeton HAFAS du trajet (ni heure ni gares dans l'adresse) :
+    // le labo le déplie (GET /px/sbb/trajet, App\Support\LienSbb) et rend les étapes, la gare de départ et sa position (pour le rappel)
+    if (!t && lien && /a\.sbbmobile\.ch\/s\//i.test(lien)) t = await trajetDuLabo(lien).catch(() => null);
     if (!t) { signaler(lien ? '⇄ ce lien ne dit pas l\'heure : partage le trajet depuis l\'app CFF' : '⇄ pas de trajet CFF là-dedans'); return null; }
     let cal = null, err = null; try { cal = await calendrier(t); } catch (e) { err = (e && e.message) || 'calendrier'; }
-    let ici = null; if (cal && cal.gare) ici = await Promise.race([Promise.resolve().then(() => position()).catch(() => null), new Promise(ok => setTimeout(() => ok(null), 6000))]);
-    const r = rappelDepart(t.depart, { ici, gare: cal && cal.gare });
+    const gare = (cal && cal.gare) || t.gare || null;
+    let ici = null; if (gare) ici = await Promise.race([Promise.resolve().then(() => position()).catch(() => null), new Promise(ok => setTimeout(() => ok(null), 6000))]);
+    const r = rappelDepart(t.depart, { ici, gare });
     let pose = false; try { pose = await rappel({ id: 820000 + (Math.floor(t.depart.getTime() / 60000) % 90000), titre: '⇄ départ ' + hm(t.depart) + (t.de ? ' · ' + t.de : ''),
       texte: (t.de && t.a ? t.de + ' → ' + t.a : 'ton train') + ' · ' + (r.depuisIci ? 'pars maintenant (' + r.minutes + ' min jusqu\'à la gare)' : 'dans 15 min'), at: r.at, ouvrir: 'calendar' }); } catch (e) { pose = false; }
     signaler('⇄ ' + (t.de && t.a ? t.de + ' → ' + t.a + ', ' : '') + hm(t.depart) + (cal ? ' : au calendrier' : ' : pas au calendrier (' + err + ')') + (pose ? ', rappel à ' + hm(r.at) : ''));

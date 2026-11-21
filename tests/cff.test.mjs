@@ -92,3 +92,23 @@ test('⇄ les entrées : ⌕ chercher (un lien collé), ploxi0n://cff?lien=… ;
   const n = creerNotifs({ W, boxion: { get: async () => null, put: async () => {} } });
   assert.equal(await n.rappel({ id: 1, titre: 't', at: new Date(Date.now() + 60000) }), false);
 });
+
+test('⇄ (21.11) le vrai lien court de l\'app (le jeton HAFAS seul) : le labo le déplie, la gare de départ sert au rappel', async () => {
+  const appels = [];
+  const f = async (u, o) => { appels.push(u);
+    if (u.startsWith('/px/sbb/trajet')) return { ok: true, status: 200, json: async () => ({ ok: true, trajet: { depart: '2026-11-21T03:05', arrivee: '2026-11-21T03:30', de: 'Yverdon-les-Bains, gare', vers: 'Lausanne', ligne: 'RE N5 3590',
+      etapes: [{ type: 'pied', de: { nom: 'Yverdon-les-Bains, gare', lat: 46.781186, lng: 6.640242 }, vers: { nom: 'Yverdon-les-Bains', lat: 46.781545, lng: 6.640943 }, depart: '2026-11-21T03:02', arrivee: '2026-11-21T03:05', ligne: '' },
+               { type: 'transport', de: { nom: 'Yverdon-les-Bains', lat: 46.781545, lng: 6.640943 }, vers: { nom: 'Lausanne', lat: 46.516795, lng: 6.629095 }, depart: '2026-11-21T03:05', arrivee: '2026-11-21T03:30', ligne: 'RE N5 3590' }] } }) };
+    if (u.startsWith('/px/calendrier/donnees.json')) return { ok: true, status: 200, json: async () => ({ groupes: [{ id: 3 }] }) };
+    if (u === '/px/calendrier/evenement') return { ok: true, status: 200, json: async () => ({ evenement: { id: 9 } }) };
+    return { ok: false, status: 404, json: async () => ({}) }; };
+  let rappel = null; const bulles = [];
+  const cff = creerCff({ W: {}, fetch: f, deplier: async () => null, rappel: async (x) => { rappel = x; return true; }, position: async () => ({ lat: 46.7790, lng: 6.6590 }), signaler: (t) => bulles.push(t), maintenant: () => new Date('2026-11-21T02:30') });
+  const r = await cff.ajouter('Je dois aller à l\'espace autogéré https://a.sbbmobile.ch/s/HqvGJVMb');
+  assert.ok(r && r.trajet, 'un trajet');
+  assert.equal(r.trajet.de, 'Yverdon-les-Bains'); assert.equal(r.trajet.a, 'Lausanne');
+  assert.equal(r.trajet.depart.getHours(), 3); assert.equal(r.trajet.depart.getMinutes(), 5);
+  assert.ok(appels.some(u => u.startsWith('/px/sbb/trajet?lien=')), 'le labo est appelé');
+  assert.ok(r.calendrier, 'au calendrier'); assert.ok(rappel && rappel.at, 'un rappel');
+  assert.ok(/pars maintenant|dans 15 min/.test(rappel.texte));
+});
