@@ -78,6 +78,14 @@ export function creerNotifs({ W = globalThis.window, boxion, vibrer = () => {}, 
       await L.schedule({ notifications: [{ id: 710000 + (h % 80000), title: String(titre || '◉ proche').slice(0, 80), body: String(texte || '').slice(0, 220), threadIdentifier: 'proche:' + String(salon || ''), ...(prive ? { actionTypeId: 'proche-prive' } : {}), extra: { ouvrir: 'proche', params: { salon: String(salon || '') } } }] });
       vibrer('notification'); return true;
     },
+    /** ⇄ (0.99.67, RS-7 coord #2258) un rappel planifié (le départ d'un train CFF) : la personne vient d'ajouter le trajet, l'app est devant,
+     *  la permission peut être demandée ; rend false hors de l'iPhone ou si l'heure est déjà passée */
+    async rappel({ id, titre, texte = '', at, ouvrir: o = null, params = null }) {
+      if (!natif() || !(at instanceof Date) || !(at.getTime() > Date.now())) return false;
+      const L = await permission();
+      await L.schedule({ notifications: [{ id, title: String(titre || 'ploxi0n').slice(0, 80), body: String(texte).slice(0, 220), schedule: { at }, extra: o ? { ouvrir: o, params } : {} }] });
+      return true;
+    },
     async regler(o) { reglage = { ...reglage, ...o }; await garder(); return { ...reglage }; },
     async coord(actif) {
       reglage.coord = !!actif; if (!actif) reglage.dernierCoord = 0;

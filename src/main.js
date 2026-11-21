@@ -93,6 +93,7 @@ import { creerMisesAJour } from './marketplace/mises-a-jour.js';
 import { creerRemontee } from './app/remontee-tsoins.js';
 import { creerSysteme } from './lot/systeme.js';
 import { creerKoins, glyphesAlien } from './app/koins.js';
+import { creerCff, deplierNatif } from './natif/cff.js';   // ⇄ (0.99.67) les liens CFF → le calendrier et le rappel de départ
 import { creerReglagesKoins } from './app/reglages-koins.js';   // ⊞ (0.99.67) les réglages en koins (le koin gauche)
 import { fondFractale } from './app/koin-fractale.js';   // ✺ (15.11) la fractale du trippion dans le portion
 import { creerNeurones } from './app/neurones.js';
@@ -723,7 +724,10 @@ async function demarrer() {
   window.ploxi0nDemo = demo;
   // ⊞ (0.64) la carte du xerboxion : pincer la fractale, ⊞, le bord « tout le xerboxion »
   // 🔍 (0.69) chercher d'abord chez soi : les ploxions installés, puis le marketplace ; ↻ tout mettre à jour (src/app/chercher-local.js)
-  chercheur = creerChercherLocal({ racine, liste: () => routeur.catalogue(), vivants: () => routeur.vivants(), ouvrir: (id) => routeurProxy.ouvrir(id), vibrer: (x, i) => vibrer(x, i),
+  // ⇄ (0.99.67, RS-7 coord #2258) un lien CFF (a.sbbmobile.ch/s/…) collé dans ⌕ chercher, ou reçu par ploxi0n://cff?lien=… : l'évènement au
+  // calendrier de l'app (le ploxion calendar du labo, mode connecté) et la notification de départ (src/natif/cff.js)
+  const cff = creerCff({ W: window, deplier: deplierNatif(window), rappel: (o) => notifs.rappel(o), position: () => window.jOSNatif.position(), signaler: (t) => routeur.signaler(t) });
+  chercheur = creerChercherLocal({ cff: (t) => cff.ajouter(t).catch(() => routeur.signaler('⇄ pas pu lire ce trajet')), racine, liste: () => routeur.catalogue(), vivants: () => routeur.vivants(), ouvrir: (id) => routeurProxy.ouvrir(id), vibrer: (x, i) => vibrer(x, i),
     marketplace: (q) => routeur.ouvrir('marketplace', q ? { chercher: '1', q } : { chercher: '1' }), majTout: async () => { const r = await depot.aJour(); await majAccueil().catch(() => {}); return r; },
     icone: (p) => p.icone || svgXerkion(p, { style: prefs.lire().styleIcones }) });
   // ▣ (0.68) le cube des pages : ▣ dans la barre d'un ploxion (src/app/cube-pages.js)
@@ -858,6 +862,8 @@ async function demarrer() {
   brancherLiens({ routeur, compte, surLien: (r) => { const c = invitationDuLien(r); if (c) boxion.put('social', 'invitation', { code: c, le: Date.now() }).catch(() => {}); }, installer: (id) => routeurProxy.ouvrir(id), lecture: (c) => maintenant.commander(c), lire: (o) => lecteurNatif.ouvrir(o.url, o).catch(() => {}),
     // ☾ (0.64) ploxi0n://dodo et ploxi0n://reveil : un raccourci, le Toucher au dos, ou l'automatisation « quand Sommeil s'active » d'iOS le notent seuls
     actions: { dodo: () => tsoinNatif.dodo().then(() => routeur.signaler('☾ dodo noté')).catch(() => {}), reveil: () => tsoinNatif.reveil().catch(() => {}),
+      // ⇄ (0.99.67) ploxi0n://cff?lien=… : « partager » un trajet de l'app CFF vers ploxi0n (une action de Raccourcis) → le calendrier, le rappel
+      cff: (u) => { cff.ajouter(u.searchParams.get('lien') || u.searchParams.get('url') || u.searchParams.get('texte') || '').catch(() => routeur.signaler('⇄ pas pu lire ce trajet')); },
       tsoin: () => tsoinNatif.ouvrir({}), vocal: () => vocal.basculer().catch(() => {}), lampe: () => window.jOSNatif.lampe().catch(() => {}),
       // 🎛 (0.99.43) Proche (allumer / éteindre, comme le Bluetooth), la balade (la Live Activity de mappion), les toilettes guidées
       proche: () => { if (proche.etat().actif) { proche.arreter().then(() => routeur.signaler('◉ Proche éteint')).catch(() => {}); return; } routeur.ouvrir('proche'); proche.demarrer().catch(() => {}); },

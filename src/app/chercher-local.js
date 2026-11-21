@@ -9,7 +9,9 @@ import { chercher } from '../marketplace/marketplace.js';
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-export function creerChercherLocal({ W = globalThis.window, racine, liste = () => [], vivants = () => [], ouvrir = () => {}, marketplace = () => {}, majTout = null, vibrer = () => {}, icone = (p) => esc(p.icone || '◇') } = {}) {
+import { trouverLienCff } from '../natif/cff.js';   // ⇄ (0.99.67) un lien CFF collé ici devient un trajet
+// (0.99.67) cff(texte) : un lien CFF collé dans le champ → « ⇄ ajouter ce trajet » (le calendrier, le rappel de départ ; src/natif/cff.js)
+export function creerChercherLocal({ W = globalThis.window, cff = null, racine, liste = () => [], vivants = () => [], ouvrir = () => {}, marketplace = () => {}, majTout = null, vibrer = () => {}, icone = (p) => esc(p.icone || '◇') } = {}) {
   const D = W.document;
   let f = null;
   /** les ploxions qui répondent à q (sans q : ceux qui vivent, puis tous, par nom) */
@@ -22,6 +24,7 @@ export function creerChercherLocal({ W = globalThis.window, racine, liste = () =
   function peindre() {
     if (!f) return;
     const q = f.querySelector('[data-cl-q]').value, l = trouver(q), v = new Set(vivants());
+    if (cff && trouverLienCff(q)) { f.querySelector('[data-cl-liste]').innerHTML = '<button type="button" class="px-cl-l" data-cl-cff><span class="px-cl-ic">⇄</span><span><b>ajouter ce trajet</b><small>au calendrier, avec le rappel de départ</small></span></button>'; f.querySelector('[data-cl-mk]').textContent = 'le marketplace ›'; return; }
     f.querySelector('[data-cl-liste]').innerHTML = l.length
       ? l.slice(0, 60).map(p => '<button type="button" class="px-cl-l" data-cl-id="' + esc(p.id) + '"><span class="px-cl-ic">' + icone(p) + '</span><span><b>' + esc(p.nom) + '</b><small>' + esc(p.id) + (v.has(p.id) ? ' · ouvert' : '') + (p.interne ? ' · de l\'app' : '') + '</small></span></button>').join('')
       : '<p class="px-cl-vide">rien chez toi pour « ' + esc(q) + ' »</p>';
@@ -36,11 +39,12 @@ export function creerChercherLocal({ W = globalThis.window, racine, liste = () =
     racine.appendChild(f);
     const champ = f.querySelector('[data-cl-q]'); champ.value = q;
     champ.addEventListener('input', peindre);
-    champ.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const p = trouver(champ.value)[0]; if (p) { fermer(); vibrer('fx-ouvrir', p.id); ouvrir(p.id); } } if (e.key === 'Escape') fermer(); });
+    champ.addEventListener('keydown', (e) => { if (e.key === 'Enter' && cff && trouverLienCff(champ.value)) { const t = champ.value; fermer(); vibrer('succes'); cff(t); return; } if (e.key === 'Enter') { const p = trouver(champ.value)[0]; if (p) { fermer(); vibrer('fx-ouvrir', p.id); ouvrir(p.id); } } if (e.key === 'Escape') fermer(); });
     f.addEventListener('click', async (e) => {
       if (e.target === f) return fermer();
       const b = e.target.closest('button'); if (!b) return;
       e.stopPropagation();
+      if (b.hasAttribute('data-cl-cff') && cff) { const t = champ.value; fermer(); vibrer('succes'); cff(t); return; }
       if (b.hasAttribute('data-cl-id')) { const id = b.getAttribute('data-cl-id'); fermer(); vibrer('fx-ouvrir', id); return ouvrir(id); }
       if (b.hasAttribute('data-cl-mk')) { const t = champ.value.trim(); fermer(); return marketplace(t); }
       if (b.hasAttribute('data-cl-maj') && majTout) {
