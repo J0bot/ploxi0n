@@ -7,6 +7,14 @@
 // tsoins, on peut aller en arrière et tester les features ; le jeu c'est le tuto ») un point peut se JOUER : ▶ essayer lance sa démo
 // (src/app/demo.js : un doigt fantôme fait le geste pour de vrai), depuis la feuille du lancement comme depuis tout l'historique.
 export const NOUVEAUTES = [
+  { v: '0.99.67', titre: 'Les icônes à l\'Apple', points: [
+    '▢ Tes ploxions ont leur icône à l\'Apple : le carré arrondi d\'iOS, un fond sombre, leur glyphe au trait du Figma. La grille et les noms comme l\'écran d\'accueil d\'un iPhone (⚙ › Apparence garde xerboxion et glyphe seul).',
+    '▭ La bande des koins reste collée en bas, entre les deux koins ; l\'accueil, les réglages et la map s\'arrêtent juste au-dessus. Les messages se posent au-dessus d\'elle.',
+    '⊞ Les réglages en koins : la case ⊞ du koin gauche, un toucher bascule (à jour tout seul, fréquence, les bions, vérifier, l\'haptique, le calme…).',
+    '✕ Le mode xerbot s\'appelle xeroction : le même monde physique (la blouse, le Bluetooth, la maison, le bus).',
+    '⬡ En xerboxion, tout le xer des koins : les koins toujours, plus de dock, une seule bande ; les koins prennent les glyphes de l\'alien.',
+    '∿ Les sons des ploxions du labo jouent dans l\'app.',
+  ] },
   { v: '0.99.66', titre: 'L\'icône du xeroction', points: [
     '◇ L\'icône de l\'app devient le logo du xeroction.',
     '▭ La barre ∧ ∨ ✓ du clavier est coupée de base : elle ne flotte plus sur les koins du bas (⚙ › Navigation la rallume).',

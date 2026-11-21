@@ -4,6 +4,18 @@ RS-7, coord #2108 (20.11.2026) : « un seul build de ploxi0n par jour, chaque jo
 
 Règle : ce qui peut vivre côté labo (les vues des ploxions servies par labo.j0bot.ch) passe sans build ; ce fichier liste ce qui part dans le build de 00:00 (heure de Zurich). Un lot = des changements finis et testés, jamais une rustine.
 
+## Build du 22.11 à 00:00
+En **0.99.67**, sur `glob/coord-dans-app`, à pousser avec le go de RS-7. Avant de commencer (21.11, 01:00 Zurich), origin avait un commit de plus : `5cbd221`, le merge de la PR #6 du 18.11, dont les deux parents étaient déjà dans le lot ; fusionné sans changer un fichier (`4a96ea1`). Ce qui part, dans l'ordre :
+- `950b643` **la bande des koins collée au bas, entre les deux koins** (RS-7 coord #2234, ses captures de la 0.99.66 : la bande flottait au-dessus du bas sur l'accueil et les réglages, un fond noir vide dessous, et recouvrait les cartes « en arrière-plan » et le champ « chercher un réglage »). La cause : le format du koin ouvert (`data-ouvert="compact"`, posé à l'ouverture dans un ploxion) restait après la fermeture et gardait la bande montée. Il part à la fin de la fermeture, et la bande ne monte que koins ouverts. L'accueil s'arrête au-dessus de la bande comme un ploxion (`html.px-koins #ploxi0n.px-mode-accueil`), l'indicateur d'accueil compté une seule fois (le champ des réglages et du marketplace, le curseur du temps de la map) ; les mini docks juste au-dessus. Les bulles se posent au-dessus de la bande, plus sur l'en-tête ; △ dit « △ : pas encore de koin pour cette vue ». Vérifié au faux iPhone (`parcours-bande-bas.mjs`).
+- `37647c5` **les icônes à l'Apple, le style de base** (#2227-2229) : le carré arrondi d'iOS (la super-ellipse, rayon 22,37 %, coins lissés), un fond sombre, le glyphe au trait des xers du Figma (contours emboîtés, traits fins et pâles), dans la couleur de sa palette ; à l'accueil (la grille et les noms d'un écran d'accueil d'iPhone : 60 px, la police du système, une ligne), aux docks, au marketplace, dans les réglages et les installés, au xer xerboxion. xerboxion et glyphe seul restent au choix (⚙ › Apparence) ; le xerboxion d'avant passe une fois à l'Apple. Les ploxions de l'app qui tombaient tous sur le téléphone ont leur glyphe (le passé, système, proche, autour, ambiances, inviter). Le clip d'écran d'accueil d'iOS reçoit un carré plein (iOS pose son masque). Vérifié au faux iPhone (`parcours-icones-apple.mjs`).
+- `acc4d56` **le mode xerbot devient le mode xeroction** (#2221) : un seul mode, qui garde le monde physique (le contrôleur, la blouse, le Bluetooth, la maison, la lampe, le NFC, le bus xerbot du labo, qui garde son nom). Un « xerbot » rangé passe tout seul à « xeroction » : les préférences, un xer d'avant, le modèle, un vieux widget, `ploxi0n://xer/xerbot`.
+- `08cde60` **le mode xerboxion du 20.11 réconcilié** (#2120, `c5fbad1` sans son trou) : en xerboxion, les koins toujours, le dock s'efface, les koins dessinés avec les glyphes de l'alien (`xb:alien:glyphes`). UNE seule bande entre les koins, celle de l'app : `koin-trou.js` n'est pas revenu, et la bande qu'un ploxion du labo pose dans le trou (`.tsk-trou`, jOSTsoins) s'efface en mode koin ; ses actions restent dans le koin ouvert (le xerkoin). Vérifié au faux iPhone (`parcours-xerboxion-koins.mjs`).
+  - côté labo (sans build, pour RS-1) : dans ploxi0n en mode koin, jOSTsoins n'a plus besoin de dessiner son trou (il est caché) ; ailleurs rien ne change.
+- `3c3ae79` **les réglages en koins depuis le koin gauche** (#2203) : une case ⊞ sous le trion et le wormion ouvre une grille de koins qu'un toucher bascule : à jour tout seul, fréquence (1 h, 6 h, 24 h), les bions aussi, vérifier (la réponse dans le koin), l'haptique, le calme, la patine, le thème vivant, la télécommande, la barre du clavier ; installés ; ⊞ tous les réglages. Vérifié au faux iPhone (`parcours-reglages-koins.mjs`). Et un test du terrax qui attendait 30 ms fixes, rendu stable.
+- `45773e5` **les sons des ploxions du labo** (#2114) : un `new Audio('/…')` ou un `audio.src = '/…'` hors de la page vise labo.j0bot.ch, comme les images (il visait capacitor://localhost : aucun son) ; les fichiers de l'app, les adresses complètes, `data:` et `blob:` ne bougent pas.
+- la version 0.99.67 (package.json, package-lock.json, `VERSION`, les nouveautés en glyphes, la feuille de route, les tsoins du nexus).
+Tests : `npm test` deux fois tout vert, `npm run build` sans erreur ; aucune nouvelle dépendance, pas de Swift ni de Kotlin.
+
 ## Build du 21.11 à 00:00
 Lancé le 21.11 vers 00:30 (Zurich), sur le go de RS-7 (coord #2214 « build à lancer de ploxi0n »), en **0.99.66**. Au moment de pousser, GitHub avait avancé : la branche contenait `main` en 0.99.65 (0.99.51 à 0.99.65, fusionnée par RS-7 le 18.11, PR #6), alors que ce lot était parti de la 0.99.50. Le build tel quel aurait fait reculer l'app de quinze versions. Ce qui part donc :
 - la 0.99.65 de GitHub telle quelle, plus l'icône du xeroction (`4ff1962`) et la barre ∧ ∨ ✓ coupée (`9ab49b3`) ;
@@ -21,10 +33,15 @@ Mis de côté (`4e61e6d`) : le relais `24ec99a`, déjà dans la 0.99.61 ; le mod
 ## Pour un prochain build
 
 ### Le prochain lot (à préparer sur le dernier origin, voir plus haut)
-- Le mode xerboxion du 20.11 (`c5fbad1`, mis de côté) réconcilié avec la bande entre les koins de la 0.99.57 / 0.99.60 : une seule bande, le trou comblé.
-- Les réglages en koins depuis le koin gauche (#2203, la capture des réglages de ploxi0n).
-- Le mode xerbot devient le mode xeroction (#2221 : « le mode xerbot de ploxi0n c'est le mode xeroction »).
-- Les sons créés en `new Audio('/…')` par les ploxions du labo (#2114).
+- (le lot du 22.11 a pris les quatre points d'ici, plus les icônes à l'Apple et la bande collée au bas : voir « Build du 22.11 »)
+
+### Le widget calendrier (RS-7 coord #2258 : « un widget calendrier pour ploxi0n »)
+Pas dans un lot sans Swift : un widget iOS vit dans l'extension `PloxionWidgets` (WidgetKit, compilée seulement par le build `[widgets]`, option `PLOXI0N_WIDGETS`). La marche à suivre, en un seul lot :
+1. Les données : l'app écrit les évènements à venir (les 8 prochains : titre, début, fin, lieu, couleur) dans ses Préférences, sous une clé `ploxi0n.agenda`, comme les autres widgets (`ploxi0n.px-widgets`, src/natif/widgets-ploxions.js : `ecrire(cle, texte)`), à chaque changement du calendrier de l'app. AppDelegate copie déjà une liste de clés dans l'App Group `group.ch.j0bot.ploxi0n` puis appelle `WidgetCenter.shared.reloadAllTimelines()` (la boucle `for k in ["ploxi0n.epingles", …, "ploxi0n.carte"]`) : y ajouter `"ploxi0n.agenda"`.
+2. Le Swift, dans l'extension : un `Widget` de plus (`kind: "ploxi0n.agenda"`), un `TimelineProvider` qui lit la clé, une entrée par évènement à venir (la timeline change à chaque début d'évènement) ; les tailles petite (le prochain : l'heure, le titre), moyenne (les trois prochains), et le widget de l'écran verrouillé (accessoryRectangular : le prochain départ). Le trait du Figma pour le glyphe (un SVG rendu en PNG par l'app, comme `glyphePng` des widgets des ploxions).
+3. Un toucher : `ploxi0n://px/calendrier?ev=<id>` (l'app s'ouvre sur l'évènement), le lien déjà routé par `brancherLiens`.
+4. Tests : node pour la clé écrite (un faux `ecrire`), puis le faux iPhone ; le Swift relu ligne par ligne (pas de Mac ici).
+
 
 
 ### Changer l'icône depuis ploxi0n (#2127 : « je veux changer l'icône de l'application depuis ploxi0n, pck je suis un xeroction »)
