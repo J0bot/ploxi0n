@@ -28,7 +28,7 @@ export const ASTUCES = [
   { id: 'wormion', cible: '[data-pad="wormion"]', texte: 'Le temps : tourne ton doigt dessus, tu remontes ce que tu avais ouvert. Lâche pour y aller.' },
   { id: 'portion', cible: '[data-pad="portion"]', texte: 'Glisse dessus : ← → tes apps, ↑ la map, ↓ l\'accueil.' },
   { id: 'map', cible: '.px-map-ici', texte: 'La map : glisse pour aller au hub d\'à côté ; touche un koin pour l\'ouvrir ; ＋ crée le tien.' },
-  { id: 'modes', cible: '.px-modes', texte: 'Ton xer : chill-tekk (le plus simple), organique (vivant), xerboxion (le labo), xerbot (le monde physique).' },
+  { id: 'modes', cible: '.px-modes', texte: 'Ton xer : chill-tekk (le plus simple), organique (vivant), xerboxion (le labo), xeroction (le monde physique).' },
   { id: 'bande', cible: '.px-bande-suite', texte: 'La bande : l\'app suivante dépasse à droite ; touche-la pour y aller.' },
   { id: 'systeme', cible: '.px-btop', texte: 'Le système : ce que fait ton iPhone et l\'app, en direct.' },
   { id: 'ambiances', cible: '.px-ambiances [data-amb-sons]', texte: 'Monte un son : il continue quand tu changes d\'app. ‹ coupe tout.' },

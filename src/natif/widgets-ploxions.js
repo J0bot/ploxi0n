@@ -11,9 +11,9 @@ const propre = (s, n) => String(s == null ? '' : s).slice(0, n);
 /** ecrire(cle, texte) : les Préférences (natif) ; glyphePng(p) → base64 ; catalogue() → [{ id, nom, interne }] ; courant() → id */
 // ◈ (0.99.59, RS-7 : « les widgets connectés au xerploxion, les descriptions des ploxions et les différents xers ») : un ploxion qui ne publie
 // rien montre sa fiche (sa description, sa catégorie, ses bions) au lieu d'un « ouvrir » vide ; les xers (organique, chill-tekk, xerboxion,
-// xerbot) sont choisissables aussi (id « xer:<mode> », ploxi0n://xer/<mode>). mappion : la mini-carte de tes zones (« ploxi0n.carte »).
+// xeroction, l'ancien xerbot) sont choisissables aussi (id « xer:<mode> », ploxi0n://xer/<mode>). mappion : la mini-carte de tes zones (« ploxi0n.carte »).
 export const XERS_WIDGET = [['organique', 'organique', 'l\'accueil vivant : tes ploxions en membranes et en neurones, la map'], ['chill-tekk', 'chill-tekk', 'tes ploxions, calme ; les koins au pouce'],
-  ['xerboxion', 'xerboxion', 'le xer chill-tekk du labo, avec tout le natif de l\'iPhone'], ['xerbot', 'xerbot', 'le monde physique : la blouse, le Bluetooth, la maison, la lampe, le NFC']];
+  ['xerboxion', 'xerboxion', 'le xer chill-tekk du labo, avec tout le natif de l\'iPhone'], ['xeroction', 'xeroction', 'le monde physique : la blouse, le Bluetooth, la maison, la lampe, le NFC']];
 export function creerWidgetsPloxions({ boxion, ecrire = async () => {}, glyphePng = async () => null, catalogue = () => [], courant = () => null, maintenant = () => Date.now() }) {
   let px = {};
   const pret = boxion.get('reglages', 'px-widgets').then(v => { if (v && typeof v === 'object') px = v; }).catch(() => {});
@@ -30,6 +30,7 @@ export function creerWidgetsPloxions({ boxion, ecrire = async () => {}, glyphePn
       if (f.d || f.c || f.b.length) fiche[id] = f;
     }
     for (const [m, n, d] of XERS_WIDGET) fiche['xer:' + m] = { d, c: 'xer', b: [] };
+    fiche['xer:xerbot'] = fiche['xer:xeroction'];   // (0.99.67) un widget posé avant le renommage garde sa fiche (son lien mène à xeroction)
     return { liste: [...ids.map(id => ({ id, nom: nom(id) })), ...XERS_WIDGET.map(([m, n]) => ({ id: 'xer:' + m, nom: 'xer · ' + n }))], px, fiche };
   }
   function planifier() { if (attente) clearTimeout(attente); attente = setTimeout(() => { attente = null; ecrire('ploxi0n.px-widgets', JSON.stringify(doc())).catch(() => {}); }, 400); }

@@ -49,7 +49,7 @@ import { creerCube } from './app/cube.js';
 import { creerLecteurNatif } from './natif/lecteur-natif.js';
 import { creerFichiersNatif } from './natif/fichiers-natif.js';
 import { creerCape } from './cape/cape.js';
-import { creerModes, MODES } from './app/modes.js';
+import { creerModes, MODES, modeNormal } from './app/modes.js';
 import { creerMiniDocks } from './app/minidocks.js';
 import { creerCadresLabo } from './natif/cadres-labo.js';
 import { installerGel } from './app/gel.js';
@@ -696,7 +696,7 @@ async function demarrer() {
     verrous: () => (routeur ? routeur.verrous() : []), jeton: () => boxion.get('compte', 'courant').then(c => (c && c.jeton) || null), surPerso: () => { majAccueil({ redessiner: true }).catch(() => {}); }, style: () => prefs.lire().styleIcones });
   window.jOSEcranAccueil = ecranAccueil;
   boot(78, 'l\'accueil');
-  // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xerbot (le monde physique)
+  // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xeroction (le monde physique ; l'ancien xerbot, 0.99.67)
   // ⬡ (0.99.63) le xer xerboxion natif (src/app/xer-xerboxion.js) : le catalogue du labo (le cache du dépôt), tes ploxions, le natif, les xers
   const xerXbx = creerXerXerboxion({ W: window, installes: () => (routeur ? routeur.catalogue() : []), labo: () => depot.catalogue({ reseau: false }).then(c => (c && c.items) || []),
     icone: (p) => svgXerkion(p, { style: prefs.lire().styleIcones }), ouvrir: (id) => routeurProxy.ouvrir(id), vibrer: (x) => vibrer(x),
@@ -857,7 +857,7 @@ async function demarrer() {
           .catch((er) => routeur.signaler('🏝 ' + ((er && er.message) || 'impossible'))); },
       toilettes: () => { routeur.ouvrir('autour'); autour.toilettes().catch(() => {}); },
       // ◈ (0.99.59) ploxi0n://xer/<mode> : le widget d'un xer t'y amène
-      xer: (u) => { const m = decodeURIComponent(String(u.pathname || '').replace(/^\/+/, '').split('/')[0]); if (MODES.some(x => x[0] === m)) prefs.regler({ mode: m }).then(() => routeur.accueil()).catch(() => {}); else routeur.accueil(); },
+      xer: (u) => { const m = modeNormal(decodeURIComponent(String(u.pathname || '').replace(/^\/+/, '').split('/')[0])); if (MODES.some(x => x[0] === m)) prefs.regler({ mode: m }).then(() => routeur.accueil()).catch(() => {}); else routeur.accueil(); },
       // 👣 (0.99.58) la veille de mappion depuis le Centre de contrôle : elle te suit (lieux, pas, vitesse, allure, capteurs) ou s'arrête
       veille: () => { const V = window.jOSVeille; if (!V) return routeur.signaler('◷ la veille : sur l\'iPhone seulement');
         V.etat().then(r => (r && r.actif

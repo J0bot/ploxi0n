@@ -6,7 +6,8 @@
 //   maxVivants  ploxions gardés vivants en arrière-plan    dock       le dock en bas de l'accueil
 //   plaque      la plaque gravée « cycle … » de l'accueil
 //   mode        (0.94) organique (membranes et neurones, src/app/neurones.js) | chill-tekk (0.99.47, RS-7 : « le mode de base quand on installe
-//               l'appli, c'est le plus simple pour prendre en main ») | xerboxion | xerbot
+//               l'appli, c'est le plus simple pour prendre en main ») | xerboxion | xeroction (0.99.67, RS-7 #2221 : « le mode xerbot de ploxi0n
+//               c'est le mode xeroction » : l'ancien xerbot, renommé ; un « xerbot » rangé passe tout seul à « xeroction », modeNormal)
 //   organiqueVu (0.94) la bascule unique vers l'organique est faite (le xer d'avant est gardé dans « mes xers », src/app/xers.js)
 //   ecriture    (0.96) comment tout s'écrit : xerboxion (forme + glyphe + nom) | texte-glyphes | glyphes (rien que) | texte (rien que) | emoji | minimal
 //               | humain (0.99.8 : zéro texte, des glyphes et des maths ; src/bions/humain.js)
@@ -22,6 +23,9 @@ export const PREFS_DEFAUT = { barreClavier: false, barreClavierVue: true, teleco
 import { POLICES, poserPolice } from '../bions/polices.js';
 export { POLICES };
 export const ECRITURES = [['xerboxion', 'xerboxion'], ['texte-glyphes', 'texte + glyphes'], ['glyphes', 'glyphes'], ['texte', 'texte'], ['emoji', 'emoji'], ['minimal', 'minimal'], ['humain', 'humain']];
+
+/** (0.99.67, RS-7 #2221) l'ancien nom d'un mode → son nom d'aujourd'hui : xerbot est devenu xeroction */
+export const modeNormal = (m) => (m === 'xerbot' ? 'xeroction' : m);
 
 export function creerPrefs({ W = globalThis.window, boxion }) {
   let p = { ...PREFS_DEFAUT };
@@ -43,6 +47,8 @@ export function creerPrefs({ W = globalThis.window, boxion }) {
     if (!v.barreClavierVue) { p.barreClavier = false; p.barreClavierVue = true; ecrire = true; }
     // ▢ (0.99.67, RS-7 #2227-2229 : « le logo à l'Apple ») les icônes à l'Apple deviennent la base : une fois, le xerboxion d'avant (l'ancienne base,
     // rangée avec tous les réglages) passe à apple ; « glyphe seul », choisi exprès, reste ; ⚙ › Apparence ramène le xerboxion
+    // ✕ (0.99.67, RS-7 #2221) le mode xerbot s'appelle xeroction : un réglage d'avant suit, en douceur (rien d'autre ne change)
+    if (v.mode === 'xerbot') { p.mode = modeNormal(v.mode); ecrire = true; }
     if (!v.iconesAppleVu) { if (!v.styleIcones || v.styleIcones === 'xerboxion') p.styleIcones = 'apple'; p.iconesAppleVu = true; ecrire = true; }
     if (ecrire) boxion.put('reglages', 'app', p).catch(() => {});
   }).catch(() => {});
@@ -80,6 +86,7 @@ export function creerPrefs({ W = globalThis.window, boxion }) {
     lire: () => { const e = p.ecriture || 'xerboxion'; return { ...p, calme: !!p.calme || ios(), calmeIos: ios(), glyphes: e === 'emoji' ? false : e === 'xerboxion' ? p.glyphes : true, styleIcones: e === 'texte-glyphes' || e === 'glyphes' || e === 'humain' ? 'glyphe' : p.styleIcones }; },
     async regler(patch) {
       p = { ...p, ...patch };
+      if (p.mode === 'xerbot') p.mode = modeNormal(p.mode);   // (0.99.67) un vieux lien, un vieux widget, un xer d'avant : xeroction
       // (0.56, RS-7 : « le max 8 ploxions ça devient chiant ») 0 = sans limite ; les cachés sont gelés (src/app/gel.js), leurs vidéos coupées
       p.maxVivants = +p.maxVivants === 0 ? 0 : Math.max(1, Math.min(99, +p.maxVivants || 12));
       p.sommeil = +p.sommeil === 0 ? 0 : Math.max(1, Math.min(240, +p.sommeil || 5));   // (0.69) minutes cachés avant de s'endormir ; 0 = jamais

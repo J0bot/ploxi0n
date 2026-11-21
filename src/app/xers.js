@@ -2,27 +2,28 @@
 // Le xer, c'est l'interface ENTIÈRE sur les MÊMES ploxions (le contrat du labo : le ploxion xer-switch, le bion jOSXer) : tu changes de xer, la
 // donnée dessous ne bouge pas, et c'est réversible. Dans ploxi0n, un xer garde ce qui fait l'interface :
 //   l'accueil (pages, dossiers, ordre, vue) · le dock (HUD : éléments, épinglés) · la barre du haut · le fond · le mode (chill-tekk, xerboxion,
-//   xerbot) et l'apparence (icônes, glyphes, gestes des bords, fractale, pages de côté…) — et la liste de ses ploxions.
+//   xeroction, l'ancien xerbot) et l'apparence (icônes, glyphes, gestes des bords, fractale, pages de côté…) — et la liste de ses ploxions.
 // Pas les réglages de l'iPhone (haptique, Calme, vivants, sommeil) : ils restent les tiens dans tous les xers.
 //   basculer   le xer actif est d'abord gardé tel qu'il est, puis l'autre est posé ; le labo est prévenu (jos:xer, le bus xer.change)
-//   nouveau    une copie de celui-ci, ou un modèle (épuré, xerbot, xerboxion) posé par-dessus
+//   nouveau    une copie de celui-ci, ou un modèle (épuré, xeroction, xerboxion) posé par-dessus
 //   partager   la feuille de 0.76 : https://labo.j0bot.ch/app/ouvrir/mes-xers?app=1&x=<le xer compressé> (un lien universel) + le QR
 //              si le lien tient dans un QR ; jamais la photo du fond (elle reste chez toi)
 //   recevoir   le lien ouvre ce ploxion avec ?x= : l'aperçu, ses ploxions (ceux qui manquent s'installent si tu le demandes), l'ajouter
 // boxion_local « xers/liste » = [xer…] (sans images), « xers/actif » = id, « xers/fond:<id> » = la photo du fond de ce xer.
 import { ACTIONS_BORDS } from './routeur.js';
 import { PUBLIC } from './liens-publics.js';
+import { modeNormal } from './prefs.js';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /** les préférences qui sont l'interface (un xer les porte) ; les autres restent celles de l'iPhone */
 export const PREFS_XER = ['mode', 'ecriture', 'variante', 'police', 'styleIcones', 'glyphes', 'icones', 'contraste', 'dock', 'plaque', 'barreHaut', 'pleinEcran', 'pxChill', 'themeVivant', 'fractale', 'pagesCote', 'gestes', 'grain', 'miniDocks', 'bords', 'telecommande'];
-const MODES = ['organique', 'chill-tekk', 'xerboxion', 'xerbot'];
+const MODES = ['organique', 'chill-tekk', 'xerboxion', 'xeroction'];
 const ACTIONS = new Set(ACTIONS_BORDS.map(a => a[0]));
 const ID = /^[A-Za-z0-9._-]{1,80}$/;
 /** des modèles, posés par-dessus une copie de ton xer */
 export const MODELES = [
   { id: 'epure', nom: 'Épuré', icone: '▢', desc: 'une seule barre, rien qui bouge : l\'essentiel', prefs: { plaque: false, themeVivant: false, fractale: false, pagesCote: false, grain: false, miniDocks: 0, pxChill: false } },
-  { id: 'xerbot', nom: 'XERB0T', icone: '🤖', desc: 'le poste de pilotage du monde physique', prefs: { mode: 'xerbot' }, epingler: ['controleur'] },
+  { id: 'xeroction', nom: 'xeroction', icone: '✕', desc: 'le poste de pilotage du monde physique (l\'ancien XERB0T)', prefs: { mode: 'xeroction' }, epingler: ['controleur'] },
   { id: 'xerboxion', nom: 'xerboxion', icone: '⬡', desc: 'l\'UI du labo comme accueil, le dock de l\'app par-dessus', prefs: { mode: 'xerboxion' } },
   { id: 'organique', nom: 'organique', icone: '〰', desc: 'le xer vivant : des membranes, des neurones, tout se zoome', prefs: { mode: 'organique', themeVivant: true, grain: true } },
   { id: 'chill-tekk', nom: 'chill-tekk', icone: '◇', desc: 'le xer classique, calme (celui d\'avant la 0.94)', prefs: { mode: 'chill-tekk', themeVivant: true, grain: true } },
@@ -38,7 +39,7 @@ export function nettoyerPrefs(p, defaut = {}) {
     if (!(k in p)) continue;
     const v = p[k];
     if (k === 'gestes') { if (v && typeof v === 'object') { r.gestes = {}; for (const [c, a] of Object.entries(v)) if (/^[a-z-]{1,20}$/.test(c) && ACTIONS.has(a)) r.gestes[c] = a; } continue; }
-    if (k === 'mode') { if (MODES.includes(v)) r.mode = v; continue; }
+    if (k === 'mode') { const m = modeNormal(v); if (MODES.includes(m)) r.mode = m; continue; }   // (0.99.67) un xer d'avant en xerbot : xeroction
     const d = defaut[k];
     if (typeof d === 'boolean' || typeof v === 'boolean') { if (typeof v === 'boolean') r[k] = v; }
     else if (typeof d === 'number' || typeof v === 'number') { if (typeof v === 'number' && isFinite(v)) r[k] = Math.max(0, Math.min(99, v)); }
@@ -164,7 +165,7 @@ export function creerXers({ W = globalThis.window, boxion, prefs, hud = null, ba
   /** un nouveau xer : une copie de l'actif, un modèle par-dessus ; il devient l'actif */
   async function nouveau({ nom, icone, modele } = {}) {
     await garderActif();
-    const base = liste.find(v => v.id === actif) || (await capturer()), m = MODELES.find(v => v.id === modele);
+    const base = liste.find(v => v.id === actif) || (await capturer()), m = MODELES.find(v => v.id === modeNormal(modele));
     const x = JSON.parse(JSON.stringify({ ...base, maj: Date.now() }));
     x.id = 'x' + Date.now().toString(36); x.nom = nom || (m ? m.nom : 'xer ' + (liste.length + 1)); x.icone = icone || (m ? m.icone : '§'); x.desc = m ? m.desc : '';
     if (m) { x.prefs = { ...x.prefs, ...m.prefs }; if (m.epingler && x.hud) x.hud.epingles = [...new Set([...m.epingler, ...(x.hud.epingles || [])])].slice(0, 4); }

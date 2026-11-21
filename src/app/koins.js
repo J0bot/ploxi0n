@@ -14,7 +14,7 @@
 // avoir l'écran avec le portion et le wormion ») UN toucher : le triangle du coin grandit et S'OUVRE en carré, les cases apparaissent dans son
 // ouverture (un clip-path : triangle → carré, réglé par --k de 0 à 1), la barre descend. Glisser vers le haut suit le doigt (--k au doigt) ;
 // lâcher après 40 % ouvre, avant referme. Toucher ailleurs, ou une case : il se referme (l'animation à l'envers). ‹ et ▁ sont dans la barre.
-// (0.99.47) LE XER : la case ⊠ change de xer (organique, chill-tekk, xerboxion, xerbot : les modes ; en mode koin, l'en-tête de l'accueil et
+// (0.99.47) LE XER : la case ⊠ change de xer (organique, chill-tekk, xerboxion, xeroction : les modes ; en mode koin, l'en-tête de l'accueil et
 // ses onglets de modes s'effacent) ; appui long : mes xers. LE TRION (le koin du ion) : « ici, maintenant » (proposition, docs/KOINS.md).
 // (0.99.57, RS-7 : « plutôt ça l'inspi », le koin ouvert du chill-tekk du labo) : LA BANDE ENTRE LES KOINS = la barre des glyphes, toujours
 // là, en trapèze (ses bouts suivent l'hypoténuse des deux koins) : ‹ › ⧗ ○ △ □ ◇ ✕ ⓘ ▁. Dans un ploxion, elle tient lieu de sa barre (‹ retour,

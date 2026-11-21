@@ -477,12 +477,12 @@ html.px-anime .px-maintenant{box-shadow:inset 0 0 0 1px var(--filet),inset 3px 0
 .px-cape-sp button:last-child{margin-left:auto;font-size:12px;padding:0 10px}
 .px-cape-leds{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.px-cape-leds i{width:22px;height:22px;border-radius:50%;box-shadow:0 0 12px rgba(255,255,255,.15)}
 .px-cape-log{max-height:160px;overflow:auto;font:11px/1.5 var(--mono);color:var(--muted);background:var(--creux);border-radius:12px;padding:10px;white-space:pre-wrap}
-/* ◈ (0.50) les modes : chill-tekk · xerboxion (l'UI du labo) · xerbot (le monde physique) */
+/* ◈ (0.50) les modes : chill-tekk · xerboxion (l'UI du labo) · xeroction (le monde physique ; l'ancien xerbot) */
 .px-modes{display:flex;gap:6px;margin:0 0 12px;padding:4px;border-radius:14px;border:var(--trait) solid var(--bord);background:var(--surface)}
 .px-modes button{flex:1;min-height:34px;border:0;border-radius:10px;background:none;color:var(--muted);font:600 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase}
 .px-modes button.on{background:var(--surface2);color:var(--txt);box-shadow:inset 0 -2px 0 var(--bio)}
 html.px-m-xerboxion .px-accueil>.px-vues,html.px-m-xerboxion .px-accueil>.px-pages,html.px-m-xerboxion .px-accueil>.px-plat,html.px-m-xerboxion .px-accueil>.px-points,html.px-m-xerboxion .px-accueil>.px-sous,
-html.px-m-xerbot .px-accueil>.px-vues,html.px-m-xerbot .px-accueil>.px-pages,html.px-m-xerbot .px-accueil>.px-plat,html.px-m-xerbot .px-accueil>.px-points,html.px-m-xerbot .px-accueil>.px-sous{display:none}
+html.px-m-xeroction .px-accueil>.px-vues,html.px-m-xeroction .px-accueil>.px-pages,html.px-m-xeroction .px-accueil>.px-plat,html.px-m-xeroction .px-accueil>.px-points,html.px-m-xeroction .px-accueil>.px-sous{display:none}
 .px-labo{position:relative;height:calc(100vh - 230px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:360px;border-radius:18px;overflow:hidden;border:var(--trait) solid var(--bord);background:#07050c}
 .px-labo iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .px-xb-c{display:flex;align-items:center;gap:10px;padding:10px 12px;margin:6px 0;border-radius:14px;border:var(--trait) solid var(--bord);background:var(--surface)}
@@ -1739,7 +1739,7 @@ html:not(.px-organique) .px-tel-vivant{display:none}
      la vraie correction est dans le labo) */
 .px-page{overflow-x:clip}
 .px-hote :is([role=tablist],[class*="tabs"],[class*="onglets"])>:is(button,a,[role=tab]){flex-shrink:0;min-width:max-content}
-/* ⊕ (0.99.19) la taille de tout (le zoom de page) rend l'écran plus étroit : les modes se serrent au lieu de couper « xerbot » */
+/* ⊕ (0.99.19) la taille de tout (le zoom de page) rend l'écran plus étroit : les modes se serrent au lieu de couper « xeroction » */
 .px-modes button{min-width:0;overflow-wrap:anywhere}
 @media (max-width:360px){.px-modes{gap:3px}.px-modes button{letter-spacing:.02em;font-size:9.5px;padding-left:2px;padding-right:2px}}
 /* (0.99.19, RS-7 : « MACHINE » coupé, « AUDIO » sous les boutons) le réseau se fait glisser jusqu'à ce qu'un hub sorte de dessous les

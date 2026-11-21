@@ -50,14 +50,14 @@ test('⊠ (0.99.47) la case xer change de xer (les modes) sur place ; l\'appui l
     const W = p.w, D = W.document; let mode = 'chill-tekk'; const faits = [];
     const k = creerKoins({ W, actif: () => true, actions: {
       xers: () => faits.push('xers'),
-      modes: () => [['organique', 'neurone'], ['chill-tekk', 'chilltekk'], ['xerboxion', 'xerboxion'], ['xerbot', 'xerbot']].map(([id, g]) => ({ id, glyphe: g, nom: id, on: id === mode })),
+      modes: () => [['organique', 'neurone'], ['chill-tekk', 'chilltekk'], ['xerboxion', 'xerboxion'], ['xeroction', 'xeroction']].map(([id, g]) => ({ id, glyphe: g, nom: id, on: id === mode })),
       choisirMode: (id) => { mode = id; faits.push('mode:' + id); }, sous_koins: () => '3 vivants · 2 voisins' } });
     k.poser();
     D.querySelector('[data-koin="gauche"]').click();
     assert.equal(D.querySelector('[data-koin-sous="koins"]').textContent, '3 vivants · 2 voisins');
     D.querySelector('[data-cases] [data-koin-a="xer"]').click();
     const z = D.querySelector('.px-koin-modes'); assert.equal(z.hidden, false);
-    assert.deepEqual([...z.querySelectorAll('[data-koin-mode]')].map(b => b.getAttribute('data-koin-mode')), ['organique', 'chill-tekk', 'xerboxion', 'xerbot']);
+    assert.deepEqual([...z.querySelectorAll('[data-koin-mode]')].map(b => b.getAttribute('data-koin-mode')), ['organique', 'chill-tekk', 'xerboxion', 'xeroction']);
     assert.equal(z.querySelector('.on').getAttribute('data-koin-mode'), 'chill-tekk');
     z.querySelector('[data-koin-mode="organique"]').click();
     assert.deepEqual(faits, ['mode:organique']); assert.deepEqual(k.etape(), { gauche: 0, droite: 0 }, 'le xer choisi, les koins se referment');

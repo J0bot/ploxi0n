@@ -24,14 +24,14 @@ test('§ le premier xer, un modèle, basculer : l\'actif est gardé tel qu\'il �
   try {
     const m = monde(p.w);
     assert.deepEqual(await m.x.liste(), [{ id: 'x1', nom: 'mon xer', icone: '◇', actif: true }]);
-    const bot = await m.x.nouveau({ modele: 'xerbot' });
-    assert.equal(m.etat().p.mode, 'xerbot', 'le modèle posé');
+    const bot = await m.x.nouveau({ modele: 'xerbot' });   // (0.99.67) l'ancien nom du modèle mène au mode xeroction
+    assert.equal(m.etat().p.mode, 'xeroction', 'le modèle posé');
     assert.equal(m.etat().h.epingles[0], 'controleur', 'le contrôleur épinglé');
     m.regler({ acc: { pages: [{ nom: 'robots', ids: ['controleur'] }], dossiers: [] }, p: { dock: false } });   // on le change
     await m.x.basculer('x1');
     assert.equal(m.etat().p.mode, 'chill-tekk'); assert.equal(m.etat().p.dock, true); assert.deepEqual(m.etat().acc.pages[0].ids, ['xp']); assert.deepEqual(m.etat().h.epingles, ['social']);
     await m.x.basculer(bot.id);
-    assert.equal(m.etat().p.mode, 'xerbot'); assert.equal(m.etat().p.dock, false, 'ses changements gardés'); assert.equal(m.etat().acc.pages[0].nom, 'robots');
+    assert.equal(m.etat().p.mode, 'xeroction'); assert.equal(m.etat().p.dock, false, 'ses changements gardés'); assert.equal(m.etat().acc.pages[0].nom, 'robots');
     assert.equal(m.etat().p.haptique, true, 'un réglage de l\'iPhone ne bouge jamais');
     assert.equal(await m.x.retirer(bot.id), false, 'pas l\'actif');
     assert.ok(m.etat().accueils >= 3);

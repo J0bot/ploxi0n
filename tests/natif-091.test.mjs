@@ -39,8 +39,8 @@ test('▦ un widget par ploxion : publier (id du ploxion devant), la liste du wi
   await new Promise(r => setTimeout(r, 450));
   const [cle, doc] = ecrits.at(-1); assert.equal(cle, 'ploxi0n.px-widgets');
   assert.deepEqual(doc.liste.map(x => x.id).filter(i => !i.startsWith('xer:')), ['systeme', 'xp', 'wiki'], 'ceux qui publient d\'abord, puis les installés (les internes seulement s\'ils publient)');
-  assert.deepEqual(doc.liste.filter(x => x.id.startsWith('xer:')).map(x => x.id), ['xer:organique', 'xer:chill-tekk', 'xer:xerboxion', 'xer:xerbot'], '(0.99.59) les xers, au bout');
-  assert.equal(doc.fiche['xer:xerbot'].c, 'xer');
+  assert.deepEqual(doc.liste.filter(x => x.id.startsWith('xer:')).map(x => x.id), ['xer:organique', 'xer:chill-tekk', 'xer:xerboxion', 'xer:xeroction'], '(0.99.59) les xers, au bout ; (0.99.67) xerbot est devenu xeroction');
+  assert.equal(doc.fiche['xer:xeroction'].c, 'xer'); assert.deepEqual(doc.fiche['xer:xerbot'], doc.fiche['xer:xeroction'], 'un widget d\'avant garde sa fiche');
   assert.deepEqual(doc.fiche.xp, { d: 'un jeu de cartes, au pouce', c: 'jeux', b: ['jOSKnob', 'jOSSwipe'] }, '◈ la fiche du xerploxion : description, catégorie, bions'); assert.equal(doc.fiche.wiki, undefined);
   assert.equal(doc.px.xp.valeur, 'x');
   await w.retirer('xp'); assert.equal(w.tous().xp, undefined);

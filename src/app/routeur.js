@@ -547,7 +547,7 @@ export function creerRouteur({ fenetre = globalThis.window, sonDe = () => false,
     const vues = '<div class="px-vues" data-neurones="fin" data-neurones-cellules="button">' + VUES_ACCUEIL.map(([k, i, n]) => '<button data-vue-accueil="' + k + '"' + (k === vue ? ' class="on"' : '') + '>' + G(i) + ' ' + n + '</button>').join('') + '</div>';
     const plat = vue !== 'grille' && vue !== 'compacte';
     ecran.innerHTML = '<div class="px-accueil px-vue-' + vue + '"><header class="px-tete"><h1>' + LOGO + '<b>ploxi0n</b></h1><button class="px-modif" data-edition aria-label="modifier l\'accueil">' + (edition ? 'terminé' : G('editer')) + '</button></header>'
-      + (panneau ? panneau() : '')   // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xerbot
+      + (panneau ? panneau() : '')   // ◈ (0.50) les modes : chill-tekk, xerboxion (l'UI du labo), xeroction (l'ancien xerbot)
       + arriere()
       + '<p class="px-sous px-grave">' + (edition ? 'Touche un ploxion : le ranger dans un dossier, sur une page, ou l\'ajouter à l\'écran d\'accueil de l\'iPhone.' : ('◇ cycle ' + (new Date().getFullYear() + 5000) + ' · ' + tous.length + ' ploxions · hors ligne')) + '</p>'
       + vues

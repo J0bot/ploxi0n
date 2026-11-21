@@ -8,7 +8,7 @@
 export const LANGUES = [['fr', 'français'], ['en', 'English'], ['de', 'Deutsch'], ['it', 'italiano'], ['es', 'español']];
 
 /** les mots du xerboxion : comme « logos » en théologie, ils restent tels quels dans toutes les langues */
-export const NEOLOGISMES = ['xerboxion', 'ploxion', 'bion', 'cubion', 'koin', 'kion', 'tsoin', 'boxion', 'xer', 'wormion', 'portion', 'terrax', 'mappion', 'nexus', 'chill-tekk', 'xerbot'];
+export const NEOLOGISMES = ['xerboxion', 'ploxion', 'bion', 'cubion', 'koin', 'kion', 'tsoin', 'boxion', 'xer', 'wormion', 'portion', 'terrax', 'mappion', 'nexus', 'chill-tekk', 'xerbot', 'xeroction'];
 
 /** la langue de l'app : le réglage s'il en choisit une, sinon la première langue de l'iPhone qu'on connaît, sinon le français */
 export function langueDe(reglage, preferees = []) {

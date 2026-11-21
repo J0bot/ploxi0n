@@ -6,8 +6,9 @@
 //                 (postMessage { ploxi0n: 'ouvrir', id }) s'ouvre dans l'app, en natif
 //                 (0.99.55, RS-7 via xerxion1 : « le xer xerboxion de l'app = le xer chill-tekk du labo : même thème, koins gauche = app,
 //                 droite = global, hypercube, octogone en bas, ‹ › ; + tout le natif ; ton xer chill-tekk reste le tien ») → /xer/chill-tekk
-//   🤖 xerbot     XERB0T, la couche robotique : le poste de pilotage du monde physique — la blouse (labo-cape), les appareils
-//                 Bluetooth, la maison (HomeKit), la lampe, les tags NFC (les kions dans le réel), le Wi-Fi, et le bus xerbot.cmd
+//   ✕ xeroction  (0.99.67, RS-7 coord #2221 : « le mode xerbot de ploxi0n c'est le mode xeroction ») l'ancien mode xerbot, le même : XERB0T,
+//                 la couche robotique, le poste de pilotage du monde physique — la blouse (labo-cape), les appareils Bluetooth, la maison
+//                 (HomeKit), la lampe, les tags NFC (les kions dans le réel), le Wi-Fi, et le bus xerbot.cmd ; « xerbot » rangé → xeroction
 // Réglage : prefs.mode ; <html> porte px-m-<mode> (le CSS cache la grille quand un panneau la remplace).
 /** « avance 1 », « tourne 90 », « stop » → la commande legacy du contrat xerbot v1 { cmd, d?, deg?, src, ts } */
 export function commandeLegacy(t) {
@@ -18,11 +19,13 @@ export function commandeLegacy(t) {
 }
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 import { glyphe as G, versGlyphe } from './glyphes.js';   // ◇ (0.54) des glyphes, plus d'emoji
-export const MODES = [['organique', 'neurone', 'organique'], ['chill-tekk', 'chilltekk', 'chill-tekk'], ['xerboxion', 'xerboxion', 'xerboxion'], ['xerbot', 'xerbot', 'xerbot']];
+import { modeNormal } from './prefs.js';
+export { modeNormal };
+export const MODES = [['organique', 'neurone', 'organique'], ['chill-tekk', 'chilltekk', 'chill-tekk'], ['xerboxion', 'xerboxion', 'xerboxion'], ['xeroction', 'xeroction', 'xeroction']];
 
 export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, connait = () => false, source = 'https://labo.j0bot.ch', chemin = '/home', vibrer = () => {}, cadres = null, controleur = null, connecter = null, xerboxion = null }) {
   const D = W.document, N = () => W.jOSNatif || {};
-  const mode = () => (MODES.some(m => m[0] === (prefs.lire().mode || '')) ? prefs.lire().mode : 'chill-tekk');   // (0.99.47) le mode de base : chill-tekk
+  const mode = () => { const m = modeNormal(prefs.lire().mode || ''); return MODES.some(x => x[0] === m) ? m : 'chill-tekk'; };   // (0.99.47) le mode de base : chill-tekk
   const appliquer = () => { for (const [m] of MODES) D.documentElement.classList.toggle('px-m-' + m, mode() === m); };
   appliquer(); prefs.surChangement(appliquer);
   const xb = { messages: [], maison: null, nfc: null, ble: null, wifi: null, lampe: false };
@@ -40,7 +43,7 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
     }
   });
   // XERB0T : le bus (les ploxions et la blouse y parlent) ; les derniers messages s'affichent
-  try { if (W.jOSPorts && W.jOSPorts.on) W.jOSPorts.on('*', (p, topic) => { if (!/^ploxion\.xerbot\./.test(topic || '')) return; xb.messages.unshift({ le: Date.now(), port: topic.slice(15), p }); xb.messages.length = Math.min(xb.messages.length, 12); if (mode() === 'xerbot') rafraichir(); }); } catch (e) { /* */ }
+  try { if (W.jOSPorts && W.jOSPorts.on) W.jOSPorts.on('*', (p, topic) => { if (!/^ploxion\.xerbot\./.test(topic || '')) return; xb.messages.unshift({ le: Date.now(), port: topic.slice(15), p }); xb.messages.length = Math.min(xb.messages.length, 12); if (mode() === 'xeroction') rafraichir(); }); } catch (e) { /* */ }
 
   const puces = () => '<div class="px-modes" role="tablist" data-neurones="fin" data-neurones-cellules="button">' + MODES.map(([k, i, n]) => '<button data-mode="' + k + '" class="' + (k === mode() ? 'on' : '') + '">' + G(i) + ' ' + n + '</button>').join('') + '</div>';
   function panneauXerboxion() {
@@ -54,7 +57,7 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
     // (0.75) le contrôleur d'abord : tes appareils, leur état d'un coup d'œil
     let resume = 'Home Assistant, WLED, ESPHome, Tasmota, les Pi, les Arduino/ESP';
     if (controleur && xb.appareils) { const l = xb.appareils, ok = l.filter(a => { const r = controleur.etat(a.id); return r && r.en_ligne && !r.erreur; }).length; resume = l.length ? ok + ' en ligne sur ' + l.length + ' appareil(s)' : 'rien encore : ajoute tes appareils'; }
-    return '<div class="px-mode-p px-xerbot"><p class="px-grave">🤖 XERB0T · le monde physique</p>'
+    return '<div class="px-mode-p px-xerbot px-xeroction"><p class="px-grave">✕ xeroction · le monde physique</p>'
       + (controleur ? carte('🤖', 'le contrôleur', esc(resume), '<button data-xb="controleur">ouvrir</button>') : '')
       + carte('🥼', 'labo-cape', 'la blouse RS-7 : températures, consigne, LEDs', '<button data-xb="cape">ouvrir</button>')
       + carte('ᛒ', 'Bluetooth', xb.ble ? esc(xb.ble) : 'un capteur, un robot, une lampe…', '<button data-xb="ble">chercher</button>' + (connait('bluetooth') ? '<button data-xb="ub">ultimate</button>' : ''))
@@ -106,11 +109,11 @@ export function creerModes({ W = globalThis.window, prefs, ouvrir = () => {}, co
     if (m === 'xerboxion' && natifXbx()) { W.setTimeout(monterXbx, 0); return puces() + '<div class="px-mode-p px-xbx-place" data-xbx-place></div>'; }
     if (m === 'xerboxion') sonder();
     if (m === 'organique') W.setTimeout(monterMap, 0);
-    return puces() + (m === 'xerboxion' ? panneauXerboxion() : m === 'xerbot' ? panneauXerbot() : m === 'organique' ? '<div class="px-mode-p px-org-map" data-org-map></div>' : '');
+    return puces() + (m === 'xerboxion' ? panneauXerboxion() : m === 'xeroction' ? panneauXerbot() : m === 'organique' ? '<div class="px-mode-p px-org-map" data-org-map></div>' : '');
   }
   function rafraichir() { const p = D.querySelector('.px-accueil .px-mode-p.px-xerbot'); if (p) p.outerHTML = panneauXerbot(); }
   // le résumé du contrôleur : la liste au premier affichage, puis chaque changement d'état
-  if (controleur) { controleur.liste().then((l) => { xb.appareils = l; if (mode() === 'xerbot') rafraichir(); }).catch(() => {}); controleur.surChangement(() => { controleur.liste().then((l) => { xb.appareils = l; if (mode() === 'xerbot') rafraichir(); }); }); }
+  if (controleur) { controleur.liste().then((l) => { xb.appareils = l; if (mode() === 'xeroction') rafraichir(); }).catch(() => {}); controleur.surChangement(() => { controleur.liste().then((l) => { xb.appareils = l; if (mode() === 'xeroction') rafraichir(); }); }); }
   async function action(b) {
     const a = b.getAttribute('data-xb'), n = N();
     try {

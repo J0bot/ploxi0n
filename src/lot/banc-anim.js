@@ -16,7 +16,7 @@ export const FAMILLES = [
   ['passer', 'Passer d\'une app à l\'autre', 'glisser depuis un bord'],
   ['koin', 'Ouvrir un koin', 'toucher le koin d\'un coin'],
   ['feuille', 'Une feuille, un tiroir', 'un bouton qui ouvre un panneau'],
-  ['xer', 'Changer de xer', 'organique, chill-tekk, xerboxion, xerbot'],
+  ['xer', 'Changer de xer', 'organique, chill-tekk, xerboxion, xeroction'],
   ['cascade', 'Arriver sur l\'accueil', 'les icônes qui se posent'],
   ['courbe', 'Le caractère du mouvement', 'la même ouverture, quatre courbes'],
   ['wormion', 'Le wormion qui tourne', 'tourner le doigt : le temps'],
